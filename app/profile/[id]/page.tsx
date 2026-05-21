@@ -1,7 +1,7 @@
 "use client";
 import { use, useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { useStore } from "@/lib/store";
+import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import CategorySection from "@/components/CategorySection";
 import type { KinkStatus } from "@/types";
@@ -12,7 +12,8 @@ interface Props {
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
-  const { profiles, setEntry, _hasHydrated } = useStore();
+  const { profiles, setEntry } = useStore();
+  const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);

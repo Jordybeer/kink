@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, KinkStatus } from "@/types";
 
 function uid() {
@@ -8,7 +9,6 @@ function uid() {
 
 interface State {
   profiles: Profile[];
-  _hasHydrated: boolean;
   createProfile: (name: string, role: string) => string;
   deleteProfile: (id: string) => void;
   renameProfile: (id: string, name: string, role: string) => void;
@@ -23,7 +23,6 @@ export const useStore = create<State>()(
   persist(
     (set, get) => ({
       profiles: [],
-      _hasHydrated: false,
 
       createProfile(name, role) {
         const id = uid();
@@ -80,9 +79,16 @@ export const useStore = create<State>()(
     }),
     {
       name: "kink-profiles",
-      onRehydrateStorage: () => () => {
-        useStore.setState({ _hasHydrated: true });
-      },
+      partialize: (state) => ({ profiles: state.profiles }),
     }
   )
 );
+
+export function useHasHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(useStore.persist.hasHydrated());
+    return useStore.persist.onFinishHydration(() => setHydrated(true));
+  }, []);
+  return hydrated;
+}

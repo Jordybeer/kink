@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
+import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
 
 const TOTAL_KINKS = KINKS.length;
@@ -14,7 +14,8 @@ const ROLES = [
 
 export default function Home() {
   const router = useRouter();
-  const { profiles, createProfile, deleteProfile, renameProfile, _hasHydrated } = useStore();
+  const { profiles, createProfile, deleteProfile, renameProfile } = useStore();
+  const _hasHydrated = useHasHydrated();
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");

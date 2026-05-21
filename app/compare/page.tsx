@@ -2,7 +2,7 @@
 import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useStore } from "@/lib/store";
+import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 
@@ -50,7 +50,8 @@ function isConflict(a: KinkStatus, b: KinkStatus) {
 
 function ComparePage() {
   const searchParams = useSearchParams();
-  const { profiles, _hasHydrated } = useStore();
+  const { profiles } = useStore();
+  const _hasHydrated = useHasHydrated();
 
   const [aId, setAId] = useState(searchParams.get("a") ?? "");
   const [bId, setBId] = useState(searchParams.get("b") ?? "");
