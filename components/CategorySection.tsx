@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import type { Kink, KinkEntry } from "@/types";
-import type { KinkStatus } from "@/types";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import KinkRow from "./KinkRow";
 
 interface Props {
@@ -13,41 +13,77 @@ interface Props {
   onCommentChange: (kinkId: string, c: string) => void;
 }
 
+const MAX_PIPS = 20;
+
 function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
-  return kinks.filter((k) => entries[k.id]?.status !== null && entries[k.id]?.status !== undefined).length;
+  return kinks.filter((k) => entries[k.id]?.status != null).length;
 }
 
-export default function CategorySection({ category, kinks, entries, onStatusChange, onScoreChange, onCommentChange }: Props) {
+export default function CategorySection({
+  category,
+  kinks,
+  entries,
+  onStatusChange,
+  onScoreChange,
+  onCommentChange,
+}: Props) {
   const [open, setOpen] = useState(true);
   const filled = countFilled(kinks, entries);
+  const pipCount = Math.min(kinks.length, MAX_PIPS);
+  const filledPips = Math.round((filled / kinks.length) * pipCount);
+  const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
 
   return (
     <section className="mb-3">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface2)] transition-colors text-left"
+        aria-expanded={open}
+        className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors text-left sticky top-[41px] z-[5]"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
+        }}
       >
-        <span className="text-[var(--accent)] font-bold text-sm">{open ? "▾" : "▸"}</span>
-        <span className="font-semibold text-sm flex-1">{category}</span>
-        <span className="text-xs text-[var(--muted)]">
-          {filled}/{kinks.length} rated
+        <span className="text-[var(--accent)] flex-none">
+          {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
+        <span className="font-semibold text-sm flex-1 text-left">{category}</span>
+        <div className="flex items-center gap-1.5 flex-none">
+          <div className="flex gap-0.5 items-center">
+            {Array.from({ length: pipCount }, (_, i) => (
+              <div
+                key={i}
+                className="w-1.5 h-1.5 rounded-full transition-colors"
+                style={{ background: i < filledPips ? "var(--accent)" : "var(--border)" }}
+              />
+            ))}
+            {overflow && (
+              <span className="text-[10px] ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>
+            )}
+          </div>
+          <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+            {filled}/{kinks.length}
+          </span>
+        </div>
       </button>
 
-      {open && (
-        <div className="mt-1 flex flex-col gap-1 pl-2">
-          {kinks.map((kink) => (
-            <KinkRow
-              key={kink.id}
-              kink={kink}
-              entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
-              onStatusChange={(s) => onStatusChange(kink.id, s)}
-              onScoreChange={(n) => onScoreChange(kink.id, n)}
-              onCommentChange={(c) => onCommentChange(kink.id, c)}
-            />
-          ))}
+      <div className={`accordion-content ${open ? "open" : ""}`}>
+        <div className="accordion-inner">
+          <div className="mt-1 flex flex-col pl-1">
+            {kinks.map((kink) => (
+              <KinkRow
+                key={kink.id}
+                kink={kink}
+                entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
+                onStatusChange={(s) => onStatusChange(kink.id, s)}
+                onScoreChange={(n) => onScoreChange(kink.id, n)}
+                onCommentChange={(c) => onCommentChange(kink.id, c)}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

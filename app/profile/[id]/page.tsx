@@ -1,5 +1,5 @@
 "use client";
-import { use } from "react";
+import { use, useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
@@ -15,29 +15,66 @@ export default function ProfilePage({ params }: Props) {
   const { profiles, setEntry, _hasHydrated } = useStore();
   const profile = profiles.find((p) => p.id === id);
 
-  if (!_hasHydrated) {
-    return null;
-  }
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const navRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const setSectionRef = useCallback((el: HTMLElement | null, cat: string) => {
+    if (el) sectionRefs.current.set(cat, el);
+    else sectionRefs.current.delete(cat);
+  }, []);
+
+  useEffect(() => {
+    if (!_hasHydrated) return;
+
+    observerRef.current?.disconnect();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const cat = entry.target.getAttribute("data-category");
+            if (cat) setActiveCategory(cat);
+          }
+        }
+      },
+      { rootMargin: "-10% 0px -75% 0px", threshold: 0 }
+    );
+
+    sectionRefs.current.forEach((el) => observerRef.current!.observe(el));
+    return () => observerRef.current?.disconnect();
+  }, [_hasHydrated]);
+
+  // Keep the active chip visible in the nav
+  useEffect(() => {
+    if (!navRef.current) return;
+    const btn = navRef.current.querySelector(`[data-nav="${activeCategory}"]`) as HTMLElement | null;
+    btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeCategory]);
+
+  if (!_hasHydrated) return null;
 
   if (!profile) {
     return (
       <main className="max-w-2xl mx-auto px-4 py-10 text-center">
-        <p style={{ color: "var(--muted)" }}>Profile not found.</p>
-        <Link href="/" className="mt-4 inline-block text-sm" style={{ color: "var(--accent)" }}>← Back to profiles</Link>
+        <p style={{ color: "var(--text2)" }}>Profiel niet gevonden.</p>
+        <Link href="/" className="focus-ring mt-4 inline-block text-sm" style={{ color: "var(--accent)" }}>
+          ← Terug
+        </Link>
       </main>
     );
   }
 
   const totalRated = Object.values(profile.entries).filter((e) => e.status).length;
   const totalKinks = CATEGORIES.reduce((sum, cat) => sum + getKinksByCategory(cat).length, 0);
+  const progress = totalKinks > 0 ? (totalRated / totalKinks) * 100 : 0;
 
   function handleExport() {
     const lines: string[] = [
       `# KinkList — ${profile!.name} (${profile!.role})`,
-      `Generated: ${new Date().toLocaleDateString()}`,
+      `Gegenereerd: ${new Date().toLocaleDateString("nl-NL")}`,
       "",
     ];
-
     for (const cat of CATEGORIES) {
       const kinks = getKinksByCategory(cat);
       const active = kinks.filter((k) => profile!.entries[k.id]?.status);
@@ -51,7 +88,6 @@ export default function ProfilePage({ params }: Props) {
       }
       lines.push("");
     }
-
     const blob = new Blob([lines.join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -61,49 +97,102 @@ export default function ProfilePage({ params }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  function scrollToCategory(cat: string) {
+    sectionRefs.current.get(cat)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <main className="max-w-3xl mx-auto px-4 py-6 w-full">
+    <main className="max-w-3xl mx-auto w-full pb-24">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <Link href="/" className="text-sm transition-colors" style={{ color: "var(--muted)" }}>← Back</Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold truncate">{profile.name}</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--muted)", border: "1px solid var(--border)" }}>{profile.role}</span>
-            <span className="text-xs" style={{ color: "var(--muted)" }}>{totalRated} / {totalKinks} rated</span>
+      <div className="px-4 pt-6 pb-4">
+        <div className="flex items-center gap-3 flex-wrap mb-3">
+          <Link
+            href="/"
+            aria-label="Terug naar profielen"
+            className="focus-ring text-sm transition-colors"
+            style={{ color: "var(--text2)" }}
+          >
+            ← Terug
+          </Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold truncate">{profile.name}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+              >
+                {profile.role}
+              </span>
+              <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                {totalRated} / {totalKinks} beoordeeld
+              </span>
+            </div>
           </div>
         </div>
-        <button
-          onClick={handleExport}
-          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
-          style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-        >
-          ↓ Export .txt
-        </button>
+        {/* Progress bar */}
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+          <div
+            className="h-full rounded-full transition-[width] duration-500 ease-out"
+            style={{
+              width: `${progress}%`,
+              background: "linear-gradient(90deg, var(--accent), var(--accent2))",
+            }}
+          />
+        </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2 mb-5 text-xs">
-        {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => (
-          <span key={s} className={`px-2 py-0.5 rounded border status-${s}`}>
-            {s === "yes" ? "✓ Yes" : s === "willing" ? "↗ Willing" : s === "maybe" ? "~ Maybe" : s === "no" ? "✗ No" : "⛔ Hard no"}
-          </span>
+      {/* Sticky category scrollspy nav */}
+      <div
+        ref={navRef}
+        className="no-scrollbar sticky top-0 z-10 flex gap-1.5 overflow-x-auto px-4 py-2"
+        style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
+      >
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            data-nav={cat}
+            onClick={() => scrollToCategory(cat)}
+            className="focus-ring flex-none px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+            style={
+              activeCategory === cat
+                ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
+                : { color: "var(--text2)", border: "1px solid var(--border)" }
+            }
+          >
+            {cat}
+          </button>
         ))}
-        <span className="text-xs ml-1" style={{ color: "var(--muted)" }}>— click a label to toggle; click again to clear</span>
       </div>
 
       {/* Categories */}
-      {CATEGORIES.map((cat) => (
-        <CategorySection
-          key={cat}
-          category={cat}
-          kinks={getKinksByCategory(cat)}
-          entries={profile.entries}
-          onStatusChange={(kinkId, s) => setEntry(profile.id, kinkId, { status: s })}
-          onScoreChange={(kinkId, n) => setEntry(profile.id, kinkId, { score: n })}
-          onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
-        />
-      ))}
+      <div className="px-4 pt-3">
+        {CATEGORIES.map((cat) => (
+          <div
+            key={cat}
+            ref={(el) => setSectionRef(el, cat)}
+            data-category={cat}
+          >
+            <CategorySection
+              category={cat}
+              kinks={getKinksByCategory(cat)}
+              entries={profile.entries}
+              onStatusChange={(kinkId, s: KinkStatus) => setEntry(profile.id, kinkId, { status: s })}
+              onScoreChange={(kinkId, n) => setEntry(profile.id, kinkId, { score: n })}
+              onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* FAB export */}
+      <button
+        onClick={handleExport}
+        aria-label="Exporteer lijst als tekstbestand"
+        className="focus-ring fixed bottom-6 right-4 z-10 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-opacity hover:opacity-90"
+        style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+      >
+        ↓ Exporteer
+      </button>
     </main>
   );
 }

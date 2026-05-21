@@ -3,18 +3,26 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
+import { KINKS } from "@/lib/kinks";
 
-const ROLES = ["Switch", "Dominant", "Submissive", "Top", "Bottom", "Rope top", "Rope bottom", "Sadist", "Masochist", "Other"];
+const TOTAL_KINKS = KINKS.length;
+
+const ROLES = [
+  "Switch", "Dominant", "Submissive", "Top", "Bottom",
+  "Rope top", "Rope bottom", "Sadist", "Masochist", "Other",
+];
 
 export default function Home() {
   const router = useRouter();
   const { profiles, createProfile, deleteProfile, renameProfile, _hasHydrated } = useStore();
+
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -36,127 +44,304 @@ export default function Home() {
     setEditId(null);
   }
 
+  function promptDelete(id: string) {
+    setDeleteTarget(id);
+    setSheetOpen(true);
+  }
+
+  function confirmDelete() {
+    if (deleteTarget) deleteProfile(deleteTarget);
+    setSheetOpen(false);
+    setTimeout(() => setDeleteTarget(null), 300);
+  }
+
+  function cancelDelete() {
+    setSheetOpen(false);
+    setTimeout(() => setDeleteTarget(null), 300);
+  }
+
   if (!_hasHydrated) return null;
 
   const compareProfiles = profiles.slice(0, 2).map((p) => p.id);
+  const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10 w-full">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-          KinkList
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-          Build kink lists, rate activities, add limits — share contracts without spreadsheets.
-        </p>
-      </div>
+    <>
+      <main className="max-w-2xl mx-auto px-4 py-10 w-full">
+        {/* Hero */}
+        <div className="mb-8 text-center">
+          <h1
+            className="text-3xl font-bold"
+            style={{
+              background: "linear-gradient(90deg, var(--accent), var(--accent2))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            KinkList
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
+            Verken je grenzen samen.
+          </p>
+        </div>
 
-      {/* Create profile */}
-      <form onSubmit={handleCreate} className="rounded-xl p-5 mb-8" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-        <h2 className="font-semibold text-xs uppercase tracking-widest mb-3" style={{ color: "var(--muted)" }}>New Profile</h2>
-        <div className="flex gap-2 flex-wrap">
+        {/* Create profile form */}
+        <form
+          onSubmit={handleCreate}
+          className="rounded-xl p-5 mb-8"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <h2
+            className="font-semibold text-xs uppercase tracking-widest mb-4"
+            style={{ color: "var(--text2)" }}
+          >
+            Nieuw profiel
+          </h2>
+
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Name or handle…"
-            className="flex-1 min-w-0 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--muted)]"
+            placeholder="Naam of alias…"
+            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-3 focus:outline-none placeholder-[color:var(--text2)]"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           />
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="rounded-lg px-3 py-2 text-sm focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          >
-            {ROLES.map((r) => <option key={r}>{r}</option>)}
-          </select>
-          <button
-            type="submit"
-            className="px-4 py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
-            style={{ background: "var(--accent)", color: "#000" }}
-          >
-            Create
-          </button>
-        </div>
-      </form>
 
-      {/* Profile list */}
-      {profiles.length === 0 ? (
-        <p className="text-center text-sm py-12" style={{ color: "var(--muted)" }}>
-          No profiles yet — create one above to start your list.
-        </p>
-      ) : (
-        <>
-          <div className="flex flex-col gap-3 mb-6">
-            {profiles.map((p) => {
-              const total = Object.values(p.entries).filter((e) => e.status).length;
-              return (
-                <div key={p.id} className="rounded-xl p-4 flex items-center gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-                  {editId === p.id ? (
-                    <div className="flex flex-1 gap-2 flex-wrap">
-                      <input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 min-w-0 rounded px-2 py-1 text-sm focus:outline-none"
-                        style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                      />
-                      <select
-                        value={editRole}
-                        onChange={(e) => setEditRole(e.target.value)}
-                        className="rounded px-2 py-1 text-sm"
-                        style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                      >
-                        {ROLES.map((r) => <option key={r}>{r}</option>)}
-                      </select>
-                      <button onClick={saveEdit} className="px-3 py-1 rounded text-sm font-medium" style={{ background: "var(--accent)", color: "#000" }}>Save</button>
-                      <button onClick={() => setEditId(null)} className="px-3 py-1 rounded border text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>Cancel</button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold truncate">{p.name}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--muted)", border: "1px solid var(--border)" }}>{p.role}</span>
-                        </div>
-                        <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{total} items rated</div>
-                      </div>
-                      <Link
-                        href={`/profile/${p.id}`}
-                        className="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                        style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                      >
-                        Open
-                      </Link>
-                      <button onClick={() => startEdit(p)} title="Edit" className="p-1.5 rounded text-sm transition-colors" style={{ color: "var(--muted)" }}>✎</button>
-                      {confirmDelete === p.id ? (
-                        <>
-                          <button onClick={() => deleteProfile(p.id)} className="text-xs px-2 py-1 rounded" style={{ background: "#450a0a", border: "1px solid #7f1d1d", color: "#fca5a5" }}>Delete</button>
-                          <button onClick={() => setConfirmDelete(null)} className="text-xs px-2 py-1 rounded border text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>Cancel</button>
-                        </>
-                      ) : (
-                        <button onClick={() => setConfirmDelete(p.id)} title="Delete" className="p-1.5 rounded text-sm transition-colors" style={{ color: "var(--muted)" }}>🗑</button>
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })}
+          {/* Role chips — replaces native <select> to avoid iOS white-box theming */}
+          <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Rol">
+            {ROLES.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRole(r)}
+                aria-pressed={role === r}
+                className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                style={
+                  role === r
+                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    : { color: "var(--text2)", borderColor: "var(--border)" }
+                }
+              >
+                {r}
+              </button>
+            ))}
           </div>
 
-          {profiles.length >= 2 && (
-            <div className="text-center">
+          <button
+            type="submit"
+            className="focus-ring w-full py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+            style={{ background: "var(--accent)", color: "#000" }}
+          >
+            Sla jezelf vast →
+          </button>
+        </form>
+
+        {/* Profile list */}
+        {profiles.length === 0 ? (
+          <p className="text-center text-sm py-12" style={{ color: "var(--text2)" }}>
+            Nog geen profielen. Wie ben jij in de speelkamer?
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-col gap-3 mb-6">
+              {profiles.map((p) => {
+                const rated = Object.values(p.entries).filter((e) => e.status).length;
+                const progress = TOTAL_KINKS > 0 ? (rated / TOTAL_KINKS) * 100 : 0;
+                const initial = p.name[0].toUpperCase();
+
+                return (
+                  <div
+                    key={p.id}
+                    className="rounded-xl overflow-hidden"
+                    style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                  >
+                    {editId === p.id ? (
+                      <div className="p-4">
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
+                          style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                        />
+                        <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Rol">
+                          {ROLES.map((r) => (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => setEditRole(r)}
+                              aria-pressed={editRole === r}
+                              className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+                              style={
+                                editRole === r
+                                  ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                  : { color: "var(--text2)", borderColor: "var(--border)" }
+                              }
+                            >
+                              {r}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={saveEdit}
+                            className="focus-ring flex-1 py-2 rounded-lg text-sm font-medium"
+                            style={{ background: "var(--accent)", color: "#000" }}
+                          >
+                            Opslaan
+                          </button>
+                          <button
+                            onClick={() => setEditId(null)}
+                            className="focus-ring px-4 py-2 rounded-lg border text-sm"
+                            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                          >
+                            Annuleer
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-3 p-4 pb-3">
+                          {/* Avatar */}
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
+                            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                            aria-hidden="true"
+                          >
+                            {initial}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold truncate">{p.name}</span>
+                              <span
+                                className="text-xs px-2 py-0.5 rounded-full"
+                                style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                              >
+                                {p.role}
+                              </span>
+                            </div>
+                            <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
+                              {rated} / {TOTAL_KINKS} beoordeeld
+                            </div>
+                          </div>
+
+                          <Link
+                            href={`/profile/${p.id}`}
+                            className="focus-ring px-3 py-1.5 rounded-lg text-sm transition-colors flex-none"
+                            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                          >
+                            Open →
+                          </Link>
+                          <button
+                            onClick={() => startEdit(p)}
+                            aria-label={`Profiel ${p.name} bewerken`}
+                            title="Bewerken"
+                            className="focus-ring p-2 rounded-lg transition-colors"
+                            style={{ color: "var(--text2)" }}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            onClick={() => promptDelete(p.id)}
+                            aria-label={`Profiel ${p.name} verwijderen`}
+                            title="Verwijderen"
+                            className="focus-ring p-2 rounded-lg transition-colors"
+                            style={{ color: "var(--text2)" }}
+                          >
+                            🗑
+                          </button>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="h-1 mx-4 mb-4 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                          <div
+                            className="h-full rounded-full transition-[width] duration-500 ease-out"
+                            style={{
+                              width: `${progress}%`,
+                              background: "linear-gradient(90deg, var(--accent), var(--accent2))",
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Compare CTA */}
+            {profiles.length >= 2 ? (
               <Link
                 href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                style={{ border: "1px solid var(--accent)", color: "var(--accent)" }}
+                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
               >
-                ⚖ Compare two profiles
+                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
+                  ⚡ Vergelijk profielen
+                </div>
+                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  Ontdek waar jullie grenzen — en verlangens — overlappen.
+                </div>
               </Link>
-              <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>Side-by-side view for contract negotiation</p>
-            </div>
+            ) : (
+              <div
+                className="rounded-xl p-5 text-center opacity-40"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                aria-hidden="true"
+              >
+                <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
+                  ⚡ Vergelijk profielen
+                </div>
+                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  Voeg een tweede profiel toe om te vergelijken.
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Delete bottom sheet */}
+      <div
+        className={`sheet-overlay ${sheetOpen ? "open" : ""}`}
+        onClick={cancelDelete}
+        aria-hidden="true"
+      />
+      <div
+        className={`sheet-panel ${sheetOpen ? "open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Profiel verwijderen"
+      >
+        <div
+          className="rounded-t-2xl p-6"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
+        >
+          <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ background: "var(--border)" }} />
+          <h2 className="text-lg font-bold text-center mb-1">Profiel verwijderen?</h2>
+          {deleteTargetProfile && (
+            <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
+              <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist.
+              Dit kan niet ongedaan worden gemaakt.
+            </p>
           )}
-        </>
-      )}
-    </main>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={confirmDelete}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: "#7f1d1d", border: "1px solid var(--hard-no)", color: "#fca5a5" }}
+            >
+              Verwijder voor altijd
+            </button>
+            <button
+              onClick={cancelDelete}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              Annuleer
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
