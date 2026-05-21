@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0f0f13;
+  --surface: #1a1a22;
+  --surface2: #22222e;
+  --border: #2e2e3e;
+  --text: #e8e6f0;
+  --muted: #7a7890;
+  --accent: #c084fc;
+  --accent2: #f472b6;
+  --yes: #4ade80;
+  --willing: #60a5fa;
+  --maybe: #fbbf24;
+  --no: #f87171;
+  --hard-no: #ef4444;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+.status-yes     { background: color-mix(in srgb, var(--yes) 15%, transparent);     color: var(--yes);     border-color: color-mix(in srgb, var(--yes) 35%, transparent); }
+.status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: color-mix(in srgb, var(--willing) 35%, transparent); }
+.status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: color-mix(in srgb, var(--maybe) 35%, transparent); }
+.status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: color-mix(in srgb, var(--no) 35%, transparent); }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: color-mix(in srgb, var(--hard-no) 35%, transparent); }

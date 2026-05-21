@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KinkList 🖤
 
-## Getting Started
+> *Finally, a safe space to be honest about what you want.*
 
-First, run the development server:
+A fast, private, browser-only tool for building and comparing kink lists — so you can negotiate BDSM contracts like adults instead of fumbling through spreadsheets at 2am.
+
+---
+
+## What it does
+
+- **100+ activities** across 11 categories — Impact Play, Bondage, Power Exchange, Sensation Play, Role Play, and more
+- **Five-point status system** — Yes / Willing to try / Maybe / No / Hard no
+- **Star scores** (1–5) per activity so intensity preference is explicit
+- **Per-item comments** — add limits, context, or conditions directly on each entry
+- **Side-by-side compare view** — see where two profiles align, conflict, or need a conversation
+- **Smart filters** on the compare view — show only matches, conflicts, or hard limits
+- **One-click export** — individual profile as `.txt`, or a full negotiation contract for two profiles
+
+---
+
+## Privacy
+
+Everything lives in your browser's `localStorage`. Nothing is sent anywhere. No accounts, no servers, no cloud. Close the tab and it's still there. Clear your browser storage and it's gone.
+
+---
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a profile (name + role)
+2. Work through the categories — check statuses, add scores, leave notes
+3. When both people have a profile, hit **Compare** for the side-by-side view
+4. Export the negotiation contract as a `.txt` file to keep or share
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js 16](https://nextjs.org/) (App Router)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [Zustand](https://zustand-demo.pmnd.rs/) (persist to localStorage)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Contributing
 
-## Deploy on Vercel
+PRs welcome. Keep it respectful, keep it consensual.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Built for adults, by adults. Not affiliated with any platform or community. Use responsibly.*
