@@ -221,7 +221,7 @@ function ContractPage() {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
-      const preamble = `Dit contract is een uitdrukking van wederzijds verlangen, vertrouwen en respect. Alles hierin is overeengekomen op basis van volledige vrije wil. Een safeword is altijd geldig en stopt alle activiteiten onmiddellijk. Dit document vervangt geen gesprek — het begint het.`;
+      const preamble = `Door dit verbond biedt de één zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en de ander aanvaardt die gave met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren. Beiden begrijpen dat deze uitwisseling niet enkel rust op bezit, maar op toewijding, communicatie, verantwoordelijkheid en het stille geloof dat ieder zal eren wat is aangeboden. De één geeft, de ander ontvangt; de één geeft zich over, de ander leidt en beiden zijn verbonden door de zorg, het vertrouwen en de gekozen intimiteit die dit verbond betekenis geven. Hierin wordt macht niet slechts uitgewisseld, maar gedragen als een daad van toewijding, verantwoordelijkheid en verbondenheid tussen hen.`;
       const pLines = doc.splitTextToSize(preamble, lineW);
       doc.text(pLines, margin, y);
       y += pLines.length * 4.5 + 4;
@@ -352,9 +352,19 @@ function ContractPage() {
 
         {/* Preamble */}
         <p className="text-sm italic mb-6 leading-relaxed" style={{ color: "var(--text2)", borderLeft: "3px solid var(--border-accent)", paddingLeft: "1rem" }}>
-          Dit contract is een uitdrukking van wederzijds verlangen, vertrouwen en respect. Alles hierin is
-          overeengekomen op basis van volledige vrije wil. Een safeword is altijd geldig en stopt alle
-          activiteiten onmiddellijk.
+          Door dit verbond biedt de één zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen
+          de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en de ander aanvaardt die gave
+          met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet
+          lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om
+          iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft
+          gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een
+          heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te
+          bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren. Beiden begrijpen dat deze
+          uitwisseling niet enkel rust op bezit, maar op toewijding, communicatie, verantwoordelijkheid en het
+          stille geloof dat ieder zal eren wat is aangeboden. De één geeft, de ander ontvangt; de één geeft
+          zich over, de ander leidt en beiden zijn verbonden door de zorg, het vertrouwen en de gekozen
+          intimiteit die dit verbond betekenis geven. Hierin wordt macht niet slechts uitgewisseld, maar
+          gedragen als een daad van toewijding, verantwoordelijkheid en verbondenheid tussen hen.
         </p>
 
         <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" />
