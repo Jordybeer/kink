@@ -1,23 +1,33 @@
 export type KinkStatus = "yes" | "willing" | "maybe" | "no" | "hard_no" | null;
 
+export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand";
+
+export interface CustomKink {
+  id: string;
+  name: string;
+}
+
 export interface Kink {
   id: string;
   name: string;
   category: string;
+  level: 1 | 2 | 3 | 4;
   description?: string;
 }
 
 export interface KinkEntry {
   status: KinkStatus;
-  score: number | null; // 1-5
+  score: number | null; // 1-5 ervaring
   comment: string;
 }
 
 export interface Profile {
   id: string;
   name: string;
-  role: string; // e.g. "Dominant", "Submissive", "Switch"
+  role: string;
+  experienceLevel: ExperienceLevel;
+  customKinks: CustomKink[];
   createdAt: number;
   updatedAt: number;
-  entries: Record<string, KinkEntry>; // kinkId -> entry
+  entries: Record<string, KinkEntry>;
 }

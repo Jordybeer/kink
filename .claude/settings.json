@@ -4,5 +4,8 @@
       "Bash(sqlite3 ~/.claude-mem/claude-mem.db *)",
       "Bash(npm run build)"
     ]
+  },
+  "env": {
+    "CLAUDE_MEM_RUNTIME": "server-beta"
   }
 }

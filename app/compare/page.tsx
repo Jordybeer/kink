@@ -7,11 +7,11 @@ import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "✓ Ja",
-  willing: "↗ Wil",
-  maybe:   "~ Soms",
-  no:      "✕ Nee",
-  hard_no: "✕✕ Grens",
+  yes:     "✓ Heel graag",
+  willing: "↗ Interesse",
+  maybe:   "♡ Voor hen",
+  no:      "✕ Liever niet",
+  hard_no: "✕✕ Harde grens",
 };
 
 const COLOUR_A = "var(--accent)";
@@ -98,41 +98,6 @@ function ComparePage() {
     }
   }
 
-  function handleExportContract() {
-    if (!profileA || !profileB) return;
-    const lines: string[] = [
-      `# BDSM Onderhandeling — ${profileA.name} & ${profileB.name}`,
-      `Gegenereerd: ${new Date().toLocaleDateString("nl-NL")}`,
-      "",
-      "## Gedeelde interesses (beiden Ja/Wil)",
-      "",
-    ];
-    const shared: string[] = [], limits: string[] = [], hardLimits: string[] = [], conflicts: string[] = [];
-    for (const kink of KINKS) {
-      const a = profileA.entries[kink.id]?.status ?? null;
-      const b = profileB.entries[kink.id]?.status ?? null;
-      if (!a && !b) continue;
-      const entryA = profileA.entries[kink.id];
-      const entryB = profileB.entries[kink.id];
-      const row = `- ${kink.name} [${profileA.name}: ${a ?? "—"}, ${profileB.name}: ${b ?? "—"}]`;
-      const commentA = entryA?.comment ? ` (${profileA.name}: ${entryA.comment})` : "";
-      const commentB = entryB?.comment ? ` (${profileB.name}: ${entryB.comment})` : "";
-      const full = row + commentA + commentB;
-      if (isHardLimit(a, b)) hardLimits.push(full);
-      else if (isMatch(a, b)) shared.push(full);
-      else if (a === "no" || b === "no") limits.push(full);
-      else conflicts.push(full);
-    }
-    lines.push(...shared, "", "## Harde grenzen", "", ...hardLimits, "", "## Zachte grenzen / nee", "", ...limits, "", "## Bespreking nodig", "", ...conflicts, "");
-    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `contract-${profileA.name}-${profileB.name}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
     <main className="max-w-4xl mx-auto px-4 py-6 w-full">
       {/* Header */}
@@ -142,14 +107,13 @@ function ComparePage() {
         </Link>
         <h1 className="text-xl font-bold flex-1">Vergelijk profielen</h1>
         {profileA && profileB && (
-          <button
-            onClick={handleExportContract}
-            aria-label="Sla contract op als tekstbestand"
+          <Link
+            href={`/contract?a=${aId}&b=${bId}`}
             className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
             style={{ background: "var(--accent)", color: "#000" }}
           >
-            ↓ Sla contract op
-          </button>
+            ✍ Teken het contract
+          </Link>
         )}
       </div>
 
@@ -280,93 +244,118 @@ function ComparePage() {
           Kies twee spelers — dan kijken we wat jullie gemeen hebben.
         </p>
       ) : (
-        CATEGORIES.map((cat) => {
-          const kinks = getKinksByCategory(cat).filter((k) => {
-            const a = getEntry(profileA, k.id).status;
-            const b = getEntry(profileB, k.id).status;
-            return passesFilter(a, b);
-          });
-          if (!kinks.length) return null;
-          return (
-            <section key={cat} className="mb-6">
-              <h2
-                className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest"
-                style={{ color: "var(--accent)" }}
-              >
-                {cat}
-              </h2>
-              <div className="flex flex-col gap-2">
-                {kinks.map((kink) => {
-                  const eA = getEntry(profileA, kink.id);
-                  const eB = getEntry(profileB, kink.id);
-                  const matched = isMatch(eA.status, eB.status);
-                  const hardLimit = isHardLimit(eA.status, eB.status);
-                  return (
-                    <div
-                      key={kink.id}
-                      className={`rounded-xl px-3 py-2.5 transition-colors ${pulsed && matched ? "match-pulse" : ""}`}
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderLeft: hardLimit
-                          ? "4px solid var(--hard-no)"
-                          : matched
-                          ? "4px solid var(--yes)"
-                          : "4px solid transparent",
-                      }}
-                    >
-                      {/* Kink name */}
-                      <div className="text-sm font-medium mb-2">
-                        {kink.name}
-                        {matched && <span className="sr-only"> — match</span>}
-                        {hardLimit && <span className="sr-only"> — harde grens</span>}
-                      </div>
-
-                      {/* Connection bar */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <StatusBadge status={eA.status} colour={COLOUR_A} />
-                        <div
-                          className="flex-1 h-px"
-                          style={{
-                            background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-                            opacity: matched ? 1 : 0.18,
-                          }}
-                        />
-                        <StatusBadge status={eB.status} colour={COLOUR_B} />
-                      </div>
-
-                      {/* Stars */}
-                      {(eA.score || eB.score) && (
-                        <div className="flex justify-between text-xs mb-1">
-                          <span style={{ color: COLOUR_A }}>{eA.score ? "★".repeat(eA.score) : ""}</span>
-                          <span style={{ color: COLOUR_B }}>{eB.score ? "★".repeat(eB.score) : ""}</span>
+        <>
+          {CATEGORIES.map((cat) => {
+            const kinks = getKinksByCategory(cat).filter((k) => {
+              const a = getEntry(profileA, k.id).status;
+              const b = getEntry(profileB, k.id).status;
+              return passesFilter(a, b);
+            });
+            if (!kinks.length) return null;
+            return (
+              <section key={cat} className="mb-6">
+                <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                  {cat}
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {kinks.map((kink) => {
+                    const eA = getEntry(profileA, kink.id);
+                    const eB = getEntry(profileB, kink.id);
+                    const matched = isMatch(eA.status, eB.status);
+                    const hardLimit = isHardLimit(eA.status, eB.status);
+                    return (
+                      <div
+                        key={kink.id}
+                        className={`rounded-xl px-3 py-2.5 transition-colors ${pulsed && matched ? "match-pulse" : ""}`}
+                        style={{
+                          background: "var(--surface)",
+                          border: "1px solid var(--border)",
+                          borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : "4px solid transparent",
+                        }}
+                      >
+                        <div className="text-sm font-medium mb-2">
+                          {kink.name}
+                          {matched && <span className="sr-only"> — match</span>}
+                          {hardLimit && <span className="sr-only"> — harde grens</span>}
                         </div>
-                      )}
-
-                      {/* Comments */}
-                      {(eA.comment || eB.comment) && (
-                        <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
-                          {eA.comment && (
-                            <div>
-                              <span className="font-medium" style={{ color: COLOUR_A }}>{profileA.name}:</span>{" "}
-                              {eA.comment}
-                            </div>
-                          )}
-                          {eB.comment && (
-                            <div>
-                              <span className="font-medium" style={{ color: COLOUR_B }}>{profileB.name}:</span>{" "}
-                              {eB.comment}
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2 mb-1">
+                          <StatusBadge status={eA.status} colour={COLOUR_A} />
+                          <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
+                          <StatusBadge status={eB.status} colour={COLOUR_B} />
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })
+                        {(eA.score || eB.score) && (
+                          <div className="flex justify-between text-xs mb-1">
+                            <span style={{ color: COLOUR_A }}>{eA.score ? "★".repeat(eA.score) : ""}</span>
+                            <span style={{ color: COLOUR_B }}>{eB.score ? "★".repeat(eB.score) : ""}</span>
+                          </div>
+                        )}
+                        {(eA.comment || eB.comment) && (
+                          <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
+                            {eA.comment && <div><span className="font-medium" style={{ color: COLOUR_A }}>{profileA.name}:</span> {eA.comment}</div>}
+                            {eB.comment && <div><span className="font-medium" style={{ color: COLOUR_B }}>{profileB.name}:</span> {eB.comment}</div>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+
+          {/* Meer — custom kinks from both profiles, always visible */}
+          {(() => {
+            const allCustom = [
+              ...(profileA.customKinks ?? []).map((k) => ({ ...k, side: "a" as const })),
+              ...(profileB.customKinks ?? []).map((k) => ({ ...k, side: "b" as const })),
+            ];
+            const merged = new Map<string, { name: string; aId?: string; bId?: string }>();
+            for (const ck of allCustom) {
+              const key = ck.name.trim().toLowerCase();
+              const existing = merged.get(key) ?? { name: ck.name };
+              merged.set(key, ck.side === "a" ? { ...existing, aId: ck.id } : { ...existing, bId: ck.id });
+            }
+            if (!merged.size) return null;
+            return (
+              <section className="mb-6">
+                <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                  Meer
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {Array.from(merged.values()).map((item) => {
+                    const eA = item.aId ? (profileA.entries[item.aId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
+                    const eB = item.bId ? (profileB.entries[item.bId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
+                    const matched = isMatch(eA.status, eB.status);
+                    const hardLimit = isHardLimit(eA.status, eB.status);
+                    const key = item.name.trim().toLowerCase();
+                    if (!passesFilter(eA.status, eB.status)) return null;
+                    return (
+                      <div
+                        key={key}
+                        className={`rounded-xl px-3 py-2.5 ${pulsed && matched ? "match-pulse" : ""}`}
+                        style={{
+                          background: "var(--surface)",
+                          border: "1px solid var(--border)",
+                          borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : "4px solid transparent",
+                        }}
+                      >
+                        <div className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                          {item.name}
+                          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>eigen</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={eA.status} colour={COLOUR_A} />
+                          <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
+                          <StatusBadge status={eB.status} colour={COLOUR_B} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })()}
+        </>
       )}
     </main>
   );

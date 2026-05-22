@@ -2,11 +2,11 @@
 import type { KinkStatus } from "@/types";
 
 const OPTIONS: { value: NonNullable<KinkStatus>; icon: string; label: string; title: string }[] = [
-  { value: "yes",     icon: "✓",  label: "Ja",    title: "Ja — ik geniet hiervan" },
-  { value: "willing", icon: "↗",  label: "Wil",   title: "Bereid om te proberen" },
-  { value: "maybe",   icon: "~",  label: "Soms",  title: "Nieuwsgierig / situationeel" },
-  { value: "no",      icon: "✕",  label: "Nee",   title: "Geen interesse" },
-  { value: "hard_no", icon: "✕✕", label: "Grens", title: "Absolute grens" },
+  { value: "yes",     icon: "✓",  label: "Heel graag",  title: "Heel graag — ik wil dit erg graag" },
+  { value: "willing", icon: "↗",  label: "Interesse",   title: "Interesse — ik sta er open voor" },
+  { value: "maybe",   icon: "♡",  label: "Voor hen",    title: "Voor hen — ik doe het voor jou" },
+  { value: "no",      icon: "✕",  label: "Liever niet", title: "Liever niet — niet mijn ding" },
+  { value: "hard_no", icon: "✕✕", label: "Harde grens", title: "Harde grens — absolute limiet" },
 ];
 
 interface Props {

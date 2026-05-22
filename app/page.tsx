@@ -3,13 +3,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { KINKS } from "@/lib/kinks";
+import { KINKS, LEVEL_MAX } from "@/lib/kinks";
+import type { ExperienceLevel } from "@/types";
 
 const TOTAL_KINKS = KINKS.length;
 
 const ROLES = [
   "Switch", "Dominant", "Submissive", "Top", "Bottom",
   "Rope top", "Rope bottom", "Sadist", "Masochist", "Other",
+];
+
+const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[] = [
+  { value: "beginner",  label: "Beginner",   sub: "kort" },
+  { value: "gevorderd", label: "Gevorderd",  sub: "normaal" },
+  { value: "ervaren",   label: "Ervaren",    sub: "lang" },
+  { value: "diepgaand", label: "Diepgaand",  sub: "alles" },
 ];
 
 export default function Home() {
@@ -19,29 +27,32 @@ export default function Home() {
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("beginner");
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
+  const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    const id = createProfile(name.trim(), role);
+    const id = createProfile(name.trim(), role, experienceLevel);
     setName("");
     router.push(`/profile/${id}`);
   }
 
-  function startEdit(p: { id: string; name: string; role: string }) {
+  function startEdit(p: { id: string; name: string; role: string; experienceLevel: ExperienceLevel }) {
     setEditId(p.id);
     setEditName(p.name);
     setEditRole(p.role);
+    setEditLevel(p.experienceLevel ?? "beginner");
   }
 
   function saveEdit() {
     if (!editId || !editName.trim()) return;
-    renameProfile(editId, editName.trim(), editRole);
+    renameProfile(editId, editName.trim(), editRole, editLevel);
     setEditId(null);
   }
 
@@ -65,6 +76,14 @@ export default function Home() {
 
   const compareProfiles = profiles.slice(0, 2).map((p) => p.id);
   const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
+
+  // Group profiles by name for multi-role display
+  const grouped = profiles.reduce<Map<string, typeof profiles>>((map, p) => {
+    const key = p.name.toLowerCase().trim();
+    map.set(key, [...(map.get(key) ?? []), p]);
+    return map;
+  }, new Map());
+  const profileGroups = Array.from(grouped.values());
 
   return (
     <>
@@ -92,10 +111,7 @@ export default function Home() {
           className="rounded-xl p-5 mb-8"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
-          <h2
-            className="font-semibold text-xs uppercase tracking-widest mb-4"
-            style={{ color: "var(--text2)" }}
-          >
+          <h2 className="font-semibold text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
             Nieuw profiel
           </h2>
 
@@ -107,7 +123,7 @@ export default function Home() {
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           />
 
-          {/* Role chips — replaces native <select> to avoid iOS white-box theming */}
+          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
           <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Rol">
             {ROLES.map((r) => (
               <button
@@ -123,6 +139,27 @@ export default function Home() {
                 }
               >
                 {r}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
+          <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
+            {EXPERIENCE_LEVELS.map((l) => (
+              <button
+                key={l.value}
+                type="button"
+                onClick={() => setExperienceLevel(l.value)}
+                aria-pressed={experienceLevel === l.value}
+                className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
+                style={
+                  experienceLevel === l.value
+                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    : { color: "var(--text2)", borderColor: "var(--border)" }
+                }
+              >
+                <span className="font-semibold">{l.label}</span>
+                <span className="text-[10px] opacity-70">{l.sub}</span>
               </button>
             ))}
           </div>
@@ -143,127 +180,187 @@ export default function Home() {
           </p>
         ) : (
           <>
-            <div className="flex flex-col gap-3 mb-6">
-              {profiles.map((p) => {
-                const rated = Object.values(p.entries).filter((e) => e.status).length;
-                const progress = TOTAL_KINKS > 0 ? (rated / TOTAL_KINKS) * 100 : 0;
-                const initial = p.name[0].toUpperCase();
-
+            <div className="flex flex-col gap-4 mb-6">
+              {profileGroups.map((group) => {
+                const groupName = group[0].name;
+                const isMulti = group.length > 1;
                 return (
-                  <div
-                    key={p.id}
-                    className="rounded-xl overflow-hidden"
-                    style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-                  >
-                    {editId === p.id ? (
-                      <div className="p-4">
-                        <input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
-                          style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                        />
-                        <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Rol">
-                          {ROLES.map((r) => (
-                            <button
-                              key={r}
-                              type="button"
-                              onClick={() => setEditRole(r)}
-                              aria-pressed={editRole === r}
-                              className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
-                              style={
-                                editRole === r
-                                  ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
-                                  : { color: "var(--text2)", borderColor: "var(--border)" }
-                              }
-                            >
-                              {r}
-                            </button>
-                          ))}
+                  <div key={groupName.toLowerCase().trim()}>
+                    {isMulti && (
+                      <div className="flex items-center gap-2 mb-2 px-1">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-black flex-none"
+                          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                          aria-hidden="true"
+                        >
+                          {groupName[0].toUpperCase()}
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={saveEdit}
-                            className="focus-ring flex-1 py-2 rounded-lg text-sm font-medium"
-                            style={{ background: "var(--accent)", color: "#000" }}
-                          >
-                            Opslaan
-                          </button>
-                          <button
-                            onClick={() => setEditId(null)}
-                            className="focus-ring px-4 py-2 rounded-lg border text-sm"
-                            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-                          >
-                            Annuleer
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-3 p-4 pb-3">
-                          {/* Avatar */}
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
-                            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
-                            aria-hidden="true"
-                          >
-                            {initial}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold truncate">{p.name}</span>
-                              <span
-                                className="text-xs px-2 py-0.5 rounded-full"
-                                style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                              >
-                                {p.role}
-                              </span>
-                            </div>
-                            <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
-                              {rated} / {TOTAL_KINKS} beoordeeld
-                            </div>
-                          </div>
-
+                        <span className="text-sm font-semibold">{groupName}</span>
+                        <span className="text-xs" style={{ color: "var(--text2)" }}>{group.length} rollen</span>
+                        {group.length === 2 && (
                           <Link
-                            href={`/profile/${p.id}`}
-                            className="focus-ring px-3 py-1.5 rounded-lg text-sm transition-colors flex-none"
-                            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                            href={`/compare?a=${group[0].id}&b=${group[1].id}`}
+                            className="focus-ring ml-auto text-xs px-2.5 py-1 rounded-full border transition-colors"
+                            style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
                           >
-                            Open →
+                            Vergelijk rollen
                           </Link>
-                          <button
-                            onClick={() => startEdit(p)}
-                            aria-label={`Profiel ${p.name} bewerken`}
-                            title="Bewerken"
-                            className="focus-ring p-2 rounded-lg transition-colors"
-                            style={{ color: "var(--text2)" }}
-                          >
-                            ✎
-                          </button>
-                          <button
-                            onClick={() => promptDelete(p.id)}
-                            aria-label={`Profiel ${p.name} verwijderen`}
-                            title="Verwijderen"
-                            className="focus-ring p-2 rounded-lg transition-colors"
-                            style={{ color: "var(--text2)" }}
-                          >
-                            🗑
-                          </button>
-                        </div>
-
-                        {/* Progress bar */}
-                        <div className="h-1 mx-4 mb-4 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-                          <div
-                            className="h-full rounded-full transition-[width] duration-500 ease-out"
-                            style={{
-                              width: `${progress}%`,
-                              background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-                            }}
-                          />
-                        </div>
-                      </>
+                        )}
+                      </div>
                     )}
+                    <div className="flex flex-col gap-3">
+                      {group.map((p) => {
+                        const rated = Object.values(p.entries).filter((e) => e.status).length;
+                        const maxKinks = KINKS.filter((k) => k.level <= LEVEL_MAX[p.experienceLevel ?? "beginner"]).length;
+                        const progress = maxKinks > 0 ? (rated / maxKinks) * 100 : 0;
+                        const initial = p.name[0].toUpperCase();
+                        const lvl = EXPERIENCE_LEVELS.find((l) => l.value === (p.experienceLevel ?? "beginner"));
+
+                        return (
+                          <div
+                            key={p.id}
+                            className="rounded-xl overflow-hidden"
+                            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                          >
+                            {editId === p.id ? (
+                              <div className="p-4">
+                                <input
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
+                                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                                />
+                                <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Rol</p>
+                                <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Rol">
+                                  {ROLES.map((r) => (
+                                    <button
+                                      key={r}
+                                      type="button"
+                                      onClick={() => setEditRole(r)}
+                                      aria-pressed={editRole === r}
+                                      className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+                                      style={
+                                        editRole === r
+                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          : { color: "var(--text2)", borderColor: "var(--border)" }
+                                      }
+                                    >
+                                      {r}
+                                    </button>
+                                  ))}
+                                </div>
+                                <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
+                                <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
+                                  {EXPERIENCE_LEVELS.map((l) => (
+                                    <button
+                                      key={l.value}
+                                      type="button"
+                                      onClick={() => setEditLevel(l.value)}
+                                      aria-pressed={editLevel === l.value}
+                                      className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
+                                      style={
+                                        editLevel === l.value
+                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          : { color: "var(--text2)", borderColor: "var(--border)" }
+                                      }
+                                    >
+                                      <span className="font-semibold">{l.label}</span>
+                                      <span className="text-[10px] opacity-70">{l.sub}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={saveEdit}
+                                    className="focus-ring flex-1 py-2 rounded-lg text-sm font-medium"
+                                    style={{ background: "var(--accent)", color: "#000" }}
+                                  >
+                                    Opslaan
+                                  </button>
+                                  <button
+                                    onClick={() => setEditId(null)}
+                                    className="focus-ring px-4 py-2 rounded-lg border text-sm"
+                                    style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                                  >
+                                    Annuleer
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-3 p-4 pb-3">
+                                  {!isMulti && (
+                                    <div
+                                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
+                                      style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                                      aria-hidden="true"
+                                    >
+                                      {initial}
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {!isMulti && <span className="font-semibold truncate">{p.name}</span>}
+                                      <span
+                                        className="text-xs px-2 py-0.5 rounded-full"
+                                        style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                                      >
+                                        {p.role}
+                                      </span>
+                                      {lvl && (
+                                        <span
+                                          className="text-xs px-2 py-0.5 rounded-full"
+                                          style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}
+                                        >
+                                          {lvl.label}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
+                                      {rated} / {maxKinks} beoordeeld
+                                    </div>
+                                  </div>
+                                  <Link
+                                    href={`/profile/${p.id}`}
+                                    className="focus-ring px-3 py-1.5 rounded-lg text-sm transition-colors flex-none"
+                                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                                  >
+                                    Open →
+                                  </Link>
+                                  <button
+                                    onClick={() => startEdit(p)}
+                                    aria-label={`Profiel ${p.name} bewerken`}
+                                    title="Bewerken"
+                                    className="focus-ring p-2 rounded-lg transition-colors"
+                                    style={{ color: "var(--text2)" }}
+                                  >
+                                    ✎
+                                  </button>
+                                  <button
+                                    onClick={() => promptDelete(p.id)}
+                                    aria-label={`Profiel ${p.name} verwijderen`}
+                                    title="Verwijderen"
+                                    className="focus-ring p-2 rounded-lg transition-colors"
+                                    style={{ color: "var(--text2)" }}
+                                  >
+                                    🗑
+                                  </button>
+                                </div>
+                                <div className="h-1 mx-4 mb-4 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                                  <div
+                                    className="h-full rounded-full transition-[width] duration-500 ease-out"
+                                    style={{
+                                      width: `${progress}%`,
+                                      background: "linear-gradient(90deg, var(--accent), var(--accent2))",
+                                    }}
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
@@ -302,17 +399,8 @@ export default function Home() {
       </main>
 
       {/* Delete bottom sheet */}
-      <div
-        className={`sheet-overlay ${sheetOpen ? "open" : ""}`}
-        onClick={cancelDelete}
-        aria-hidden="true"
-      />
-      <div
-        className={`sheet-panel ${sheetOpen ? "open" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Profiel verwijderen"
-      >
+      <div className={`sheet-overlay ${sheetOpen ? "open" : ""}`} onClick={cancelDelete} aria-hidden="true" />
+      <div className={`sheet-panel ${sheetOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Profiel verwijderen">
         <div
           className="rounded-t-2xl p-6"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
