@@ -103,6 +103,45 @@ html, body {
   display: none;
 }
 
+/* Theme: Deep Red */
+.theme-red {
+  --bg: #0f0505;
+  --surface: #1a0a0a;
+  --surface2: #220d0d;
+  --surface3: #2d1010;
+  --border: #3d1515;
+  --border-accent: rgba(239, 68, 68, 0.25);
+  --accent: #ef4444;
+  --accent2: #f97316;
+  --accent-glow: rgba(239, 68, 68, 0.15);
+}
+
+/* Theme: Forest */
+.theme-forest {
+  --bg: #050f08;
+  --surface: #0a1a0e;
+  --surface2: #0d2213;
+  --surface3: #102a18;
+  --border: #153520;
+  --border-accent: rgba(74, 222, 128, 0.25);
+  --accent: #4ade80;
+  --accent2: #34d399;
+  --accent-glow: rgba(74, 222, 128, 0.15);
+}
+
+/* Theme: Monochrome */
+.theme-mono {
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --surface3: #222222;
+  --border: #2e2e2e;
+  --border-accent: rgba(255, 255, 255, 0.15);
+  --accent: #e5e5e5;
+  --accent2: #a3a3a3;
+  --accent-glow: rgba(255, 255, 255, 0.08);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .accordion-content,
   .sheet-overlay,

@@ -22,9 +22,10 @@ interface Props {
   onScoreChange: (n: number | null) => void;
   onCommentChange: (c: string) => void;
   onTagsChange: (tags: string[]) => void;
+  compact?: boolean;
 }
 
-export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, onCommentChange, onTagsChange }: Props) {
+export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, onCommentChange, onTagsChange, compact }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const borderColour = entry.status ? STATUS_BORDER[entry.status] : "transparent";
@@ -74,25 +75,62 @@ export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, on
 
           <StarScore value={entry.score} onChange={onScoreChange} />
 
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            aria-label={expanded ? "Opmerking verbergen" : "Opmerking toevoegen"}
-            title={expanded ? "Opmerking verbergen" : "Opmerking toevoegen"}
-            className={`focus-ring w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
-              entry.comment
-                ? "text-[var(--accent)] border border-[var(--accent)]"
-                : "text-[var(--text2)] border border-[var(--border)] hover:text-[var(--text)] hover:border-[var(--text2)]"
-            }`}
-          >
-            {entry.comment ? "✎" : "+"}
-          </button>
+          {!compact && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              aria-label={expanded ? "Opmerking verbergen" : "Opmerking toevoegen"}
+              title={expanded ? "Opmerking verbergen" : "Opmerking toevoegen"}
+              className={`focus-ring w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
+                entry.comment
+                  ? "text-[var(--accent)] border border-[var(--accent)]"
+                  : "text-[var(--text2)] border border-[var(--border)] hover:text-[var(--text)] hover:border-[var(--text2)]"
+              }`}
+            >
+              {entry.comment ? "✎" : "+"}
+            </button>
+          )}
         </div>
 
-        {/* Row 2: full-width status strip */}
-        <StatusPicker value={entry.status} onChange={onStatusChange} kinkName={kink.name} />
+        {/* Row 2: full-width status strip OR compact dot row */}
+        {compact ? (
+          <div className="flex gap-1.5 px-3 pb-2.5">
+            {(["yes", "willing", "maybe", "no", "hard_no"] as NonNullable<KinkStatus>[]).map((val) => {
+              const active = entry.status === val;
+              const dotColors: Record<string, string> = {
+                yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)",
+                no: "var(--no)", hard_no: "var(--hard-no)",
+              };
+              const labels: Record<string, string> = { yes: "Heel graag", willing: "Interesse", maybe: "Voor hen", no: "Liever niet", hard_no: "Harde grens" };
+              return (
+                <button
+                  key={val}
+                  title={labels[val]}
+                  aria-pressed={active}
+                  onClick={() => onStatusChange(active ? null : val)}
+                  className="focus-ring w-8 h-8 rounded-full flex items-center justify-center transition-all border"
+                  style={active ? {
+                    background: `color-mix(in srgb, ${dotColors[val]} 20%, transparent)`,
+                    borderColor: dotColors[val],
+                    boxShadow: `0 0 6px color-mix(in srgb, ${dotColors[val]} 40%, transparent)`,
+                  } : {
+                    background: "transparent",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ background: active ? dotColors[val] : "var(--border)" }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <StatusPicker value={entry.status} onChange={onStatusChange} kinkName={kink.name} />
+        )}
 
-        {/* Row 3: comment textarea + tag chips (conditional) */}
-        {(expanded || entry.comment || tags.length > 0) && (
+        {/* Row 3: comment textarea + tag chips (hidden in compact mode) */}
+        {!compact && (expanded || entry.comment || tags.length > 0) && (
           <div className="px-3 pb-3 pt-1">
             <div className="relative">
               <textarea

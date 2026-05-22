@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import CategorySection from "@/components/CategorySection";
+import KinkRow from "@/components/KinkRow";
 import CheckIn from "@/components/CheckIn";
 import type { KinkStatus } from "@/types";
+import QRModal from "@/components/QRModal";
 
 const STAR_LEGEND = "★ Nooit · ★★ Één keer · ★★★ Af en toe · ★★★★ Regelmatig · ★★★★★ Veel ervaring";
 const ALL_CATS = [...CATEGORIES, "Meer"];
@@ -23,6 +25,9 @@ export default function ProfilePage({ params }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [customInput, setCustomInput] = useState("");
   const [checkInDone, setCheckInDone] = useState(false);
+  const [search, setSearch] = useState("");
+  const [compact, setCompact] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -88,6 +93,11 @@ export default function ProfilePage({ params }: Props) {
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
   const totalVisible = visibleKinks.length;
   const progress = totalVisible > 0 ? (totalRated / totalVisible) * 100 : 0;
+
+  const searchTrimmed = search.trim();
+  const searchResults = searchTrimmed
+    ? visibleKinks.filter((k) => k.name.toLowerCase().includes(searchTrimmed.toLowerCase()))
+    : [];
 
   function handleExport() {
     const lines: string[] = [
@@ -303,6 +313,28 @@ export default function ProfilePage({ params }: Props) {
               </span>
             </div>
           </div>
+          <button
+            onClick={() => setShareOpen(true)}
+            aria-label="Profiel delen via QR"
+            title="Deel profiel"
+            className="focus-ring p-2 rounded-lg border text-sm flex-none"
+            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+          >
+            ↗
+          </button>
+          <button
+            onClick={() => setCompact((v) => !v)}
+            aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
+            title={compact ? "Uitgebreide weergave" : "Compacte weergave"}
+            className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
+            style={{
+              border: "1px solid var(--border)",
+              color: compact ? "var(--accent)" : "var(--text2)",
+              background: compact ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
+            }}
+          >
+            {compact ? "≡" : "⊡"}
+          </button>
         </div>
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
           <div
@@ -317,6 +349,17 @@ export default function ProfilePage({ params }: Props) {
         <p className="text-[11px]" style={{ color: "var(--text2)" }}>
           <span className="font-semibold" style={{ color: "var(--accent)" }}>★ Ervaring:</span> {STAR_LEGEND}
         </p>
+      </div>
+
+      {/* Search filter */}
+      <div className="px-4 pb-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Zoek een kink…"
+          className="focus-ring w-full rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+        />
       </div>
 
       {/* Sticky scrollspy nav */}
@@ -342,8 +385,36 @@ export default function ProfilePage({ params }: Props) {
         ))}
       </div>
 
-      {/* Standard categories — filtered by level */}
+      {/* Standard categories — filtered by level, or search results */}
       <div className="px-4 pt-3">
+        {searchTrimmed ? (
+          <div>
+            <p className="text-[11px] mb-2 tabular-nums" style={{ color: "var(--text2)" }}>
+              {searchResults.length} resultaten
+            </p>
+            {searchResults.length === 0 ? (
+              <p className="text-center text-sm py-8" style={{ color: "var(--text2)" }}>
+                Geen kinks gevonden voor &ldquo;{searchTrimmed}&rdquo;
+              </p>
+            ) : (
+              <div className="flex flex-col pl-1">
+                {searchResults.map((kink) => (
+                  <KinkRow
+                    key={kink.id}
+                    kink={kink}
+                    entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
+                    onStatusChange={(s) => setEntry(profile.id, kink.id, { status: s })}
+                    onScoreChange={(n) => setEntry(profile.id, kink.id, { score: n })}
+                    onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
+                    onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
+                    compact={compact}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
         {CATEGORIES.map((cat) => {
           const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
           if (!kinks.length) return null;
@@ -357,6 +428,13 @@ export default function ProfilePage({ params }: Props) {
                 onScoreChange={(kinkId, n) => setEntry(profile.id, kinkId, { score: n })}
                 onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
                 onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
+                onBulkSkip={() => {
+                  const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
+                  for (const k of kinks) {
+                    setEntry(profile.id, k.id, { status: "no" });
+                  }
+                }}
+                compact={compact}
               />
             </div>
           );
@@ -440,7 +518,11 @@ export default function ProfilePage({ params }: Props) {
             </button>
           </form>
         </div>
+          </>
+        )}
       </div>
+
+      <QRModal profile={shareOpen ? profile : null} onClose={() => setShareOpen(false)} />
 
       {/* FAB export — split button */}
       <div

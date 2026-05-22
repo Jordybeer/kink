@@ -7,10 +7,14 @@ function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+type Theme = "midnight" | "red" | "forest" | "mono";
+
 interface State {
   profiles: Profile[];
   contracts: ContractSnapshot[];
   onboardingComplete: boolean;
+  installPromptDismissed: boolean;
+  theme: Theme;
   createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel) => string;
   deleteProfile: (id: string) => void;
   renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel) => void;
@@ -23,6 +27,8 @@ interface State {
   deleteContract: (id: string) => void;
   completeOnboarding: () => void;
   importProfiles: (incoming: Profile[]) => void;
+  dismissInstallPrompt: () => void;
+  setTheme: (t: Theme) => void;
 }
 
 const EMPTY_ENTRY: KinkEntry = { status: null, score: null, comment: "" };
@@ -33,6 +39,8 @@ export const useStore = create<State>()(
       profiles: [],
       contracts: [],
       onboardingComplete: false,
+      installPromptDismissed: false,
+      theme: "midnight" as Theme,
 
       createProfile(name, role, experienceLevel = "beginner") {
         const id = uid();
@@ -147,6 +155,14 @@ export const useStore = create<State>()(
           return novel.length === 0 ? s : { profiles: [...s.profiles, ...novel] };
         });
       },
+
+      dismissInstallPrompt() {
+        set({ installPromptDismissed: true });
+      },
+
+      setTheme(t) {
+        set({ theme: t });
+      },
     }),
     {
       name: "kink-profiles",
@@ -154,13 +170,17 @@ export const useStore = create<State>()(
         profiles: state.profiles,
         contracts: state.contracts,
         onboardingComplete: state.onboardingComplete,
+        installPromptDismissed: state.installPromptDismissed,
+        theme: state.theme,
       }),
-      version: 3,
+      version: 4,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
           contracts?: ContractSnapshot[];
           onboardingComplete?: boolean;
+          installPromptDismissed?: boolean;
+          theme?: Theme;
         };
         if (version < 2 && state.profiles) {
           state.profiles = state.profiles.map((p) => ({
@@ -172,6 +192,10 @@ export const useStore = create<State>()(
         if (version < 3) {
           state.contracts = state.contracts ?? [];
           state.onboardingComplete = state.onboardingComplete ?? false;
+        }
+        if (version < 4) {
+          state.installPromptDismissed = false;
+          state.theme = "midnight";
         }
         return state;
       },

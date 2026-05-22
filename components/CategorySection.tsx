@@ -12,6 +12,8 @@ interface Props {
   onScoreChange: (kinkId: string, n: number | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
+  onBulkSkip: () => void;
+  compact?: boolean;
 }
 
 const MAX_PIPS = 20;
@@ -28,6 +30,8 @@ export default function CategorySection({
   onScoreChange,
   onCommentChange,
   onTagsChange,
+  onBulkSkip,
+  compact,
 }: Props) {
   const [open, setOpen] = useState(true);
   const filled = countFilled(kinks, entries);
@@ -67,6 +71,27 @@ export default function CategorySection({
           <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
             {filled}/{kinks.length}
           </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onBulkSkip(); }}
+            aria-label={`Alle kinks in ${category} overslaan`}
+            className="focus-ring rounded-full transition-colors"
+            style={{
+              fontSize: "10px",
+              padding: "2px 8px",
+              border: "1px solid var(--border)",
+              color: "var(--text2)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--accent)";
+              e.currentTarget.style.color = "var(--accent)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.color = "var(--text2)";
+            }}
+          >
+            Sla over
+          </button>
         </div>
       </button>
 
@@ -82,6 +107,7 @@ export default function CategorySection({
                 onScoreChange={(n) => onScoreChange(kink.id, n)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
+                compact={compact}
               />
             ))}
           </div>

@@ -1,11 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import type { ExperienceLevel, Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
+import { decodeProfile } from "@/lib/shareProfile";
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
 
 const TOTAL_KINKS = KINKS.length;
 
@@ -21,10 +27,24 @@ const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[
   { value: "diepgaand", label: "Diepgaand",  sub: "alles" },
 ];
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
-  const { profiles, createProfile, deleteProfile, renameProfile, importProfiles, onboardingComplete, completeOnboarding } = useStore();
+  const searchParams = useSearchParams();
+  const {
+    profiles,
+    createProfile,
+    deleteProfile,
+    renameProfile,
+    importProfiles,
+    onboardingComplete,
+    completeOnboarding,
+    installPromptDismissed,
+    dismissInstallPrompt,
+    theme,
+    setTheme,
+  } = useStore();
   const _hasHydrated = useHasHydrated();
+  const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
@@ -38,6 +58,44 @@ export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [visitCount, setVisitCount] = useState(0);
+  const [importPreview, setImportPreview] = useState<Profile | null>(null);
+  const [importDone, setImportDone] = useState(false);
+
+  useEffect(() => {
+    const count = parseInt(localStorage.getItem("ks-visits") ?? "0") + 1;
+    localStorage.setItem("ks-visits", String(count));
+    setVisitCount(count);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt.current = e as BeforeInstallPromptEvent;
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    const p = searchParams.get("p");
+    if (!p) return;
+    try {
+      const incoming = decodeProfile(p);
+      setImportPreview(incoming);
+    } catch {
+      // ongeldige parameter, negeren
+    }
+  }, [searchParams]);
+
+  async function handleInstall() {
+    if (deferredPrompt.current) {
+      await deferredPrompt.current.prompt();
+      await deferredPrompt.current.userChoice;
+      deferredPrompt.current = null;
+    }
+    dismissInstallPrompt();
+  }
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -466,6 +524,43 @@ export default function Home() {
           <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ background: "var(--border)" }} />
           <h2 className="text-lg font-bold text-center mb-5">Instellingen</h2>
           <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
+            Thema
+          </p>
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            {(
+              [
+                { value: "midnight", label: "Midnight", color: "#c084fc" },
+                { value: "red",      label: "Deep Red",  color: "#ef4444" },
+                { value: "forest",   label: "Forest",    color: "#4ade80" },
+                { value: "mono",     label: "Mono",      color: "#e5e5e5" },
+              ] as { value: "midnight" | "red" | "forest" | "mono"; label: string; color: string }[]
+            ).map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTheme(t.value)}
+                aria-pressed={theme === t.value}
+                className="focus-ring rounded-xl p-3 flex items-center gap-2 border transition-colors text-left"
+                style={
+                  theme === t.value
+                    ? {
+                        borderColor: "var(--accent)",
+                        background: "color-mix(in srgb, var(--accent) 8%, transparent)",
+                      }
+                    : { borderColor: "var(--border)" }
+                }
+              >
+                <span
+                  className="rounded-full flex-none"
+                  style={{ width: 20, height: 20, background: t.color }}
+                  aria-hidden="true"
+                />
+                <span className="text-sm font-medium">{t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
             Back-up &amp; herstel
           </p>
           <div className="flex flex-col gap-3">
@@ -537,6 +632,138 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Import profile sheet */}
+      <div
+        className={`sheet-overlay ${importPreview ? "open" : ""}`}
+        onClick={() => setImportPreview(null)}
+        aria-hidden="true"
+      />
+      <div
+        className={`sheet-panel ${importPreview ? "open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Profiel importeren"
+      >
+        <div
+          className="rounded-t-2xl p-6"
+          style={{
+            background: "var(--surface)",
+            borderTop: "1px solid var(--border)",
+            borderLeft: "1px solid var(--border)",
+            borderRight: "1px solid var(--border)",
+          }}
+        >
+          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
+          <h2 className="text-lg font-bold text-center mb-4">Profiel importeren?</h2>
+
+          {importPreview && (
+            <div
+              className="rounded-xl p-4 mb-5 flex items-center gap-3"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
+                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                aria-hidden="true"
+              >
+                {importPreview.name[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold truncate">{importPreview.name}</span>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                  >
+                    {importPreview.role}
+                  </span>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}
+                  >
+                    {importPreview.experienceLevel}
+                  </span>
+                </div>
+                <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
+                  {Object.values(importPreview.entries).filter((e) => e.status).length} kinks beoordeeld
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {importDone ? (
+              <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
+                ✓ Profiel geïmporteerd!
+              </p>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!importPreview) return;
+                  importProfiles([importPreview]);
+                  setImportDone(true);
+                  setTimeout(() => {
+                    setImportPreview(null);
+                    setImportDone(false);
+                  }, 1500);
+                }}
+                className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                Importeer profiel
+              </button>
+            )}
+            <button
+              onClick={() => setImportPreview(null)}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              Weiger
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Install prompt banner */}
+      {_hasHydrated && !installPromptDismissed && visitCount >= 3 && onboardingComplete && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 py-3 px-4 flex items-center gap-3"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
+          role="banner"
+        >
+          <span className="text-xl" aria-hidden="true">📱</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold">Installeer KinkSync</div>
+            <div className="text-xs" style={{ color: "var(--text2)" }}>
+              Bewaar op je beginscherm voor snelle toegang.
+            </div>
+          </div>
+          <button
+            onClick={handleInstall}
+            className="focus-ring px-3 py-1.5 rounded-lg text-xs font-semibold flex-none"
+            style={{ background: "var(--accent)", color: "#000" }}
+          >
+            Installeer
+          </button>
+          <button
+            onClick={dismissInstallPrompt}
+            aria-label="Installatiebanner sluiten"
+            className="focus-ring p-1.5 flex-none"
+            style={{ color: "var(--text2)" }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   );
 }

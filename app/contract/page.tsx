@@ -143,6 +143,7 @@ function ContractPage() {
   const aId = searchParams.get("a") ?? "";
   const bId = searchParams.get("b") ?? "";
   const [generating, setGenerating] = useState(false);
+  const [ceremony, setCeremony] = useState(false);
 
   // Safeword & aftercare state
   const [safewordA, setSafewordA] = useState("");
@@ -226,6 +227,9 @@ function ContractPage() {
 
   async function handleGeneratePDF() {
     if (!profileA || !profileB) return;
+    setCeremony(true);
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    setCeremony(false);
     setGenerating(true);
     try {
       const { default: jsPDF } = await import("jspdf");
@@ -617,7 +621,7 @@ function ContractPage() {
       <div className="flex gap-3">
         <button
           onClick={handleGeneratePDF}
-          disabled={generating}
+          disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent)", color: "#000" }}
         >
@@ -657,6 +661,86 @@ function ContractPage() {
             ))}
           </div>
         </div>
+      )}
+      {ceremony && (
+        <>
+          <style>{`
+            @keyframes ceremony-bg {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes ceremony-text {
+              0%   { opacity: 0; transform: translateY(12px) scale(0.95); }
+              30%  { opacity: 1; transform: translateY(0) scale(1); }
+              80%  { opacity: 1; transform: translateY(0) scale(1); }
+              100% { opacity: 0; transform: translateY(-8px) scale(1.02); }
+            }
+            @keyframes ceremony-sub {
+              0%, 15% { opacity: 0; transform: translateY(8px); }
+              40%     { opacity: 1; transform: translateY(0); }
+              80%     { opacity: 1; transform: translateY(0); }
+              100%    { opacity: 0; }
+            }
+            @keyframes ceremony-glow {
+              0%, 100% { box-shadow: 0 0 60px rgba(192,132,252,0.1); }
+              50%      { box-shadow: 0 0 120px rgba(192,132,252,0.3); }
+            }
+          `}</style>
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 60,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(10,10,15,0.97)",
+              animation: "ceremony-bg 0.3s ease forwards",
+            }}
+          >
+            <div style={{ textAlign: "center", maxWidth: "20rem", padding: "0 1.5rem" }}>
+              <div
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: "50%",
+                  margin: "0 auto 2rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "linear-gradient(135deg, rgba(192,132,252,0.15), rgba(244,114,182,0.15))",
+                  border: "1px solid rgba(192,132,252,0.3)",
+                  animation: "ceremony-glow 2s ease infinite",
+                  fontSize: "1.875rem",
+                }}
+              >
+                🖤
+              </div>
+              <p
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  color: "#ffffff",
+                  letterSpacing: "0.02em",
+                  animation: "ceremony-text 2.2s ease forwards",
+                  margin: 0,
+                }}
+              >
+                Contract ondertekend.
+              </p>
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  color: "rgba(192,132,252,0.7)",
+                  marginTop: "0.75rem",
+                  animation: "ceremony-sub 2.2s ease forwards",
+                }}
+              >
+                De woorden die het verbond dragen.
+              </p>
+            </div>
+          </div>
+        </>
       )}
     </main>
   );
