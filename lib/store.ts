@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useState, useEffect } from "react";
-import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink } from "@/types";
+import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot } from "@/types";
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -9,6 +9,8 @@ function uid() {
 
 interface State {
   profiles: Profile[];
+  contracts: ContractSnapshot[];
+  onboardingComplete: boolean;
   createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel) => string;
   deleteProfile: (id: string) => void;
   renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel) => void;
@@ -17,6 +19,10 @@ interface State {
   getEntry: (profileId: string, kinkId: string) => KinkEntry;
   addCustomKink: (profileId: string, name: string) => void;
   removeCustomKink: (profileId: string, kinkId: string) => void;
+  saveContract: (snapshot: Omit<ContractSnapshot, "id">) => void;
+  deleteContract: (id: string) => void;
+  completeOnboarding: () => void;
+  importProfiles: (incoming: Profile[]) => void;
 }
 
 const EMPTY_ENTRY: KinkEntry = { status: null, score: null, comment: "" };
@@ -25,6 +31,8 @@ export const useStore = create<State>()(
   persist(
     (set, get) => ({
       profiles: [],
+      contracts: [],
+      onboardingComplete: false,
 
       createProfile(name, role, experienceLevel = "beginner") {
         const id = uid();
@@ -116,20 +124,54 @@ export const useStore = create<State>()(
           ),
         }));
       },
+
+      saveContract(snapshot) {
+        const id = uid();
+        set((s) => ({
+          contracts: [{ id, ...snapshot }, ...s.contracts].slice(0, 20),
+        }));
+      },
+
+      deleteContract(id) {
+        set((s) => ({ contracts: s.contracts.filter((c) => c.id !== id) }));
+      },
+
+      completeOnboarding() {
+        set({ onboardingComplete: true });
+      },
+
+      importProfiles(incoming) {
+        set((s) => {
+          const existingIds = new Set(s.profiles.map((p) => p.id));
+          const novel = incoming.filter((p) => !existingIds.has(p.id));
+          return novel.length === 0 ? s : { profiles: [...s.profiles, ...novel] };
+        });
+      },
     }),
     {
       name: "kink-profiles",
-      partialize: (state) => ({ profiles: state.profiles }),
-      // Migrate existing profiles missing the new fields
-      version: 2,
+      partialize: (state) => ({
+        profiles: state.profiles,
+        contracts: state.contracts,
+        onboardingComplete: state.onboardingComplete,
+      }),
+      version: 3,
       migrate(persisted: unknown, version: number) {
-        const state = persisted as { profiles?: Profile[] };
+        const state = persisted as {
+          profiles?: Profile[];
+          contracts?: ContractSnapshot[];
+          onboardingComplete?: boolean;
+        };
         if (version < 2 && state.profiles) {
           state.profiles = state.profiles.map((p) => ({
             ...p,
             experienceLevel: (p as Profile & { experienceLevel?: ExperienceLevel }).experienceLevel ?? "beginner",
             customKinks: (p as Profile & { customKinks?: CustomKink[] }).customKinks ?? [],
           }));
+        }
+        if (version < 3) {
+          state.contracts = state.contracts ?? [];
+          state.onboardingComplete = state.onboardingComplete ?? false;
         }
         return state;
       },

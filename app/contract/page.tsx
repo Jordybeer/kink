@@ -103,13 +103,54 @@ function SignatureCanvas({ label, colour }: { label: string; colour: string }) {
   );
 }
 
+const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
+
+const TRAFFIC_LIGHTS: { value: "green" | "yellow" | "red"; label: string; color: string }[] = [
+  { value: "green",  label: "Alles OK",  color: "#22c55e" },
+  { value: "yellow", label: "Vertraag",  color: "#f59e0b" },
+  { value: "red",    label: "Stop",      color: "#ef4444" },
+];
+
+function buildPreamble(
+  nameA: string,
+  roleA: string,
+  nameB: string,
+  roleB: string,
+  levelA: string,
+  levelB: string
+): string {
+  const intro = `Dit verbond wordt gesloten tussen ${nameA} (${roleA}) en ${nameB} (${roleB}).`;
+
+  const body = `Door dit verbond biedt ${nameA} zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en ${nameB} aanvaardt die gave met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren. Beiden begrijpen dat deze uitwisseling niet enkel rust op bezit, maar op toewijding, communicatie, verantwoordelijkheid en het stille geloof dat ieder zal eren wat is aangeboden. De één geeft, de ander ontvangt; de één geeft zich over, de ander leidt en beiden zijn verbonden door de zorg, het vertrouwen en de gekozen intimiteit die dit verbond betekenis geven. Hierin wordt macht niet slechts uitgewisseld, maar gedragen als een daad van toewijding, verantwoordelijkheid en verbondenheid tussen hen.`;
+
+  const beginnerLevels = ["beginner"];
+  const deepLevels = ["diepgaand", "ervaren"];
+  const needsGuidanceClause =
+    (beginnerLevels.includes(levelA) && deepLevels.includes(levelB)) ||
+    (beginnerLevels.includes(levelB) && deepLevels.includes(levelA));
+
+  const guidanceClause = needsGuidanceClause
+    ? ` ${levelA === "beginner" ? nameA : nameB} brengt nieuwsgierigheid; ${levelA === "beginner" ? nameB : nameA} brengt geduld en begeleiding. Zij verplichten zich aan een tempo dat altijd in dienst staat van veiligheid en wederzijds begrip.`
+    : "";
+
+  return `${intro} ${body}${guidanceClause}`;
+}
+
 function ContractPage() {
   const searchParams = useSearchParams();
-  const { profiles } = useStore();
+  const { profiles, saveContract, contracts, deleteContract } = useStore();
   const _hasHydrated = useHasHydrated();
   const aId = searchParams.get("a") ?? "";
   const bId = searchParams.get("b") ?? "";
   const [generating, setGenerating] = useState(false);
+
+  // Safeword & aftercare state
+  const [safewordA, setSafewordA] = useState("");
+  const [safewordB, setSafewordB] = useState("");
+  const [trafficA, setTrafficA] = useState<"green" | "yellow" | "red" | null>(null);
+  const [trafficB, setTrafficB] = useState<"green" | "yellow" | "red" | null>(null);
+  const [aftercareA, setAftercareA] = useState<string[]>([]);
+  const [aftercareB, setAftercareB] = useState<string[]>([]);
 
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
@@ -177,6 +218,12 @@ function ContractPage() {
 
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
+  const preamble = buildPreamble(
+    profileA.name, profileA.role,
+    profileB.name, profileB.role,
+    profileA.experienceLevel, profileB.experienceLevel
+  );
+
   async function handleGeneratePDF() {
     if (!profileA || !profileB) return;
     setGenerating(true);
@@ -200,12 +247,17 @@ function ContractPage() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(20);
       doc.setTextColor(...accent);
-      doc.text("KinkList Contract", W / 2, y, { align: "center" });
-      y += 8;
+      doc.text("KinkSync Contract", W / 2, y, { align: "center" });
+      y += 7;
 
-      doc.setFontSize(10);
+      // Subtitle
+      doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...muted);
+      doc.text("kinksync.be", W / 2, y, { align: "center" });
+      y += 5;
+
+      doc.setFontSize(10);
       doc.text(`${profileA.name} (${profileA.role}) & ${profileB.name} (${profileB.role})`, W / 2, y, { align: "center" });
       y += 5;
       doc.text(`Opgesteld op ${today}`, W / 2, y, { align: "center" });
@@ -221,10 +273,39 @@ function ContractPage() {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
-      const preamble = `Door dit verbond biedt de één zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en de ander aanvaardt die gave met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren. Beiden begrijpen dat deze uitwisseling niet enkel rust op bezit, maar op toewijding, communicatie, verantwoordelijkheid en het stille geloof dat ieder zal eren wat is aangeboden. De één geeft, de ander ontvangt; de één geeft zich over, de ander leidt en beiden zijn verbonden door de zorg, het vertrouwen en de gekozen intimiteit die dit verbond betekenis geven. Hierin wordt macht niet slechts uitgewisseld, maar gedragen als een daad van toewijding, verantwoordelijkheid en verbondenheid tussen hen.`;
       const pLines = doc.splitTextToSize(preamble, lineW);
       doc.text(pLines, margin, y);
       y += pLines.length * 4.5 + 4;
+
+      // Safeword & Nazorg section in PDF
+      const hasSafewordData =
+        safewordA || safewordB || aftercareA.length > 0 || aftercareB.length > 0;
+      if (hasSafewordData) {
+        if (y > 250) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(...accent);
+        doc.text("Safeword & Nazorg", margin, y);
+        y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(220, 215, 240);
+
+        const trafficLabel = (t: "green" | "yellow" | "red" | null) => {
+          if (t === "green") return "Groen";
+          if (t === "yellow") return "Geel";
+          if (t === "red") return "Rood";
+          return null;
+        };
+
+        if (safewordA) { doc.text(`Safeword ${profileA.name}: ${safewordA}`, margin + 3, y); y += 4.5; }
+        if (trafficA) { doc.text(`Signaal ${profileA.name}: ${trafficLabel(trafficA)}`, margin + 3, y); y += 4.5; }
+        if (aftercareA.length) { doc.text(`Nazorg ${profileA.name}: ${aftercareA.join(", ")}`, margin + 3, y); y += 4.5; }
+        if (safewordB) { doc.text(`Safeword ${profileB.name}: ${safewordB}`, margin + 3, y); y += 4.5; }
+        if (trafficB) { doc.text(`Signaal ${profileB.name}: ${trafficLabel(trafficB)}`, margin + 3, y); y += 4.5; }
+        if (aftercareB.length) { doc.text(`Nazorg ${profileB.name}: ${aftercareB.join(", ")}`, margin + 3, y); y += 4.5; }
+        y += 3;
+      }
 
       const section = (title: string, items: string[], colour: [number, number, number]) => {
         if (!items.length) return;
@@ -287,11 +368,9 @@ function ContractPage() {
       const sigW = (lineW - 10) / 2;
       const sigH = 30;
 
-      // Signature canvases → images
       const sigDataA = canvasARef.current?.toDataURL("image/png") ?? null;
       const sigDataB = canvasBRef.current?.toDataURL("image/png") ?? null;
 
-      // Boxes
       doc.setDrawColor(...muted);
       doc.setLineWidth(0.3);
       doc.rect(margin, y, sigW, sigH);
@@ -311,6 +390,16 @@ function ContractPage() {
       doc.text(today, margin + sigW + 10 + sigW / 2, y, { align: "center" });
 
       doc.save(`contract-${profileA.name}-${profileB.name}.pdf`);
+
+      saveContract({
+        date: Date.now(),
+        profileAName: profileA.name,
+        profileBName: profileB.name,
+        matchCount: shared.length + customShared.length,
+        hardLimitCount: hardLimits.length,
+        softLimitCount: softLimits.length,
+        discussCount: discuss.length,
+      });
     } finally {
       setGenerating(false);
     }
@@ -318,6 +407,18 @@ function ContractPage() {
 
   const COLOUR_A = "var(--accent)";
   const COLOUR_B = "var(--accent2)";
+
+  function toggleAftercareA(option: string) {
+    setAftercareA((prev) =>
+      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
+    );
+  }
+
+  function toggleAftercareB(option: string) {
+    setAftercareB((prev) =>
+      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
+    );
+  }
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-28">
@@ -340,7 +441,7 @@ function ContractPage() {
             className="text-2xl font-bold mb-1"
             style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
           >
-            KinkList Contract
+            KinkSync Contract
           </h2>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
             <span style={{ color: COLOUR_A }}>{profileA.name}</span>
@@ -352,20 +453,128 @@ function ContractPage() {
 
         {/* Preamble */}
         <p className="text-sm italic mb-6 leading-relaxed" style={{ color: "var(--text2)", borderLeft: "3px solid var(--border-accent)", paddingLeft: "1rem" }}>
-          Door dit verbond biedt de één zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen
-          de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en de ander aanvaardt die gave
-          met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet
-          lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om
-          iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft
-          gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een
-          heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te
-          bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren. Beiden begrijpen dat deze
-          uitwisseling niet enkel rust op bezit, maar op toewijding, communicatie, verantwoordelijkheid en het
-          stille geloof dat ieder zal eren wat is aangeboden. De één geeft, de ander ontvangt; de één geeft
-          zich over, de ander leidt en beiden zijn verbonden door de zorg, het vertrouwen en de gekozen
-          intimiteit die dit verbond betekenis geven. Hierin wordt macht niet slechts uitgewisseld, maar
-          gedragen als een daad van toewijding, verantwoordelijkheid en verbondenheid tussen hen.
+          {preamble}
         </p>
+
+        {/* Safeword & Nazorg */}
+        <div className="mb-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+            Safeword &amp; Nazorg
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Column A */}
+            <div className="flex flex-col gap-3">
+              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_A }}>
+                {profileA.name}
+              </div>
+              <input
+                type="text"
+                placeholder="Safeword…"
+                value={safewordA}
+                onChange={(e) => setSafewordA(e.target.value)}
+                className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
+                style={{
+                  background: "var(--surface2)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
+                aria-label={`Safeword voor ${profileA.name}`}
+              />
+              <div className="flex gap-2">
+                {TRAFFIC_LIGHTS.map((tl) => (
+                  <button
+                    key={tl.value}
+                    onClick={() => setTrafficA((prev) => prev === tl.value ? null : tl.value)}
+                    aria-label={tl.label}
+                    className="rounded-full border-2 transition-all focus-ring"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      background: trafficA === tl.value ? tl.color : "transparent",
+                      borderColor: tl.color,
+                      opacity: trafficA !== null && trafficA !== tl.value ? 0.3 : 1,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {AFTERCARE_OPTIONS.map((option) => {
+                  const active = aftercareA.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => toggleAftercareA(option)}
+                      className="text-xs px-2 py-1 rounded-full border transition-all focus-ring"
+                      style={{
+                        background: active ? "color-mix(in srgb, #22c55e 20%, transparent)" : "transparent",
+                        borderColor: active ? "#22c55e" : "var(--border)",
+                        color: active ? "#22c55e" : "var(--text2)",
+                      }}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Column B */}
+            <div className="flex flex-col gap-3">
+              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_B }}>
+                {profileB.name}
+              </div>
+              <input
+                type="text"
+                placeholder="Safeword…"
+                value={safewordB}
+                onChange={(e) => setSafewordB(e.target.value)}
+                className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
+                style={{
+                  background: "var(--surface2)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
+                aria-label={`Safeword voor ${profileB.name}`}
+              />
+              <div className="flex gap-2">
+                {TRAFFIC_LIGHTS.map((tl) => (
+                  <button
+                    key={tl.value}
+                    onClick={() => setTrafficB((prev) => prev === tl.value ? null : tl.value)}
+                    aria-label={tl.label}
+                    className="rounded-full border-2 transition-all focus-ring"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      background: trafficB === tl.value ? tl.color : "transparent",
+                      borderColor: tl.color,
+                      opacity: trafficB !== null && trafficB !== tl.value ? 0.3 : 1,
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {AFTERCARE_OPTIONS.map((option) => {
+                  const active = aftercareB.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => toggleAftercareB(option)}
+                      className="text-xs px-2 py-1 rounded-full border transition-all focus-ring"
+                      style={{
+                        background: active ? "color-mix(in srgb, #22c55e 20%, transparent)" : "transparent",
+                        borderColor: active ? "#22c55e" : "var(--border)",
+                        color: active ? "#22c55e" : "var(--text2)",
+                      }}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" />
         <ContractSection
@@ -415,6 +624,40 @@ function ContractPage() {
           {generating ? "Genereren…" : "↓ Opslaan / Afdrukken"}
         </button>
       </div>
+
+      {/* Eerdere contracten */}
+      {contracts.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+            Eerdere contracten
+          </h2>
+          <div className="flex flex-col gap-2 mt-3">
+            {contracts.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl p-4 flex items-center gap-3"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+              >
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{c.profileAName} &amp; {c.profileBName}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                    {new Date(c.date).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}
+                    {" · "}{c.matchCount} matches · {c.hardLimitCount} grenzen
+                  </div>
+                </div>
+                <button
+                  onClick={() => deleteContract(c.id)}
+                  aria-label="Contract verwijderen"
+                  className="focus-ring p-2 rounded-lg text-sm"
+                  style={{ color: "var(--text2)" }}
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

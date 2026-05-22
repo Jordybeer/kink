@@ -19,6 +19,18 @@ export interface KinkEntry {
   status: KinkStatus;
   score: number | null; // 1-5 ervaring
   comment: string;
+  tags?: string[];
+}
+
+export interface ContractSnapshot {
+  id: string;
+  date: number;
+  profileAName: string;
+  profileBName: string;
+  matchCount: number;
+  hardLimitCount: number;
+  softLimitCount: number;
+  discussCount: number;
 }
 
 export interface Profile {

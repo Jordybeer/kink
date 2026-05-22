@@ -1,5 +1,5 @@
 "use client";
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -48,6 +48,20 @@ function isConflict(a: KinkStatus, b: KinkStatus) {
   return !(ok.includes(a) && ok.includes(b));
 }
 
+/** Abbreviate a category name to its first word, max 8 chars. */
+function catAbbrev(cat: string): string {
+  const first = cat.split(/\s+/)[0];
+  return first.length > 8 ? first.slice(0, 8) : first;
+}
+
+function categoryPillStyle(rate: number | null): { background: string; borderColor: string } {
+  if (rate === null) return { background: "var(--border)", borderColor: "var(--border)" };
+  if (rate === 0)    return { background: "color-mix(in srgb, var(--hard-no) 20%, transparent)", borderColor: "color-mix(in srgb, var(--hard-no) 50%, transparent)" };
+  if (rate < 0.4)   return { background: "color-mix(in srgb, #f59e0b 20%, transparent)", borderColor: "color-mix(in srgb, #f59e0b 50%, transparent)" };
+  if (rate < 0.7)   return { background: "color-mix(in srgb, #3b82f6 20%, transparent)", borderColor: "color-mix(in srgb, #3b82f6 50%, transparent)" };
+  return { background: "color-mix(in srgb, var(--yes) 20%, transparent)", borderColor: "color-mix(in srgb, var(--yes) 50%, transparent)" };
+}
+
 function ComparePage() {
   const searchParams = useSearchParams();
   const { profiles } = useStore();
@@ -59,16 +73,31 @@ function ComparePage() {
   const [showEmpty, setShowEmpty] = useState(false);
   const [pulsed, setPulsed] = useState(false);
 
+  // Feature 1: discussion tracker — session-only, not persisted
+  const [discussed, setDiscussed] = useState<Set<string>>(new Set());
+  const [hideDiscussed, setHideDiscussed] = useState(false);
+
+  // Feature 2: confetti trigger
+  const [showConfetti, setShowConfetti] = useState(false);
+
   const profileA = profiles.find((p) => p.id === aId);
   const profileB = profiles.find((p) => p.id === bId);
 
-  // Trigger the match-pulse animation once on each new comparison pair
   useEffect(() => {
     if (!profileA || !profileB) return;
     setPulsed(false);
     const t = setTimeout(() => setPulsed(true), 60);
     return () => clearTimeout(t);
   }, [aId, bId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleDiscussed = useCallback((id: string) => {
+    setDiscussed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   if (!_hasHydrated) return null;
 
@@ -86,17 +115,65 @@ function ComparePage() {
   }
 
   // Compute summary counts
-  let matchCount = 0, hardLimitCount = 0, discussCount = 0;
+  let matchCount = 0, hardLimitCount = 0, discussCount = 0, totalRated = 0;
   if (profileA && profileB) {
     for (const kink of KINKS) {
       const a = profileA.entries[kink.id]?.status ?? null;
       const b = profileB.entries[kink.id]?.status ?? null;
       if (!a && !b) continue;
+      if (a && b) totalRated++;
       if (isHardLimit(a, b)) hardLimitCount++;
       else if (isMatch(a, b)) matchCount++;
       else if (a && b) discussCount++;
     }
   }
+
+  const score = Math.round((matchCount / Math.max(totalRated, 1)) * 100);
+
+  // Fire confetti once when score >= 70 and both profiles present
+  useEffect(() => {
+    if (profileA && profileB && score >= 70) {
+      setShowConfetti(false);
+      const t = setTimeout(() => setShowConfetti(true), 200);
+      return () => clearTimeout(t);
+    } else {
+      setShowConfetti(false);
+    }
+  }, [aId, bId, score]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Category heatmap scores
+  const categoryScores = (profileA && profileB)
+    ? CATEGORIES.map((cat) => {
+        const kinks = getKinksByCategory(cat);
+        let catMatches = 0, catRated = 0;
+        for (const k of kinks) {
+          const a = profileA.entries[k.id]?.status ?? null;
+          const b = profileB.entries[k.id]?.status ?? null;
+          if (a || b) {
+            catRated++;
+            if (isMatch(a, b)) catMatches++;
+          }
+        }
+        const rate: number | null = catRated > 0 ? catMatches / catRated : null;
+        return { cat, rate };
+      })
+    : [];
+
+  function scrollToCategory(cat: string) {
+    const el = document.getElementById(`cat-${cat}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const confettiColors = [
+    "var(--accent)",
+    "var(--accent2)",
+    "var(--yes)",
+    "#f59e0b",
+    "#3b82f6",
+    "var(--maybe)",
+    "var(--accent)",
+    "var(--yes)",
+  ];
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-6 w-full">
@@ -209,6 +286,108 @@ function ComparePage() {
         </div>
       )}
 
+      {/* Compatibility score card */}
+      {profileA && profileB && (
+        <div
+          className="rounded-xl p-4 mb-5 relative overflow-hidden"
+          style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+        >
+          {/* CSS confetti dots */}
+          {showConfetti && (
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+              {confettiColors.map((color, i) => (
+                <span
+                  key={i}
+                  className="absolute w-1 h-1 rounded-full"
+                  style={{
+                    background: color,
+                    left: `${10 + i * 11}%`,
+                    top: "60%",
+                    animation: `confetti-pop 0.6s ease-out ${i * 0.07}s both`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <style>{`
+            @keyframes confetti-pop {
+              0%   { transform: translateY(0) scale(0); opacity: 1; }
+              60%  { transform: translateY(-40px) scale(1); opacity: 1; }
+              100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+            }
+          `}</style>
+
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="text-center">
+              <div
+                className="text-4xl font-bold tabular-nums"
+                style={{
+                  background: "linear-gradient(90deg, var(--accent), var(--accent2))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                {score}%
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>Compatibiliteit</div>
+            </div>
+            <div className="flex-1">
+              <div className="text-xs mb-1" style={{ color: "var(--text2)" }}>
+                {matchCount} van {totalRated} beoordeeld samen
+              </div>
+              <div
+                className="h-2 rounded-full overflow-hidden"
+                style={{ background: "var(--border)" }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${score}%`,
+                    background: "linear-gradient(90deg, var(--accent), var(--accent2))",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {score >= 70 && (
+            <div className="mt-3 text-xs font-medium" style={{ color: "var(--accent)" }}>
+              Jullie passen goed samen 🖤
+            </div>
+          )}
+
+          {/* Category heatmap */}
+          {categoryScores.length > 0 && (
+            <div className="mt-4">
+              <div className="text-xs mb-2 uppercase tracking-widest" style={{ color: "var(--text2)" }}>
+                Per categorie
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {categoryScores.map(({ cat, rate }) => {
+                  const pillStyle = categoryPillStyle(rate);
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => scrollToCategory(cat)}
+                      aria-label={`Scroll naar ${cat}`}
+                      className="text-[10px] px-2 py-1 rounded-full font-medium cursor-pointer border transition-opacity hover:opacity-80 focus-ring"
+                      style={{
+                        background: pillStyle.background,
+                        borderColor: pillStyle.borderColor,
+                        color: "var(--text)",
+                      }}
+                    >
+                      {catAbbrev(cat)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-5">
         {(["all", "match", "conflict", "hardno"] as const).map((f) => (
@@ -237,6 +416,27 @@ function ComparePage() {
           />
           Toon onbeoordeeld
         </label>
+
+        {/* Discussion tracker controls */}
+        {discussed.size > 0 && (
+          <span className="text-xs ml-1" style={{ color: "var(--text2)" }}>
+            💬 {discussed.size} besproken
+          </span>
+        )}
+        {discussed.size > 0 && (
+          <label
+            className="flex items-center gap-1.5 text-xs cursor-pointer"
+            style={{ color: "var(--text2)" }}
+          >
+            <input
+              type="checkbox"
+              checked={hideDiscussed}
+              onChange={(e) => setHideDiscussed(e.target.checked)}
+              className="rounded"
+            />
+            Verberg besproken
+          </label>
+        )}
       </div>
 
       {!profileA || !profileB ? (
@@ -247,13 +447,14 @@ function ComparePage() {
         <>
           {CATEGORIES.map((cat) => {
             const kinks = getKinksByCategory(cat).filter((k) => {
+              if (hideDiscussed && discussed.has(k.id)) return false;
               const a = getEntry(profileA, k.id).status;
               const b = getEntry(profileB, k.id).status;
               return passesFilter(a, b);
             });
             if (!kinks.length) return null;
             return (
-              <section key={cat} className="mb-6">
+              <section key={cat} id={`cat-${cat}`} className="mb-6">
                 <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
                   {cat}
                 </h2>
@@ -263,6 +464,7 @@ function ComparePage() {
                     const eB = getEntry(profileB, kink.id);
                     const matched = isMatch(eA.status, eB.status);
                     const hardLimit = isHardLimit(eA.status, eB.status);
+                    const isDiscussed = discussed.has(kink.id);
                     return (
                       <div
                         key={kink.id}
@@ -273,10 +475,33 @@ function ComparePage() {
                           borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : "4px solid transparent",
                         }}
                       >
-                        <div className="text-sm font-medium mb-2">
-                          {kink.name}
-                          {matched && <span className="sr-only"> — match</span>}
-                          {hardLimit && <span className="sr-only"> — harde grens</span>}
+                        {/* Name row with Besproken toggle */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium flex-1">
+                            {kink.name}
+                            {matched && <span className="sr-only"> — match</span>}
+                            {hardLimit && <span className="sr-only"> — harde grens</span>}
+                          </span>
+                          <button
+                            onClick={() => toggleDiscussed(kink.id)}
+                            aria-label={isDiscussed ? `${kink.name} als niet besproken markeren` : `${kink.name} als besproken markeren`}
+                            className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                            style={
+                              isDiscussed
+                                ? {
+                                    background: "color-mix(in srgb, var(--yes) 15%, transparent)",
+                                    borderColor: "var(--yes)",
+                                    color: "var(--yes)",
+                                  }
+                                : {
+                                    background: "transparent",
+                                    borderColor: "var(--border)",
+                                    color: "var(--text2)",
+                                  }
+                            }
+                          >
+                            {isDiscussed ? "✓ Besproken" : "Besproken"}
+                          </button>
                         </div>
                         <div className="flex items-center gap-2 mb-1">
                           <StatusBadge status={eA.status} colour={COLOUR_A} />
@@ -327,11 +552,13 @@ function ComparePage() {
                     const eB = item.bId ? (profileB.entries[item.bId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
                     const matched = isMatch(eA.status, eB.status);
                     const hardLimit = isHardLimit(eA.status, eB.status);
-                    const key = item.name.trim().toLowerCase();
+                    const rowKey = item.name.trim().toLowerCase();
                     if (!passesFilter(eA.status, eB.status)) return null;
+                    if (hideDiscussed && discussed.has(rowKey)) return null;
+                    const isDiscussed = discussed.has(rowKey);
                     return (
                       <div
-                        key={key}
+                        key={rowKey}
                         className={`rounded-xl px-3 py-2.5 ${pulsed && matched ? "match-pulse" : ""}`}
                         style={{
                           background: "var(--surface)",
@@ -339,9 +566,32 @@ function ComparePage() {
                           borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : "4px solid transparent",
                         }}
                       >
-                        <div className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                          {item.name}
-                          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>eigen</span>
+                        {/* Name row with Besproken toggle */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium flex-1 flex items-center gap-1.5">
+                            {item.name}
+                            <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>eigen</span>
+                          </span>
+                          <button
+                            onClick={() => toggleDiscussed(rowKey)}
+                            aria-label={isDiscussed ? `${item.name} als niet besproken markeren` : `${item.name} als besproken markeren`}
+                            className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                            style={
+                              isDiscussed
+                                ? {
+                                    background: "color-mix(in srgb, var(--yes) 15%, transparent)",
+                                    borderColor: "var(--yes)",
+                                    color: "var(--yes)",
+                                  }
+                                : {
+                                    background: "transparent",
+                                    borderColor: "var(--border)",
+                                    color: "var(--text2)",
+                                  }
+                            }
+                          >
+                            {isDiscussed ? "✓ Besproken" : "Besproken"}
+                          </button>
                         </div>
                         <div className="flex items-center gap-2">
                           <StatusBadge status={eA.status} colour={COLOUR_A} />

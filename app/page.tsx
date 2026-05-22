@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
-import type { ExperienceLevel } from "@/types";
+import type { ExperienceLevel, Profile } from "@/types";
+import Onboarding from "@/components/Onboarding";
 
 const TOTAL_KINKS = KINKS.length;
 
@@ -22,7 +23,7 @@ const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[
 
 export default function Home() {
   const router = useRouter();
-  const { profiles, createProfile, deleteProfile, renameProfile } = useStore();
+  const { profiles, createProfile, deleteProfile, renameProfile, importProfiles, onboardingComplete, completeOnboarding } = useStore();
   const _hasHydrated = useHasHydrated();
 
   const [name, setName] = useState("");
@@ -34,6 +35,9 @@ export default function Home() {
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -72,7 +76,53 @@ export default function Home() {
     setTimeout(() => setDeleteTarget(null), 300);
   }
 
+  function exportProfiles() {
+    const data = JSON.stringify({ version: 1, profiles }, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const date = new Date().toISOString().slice(0, 10);
+    a.download = `kinksync-backup-${date}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    setImportError(null);
+    setImportSuccess(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        if (!parsed.profiles || !Array.isArray(parsed.profiles)) {
+          setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+          return;
+        }
+        const incoming = parsed.profiles as Profile[];
+        const existing = new Set(profiles.map((p: Profile) => p.id));
+        const newOnes = incoming.filter((p: Profile) => !existing.has(p.id));
+        if (!newOnes.length) {
+          setImportError("Alle profielen in dit bestand bestaan al.");
+          return;
+        }
+        importProfiles(newOnes);
+        setImportSuccess(`${newOnes.length} profiel(en) toegevoegd.`);
+      } catch {
+        setImportError("Bestand kon niet worden gelezen.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
   if (!_hasHydrated) return null;
+
+  if (!onboardingComplete) {
+    return <Onboarding onComplete={completeOnboarding} />;
+  }
 
   const compareProfiles = profiles.slice(0, 2).map((p) => p.id);
   const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
@@ -89,7 +139,15 @@ export default function Home() {
     <>
       <main className="max-w-2xl mx-auto px-4 py-10 w-full">
         {/* Hero */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center relative">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Instellingen openen"
+            className="focus-ring absolute top-0 right-0 p-1 text-xl leading-none"
+            style={{ color: "var(--text2)" }}
+          >
+            ⚙
+          </button>
           <h1
             className="text-3xl font-bold"
             style={{
@@ -98,10 +156,10 @@ export default function Home() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            KinkList
+            KinkSync
           </h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
-            Verken je grenzen samen.
+            Verken grenzen. Samen. — <span className="opacity-50 text-xs">kinksync.be</span>
           </p>
         </div>
 
@@ -397,6 +455,54 @@ export default function Home() {
           </>
         )}
       </main>
+
+      {/* Settings bottom sheet */}
+      <div className={`sheet-overlay ${settingsOpen ? "open" : ""}`} onClick={() => setSettingsOpen(false)} aria-hidden="true" />
+      <div className={`sheet-panel ${settingsOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Instellingen">
+        <div
+          className="rounded-t-2xl p-6"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
+        >
+          <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ background: "var(--border)" }} />
+          <h2 className="text-lg font-bold text-center mb-5">Instellingen</h2>
+          <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
+            Back-up &amp; herstel
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={exportProfiles}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+            >
+              ⬇ Maak backup (JSON)
+            </button>
+            <label className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors text-center cursor-pointer"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+            >
+              ⬆ Herstel backup
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="sr-only"
+              />
+            </label>
+            {importError && (
+              <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{importError}</p>
+            )}
+            {importSuccess && (
+              <p className="text-xs text-center" style={{ color: "var(--accent)" }}>{importSuccess}</p>
+            )}
+            <button
+              onClick={() => setSettingsOpen(false)}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors mt-1"
+              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              Sluit
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Delete bottom sheet */}
       <div className={`sheet-overlay ${sheetOpen ? "open" : ""}`} onClick={cancelDelete} aria-hidden="true" />

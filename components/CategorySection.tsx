@@ -11,6 +11,7 @@ interface Props {
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onScoreChange: (kinkId: string, n: number | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
+  onTagsChange: (kinkId: string, tags: string[]) => void;
 }
 
 const MAX_PIPS = 20;
@@ -26,6 +27,7 @@ export default function CategorySection({
   onStatusChange,
   onScoreChange,
   onCommentChange,
+  onTagsChange,
 }: Props) {
   const [open, setOpen] = useState(true);
   const filled = countFilled(kinks, entries);
@@ -79,6 +81,7 @@ export default function CategorySection({
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
                 onScoreChange={(n) => onScoreChange(kink.id, n)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
+                onTagsChange={(tags) => onTagsChange(kink.id, tags)}
               />
             ))}
           </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import CategorySection from "@/components/CategorySection";
+import CheckIn from "@/components/CheckIn";
 import type { KinkStatus } from "@/types";
 
 const STAR_LEGEND = "★ Nooit · ★★ Één keer · ★★★ Af en toe · ★★★★ Regelmatig · ★★★★★ Veel ervaring";
@@ -21,6 +22,7 @@ export default function ProfilePage({ params }: Props) {
 
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [customInput, setCustomInput] = useState("");
+  const [checkInDone, setCheckInDone] = useState(false);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -54,6 +56,20 @@ export default function ProfilePage({ params }: Props) {
     btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [activeCategory]);
 
+  useEffect(() => {
+    if (!_hasHydrated || !profile) return;
+    const key = `checkin-${profile.id}`;
+    if (localStorage.getItem(key)) {
+      setCheckInDone(true);
+      return;
+    }
+    const hasRatings = Object.values(profile.entries).some((e) => e.status);
+    if (hasRatings) {
+      setCheckInDone(true);
+      localStorage.setItem(key, "1");
+    }
+  }, [_hasHydrated, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!_hasHydrated) return null;
 
   if (!profile) {
@@ -75,7 +91,7 @@ export default function ProfilePage({ params }: Props) {
 
   function handleExport() {
     const lines: string[] = [
-      `# KinkList — ${profile!.name} (${profile!.role})`,
+      `# KinkSync — ${profile!.name} (${profile!.role})`,
       `Gegenereerd: ${new Date().toLocaleDateString("nl-NL")}`,
       "",
     ];
@@ -112,6 +128,135 @@ export default function ProfilePage({ params }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  async function handlePDFExport() {
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const W = 210;
+    const margin = 20;
+    const lineW = W - margin * 2;
+    let y = 20;
+
+    const accent: [number, number, number] = [192, 132, 252];
+    const dark: [number, number, number] = [20, 18, 28];
+    const muted: [number, number, number] = [120, 110, 160];
+    const light: [number, number, number] = [220, 215, 240];
+
+    // Background
+    doc.setFillColor(...dark);
+    doc.rect(0, 0, W, 297, "F");
+
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...accent);
+    doc.text("KinkSync", W / 2, y, { align: "center" });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...muted);
+    doc.text("kinksync.be", W / 2, y, { align: "center" });
+    y += 7;
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...light);
+    doc.text(`${profile!.name} — ${profile!.role}`, W / 2, y, { align: "center" });
+    y += 5;
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...muted);
+    doc.text(`${profile!.experienceLevel} · Gegenereerd op ${new Date().toLocaleDateString("nl-NL")}`, W / 2, y, { align: "center" });
+    y += 5;
+
+    doc.setDrawColor(...accent);
+    doc.setLineWidth(0.4);
+    doc.line(margin, y, W - margin, y);
+    y += 6;
+
+    const STATUS_COLORS: Record<string, [number, number, number]> = {
+      yes:     [74, 222, 128],
+      willing: [96, 165, 250],
+      maybe:   [192, 132, 252],
+      no:      [120, 110, 160],
+      hard_no: [239, 68, 68],
+    };
+    const STATUS_NL: Record<string, string> = {
+      yes: "Heel graag", willing: "Interesse", maybe: "Voor hen", no: "Liever niet", hard_no: "Harde grens",
+    };
+
+    for (const cat of CATEGORIES) {
+      const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
+      const active = kinks.filter((k) => profile!.entries[k.id]?.status);
+      if (!active.length) continue;
+
+      if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...accent);
+      doc.text(cat.toUpperCase(), margin, y);
+      y += 5;
+
+      for (const k of active) {
+        if (y > 265) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+        const e = profile!.entries[k.id];
+        const color = e.status ? STATUS_COLORS[e.status] : muted;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...color);
+        const statusLabel = e.status ? `[${STATUS_NL[e.status]}]` : "";
+        const stars = e.score ? "★".repeat(e.score) : "";
+        const tags = (e.tags ?? []).length ? ` [${e.tags!.join(", ")}]` : "";
+        doc.text(`• ${k.name}`, margin + 2, y);
+        doc.setTextColor(...muted);
+        doc.text(`${statusLabel}${stars ? "  " + stars : ""}${tags}`, margin + 2 + doc.getTextWidth(`• ${k.name}`) + 3, y);
+        y += 4.5;
+        if (e.comment) {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(8);
+          doc.setTextColor(...muted);
+          const commentLines = doc.splitTextToSize(`  ${e.comment}`, lineW - 5);
+          doc.text(commentLines, margin + 4, y);
+          y += commentLines.length * 4;
+        }
+      }
+      y += 3;
+    }
+
+    const customKinksList = profile!.customKinks ?? [];
+    const activeCustom = customKinksList.filter((ck) => profile!.entries[ck.id]?.status);
+    if (activeCustom.length) {
+      if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...accent);
+      doc.text("MEER (EIGEN KINKS)", margin, y);
+      y += 5;
+      for (const ck of activeCustom) {
+        const e = profile!.entries[ck.id];
+        const color = e?.status ? STATUS_COLORS[e.status] : muted;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...color);
+        const statusLabel = e?.status ? `[${STATUS_NL[e.status]}]` : "";
+        doc.text(`• ${ck.name}  ${statusLabel}`, margin + 2, y);
+        y += 4.5;
+      }
+    }
+
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...muted);
+      doc.text(`${i} / ${pageCount}`, W - margin, 290, { align: "right" });
+    }
+
+    doc.save(`${profile!.name}-kinks.pdf`);
+  }
+
   function scrollToCategory(cat: string) {
     sectionRefs.current.get(cat)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -127,6 +272,17 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className="max-w-3xl mx-auto w-full pb-24">
+      {/* Emotional check-in overlay */}
+      {_hasHydrated && profile && !checkInDone && (
+        <CheckIn
+          profileName={profile.name}
+          onDone={() => {
+            setCheckInDone(true);
+            localStorage.setItem(`checkin-${profile.id}`, "1");
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="px-4 pt-6 pb-4">
         <div className="flex items-center gap-3 flex-wrap mb-3">
@@ -200,6 +356,7 @@ export default function ProfilePage({ params }: Props) {
                 onStatusChange={(kinkId, s: KinkStatus) => setEntry(profile.id, kinkId, { status: s })}
                 onScoreChange={(kinkId, n) => setEntry(profile.id, kinkId, { score: n })}
                 onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
+                onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
               />
             </div>
           );
@@ -285,15 +442,29 @@ export default function ProfilePage({ params }: Props) {
         </div>
       </div>
 
-      {/* FAB export */}
-      <button
-        onClick={handleExport}
-        aria-label="Exporteer lijst als tekstbestand"
-        className="focus-ring fixed bottom-6 right-4 z-10 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-opacity hover:opacity-90"
-        style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+      {/* FAB export — split button */}
+      <div
+        className="focus-ring fixed bottom-6 right-4 z-10 flex items-center gap-1 rounded-full shadow-lg overflow-hidden"
+        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
       >
-        ↓ Exporteer
-      </button>
+        <button
+          onClick={handleExport}
+          aria-label="Exporteer lijst als tekstbestand"
+          className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+          style={{ color: "var(--text)" }}
+        >
+          ↓ TXT
+        </button>
+        <div style={{ width: "1px", background: "var(--border)", alignSelf: "stretch" }} />
+        <button
+          onClick={handlePDFExport}
+          aria-label="Exporteer lijst als PDF"
+          className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+          style={{ color: "var(--accent)" }}
+        >
+          ↓ PDF
+        </button>
+      </div>
     </main>
   );
 }

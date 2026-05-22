@@ -5,8 +5,8 @@ import "./globals.css";
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "KinkList — BDSM contract builder",
-  description: "Build and compare kink lists for BDSM negotiation and contracts",
+  title: "KinkSync — BDSM contract builder",
+  description: "Verken grenzen samen. Kink negotiation en contracten voor volwassenen. kinksync.be",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
