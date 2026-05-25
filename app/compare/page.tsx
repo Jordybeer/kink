@@ -99,22 +99,7 @@ function ComparePage() {
     });
   }, []);
 
-  if (!_hasHydrated) return null;
-
-  function getEntry(profile: typeof profileA, kinkId: string): KinkEntry {
-    return profile?.entries[kinkId] ?? { status: null, score: null, comment: "" };
-  }
-
-  function passesFilter(a: KinkStatus, b: KinkStatus): boolean {
-    if (!showEmpty && !a && !b) return false;
-    if (filterMode === "all") return true;
-    if (filterMode === "hardno") return isHardLimit(a, b);
-    if (filterMode === "conflict") return isConflict(a, b);
-    if (filterMode === "match") return isMatch(a, b);
-    return true;
-  }
-
-  // Compute summary counts
+  // Compute summary counts — must be above all hooks (Rules of Hooks)
   let matchCount = 0, hardLimitCount = 0, discussCount = 0, totalRated = 0;
   if (profileA && profileB) {
     for (const kink of KINKS) {
@@ -130,7 +115,7 @@ function ComparePage() {
 
   const score = Math.round((matchCount / Math.max(totalRated, 1)) * 100);
 
-  // Fire confetti once when score >= 70 and both profiles present
+  // Fire confetti once when score >= 70 — must be above early return (Rules of Hooks)
   useEffect(() => {
     if (profileA && profileB && score >= 70) {
       setShowConfetti(false);
@@ -140,6 +125,21 @@ function ComparePage() {
       setShowConfetti(false);
     }
   }, [aId, bId, score]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!_hasHydrated) return null;
+
+  function getEntry(profile: typeof profileA, kinkId: string): KinkEntry {
+    return profile?.entries[kinkId] ?? { status: null, score: null, comment: "" };
+  }
+
+  function passesFilter(a: KinkStatus, b: KinkStatus): boolean {
+    if (!showEmpty && !a && !b) return false;
+    if (filterMode === "all") return true;
+    if (filterMode === "hardno") return isHardLimit(a, b);
+    if (filterMode === "conflict") return isConflict(a, b);
+    if (filterMode === "match") return isMatch(a, b);
+    return true;
+  }
 
   // Category heatmap scores
   const categoryScores = (profileA && profileB)

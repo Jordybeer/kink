@@ -8,6 +8,7 @@ import KinkRow from "@/components/KinkRow";
 import CheckIn from "@/components/CheckIn";
 import type { KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
+import ProfileHero from "@/components/ProfileHero";
 
 const STAR_LEGEND = "★ Nooit · ★★ Één keer · ★★★ Af en toe · ★★★★ Regelmatig · ★★★★★ Veel ervaring";
 const ALL_CATS = [...CATEGORIES, "Meer"];
@@ -314,15 +315,6 @@ export default function ProfilePage({ params }: Props) {
             </div>
           </div>
           <button
-            onClick={() => setShareOpen(true)}
-            aria-label="Profiel delen via QR"
-            title="Deel profiel"
-            className="focus-ring p-2 rounded-lg border text-sm flex-none"
-            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-          >
-            ↗
-          </button>
-          <button
             onClick={() => setCompact((v) => !v)}
             aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
             title={compact ? "Uitgebreide weergave" : "Compacte weergave"}
@@ -343,6 +335,13 @@ export default function ProfilePage({ params }: Props) {
           />
         </div>
       </div>
+
+      {/* Profile Hero */}
+      <ProfileHero
+        profile={profile}
+        maxLevel={maxLevel}
+        onShare={() => setShareOpen(true)}
+      />
 
       {/* Star legend */}
       <div className="px-4 pb-2">

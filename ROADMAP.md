@@ -4,7 +4,7 @@ Site: **kinksync.be** | Stack: Next.js 16, TypeScript, Tailwind v4, Zustand, jsP
 
 ---
 
-## Phase 1 — Now (Quick wins + depth)
+## Phase 1 — Shipped ✅
 
 ### ✅ Rebrand: KinkList → KinkSync
 Update all UI text, metadata, PDF headers, and manifest to use "KinkSync" and "kinksync.be".
@@ -12,93 +12,87 @@ Update all UI text, metadata, PDF headers, and manifest to use "KinkSync" and "k
 
 ---
 
-### F1 — Kink Info Cards (ⓘ)
-Populate `description` on all 134 kinks in `lib/kinks.ts`. Add ⓘ button in `components/KinkRow.tsx` that opens a bottom sheet with Dutch plain-language description, consent note, and experience level badge.
+### ✅ F1 — Kink Info Cards (ⓘ)
+134 Dutch plain-language kink descriptions with consent notes and experience level badges. ⓘ button opens bottom sheet.
+**Files:** `lib/kinks.ts`, `components/KinkRow.tsx`, `components/InfoSheet.tsx`
 
 ---
 
-### F2 — JSON Backup & Import
+### ✅ F2 — JSON Backup & Import
 Export full profiles as `kinksync-backup-{date}.json`. Import with validation + duplicate detection. Accessible via ⚙ in home header.
 **Files:** `app/page.tsx`, `lib/store.ts`
 
 ---
 
-### F3 — Safeword & Aftercare in Contract
+### ✅ F3 — Safeword & Aftercare in Contract
 Before signatures: each person enters their safeword, selects traffic-light level (🟢🟡🔴), and toggles aftercare chips. Feeds into PDF as "Safeword & Nazorg" section.
 **Files:** `app/contract/page.tsx`, `types/index.ts`
 
 ---
 
-### F4 — Compatibility Score + Category Heatmap
-Compare page: large % compatability score + grid of category pills colored green→red. High score (>70%) triggers subtle confetti CSS animation on load.
-**Files:** `app/compare/page.tsx`, `components/CompatibilityScore.tsx`
+### ✅ F4 — Compatibility Score + Category Heatmap
+Compare page: large % compatibility score + grid of category pills colored green→red.
+**Files:** `app/compare/page.tsx`
 
 ---
 
-### F6 — Discussion Tracker
+### ✅ F6 — Discussion Tracker
 Each kink row in compare gets "Besproken ✓" toggle. Counter: "💬 14/22 besproken". Session-only state.
 **Files:** `app/compare/page.tsx`
 
 ---
 
-### F7 — Collapsible Comment Box
+### ✅ F7 — Collapsible Comment Box
 Multi-line textarea (3→6 rows auto-expand), char counter 0/200, tag chips: "eerste keer", "alleen privé", "scène specifiek", "vraag eerst". Tags shown in PDF.
 **Files:** `components/KinkRow.tsx`, `types/index.ts`
 
 ---
 
-### F11 — Profile PDF Export (KinkSync branded)
+### ✅ F11 — Profile PDF Export (KinkSync branded)
 PDF from profile page: KinkSync logo + kinksync.be, profile name/role/date, color-coded kinks by status, stars as ★, tags + comments.
-**Files:** `app/profile/[id]/page.tsx`, `lib/exportProfilePDF.ts`
+**Files:** `app/profile/[id]/page.tsx`
 
 ---
 
-### F12 — Contract Versioning
+### ✅ F12 — Contract Versioning
 Save slim snapshot on PDF export. "Eerdere contracten" section on contract page. Tap to re-generate + download.
 **Files:** `app/contract/page.tsx`, `lib/store.ts`, `types/index.ts`
 
 ---
 
-### F14 — Emotional Check-in
+### ✅ F14 — Emotional Check-in
 One-time overlay on first open of empty profile. Emoji check-in (not stored). Calming tone. Once per profile, never repeated.
 **Files:** `app/profile/[id]/page.tsx`, `components/CheckIn.tsx`
 
 ---
 
-### F15 — Dynamic Contract Personalization
-Preamble uses actual names, roles, and adjusts for experience level gap. Logic extracted to `lib/contractText.ts`. No content removed — additive only.
-**Files:** `app/contract/page.tsx`, `lib/contractText.ts`
+### ✅ F15 — Dynamic Contract Personalization
+Preamble uses actual names, roles, and adjusts for experience level gap.
+**Files:** `app/contract/page.tsx`
 
 ---
 
-## Phase 2 — Next Sprint
+## Phase 2 — Shipped ✅
 
-### F10 — Onboarding Wizard (Gorgeous, Proper UX)
-Full-screen portal, cinematic entry, 4 steps with smooth slide+fade transitions.
-
-**Step 0:** "KinkSync" fades in, subtitle appears, pulse "Begin" CTA  
-**Step 1:** 🔒 Privacy first — no server, no account  
-**Step 2:** Animated 4-icon flow (person → stars → compare → contract)  
-**Step 3:** Age gate — "Ja, ik ben 18+" / "Ik ben jonger" (shows lockout)
-
-Transitions: 300ms slide-left + fade. Step dots: active dot expands with spring-like CSS width. Staggered entry on step 0.
-**Files:** `components/Onboarding.tsx`, `app/page.tsx`, `lib/store.ts` (add `onboardingComplete`)
+### ✅ F10 — Onboarding Wizard
+Full-screen portal, cinematic entry, 4 steps with smooth slide+fade transitions. Age gate with lockout for underage.
+**Files:** `components/Onboarding.tsx`, `app/page.tsx`, `lib/store.ts`
 
 ---
 
-### F9 — PWA / Install Prompt (once)
+### ✅ F9 — PWA / Install Prompt
 `public/manifest.json` + meta link. Install banner shown on 3rd visit. State: `installPromptDismissed: boolean` — never shown again.
 **Files:** `public/manifest.json`, `app/layout.tsx`, `app/page.tsx`, `lib/store.ts`
 
 ---
 
-### F16 — KinkSync Share via URL / QR
-Profile → encoded base64/lz URL fragment. Partner opens link → "Importeer profiel?" modal. QR button on profile page renders encoded URL.
-**Files:** `app/profile/[id]/page.tsx`, `components/QRModal.tsx`, `app/page.tsx`
+### ✅ F16 — Profile Share via URL / QR
+Profile encoded to base64 URL fragment. Partner opens link → "Importeer profiel?" modal. QR bottom sheet on profile page.
+**Files:** `app/profile/[id]/page.tsx`, `components/QRModal.tsx`, `lib/shareProfile.ts`, `app/page.tsx`
 
 ---
 
-## Phase 3 — Standalone Feature
+## Phase 3 — Standalone Features
 
 ### F8 — Scene Builder (`/scene`)
 Plan a scene from matched kinks. Drag-reorder list. Intensity per item (Zacht/Midden/Intens). Time estimates. Notes. Export as A5 PDF "Scène Menu".
@@ -106,12 +100,91 @@ Plan a scene from matched kinks. Drag-reorder list. Intensity per item (Zacht/Mi
 
 ---
 
+### F17 — Live P2P Vergelijken (WebRTC)
+Real-time comparison session between two devices. No server, no cloud — pure peer-to-peer via WebRTC DataChannel. DTLS encryption prevents MITM: the fingerprint is embedded in the SDP and exchanged via QR, so any interceptor is cryptographically rejected.
+
+**Flow:**
+1. Profile A: tap "Live sessie starten" → WebRTC offer SDP → rendered as QR code
+2. Profile B: scan QR → receives offer → generates answer SDP → shows as QR
+3. Profile A: scans answer → ICE negotiation completes → P2P link live
+4. Both see partner's kink selections update in real-time as they rate
+5. **Blind reveal ceremony**: both tap "Sluit af" → profiles lock simultaneously → matches revealed with pulse animation
+
+**Why no MITM:** The DTLS fingerprint in the offer SDP is cryptographically bound to A's ephemeral private key. B's browser verifies it on handshake. An interceptor cannot forge the fingerprint — they'd need A's private key, which never leaves the device. The QR exchange is the trust anchor (equivalent to handing your public key in person).
+
+**Tech:**
+- `RTCPeerConnection` + `RTCDataChannel` (native browser API, no library needed)
+- SDP offer/answer encoded into QR via existing `qrcode` package
+- STUN only: `stun:stun.l.google.com:19302` (NAT traversal only — STUN never sees data)
+- Session fully ephemeral — scoped to tab, nothing persisted
+
+**Files:** `app/session/page.tsx`, `components/SessionQR.tsx`, `lib/webrtc.ts`
+
+---
+
+### ✅ Uitgebreide Kink Database (sublijst + FetLife-inspiratie)
+Expanded from 108 → 188 kinks across 5 new categories and expanded existing ones. All items leveled 1–4 with Dutch descriptions.
+
+**New categories added:**
+- **Uiterlijk & Kleding** — kledingregels, crossdressing M→V & V→M, korset, nudisme, erotisch dansen
+- **Ageplay & Little Space** — DD/DM-little dynamiek, baby/infantiliteit, fopspeen, luiers
+- **Pet Play** — puppyplay, kittenplay, ponyplay, staart, leiband, kom, kooi (gedetailleerd)
+
+**Expanded existing categories:**
+- **Bondage** — gag-types (opblaasbaar, penisvorm, rubber), gasmasker, borstafbinden, suspension (3 typen), opsluiting (kooi, donker, kleine ruimte)
+- **Power Exchange** — knielen, strafstandjes, meubel/asbak play, 24/7 lifestyle, spreekverbod, badkamercontrole
+- **Sensation Play** — tepelklemmen (zacht/hard), tepelgewichten, fire cupping, celpopping, naaldjes (2 niveaus), artistiek snijden, Violet Wand (3 niveaus), E-stim (2 niveaus), shockcollar (privé/publiek)
+- **Impact Play** — over-de-knie, rubber zweep, fire flogger, bullwhip
+- **Fetishes** — geur/scent, hoge hakken aanbidding, vagina-aanbidding, footjob, laarzen, panty sniffing, vossenstaart plug, kniekousen
+- **Fluid & Bodily** — watersports geven/ontvangen gesplitst, urine intiem, bloedplay, katheters/sounds, klysma (reiniging + straf)
+
+**Files:** `lib/kinks.ts`
+
+---
+
+### F18 — Uitgebreide Rollen & Relatiestatus
+
+Expand the role picker with the full FetLife-style vocabulary, and add a relationship status field to the profile.
+
+**Extended roles (grouped):**
+- *D/s dynamiek:* Dominant, Submissive, Switch, Master/Mistress, slave, Daddy Dom, Mommy Dom, little, Middle, Caregiver, Brat, Brat Tamer
+- *Impact & sensatie:* Top, Bottom, Sadist, Masochist, Primal Hunter, Primal Prey
+- *Touw & restraint:* Rigger, Rope Bunny
+- *Dier & spel:* Pet, Handler/Owner, Voyeur, Exhibitionist
+- *Overig:* Kinkster, Vanilla (curious)
+
+**Relationship status (single-select):**
+Single · Taken · Getrouwd · Gecollared · Polyamoreus · Open relatie · Geowned · Ingewikkeld
+
+Stored on `Profile` as `relationshipStatus?: string`. Shown as a chip on the profile hero and optionally in the PDF.
+
+**Files:** `app/page.tsx` (profile create/edit form), `types/index.ts`, `app/profile/[id]/page.tsx` (ProfileHero chip), `app/profile/[id]/page.tsx` (PDF export)
+
+---
+
+### F19 — FetLife Profiel Koppelen
+
+Store a FetLife username or profile URL locally on the profile. When sharing via QR, a **privacy gate** asks explicitly: "FetLife-link meesturen?" — only included in the encoded payload if the user actively confirms.
+
+**Flow:**
+- In profile settings: optional "FetLife gebruikersnaam" input (stored as `fetlifeUsername?: string`)
+- On QR modal: if username is set, show toggle "Voeg FetLife-link toe aan QR" (default: OFF)
+- Encoded URL only includes `fl=username` param when toggle is ON
+- Recipient's import modal shows the FetLife username as a tappable chip (opens `https://fetlife.com/users/{username}` in new tab)
+
+**Privacy rationale:** FetLife username can de-anonymise a person. Default-off ensures you consciously choose to reveal it per share, per moment.
+
+**Files:** `types/index.ts` (`fetlifeUsername?`), `lib/store.ts` (renameProfile extended), `components/QRModal.tsx` (privacy toggle), `lib/shareProfile.ts` (conditional encode), `app/page.tsx` (import modal chip)
+
+---
+
 ## UI/UX Polish (ongoing)
 
-- Compact kink row toggle (full picker ↔ dot-picker)
+- ✅ Compact kink row toggle (full picker ↔ dot-picker)
+- ✅ Sensual theme variants: Midnight (default), Deep Red, Forest, Monochrome
+- ✅ Kink search filter on profile page
+- ✅ Profile Hero with Kink DNA fingerprint + prominent QR share CTA
 - Category bulk skip action
 - Split-screen layout at ≥768px (tablet)
 - Animated match reveal on compare page
 - Contract signing ceremony (dim + message before PDF)
-- Sensual theme variants: Midnight (default), Deep Red, Forest, Monochrome
-- Kink search filter on profile page
