@@ -161,7 +161,8 @@ Optional FetLife username stored on profile. Inline input on profile page. Priva
 - ✅ Kink search filter on profile page
 - ✅ Profile Hero with Kink DNA fingerprint + prominent QR share CTA
 - ✅ Category bulk skip action ("Sla over" per categorie)
-- ✅ Kink row redesign: 1–5 verlangenssterren + harde-grensknop + ervaring ja/nee checkbox
+- ✅ Kink row: status pills (ja/graag/misschien/nee/harde grens) + ervaring ja/nee checkbox
+- ✅ Rol-picker als grouped `<select>` met optgroup per categorie (was: 24 losse chips)
 - ✅ Profielfoto uploaden (canvas crop → JPEG 0.7, 256×256, nooit in QR)
 - ✅ Geïmporteerde profielen kunnen niet worden doorgedeeld (privacy — `isImported` flag, export/share verborgen)
 
@@ -176,31 +177,6 @@ Optional FetLife username stored on profile. Inline input on profile page. Priva
 ---
 
 ## Geplande fixes (volgende iteratie)
-
-### KinkRow: status pills terug, sterren weg, ervaring checkbox blijft
-De 1–5 verlangenssterren die in de vorige iteratie zijn toegevoegd, worden teruggedraaid naar de oorspronkelijke status-pills (ja/graag/misschien/nee/harde grens). De pills zijn begrijpelijker. De nieuwe "Ervaring" ja/nee checkbox blijft behouden.
-
-**Wijzigingen:**
-- `components/KinkRow.tsx` — StatusPicker terug, sterren weg, experienced checkbox in rij 1
-- `components/CategorySection.tsx` — props terug naar `onStatusChange` + nieuw `onExperiencedChange`
-- `app/profile/[id]/page.tsx` — handlers, CategorySection-calls en custom kink rijen bijwerken
-
----
-
-### Home page UX: rol-picker als grouped select
-De 24 rol-chips in het aanmaak- en bewerkformulier worden vervangen door een `<select>` dropdown met `<optgroup>` per categorie. Veel minder visuele ruis.
-
-**Groepen:**
-- D/s dynamiek: Switch, Dominant, Submissive
-- Zorgzame D/s: Daddy Dom, Mommy Dom, little, Middle, Caregiver
-- Impact & touw: Top, Bottom, Sadist, Masochist, Rigger, Rope Bunny
-- Karakter: Brat, Brat Tamer, Primal Hunter, Primal Prey
-- Dier & spel: Handler/Owner, Pet
-- Overig: Voyeur, Exhibitionist, Kinkster, Vanilla (curious)
-
-**Wijzigingen:** `app/page.tsx` — beide rolpickers (aanmaken + bewerken) vervangen
-
----
 
 ### Privacy-noot: isImported is een UX-guard, geen cryptografisch slot
 Geïmporteerde profielen krijgen `isImported: true` bij import — share/export knoppen worden verborgen. Omdat alles in localStorage staat, kan een technisch gebruiker dit via DevTools omzeilen. Dit is acceptabel voor een pure client-side app.
