@@ -100,7 +100,7 @@ Plan a scene from matched kinks. Drag-reorder list. Intensity per item (Zacht/Mi
 
 ---
 
-### F17 — Live P2P Vergelijken (WebRTC)
+### ✅ F17 — Live P2P Vergelijken (WebRTC)
 Real-time comparison session between two devices. No server, no cloud — pure peer-to-peer via WebRTC DataChannel. DTLS encryption prevents MITM: the fingerprint is embedded in the SDP and exchanged via QR, so any interceptor is cryptographically rejected.
 
 **Flow:**
@@ -118,7 +118,9 @@ Real-time comparison session between two devices. No server, no cloud — pure p
 - STUN only: `stun:stun.l.google.com:19302` (NAT traversal only — STUN never sees data)
 - Session fully ephemeral — scoped to tab, nothing persisted
 
-**Files:** `app/session/page.tsx`, `components/SessionQR.tsx`, `lib/webrtc.ts`
+**Files:** `app/session/page.tsx`, `lib/webrtc.ts`
+
+**Implementatie:** twee QR-codes, nul servers, nul copy-paste. Host toont offer-QR → partner scant → antwoord-QR → host scant in-app via `BarcodeDetector` API (camera-overlay, geen library). Fallback: BroadcastChannel relay + paste-textarea voor browsers zonder BarcodeDetector. DataChannel: DTLS end-to-end, ephemeer, niets opgeslagen.
 
 ---
 
