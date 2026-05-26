@@ -37,6 +37,7 @@ export interface Profile {
   id: string;
   name: string;
   role: string;
+  relationshipStatus?: string;
   experienceLevel: ExperienceLevel;
   customKinks: CustomKink[];
   createdAt: number;
