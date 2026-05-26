@@ -16,8 +16,23 @@ interface BeforeInstallPromptEvent extends Event {
 const TOTAL_KINKS = KINKS.length;
 
 const ROLES = [
-  "Switch", "Dominant", "Submissive", "Top", "Bottom",
-  "Rope top", "Rope bottom", "Sadist", "Masochist", "Other",
+  // Kern D/s
+  "Switch", "Dominant", "Submissive",
+  // Impact & touw
+  "Top", "Bottom", "Sadist", "Masochist", "Rigger", "Rope Bunny",
+  // Zorgzame dynamieken
+  "Daddy Dom", "Mommy Dom", "little", "Middle", "Caregiver",
+  // Karakter
+  "Brat", "Brat Tamer", "Primal Hunter", "Primal Prey",
+  // Pet play
+  "Handler/Owner", "Pet",
+  // Overig
+  "Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)",
+];
+
+const RELATIONSHIP_STATUSES = [
+  "Single", "Taken", "Getrouwd", "Gecollared",
+  "Polyamoreus", "Open relatie", "Geowned", "Het is ingewikkeld",
 ];
 
 const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[] = [
@@ -49,10 +64,12 @@ function HomeContent() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("beginner");
+  const [relationshipStatus, setRelationshipStatus] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
+  const [editRelationshipStatus, setEditRelationshipStatus] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -101,20 +118,25 @@ function HomeContent() {
     e.preventDefault();
     if (!name.trim()) return;
     const id = createProfile(name.trim(), role, experienceLevel);
+    if (relationshipStatus) {
+      renameProfile(id, name.trim(), role, experienceLevel, relationshipStatus);
+    }
     setName("");
+    setRelationshipStatus("");
     router.push(`/profile/${id}`);
   }
 
-  function startEdit(p: { id: string; name: string; role: string; experienceLevel: ExperienceLevel }) {
+  function startEdit(p: { id: string; name: string; role: string; experienceLevel: ExperienceLevel; relationshipStatus?: string }) {
     setEditId(p.id);
     setEditName(p.name);
     setEditRole(p.role);
     setEditLevel(p.experienceLevel ?? "beginner");
+    setEditRelationshipStatus(p.relationshipStatus ?? "");
   }
 
   function saveEdit() {
     if (!editId || !editName.trim()) return;
-    renameProfile(editId, editName.trim(), editRole, editLevel);
+    renameProfile(editId, editName.trim(), editRole, editLevel, editRelationshipStatus || undefined);
     setEditId(null);
   }
 
@@ -280,6 +302,26 @@ function HomeContent() {
             ))}
           </div>
 
+          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Relatiestatus <span className="font-normal opacity-60">(optioneel)</span></p>
+          <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Relatiestatus">
+            {RELATIONSHIP_STATUSES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setRelationshipStatus((rs) => (rs === s ? "" : s))}
+                aria-pressed={relationshipStatus === s}
+                className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                style={
+                  relationshipStatus === s
+                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    : { color: "var(--text2)", borderColor: "var(--border)" }
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
           <button
             type="submit"
             className="focus-ring w-full py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
@@ -385,6 +427,25 @@ function HomeContent() {
                                     </button>
                                   ))}
                                 </div>
+                                <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Relatiestatus <span className="opacity-60">(optioneel)</span></p>
+                                <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Relatiestatus">
+                                  {RELATIONSHIP_STATUSES.map((s) => (
+                                    <button
+                                      key={s}
+                                      type="button"
+                                      onClick={() => setEditRelationshipStatus((rs) => (rs === s ? "" : s))}
+                                      aria-pressed={editRelationshipStatus === s}
+                                      className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                                      style={
+                                        editRelationshipStatus === s
+                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          : { color: "var(--text2)", borderColor: "var(--border)" }
+                                      }
+                                    >
+                                      {s}
+                                    </button>
+                                  ))}
+                                </div>
                                 <div className="flex gap-2">
                                   <button
                                     onClick={saveEdit}
@@ -429,6 +490,14 @@ function HomeContent() {
                                           style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}
                                         >
                                           {lvl.label}
+                                        </span>
+                                      )}
+                                      {p.relationshipStatus && (
+                                        <span
+                                          className="text-xs px-2 py-0.5 rounded-full"
+                                          style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                                        >
+                                          {p.relationshipStatus}
                                         </span>
                                       )}
                                     </div>
@@ -483,33 +552,63 @@ function HomeContent() {
             </div>
 
             {/* Compare CTA */}
-            {profiles.length >= 2 ? (
-              <Link
-                href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
-                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-              >
-                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                  ⚡ Vergelijk profielen
+            <div className="flex flex-col gap-3">
+              {profiles.length >= 2 ? (
+                <Link
+                  href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
+                  className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
+                    ⚡ Vergelijk profielen
+                  </div>
+                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                    Ontdek waar jullie grenzen — en verlangens — overlappen.
+                  </div>
+                </Link>
+              ) : (
+                <div
+                  className="rounded-xl p-5 text-center opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                  aria-hidden="true"
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
+                    ⚡ Vergelijk profielen
+                  </div>
+                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                    Voeg een tweede profiel toe om te vergelijken.
+                  </div>
                 </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Ontdek waar jullie grenzen — en verlangens — overlappen.
+              )}
+
+              {profiles.length >= 2 ? (
+                <Link
+                  href={`/contract?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
+                  className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
+                    ✍ Maak een contract
+                  </div>
+                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                    Leg afspraken vast, safewords en aftercare — en exporteer als PDF.
+                  </div>
+                </Link>
+              ) : (
+                <div
+                  className="rounded-xl p-5 text-center opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                  aria-hidden="true"
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
+                    ✍ Maak een contract
+                  </div>
+                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                    Voeg twee profielen toe om een contract te maken.
+                  </div>
                 </div>
-              </Link>
-            ) : (
-              <div
-                className="rounded-xl p-5 text-center opacity-40"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-                aria-hidden="true"
-              >
-                <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
-                  ⚡ Vergelijk profielen
-                </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Voeg een tweede profiel toe om te vergelijken.
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
       </main>

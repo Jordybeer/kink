@@ -113,6 +113,14 @@ export default function ProfileHero({ profile, maxLevel, onShare }: ProfileHeroP
             >
               {profile.experienceLevel ?? "beginner"}
             </span>
+            {profile.relationshipStatus && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+              >
+                {profile.relationshipStatus}
+              </span>
+            )}
             {vibe && (
               <span
                 className="text-xs px-3 py-0.5 rounded-full font-semibold"
