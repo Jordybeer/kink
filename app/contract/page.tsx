@@ -24,30 +24,36 @@ const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const drawing = useRef(false);
 
-  const getPos = (e: PointerEvent, canvas: HTMLCanvasElement) => {
-    const rect = canvas.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+
     const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
     ctx.strokeStyle = "#c084fc";
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+    const getPos = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+
     const onDown = (e: PointerEvent) => {
       drawing.current = true;
       canvas.setPointerCapture(e.pointerId);
-      const { x, y } = getPos(e, canvas);
+      const { x, y } = getPos(e);
       ctx.beginPath();
       ctx.moveTo(x, y);
     };
     const onMove = (e: PointerEvent) => {
       if (!drawing.current) return;
-      const { x, y } = getPos(e, canvas);
+      const { x, y } = getPos(e);
       ctx.lineTo(x, y);
       ctx.stroke();
     };
