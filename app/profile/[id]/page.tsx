@@ -78,10 +78,10 @@ export default function ProfilePage({ params }: Props) {
     }
   }, [_hasHydrated, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync fetLifeInput when profile loads
+  // Sync fetLifeInput when profile or username changes
   useEffect(() => {
     if (profile) setFetLifeInput(profile.fetLifeUsername ?? "");
-  }, [profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profile?.id, profile?.fetLifeUsername]);
 
   if (!_hasHydrated) return null;
 
@@ -398,7 +398,7 @@ export default function ProfilePage({ params }: Props) {
           />
           {fetLifeInput && (
             <a
-              href={`https://fetlife.com/users/${fetLifeInput}`}
+              href={`https://fetlife.com/users/${encodeURIComponent(fetLifeInput)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[11px] hover:underline flex-none"

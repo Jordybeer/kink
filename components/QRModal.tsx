@@ -16,6 +16,10 @@ export default function QRModal({ profile, onClose }: Props) {
   const [includeFetLife, setIncludeFetLife] = useState(false);
 
   useEffect(() => {
+    setIncludeFetLife(false);
+  }, [profile?.id]);
+
+  useEffect(() => {
     if (!profile) {
       setQrDataUrl(null);
       setCopied(false);

@@ -13,20 +13,16 @@ export function decodeSdp(enc: string): string {
 export function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = 8000): Promise<void> {
   return new Promise((resolve, reject) => {
     if (pc.iceGatheringState === "complete") { resolve(); return; }
-
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    const handler = () => {
+    let timer: ReturnType<typeof setTimeout>;
+    function handler() {
       if (pc.iceGatheringState === "complete") {
+        clearTimeout(timer);
         pc.removeEventListener("icegatheringstatechange", handler);
-        if (timeoutId !== null) clearTimeout(timeoutId);
         resolve();
       }
-    };
-
+    }
     pc.addEventListener("icegatheringstatechange", handler);
-
-    timeoutId = setTimeout(() => {
+    timer = setTimeout(() => {
       pc.removeEventListener("icegatheringstatechange", handler);
       reject(new Error("ICE gathering timed out"));
     }, timeoutMs);

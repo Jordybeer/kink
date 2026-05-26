@@ -1,14 +1,14 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { Kink, KinkEntry } from "@/types";
+import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import KinkRow from "./KinkRow";
 
 interface Props {
   category: string;
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
-  onStatusChange: (kinkId: string, s: import("@/types").KinkStatus) => void;
+  onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onExperiencedChange: (kinkId: string, v: boolean | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;

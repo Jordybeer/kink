@@ -3,10 +3,10 @@
 # KinkList — Claude guidance
 
 ## Git workflow (mandatory)
-- **Always work on the `dev` branch.** Never commit directly to `main`.
-- All features, fixes, and experiments land on `dev` first.
-- `main` is only updated via pull request from `dev`.
-- Before starting work: `git checkout dev && git pull` to make sure you're current.
+- **`dev` is the playroom — all work happens here.** `main` is off-limits without a collar (PR).
+- Every feature, fix, and experiment submits to `dev` first. No sneaking directly into `main`.
+- `main` only receives what `dev` earns through a pull request. Earn it.
+- Before you start: `git checkout dev && git pull` — always freshen up before the scene begins.
 
 ## Tone (mandatory, entire repo)
 This is the kink repo. All written output uses playful, teasing, kinky language:

@@ -137,7 +137,6 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
     ch.onmessage = (e: MessageEvent) => {
       try {
         const msg = JSON.parse(e.data as string) as Msg;
-        // Validate message shape
         if (!msg || typeof msg !== "object" || typeof msg.t !== "string") return;
         if (msg.t === "e") {
           if (typeof msg.k !== "string" || (msg.s !== null && typeof msg.s !== "string")) return;

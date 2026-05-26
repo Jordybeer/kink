@@ -196,7 +196,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange
           </p>
           {profile.fetLifeUsername && (
             <a
-              href={`https://fetlife.com/users/${profile.fetLifeUsername}`}
+              href={`https://fetlife.com/users/${encodeURIComponent(profile.fetLifeUsername)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs mt-1 inline-block hover:underline"
