@@ -9,7 +9,7 @@ interface Props {
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
-  onScoreChange: (kinkId: string, n: number | null) => void;
+  onExperiencedChange: (kinkId: string, v: boolean | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
   onBulkSkip: () => void;
@@ -23,15 +23,9 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 }
 
 export default function CategorySection({
-  category,
-  kinks,
-  entries,
-  onStatusChange,
-  onScoreChange,
-  onCommentChange,
-  onTagsChange,
-  onBulkSkip,
-  compact,
+  category, kinks, entries,
+  onStatusChange, onExperiencedChange,
+  onCommentChange, onTagsChange, onBulkSkip, compact,
 }: Props) {
   const [open, setOpen] = useState(true);
   const filled = countFilled(kinks, entries);
@@ -104,7 +98,7 @@ export default function CategorySection({
                 kink={kink}
                 entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
-                onScoreChange={(n) => onScoreChange(kink.id, n)}
+                onExperiencedChange={(v) => onExperiencedChange(kink.id, v)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
                 compact={compact}

@@ -15,19 +15,13 @@ interface BeforeInstallPromptEvent extends Event {
 
 const TOTAL_KINKS = KINKS.length;
 
-const ROLES = [
-  // Kern D/s
-  "Switch", "Dominant", "Submissive",
-  // Impact & touw
-  "Top", "Bottom", "Sadist", "Masochist", "Rigger", "Rope Bunny",
-  // Zorgzame dynamieken
-  "Daddy Dom", "Mommy Dom", "little", "Middle", "Caregiver",
-  // Karakter
-  "Brat", "Brat Tamer", "Primal Hunter", "Primal Prey",
-  // Pet play
-  "Handler/Owner", "Pet",
-  // Overig
-  "Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)",
+const ROLE_GROUPS: { label: string; roles: string[] }[] = [
+  { label: "D/s dynamiek",       roles: ["Switch", "Dominant", "Submissive"] },
+  { label: "Zorgzame D/s",       roles: ["Daddy Dom", "Mommy Dom", "little", "Middle", "Caregiver"] },
+  { label: "Impact & touw",      roles: ["Top", "Bottom", "Sadist", "Masochist", "Rigger", "Rope Bunny"] },
+  { label: "Karakter",           roles: ["Brat", "Brat Tamer", "Primal Hunter", "Primal Prey"] },
+  { label: "Dier & spel",        roles: ["Handler/Owner", "Pet"] },
+  { label: "Overig",             roles: ["Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)"] },
 ];
 
 const RELATIONSHIP_STATUSES = [
@@ -185,7 +179,7 @@ function HomeContent() {
           setImportError("Alle profielen in dit bestand bestaan al.");
           return;
         }
-        importProfiles(newOnes);
+        importProfiles(newOnes.map((p: Profile) => ({ ...p, isImported: true })));
         setImportSuccess(`${newOnes.length} profiel(en) toegevoegd.`);
       } catch {
         setImportError("Bestand kon niet worden gelezen.");
@@ -258,25 +252,20 @@ function HomeContent() {
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           />
 
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
-          <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Rol">
-            {ROLES.map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                aria-pressed={role === r}
-                className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
-                style={
-                  role === r
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }
-                }
-              >
-                {r}
-              </button>
+          <label htmlFor="role-select" className="text-xs mb-1.5 font-medium block" style={{ color: "var(--text2)" }}>Rol</label>
+          <select
+            id="role-select"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            {ROLE_GROUPS.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
+              </optgroup>
             ))}
-          </div>
+          </select>
 
           <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
           <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
@@ -344,11 +333,16 @@ function HomeContent() {
                     {isMulti && (
                       <div className="flex items-center gap-2 mb-2 px-1">
                         <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-black flex-none"
-                          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                          className="w-6 h-6 rounded-full flex-none overflow-hidden"
                           aria-hidden="true"
                         >
-                          {groupName[0].toUpperCase()}
+                          {group[0].avatarDataUrl ? (
+                            <img src={group[0].avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                              {groupName[0].toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <span className="text-sm font-semibold">{groupName}</span>
                         <span className="text-xs" style={{ color: "var(--text2)" }}>{group.length} rollen</span>
@@ -385,25 +379,20 @@ function HomeContent() {
                                   className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
                                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                                 />
-                                <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Rol</p>
-                                <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Rol">
-                                  {ROLES.map((r) => (
-                                    <button
-                                      key={r}
-                                      type="button"
-                                      onClick={() => setEditRole(r)}
-                                      aria-pressed={editRole === r}
-                                      className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
-                                      style={
-                                        editRole === r
-                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
-                                          : { color: "var(--text2)", borderColor: "var(--border)" }
-                                      }
-                                    >
-                                      {r}
-                                    </button>
+                                <label htmlFor="role-select-edit" className="text-xs mb-1.5 block" style={{ color: "var(--text2)" }}>Rol</label>
+                                <select
+                                  id="role-select-edit"
+                                  value={editRole}
+                                  onChange={(e) => setEditRole(e.target.value)}
+                                  className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
+                                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                                >
+                                  {ROLE_GROUPS.map((g) => (
+                                    <optgroup key={g.label} label={g.label}>
+                                      {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
+                                    </optgroup>
                                   ))}
-                                </div>
+                                </select>
                                 <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
                                 <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
                                   {EXPERIENCE_LEVELS.map((l) => (
@@ -464,12 +453,14 @@ function HomeContent() {
                               <>
                                 <div className="flex items-center gap-3 p-4 pb-3">
                                   {!isMulti && (
-                                    <div
-                                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
-                                      style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
-                                      aria-hidden="true"
-                                    >
-                                      {initial}
+                                    <div className="w-10 h-10 rounded-full flex-none overflow-hidden" aria-hidden="true">
+                                      {p.avatarDataUrl ? (
+                                        <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                          {initial}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
@@ -605,6 +596,30 @@ function HomeContent() {
                   </div>
                 </div>
               )}
+              <Link
+                href="/session"
+                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+              >
+                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
+                  📡 Live sessie
+                </div>
+                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  Verbind direct met je partner — peer-to-peer, geen server, end-to-end versleuteld.
+                </div>
+              </Link>
+              <Link
+                href="/scene"
+                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+              >
+                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
+                  🎬 Scène planner
+                </div>
+                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  Plan activiteiten, intensiteit en timing vooraf.
+                </div>
+              </Link>
             </div>
           </>
         )}
@@ -797,7 +812,7 @@ function HomeContent() {
               <button
                 onClick={() => {
                   if (!importPreview) return;
-                  importProfiles([importPreview]);
+                  importProfiles([{ ...importPreview, isImported: true }]);
                   setImportDone(true);
                   setTimeout(() => {
                     setImportPreview(null);

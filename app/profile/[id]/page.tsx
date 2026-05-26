@@ -10,7 +10,7 @@ import type { KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 
-const STAR_LEGEND = "★ Nooit · ★★ Één keer · ★★★ Af en toe · ★★★★ Regelmatig · ★★★★★ Veel ervaring";
+const DESIRE_LEGEND = "★ Weinig  ·  ★★★ Gemiddeld  ·  ★★★★★ Heel graag";
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
@@ -29,6 +29,8 @@ export default function ProfilePage({ params }: Props) {
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [fetLifeInput, setFetLifeInput] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -76,6 +78,11 @@ export default function ProfilePage({ params }: Props) {
     }
   }, [_hasHydrated, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sync fetLifeInput when profile or username changes
+  useEffect(() => {
+    if (profile) setFetLifeInput(profile.fetLifeUsername ?? "");
+  }, [profile?.id, profile?.fetLifeUsername]);
+
   if (!_hasHydrated) return null;
 
   if (!profile) {
@@ -90,6 +97,17 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"];
+
+  function handleStatus(kinkId: string, s: KinkStatus) {
+    setEntry(profile!.id, kinkId, { status: s, desire: null });
+  }
+
+  function saveFetLife() {
+    renameProfile(
+      profile!.id, profile!.name, profile!.role, profile!.experienceLevel,
+      profile!.relationshipStatus, fetLifeInput.trim() || undefined
+    );
+  }
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
   const totalVisible = visibleKinks.length;
@@ -283,6 +301,17 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className="max-w-3xl mx-auto w-full pb-24">
+      {/* Error toast */}
+      {errorMessage && (
+        <div
+          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-50 px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
+          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      )}
+
       {/* Emotional check-in overlay */}
       {_hasHydrated && profile && !checkInDone && (
         <CheckIn
@@ -340,14 +369,45 @@ export default function ProfilePage({ params }: Props) {
       <ProfileHero
         profile={profile}
         maxLevel={maxLevel}
-        onShare={() => setShareOpen(true)}
+        onShare={profile.isImported ? undefined : () => setShareOpen(true)}
+        onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
+        onError={(msg) => {
+          setErrorMessage(msg);
+          setTimeout(() => setErrorMessage(null), 5000);
+        }}
       />
 
-      {/* Star legend */}
-      <div className="px-4 pb-2">
+      {/* Verlangen legend + FetLife input */}
+      <div className="px-4 pb-2 flex flex-col gap-2">
         <p className="text-[11px]" style={{ color: "var(--text2)" }}>
-          <span className="font-semibold" style={{ color: "var(--accent)" }}>★ Ervaring:</span> {STAR_LEGEND}
+          <span className="font-semibold" style={{ color: "var(--accent)" }}>★ Verlangen:</span> {DESIRE_LEGEND}
         </p>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>FL:</span>
+          <input
+            value={fetLifeInput}
+            onChange={(e) => setFetLifeInput(e.target.value)}
+            onBlur={saveFetLife}
+            onKeyDown={(e) => e.key === "Enter" && (e.currentTarget.blur())}
+            placeholder="FetLife gebruikersnaam (optioneel)"
+            className="flex-1 text-[11px] bg-transparent border-b focus:outline-none py-0.5 transition-colors"
+            style={{
+              color: "var(--text)",
+              borderBottomColor: fetLifeInput ? "var(--accent)" : "var(--border)",
+            }}
+          />
+          {fetLifeInput && (
+            <a
+              href={`https://fetlife.com/users/${encodeURIComponent(fetLifeInput)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] hover:underline flex-none"
+              style={{ color: "var(--accent)" }}
+            >
+              ↗
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Search filter */}
@@ -402,8 +462,8 @@ export default function ProfilePage({ params }: Props) {
                     key={kink.id}
                     kink={kink}
                     entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
-                    onStatusChange={(s) => setEntry(profile.id, kink.id, { status: s })}
-                    onScoreChange={(n) => setEntry(profile.id, kink.id, { score: n })}
+                    onStatusChange={(s) => handleStatus(kink.id, s)}
+                    onExperiencedChange={(v) => setEntry(profile.id, kink.id, { experienced: v })}
                     onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
                     onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
                     compact={compact}
@@ -423,14 +483,13 @@ export default function ProfilePage({ params }: Props) {
                 category={cat}
                 kinks={kinks}
                 entries={profile.entries}
-                onStatusChange={(kinkId, s: KinkStatus) => setEntry(profile.id, kinkId, { status: s })}
-                onScoreChange={(kinkId, n) => setEntry(profile.id, kinkId, { score: n })}
+                onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
+                onExperiencedChange={(kinkId, v) => setEntry(profile.id, kinkId, { experienced: v })}
                 onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
                 onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
                 onBulkSkip={() => {
-                  const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
-                  for (const k of kinks) {
-                    setEntry(profile.id, k.id, { status: "no" });
+                  for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
+                    setEntry(profile.id, k.id, { status: "no", desire: null });
                   }
                 }}
                 compact={compact}
@@ -453,50 +512,46 @@ export default function ProfilePage({ params }: Props) {
 
           {/* Custom kink rows */}
           <div className="flex flex-col pl-1 mb-2">
-            {customKinks.map((ck) => (
-              <div
-                key={ck.id}
-                className="rounded-xl overflow-hidden mb-1"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  borderLeft: `4px solid ${profile.entries[ck.id]?.status ? "var(--accent)" : "transparent"}`,
-                }}
-              >
-                <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                  <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
-                  <button
-                    onClick={() => removeCustomKink(profile.id, ck.id)}
-                    aria-label={`${ck.name} verwijderen`}
-                    className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-sm transition-colors"
-                    style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="grid grid-cols-5 border-t border-[var(--border)]">
-                  {(["yes", "willing", "maybe", "no", "hard_no"] as NonNullable<KinkStatus>[]).map((val) => {
-                    const labels: Record<string, string> = { yes: "Heel graag", willing: "Interesse", maybe: "Voor hen", no: "Liever niet", hard_no: "Harde grens" };
-                    const icons: Record<string, string> = { yes: "✓", willing: "↗", maybe: "♡", no: "✕", hard_no: "✕✕" };
-                    const active = profile.entries[ck.id]?.status === val;
-                    return (
+            {customKinks.map((ck) => {
+              const ckStatus = profile.entries[ck.id]?.status ?? null;
+              const ckBorderColor = ckStatus ? ({ yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)" }[ckStatus]) : "transparent";
+              return (
+                <div
+                  key={ck.id}
+                  className="rounded-xl overflow-hidden mb-1 transition-[border-left-color] duration-150"
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderLeft: `4px solid ${ckBorderColor}`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                    <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
+                    <button
+                      onClick={() => removeCustomKink(profile.id, ck.id)}
+                      aria-label={`${ck.name} verwijderen`}
+                      className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-sm transition-colors"
+                      style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
+                    {(["yes","willing","maybe","no","hard_no"] as const).map((s) => (
                       <button
-                        key={val}
-                        title={labels[val]}
-                        aria-pressed={active}
-                        onClick={() => setEntry(profile.id, ck.id, { status: active ? null : val })}
-                        className={`focus-ring h-11 flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors ${
-                          active ? `status-${val}` : "text-[var(--text2)] hover:text-[var(--text)] hover:bg-[var(--surface3)]"
-                        }`}
+                        key={s}
+                        onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
+                        aria-pressed={ckStatus === s}
+                        className={`focus-ring rounded-full border text-[11px] font-medium transition-colors px-2.5 py-1${ckStatus === s ? ` status-${s}` : ""}`}
+                        style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                       >
-                        <span className="text-[13px] leading-none">{icons[val]}</span>
-                        <span>{labels[val]}</span>
+                        {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Add custom kink input */}
@@ -521,10 +576,15 @@ export default function ProfilePage({ params }: Props) {
         )}
       </div>
 
-      <QRModal profile={shareOpen ? profile : null} onClose={() => setShareOpen(false)} />
+      <QRModal profile={shareOpen && !profile.isImported ? profile : null} onClose={() => setShareOpen(false)} />
 
-      {/* FAB export — split button */}
-      <div
+      {/* FAB export — hidden for imported profiles (privacy) */}
+      {profile.isImported && (
+        <div className="fixed bottom-6 right-4 z-10 px-3 py-2 rounded-full text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+          🔒 Geïmporteerd profiel
+        </div>
+      )}
+      {!profile.isImported && <div
         className="focus-ring fixed bottom-6 right-4 z-10 flex items-center gap-1 rounded-full shadow-lg overflow-hidden"
         style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
       >
@@ -545,7 +605,7 @@ export default function ProfilePage({ params }: Props) {
         >
           ↓ PDF
         </button>
-      </div>
+      </div>}
     </main>
   );
 }

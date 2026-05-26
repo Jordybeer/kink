@@ -17,7 +17,8 @@ interface State {
   theme: Theme;
   createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel, relationshipStatus?: string) => string;
   deleteProfile: (id: string) => void;
-  renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string) => void;
+  renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string, fetLifeUsername?: string) => void;
+  setProfileAvatar: (id: string, avatarDataUrl: string | undefined) => void;
   setEntry: (profileId: string, kinkId: string, patch: Partial<KinkEntry>) => void;
   resetEntry: (profileId: string, kinkId: string) => void;
   getEntry: (profileId: string, kinkId: string) => KinkEntry;
@@ -67,10 +68,20 @@ export const useStore = create<State>()(
         set((s) => ({ profiles: s.profiles.filter((p) => p.id !== id) }));
       },
 
-      renameProfile(id, name, role, experienceLevel, relationshipStatus) {
+      renameProfile(id, name, role, experienceLevel, relationshipStatus, fetLifeUsername) {
         set((s) => ({
           profiles: s.profiles.map((p) =>
-            p.id === id ? { ...p, name, role, experienceLevel, relationshipStatus, updatedAt: Date.now() } : p
+            p.id === id
+              ? { ...p, name, role, experienceLevel, relationshipStatus: relationshipStatus || undefined, fetLifeUsername: fetLifeUsername || undefined, updatedAt: Date.now() }
+              : p
+          ),
+        }));
+      },
+
+      setProfileAvatar(id, avatarDataUrl) {
+        set((s) => ({
+          profiles: s.profiles.map((p) =>
+            p.id === id ? { ...p, avatarDataUrl, updatedAt: Date.now() } : p
           ),
         }));
       },
@@ -174,7 +185,7 @@ export const useStore = create<State>()(
         installPromptDismissed: state.installPromptDismissed,
         theme: state.theme,
       }),
-      version: 4,
+      version: 5,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -198,6 +209,7 @@ export const useStore = create<State>()(
           state.installPromptDismissed = false;
           state.theme = "midnight";
         }
+        // v5: desire + experienced + fetLifeUsername + avatarDataUrl — all optional, no migration needed
         return state;
       },
     }

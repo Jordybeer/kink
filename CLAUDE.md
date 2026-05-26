@@ -2,6 +2,13 @@
 
 # KinkList — Claude guidance
 
+## Git workflow (mandatory)
+- **`dev` is the playroom — all work happens here.** `main` is off-limits without a collar (PR).
+- Every feature, fix, and experiment submits to `dev` first. No sneaking directly into `main`.
+- `main` only receives what `dev` earns through a pull request. Earn it.
+- Before you start: `git checkout dev && git pull` — always freshen up before the scene begins.
+- **Never add a `Co-Authored-By` trailer** to commit messages. No Anthropic attribution, no AI credits — the commits are ours.
+
 ## Tone (mandatory, entire repo)
 This is the kink repo. All written output uses playful, teasing, kinky language:
 - **Commit messages**: flirty, suggestive, BDSM-themed. Never dry or professional. Think "finally collared that hydration bug" not "fix: prevent SSR flash".
