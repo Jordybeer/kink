@@ -42,6 +42,7 @@ export interface Profile {
   relationshipStatus?: string;
   fetLifeUsername?: string;
   avatarDataUrl?: string;
+  isImported?: boolean;
   experienceLevel: ExperienceLevel;
   customKinks: CustomKink[];
   createdAt: number;

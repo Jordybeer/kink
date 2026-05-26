@@ -7,7 +7,7 @@ import { resizeImage } from "@/lib/imageUtils";
 interface ProfileHeroProps {
   profile: Profile;
   maxLevel: number;
-  onShare: () => void;
+  onShare?: () => void;
   onAvatarChange?: (dataUrl: string | undefined) => void;
 }
 
@@ -303,14 +303,20 @@ export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange
         </div>
       </div>
 
-      {/* QR share CTA */}
-      <button
-        onClick={onShare}
-        className="focus-ring w-full rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-        style={{ background: "var(--accent)", color: "#000" }}
-      >
-        ↗ Deel profiel via QR
-      </button>
+      {/* QR share CTA — hidden for imported profiles */}
+      {onShare ? (
+        <button
+          onClick={onShare}
+          className="focus-ring w-full rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+          style={{ background: "var(--accent)", color: "#000" }}
+        >
+          ↗ Deel profiel via QR
+        </button>
+      ) : (
+        <p className="text-xs text-center py-2" style={{ color: "var(--text2)" }}>
+          🔒 Dit profiel is geïmporteerd — delen is uitgeschakeld voor privacy.
+        </p>
+      )}
     </section>
   );
 }

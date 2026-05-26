@@ -363,7 +363,7 @@ export default function ProfilePage({ params }: Props) {
       <ProfileHero
         profile={profile}
         maxLevel={maxLevel}
-        onShare={() => setShareOpen(true)}
+        onShare={profile.isImported ? undefined : () => setShareOpen(true)}
         onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
       />
 
@@ -584,10 +584,15 @@ export default function ProfilePage({ params }: Props) {
         )}
       </div>
 
-      <QRModal profile={shareOpen ? profile : null} onClose={() => setShareOpen(false)} />
+      <QRModal profile={shareOpen && !profile.isImported ? profile : null} onClose={() => setShareOpen(false)} />
 
-      {/* FAB export — split button */}
-      <div
+      {/* FAB export — hidden for imported profiles (privacy) */}
+      {profile.isImported && (
+        <div className="fixed bottom-6 right-4 z-10 px-3 py-2 rounded-full text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+          🔒 Geïmporteerd profiel
+        </div>
+      )}
+      {!profile.isImported && <div
         className="focus-ring fixed bottom-6 right-4 z-10 flex items-center gap-1 rounded-full shadow-lg overflow-hidden"
         style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
       >
@@ -608,7 +613,7 @@ export default function ProfilePage({ params }: Props) {
         >
           ↓ PDF
         </button>
-      </div>
+      </div>}
     </main>
   );
 }

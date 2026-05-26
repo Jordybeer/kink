@@ -185,7 +185,7 @@ function HomeContent() {
           setImportError("Alle profielen in dit bestand bestaan al.");
           return;
         }
-        importProfiles(newOnes);
+        importProfiles(newOnes.map((p: Profile) => ({ ...p, isImported: true })));
         setImportSuccess(`${newOnes.length} profiel(en) toegevoegd.`);
       } catch {
         setImportError("Bestand kon niet worden gelezen.");
@@ -804,7 +804,7 @@ function HomeContent() {
               <button
                 onClick={() => {
                   if (!importPreview) return;
-                  importProfiles([importPreview]);
+                  importProfiles([{ ...importPreview, isImported: true }]);
                   setImportDone(true);
                   setTimeout(() => {
                     setImportPreview(null);

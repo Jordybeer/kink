@@ -94,9 +94,9 @@ Profile encoded to base64 URL fragment. Partner opens link → "Importeer profie
 
 ## Phase 3 — Standalone Features
 
-### F8 — Scene Builder (`/scene`)
+### ✅ F8 — Scene Builder (`/scene`)
 Plan a scene from matched kinks. Drag-reorder list. Intensity per item (Zacht/Midden/Intens). Time estimates. Notes. Export as A5 PDF "Scène Menu".
-**Files:** `app/scene/page.tsx`, `components/SceneCard.tsx`
+**Files:** `app/scene/page.tsx`
 
 ---
 
@@ -122,8 +122,8 @@ Real-time comparison session between two devices. No server, no cloud — pure p
 
 ---
 
-### ✅ Uitgebreide Kink Database (sublijst + FetLife-inspiratie)
-Expanded from 108 → 188 kinks across 5 new categories and expanded existing ones. All items leveled 1–4 with Dutch descriptions.
+### ✅ Uitgebreide Kink Database
+Expanded from 108 → 199 kinks across 5 new categories and expanded existing ones. All items leveled 1–4 with Dutch descriptions.
 
 **New categories added:**
 - **Uiterlijk & Kleding** — kledingregels, crossdressing M→V & V→M, korset, nudisme, erotisch dansen
@@ -131,60 +131,76 @@ Expanded from 108 → 188 kinks across 5 new categories and expanded existing on
 - **Pet Play** — puppyplay, kittenplay, ponyplay, staart, leiband, kom, kooi (gedetailleerd)
 
 **Expanded existing categories:**
-- **Bondage** — gag-types (opblaasbaar, penisvorm, rubber), gasmasker, borstafbinden, suspension (3 typen), opsluiting (kooi, donker, kleine ruimte)
-- **Power Exchange** — knielen, strafstandjes, meubel/asbak play, 24/7 lifestyle, spreekverbod, badkamercontrole
-- **Sensation Play** — tepelklemmen (zacht/hard), tepelgewichten, fire cupping, celpopping, naaldjes (2 niveaus), artistiek snijden, Violet Wand (3 niveaus), E-stim (2 niveaus), shockcollar (privé/publiek)
+- **Bondage** — gag-types, gasmasker, borstafbinden, suspension (3 typen), opsluiting
+- **Power Exchange** — knielen, strafstandjes, meubel/asbak play, 24/7 lifestyle, spreekverbod
+- **Sensation Play** — tepelklemmen, fire cupping, naaldjes, Violet Wand, E-stim, shockcollar
 - **Impact Play** — over-de-knie, rubber zweep, fire flogger, bullwhip
-- **Fetishes** — geur/scent, hoge hakken aanbidding, vagina-aanbidding, footjob, laarzen, panty sniffing, vossenstaart plug, kniekousen
-- **Fluid & Bodily** — watersports geven/ontvangen gesplitst, urine intiem, bloedplay, katheters/sounds, klysma (reiniging + straf)
+- **Fetishes** — geur/scent, hoge hakken aanbidding, footjob, laarzen, vossenstaart plug
+- **Fluid & Bodily** — watersports gesplitst, bloedplay, katheters/sounds, klysma
 
 **Files:** `lib/kinks.ts`
 
 ---
 
 ### ✅ F18 — Uitgebreide Rollen & Relatiestatus
-
-Expand the role picker with the full FetLife-style vocabulary, and add a relationship status field to the profile.
-
-**Extended roles (grouped):**
-- *D/s dynamiek:* Dominant, Submissive, Switch, Master/Mistress, slave, Daddy Dom, Mommy Dom, little, Middle, Caregiver, Brat, Brat Tamer
-- *Impact & sensatie:* Top, Bottom, Sadist, Masochist, Primal Hunter, Primal Prey
-- *Touw & restraint:* Rigger, Rope Bunny
-- *Dier & spel:* Pet, Handler/Owner, Voyeur, Exhibitionist
-- *Overig:* Kinkster, Vanilla (curious)
-
-**Relationship status (single-select):**
-Single · Taken · Getrouwd · Gecollared · Polyamoreus · Open relatie · Geowned · Ingewikkeld
-
-Stored on `Profile` as `relationshipStatus?: string`. Shown as a chip on home page profile cards and ProfileHero. Contract CTA added to home page alongside compare button.
-
-**Files:** `app/page.tsx` (profile create/edit form + contract CTA), `types/index.ts`, `lib/store.ts`, `components/ProfileHero.tsx`
+Full FetLife-style role vocabulary + relationship status field on profile. Stored as `relationshipStatus?: string`, shown as chip on cards and ProfileHero.
+**Files:** `app/page.tsx`, `types/index.ts`, `lib/store.ts`, `components/ProfileHero.tsx`
 
 ---
 
-### F19 — FetLife Profiel Koppelen
-
-Store a FetLife username or profile URL locally on the profile. When sharing via QR, a **privacy gate** asks explicitly: "FetLife-link meesturen?" — only included in the encoded payload if the user actively confirms.
-
-**Flow:**
-- In profile settings: optional "FetLife gebruikersnaam" input (stored as `fetlifeUsername?: string`)
-- On QR modal: if username is set, show toggle "Voeg FetLife-link toe aan QR" (default: OFF)
-- Encoded URL only includes `fl=username` param when toggle is ON
-- Recipient's import modal shows the FetLife username as a tappable chip (opens `https://fetlife.com/users/{username}` in new tab)
-
-**Privacy rationale:** FetLife username can de-anonymise a person. Default-off ensures you consciously choose to reveal it per share, per moment.
-
-**Files:** `types/index.ts` (`fetlifeUsername?`), `lib/store.ts` (renameProfile extended), `components/QRModal.tsx` (privacy toggle), `lib/shareProfile.ts` (conditional encode), `app/page.tsx` (import modal chip)
+### ✅ F19 — FetLife Profiel Koppelen
+Optional FetLife username stored on profile. Inline input on profile page. Privacy gate in QR modal: "FetLife-link meesturen?" defaults to OFF. `avatarDataUrl` always stripped from share payload.
+**Files:** `types/index.ts`, `lib/store.ts`, `components/QRModal.tsx`, `lib/shareProfile.ts`, `app/profile/[id]/page.tsx`
 
 ---
 
-## UI/UX Polish (ongoing)
+## UI/UX Polish — Shipped ✅
 
 - ✅ Compact kink row toggle (full picker ↔ dot-picker)
 - ✅ Sensual theme variants: Midnight (default), Deep Red, Forest, Monochrome
 - ✅ Kink search filter on profile page
 - ✅ Profile Hero with Kink DNA fingerprint + prominent QR share CTA
-- Category bulk skip action
+- ✅ Category bulk skip action ("Sla over" per categorie)
+- ✅ Kink row redesign: 1–5 verlangenssterren + harde-grensknop + ervaring ja/nee checkbox
+- ✅ Profielfoto uploaden (canvas crop → JPEG 0.7, 256×256, nooit in QR)
+- ✅ Geïmporteerde profielen kunnen niet worden doorgedeeld (privacy — `isImported` flag, export/share verborgen)
+
+---
+
+## UI/UX Polish — Upcoming
+
 - Split-screen layout at ≥768px (tablet)
 - Animated match reveal on compare page
 - Contract signing ceremony (dim + message before PDF)
+
+---
+
+## Geplande fixes (volgende iteratie)
+
+### KinkRow: status pills terug, sterren weg, ervaring checkbox blijft
+De 1–5 verlangenssterren die in de vorige iteratie zijn toegevoegd, worden teruggedraaid naar de oorspronkelijke status-pills (ja/graag/misschien/nee/harde grens). De pills zijn begrijpelijker. De nieuwe "Ervaring" ja/nee checkbox blijft behouden.
+
+**Wijzigingen:**
+- `components/KinkRow.tsx` — StatusPicker terug, sterren weg, experienced checkbox in rij 1
+- `components/CategorySection.tsx` — props terug naar `onStatusChange` + nieuw `onExperiencedChange`
+- `app/profile/[id]/page.tsx` — handlers, CategorySection-calls en custom kink rijen bijwerken
+
+---
+
+### Home page UX: rol-picker als grouped select
+De 24 rol-chips in het aanmaak- en bewerkformulier worden vervangen door een `<select>` dropdown met `<optgroup>` per categorie. Veel minder visuele ruis.
+
+**Groepen:**
+- D/s dynamiek: Switch, Dominant, Submissive
+- Zorgzame D/s: Daddy Dom, Mommy Dom, little, Middle, Caregiver
+- Impact & touw: Top, Bottom, Sadist, Masochist, Rigger, Rope Bunny
+- Karakter: Brat, Brat Tamer, Primal Hunter, Primal Prey
+- Dier & spel: Handler/Owner, Pet
+- Overig: Voyeur, Exhibitionist, Kinkster, Vanilla (curious)
+
+**Wijzigingen:** `app/page.tsx` — beide rolpickers (aanmaken + bewerken) vervangen
+
+---
+
+### Privacy-noot: isImported is een UX-guard, geen cryptografisch slot
+Geïmporteerde profielen krijgen `isImported: true` bij import — share/export knoppen worden verborgen. Omdat alles in localStorage staat, kan een technisch gebruiker dit via DevTools omzeilen. Dit is acceptabel voor een pure client-side app.
