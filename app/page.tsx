@@ -344,11 +344,16 @@ function HomeContent() {
                     {isMulti && (
                       <div className="flex items-center gap-2 mb-2 px-1">
                         <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-black flex-none"
-                          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                          className="w-6 h-6 rounded-full flex-none overflow-hidden"
                           aria-hidden="true"
                         >
-                          {groupName[0].toUpperCase()}
+                          {group[0].avatarDataUrl ? (
+                            <img src={group[0].avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                              {groupName[0].toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <span className="text-sm font-semibold">{groupName}</span>
                         <span className="text-xs" style={{ color: "var(--text2)" }}>{group.length} rollen</span>
@@ -464,12 +469,14 @@ function HomeContent() {
                               <>
                                 <div className="flex items-center gap-3 p-4 pb-3">
                                   {!isMulti && (
-                                    <div
-                                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
-                                      style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
-                                      aria-hidden="true"
-                                    >
-                                      {initial}
+                                    <div className="w-10 h-10 rounded-full flex-none overflow-hidden" aria-hidden="true">
+                                      {p.avatarDataUrl ? (
+                                        <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                          {initial}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">

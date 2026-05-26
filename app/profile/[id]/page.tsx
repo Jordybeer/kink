@@ -10,7 +10,7 @@ import type { KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 
-const STAR_LEGEND = "★ Nooit · ★★ Één keer · ★★★ Af en toe · ★★★★ Regelmatig · ★★★★★ Veel ervaring";
+const DESIRE_LEGEND = "★ Weinig  ·  ★★★ Gemiddeld  ·  ★★★★★ Heel graag";
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
@@ -29,6 +29,7 @@ export default function ProfilePage({ params }: Props) {
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [fetLifeInput, setFetLifeInput] = useState("");
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -76,6 +77,11 @@ export default function ProfilePage({ params }: Props) {
     }
   }, [_hasHydrated, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sync fetLifeInput when profile loads
+  useEffect(() => {
+    if (profile) setFetLifeInput(profile.fetLifeUsername ?? "");
+  }, [profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!_hasHydrated) return null;
 
   if (!profile) {
@@ -90,6 +96,23 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"];
+
+  function handleDesire(kinkId: string, n: number | null) {
+    const status: KinkStatus = n === null ? null : n <= 2 ? "willing" : n === 3 ? "maybe" : "yes";
+    setEntry(profile!.id, kinkId, { desire: n, status });
+  }
+
+  function handleHardLimit(kinkId: string) {
+    const isHardNo = profile!.entries[kinkId]?.status === "hard_no";
+    setEntry(profile!.id, kinkId, { status: isHardNo ? null : "hard_no", desire: null });
+  }
+
+  function saveFetLife() {
+    renameProfile(
+      profile!.id, profile!.name, profile!.role, profile!.experienceLevel,
+      profile!.relationshipStatus, fetLifeInput.trim() || undefined
+    );
+  }
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
   const totalVisible = visibleKinks.length;
@@ -341,13 +364,40 @@ export default function ProfilePage({ params }: Props) {
         profile={profile}
         maxLevel={maxLevel}
         onShare={() => setShareOpen(true)}
+        onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
       />
 
-      {/* Star legend */}
-      <div className="px-4 pb-2">
+      {/* Verlangen legend + FetLife input */}
+      <div className="px-4 pb-2 flex flex-col gap-2">
         <p className="text-[11px]" style={{ color: "var(--text2)" }}>
-          <span className="font-semibold" style={{ color: "var(--accent)" }}>★ Ervaring:</span> {STAR_LEGEND}
+          <span className="font-semibold" style={{ color: "var(--accent)" }}>★ Verlangen:</span> {DESIRE_LEGEND}
         </p>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>FL:</span>
+          <input
+            value={fetLifeInput}
+            onChange={(e) => setFetLifeInput(e.target.value)}
+            onBlur={saveFetLife}
+            onKeyDown={(e) => e.key === "Enter" && (e.currentTarget.blur())}
+            placeholder="FetLife gebruikersnaam (optioneel)"
+            className="flex-1 text-[11px] bg-transparent border-b focus:outline-none py-0.5 transition-colors"
+            style={{
+              color: "var(--text)",
+              borderBottomColor: fetLifeInput ? "var(--accent)" : "var(--border)",
+            }}
+          />
+          {fetLifeInput && (
+            <a
+              href={`https://fetlife.com/users/${fetLifeInput}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] hover:underline flex-none"
+              style={{ color: "var(--accent)" }}
+            >
+              ↗
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Search filter */}
@@ -402,8 +452,9 @@ export default function ProfilePage({ params }: Props) {
                     key={kink.id}
                     kink={kink}
                     entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
-                    onStatusChange={(s) => setEntry(profile.id, kink.id, { status: s })}
-                    onScoreChange={(n) => setEntry(profile.id, kink.id, { score: n })}
+                    onDesireChange={(n) => handleDesire(kink.id, n)}
+                    onHardLimitToggle={() => handleHardLimit(kink.id)}
+                    onExperiencedChange={(v) => setEntry(profile.id, kink.id, { experienced: v })}
                     onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
                     onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
                     compact={compact}
@@ -423,14 +474,14 @@ export default function ProfilePage({ params }: Props) {
                 category={cat}
                 kinks={kinks}
                 entries={profile.entries}
-                onStatusChange={(kinkId, s: KinkStatus) => setEntry(profile.id, kinkId, { status: s })}
-                onScoreChange={(kinkId, n) => setEntry(profile.id, kinkId, { score: n })}
+                onDesireChange={(kinkId, n) => handleDesire(kinkId, n)}
+                onHardLimitToggle={(kinkId) => handleHardLimit(kinkId)}
+                onExperiencedChange={(kinkId, v) => setEntry(profile.id, kinkId, { experienced: v })}
                 onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
                 onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
                 onBulkSkip={() => {
-                  const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
-                  for (const k of kinks) {
-                    setEntry(profile.id, k.id, { status: "no" });
+                  for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
+                    setEntry(profile.id, k.id, { status: "no", desire: null });
                   }
                 }}
                 compact={compact}
@@ -453,50 +504,62 @@ export default function ProfilePage({ params }: Props) {
 
           {/* Custom kink rows */}
           <div className="flex flex-col pl-1 mb-2">
-            {customKinks.map((ck) => (
-              <div
-                key={ck.id}
-                className="rounded-xl overflow-hidden mb-1"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  borderLeft: `4px solid ${profile.entries[ck.id]?.status ? "var(--accent)" : "transparent"}`,
-                }}
-              >
-                <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                  <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
-                  <button
-                    onClick={() => removeCustomKink(profile.id, ck.id)}
-                    aria-label={`${ck.name} verwijderen`}
-                    className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-sm transition-colors"
-                    style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="grid grid-cols-5 border-t border-[var(--border)]">
-                  {(["yes", "willing", "maybe", "no", "hard_no"] as NonNullable<KinkStatus>[]).map((val) => {
-                    const labels: Record<string, string> = { yes: "Heel graag", willing: "Interesse", maybe: "Voor hen", no: "Liever niet", hard_no: "Harde grens" };
-                    const icons: Record<string, string> = { yes: "✓", willing: "↗", maybe: "♡", no: "✕", hard_no: "✕✕" };
-                    const active = profile.entries[ck.id]?.status === val;
-                    return (
+            {customKinks.map((ck) => {
+              const ckEntry = profile.entries[ck.id];
+              const ckDesire = ckEntry?.desire ?? null;
+              const ckIsHardNo = ckEntry?.status === "hard_no";
+              const ckBorderColor = ckIsHardNo ? "var(--hard-no)" : ckDesire ? (ckDesire <= 2 ? "var(--willing)" : ckDesire === 3 ? "var(--maybe)" : "var(--yes)") : "transparent";
+              return (
+                <div
+                  key={ck.id}
+                  className="rounded-xl overflow-hidden mb-1 transition-[border-left-color] duration-150"
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderLeft: `4px solid ${ckBorderColor}`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                    <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
+                    <button
+                      onClick={() => removeCustomKink(profile.id, ck.id)}
+                      aria-label={`${ck.name} verwijderen`}
+                      className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-sm transition-colors"
+                      style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1 px-3 pb-2.5">
+                    {[1, 2, 3, 4, 5].map((n) => (
                       <button
-                        key={val}
-                        title={labels[val]}
-                        aria-pressed={active}
-                        onClick={() => setEntry(profile.id, ck.id, { status: active ? null : val })}
-                        className={`focus-ring h-11 flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors ${
-                          active ? `status-${val}` : "text-[var(--text2)] hover:text-[var(--text)] hover:bg-[var(--surface3)]"
-                        }`}
+                        key={n}
+                        onClick={() => !ckIsHardNo && handleDesire(ck.id, ckDesire === n ? null : n)}
+                        disabled={ckIsHardNo}
+                        aria-label={`${n} ster`}
+                        className="focus-ring text-xl leading-none transition-colors disabled:opacity-40"
+                        style={{ color: (ckDesire ?? 0) >= n ? "var(--accent)" : "var(--border)" }}
                       >
-                        <span className="text-[13px] leading-none">{icons[val]}</span>
-                        <span>{labels[val]}</span>
+                        ★
                       </button>
-                    );
-                  })}
+                    ))}
+                    <button
+                      onClick={() => handleHardLimit(ck.id)}
+                      aria-pressed={ckIsHardNo}
+                      title="Harde grens"
+                      className="focus-ring ml-2 w-8 h-8 flex items-center justify-center rounded-full border transition-colors"
+                      style={ckIsHardNo ? {
+                        borderColor: "var(--hard-no)",
+                        background: "color-mix(in srgb, var(--hard-no) 20%, transparent)",
+                        color: "var(--hard-no)",
+                      } : { borderColor: "var(--border)", color: "var(--text2)" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Add custom kink input */}

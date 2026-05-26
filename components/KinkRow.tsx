@@ -1,37 +1,43 @@
 "use client";
 import { useState } from "react";
-import type { Kink, KinkEntry, KinkStatus } from "@/types";
-import StatusPicker from "./StatusPicker";
-import StarScore from "./StarScore";
+import type { Kink, KinkEntry } from "@/types";
 import InfoSheet from "./InfoSheet";
 
-const STATUS_BORDER: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "var(--yes)",
-  willing: "var(--willing)",
-  maybe:   "var(--maybe)",
-  no:      "var(--no)",
-  hard_no: "var(--hard-no)",
-};
-
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
+
+function desireBorderColor(entry: KinkEntry): string {
+  if (entry.status === "hard_no") return "var(--hard-no)";
+  const d = entry.desire ?? 0;
+  if (d === 0) return "transparent";
+  if (d <= 2) return "var(--willing)";
+  if (d === 3) return "var(--maybe)";
+  return "var(--yes)";
+}
 
 interface Props {
   kink: Kink;
   entry: KinkEntry;
-  onStatusChange: (s: KinkStatus) => void;
-  onScoreChange: (n: number | null) => void;
+  onDesireChange: (n: number | null) => void;
+  onHardLimitToggle: () => void;
+  onExperiencedChange: (v: boolean | null) => void;
   onCommentChange: (c: string) => void;
   onTagsChange: (tags: string[]) => void;
   compact?: boolean;
 }
 
-export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, onCommentChange, onTagsChange, compact }: Props) {
+export default function KinkRow({
+  kink, entry, onDesireChange, onHardLimitToggle, onExperiencedChange,
+  onCommentChange, onTagsChange, compact,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const borderColour = entry.status ? STATUS_BORDER[entry.status] : "transparent";
-  const tags = entry.tags ?? [];
 
+  const isHardNo = entry.status === "hard_no";
+  const desire = entry.desire ?? null;
+  const tags = entry.tags ?? [];
   const commentLen = entry.comment.length;
+  const isRated = isHardNo || desire !== null;
+
   const counterColor =
     commentLen >= 190 ? "var(--hard-no)" :
     commentLen >= 160 ? "var(--maybe)" :
@@ -48,6 +54,8 @@ export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, on
     onTagsChange(next);
   }
 
+  const showComment = !compact && (expanded || entry.comment || tags.length > 0 || isRated);
+
   return (
     <>
       <div
@@ -55,10 +63,10 @@ export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, on
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
-          borderLeft: `4px solid ${borderColour}`,
+          borderLeft: `4px solid ${desireBorderColor(entry)}`,
         }}
       >
-        {/* Row 1: name + info + stars + comment toggle */}
+        {/* Row 1: name + info + ervaring checkbox + comment toggle */}
         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
           <span className="flex-1 text-[15px] font-medium leading-snug">{kink.name}</span>
 
@@ -73,13 +81,39 @@ export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, on
             ⓘ
           </button>
 
-          <StarScore value={entry.score} onChange={onScoreChange} />
+          {/* Ervaring yes/no checkbox */}
+          <label
+            className="flex items-center gap-1 cursor-pointer select-none flex-none"
+            title={entry.experienced ? "Ervaring: ja" : "Ervaring: nee"}
+          >
+            <span
+              className="w-4 h-4 rounded border flex items-center justify-center transition-colors flex-none"
+              style={
+                entry.experienced
+                  ? { background: "var(--accent)", borderColor: "var(--accent)" }
+                  : { borderColor: "var(--border)" }
+              }
+              aria-hidden="true"
+            >
+              {entry.experienced && (
+                <span className="text-[8px] font-bold leading-none text-black">✓</span>
+              )}
+            </span>
+            <span className="text-[11px]" style={{ color: "var(--text2)" }}>Ervaring</span>
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={entry.experienced ?? false}
+              onChange={(e) => onExperiencedChange(e.target.checked || null)}
+              aria-label="Heb je hier ervaring mee"
+            />
+          </label>
 
           {!compact && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              aria-label={expanded ? "Opmerking verbergen" : "Opmerking toevoegen"}
-              title={expanded ? "Opmerking verbergen" : "Opmerking toevoegen"}
+              aria-label={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
+              title={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
               className={`focus-ring w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
                 entry.comment
                   ? "text-[var(--accent)] border border-[var(--accent)]"
@@ -91,55 +125,85 @@ export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, on
           )}
         </div>
 
-        {/* Row 2: full-width status strip OR compact dot row */}
+        {/* Row 2: desire stars + hard limit toggle */}
         {compact ? (
-          <div className="flex gap-1.5 px-3 pb-2.5">
-            {(["yes", "willing", "maybe", "no", "hard_no"] as NonNullable<KinkStatus>[]).map((val) => {
-              const active = entry.status === val;
-              const dotColors: Record<string, string> = {
-                yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)",
-                no: "var(--no)", hard_no: "var(--hard-no)",
-              };
-              const labels: Record<string, string> = { yes: "Heel graag", willing: "Interesse", maybe: "Voor hen", no: "Liever niet", hard_no: "Harde grens" };
-              return (
-                <button
-                  key={val}
-                  title={labels[val]}
-                  aria-pressed={active}
-                  onClick={() => onStatusChange(active ? null : val)}
-                  className="focus-ring w-8 h-8 rounded-full flex items-center justify-center transition-all border"
-                  style={active ? {
-                    background: `color-mix(in srgb, ${dotColors[val]} 20%, transparent)`,
-                    borderColor: dotColors[val],
-                    boxShadow: `0 0 6px color-mix(in srgb, ${dotColors[val]} 40%, transparent)`,
-                  } : {
-                    background: "transparent",
-                    borderColor: "var(--border)",
-                  }}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ background: active ? dotColors[val] : "var(--border)" }}
-                  />
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-0.5 px-3 pb-2.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => !isHardNo && onDesireChange(desire === n ? null : n)}
+                disabled={isHardNo}
+                aria-label={`${n} ster`}
+                className="focus-ring text-sm leading-none transition-colors disabled:opacity-30"
+                style={{ color: (desire ?? 0) >= n ? "var(--accent)" : "var(--border)" }}
+              >
+                ★
+              </button>
+            ))}
+            <button
+              onClick={onHardLimitToggle}
+              aria-pressed={isHardNo}
+              title="Harde grens"
+              className="focus-ring ml-1.5 w-6 h-6 flex items-center justify-center rounded-full border text-[10px] transition-colors"
+              style={isHardNo ? {
+                borderColor: "var(--hard-no)",
+                background: "color-mix(in srgb, var(--hard-no) 20%, transparent)",
+                color: "var(--hard-no)",
+              } : { borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              ✕
+            </button>
           </div>
         ) : (
-          <StatusPicker value={entry.status} onChange={onStatusChange} kinkName={kink.name} />
+          <div className="flex items-center gap-1 px-3 pb-2.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => !isHardNo && onDesireChange(desire === n ? null : n)}
+                disabled={isHardNo}
+                aria-label={`${n} ster — verlangen`}
+                className="focus-ring text-xl leading-none transition-colors disabled:opacity-40"
+                style={{ color: (desire ?? 0) >= n ? "var(--accent)" : "var(--border)" }}
+              >
+                ★
+              </button>
+            ))}
+            <button
+              onClick={onHardLimitToggle}
+              aria-pressed={isHardNo}
+              title="Harde grens"
+              className="focus-ring ml-2 w-8 h-8 flex items-center justify-center rounded-full border transition-colors"
+              style={isHardNo ? {
+                borderColor: "var(--hard-no)",
+                background: "color-mix(in srgb, var(--hard-no) 20%, transparent)",
+                color: "var(--hard-no)",
+                fontWeight: "bold",
+              } : { borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              ✕
+            </button>
+            {isHardNo && (
+              <span className="text-[10px] ml-1" style={{ color: "var(--hard-no)" }}>
+                Harde grens
+              </span>
+            )}
+          </div>
         )}
 
-        {/* Row 3: comment textarea + tag chips (hidden in compact mode) */}
-        {!compact && (expanded || entry.comment || tags.length > 0) && (
+        {/* Row 3: comment + tags (auto-shown when rated) */}
+        {showComment && (
           <div className="px-3 pb-3 pt-1">
+            <p className="text-[10px] uppercase tracking-wider mb-1 font-semibold" style={{ color: "var(--text2)" }}>
+              Notitie
+            </p>
             <div className="relative">
               <textarea
-                aria-label="Opmerking of grensvoorwaarde"
-                placeholder="Voeg een notitie of grensvoorwaarde toe…"
+                aria-label="Notitie of grensvoorwaarde"
+                placeholder="Grenzen, voorkeuren of aantekeningen…"
                 value={entry.comment}
                 onChange={(e) => onCommentChange(e.target.value)}
                 onInput={handleInput}
-                rows={3}
+                rows={2}
                 maxLength={200}
                 style={{ resize: "none", maxHeight: "9rem" }}
                 className="focus-ring w-full text-sm rounded-lg border border-[var(--border)] bg-[var(--surface2)] px-3 py-2 pb-5 text-[var(--text)] placeholder-[color:var(--text2)] focus:outline-none focus:border-[var(--accent)]"
@@ -152,7 +216,6 @@ export default function KinkRow({ kink, entry, onStatusChange, onScoreChange, on
               </span>
             </div>
 
-            {/* Tag chips */}
             <div className="flex flex-wrap gap-1.5 mt-2">
               {TAGS.map((tag) => {
                 const active = tags.includes(tag);

@@ -17,7 +17,9 @@ export interface Kink {
 
 export interface KinkEntry {
   status: KinkStatus;
-  score: number | null; // 1-5 ervaring
+  desire?: number | null;       // 1–5 verlangen (vervangt pills visueel)
+  experienced?: boolean | null; // ja/nee ervaring checkbox
+  score: number | null;         // deprecated — bewaard voor achterwaartse compat
   comment: string;
   tags?: string[];
 }
@@ -38,6 +40,8 @@ export interface Profile {
   name: string;
   role: string;
   relationshipStatus?: string;
+  fetLifeUsername?: string;
+  avatarDataUrl?: string;
   experienceLevel: ExperienceLevel;
   customKinks: CustomKink[];
   createdAt: number;

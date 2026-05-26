@@ -1,15 +1,16 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { Kink, KinkEntry, KinkStatus } from "@/types";
+import type { Kink, KinkEntry } from "@/types";
 import KinkRow from "./KinkRow";
 
 interface Props {
   category: string;
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
-  onStatusChange: (kinkId: string, s: KinkStatus) => void;
-  onScoreChange: (kinkId: string, n: number | null) => void;
+  onDesireChange: (kinkId: string, n: number | null) => void;
+  onHardLimitToggle: (kinkId: string) => void;
+  onExperiencedChange: (kinkId: string, v: boolean | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
   onBulkSkip: () => void;
@@ -23,15 +24,9 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 }
 
 export default function CategorySection({
-  category,
-  kinks,
-  entries,
-  onStatusChange,
-  onScoreChange,
-  onCommentChange,
-  onTagsChange,
-  onBulkSkip,
-  compact,
+  category, kinks, entries,
+  onDesireChange, onHardLimitToggle, onExperiencedChange,
+  onCommentChange, onTagsChange, onBulkSkip, compact,
 }: Props) {
   const [open, setOpen] = useState(true);
   const filled = countFilled(kinks, entries);
@@ -103,8 +98,9 @@ export default function CategorySection({
                 key={kink.id}
                 kink={kink}
                 entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
-                onStatusChange={(s) => onStatusChange(kink.id, s)}
-                onScoreChange={(n) => onScoreChange(kink.id, n)}
+                onDesireChange={(n) => onDesireChange(kink.id, n)}
+                onHardLimitToggle={() => onHardLimitToggle(kink.id)}
+                onExperiencedChange={(v) => onExperiencedChange(kink.id, v)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
                 compact={compact}
