@@ -11,9 +11,17 @@ This is the kink repo. All written output uses playful, teasing, kinky language:
 
 Never break character toward corporate-neutral language. If a message could appear in a Jira ticket at a bank, rewrite it.
 
+## Tests (mandatory before every commit)
+- Run `npm test` before committing. A commit without passing tests is a hard limit — no exceptions, no `--no-verify`.
+- Tests live in `__tests__/` or alongside source as `*.test.ts(x)`.
+- Cover: pure logic in `lib/` (store actions, kink helpers, shareProfile encoding), type narrowing, and any non-trivial computed values.
+- Do NOT test React component rendering unless a specific visual regression is at stake — unit-test the logic, not the JSX.
+- When you add a feature, add at least one test for its core behaviour in the same commit.
+
 ## Stack
 - Next.js 16 App Router, TypeScript, Tailwind CSS v4, Zustand persist
 - `npm run build` — type-check + lint
+- `npm test` — Vitest unit tests (run before every commit)
 
 ## Architecture
 - All data in `localStorage` via Zustand `persist` — no backend, no auth

@@ -15,9 +15,9 @@ interface State {
   onboardingComplete: boolean;
   installPromptDismissed: boolean;
   theme: Theme;
-  createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel) => string;
+  createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel, relationshipStatus?: string) => string;
   deleteProfile: (id: string) => void;
-  renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel) => void;
+  renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string) => void;
   setEntry: (profileId: string, kinkId: string, patch: Partial<KinkEntry>) => void;
   resetEntry: (profileId: string, kinkId: string) => void;
   getEntry: (profileId: string, kinkId: string) => KinkEntry;
@@ -42,7 +42,7 @@ export const useStore = create<State>()(
       installPromptDismissed: false,
       theme: "midnight" as Theme,
 
-      createProfile(name, role, experienceLevel = "beginner") {
+      createProfile(name, role, experienceLevel = "beginner", relationshipStatus) {
         const id = uid();
         set((s) => ({
           profiles: [
@@ -52,6 +52,7 @@ export const useStore = create<State>()(
               name,
               role,
               experienceLevel,
+              relationshipStatus: relationshipStatus || undefined,
               customKinks: [],
               createdAt: Date.now(),
               updatedAt: Date.now(),
@@ -66,10 +67,10 @@ export const useStore = create<State>()(
         set((s) => ({ profiles: s.profiles.filter((p) => p.id !== id) }));
       },
 
-      renameProfile(id, name, role, experienceLevel) {
+      renameProfile(id, name, role, experienceLevel, relationshipStatus) {
         set((s) => ({
           profiles: s.profiles.map((p) =>
-            p.id === id ? { ...p, name, role, experienceLevel, updatedAt: Date.now() } : p
+            p.id === id ? { ...p, name, role, experienceLevel, relationshipStatus, updatedAt: Date.now() } : p
           ),
         }));
       },

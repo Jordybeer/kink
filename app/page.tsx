@@ -117,10 +117,7 @@ function HomeContent() {
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    const id = createProfile(name.trim(), role, experienceLevel);
-    if (relationshipStatus) {
-      renameProfile(id, name.trim(), role, experienceLevel, relationshipStatus);
-    }
+    const id = createProfile(name.trim(), role, experienceLevel, relationshipStatus || undefined);
     setName("");
     setRelationshipStatus("");
     router.push(`/profile/${id}`);
