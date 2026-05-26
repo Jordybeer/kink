@@ -10,7 +10,7 @@ export function decodeSdp(enc: string): string {
   return decodeURIComponent(escape(atob(enc)));
 }
 
-export function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = 8000): Promise<void> {
+export function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = 3000): Promise<void> {
   return new Promise((resolve, reject) => {
     if (pc.iceGatheringState === "complete") { resolve(); return; }
     let timer: ReturnType<typeof setTimeout>;
@@ -24,7 +24,7 @@ export function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = 8000): Pr
     pc.addEventListener("icegatheringstatechange", handler);
     timer = setTimeout(() => {
       pc.removeEventListener("icegatheringstatechange", handler);
-      reject(new Error("ICE gathering timed out"));
+      resolve(); // proceed with whatever candidates gathered so far
     }, timeoutMs);
   });
 }

@@ -68,11 +68,11 @@ describe("waitForIceGathering", () => {
     await expect(promise).resolves.toBeUndefined();
   });
 
-  it("rejects after timeout when ICE never completes", async () => {
+  it("resolves after timeout even when ICE never completes", async () => {
     const pc = makeMockPc("gathering");
     const promise = waitForIceGathering(pc as unknown as RTCPeerConnection, 3000);
     vi.advanceTimersByTime(3000);
-    await expect(promise).rejects.toThrow("ICE gathering timed out");
+    await expect(promise).resolves.toBeUndefined();
   });
 
   it("removes event listener on successful completion", async () => {

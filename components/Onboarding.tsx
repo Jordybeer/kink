@@ -159,17 +159,10 @@ function Step1({ onNext }: { onNext: () => void }) {
         <span style={{ fontSize: '2.25rem' }}>🔒</span>
       </div>
       <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
-      <div style={{ ...BODY, textAlign: 'left' }}>
-        <p style={{ margin: '0 0 0.75rem' }}>
-          Geen account. Geen server. Geen tracking. Alles wat je invoert — je naam, je kinks, je grenzen — slaat KinkSync uitsluitend op in jouw browser.
-        </p>
-        <p style={{ margin: '0 0 0.75rem' }}>
-          Live sessies met je partner verlopen via <strong style={{ color: 'rgba(255,255,255,0.7)' }}>WebRTC met end-to-end encryptie</strong> — de data reist direct van apparaat naar apparaat, raakt nooit een server.
-        </p>
-        <p style={{ margin: 0 }}>
-          Wanneer je een profiel van iemand anders importeert, wordt dat profiel geblokkeerd voor verdere deling — jouw partners data is van hen.
-        </p>
-      </div>
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        Geen account, geen server, geen tracking.<br />
+        Alles blijft in jouw browser — live sessies reizen direct van apparaat naar apparaat.
+      </p>
       <NextButton onClick={onNext} />
     </div>
   );
@@ -184,17 +177,10 @@ function Step2({ onNext }: { onNext: () => void }) {
         <span style={{ fontSize: '2.25rem' }}>💾</span>
       </div>
       <h2 style={TITLE}>Maak regelmatig een back-up</h2>
-      <div style={{ ...BODY, textAlign: 'left' }}>
-        <p style={{ margin: '0 0 0.75rem' }}>
-          Omdat alles lokaal staat, is jij de enige bewaarder van je data. Verwijder je de app, wissel je van apparaat, of wordt je browser-opslag gecleared — dan is je profiel weg.
-        </p>
-        <p style={{ margin: '0 0 0.75rem' }}>
-          Via <strong style={{ color: 'rgba(255,255,255,0.7)' }}>⚙ Instellingen</strong> (rechtsboven op het startscherm) kun je een JSON-back-up exporteren en later opnieuw importeren.
-        </p>
-        <p style={{ margin: 0 }}>
-          Behandel je back-up als je dagboek — sla hem veilig op.
-        </p>
-      </div>
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        Geen cloud-sync — jij bewaart je data.<br />
+        Exporteer via <strong style={{ color: 'rgba(255,255,255,0.7)' }}>⚙ Instellingen</strong> als JSON en herstel het later.
+      </p>
       <NextButton onClick={onNext} />
     </div>
   );
@@ -203,12 +189,12 @@ function Step2({ onNext }: { onNext: () => void }) {
 /* ── Step 3 — Profiel & kinks (nieuw) ────────────────────────────────────── */
 
 const FEATURE_ROWS: { icon: string; title: string; sub: string }[] = [
-  { icon: '👤', title: 'Profiel',       sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
-  { icon: '🏷',  title: 'Kinks',         sub: 'Pills: ja / graag / misschien / nee / harde grens' },
-  { icon: '⚡',  title: 'Vergelijken',   sub: 'Heatmap + compatibiliteitsscore per categorie' },
-  { icon: '📡',  title: 'Live sessie',   sub: 'Peer-to-peer QR — geen server, real-time' },
-  { icon: '🔗',  title: 'Profiel delen', sub: 'QR-code — importeur kan het niet doorsturen' },
-  { icon: '✍',  title: 'Contract',      sub: 'Safeword, aftercare, handtekening → PDF' },
+  { icon: '👤', title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
+  { icon: '🏷',  title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
+  { icon: '⚡',  title: 'Vergelijken',    sub: 'Heatmap + compatibiliteitsscore' },
+  { icon: '📡',  title: 'Live sessie',    sub: 'Peer-to-peer QR — zelfde WiFi, geen server' },
+  { icon: '🎬',  title: 'Scène planner', sub: 'Activiteiten, intensiteit en timing plannen' },
+  { icon: '✍',  title: 'Contract',       sub: 'Safeword, aftercare, handtekening → PDF' },
 ];
 
 function Step3({ onNext }: { onNext: () => void }) {
@@ -249,9 +235,8 @@ function Step4({ onNext }: { onNext: () => void }) {
         <span style={{ fontSize: '2.25rem' }}>🖤</span>
       </div>
       <h2 style={TITLE}>Consent, altijd</h2>
-      <p style={{ ...BODY, textAlign: 'left' }}>
-        KinkSync helpt je om open te zijn over je verlangens — maar de echte toestemming geef je aan elkaar, nooit aan een app.
-        Gebruik de tools als startpunt voor een gesprek, niet als vervanging.
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
         Safewords zijn heilig. Grenzen zijn wet.
       </p>
       <NextButton onClick={onNext} />

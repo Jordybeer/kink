@@ -378,7 +378,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
       {phase === "host_idle" && (
         <div>
           <p className="text-sm mb-5" style={{ color: "var(--text2)" }}>
-            Start een live sessie. Geen server, geen cloud — puur apparaat-tot-apparaat via WebRTC met end-to-end encryptie.
+            Start een live sessie — puur apparaat-tot-apparaat, geen server, geen cloud. Beide apparaten moeten op <strong>hetzelfde WiFi-netwerk</strong> zitten.
           </p>
           {profilePicker()}
           {accentBtn("Sessie starten →", handleStartHost, !profile)}
