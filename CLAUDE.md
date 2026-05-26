@@ -2,6 +2,12 @@
 
 # KinkList — Claude guidance
 
+## Git workflow (mandatory)
+- **Always work on the `dev` branch.** Never commit directly to `main`.
+- All features, fixes, and experiments land on `dev` first.
+- `main` is only updated via pull request from `dev`.
+- Before starting work: `git checkout dev && git pull` to make sure you're current.
+
 ## Tone (mandatory, entire repo)
 This is the kink repo. All written output uses playful, teasing, kinky language:
 - **Commit messages**: flirty, suggestive, BDSM-themed. Never dry or professional. Think "finally collared that hydration bug" not "fix: prevent SSR flash".
