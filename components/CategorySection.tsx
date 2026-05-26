@@ -8,8 +8,7 @@ interface Props {
   category: string;
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
-  onDesireChange: (kinkId: string, n: number | null) => void;
-  onHardLimitToggle: (kinkId: string) => void;
+  onStatusChange: (kinkId: string, s: import("@/types").KinkStatus) => void;
   onExperiencedChange: (kinkId: string, v: boolean | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
@@ -25,7 +24,7 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 
 export default function CategorySection({
   category, kinks, entries,
-  onDesireChange, onHardLimitToggle, onExperiencedChange,
+  onStatusChange, onExperiencedChange,
   onCommentChange, onTagsChange, onBulkSkip, compact,
 }: Props) {
   const [open, setOpen] = useState(true);
@@ -98,8 +97,7 @@ export default function CategorySection({
                 key={kink.id}
                 kink={kink}
                 entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
-                onDesireChange={(n) => onDesireChange(kink.id, n)}
-                onHardLimitToggle={() => onHardLimitToggle(kink.id)}
+                onStatusChange={(s) => onStatusChange(kink.id, s)}
                 onExperiencedChange={(v) => onExperiencedChange(kink.id, v)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}

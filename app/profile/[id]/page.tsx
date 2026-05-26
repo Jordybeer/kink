@@ -97,14 +97,8 @@ export default function ProfilePage({ params }: Props) {
 
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"];
 
-  function handleDesire(kinkId: string, n: number | null) {
-    const status: KinkStatus = n === null ? null : n <= 2 ? "willing" : n === 3 ? "maybe" : "yes";
-    setEntry(profile!.id, kinkId, { desire: n, status });
-  }
-
-  function handleHardLimit(kinkId: string) {
-    const isHardNo = profile!.entries[kinkId]?.status === "hard_no";
-    setEntry(profile!.id, kinkId, { status: isHardNo ? null : "hard_no", desire: null });
+  function handleStatus(kinkId: string, s: KinkStatus) {
+    setEntry(profile!.id, kinkId, { status: s, desire: null });
   }
 
   function saveFetLife() {
@@ -452,8 +446,7 @@ export default function ProfilePage({ params }: Props) {
                     key={kink.id}
                     kink={kink}
                     entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
-                    onDesireChange={(n) => handleDesire(kink.id, n)}
-                    onHardLimitToggle={() => handleHardLimit(kink.id)}
+                    onStatusChange={(s) => handleStatus(kink.id, s)}
                     onExperiencedChange={(v) => setEntry(profile.id, kink.id, { experienced: v })}
                     onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
                     onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
@@ -474,8 +467,7 @@ export default function ProfilePage({ params }: Props) {
                 category={cat}
                 kinks={kinks}
                 entries={profile.entries}
-                onDesireChange={(kinkId, n) => handleDesire(kinkId, n)}
-                onHardLimitToggle={(kinkId) => handleHardLimit(kinkId)}
+                onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
                 onExperiencedChange={(kinkId, v) => setEntry(profile.id, kinkId, { experienced: v })}
                 onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
                 onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
@@ -505,10 +497,8 @@ export default function ProfilePage({ params }: Props) {
           {/* Custom kink rows */}
           <div className="flex flex-col pl-1 mb-2">
             {customKinks.map((ck) => {
-              const ckEntry = profile.entries[ck.id];
-              const ckDesire = ckEntry?.desire ?? null;
-              const ckIsHardNo = ckEntry?.status === "hard_no";
-              const ckBorderColor = ckIsHardNo ? "var(--hard-no)" : ckDesire ? (ckDesire <= 2 ? "var(--willing)" : ckDesire === 3 ? "var(--maybe)" : "var(--yes)") : "transparent";
+              const ckStatus = profile.entries[ck.id]?.status ?? null;
+              const ckBorderColor = ckStatus ? ({ yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)" }[ckStatus]) : "transparent";
               return (
                 <div
                   key={ck.id}
@@ -530,32 +520,18 @@ export default function ProfilePage({ params }: Props) {
                       ✕
                     </button>
                   </div>
-                  <div className="flex items-center gap-1 px-3 pb-2.5">
-                    {[1, 2, 3, 4, 5].map((n) => (
+                  <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
+                    {(["yes","willing","maybe","no","hard_no"] as const).map((s) => (
                       <button
-                        key={n}
-                        onClick={() => !ckIsHardNo && handleDesire(ck.id, ckDesire === n ? null : n)}
-                        disabled={ckIsHardNo}
-                        aria-label={`${n} ster`}
-                        className="focus-ring text-xl leading-none transition-colors disabled:opacity-40"
-                        style={{ color: (ckDesire ?? 0) >= n ? "var(--accent)" : "var(--border)" }}
+                        key={s}
+                        onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
+                        aria-pressed={ckStatus === s}
+                        className={`focus-ring rounded-full border text-[11px] font-medium transition-colors px-2.5 py-1${ckStatus === s ? ` status-${s}` : ""}`}
+                        style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                       >
-                        ★
+                        {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}
                       </button>
                     ))}
-                    <button
-                      onClick={() => handleHardLimit(ck.id)}
-                      aria-pressed={ckIsHardNo}
-                      title="Harde grens"
-                      className="focus-ring ml-2 w-8 h-8 flex items-center justify-center rounded-full border transition-colors"
-                      style={ckIsHardNo ? {
-                        borderColor: "var(--hard-no)",
-                        background: "color-mix(in srgb, var(--hard-no) 20%, transparent)",
-                        color: "var(--hard-no)",
-                      } : { borderColor: "var(--border)", color: "var(--text2)" }}
-                    >
-                      ✕
-                    </button>
                   </div>
                 </div>
               );
