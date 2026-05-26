@@ -30,6 +30,7 @@ export default function ProfilePage({ params }: Props) {
   const [compact, setCompact] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [fetLifeInput, setFetLifeInput] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -300,6 +301,17 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className="max-w-3xl mx-auto w-full pb-24">
+      {/* Error toast */}
+      {errorMessage && (
+        <div
+          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-50 px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
+          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      )}
+
       {/* Emotional check-in overlay */}
       {_hasHydrated && profile && !checkInDone && (
         <CheckIn
@@ -359,6 +371,10 @@ export default function ProfilePage({ params }: Props) {
         maxLevel={maxLevel}
         onShare={profile.isImported ? undefined : () => setShareOpen(true)}
         onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
+        onError={(msg) => {
+          setErrorMessage(msg);
+          setTimeout(() => setErrorMessage(null), 5000);
+        }}
       />
 
       {/* Verlangen legend + FetLife input */}

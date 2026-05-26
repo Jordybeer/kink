@@ -135,10 +135,22 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
   function setupChannel(ch: RTCDataChannel, p: Profile, initial: Record<string, KinkStatus>) {
     channelRef.current = ch;
     ch.onmessage = (e: MessageEvent) => {
-      const msg = JSON.parse(e.data as string) as Msg;
-      if (msg.t === "e") setRemote(r => ({ ...r, [msg.k]: msg.s }));
-      else if (msg.t === "p") setRemoteProfile({ name: msg.n, role: msg.r });
-      else if (msg.t === "d") setPartnerDone(true);
+      try {
+        const msg = JSON.parse(e.data as string) as Msg;
+        // Validate message shape
+        if (!msg || typeof msg !== "object" || typeof msg.t !== "string") return;
+        if (msg.t === "e") {
+          if (typeof msg.k !== "string" || (msg.s !== null && typeof msg.s !== "string")) return;
+          setRemote(r => ({ ...r, [msg.k]: msg.s }));
+        } else if (msg.t === "p") {
+          if (typeof msg.n !== "string" || typeof msg.r !== "string") return;
+          setRemoteProfile({ name: msg.n, role: msg.r });
+        } else if (msg.t === "d") {
+          setPartnerDone(true);
+        }
+      } catch (err) {
+        console.error("Invalid message received:", err);
+      }
     };
     const onOpen = () => {
       setPhase("connected");
@@ -253,12 +265,21 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
           if (codes.length > 0) {
             const raw = codes[0].rawValue;
             let scannedA: string | null = null;
+            let scannedSid: string | null = null;
             try {
-              scannedA = new URL(raw).searchParams.get("a");
+              const url = new URL(raw);
+              scannedA = url.searchParams.get("a");
+              scannedSid = url.searchParams.get("sid");
             } catch {
               scannedA = raw;
             }
             if (scannedA) {
+              // Validate session ID if present
+              if (scannedSid && scannedSid !== sessionId) {
+                setError("Sessie ID komt niet overeen.");
+                stopScanner();
+                return;
+              }
               await applyAnswerRef.current?.(scannedA);
             } else {
               setError("Ongeldige QR-code.");
@@ -411,7 +432,16 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
                 try {
                   const u = new URL(pasteAnswer.trim());
                   const a = u.searchParams.get("a");
-                  if (a) applyAnswerSdp(a); else setError("Geen antwoord gevonden in URL.");
+                  const sid = u.searchParams.get("sid");
+                  if (!a) {
+                    setError("Geen antwoord gevonden in URL.");
+                    return;
+                  }
+                  if (sid && sid !== sessionId) {
+                    setError("Sessie ID komt niet overeen.");
+                    return;
+                  }
+                  applyAnswerSdp(a);
                 } catch { setError("Ongeldige URL."); }
               }} disabled={!pasteAnswer.trim()}
                 className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"

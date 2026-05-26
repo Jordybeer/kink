@@ -252,8 +252,9 @@ function HomeContent() {
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           />
 
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
+          <label htmlFor="role-select" className="text-xs mb-1.5 font-medium block" style={{ color: "var(--text2)" }}>Rol</label>
           <select
+            id="role-select"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
@@ -378,8 +379,9 @@ function HomeContent() {
                                   className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
                                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                                 />
-                                <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Rol</p>
+                                <label htmlFor="role-select-edit" className="text-xs mb-1.5 block" style={{ color: "var(--text2)" }}>Rol</label>
                                 <select
+                                  id="role-select-edit"
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value)}
                                   className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"

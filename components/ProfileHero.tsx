@@ -9,6 +9,7 @@ interface ProfileHeroProps {
   maxLevel: number;
   onShare?: () => void;
   onAvatarChange?: (dataUrl: string | undefined) => void;
+  onError?: (message: string) => void;
 }
 
 const STATUSES = ["yes", "willing", "maybe", "no", "hard_no"] as const;
@@ -38,7 +39,7 @@ const VIBE_MAP: Record<Status, string> = {
   hard_no: "Selectief 🔒",
 };
 
-export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange }: ProfileHeroProps) {
+export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange, onError }: ProfileHeroProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
 
@@ -91,8 +92,9 @@ export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange
     try {
       const dataUrl = await resizeImage(file);
       onAvatarChange?.(dataUrl);
-    } catch {
-      // silently skip on error
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      onError?.("Afbeelding kon niet worden verwerkt. Probeer een andere afbeelding.");
     }
     e.target.value = "";
   }

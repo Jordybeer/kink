@@ -72,7 +72,7 @@ export const useStore = create<State>()(
         set((s) => ({
           profiles: s.profiles.map((p) =>
             p.id === id
-              ? { ...p, name, role, experienceLevel, relationshipStatus, fetLifeUsername: fetLifeUsername || undefined, updatedAt: Date.now() }
+              ? { ...p, name, role, experienceLevel, relationshipStatus: relationshipStatus || undefined, fetLifeUsername: fetLifeUsername || undefined, updatedAt: Date.now() }
               : p
           ),
         }));
