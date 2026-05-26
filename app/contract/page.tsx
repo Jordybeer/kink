@@ -79,7 +79,7 @@ function SignatureCanvas({ label, colour }: { label: string; colour: string }) {
   function clear() {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.getContext("2d")!.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
   }
 
   return (
@@ -166,7 +166,7 @@ function ContractPage() {
 
   function clearCanvas(ref: React.RefObject<HTMLCanvasElement | null>) {
     const c = ref.current;
-    if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+    if (c) c.getContext("2d")!.clearRect(0, 0, c.offsetWidth, c.offsetHeight);
   }
 
   if (!_hasHydrated) return null;
@@ -784,7 +784,7 @@ function SignaturePad({
 
   function clear() {
     const c = canvasRef.current;
-    if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+    if (c) c.getContext("2d")!.clearRect(0, 0, c.offsetWidth, c.offsetHeight);
   }
 
   return (
