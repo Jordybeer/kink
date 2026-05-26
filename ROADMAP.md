@@ -142,7 +142,7 @@ Expanded from 108 → 188 kinks across 5 new categories and expanded existing on
 
 ---
 
-### F18 — Uitgebreide Rollen & Relatiestatus
+### ✅ F18 — Uitgebreide Rollen & Relatiestatus
 
 Expand the role picker with the full FetLife-style vocabulary, and add a relationship status field to the profile.
 
@@ -156,9 +156,9 @@ Expand the role picker with the full FetLife-style vocabulary, and add a relatio
 **Relationship status (single-select):**
 Single · Taken · Getrouwd · Gecollared · Polyamoreus · Open relatie · Geowned · Ingewikkeld
 
-Stored on `Profile` as `relationshipStatus?: string`. Shown as a chip on the profile hero and optionally in the PDF.
+Stored on `Profile` as `relationshipStatus?: string`. Shown as a chip on home page profile cards and ProfileHero. Contract CTA added to home page alongside compare button.
 
-**Files:** `app/page.tsx` (profile create/edit form), `types/index.ts`, `app/profile/[id]/page.tsx` (ProfileHero chip), `app/profile/[id]/page.tsx` (PDF export)
+**Files:** `app/page.tsx` (profile create/edit form + contract CTA), `types/index.ts`, `lib/store.ts`, `components/ProfileHero.tsx`
 
 ---
 
