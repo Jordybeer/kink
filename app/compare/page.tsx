@@ -43,7 +43,7 @@ function isHardLimit(a: KinkStatus, b: KinkStatus) {
 }
 function isConflict(a: KinkStatus, b: KinkStatus) {
   if (!a || !b) return false;
-  if (isHardLimit(a, b)) return true;
+  if (isHardLimit(a, b)) return false;
   const ok = ["yes", "willing", "maybe"];
   return !(ok.includes(a) && ok.includes(b));
 }
