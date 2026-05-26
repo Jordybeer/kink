@@ -165,14 +165,15 @@ Optional FetLife username stored on profile. Inline input on profile page. Priva
 - ✅ Rol-picker als grouped `<select>` met optgroup per categorie (was: 24 losse chips)
 - ✅ Profielfoto uploaden (canvas crop → JPEG 0.7, 256×256, nooit in QR)
 - ✅ Geïmporteerde profielen kunnen niet worden doorgedeeld (privacy — `isImported` flag, export/share verborgen)
+- ✅ Split-screen layout op ≥768px (tablet) — sidebar sticky, content scrollt
+- ✅ Animated match reveal op vergelijkpagina — pulse bij profiel-wissel, confetti bij score ≥70%
+- ✅ Contract signing ceremony — dimoverlay + animatie voor PDF-export
 
 ---
 
 ## UI/UX Polish — Upcoming
 
-- Split-screen layout at ≥768px (tablet)
-- Animated match reveal on compare page
-- Contract signing ceremony (dim + message before PDF)
+*(leeg — alles gefluisterd en geshipped)*
 
 ---
 
