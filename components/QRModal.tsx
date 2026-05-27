@@ -11,6 +11,7 @@ interface Props {
 
 export default function QRModal({ profile, onClose }: Props) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrError, setQrError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
@@ -22,9 +23,12 @@ export default function QRModal({ profile, onClose }: Props) {
   useEffect(() => {
     if (!profile) {
       setQrDataUrl(null);
+      setQrError(false);
       setCopied(false);
       return;
     }
+    setQrDataUrl(null);
+    setQrError(false);
     const shareUrl =
       window.location.origin + "/import?p=" + encodeProfile(profile, { includeFetLife });
     setUrl(shareUrl);
@@ -32,7 +36,7 @@ export default function QRModal({ profile, onClose }: Props) {
       width: 240,
       margin: 2,
       color: { dark: "#c084fc", light: "#0a0a0f" },
-    }).then(setQrDataUrl);
+    }).then(setQrDataUrl).catch(() => setQrError(true));
   }, [profile, includeFetLife]);
 
   function handleCopy() {
@@ -86,6 +90,16 @@ export default function QRModal({ profile, onClose }: Props) {
               alt="QR-code voor profielimport"
               className="mx-auto rounded-xl my-4"
             />
+          ) : qrError ? (
+            <div
+              className="mx-auto my-4 rounded-xl flex flex-col items-center justify-center gap-2 px-4 text-center"
+              style={{ width: 240, height: 240, background: "var(--surface2)", border: "1px solid var(--border)" }}
+            >
+              <span className="text-2xl">📎</span>
+              <p className="text-xs" style={{ color: "var(--text2)" }}>
+                Profiel te groot voor QR-code — gebruik de kopieerknop hieronder.
+              </p>
+            </div>
           ) : (
             <div
               className="mx-auto my-4 rounded-xl animate-pulse"

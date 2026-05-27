@@ -21,7 +21,15 @@ const BASE_PROFILE: Profile = {
 
 describe("encodeProfile / decodeProfile", () => {
   it("round-trips a full profile without data loss (avatar + FL stripped by default)", () => {
-    const { avatarDataUrl: _av, fetLifeUsername: _fl, ...expected } = BASE_PROFILE;
+    const { avatarDataUrl: _av, fetLifeUsername: _fl, ...base } = BASE_PROFILE;
+    // score is deprecated and not encoded; null fields are stripped from entries
+    const expected = {
+      ...base,
+      entries: {
+        spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["eerste keer"] },
+        flogging: { status: "maybe", desire: 3 },
+      },
+    };
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
     expect(decoded).toEqual(expected);
   });
@@ -52,7 +60,8 @@ describe("encodeProfile / decodeProfile", () => {
     expect(decoded.entries.spanking_hand.desire).toBe(5);
     expect(decoded.entries.spanking_hand.experienced).toBe(true);
     expect(decoded.entries.flogging.desire).toBe(3);
-    expect(decoded.entries.flogging.experienced).toBeNull();
+    // null experienced is stripped from encoding; decodes as undefined (falsy)
+    expect(decoded.entries.flogging.experienced).toBeFalsy();
   });
 
   it("round-trips a profile with special characters in name", () => {
@@ -69,6 +78,11 @@ describe("encodeProfile / decodeProfile", () => {
   it("round-trips without relationshipStatus", () => {
     const { relationshipStatus: _rs, avatarDataUrl: _av, fetLifeUsername: _fl, ...rest } = BASE_PROFILE;
     const profile = rest as Profile;
-    expect(decodeProfile(encodeProfile(profile))).toEqual(profile);
+    const decoded = decodeProfile(encodeProfile(profile));
+    // score is deprecated and stripped; null fields are omitted from encoding
+    expect(decoded.name).toBe(profile.name);
+    expect(decoded.relationshipStatus).toBeUndefined();
+    expect(decoded.entries.spanking_hand.status).toBe("yes");
+    expect(decoded.entries.flogging.status).toBe("maybe");
   });
 });
