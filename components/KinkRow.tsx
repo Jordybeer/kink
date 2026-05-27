@@ -29,11 +29,12 @@ interface Props {
   onCommentChange: (c: string) => void;
   onTagsChange: (tags: string[]) => void;
   compact?: boolean;
+  hideComments?: boolean;
 }
 
 export default function KinkRow({
   kink, entry, onStatusChange, onExperiencedChange,
-  onCommentChange, onTagsChange, compact,
+  onCommentChange, onTagsChange, compact, hideComments,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -59,7 +60,7 @@ export default function KinkRow({
     onTagsChange(next);
   }
 
-  const showComment = !compact && (expanded || entry.comment || tags.length > 0 || isRated);
+  const showComment = !compact && !hideComments && (expanded || entry.comment || tags.length > 0 || isRated);
 
   return (
     <>
@@ -100,7 +101,7 @@ export default function KinkRow({
             Ervaring
           </button>
 
-          {!compact && (
+          {!compact && !hideComments && (
             <button
               data-tour="comment"
               onClick={() => setExpanded((v) => !v)}
@@ -115,7 +116,7 @@ export default function KinkRow({
         </div>
 
         {/* Row 2: status pills */}
-        <div data-tour="pills" className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
+        <div data-tour="pills" className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
           {PILLS.map(({ status: s, label }) => (
             <button
               key={s}

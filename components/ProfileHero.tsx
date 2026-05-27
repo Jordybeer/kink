@@ -8,6 +8,7 @@ interface ProfileHeroProps {
   profile: Profile;
   maxLevel: number;
   onShare?: () => void;
+  onEdit?: () => void;
   onAvatarChange?: (dataUrl: string | undefined) => void;
   onError?: (message: string) => void;
 }
@@ -39,7 +40,7 @@ const VIBE_MAP: Record<Status, string> = {
   hard_no: "Selectief 🔒",
 };
 
-export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange, onError }: ProfileHeroProps) {
+export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvatarChange, onError }: ProfileHeroProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
 
@@ -157,7 +158,20 @@ export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange
         </div>
 
         <div className="flex-1 min-w-0 pt-0.5">
-          <h2 className="text-2xl font-bold truncate">{profile.name}</h2>
+          <div className="flex items-start gap-2">
+            <h2 className="text-2xl font-bold truncate flex-1">{profile.name}</h2>
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                aria-label="Profiel bewerken"
+                title="Bewerken"
+                className="focus-ring flex-none mt-0.5 p-1.5 rounded-lg text-sm transition-colors"
+                style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+              >
+                ✎
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             <span
               className="text-xs px-2 py-0.5 rounded-full"
@@ -210,12 +224,6 @@ export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange
 
       {/* Kink DNA bar */}
       <div className="mb-4">
-        <p className="text-xs font-semibold mb-1.5">
-          Jouw kink-DNA{" "}
-          <span className="font-normal" style={{ color: "var(--text2)" }}>
-            — verdeling van je keuzes
-          </span>
-        </p>
         {dnaSegments.length === 0 ? (
           <div
             className="h-2 rounded-full w-full"
