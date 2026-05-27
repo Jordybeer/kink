@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
-import { encodeProfile } from "@/lib/shareProfile";
+import { encodeProfile, encodeProfileCompact } from "@/lib/shareProfile";
 
 interface Props {
   profile: Profile | null;
@@ -25,10 +25,12 @@ export default function QRModal({ profile, onClose }: Props) {
       setCopied(false);
       return;
     }
-    const shareUrl =
-      window.location.origin + "/import?p=" + encodeProfile(profile, { includeFetLife });
-    setUrl(shareUrl);
-    QRCode.toDataURL(shareUrl, {
+    setQrDataUrl(null);
+    // QR uses compact encoding (always fits); copy-link uses full encoding (includes comments)
+    const qrUrl = window.location.origin + "/import?p=" + encodeProfileCompact(profile, { includeFetLife });
+    const fullUrl = window.location.origin + "/import?p=" + encodeProfile(profile, { includeFetLife });
+    setUrl(fullUrl);
+    QRCode.toDataURL(qrUrl, {
       width: 240,
       margin: 2,
       color: { dark: "#c084fc", light: "#0a0a0f" },
@@ -92,6 +94,13 @@ export default function QRModal({ profile, onClose }: Props) {
               style={{ width: 240, height: 240, background: "var(--surface2)" }}
               aria-label="QR-code laden…"
             />
+          )}
+
+          {/* Note: QR carries statuses only; comments travel via copy-link */}
+          {profile && Object.values(profile.entries).some(e => e.comment || e.tags?.length) && (
+            <p className="text-[11px] text-center mb-1" style={{ color: "var(--text2)" }}>
+              QR deelt statussen — gebruik de link voor volledige notities.
+            </p>
           )}
 
           {/* FetLife toggle — only shown if username is set */}

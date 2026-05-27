@@ -1,12 +1,139 @@
-import type { Profile } from "@/types";
+import type { Profile, KinkEntry, KinkStatus, CustomKink } from "@/types";
+import { KINKS } from "@/lib/kinks";
+
+// ── v1 encoding (full JSON, used for copy-link) ──────────────────────────────
+
+function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
+  const out: Record<string, unknown> = {};
+  if (entry.status != null) out.status = entry.status;
+  if (entry.desire != null) out.desire = entry.desire;
+  if (entry.experienced != null) out.experienced = entry.experienced;
+  if (entry.comment) out.comment = entry.comment;
+  if (entry.tags?.length) out.tags = entry.tags;
+  // score is deprecated — never encoded
+  return Object.keys(out).length > 0 ? out : null;
+}
 
 export function encodeProfile(profile: Profile, opts?: { includeFetLife?: boolean }): string {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { avatarDataUrl, fetLifeUsername, ...rest } = profile;
-  const stripped = opts?.includeFetLife && fetLifeUsername
-    ? { ...rest, fetLifeUsername }
-    : rest;
-  const json = JSON.stringify(stripped);
+
+  const compactedEntries: Record<string, unknown> = {};
+  for (const [id, entry] of Object.entries(rest.entries)) {
+    const compact = compactEntry(entry);
+    if (compact) compactedEntries[id] = compact;
+  }
+
+  const payload = {
+    ...(opts?.includeFetLife && fetLifeUsername ? { ...rest, fetLifeUsername } : rest),
+    entries: compactedEntries,
+  };
+
+  const json = JSON.stringify(payload);
+  return toBase64Url(json);
+}
+
+export function decodeProfile(encoded: string): Profile {
+  return JSON.parse(fromBase64Url(encoded)) as Profile;
+}
+
+// ── v2 encoding (compact fixed-position, used for QR codes) ──────────────────
+
+const S_ENC: Partial<Record<NonNullable<KinkStatus>, string>> = {
+  yes: "y", willing: "g", maybe: "m", no: "n", hard_no: "H",
+};
+const S_DEC: Record<string, KinkStatus> = {
+  y: "yes", g: "willing", m: "maybe", n: "no", H: "hard_no",
+};
+
+export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?: boolean }): string {
+  // One char per kink in KINKS order: status, desire, experienced
+  const s = KINKS.map(k => {
+    const st = profile.entries[k.id]?.status;
+    return (st ? S_ENC[st] : undefined) ?? " ";
+  }).join("");
+  const d = KINKS.map(k => {
+    const v = profile.entries[k.id]?.desire;
+    return v != null ? String(v) : "0";
+  }).join("");
+  const x = KINKS.map(k => {
+    const v = profile.entries[k.id]?.experienced;
+    return v === true ? "1" : v === false ? "0" : "?";
+  }).join("");
+
+  const ck = (profile.customKinks ?? []).map(c => {
+    const e = profile.entries[c.id];
+    const sc = (e?.status ? S_ENC[e.status] : undefined) ?? " ";
+    return [c.id, c.name, sc, e?.desire ?? 0, e?.experienced ?? null];
+  });
+
+  const payload: Record<string, unknown> = {
+    v: 2,
+    id: profile.id,
+    n: profile.name,
+    r: profile.role,
+    e: profile.experienceLevel,
+    ca: profile.createdAt,
+    ua: profile.updatedAt,
+    s, d, x,
+  };
+  if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
+  if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
+  if (ck.length) payload.ck = ck;
+
+  return toBase64Url(JSON.stringify(payload));
+}
+
+export function decodeProfileCompact(encoded: string): Profile {
+  const p = JSON.parse(fromBase64Url(encoded));
+  const entries: Record<string, KinkEntry> = {};
+
+  for (let i = 0; i < KINKS.length; i++) {
+    const status = S_DEC[p.s?.[i] ?? ""] ?? null;
+    const desire = p.d?.[i] !== "0" && p.d?.[i] ? parseInt(p.d[i]) : null;
+    const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
+    if (status !== null || desire !== null || experienced !== null) {
+      entries[KINKS[i].id] = { status, desire, experienced, score: null, comment: "" };
+    }
+  }
+
+  const customKinks: CustomKink[] = [];
+  for (const [id, name, sc, desireNum, exp] of (p.ck ?? [])) {
+    customKinks.push({ id, name });
+    const status = S_DEC[sc] ?? null;
+    const desire = desireNum || null;
+    const experienced = exp === true ? true : exp === false ? false : null;
+    if (status !== null || desire !== null || experienced !== null) {
+      entries[id] = { status, desire, experienced, score: null, comment: "" };
+    }
+  }
+
+  return {
+    id: p.id,
+    name: p.n,
+    role: p.r,
+    experienceLevel: p.e,
+    ...(p.rs ? { relationshipStatus: p.rs } : {}),
+    ...(p.fl ? { fetLifeUsername: p.fl } : {}),
+    customKinks,
+    createdAt: p.ca,
+    updatedAt: p.ua,
+    entries,
+    isImported: true,
+  };
+}
+
+// Decodes either v1 or v2 — use this on the import path
+export function decodeAny(encoded: string): Profile {
+  const raw = fromBase64Url(encoded);
+  const parsed = JSON.parse(raw);
+  if (parsed.v === 2) return decodeProfileCompact(encoded);
+  return parsed as Profile;
+}
+
+// ── shared UTF-8-safe base64 helpers ─────────────────────────────────────────
+
+function toBase64Url(json: string): string {
   return btoa(
     encodeURIComponent(json).replace(
       /%([0-9A-F]{2})/g,
@@ -15,11 +142,10 @@ export function encodeProfile(profile: Profile, opts?: { includeFetLife?: boolea
   );
 }
 
-export function decodeProfile(encoded: string): Profile {
-  const json = decodeURIComponent(
+function fromBase64Url(encoded: string): string {
+  return decodeURIComponent(
     Array.from(atob(encoded))
       .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
       .join("")
   );
-  return JSON.parse(json) as Profile;
 }

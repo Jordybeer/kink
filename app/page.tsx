@@ -6,7 +6,8 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import type { ExperienceLevel, Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
-import { decodeProfile } from "@/lib/shareProfile";
+import BottomNav from "@/components/BottomNav";
+import { decodeAny } from "@/lib/shareProfile";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -65,6 +66,7 @@ function HomeContent() {
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
   const [editRelationshipStatus, setEditRelationshipStatus] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -72,6 +74,9 @@ function HomeContent() {
   const [visitCount, setVisitCount] = useState(0);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [importDone, setImportDone] = useState(false);
+  const [importDragY, setImportDragY] = useState(0);
+  const [importDragging, setImportDragging] = useState(false);
+  const importDragStart = useRef(0);
 
   useEffect(() => {
     const count = parseInt(localStorage.getItem("ks-visits") ?? "0") + 1;
@@ -92,7 +97,7 @@ function HomeContent() {
     const p = searchParams.get("p");
     if (!p) return;
     try {
-      const incoming = decodeProfile(p);
+      const incoming = decodeAny(p);
       setImportPreview(incoming);
     } catch {
       // ongeldige parameter, negeren
@@ -208,7 +213,7 @@ function HomeContent() {
 
   return (
     <>
-      <main className="max-w-2xl mx-auto px-4 py-10 w-full">
+      <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full">
         {/* Hero */}
         <div className="mb-8 text-center relative">
           <button
@@ -234,9 +239,21 @@ function HomeContent() {
           </p>
         </div>
 
-        {/* Create profile form */}
+        {/* Create profile form — always visible when no profiles, toggle otherwise */}
+        {profiles.length > 0 && (
+          <button
+            onClick={() => setFormOpen(v => !v)}
+            className="focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left transition-colors"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          >
+            <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
+              {formOpen ? "▲ Annuleer" : "+ Nieuw profiel"}
+            </span>
+          </button>
+        )}
+        {(profiles.length === 0 || formOpen) && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={(e) => { handleCreate(e); setFormOpen(false); }}
           className="rounded-xl p-5 mb-8"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
@@ -316,6 +333,7 @@ function HomeContent() {
             Sla jezelf vast →
           </button>
         </form>
+        )}
 
         {/* Profile list */}
         {profiles.length === 0 ? (
@@ -558,7 +576,9 @@ function HomeContent() {
                 <div
                   className="rounded-xl p-5 text-center opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-                  aria-hidden="true"
+                  role="button"
+                  aria-disabled="true"
+                  aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
                 >
                   <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
                     ⚡ Vergelijk profielen
@@ -586,7 +606,9 @@ function HomeContent() {
                 <div
                   className="rounded-xl p-5 text-center opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-                  aria-hidden="true"
+                  role="button"
+                  aria-disabled="true"
+                  aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
                 >
                   <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
                     ✍ Maak een contract
@@ -632,7 +654,7 @@ function HomeContent() {
           className="rounded-t-2xl p-6"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
         >
-          <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ background: "var(--border)" }} />
+          <div className="mb-6" />
           <h2 className="text-lg font-bold text-center mb-5">Instellingen</h2>
           <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
             Thema
@@ -717,7 +739,7 @@ function HomeContent() {
           className="rounded-t-2xl p-6"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
         >
-          <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ background: "var(--border)" }} />
+          <div className="mb-6" />
           <h2 className="text-lg font-bold text-center mb-1">Profiel verwijderen?</h2>
           {deleteTargetProfile && (
             <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
@@ -755,6 +777,27 @@ function HomeContent() {
         role="dialog"
         aria-modal="true"
         aria-label="Profiel importeren"
+        onTouchStart={(e) => {
+          importDragStart.current = e.touches[0].clientY;
+          setImportDragging(true);
+        }}
+        onTouchMove={(e) => {
+          const dy = e.touches[0].clientY - importDragStart.current;
+          if (dy > 0) setImportDragY(dy);
+        }}
+        onTouchEnd={() => {
+          if (importDragY > 80) {
+            setImportDragY(0);
+            setImportPreview(null);
+          } else {
+            setImportDragY(0);
+          }
+          setImportDragging(false);
+        }}
+        style={importDragging || importDragY > 0 ? {
+          transform: `translateY(${importDragY}px)`,
+          transition: importDragging ? "none" : undefined,
+        } : undefined}
       >
         <div
           className="rounded-t-2xl p-6"
@@ -830,11 +873,13 @@ function HomeContent() {
               className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
-              Weiger
+              Niet nu
             </button>
           </div>
         </div>
       </div>
+
+      <BottomNav />
 
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && visitCount >= 3 && onboardingComplete && (

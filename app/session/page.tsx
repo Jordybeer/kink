@@ -90,6 +90,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
   const [partnerDone, setPartnerDone] = useState(false);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const [gatheringElapsed, setGatheringElapsed] = useState(0);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
@@ -318,6 +319,14 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
     if (phase === "done_local" && partnerDone) setPhase("revealed");
   }, [phase, partnerDone]);
 
+  useEffect(() => {
+    const gathering = phase === "host_gathering" || phase === "guest_gathering";
+    if (!gathering) { setGatheringElapsed(0); return; }
+    setGatheringElapsed(0);
+    const t = setInterval(() => setGatheringElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
+
   useEffect(() => () => {
     pcRef.current?.close();
     stopScanner();
@@ -339,6 +348,11 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
     <div className="text-center py-16">
       <div className="animate-pulse text-4xl mb-4">🔮</div>
       <p className="text-sm" style={{ color: "var(--text2)" }}>{msg}</p>
+      {gatheringElapsed >= 5 && (
+        <p className="text-xs mt-2" style={{ color: "var(--text2)", opacity: 0.6 }}>
+          Nog bezig… ({gatheringElapsed}s) — controleer je WiFi-verbinding.
+        </p>
+      )}
     </div>
   );
 
@@ -371,7 +385,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
     <main style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100vh" }} className="max-w-lg mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/" className="focus-ring text-sm" style={{ color: "var(--text2)" }}>← Terug</Link>
-        <h1 className="text-xl font-bold flex-1 text-center" style={{ color: "var(--accent)" }}>Live Sessie</h1>
+        <h1 className="text-xl font-bold flex-1 text-center" style={{ color: "var(--accent)" }}>Live sessie</h1>
         <div className="w-16" />
       </div>
 
@@ -421,7 +435,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
           ) : (
             <div className="mb-3">
               <p className="text-xs mb-2 font-medium" style={{ color: "var(--text2)" }}>
-                Plak de antwoord-URL van je partner (fallback)
+                Geen camera? Laat je partner via &ldquo;Kopieer als fallback-link&rdquo; een link kopiëren en plak die hier.
               </p>
               <textarea value={pasteAnswer} onChange={e => setPasteAnswer(e.target.value)}
                 rows={3} placeholder="https://kinksync.be/session?a=…&sid=…"
@@ -551,7 +565,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
                                   onClick={() => phase === "connected" && handleStatusChange(kink.id, myStatus === s ? null : s)}
                                   disabled={phase !== "connected"}
                                   aria-pressed={myStatus === s}
-                                  className={`focus-ring rounded-full border text-[10px] px-2 py-0.5 transition-colors disabled:opacity-50${myStatus === s ? ` status-${s}` : ""}`}
+                                  className={`focus-ring rounded-full border text-[11px] px-2.5 py-2.5 transition-colors disabled:opacity-50${myStatus === s ? ` status-${s}` : ""}`}
                                   style={myStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}>
                                   {label}
                                 </button>
@@ -612,6 +626,18 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
             </div>
           )}
 
+          <div className="flex flex-col gap-2 mb-3">
+            <Link href={`/compare?a=${profileId}`}
+              className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
+              style={{ background: "var(--accent)", color: "#000" }}>
+              Vergelijk uitgebreid →
+            </Link>
+            <Link href={`/contract?a=${profileId}`}
+              className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
+              style={{ background: "var(--surface)", border: "1px solid var(--accent)", color: "var(--accent)" }}>
+              Maak een contract →
+            </Link>
+          </div>
           <Link href="/"
             className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
