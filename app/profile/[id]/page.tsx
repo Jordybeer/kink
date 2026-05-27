@@ -624,7 +624,7 @@ export default function ProfilePage({ params }: Props) {
                         key={s}
                         onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
                         aria-pressed={ckStatus === s}
-                        className={`focus-ring rounded-full border text-[11px] font-medium transition-colors px-2.5 py-1${ckStatus === s ? ` status-${s}` : ""}`}
+                        className={`focus-ring rounded-full border text-[11px] font-medium transition-colors px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
                         style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                       >
                         {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}

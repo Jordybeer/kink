@@ -85,7 +85,7 @@ export default function CategorySection({
             className="focus-ring rounded-full transition-colors"
             style={{
               fontSize: "10px",
-              padding: "5px 8px",
+              padding: "6px 8px",
               border: "1px solid var(--border)",
               color: "var(--text2)",
             }}
