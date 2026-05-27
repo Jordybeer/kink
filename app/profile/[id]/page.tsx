@@ -9,6 +9,7 @@ import type { KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import BottomNav from "@/components/BottomNav";
+import ProfileTour from "@/components/ProfileTour";
 
 const DESIRE_LEGEND = "★ Weinig  ·  ★★★ Gemiddeld  ·  ★★★★★ Heel graag";
 const ALL_CATS = [...CATEGORIES, "Meer"];
@@ -19,7 +20,7 @@ interface Props {
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, profileTourComplete, completeProfileTour } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
@@ -289,6 +290,8 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className={`max-w-3xl mx-auto w-full ${!profile.isImported ? "pb-28" : "pb-10"}`}>
+      {!profileTourComplete && <ProfileTour onComplete={completeProfileTour} />}
+
       {/* Error toast */}
       {errorMessage && (
         <div

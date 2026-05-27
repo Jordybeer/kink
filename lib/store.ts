@@ -13,6 +13,7 @@ interface State {
   profiles: Profile[];
   contracts: ContractSnapshot[];
   onboardingComplete: boolean;
+  profileTourComplete: boolean;
   installPromptDismissed: boolean;
   theme: Theme;
   createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel, relationshipStatus?: string) => string;
@@ -27,6 +28,7 @@ interface State {
   saveContract: (snapshot: Omit<ContractSnapshot, "id">) => void;
   deleteContract: (id: string) => void;
   completeOnboarding: () => void;
+  completeProfileTour: () => void;
   importProfiles: (incoming: Profile[]) => void;
   dismissInstallPrompt: () => void;
   setTheme: (t: Theme) => void;
@@ -40,6 +42,7 @@ export const useStore = create<State>()(
       profiles: [],
       contracts: [],
       onboardingComplete: false,
+      profileTourComplete: false,
       installPromptDismissed: false,
       theme: "midnight" as Theme,
 
@@ -160,6 +163,10 @@ export const useStore = create<State>()(
         set({ onboardingComplete: true });
       },
 
+      completeProfileTour() {
+        set({ profileTourComplete: true });
+      },
+
       importProfiles(incoming) {
         set((s) => {
           const existingIds = new Set(s.profiles.map((p) => p.id));
@@ -182,15 +189,17 @@ export const useStore = create<State>()(
         profiles: state.profiles,
         contracts: state.contracts,
         onboardingComplete: state.onboardingComplete,
+        profileTourComplete: state.profileTourComplete,
         installPromptDismissed: state.installPromptDismissed,
         theme: state.theme,
       }),
-      version: 5,
+      version: 6,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
           contracts?: ContractSnapshot[];
           onboardingComplete?: boolean;
+          profileTourComplete?: boolean;
           installPromptDismissed?: boolean;
           theme?: Theme;
         };
@@ -210,6 +219,9 @@ export const useStore = create<State>()(
           state.theme = "midnight";
         }
         // v5: desire + experienced + fetLifeUsername + avatarDataUrl — all optional, no migration needed
+        if (version < 6) {
+          state.profileTourComplete = false;
+        }
         return state;
       },
     }

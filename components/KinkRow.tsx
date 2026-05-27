@@ -71,10 +71,8 @@ export default function KinkRow({
           borderLeft: `4px solid ${status ? STATUS_BORDER[status] : "transparent"}`,
         }}
       >
-        {/* Row 1: name + info + ervaring checkbox + comment toggle */}
-        <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-          <span className="flex-1 text-[15px] font-medium leading-snug">{kink.name}</span>
-
+        {/* Row 1: info + name + ervaring pill + comment toggle */}
+        <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
           <button
             onClick={() => setInfoOpen(true)}
             aria-label={`Informatie over ${kink.name}`}
@@ -86,45 +84,32 @@ export default function KinkRow({
             ⓘ
           </button>
 
-          <label
-            className="flex items-center gap-1 cursor-pointer select-none flex-none"
+          <span className="flex-1 text-[17px] font-medium leading-snug">{kink.name}</span>
+
+          <button
+            onClick={() => onExperiencedChange(entry.experienced ? null : true)}
+            aria-pressed={!!entry.experienced}
+            aria-label="Heb je hier ervaring mee"
             title={entry.experienced ? "Ervaring: ja" : "Ervaring: nee"}
+            className="focus-ring flex-none rounded-full border text-[12px] px-2.5 py-1.5 font-medium transition-colors"
+            style={
+              entry.experienced
+                ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
+                : { borderColor: "var(--border)", color: "var(--text2)" }
+            }
           >
-            <span
-              className="w-4 h-4 rounded border flex items-center justify-center transition-colors flex-none"
-              style={
-                entry.experienced
-                  ? { background: "var(--accent)", borderColor: "var(--accent)" }
-                  : { borderColor: "var(--border)" }
-              }
-              aria-hidden="true"
-            >
-              {entry.experienced && (
-                <span className="text-[8px] font-bold leading-none text-black">✓</span>
-              )}
-            </span>
-            <span className="text-[11px]" style={{ color: "var(--text2)" }}>Ervaring</span>
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={entry.experienced ?? false}
-              onChange={(e) => onExperiencedChange(e.target.checked || null)}
-              aria-label="Heb je hier ervaring mee"
-            />
-          </label>
+            Ervaring
+          </button>
 
           {!compact && (
             <button
               onClick={() => setExpanded((v) => !v)}
               aria-label={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
               title={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
-              className={`focus-ring w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
-                entry.comment
-                  ? "text-[var(--accent)] border border-[var(--accent)]"
-                  : "text-[var(--text2)] border border-[var(--border)] hover:text-[var(--text)] hover:border-[var(--text2)]"
-              }`}
+              className="focus-ring w-8 h-8 flex items-center justify-center rounded-lg text-base transition-colors border border-[var(--border)]"
+              style={{ opacity: entry.comment ? 1 : 0.45 }}
             >
-              {entry.comment ? "✎" : "+"}
+              💬
             </button>
           )}
         </div>
@@ -137,7 +122,7 @@ export default function KinkRow({
               onClick={() => onStatusChange(status === s ? null : s)}
               aria-pressed={status === s}
               className={`focus-ring rounded-full border font-medium transition-colors ${
-                compact ? "text-[10px] px-2 py-1.5" : "text-[11px] px-2.5 py-2.5"
+                compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
               }${status === s ? ` status-${s}` : ""}`}
               style={status !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
             >
@@ -148,7 +133,7 @@ export default function KinkRow({
 
         {showComment && (
           <div className="px-3 pb-3 pt-1">
-            <p className="text-[10px] uppercase tracking-wider mb-1 font-semibold" style={{ color: "var(--text2)" }}>
+            <p className="text-[11px] uppercase tracking-wider mb-1 font-semibold" style={{ color: "var(--text2)" }}>
               Notitie
             </p>
             <div className="relative">
@@ -164,7 +149,7 @@ export default function KinkRow({
                 className="focus-ring w-full text-sm rounded-lg border border-[var(--border)] bg-[var(--surface2)] px-3 py-2 pb-5 text-[var(--text)] placeholder-[color:var(--text2)] focus:outline-none focus:border-[var(--accent)]"
               />
               <span
-                className="absolute bottom-2 right-2.5 text-[10px] tabular-nums pointer-events-none select-none"
+                className="absolute bottom-2 right-2.5 text-[11px] tabular-nums pointer-events-none select-none"
                 style={{ color: counterColor }}
               >
                 {commentLen}/200
@@ -181,8 +166,8 @@ export default function KinkRow({
                     aria-pressed={active}
                     className="focus-ring rounded-full border transition-colors"
                     style={{
-                      fontSize: "10px",
-                      padding: "2px 8px",
+                      fontSize: "12px",
+                      padding: "3px 10px",
                       background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "transparent",
                       borderColor: active ? "var(--accent)" : "var(--border)",
                       color: active ? "var(--accent)" : "var(--text2)",

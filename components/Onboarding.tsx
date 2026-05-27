@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useStore } from '@/lib/store';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -50,8 +51,8 @@ function NextButton({ onClick, label = 'Volgende →' }: { onClick: () => void; 
   );
 }
 
-// Total content steps: 1–5 (step 0 is the splash, step 5 is the age gate)
-const TOTAL_STEPS = 5;
+// Total content steps: 1–6 (step 0 is the splash, step 5 is theme, step 6 is the age gate)
+const TOTAL_STEPS = 6;
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
@@ -100,7 +101,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               {step === 2 && <Step2 onNext={advance} />}
               {step === 3 && <Step3 onNext={advance} />}
               {step === 4 && <Step4 onNext={advance} />}
-              {step === 5 && <Step5 onComplete={onComplete} onLockout={() => setLockout(true)} />}
+              {step === 5 && <Step5 onNext={advance} />}
+              {step === 6 && <Step6 onComplete={onComplete} onLockout={() => setLockout(true)} />}
             </div>
 
             <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
@@ -245,9 +247,55 @@ function Step4({ onNext }: { onNext: () => void }) {
   );
 }
 
-/* ── Step 5 — Leeftijdscheck ─────────────────────────────────────────────── */
+/* ── Step 5 — Kies je thema ──────────────────────────────────────────────── */
 
-function Step5({ onComplete, onLockout }: { onComplete: () => void; onLockout: () => void }) {
+const THEMES = [
+  { value: 'midnight' as const, label: 'Midnight',  color: '#c084fc' },
+  { value: 'red'      as const, label: 'Deep Red',  color: '#ef4444' },
+  { value: 'forest'   as const, label: 'Forest',    color: '#4ade80' },
+  { value: 'mono'     as const, label: 'Mono',      color: '#e5e5e5' },
+];
+
+function Step5({ onNext }: { onNext: () => void }) {
+  const { theme, setTheme } = useStore((s) => ({ theme: s.theme, setTheme: s.setTheme }));
+
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ ...ICON_CIRCLE, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }} aria-hidden="true">
+        <span style={{ fontSize: '2.25rem' }}>🎨</span>
+      </div>
+      <h2 style={TITLE}>Kies je sfeer</h2>
+      <p style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%', marginBottom: '2.5rem', animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0 }}>
+        {THEMES.map((t) => {
+          const selected = theme === t.value;
+          return (
+            <button
+              key={t.value}
+              onClick={() => setTheme(t.value)}
+              aria-pressed={selected}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.625rem',
+                padding: '1rem 0.75rem', borderRadius: '0.875rem', cursor: 'pointer',
+                background: selected ? `color-mix(in srgb, ${t.color} 12%, transparent)` : 'rgba(255,255,255,0.04)',
+                border: selected ? `2px solid ${t.color}` : '2px solid rgba(255,255,255,0.1)',
+                transition: 'border-color 150ms ease, background 150ms ease',
+              }}
+            >
+              <span style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: t.color, display: 'block', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: selected ? t.color : 'rgba(255,255,255,0.6)' }}>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <NextButton onClick={onNext} label="Ga door →" />
+    </div>
+  );
+}
+
+/* ── Step 6 — Leeftijdscheck ─────────────────────────────────────────────── */
+
+function Step6({ onComplete, onLockout }: { onComplete: () => void; onLockout: () => void }) {
   return (
     <div style={{ maxWidth: '20rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem', animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both', opacity: 0 }} aria-hidden="true">
