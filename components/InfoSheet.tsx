@@ -1,5 +1,6 @@
 "use client";
 import type { Kink } from "@/types";
+import Sheet from "./Sheet";
 
 interface Props {
   kink: Kink | null;
@@ -14,65 +15,42 @@ const LEVEL_BADGE: Record<1 | 2 | 3 | 4, { label: string; bg: string; color: str
 };
 
 export default function InfoSheet({ kink, onClose }: Props) {
-  const open = kink !== null;
   const badge = kink ? LEVEL_BADGE[kink.level] : null;
 
   return (
-    <>
-      <div
-        className={`sheet-overlay ${open ? "open" : ""}`}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div
-        className={`sheet-panel ${open ? "open" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={kink?.name ?? "Kink informatie"}
-      >
-        <div
-          className="rounded-t-2xl p-6"
-          style={{ background: "var(--surface)" }}
+    <Sheet open={kink !== null} onClose={onClose} aria-label={kink?.name ?? "Kink informatie"}>
+      <div className="rounded-t-2xl p-6" style={{ background: "var(--surface)" }}>
+        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
+
+        {badge && (
+          <span
+            className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-3 border"
+            style={{ background: badge.bg, color: badge.color, borderColor: badge.color }}
+          >
+            {badge.label}
+          </span>
+        )}
+
+        <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>
+          {kink?.name ?? ""}
+        </h2>
+
+        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
+          {kink?.category ?? ""}
+        </p>
+
+        <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text)" }}>
+          {kink?.description ?? "Geen beschrijving beschikbaar."}
+        </p>
+
+        <button
+          onClick={onClose}
+          className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          style={{ border: "1px solid var(--border)", color: "var(--text)" }}
         >
-          {/* Drag handle */}
-          <div
-            className="w-10 h-1 rounded-full mx-auto mb-5"
-            style={{ background: "var(--border)" }}
-          />
-
-          {badge && (
-            <span
-              className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-3 border"
-              style={{ background: badge.bg, color: badge.color, borderColor: badge.color }}
-            >
-              {badge.label}
-            </span>
-          )}
-
-          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>
-            {kink?.name ?? ""}
-          </h2>
-
-          <p
-            className="text-xs uppercase tracking-widest mb-4"
-            style={{ color: "var(--text2)" }}
-          >
-            {kink?.category ?? ""}
-          </p>
-
-          <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text)" }}>
-            {kink?.description ?? "Geen beschrijving beschikbaar."}
-          </p>
-
-          <button
-            onClick={onClose}
-            className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            style={{ border: "1px solid var(--border)", color: "var(--text)" }}
-          >
-            Sluit
-          </button>
-        </div>
+          Sluit
+        </button>
       </div>
-    </>
+    </Sheet>
   );
 }

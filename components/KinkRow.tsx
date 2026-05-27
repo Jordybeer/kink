@@ -74,12 +74,11 @@ export default function KinkRow({
         {/* Row 1: info + name + ervaring pill + comment toggle */}
         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
           <button
+            data-tour="info"
             onClick={() => setInfoOpen(true)}
             aria-label={`Informatie over ${kink.name}`}
-            className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs transition-colors flex-none"
-            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text2)")}
+            className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs flex-none"
+            style={{ background: "#3b82f6", color: "#fff", border: "none" }}
           >
             ⓘ
           </button>
@@ -103,6 +102,7 @@ export default function KinkRow({
 
           {!compact && (
             <button
+              data-tour="comment"
               onClick={() => setExpanded((v) => !v)}
               aria-label={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
               title={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
@@ -115,7 +115,7 @@ export default function KinkRow({
         </div>
 
         {/* Row 2: status pills */}
-        <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
+        <div data-tour="pills" className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
           {PILLS.map(({ status: s, label }) => (
             <button
               key={s}
