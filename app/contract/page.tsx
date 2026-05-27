@@ -179,7 +179,7 @@ function ContractPage() {
     return (
       <main className="max-w-2xl mx-auto px-4 py-16 text-center">
         <p className="mb-4" style={{ color: "var(--text2)" }}>Geen twee profielen geselecteerd.</p>
-        <Link href="/compare" className="focus-ring text-sm" style={{ color: "var(--accent)" }}>← Terug naar vergelijking</Link>
+        <Link href="/compare" className="focus-ring text-sm py-2 inline-block" style={{ color: "var(--accent)" }}>← Terug naar vergelijking</Link>
       </main>
     );
   }
@@ -435,7 +435,7 @@ function ContractPage() {
     <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-28">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
+        <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">Teken het contract</h1>

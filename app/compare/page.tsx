@@ -181,7 +181,7 @@ function ComparePage() {
     <main className="max-w-5xl mx-auto px-4 py-6 pb-20 w-full">
       {/* Header — back link + title only */}
       <div className="flex items-center gap-3 mb-4">
-        <Link href="/" className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
+        <Link href="/" className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">Vergelijk profielen</h1>
@@ -229,7 +229,7 @@ function ComparePage() {
       <div className="md:hidden flex flex-wrap items-center gap-2 mb-3">
         {(["all", "match", "conflict", "hardno"] as const).map((f) => (
           <button key={f} onClick={() => setFilterMode(f)}
-            className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+            className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
             style={filterMode === f
               ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
               : { background: "transparent", color: "var(--text2)", borderColor: "var(--border)" }}>
@@ -463,7 +463,7 @@ function ComparePage() {
               <button
                 key={f}
                 onClick={() => setFilterMode(f)}
-                className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+                className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
                 style={
                   filterMode === f
                     ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }

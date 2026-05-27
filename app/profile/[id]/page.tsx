@@ -334,7 +334,7 @@ export default function ProfilePage({ params }: Props) {
       {/* Header — slim controls only */}
       <div className="px-4 pt-6 pb-3">
         <div className="flex items-center gap-2 mb-3">
-          <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
+          <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
             ← Terug
           </Link>
           <div className="flex-1" />
@@ -507,7 +507,7 @@ export default function ProfilePage({ params }: Props) {
             key={cat}
             data-nav={cat}
             onClick={() => scrollToCategory(cat)}
-            className="focus-ring flex-none px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+            className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
             style={
               activeCategory === cat
                 ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
