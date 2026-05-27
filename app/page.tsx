@@ -74,6 +74,9 @@ function HomeContent() {
   const [visitCount, setVisitCount] = useState(0);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [importDone, setImportDone] = useState(false);
+  const [importDragY, setImportDragY] = useState(0);
+  const [importDragging, setImportDragging] = useState(false);
+  const importDragStart = useRef(0);
 
   useEffect(() => {
     const count = parseInt(localStorage.getItem("ks-visits") ?? "0") + 1;
@@ -774,6 +777,27 @@ function HomeContent() {
         role="dialog"
         aria-modal="true"
         aria-label="Profiel importeren"
+        onTouchStart={(e) => {
+          importDragStart.current = e.touches[0].clientY;
+          setImportDragging(true);
+        }}
+        onTouchMove={(e) => {
+          const dy = e.touches[0].clientY - importDragStart.current;
+          if (dy > 0) setImportDragY(dy);
+        }}
+        onTouchEnd={() => {
+          if (importDragY > 80) {
+            setImportDragY(0);
+            setImportPreview(null);
+          } else {
+            setImportDragY(0);
+          }
+          setImportDragging(false);
+        }}
+        style={importDragging || importDragY > 0 ? {
+          transform: `translateY(${importDragY}px)`,
+          transition: importDragging ? "none" : undefined,
+        } : undefined}
       >
         <div
           className="rounded-t-2xl p-6"
