@@ -132,7 +132,8 @@ function HomeContent() {
 
   function saveEdit() {
     if (!editId || !editName.trim()) return;
-    renameProfile(editId, editName.trim(), editRole, editLevel, editRelationshipStatus || undefined);
+    const existing = profiles.find((p) => p.id === editId);
+    renameProfile(editId, editName.trim(), editRole, editLevel, editRelationshipStatus || undefined, existing?.fetLifeUsername);
     setEditId(null);
   }
 

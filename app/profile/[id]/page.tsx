@@ -5,14 +5,34 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import CategorySection from "@/components/CategorySection";
 import KinkRow from "@/components/KinkRow";
-import type { KinkStatus } from "@/types";
+import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import BottomNav from "@/components/BottomNav";
 import ProfileTour from "@/components/ProfileTour";
 
-const DESIRE_LEGEND = "★ Weinig  ·  ★★★ Gemiddeld  ·  ★★★★★ Heel graag";
 const ALL_CATS = [...CATEGORIES, "Meer"];
+
+const ROLE_GROUPS: { label: string; roles: string[] }[] = [
+  { label: "D/s dynamiek",   roles: ["Switch", "Dominant", "Submissive"] },
+  { label: "Zorgzame D/s",   roles: ["Daddy Dom", "Mommy Dom", "little", "Middle", "Caregiver"] },
+  { label: "Impact & touw",  roles: ["Top", "Bottom", "Sadist", "Masochist", "Rigger", "Rope Bunny"] },
+  { label: "Karakter",       roles: ["Brat", "Brat Tamer", "Primal Hunter", "Primal Prey"] },
+  { label: "Dier & spel",    roles: ["Handler/Owner", "Pet"] },
+  { label: "Overig",         roles: ["Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)"] },
+];
+
+const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[] = [
+  { value: "beginner",  label: "Beginner",  sub: "kort" },
+  { value: "gevorderd", label: "Gevorderd", sub: "normaal" },
+  { value: "ervaren",   label: "Ervaren",   sub: "lang" },
+  { value: "diepgaand", label: "Diepgaand", sub: "alles" },
+];
+
+const RELATIONSHIP_STATUSES = [
+  "Single", "Taken", "Getrouwd", "Gecollared",
+  "Polyamoreus", "Open relatie", "Geowned", "Het is ingewikkeld",
+];
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -28,9 +48,14 @@ export default function ProfilePage({ params }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
+  const [hideComments, setHideComments] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [fetLifeInput, setFetLifeInput] = useState("");
-  const [fetLifeSaved, setFetLifeSaved] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
+  const [editRelStatus, setEditRelStatus] = useState("");
+  const [editFetLife, setEditFetLife] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
@@ -65,10 +90,21 @@ export default function ProfilePage({ params }: Props) {
     btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [activeCategory]);
 
-  // Sync fetLifeInput when profile or username changes
-  useEffect(() => {
-    if (profile) setFetLifeInput(profile.fetLifeUsername ?? "");
-  }, [profile?.id, profile?.fetLifeUsername]);
+  function handleStartEdit() {
+    if (!profile) return;
+    setEditName(profile.name);
+    setEditRole(profile.role);
+    setEditLevel(profile.experienceLevel ?? "beginner");
+    setEditRelStatus(profile.relationshipStatus ?? "");
+    setEditFetLife(profile.fetLifeUsername ?? "");
+    setEditing(true);
+  }
+
+  function handleSaveEdit() {
+    if (!profile || !editName.trim()) return;
+    renameProfile(profile.id, editName.trim(), editRole, editLevel, editRelStatus || undefined, editFetLife.trim() || undefined);
+    setEditing(false);
+  }
 
   if (!_hasHydrated) return null;
 
@@ -89,14 +125,6 @@ export default function ProfilePage({ params }: Props) {
     setEntry(profile!.id, kinkId, { status: s, desire: null });
   }
 
-  function saveFetLife() {
-    renameProfile(
-      profile!.id, profile!.name, profile!.role, profile!.experienceLevel,
-      profile!.relationshipStatus, fetLifeInput.trim() || undefined
-    );
-    setFetLifeSaved(true);
-    setTimeout(() => setFetLifeSaved(false), 1500);
-  }
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
   const totalVisible = visibleKinks.length;
@@ -303,26 +331,26 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="px-4 pt-6 pb-4">
-        <div className="flex items-center gap-3 flex-wrap mb-3">
+      {/* Header — slim controls only */}
+      <div className="px-4 pt-6 pb-3">
+        <div className="flex items-center gap-2 mb-3">
           <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
             ← Terug
           </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold truncate">{profile.name}</h1>
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-                {profile.role}
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}>
-                {profile.experienceLevel ?? "beginner"}
-              </span>
-              <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-                {totalRated} / {totalVisible} beoordeeld
-              </span>
-            </div>
-          </div>
+          <div className="flex-1" />
+          <button
+            onClick={() => setHideComments((v) => !v)}
+            aria-label={hideComments ? "Toon notities" : "Verberg notities"}
+            title={hideComments ? "Toon notities" : "Verberg notities"}
+            className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
+            style={{
+              border: "1px solid var(--border)",
+              color: hideComments ? "var(--accent)" : "var(--text2)",
+              background: hideComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
+            }}
+          >
+            💬
+          </button>
           <button
             onClick={() => setCompact((v) => !v)}
             aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
@@ -350,6 +378,7 @@ export default function ProfilePage({ params }: Props) {
         profile={profile}
         maxLevel={maxLevel}
         onShare={profile.isImported ? undefined : () => setShareOpen(true)}
+        onEdit={profile.isImported ? undefined : handleStartEdit}
         onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
         onError={(msg) => {
           setErrorMessage(msg);
@@ -357,41 +386,104 @@ export default function ProfilePage({ params }: Props) {
         }}
       />
 
-      {/* Verlangen legend + FetLife input */}
-      <div className="px-4 pb-2 flex flex-col gap-2">
-        <p className="text-[11px]" style={{ color: "var(--text2)" }}>
-          <span className="font-semibold" style={{ color: "var(--accent)" }}>★ Verlangen:</span> {DESIRE_LEGEND}
-        </p>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>FL:</span>
-          <input
-            value={fetLifeInput}
-            onChange={(e) => setFetLifeInput(e.target.value)}
-            onBlur={saveFetLife}
-            onKeyDown={(e) => e.key === "Enter" && (e.currentTarget.blur())}
-            placeholder="FetLife gebruikersnaam (optioneel)"
-            className="flex-1 text-[11px] bg-transparent border-b focus:outline-none py-0.5 transition-colors"
-            style={{
-              color: "var(--text)",
-              borderBottomColor: fetLifeInput ? "var(--accent)" : "var(--border)",
-            }}
-          />
-          {fetLifeSaved && (
-            <span className="text-[11px] flex-none" style={{ color: "var(--yes)" }}>✓</span>
-          )}
-          {fetLifeInput && (
-            <a
-              href={`https://fetlife.com/users/${encodeURIComponent(fetLifeInput)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] hover:underline flex-none"
-              style={{ color: "var(--accent)" }}
+      {/* Inline profile edit form */}
+      {editing && !profile.isImported && (
+        <div className="px-4 pb-5">
+          <div className="rounded-2xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+              Profiel bijwerken
+            </h3>
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Naam of alias…"
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-3 focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+            <label className="text-xs mb-1.5 font-medium block" style={{ color: "var(--text2)" }}>Rol</label>
+            <select
+              value={editRole}
+              onChange={(e) => setEditRole(e.target.value)}
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
-              ↗
-            </a>
-          )}
+              {ROLE_GROUPS.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+              ))}
+            </select>
+            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
+            <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
+              {EXPERIENCE_LEVELS.map((l) => (
+                <button
+                  key={l.value}
+                  type="button"
+                  onClick={() => setEditLevel(l.value)}
+                  aria-pressed={editLevel === l.value}
+                  className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
+                  style={
+                    editLevel === l.value
+                      ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                      : { color: "var(--text2)", borderColor: "var(--border)" }
+                  }
+                >
+                  <span className="font-semibold">{l.label}</span>
+                  <span className="text-[10px] opacity-70">{l.sub}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
+              Relatiestatus <span className="font-normal opacity-60">(optioneel)</span>
+            </p>
+            <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Relatiestatus">
+              {RELATIONSHIP_STATUSES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setEditRelStatus((rs) => (rs === s ? "" : s))}
+                  aria-pressed={editRelStatus === s}
+                  className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                  style={
+                    editRelStatus === s
+                      ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                      : { color: "var(--text2)", borderColor: "var(--border)" }
+                  }
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
+              FetLife <span className="font-normal opacity-60">(optioneel)</span>
+            </p>
+            <input
+              value={editFetLife}
+              onChange={(e) => setEditFetLife(e.target.value)}
+              placeholder="Gebruikersnaam…"
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveEdit}
+                disabled={!editName.trim()}
+                className="focus-ring flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-40"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                Opslaan
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="focus-ring px-4 py-2.5 rounded-lg border text-sm"
+                style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+              >
+                Annuleer
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Search filter */}
       <div className="px-4 pb-2">
@@ -450,6 +542,7 @@ export default function ProfilePage({ params }: Props) {
                     onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
                     onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
                     compact={compact}
+                    hideComments={hideComments}
                   />
                 ))}
               </div>
@@ -481,6 +574,7 @@ export default function ProfilePage({ params }: Props) {
                   }
                 }}
                 compact={compact}
+                hideComments={hideComments}
               />
             </div>
           );

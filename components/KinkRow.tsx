@@ -29,11 +29,12 @@ interface Props {
   onCommentChange: (c: string) => void;
   onTagsChange: (tags: string[]) => void;
   compact?: boolean;
+  hideComments?: boolean;
 }
 
 export default function KinkRow({
   kink, entry, onStatusChange, onExperiencedChange,
-  onCommentChange, onTagsChange, compact,
+  onCommentChange, onTagsChange, compact, hideComments,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -59,7 +60,7 @@ export default function KinkRow({
     onTagsChange(next);
   }
 
-  const showComment = !compact && (expanded || entry.comment || tags.length > 0 || isRated);
+  const showComment = !compact && !hideComments && (expanded || entry.comment || tags.length > 0 || isRated);
 
   return (
     <>
@@ -74,12 +75,11 @@ export default function KinkRow({
         {/* Row 1: info + name + ervaring pill + comment toggle */}
         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
           <button
+            data-tour="info"
             onClick={() => setInfoOpen(true)}
             aria-label={`Informatie over ${kink.name}`}
-            className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs transition-colors flex-none"
-            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text2)")}
+            className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs flex-none"
+            style={{ background: "#3b82f6", color: "#fff", border: "none" }}
           >
             ⓘ
           </button>
@@ -101,8 +101,9 @@ export default function KinkRow({
             Ervaring
           </button>
 
-          {!compact && (
+          {!compact && !hideComments && (
             <button
+              data-tour="comment"
               onClick={() => setExpanded((v) => !v)}
               aria-label={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
               title={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
@@ -115,7 +116,7 @@ export default function KinkRow({
         </div>
 
         {/* Row 2: status pills */}
-        <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
+        <div data-tour="pills" className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
           {PILLS.map(({ status: s, label }) => (
             <button
               key={s}

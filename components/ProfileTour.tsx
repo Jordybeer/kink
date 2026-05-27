@@ -1,132 +1,142 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-interface Props {
-  onComplete: () => void;
-}
+interface TourRect { top: number; left: number; width: number; height: number }
 
 const STEPS = [
   {
+    selector: '[data-tour="info"]',
     title: "Info over elke kink",
-    body: "Tap ⓘ links van de naam voor een beschrijving en uitleg.",
-    hint: "ⓘ",
-    hintSide: "left" as const,
+    body: "Tap ⓘ voor een beschrijving en veiligheidstips.",
+    pad: 6,
   },
   {
+    selector: '[data-tour="pills"]',
     title: "Jouw status",
     body: "Tap een pill om aan te geven hoe je over deze kink denkt — van Ja tot Harde grens.",
-    hint: "pills",
-    hintSide: "bottom" as const,
+    pad: 4,
   },
   {
-    title: "Notities en tags",
-    body: "Tap 💬 om een grenstoelichting of opmerking toe te voegen. Verschijnt ook automatisch na het kiezen van een status.",
-    hint: "💬",
-    hintSide: "right" as const,
+    selector: '[data-tour="comment"]',
+    title: "Notities & tags",
+    body: "Tap 💬 voor een grenstoelichting of opmerking. Verschijnt ook automatisch na het kiezen van een status.",
+    pad: 6,
   },
 ];
 
+interface Props { onComplete: () => void }
+
 export default function ProfileTour({ onComplete }: Props) {
   const [step, setStep] = useState(0);
+  const [rects, setRects] = useState<(TourRect | null)[]>([null, null, null]);
+
+  useEffect(() => {
+    const measured = STEPS.map(s => {
+      const el = document.querySelector(s.selector);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { top: r.top, left: r.left, width: r.width, height: r.height };
+    });
+    setRects(measured);
+  }, []);
+
   const current = STEPS[step];
+  const rect = rects[step];
   const isLast = step === STEPS.length - 1;
 
+  if (!rect) return null;
+
+  const pad = current.pad;
+  const spotTop = rect.top - pad;
+  const spotLeft = rect.left - pad;
+  const spotW = rect.width + pad * 2;
+  const spotH = rect.height + pad * 2;
+
+  const spaceBelow = window.innerHeight - (rect.top + rect.height + pad);
+  const tooltipH = 180;
+  const below = spaceBelow >= tooltipH + 16;
+  const tipTop = below
+    ? rect.top + rect.height + pad + 12
+    : rect.top - pad - 12 - tooltipH;
+  const tipLeft = Math.min(
+    Math.max(rect.left - 16, 8),
+    window.innerWidth - 300 - 8,
+  );
+
+  function advance() {
+    if (isLast) onComplete();
+    else setStep(s => s + 1);
+  }
+
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.75)" }}
-        onClick={onComplete}
+    <AnimatePresence>
+      {/* Backdrop — click to skip */}
+      <motion.div
+        key="backdrop"
         aria-hidden="true"
+        style={{ position: "fixed", inset: 0, zIndex: 400 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onComplete}
       />
 
-      {/* Mock kink row as visual anchor */}
-      <div style={{
-        position: "fixed", top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)",
-        zIndex: 401, width: "min(22rem, calc(100vw - 2rem))",
-      }}>
-        {/* Simulated kink row */}
-        <div style={{
-          background: "var(--surface)", border: "1px solid var(--border)",
-          borderLeft: "4px solid var(--accent)", borderRadius: "0.75rem",
-          padding: "0.625rem 0.75rem 0.5rem",
-          marginBottom: "0.75rem",
-        }}>
-          {/* Row 1 */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <span style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: "1.75rem", height: "1.75rem", borderRadius: "0.5rem", flexShrink: 0,
-              border: `1px solid ${current.hintSide === "left" ? "var(--accent)" : "var(--border)"}`,
-              color: current.hintSide === "left" ? "var(--accent)" : "var(--text2)",
-              fontSize: "0.75rem",
-              boxShadow: current.hintSide === "left" ? "0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)" : "none",
-              transition: "all 200ms ease",
-            }}>ⓘ</span>
+      {/* Spotlight cutout — springs between targets */}
+      <motion.div
+        key="spotlight"
+        style={{
+          position: "fixed", zIndex: 401, pointerEvents: "none",
+          boxShadow: "0 0 0 9999px rgba(0,0,0,0.78)",
+          borderRadius: 10,
+          border: "2px solid rgba(255,255,255,0.25)",
+        }}
+        initial={{ opacity: 0, top: spotTop, left: spotLeft, width: spotW, height: spotH }}
+        animate={{ opacity: 1, top: spotTop, left: spotLeft, width: spotW, height: spotH }}
+        exit={{ opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 260 }}
+      />
 
-            <span style={{ flex: 1, fontSize: "1.0625rem", fontWeight: 500, color: "var(--text)" }}>
-              Voorbeeld kink
-            </span>
-
-            <span style={{
-              fontSize: "0.75rem", padding: "0.25rem 0.625rem",
-              borderRadius: "9999px", border: "1px solid var(--border)",
-              color: "var(--text2)", flexShrink: 0,
-            }}>Ervaring</span>
-
-            <span style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: "2rem", height: "2rem", borderRadius: "0.5rem",
-              border: `1px solid ${current.hintSide === "right" ? "var(--accent)" : "var(--border)"}`,
-              fontSize: "0.875rem", opacity: current.hintSide === "right" ? 1 : 0.4,
-              boxShadow: current.hintSide === "right" ? "0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)" : "none",
-              transition: "all 200ms ease",
-            }}>💬</span>
-          </div>
-
-          {/* Row 2 — pills */}
-          <div style={{
-            display: "flex", gap: "0.25rem", flexWrap: "wrap",
-            padding: current.hintSide === "bottom" ? "0.25rem" : "0",
-            borderRadius: "0.5rem",
-            boxShadow: current.hintSide === "bottom" ? "0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)" : "none",
-            transition: "box-shadow 200ms ease",
-          }}>
-            {["Ja", "Graag", "Misschien", "Nee", "Harde grens"].map((label) => (
-              <span key={label} style={{
-                fontSize: "0.8125rem", padding: "0.375rem 0.75rem",
-                borderRadius: "9999px", border: "1px solid var(--border)",
-                color: "var(--text2)",
-              }}>{label}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* Tooltip card */}
-        <div style={{
-          background: "var(--surface2)", border: "1px solid var(--border)",
-          borderRadius: "1rem", padding: "1.25rem 1.25rem 1rem",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-        }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-            <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: "var(--text)" }}>
+      {/* Tooltip card — re-enters per step */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          style={{
+            position: "fixed", zIndex: 402,
+            width: "min(18rem, calc(100vw - 1rem))",
+            left: tipLeft, top: tipTop,
+            background: "var(--surface2)",
+            border: "1px solid var(--border)",
+            borderRadius: "1rem",
+            padding: "1.125rem 1.125rem 0.875rem",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          }}
+          initial={{ opacity: 0, y: below ? 8 : -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: below ? -4 : 4 }}
+          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
+            <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
               {current.title}
             </h3>
             <span style={{ fontSize: "0.75rem", color: "var(--text2)", flexShrink: 0, marginLeft: "0.5rem", marginTop: "0.125rem" }}>
               {step + 1}/{STEPS.length}
             </span>
           </div>
-          <p style={{ margin: "0 0 1.25rem", fontSize: "0.875rem", color: "var(--text2)", lineHeight: 1.6 }}>
+
+          <p style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
             {current.body}
           </p>
-          <div style={{ display: "flex", gap: "0.625rem", alignItems: "center" }}>
+
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <button
-              onClick={isLast ? onComplete : () => setStep((s) => s + 1)}
+              onClick={advance}
               style={{
                 flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
-                padding: "0.625rem 1.25rem", borderRadius: "9999px", border: "none",
-                fontSize: "0.875rem", cursor: "pointer",
+                padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
+                fontSize: "0.8125rem", cursor: "pointer",
               }}
             >
               {isLast ? "Aan de slag 🖤" : "Volgende →"}
@@ -135,26 +145,26 @@ export default function ProfileTour({ onComplete }: Props) {
               onClick={onComplete}
               style={{
                 background: "transparent", border: "1px solid var(--border)",
-                color: "var(--text2)", padding: "0.625rem 1rem",
-                borderRadius: "9999px", fontSize: "0.8125rem", cursor: "pointer",
+                color: "var(--text2)", padding: "0.5rem 0.875rem",
+                borderRadius: "9999px", fontSize: "0.75rem", cursor: "pointer",
               }}
             >
               Sla over
             </button>
           </div>
-        </div>
 
-        {/* Step dots */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "0.375rem", marginTop: "0.875rem" }}>
-          {STEPS.map((_, i) => (
-            <div key={i} style={{
-              height: 4, width: i === step ? 20 : 6, borderRadius: 999,
-              background: i === step ? "var(--accent)" : "var(--border)",
-              transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
-            }} />
-          ))}
-        </div>
-      </div>
-    </>
+          {/* Step dots */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "0.375rem", marginTop: "0.75rem" }}>
+            {STEPS.map((_, i) => (
+              <div key={i} style={{
+                height: 3, width: i === step ? 18 : 5, borderRadius: 999,
+                background: i === step ? "var(--accent)" : "var(--border)",
+                transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
+              }} />
+            ))}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </AnimatePresence>
   );
 }

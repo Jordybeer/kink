@@ -15,6 +15,7 @@ interface Props {
   onBulkSkip: () => void;
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
+  hideComments?: boolean;
 }
 
 const MAX_PIPS = 20;
@@ -26,7 +27,7 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 export default function CategorySection({
   category, kinks, entries,
   onStatusChange, onExperiencedChange,
-  onCommentChange, onTagsChange, onBulkSkip, onBulkRestore, compact,
+  onCommentChange, onTagsChange, onBulkSkip, onBulkRestore, compact, hideComments,
 }: Props) {
   const [open, setOpen] = useState(true);
   const [undoPending, setUndoPending] = useState(false);
@@ -128,6 +129,7 @@ export default function CategorySection({
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
                 compact={compact}
+                hideComments={hideComments}
               />
             ))}
           </div>
