@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import KinkRow from "./KinkRow";
@@ -13,6 +13,7 @@ interface Props {
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
   onBulkSkip: () => void;
+  onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
 }
 
@@ -25,9 +26,12 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 export default function CategorySection({
   category, kinks, entries,
   onStatusChange, onExperiencedChange,
-  onCommentChange, onTagsChange, onBulkSkip, compact,
+  onCommentChange, onTagsChange, onBulkSkip, onBulkRestore, compact,
 }: Props) {
   const [open, setOpen] = useState(true);
+  const [undoPending, setUndoPending] = useState(false);
+  const undoSnapshot = useRef<Record<string, KinkEntry>>({});
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filled = countFilled(kinks, entries);
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
@@ -66,7 +70,16 @@ export default function CategorySection({
             {filled}/{kinks.length}
           </span>
           <button
-            onClick={(e) => { e.stopPropagation(); onBulkSkip(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const snapshot: Record<string, KinkEntry> = {};
+              for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, score: null, comment: "" };
+              undoSnapshot.current = snapshot;
+              onBulkSkip();
+              setUndoPending(true);
+              if (undoTimer.current) clearTimeout(undoTimer.current);
+              undoTimer.current = setTimeout(() => setUndoPending(false), 3000);
+            }}
             aria-label={`Alle kinks in ${category} overslaan`}
             className="focus-ring rounded-full transition-colors"
             style={{
@@ -88,6 +101,19 @@ export default function CategorySection({
           </button>
         </div>
       </button>
+
+      {undoPending && onBulkRestore && (
+        <div className="fixed bottom-20 left-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", maxWidth: "28rem", margin: "0 auto" }}>
+          <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
+          <button
+            onClick={() => { onBulkRestore(undoSnapshot.current); setUndoPending(false); if (undoTimer.current) clearTimeout(undoTimer.current); }}
+            className="focus-ring text-sm font-semibold flex-none"
+            style={{ color: "var(--accent)" }}>
+            Ongedaan maken
+          </button>
+        </div>
+      )}
 
       <div className={`accordion-content ${open ? "open" : ""}`}>
         <div className="accordion-inner">

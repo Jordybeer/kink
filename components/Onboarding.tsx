@@ -77,9 +77,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         @keyframes ks-pulse     { 0%,100% { box-shadow:0 0 0 0 rgba(255,255,255,0.2); } 50% { box-shadow:0 0 0 8px rgba(255,255,255,0); } }
         .ks-slide-out { animation: ks-slide-out 220ms ease forwards; }
         .ks-slide-in  { animation: ks-slide-in  220ms ease forwards; }
+        @media (prefers-reduced-motion: reduce) {
+          .ks-slide-out, .ks-slide-in { animation: none; }
+        }
       `}</style>
 
-      <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
         role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync">
 
         {lockout ? (
@@ -100,19 +103,17 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               {step === 5 && <Step5 onComplete={onComplete} onLockout={() => setLockout(true)} />}
             </div>
 
-            {step > 0 && (
-              <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
-                {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => (
-                  <div key={i} style={{
-                    height: 4,
-                    width: i === step ? 24 : 8,
-                    borderRadius: 999,
-                    background: i === step ? '#c084fc' : 'rgba(255,255,255,0.2)',
-                    transition: 'width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease',
-                  }} />
-                ))}
-              </div>
-            )}
+            <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
+              {Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => i).map(i => (
+                <div key={i} style={{
+                  height: 4,
+                  width: i === step ? 24 : 8,
+                  borderRadius: 999,
+                  background: i === step ? '#c084fc' : 'rgba(255,255,255,0.2)',
+                  transition: 'width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease',
+                }} />
+              ))}
+            </div>
           </>
         )}
       </div>
@@ -140,9 +141,9 @@ function Step0({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
         Begin
       </button>
       <button onClick={onSkip}
-        style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', cursor: 'pointer', padding: '0.25rem 0.5rem' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.5)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.2)'; }}
+        style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '0.875rem', cursor: 'pointer', padding: '0.75rem 1rem' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.6)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; }}
         aria-label="Sla de introductie over">
         Sla over
       </button>

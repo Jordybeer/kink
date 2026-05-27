@@ -251,17 +251,22 @@ export default function ProfileHero({ profile, maxLevel, onShare, onAvatarChange
           </div>
         )}
         {dnaSegments.length > 0 && (
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-            {dnaSegments.map((seg) => (
-              <span
-                key={seg.status}
-                className="text-[10px] tabular-nums flex items-center gap-0.5"
-                style={{ color: DNA_COLORS[seg.status] }}
-              >
-                {DNA_ICONS[seg.status]} {seg.count}
-              </span>
-            ))}
-          </div>
+          <>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+              {dnaSegments.map((seg) => (
+                <span
+                  key={seg.status}
+                  className="text-[10px] tabular-nums flex items-center gap-0.5"
+                  style={{ color: DNA_COLORS[seg.status] }}
+                >
+                  {DNA_ICONS[seg.status]} {seg.count}
+                </span>
+              ))}
+            </div>
+            <p className="text-[10px] mt-1" style={{ color: "var(--text2)" }}>
+              ✓ Ja · ↗ Graag · ♡ Misschien · ✕ Nee · ✕✕ Grens
+            </p>
+          </>
         )}
       </div>
 

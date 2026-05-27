@@ -3,6 +3,7 @@ import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
+import BottomNav from "@/components/BottomNav";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 
@@ -176,37 +177,71 @@ function ComparePage() {
   ];
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-6 w-full">
-      {/* Header — full width, above the two-column split */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+    <>
+    <main className="max-w-5xl mx-auto px-4 py-6 pb-20 w-full">
+      {/* Header — back link + title only */}
+      <div className="flex items-center gap-3 mb-4">
         <Link href="/" className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">Vergelijk profielen</h1>
+      </div>
+
+      {/* Mobile-only sticky selector strip */}
+      <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+        <div className="grid grid-cols-2 gap-3">
+          {(
+            [
+              { id: aId, setId: setAId, label: "Profiel A", colour: COLOUR_A },
+              { id: bId, setId: setBId, label: "Profiel B", colour: COLOUR_B },
+            ] as const
+          ).map(({ id, setId, label, colour }) => (
+            <div key={label}>
+              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>{label}</label>
+              <select value={id} onChange={(e) => setId(e.target.value)}
+                className="focus-ring w-full rounded-lg px-2 py-2 text-sm focus:outline-none"
+                style={{ background: "var(--surface)", border: `1px solid ${colour}`, color: "var(--text)" }}>
+                <option value="">— selecteer —</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.role})</option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
         {profileA && profileB && (
-          <>
-            <Link
-              href={`/scene?a=${aId}&b=${bId}`}
-              className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90 border"
-              style={{ borderColor: "var(--border)", color: "var(--text)" }}
-            >
+          <div className="flex gap-2 mt-2 flex-wrap">
+            <Link href={`/scene?a=${aId}&b=${bId}`}
+              className="focus-ring px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 border flex-1 text-center"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}>
               🎭 Plan een scène
             </Link>
-            <Link
-              href={`/contract?a=${aId}&b=${bId}`}
-              className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "#000" }}
-            >
-              ✍ Teken het contract
+            <Link href={`/contract?a=${aId}&b=${bId}`}
+              className="focus-ring px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 flex-1 text-center"
+              style={{ background: "var(--accent)", color: "#000" }}>
+              ✍ Contract
             </Link>
-          </>
+          </div>
         )}
+      </div>
+
+      {/* Mobile-only filter strip */}
+      <div className="md:hidden flex flex-wrap items-center gap-2 mb-3">
+        {(["all", "match", "conflict", "hardno"] as const).map((f) => (
+          <button key={f} onClick={() => setFilterMode(f)}
+            className="focus-ring px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+            style={filterMode === f
+              ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+              : { background: "transparent", color: "var(--text2)", borderColor: "var(--border)" }}>
+            {f === "all" ? "Alles" : f === "match" ? "Match ✓" : f === "conflict" ? "Spanning ⚡" : "Grenzen ⛔"}
+          </button>
+        ))}
       </div>
 
       <div className="md:flex md:gap-6 md:items-start">
 
-        {/* Left panel — sticky sidebar on md+ */}
-        <div className="md:w-72 md:flex-none md:sticky md:top-6 md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+        {/* Left panel — sticky sidebar on md+ (hidden on mobile, replaced by sticky strip above) */}
+        <div className="hidden md:block md:w-72 md:flex-none md:sticky md:top-6 md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
 
           {/* Profile selectors */}
           <div className="grid grid-cols-2 gap-4 mb-5">
@@ -266,6 +301,26 @@ function ComparePage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          {profileA && profileB && (
+            <div className="flex gap-2 mb-5 flex-wrap">
+              <Link
+                href={`/scene?a=${aId}&b=${bId}`}
+                className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90 border flex-1 text-center"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                🎭 Plan een scène
+              </Link>
+              <Link
+                href={`/contract?a=${aId}&b=${bId}`}
+                className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90 flex-1 text-center"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                ✍ Contract
+              </Link>
             </div>
           )}
 
@@ -455,8 +510,8 @@ function ComparePage() {
 
         </div>{/* end left panel */}
 
-        {/* Right panel — scrollable kink list */}
-        <div className="md:flex-1 mt-5 md:mt-0">
+        {/* Right panel — scrollable kink list (full width on mobile) */}
+        <div className="flex-1 mt-2 md:mt-0">
           {!profileA || !profileB ? (
             <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
               Kies twee spelers — dan kijken we wat jullie gemeen hebben.
@@ -637,6 +692,8 @@ function ComparePage() {
 
       </div>
     </main>
+    <BottomNav />
+    </>
   );
 }
 

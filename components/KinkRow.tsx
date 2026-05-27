@@ -137,7 +137,7 @@ export default function KinkRow({
               onClick={() => onStatusChange(status === s ? null : s)}
               aria-pressed={status === s}
               className={`focus-ring rounded-full border font-medium transition-colors ${
-                compact ? "text-[10px] px-2 py-0.5" : "text-[11px] px-2.5 py-1"
+                compact ? "text-[10px] px-2 py-1.5" : "text-[11px] px-2.5 py-2.5"
               }${status === s ? ` status-${s}` : ""}`}
               style={status !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
             >

@@ -5,10 +5,10 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import CategorySection from "@/components/CategorySection";
 import KinkRow from "@/components/KinkRow";
-import CheckIn from "@/components/CheckIn";
 import type { KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
+import BottomNav from "@/components/BottomNav";
 
 const DESIRE_LEGEND = "★ Weinig  ·  ★★★ Gemiddeld  ·  ★★★★★ Heel graag";
 const ALL_CATS = [...CATEGORIES, "Meer"];
@@ -25,11 +25,11 @@ export default function ProfilePage({ params }: Props) {
 
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [customInput, setCustomInput] = useState("");
-  const [checkInDone, setCheckInDone] = useState(false);
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [fetLifeInput, setFetLifeInput] = useState("");
+  const [fetLifeSaved, setFetLifeSaved] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
@@ -64,20 +64,6 @@ export default function ProfilePage({ params }: Props) {
     btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [activeCategory]);
 
-  useEffect(() => {
-    if (!_hasHydrated || !profile) return;
-    const key = `checkin-${profile.id}`;
-    if (localStorage.getItem(key)) {
-      setCheckInDone(true);
-      return;
-    }
-    const hasRatings = Object.values(profile.entries).some((e) => e.status);
-    if (hasRatings) {
-      setCheckInDone(true);
-      localStorage.setItem(key, "1");
-    }
-  }, [_hasHydrated, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Sync fetLifeInput when profile or username changes
   useEffect(() => {
     if (profile) setFetLifeInput(profile.fetLifeUsername ?? "");
@@ -107,6 +93,8 @@ export default function ProfilePage({ params }: Props) {
       profile!.id, profile!.name, profile!.role, profile!.experienceLevel,
       profile!.relationshipStatus, fetLifeInput.trim() || undefined
     );
+    setFetLifeSaved(true);
+    setTimeout(() => setFetLifeSaved(false), 1500);
   }
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
@@ -300,7 +288,7 @@ export default function ProfilePage({ params }: Props) {
   const customKinks = profile.customKinks ?? [];
 
   return (
-    <main className="max-w-3xl mx-auto w-full pb-24">
+    <main className={`max-w-3xl mx-auto w-full ${!profile.isImported ? "pb-28" : "pb-10"}`}>
       {/* Error toast */}
       {errorMessage && (
         <div
@@ -310,17 +298,6 @@ export default function ProfilePage({ params }: Props) {
         >
           {errorMessage}
         </div>
-      )}
-
-      {/* Emotional check-in overlay */}
-      {_hasHydrated && profile && !checkInDone && (
-        <CheckIn
-          profileName={profile.name}
-          onDone={() => {
-            setCheckInDone(true);
-            localStorage.setItem(`checkin-${profile.id}`, "1");
-          }}
-        />
       )}
 
       {/* Header */}
@@ -396,6 +373,9 @@ export default function ProfilePage({ params }: Props) {
               borderBottomColor: fetLifeInput ? "var(--accent)" : "var(--border)",
             }}
           />
+          {fetLifeSaved && (
+            <span className="text-[11px] flex-none" style={{ color: "var(--yes)" }}>✓</span>
+          )}
           {fetLifeInput && (
             <a
               href={`https://fetlife.com/users/${encodeURIComponent(fetLifeInput)}`}
@@ -492,6 +472,11 @@ export default function ProfilePage({ params }: Props) {
                     setEntry(profile.id, k.id, { status: "no", desire: null });
                   }
                 }}
+                onBulkRestore={(snapshot) => {
+                  for (const [kinkId, entry] of Object.entries(snapshot)) {
+                    setEntry(profile.id, kinkId, { status: entry.status ?? null });
+                  }
+                }}
                 compact={compact}
               />
             </div>
@@ -577,6 +562,7 @@ export default function ProfilePage({ params }: Props) {
       </div>
 
       <QRModal profile={shareOpen && !profile.isImported ? profile : null} onClose={() => setShareOpen(false)} />
+      <BottomNav />
 
       {/* FAB export — hidden for imported profiles (privacy) */}
       {profile.isImported && (
@@ -584,28 +570,33 @@ export default function ProfilePage({ params }: Props) {
           🔒 Geïmporteerd profiel
         </div>
       )}
-      {!profile.isImported && <div
-        className="focus-ring fixed bottom-6 right-4 z-10 flex items-center gap-1 rounded-full shadow-lg overflow-hidden"
-        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-      >
-        <button
-          onClick={handleExport}
-          aria-label="Exporteer lijst als tekstbestand"
-          className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
-          style={{ color: "var(--text)" }}
-        >
-          ↓ TXT
-        </button>
-        <div style={{ width: "1px", background: "var(--border)", alignSelf: "stretch" }} />
-        <button
-          onClick={handlePDFExport}
-          aria-label="Exporteer lijst als PDF"
-          className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
-          style={{ color: "var(--accent)" }}
-        >
-          ↓ PDF
-        </button>
-      </div>}
+      {!profile.isImported && (
+        <div className="fixed bottom-6 right-4 z-10 flex flex-col items-end gap-1">
+          <span className="text-[10px] font-semibold px-2" style={{ color: "var(--text2)" }}>Exporteer</span>
+          <div
+            className="focus-ring flex items-center gap-1 rounded-full shadow-lg overflow-hidden"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+          >
+            <button
+              onClick={handleExport}
+              aria-label="Exporteer lijst als tekstbestand"
+              className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              style={{ color: "var(--text)" }}
+            >
+              ↓ TXT
+            </button>
+            <div style={{ width: "1px", background: "var(--border)", alignSelf: "stretch" }} />
+            <button
+              onClick={handlePDFExport}
+              aria-label="Exporteer lijst als PDF"
+              className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              style={{ color: "var(--accent)" }}
+            >
+              ↓ PDF
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

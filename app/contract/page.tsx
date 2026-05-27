@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
+import BottomNav from "@/components/BottomNav";
 import type { KinkStatus } from "@/types";
 
 function isMatch(a: KinkStatus, b: KinkStatus) {
@@ -166,7 +167,7 @@ function ContractPage() {
 
   function clearCanvas(ref: React.RefObject<HTMLCanvasElement | null>) {
     const c = ref.current;
-    if (c) c.getContext("2d")!.clearRect(0, 0, c.offsetWidth, c.offsetHeight);
+    if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
   }
 
   if (!_hasHydrated) return null;
@@ -471,7 +472,7 @@ function ContractPage() {
           <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
             Safeword &amp; Nazorg
           </h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Column A */}
             <div className="flex flex-col gap-3">
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_A }}>
@@ -668,6 +669,7 @@ function ContractPage() {
           </div>
         </div>
       )}
+      <BottomNav />
       {ceremony && (
         <>
           <style>{`
@@ -784,7 +786,7 @@ function SignaturePad({
 
   function clear() {
     const c = canvasRef.current;
-    if (c) c.getContext("2d")!.clearRect(0, 0, c.offsetWidth, c.offsetHeight);
+    if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
   }
 
   return (
