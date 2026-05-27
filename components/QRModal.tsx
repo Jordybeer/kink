@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
-import { encodeProfile } from "@/lib/shareProfile";
+import { encodeProfile, encodeProfileCompact } from "@/lib/shareProfile";
 
 interface Props {
   profile: Profile | null;
@@ -11,7 +11,6 @@ interface Props {
 
 export default function QRModal({ profile, onClose }: Props) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [qrError, setQrError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
@@ -23,20 +22,19 @@ export default function QRModal({ profile, onClose }: Props) {
   useEffect(() => {
     if (!profile) {
       setQrDataUrl(null);
-      setQrError(false);
       setCopied(false);
       return;
     }
     setQrDataUrl(null);
-    setQrError(false);
-    const shareUrl =
-      window.location.origin + "/import?p=" + encodeProfile(profile, { includeFetLife });
-    setUrl(shareUrl);
-    QRCode.toDataURL(shareUrl, {
+    // QR uses compact encoding (always fits); copy-link uses full encoding (includes comments)
+    const qrUrl = window.location.origin + "/import?p=" + encodeProfileCompact(profile, { includeFetLife });
+    const fullUrl = window.location.origin + "/import?p=" + encodeProfile(profile, { includeFetLife });
+    setUrl(fullUrl);
+    QRCode.toDataURL(qrUrl, {
       width: 240,
       margin: 2,
       color: { dark: "#c084fc", light: "#0a0a0f" },
-    }).then(setQrDataUrl).catch(() => setQrError(true));
+    }).then(setQrDataUrl);
   }, [profile, includeFetLife]);
 
   function handleCopy() {
@@ -90,22 +88,19 @@ export default function QRModal({ profile, onClose }: Props) {
               alt="QR-code voor profielimport"
               className="mx-auto rounded-xl my-4"
             />
-          ) : qrError ? (
-            <div
-              className="mx-auto my-4 rounded-xl flex flex-col items-center justify-center gap-2 px-4 text-center"
-              style={{ width: 240, height: 240, background: "var(--surface2)", border: "1px solid var(--border)" }}
-            >
-              <span className="text-2xl">📎</span>
-              <p className="text-xs" style={{ color: "var(--text2)" }}>
-                Profiel te groot voor QR-code — gebruik de kopieerknop hieronder.
-              </p>
-            </div>
           ) : (
             <div
               className="mx-auto my-4 rounded-xl animate-pulse"
               style={{ width: 240, height: 240, background: "var(--surface2)" }}
               aria-label="QR-code laden…"
             />
+          )}
+
+          {/* Note: QR carries statuses only; comments travel via copy-link */}
+          {profile && Object.values(profile.entries).some(e => e.comment || e.tags?.length) && (
+            <p className="text-[11px] text-center mb-1" style={{ color: "var(--text2)" }}>
+              QR deelt statussen — gebruik de link voor volledige notities.
+            </p>
           )}
 
           {/* FetLife toggle — only shown if username is set */}

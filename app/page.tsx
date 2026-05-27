@@ -7,7 +7,7 @@ import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import type { ExperienceLevel, Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import BottomNav from "@/components/BottomNav";
-import { decodeProfile } from "@/lib/shareProfile";
+import { decodeAny } from "@/lib/shareProfile";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -97,7 +97,7 @@ function HomeContent() {
     const p = searchParams.get("p");
     if (!p) return;
     try {
-      const incoming = decodeProfile(p);
+      const incoming = decodeAny(p);
       setImportPreview(incoming);
     } catch {
       // ongeldige parameter, negeren
