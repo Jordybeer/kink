@@ -21,7 +21,7 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
           <motion.div
             aria-hidden="true"
             style={{
-              position: "fixed", inset: 0, zIndex: 50,
+              position: "fixed", inset: 0, zIndex: 150,
               background: "rgba(0,0,0,0.6)",
               opacity: backdropOpacity,
             }}
@@ -36,7 +36,7 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 51, y, touchAction: "none" }}
+            style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 151, y, touchAction: "none" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}

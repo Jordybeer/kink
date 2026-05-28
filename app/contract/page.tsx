@@ -1,5 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -247,13 +248,17 @@ function ContractPage() {
       doc.line(margin, y, W - margin, y);
       y += 6;
 
-      // Preamble
+      // Preamble — paginate line by line so long text can't overflow the page
       doc.setFont("helvetica", "italic");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
-      const pLines = doc.splitTextToSize(preamble, lineW);
-      doc.text(pLines, margin, y);
-      y += pLines.length * 4.5 + 4;
+      const pLines = doc.splitTextToSize(preamble, lineW) as string[];
+      for (const line of pLines) {
+        if (y > 272) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(...muted); }
+        doc.text(line, margin, y);
+        y += 4.5;
+      }
+      y += 4;
 
       // Safeword & Nazorg section in PDF
       const hasSignalData = (s: Signals) => SIGNAL_LEVELS.some((l) => s[l.key] !== DEFAULT_SIGNALS[l.key] && s[l.key].trim());
@@ -318,6 +323,7 @@ function ContractPage() {
         "Aftercare is geen optie, maar een afspraak.",
         "Dit contract kan op elk moment door beiden worden herzien.",
         "Grenzen die hier niet staan, worden voor elke scène besproken.",
+        "Dit contract kan door beide partijen ten alle tijden verbroken worden zonder toestemming van de ander.",
       ];
       for (const c of clauses) {
         doc.text(`• ${c}`, margin + 3, y);
@@ -552,6 +558,7 @@ function ContractPage() {
             <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }} />Aftercare is geen optie, maar een afspraak.</li>
             <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--willing)" }} />Dit contract kan op elk moment door beiden worden herzien.</li>
             <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--maybe)" }} />Grenzen die hier niet staan, worden voor elke scène besproken.</li>
+            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--accent2)" }} />Dit contract kan door beide partijen ten alle tijden verbroken worden zonder toestemming van de ander.</li>
           </ul>
         </div>
       </div>
@@ -729,6 +736,7 @@ function SignaturePad({
   colour: string;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }) {
+  const [expanded, setExpanded] = useState(false);
   useDrawCanvas(canvasRef);
 
   function clear() {
@@ -744,18 +752,34 @@ function SignaturePad({
       <canvas
         ref={canvasRef}
         width={320}
-        height={120}
         className="w-full rounded-xl touch-none"
-        style={{ border: `1px solid ${colour}`, background: "var(--surface2)", cursor: "crosshair", display: "block" }}
+        style={{
+          border: `1px solid ${colour}`,
+          background: "var(--surface2)",
+          cursor: "crosshair",
+          display: "block",
+          height: expanded ? "200px" : "120px",
+          transition: "height 300ms ease",
+        }}
         aria-label={`Handtekening voor ${label}`}
       />
-      <button
-        onClick={clear}
-        className="focus-ring text-xs px-3 py-1 rounded-full border transition-colors"
-        style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-      >
-        Wis
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          aria-label={expanded ? "Verklein handtekeningveld" : "Vergroot handtekeningveld"}
+          className="focus-ring p-1 rounded-full border transition-colors"
+          style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+        >
+          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+        <button
+          onClick={clear}
+          className="focus-ring text-xs px-3 py-1 rounded-full border transition-colors"
+          style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+        >
+          Wis
+        </button>
+      </div>
       <div className="text-xs text-center" style={{ color: "var(--text2)" }}>
         Teken hier met vinger of muis
       </div>

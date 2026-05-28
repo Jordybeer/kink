@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import InfoSheet from "./InfoSheet";
 
@@ -38,18 +38,9 @@ export default function KinkRow({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const status = entry.status;
 
-  useEffect(() => {
-    if (!status) return;
-    const el = containerRef.current;
-    if (!el) return;
-    el.classList.remove("ks-pop");
-    void el.offsetWidth;
-    el.classList.add("ks-pop");
-  }, [status]);
   const tags = entry.tags ?? [];
   const commentLen = entry.comment.length;
   const isRated = status !== null;
@@ -75,8 +66,7 @@ export default function KinkRow({
   return (
     <>
       <div
-        ref={containerRef}
-        className="rounded-xl mb-1 transition-[border-left-color] duration-150"
+        className={`rounded-xl mb-1 transition-[border-left-color] duration-150${status ? ` ks-glow-${status.replace("_", "-")}` : ""}`}
         style={{
           overflow: "clip",
           background: "var(--surface)",

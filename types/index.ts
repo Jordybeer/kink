@@ -41,6 +41,8 @@ export interface Profile {
   role: string;
   relationshipStatus?: string;
   fetLifeUsername?: string;
+  bdsmtestUrl?: string;
+  privateNote?: string;
   avatarDataUrl?: string;
   isImported?: boolean;
   experienceLevel: ExperienceLevel;
