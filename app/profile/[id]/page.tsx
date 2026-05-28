@@ -8,7 +8,6 @@ import KinkRow from "@/components/KinkRow";
 import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
-import BottomNav from "@/components/BottomNav";
 import ProfileTour from "@/components/ProfileTour";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -349,7 +348,7 @@ export default function ProfilePage({ params }: Props) {
   const customKinks = profile.customKinks ?? [];
 
   return (
-    <main className={`max-w-3xl mx-auto w-full ${!profile.isImported ? "pb-28" : "pb-10"}`}>
+    <main className={`max-w-3xl mx-auto w-full ${!profile.isImported ? "pb-6" : "pb-6"}`}>
       {!profileTourComplete && <ProfileTour onComplete={completeProfileTour} />}
 
       {/* Error toast */}
@@ -406,6 +405,207 @@ export default function ProfilePage({ params }: Props) {
             ✏ {editListOpen ? "Verberg bewerken ↑" : "Lijst bewerken ↓"}
           </button>
         </div>
+      )}
+
+      {/* Collapsible edit list */}
+      {editListOpen && (
+        <>
+          {/* Edit toolbar: search + compact/hideComments */}
+          <div className="px-4 pb-2 flex gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Zoek een kink…"
+              className="focus-ring flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+            <button
+              onClick={() => setHideComments((v) => !v)}
+              aria-label={hideComments ? "Toon notities" : "Verberg notities"}
+              title={hideComments ? "Toon notities" : "Verberg notities"}
+              className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
+              style={{
+                border: "1px solid var(--border)",
+                color: hideComments ? "var(--accent)" : "var(--text2)",
+                background: hideComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
+              }}
+            >
+              💬
+            </button>
+            <button
+              onClick={() => setCompact((v) => !v)}
+              aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
+              title={compact ? "Uitgebreide weergave" : "Compacte weergave"}
+              className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
+              style={{
+                border: "1px solid var(--border)",
+                color: compact ? "var(--accent)" : "var(--text2)",
+                background: compact ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
+              }}
+            >
+              {compact ? "≡" : "⊡"}
+            </button>
+          </div>
+
+          {/* Sticky scrollspy nav */}
+          <div
+            ref={navRef}
+            className="no-scrollbar sticky top-0 z-10 flex gap-1.5 overflow-x-auto px-4 py-2"
+            style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
+          >
+            {ALL_CATS.map((cat) => (
+              <button
+                key={cat}
+                data-nav={cat}
+                onClick={() => { setActiveCategory(cat); scrollToCategory(cat); }}
+                className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+                style={
+                  activeCategory === cat
+                    ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
+                    : { color: "var(--text2)", border: "1px solid var(--border)" }
+                }
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Search results or full category list */}
+          <div className="px-4 pt-3">
+            {searchTrimmed ? (
+              <div>
+                <p className="text-[11px] mb-2 tabular-nums" style={{ color: "var(--text2)" }}>
+                  {searchResults.length} resultaten
+                </p>
+                {searchResults.length === 0 ? (
+                  <p className="text-center text-sm py-8" style={{ color: "var(--text2)" }}>
+                    Geen kinks gevonden voor &ldquo;{searchTrimmed}&rdquo;
+                  </p>
+                ) : (
+                  <div className="flex flex-col pl-1">
+                    {searchResults.map((kink) => (
+                      <KinkRow
+                        key={kink.id}
+                        kink={kink}
+                        entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
+                        onStatusChange={(s) => handleStatus(kink.id, s)}
+                        onExperiencedChange={(v) => setEntry(profile.id, kink.id, { experienced: v })}
+                        onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
+                        onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
+                        compact={compact}
+                        hideComments={hideComments}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {CATEGORIES.map((cat) => {
+                  const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
+                  if (!kinks.length) return null;
+                  return (
+                    <div key={cat} ref={(el) => setSectionRef(el, cat)} data-category={cat}>
+                      <CategorySection
+                        category={cat}
+                        kinks={kinks}
+                        entries={profile.entries}
+                        onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
+                        onExperiencedChange={(kinkId, v) => setEntry(profile.id, kinkId, { experienced: v })}
+                        onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
+                        onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
+                        onBulkSkip={() => {
+                          for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
+                            setEntry(profile.id, k.id, { status: "no", desire: null });
+                          }
+                        }}
+                        onBulkRestore={(snapshot) => {
+                          for (const [kinkId, entry] of Object.entries(snapshot)) {
+                            setEntry(profile.id, kinkId, { status: entry.status ?? null });
+                          }
+                        }}
+                        compact={compact}
+                        hideComments={hideComments}
+                      />
+                    </div>
+                  );
+                })}
+
+                {/* Meer — custom kinks */}
+                <div ref={(el) => setSectionRef(el, "Meer")} data-category="Meer" className="mb-3">
+                  <button
+                    onClick={() => setMeerOpen((v) => !v)}
+                    aria-expanded={meerOpen}
+                    className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1"
+                    style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "4px solid var(--accent)" }}
+                  >
+                    {meerOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    <span className="font-semibold text-sm flex-1 text-left">Meer</span>
+                    <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                      {customKinks.length} eigen
+                    </span>
+                  </button>
+
+                  {meerOpen && <div className="flex flex-col pl-1 mb-2">
+                    {customKinks.map((ck) => {
+                      const ckStatus = profile.entries[ck.id]?.status ?? null;
+                      const ckBorderColor = ckStatus ? STATUS_COLORS[ckStatus] : "transparent";
+                      return (
+                        <div
+                          key={ck.id}
+                          className="rounded-xl overflow-hidden mb-1 transition-[border-left-color] duration-150"
+                          style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `4px solid ${ckBorderColor}` }}
+                        >
+                          <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                            <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
+                            <button
+                              onClick={() => removeCustomKink(profile.id, ck.id)}
+                              aria-label={`${ck.name} verwijderen`}
+                              className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-sm transition-colors"
+                              style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
+                            {(["willing","yes","maybe","no","hard_no"] as const).map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
+                                aria-pressed={ckStatus === s}
+                                className={`focus-ring rounded-full border text-[11px] font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
+                                style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
+                              >
+                                {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>}
+
+                  {meerOpen && <form onSubmit={handleAddCustom} className="flex gap-2">
+                    <input
+                      value={customInput}
+                      onChange={(e) => setCustomInput(e.target.value)}
+                      placeholder="Voeg iets eigens toe…"
+                      className="focus-ring flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+                      style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                    />
+                    <button
+                      type="submit"
+                      className="focus-ring px-3 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
+                      style={{ background: "var(--accent)", color: "#000" }}
+                    >
+                      + Voeg toe
+                    </button>
+                  </form>}
+                </div>
+              </>
+            )}
+          </div>
+        </>
       )}
 
       {/* Inline profile edit form */}
@@ -662,207 +862,6 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {/* Collapsible edit list */}
-      {editListOpen && (
-        <>
-          {/* Edit toolbar: search + compact/hideComments */}
-          <div className="px-4 pb-2 flex gap-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Zoek een kink…"
-              className="focus-ring flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-            />
-            <button
-              onClick={() => setHideComments((v) => !v)}
-              aria-label={hideComments ? "Toon notities" : "Verberg notities"}
-              title={hideComments ? "Toon notities" : "Verberg notities"}
-              className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
-              style={{
-                border: "1px solid var(--border)",
-                color: hideComments ? "var(--accent)" : "var(--text2)",
-                background: hideComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
-              }}
-            >
-              💬
-            </button>
-            <button
-              onClick={() => setCompact((v) => !v)}
-              aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
-              title={compact ? "Uitgebreide weergave" : "Compacte weergave"}
-              className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
-              style={{
-                border: "1px solid var(--border)",
-                color: compact ? "var(--accent)" : "var(--text2)",
-                background: compact ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
-              }}
-            >
-              {compact ? "≡" : "⊡"}
-            </button>
-          </div>
-
-          {/* Sticky scrollspy nav */}
-          <div
-            ref={navRef}
-            className="no-scrollbar sticky top-0 z-10 flex gap-1.5 overflow-x-auto px-4 py-2"
-            style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
-          >
-            {ALL_CATS.map((cat) => (
-              <button
-                key={cat}
-                data-nav={cat}
-                onClick={() => { setActiveCategory(cat); scrollToCategory(cat); }}
-                className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
-                style={
-                  activeCategory === cat
-                    ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
-                    : { color: "var(--text2)", border: "1px solid var(--border)" }
-                }
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Search results or full category list */}
-          <div className="px-4 pt-3">
-            {searchTrimmed ? (
-              <div>
-                <p className="text-[11px] mb-2 tabular-nums" style={{ color: "var(--text2)" }}>
-                  {searchResults.length} resultaten
-                </p>
-                {searchResults.length === 0 ? (
-                  <p className="text-center text-sm py-8" style={{ color: "var(--text2)" }}>
-                    Geen kinks gevonden voor &ldquo;{searchTrimmed}&rdquo;
-                  </p>
-                ) : (
-                  <div className="flex flex-col pl-1">
-                    {searchResults.map((kink) => (
-                      <KinkRow
-                        key={kink.id}
-                        kink={kink}
-                        entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
-                        onStatusChange={(s) => handleStatus(kink.id, s)}
-                        onExperiencedChange={(v) => setEntry(profile.id, kink.id, { experienced: v })}
-                        onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
-                        onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
-                        compact={compact}
-                        hideComments={hideComments}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                {CATEGORIES.map((cat) => {
-                  const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
-                  if (!kinks.length) return null;
-                  return (
-                    <div key={cat} ref={(el) => setSectionRef(el, cat)} data-category={cat}>
-                      <CategorySection
-                        category={cat}
-                        kinks={kinks}
-                        entries={profile.entries}
-                        onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
-                        onExperiencedChange={(kinkId, v) => setEntry(profile.id, kinkId, { experienced: v })}
-                        onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
-                        onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
-                        onBulkSkip={() => {
-                          for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
-                            setEntry(profile.id, k.id, { status: "no", desire: null });
-                          }
-                        }}
-                        onBulkRestore={(snapshot) => {
-                          for (const [kinkId, entry] of Object.entries(snapshot)) {
-                            setEntry(profile.id, kinkId, { status: entry.status ?? null });
-                          }
-                        }}
-                        compact={compact}
-                        hideComments={hideComments}
-                      />
-                    </div>
-                  );
-                })}
-
-                {/* Meer — custom kinks */}
-                <div ref={(el) => setSectionRef(el, "Meer")} data-category="Meer" className="mb-3">
-                  <button
-                    onClick={() => setMeerOpen((v) => !v)}
-                    aria-expanded={meerOpen}
-                    className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1"
-                    style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "4px solid var(--accent)" }}
-                  >
-                    {meerOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    <span className="font-semibold text-sm flex-1 text-left">Meer</span>
-                    <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-                      {customKinks.length} eigen
-                    </span>
-                  </button>
-
-                  {meerOpen && <div className="flex flex-col pl-1 mb-2">
-                    {customKinks.map((ck) => {
-                      const ckStatus = profile.entries[ck.id]?.status ?? null;
-                      const ckBorderColor = ckStatus ? STATUS_COLORS[ckStatus] : "transparent";
-                      return (
-                        <div
-                          key={ck.id}
-                          className="rounded-xl overflow-hidden mb-1 transition-[border-left-color] duration-150"
-                          style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `4px solid ${ckBorderColor}` }}
-                        >
-                          <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                            <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
-                            <button
-                              onClick={() => removeCustomKink(profile.id, ck.id)}
-                              aria-label={`${ck.name} verwijderen`}
-                              className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-sm transition-colors"
-                              style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <div className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
-                            {(["willing","yes","maybe","no","hard_no"] as const).map((s) => (
-                              <button
-                                key={s}
-                                onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
-                                aria-pressed={ckStatus === s}
-                                className={`focus-ring rounded-full border text-[11px] font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
-                                style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
-                              >
-                                {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>}
-
-                  {meerOpen && <form onSubmit={handleAddCustom} className="flex gap-2">
-                    <input
-                      value={customInput}
-                      onChange={(e) => setCustomInput(e.target.value)}
-                      placeholder="Voeg iets eigens toe…"
-                      className="focus-ring flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
-                      style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                    />
-                    <button
-                      type="submit"
-                      className="focus-ring px-3 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
-                      style={{ background: "var(--accent)", color: "#000" }}
-                    >
-                      + Voeg toe
-                    </button>
-                  </form>}
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
       {/* Terug naar boven */}
       <div className="px-4 pb-6 pt-2 flex justify-center">
         <button
@@ -875,16 +874,15 @@ export default function ProfilePage({ params }: Props) {
       </div>
 
       <QRModal profile={shareOpen && !profile.isImported ? profile : null} onClose={() => setShareOpen(false)} />
-      <BottomNav />
 
       {/* FAB export — hidden for imported profiles (privacy) */}
       {profile.isImported && (
-        <div className="fixed bottom-20 right-4 z-[110] px-3 py-2 rounded-full text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+        <div className="fixed bottom-6 right-4 z-[110] px-3 py-2 rounded-full text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
           🔒 Geïmporteerd profiel
         </div>
       )}
       {!profile.isImported && (
-        <div className="fixed bottom-20 right-4 z-[110] flex flex-col items-end gap-1">
+        <div className="fixed bottom-6 right-4 z-[110] flex flex-col items-end gap-1">
           <span className="text-[10px] font-semibold px-2" style={{ color: "var(--text2)" }}>Exporteer</span>
           <div
             className="focus-ring flex items-center gap-1 rounded-full shadow-lg overflow-hidden"

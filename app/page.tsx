@@ -8,7 +8,6 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import type { ExperienceLevel, Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
-import BottomNav from "@/components/BottomNav";
 import { decodeAny } from "@/lib/shareProfile";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -498,7 +497,7 @@ function HomeContent() {
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       {!isMulti && <span className="text-sm font-semibold truncate">{p.name}</span>}
                                       {p.id === pinnedProfileId && (
-                                        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)", border: "1px solid var(--accent)" }}>
+                                        <span className="text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)", border: "1px solid var(--accent)" }}>
                                           Mijn profiel
                                         </span>
                                       )}
@@ -912,8 +911,6 @@ function HomeContent() {
           </div>
         </div>
       </div>
-
-      <BottomNav />
 
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && visitCount >= 3 && onboardingComplete && (

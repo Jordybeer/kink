@@ -3,7 +3,6 @@ import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
-import BottomNav from "@/components/BottomNav";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 
@@ -697,7 +696,6 @@ function ComparePage() {
 
       </div>
     </main>
-    <BottomNav />
     </>
   );
 }
