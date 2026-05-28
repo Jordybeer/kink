@@ -596,12 +596,6 @@ function ComparePage() {
                                 <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
                                 <StatusBadge status={eB.status} colour={COLOUR_B} />
                               </div>
-                              {(eA.score || eB.score) && (
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span style={{ color: COLOUR_A }}>{eA.score ? "★".repeat(eA.score) : ""}</span>
-                                  <span style={{ color: COLOUR_B }}>{eB.score ? "★".repeat(eB.score) : ""}</span>
-                                </div>
-                              )}
                               {(eA.comment || eB.comment) && (
                                 <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
                                   {eA.comment && <div><span className="font-medium" style={{ color: COLOUR_A }}>{profileA.name}:</span> {eA.comment}</div>}

@@ -1,5 +1,6 @@
 "use client";
 import { useRef } from "react";
+import { Pencil } from "lucide-react";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
@@ -165,10 +166,10 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 onClick={onEdit}
                 aria-label="Profiel bewerken"
                 title="Bewerken"
-                className="focus-ring flex-none mt-0.5 p-1.5 rounded-lg text-sm transition-colors"
+                className="focus-ring flex-none mt-0.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-colors"
                 style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
               >
-                ✎
+                <Pencil size={15} />
               </button>
             )}
           </div>
@@ -219,14 +220,22 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
               ↗ fetlife.com/users/{profile.fetLifeUsername}
             </a>
           )}
+          {profile.bdsmtestUrl && (
+            <a
+              href={profile.bdsmtestUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs mt-0.5 inline-block hover:underline py-2"
+              style={{ color: "var(--accent)" }}
+            >
+              ↗ BDSMTest resultaat
+            </a>
+          )}
         </div>
       </div>
 
       {/* Kink DNA bar */}
       <div className="mb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text2)" }}>
-          Kink DNA
-        </p>
         {dnaSegments.length === 0 ? (
           <div
             className="h-2 rounded-full w-full"

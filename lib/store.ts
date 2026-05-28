@@ -21,7 +21,8 @@ interface State {
   unpinProfile: () => void;
   createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel, relationshipStatus?: string) => string;
   deleteProfile: (id: string) => void;
-  renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string, fetLifeUsername?: string) => void;
+  renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string, fetLifeUsername?: string, bdsmtestUrl?: string) => void;
+  updatePrivateNote: (id: string, note: string) => void;
   setProfileAvatar: (id: string, avatarDataUrl: string | undefined) => void;
   setEntry: (profileId: string, kinkId: string, patch: Partial<KinkEntry>) => void;
   resetEntry: (profileId: string, kinkId: string) => void;
@@ -86,12 +87,20 @@ export const useStore = create<State>()(
         }));
       },
 
-      renameProfile(id, name, role, experienceLevel, relationshipStatus, fetLifeUsername) {
+      renameProfile(id, name, role, experienceLevel, relationshipStatus, fetLifeUsername, bdsmtestUrl) {
         set((s) => ({
           profiles: s.profiles.map((p) =>
             p.id === id
-              ? { ...p, name, role, experienceLevel, relationshipStatus: relationshipStatus || undefined, fetLifeUsername: fetLifeUsername || undefined, updatedAt: Date.now() }
+              ? { ...p, name, role, experienceLevel, relationshipStatus: relationshipStatus || undefined, fetLifeUsername: fetLifeUsername || undefined, bdsmtestUrl: bdsmtestUrl || undefined, updatedAt: Date.now() }
               : p
+          ),
+        }));
+      },
+
+      updatePrivateNote(id, note) {
+        set((s) => ({
+          profiles: s.profiles.map((p) =>
+            p.id === id ? { ...p, privateNote: note || undefined } : p
           ),
         }));
       },
@@ -209,7 +218,7 @@ export const useStore = create<State>()(
         theme: state.theme,
         pinnedProfileId: state.pinnedProfileId,
       }),
-      version: 7,
+      version: 8,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -242,6 +251,7 @@ export const useStore = create<State>()(
         if (version < 7) {
           state.pinnedProfileId = null;
         }
+        // v8: bdsmtestUrl + privateNote — both optional, no migration needed
         return state;
       },
     }

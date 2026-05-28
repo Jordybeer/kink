@@ -49,7 +49,7 @@ interface Props {
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, profileTourComplete, completeProfileTour } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
@@ -65,6 +65,9 @@ export default function ProfilePage({ params }: Props) {
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
   const [editRelStatus, setEditRelStatus] = useState("");
   const [editFetLife, setEditFetLife] = useState("");
+  const [editBdsmtestUrl, setEditBdsmtestUrl] = useState("");
+  const [editUrlError, setEditUrlError] = useState<string | null>(null);
+  const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [editListOpen, setEditListOpen] = useState(false);
   const [meerOpen, setMeerOpen] = useState(true);
@@ -116,12 +119,25 @@ export default function ProfilePage({ params }: Props) {
     setEditLevel(profile.experienceLevel ?? "beginner");
     setEditRelStatus(profile.relationshipStatus ?? "");
     setEditFetLife(profile.fetLifeUsername ?? "");
+    setEditBdsmtestUrl(profile.bdsmtestUrl ?? "");
+    setEditUrlError(null);
     setEditing(true);
   }
 
   function handleSaveEdit() {
     if (!profile || !editName.trim()) return;
-    renameProfile(profile.id, editName.trim(), editRole, editLevel, editRelStatus || undefined, editFetLife.trim() || undefined);
+    const fetLife = editFetLife.trim();
+    if (fetLife && (fetLife.includes("://") || fetLife.includes("<") || fetLife.includes(">"))) {
+      setEditUrlError("FetLife: vul alleen je gebruikersnaam in, geen URL.");
+      return;
+    }
+    const bdsmtest = editBdsmtestUrl.trim();
+    if (bdsmtest && !/^https?:\/\/(www\.)?bdsmtest\.org\//i.test(bdsmtest)) {
+      setEditUrlError("BDSMTest: URL moet beginnen met https://bdsmtest.org/");
+      return;
+    }
+    setEditUrlError(null);
+    renameProfile(profile.id, editName.trim(), editRole, editLevel, editRelStatus || undefined, fetLife || undefined, bdsmtest || undefined);
     setEditing(false);
   }
 
@@ -167,9 +183,8 @@ export default function ProfilePage({ params }: Props) {
       lines.push(`## ${cat}`);
       for (const k of active) {
         const e = profile!.entries[k.id];
-        const stars = e.score ? "★".repeat(e.score) + "☆".repeat(5 - e.score) : "";
         const comment = e.comment ? ` — ${e.comment}` : "";
-        lines.push(`- [${e.status?.toUpperCase()}] ${k.name}${stars ? "  " + stars : ""}${comment}`);
+        lines.push(`- [${e.status?.toUpperCase()}] ${k.name}${comment}`);
       }
       lines.push("");
     }
@@ -178,9 +193,8 @@ export default function ProfilePage({ params }: Props) {
       for (const ck of profile!.customKinks) {
         const e = profile!.entries[ck.id];
         if (!e?.status) continue;
-        const stars = e.score ? "★".repeat(e.score) : "";
         const comment = e.comment ? ` — ${e.comment}` : "";
-        lines.push(`- [${e.status?.toUpperCase()}] ${ck.name}${stars ? "  " + stars : ""}${comment}`);
+        lines.push(`- [${e.status?.toUpperCase()}] ${ck.name}${comment}`);
       }
       lines.push("");
     }
@@ -271,11 +285,10 @@ export default function ProfilePage({ params }: Props) {
         doc.setFontSize(9);
         doc.setTextColor(...color);
         const statusLabel = e.status ? `[${STATUS_NL[e.status]}]` : "";
-        const stars = e.score ? "★".repeat(e.score) : "";
         const tags = (e.tags ?? []).length ? ` [${e.tags!.join(", ")}]` : "";
         doc.text(`• ${k.name}`, margin + 2, y);
         doc.setTextColor(...muted);
-        doc.text(`${statusLabel}${stars ? "  " + stars : ""}${tags}`, margin + 2 + doc.getTextWidth(`• ${k.name}`) + 3, y);
+        doc.text(`${statusLabel}${tags}`, margin + 2 + doc.getTextWidth(`• ${k.name}`) + 3, y);
         y += 4.5;
         if (e.comment) {
           doc.setFont("helvetica", "italic");
@@ -378,6 +391,23 @@ export default function ProfilePage({ params }: Props) {
         }}
       />
 
+      {/* Edit list toggle — primary CTA directly below hero */}
+      {!profile.isImported && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={() => setEditListOpen((v) => !v)}
+            className="focus-ring w-full rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+            style={{
+              background: editListOpen ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "var(--surface)",
+              border: editListOpen ? "1px solid var(--accent)" : "1px solid var(--border)",
+              color: editListOpen ? "var(--accent)" : "var(--text2)",
+            }}
+          >
+            ✏ {editListOpen ? "Verberg bewerken ↑" : "Lijst bewerken ↓"}
+          </button>
+        </div>
+      )}
+
       {/* Inline profile edit form */}
       {editing && !profile.isImported && (
         <div className="px-4 pb-5">
@@ -428,14 +458,14 @@ export default function ProfilePage({ params }: Props) {
             <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
               Relatiestatus <span className="font-normal opacity-60">(optioneel)</span>
             </p>
-            <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Relatiestatus">
+            <div className="no-scrollbar flex gap-1.5 mb-4 overflow-x-auto pb-1" role="group" aria-label="Relatiestatus">
               {RELATIONSHIP_STATUSES.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setEditRelStatus((rs) => (rs === s ? "" : s))}
                   aria-pressed={editRelStatus === s}
-                  className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                  className="focus-ring flex-none px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                   style={
                     editRelStatus === s
                       ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
@@ -456,6 +486,19 @@ export default function ProfilePage({ params }: Props) {
               className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none placeholder-[color:var(--text2)]"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
+            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
+              BDSMTest <span className="font-normal opacity-60">(optioneel)</span>
+            </p>
+            <input
+              value={editBdsmtestUrl}
+              onChange={(e) => setEditBdsmtestUrl(e.target.value)}
+              placeholder="https://bdsmtest.org/r/…"
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+            {editUrlError && (
+              <p className="text-xs mb-3 px-1" style={{ color: "var(--hard-no)" }}>{editUrlError}</p>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={handleSaveEdit}
@@ -492,6 +535,24 @@ export default function ProfilePage({ params }: Props) {
           </div>
         ) : (
           <>
+            <div className="flex items-center justify-between mb-2 px-0.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text2)" }}>
+                {totalRated} beoordeeld
+              </span>
+              <button
+                onClick={() => setShowOverviewComments((v) => !v)}
+                aria-label={showOverviewComments ? "Verberg notities" : "Toon notities"}
+                title={showOverviewComments ? "Verberg notities" : "Toon notities"}
+                className="focus-ring p-1.5 rounded-lg border text-xs transition-colors"
+                style={{
+                  border: "1px solid var(--border)",
+                  color: showOverviewComments ? "var(--accent)" : "var(--text2)",
+                  background: showOverviewComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
+                }}
+              >
+                💬
+              </button>
+            </div>
             {CATEGORIES.map((cat) => {
               const ratedKinks = getKinksByCategoryAndLevel(cat, maxLevel).filter(
                 (k) => profile.entries[k.id]?.status
@@ -529,7 +590,7 @@ export default function ProfilePage({ params }: Props) {
                               {STATUS_LABELS[s]}
                             </span>
                           </div>
-                          {entry.comment && (
+                          {showOverviewComments && entry.comment && (
                             <p className="text-xs mt-1 truncate" style={{ color: "var(--text2)" }}>
                               {entry.comment}
                             </p>
@@ -584,20 +645,22 @@ export default function ProfilePage({ params }: Props) {
         )}
       </div>
 
-      {/* Edit list toggle */}
-      <div className="px-4 pb-3">
-        <button
-          onClick={() => setEditListOpen((v) => !v)}
-          className="focus-ring w-full rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-          style={{
-            background: editListOpen ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "var(--surface)",
-            border: editListOpen ? "1px solid var(--accent)" : "1px solid var(--border)",
-            color: editListOpen ? "var(--accent)" : "var(--text2)",
-          }}
-        >
-          ✏ {editListOpen ? "Verberg bewerken ↑" : "Lijst bewerken ↓"}
-        </button>
-      </div>
+      {/* Private notes — imported profiles only */}
+      {profile.isImported && (
+        <div className="px-4 pb-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text2)" }}>
+            Persoonlijke notitie
+          </p>
+          <textarea
+            value={profile.privateNote ?? ""}
+            onChange={(e) => updatePrivateNote(profile.id, e.target.value)}
+            placeholder="Wanneer/waar ontmoet, indrukken…"
+            rows={3}
+            className="focus-ring w-full text-sm rounded-lg border px-3 py-2 placeholder-[color:var(--text2)] focus:outline-none"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
+          />
+        </div>
+      )}
 
       {/* Collapsible edit list */}
       {editListOpen && (
@@ -799,6 +862,17 @@ export default function ProfilePage({ params }: Props) {
           </div>
         </>
       )}
+
+      {/* Terug naar boven */}
+      <div className="px-4 pb-6 pt-2 flex justify-center">
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="focus-ring text-xs px-4 py-2 rounded-full border transition-colors"
+          style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+        >
+          ↑ Terug naar boven
+        </button>
+      </div>
 
       <QRModal profile={shareOpen && !profile.isImported ? profile : null} onClose={() => setShareOpen(false)} />
       <BottomNav />
