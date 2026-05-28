@@ -885,7 +885,7 @@ function HomeContent() {
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && visitCount >= 3 && onboardingComplete && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 py-3 px-4 flex items-center gap-3"
+          className="fixed bottom-0 left-0 right-0 z-[120] py-3 px-4 flex items-center gap-3"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
           role="banner"
         >

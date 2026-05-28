@@ -188,7 +188,7 @@ function ComparePage() {
       </div>
 
       {/* Mobile-only sticky selector strip */}
-      <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+      <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", paddingTop: "env(safe-area-inset-top)" }}>
         <div className="grid grid-cols-2 gap-3">
           {(
             [
@@ -224,6 +224,31 @@ function ComparePage() {
           </div>
         )}
       </div>
+
+      {/* Mobile-only summary card */}
+      {profileA && profileB && (
+        <div className="md:hidden rounded-xl p-3 mb-3 flex items-center gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}>
+          <div className="flex-1 text-center">
+            <div className="text-xl font-bold tabular-nums" style={{ color: "var(--yes)" }}>{matchCount}</div>
+            <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>matches</div>
+          </div>
+          <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
+          <div className="flex-1 text-center">
+            <div className="text-xl font-bold tabular-nums" style={{ color: "var(--maybe)" }}>{discussCount}</div>
+            <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>bespreken</div>
+          </div>
+          <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
+          <div className="flex-1 text-center">
+            <div className="text-xl font-bold tabular-nums" style={{ color: "var(--hard-no)" }}>{hardLimitCount}</div>
+            <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>grenzen</div>
+          </div>
+          <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
+          <div className="flex-1 text-center">
+            <div className="text-xl font-bold tabular-nums" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{score}%</div>
+            <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>match</div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile-only filter strip */}
       <div className="md:hidden flex flex-wrap items-center gap-2 mb-3">

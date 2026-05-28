@@ -11,8 +11,11 @@ const STATIC_ITEMS = [
 
 export default function BottomNav() {
   const path = usePathname();
-  const profileId = useStore((s) => s.profiles[0]?.id);
-  const profileHref = profileId ? `/profile/${profileId}` : "/";
+  const firstProfileId = useStore((s) => s.profiles[0]?.id);
+  const currentProfileMatch = path.match(/^\/profile\/([^/]+)/);
+  const profileHref = currentProfileMatch
+    ? `/profile/${currentProfileMatch[1]}`
+    : firstProfileId ? `/profile/${firstProfileId}` : "/";
 
   const allItems = [
     ...STATIC_ITEMS,
@@ -21,8 +24,12 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch"
-      style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
+      className="fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
+      style={{
+        background: "var(--surface)",
+        borderTop: "1px solid var(--border)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
       aria-label="Hoofdnavigatie"
     >
       {allItems.map(({ href, label, icon }) => {

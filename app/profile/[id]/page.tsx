@@ -340,7 +340,7 @@ export default function ProfilePage({ params }: Props) {
       {/* Error toast */}
       {errorMessage && (
         <div
-          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-50 px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
+          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-[300] px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
           style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
           role="alert"
         >
