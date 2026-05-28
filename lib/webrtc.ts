@@ -13,6 +13,7 @@ export function decodeSdp(enc: string): string {
 export function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = 3000): Promise<void> {
   return new Promise((resolve, reject) => {
     if (pc.iceGatheringState === "complete") { resolve(); return; }
+    // eslint-disable-next-line prefer-const
     let timer: ReturnType<typeof setTimeout>;
     function handler() {
       if (pc.iceGatheringState === "complete") {
