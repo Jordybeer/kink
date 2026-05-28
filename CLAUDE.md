@@ -26,5 +26,5 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - `_hasHydrated` guards all pages against SSR flash
 - Kink data: `lib/kinks.ts` · Types: `types/index.ts`
 
-## Suggestions (welcome)
-After each task, proactively suggest improvements and write them to `future.md`.
+## Suggestions (ask first)
+After each task, ask if suggestions are welcome before writing anything to `future.md`.
