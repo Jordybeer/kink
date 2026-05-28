@@ -28,3 +28,8 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 
 ## Suggestions (ask first)
 After each task, ask if suggestions are welcome before writing anything to `future.md`.
+
+## Editing discipline (learned)
+- Read the full element before editing — not just the target line. Avoid duplicate props.
+- On large files (300+ lines), run `smart_outline(file)` before planning structural changes.
+- When restructuring JSX (moving nodes, adding fragments), verify open/close tag balance with `grep` after each edit.
