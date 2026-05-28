@@ -340,7 +340,7 @@ export default function ProfilePage({ params }: Props) {
       {/* Error toast */}
       {errorMessage && (
         <div
-          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-50 px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
+          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-[300] px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
           style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
           role="alert"
         >
@@ -807,7 +807,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               onClick={handleExport}
               aria-label="Exporteer lijst als tekstbestand"
-              className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              className="px-3 py-3 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
               style={{ color: "var(--text)" }}
             >
               ↓ TXT
@@ -816,7 +816,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               onClick={handlePDFExport}
               aria-label="Exporteer lijst als PDF"
-              className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              className="px-3 py-3 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
               style={{ color: "var(--accent)" }}
             >
               ↓ PDF

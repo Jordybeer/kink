@@ -17,8 +17,8 @@ const STATUSES = ["willing", "yes", "maybe", "no", "hard_no"] as const;
 type Status = typeof STATUSES[number];
 
 const DNA_COLORS: Record<Status, string> = {
-  willing: "#4ade80",
-  yes:     "#60a5fa",
+  willing: "#60a5fa",
+  yes:     "#4ade80",
   maybe:   "#fbbf24",
   no:      "#f87171",
   hard_no: "#ef4444",

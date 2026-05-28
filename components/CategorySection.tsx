@@ -40,71 +40,74 @@ export default function CategorySection({
 
   return (
     <section className="mb-3">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors text-left sticky top-[41px] z-[5]"
+      <div
+        className="sticky top-[41px] z-[5] flex items-center rounded-lg transition-colors"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
         }}
       >
-        <span className="text-[var(--accent)] flex-none">
-          {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        </span>
-        <span className="font-semibold text-sm flex-1 text-left">{category}</span>
-        <div className="flex items-center gap-1.5 flex-none">
-          <div className="flex gap-0.5 items-center">
-            {Array.from({ length: pipCount }, (_, i) => (
-              <div
-                key={i}
-                className="w-1.5 h-1.5 rounded-full transition-colors"
-                style={{ background: i < filledPips ? "var(--accent)" : "var(--border)" }}
-              />
-            ))}
-            {overflow && (
-              <span className="text-[10px] ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>
-            )}
-          </div>
-          <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-            {filled}/{kinks.length}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="focus-ring flex-1 flex items-center gap-2 px-3 py-2.5 text-left min-w-0"
+        >
+          <span className="text-[var(--accent)] flex-none">
+            {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              const snapshot: Record<string, KinkEntry> = {};
-              for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, score: null, comment: "" };
-              undoSnapshot.current = snapshot;
-              onBulkSkip();
-              setUndoPending(true);
-              if (undoTimer.current) clearTimeout(undoTimer.current);
-              undoTimer.current = setTimeout(() => setUndoPending(false), 3000);
-            }}
-            aria-label={`Alle kinks in ${category} overslaan`}
-            className="focus-ring rounded-full transition-colors"
-            style={{
-              fontSize: "10px",
-              padding: "6px 8px",
-              border: "1px solid var(--border)",
-              color: "var(--text2)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--accent)";
-              e.currentTarget.style.color = "var(--accent)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--border)";
-              e.currentTarget.style.color = "var(--text2)";
-            }}
-          >
-            Sla over
-          </button>
-        </div>
-      </button>
+          <span className="font-semibold text-sm flex-1 text-left truncate">{category}</span>
+          <div className="flex items-center gap-1.5 flex-none">
+            <div className="flex gap-0.5 items-center">
+              {Array.from({ length: pipCount }, (_, i) => (
+                <div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full transition-colors"
+                  style={{ background: i < filledPips ? "var(--accent)" : "var(--border)" }}
+                />
+              ))}
+              {overflow && (
+                <span className="text-[10px] ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>
+              )}
+            </div>
+            <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+              {filled}/{kinks.length}
+            </span>
+          </div>
+        </button>
+        <button
+          onClick={() => {
+            const snapshot: Record<string, KinkEntry> = {};
+            for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, score: null, comment: "" };
+            undoSnapshot.current = snapshot;
+            onBulkSkip();
+            setUndoPending(true);
+            if (undoTimer.current) clearTimeout(undoTimer.current);
+            undoTimer.current = setTimeout(() => setUndoPending(false), 3000);
+          }}
+          aria-label={`Alle kinks in ${category} overslaan`}
+          className="focus-ring rounded-full transition-colors flex-none mr-2"
+          style={{
+            fontSize: "10px",
+            padding: "6px 8px",
+            border: "1px solid var(--border)",
+            color: "var(--text2)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--accent)";
+            e.currentTarget.style.color = "var(--accent)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.color = "var(--text2)";
+          }}
+        >
+          Sla over
+        </button>
+      </div>
 
       {undoPending && onBulkRestore && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
+        <div className="fixed bottom-20 left-4 right-4 z-[300] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
           style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", maxWidth: "28rem", margin: "0 auto" }}>
           <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
           <button

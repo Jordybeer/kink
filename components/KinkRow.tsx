@@ -76,8 +76,9 @@ export default function KinkRow({
     <>
       <div
         ref={containerRef}
-        className="rounded-xl overflow-hidden mb-1 transition-[border-left-color] duration-150"
+        className="rounded-xl mb-1 transition-[border-left-color] duration-150"
         style={{
+          overflow: "clip",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderLeft: `4px solid ${status ? STATUS_BORDER[status] : "transparent"}`,

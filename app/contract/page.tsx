@@ -73,42 +73,6 @@ function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   }, [canvasRef]);
 }
 
-function SignatureCanvas({ label, colour }: { label: string; colour: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useDrawCanvas(canvasRef);
-
-  function clear() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.getContext("2d")!.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-2 flex-1 min-w-[140px]">
-      <div
-        className="text-xs font-semibold uppercase tracking-widest"
-        style={{ color: colour }}
-      >
-        {label}
-      </div>
-      <canvas
-        ref={canvasRef}
-        width={280}
-        height={120}
-        className="sig-canvas w-full rounded-xl touch-none"
-        style={{ border: `1px solid ${colour}`, background: "var(--surface2)", cursor: "crosshair" }}
-        aria-label={`Handtekening voor ${label}`}
-      />
-      <button
-        onClick={clear}
-        className="focus-ring text-xs px-3 py-1 rounded-full border transition-colors"
-        style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-      >
-        Wis
-      </button>
-    </div>
-  );
-}
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 
@@ -433,6 +397,7 @@ function ContractPage() {
   }
 
   return (
+    <>
     <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-28">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
@@ -679,10 +644,11 @@ function ContractPage() {
           </div>
         </div>
       )}
-      <BottomNav />
-      {ceremony && (
-        <>
-          <style>{`
+    </main>
+    <BottomNav />
+    {ceremony && (
+      <>
+        <style>{`
             @keyframes ceremony-bg {
               from { opacity: 0; }
               to { opacity: 1; }
@@ -708,7 +674,7 @@ function ContractPage() {
             style={{
               position: "fixed",
               inset: 0,
-              zIndex: 60,
+              zIndex: 200,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -760,7 +726,7 @@ function ContractPage() {
           </div>
         </>
       )}
-    </main>
+    </>
   );
 }
 

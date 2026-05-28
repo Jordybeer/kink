@@ -578,6 +578,7 @@ function HomeContent() {
                   className="rounded-xl p-5 text-center opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                   role="button"
+                  tabIndex={0}
                   aria-disabled="true"
                   aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
                 >
@@ -608,6 +609,7 @@ function HomeContent() {
                   className="rounded-xl p-5 text-center opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                   role="button"
+                  tabIndex={0}
                   aria-disabled="true"
                   aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
                 >
@@ -885,7 +887,7 @@ function HomeContent() {
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && visitCount >= 3 && onboardingComplete && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 py-3 px-4 flex items-center gap-3"
+          className="fixed bottom-0 left-0 right-0 z-[120] py-3 px-4 flex items-center gap-3"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
           role="banner"
         >
