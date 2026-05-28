@@ -151,6 +151,7 @@ function ContractPage() {
   const bId = searchParams.get("b") ?? "";
   const [generating, setGenerating] = useState(false);
   const [ceremony, setCeremony] = useState(false);
+  const [preambleOpen, setPreambleOpen] = useState(false);
 
   // Safeword & aftercare state
   const [safewordA, setSafewordA] = useState("");
@@ -463,9 +464,18 @@ function ContractPage() {
         </div>
 
         {/* Preamble */}
-        <p className="text-sm italic mb-6 leading-relaxed" style={{ color: "var(--text2)", borderLeft: "3px solid var(--border-accent)", paddingLeft: "1rem" }}>
-          {preamble}
-        </p>
+        <div className="mb-6" style={{ borderLeft: "3px solid var(--border-accent)", paddingLeft: "1rem" }}>
+          <p className="text-sm italic leading-relaxed" style={{ color: "var(--text2)" }}>
+            {preambleOpen ? preamble : preamble.slice(0, preamble.indexOf(". ") + 1)}
+          </p>
+          <button
+            onClick={() => setPreambleOpen((v) => !v)}
+            className="focus-ring text-xs mt-2 transition-colors"
+            style={{ color: "var(--accent)" }}
+          >
+            {preambleOpen ? "Minder ↑" : "Lees meer ↓"}
+          </button>
+        </div>
 
         {/* Safeword & Nazorg */}
         <div className="mb-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>

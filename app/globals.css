@@ -160,6 +160,23 @@ html, body {
 .ks-icon-pop { animation: ksIconPop 400ms cubic-bezier(0.34,1.56,0.64,1) both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
+/* Prevent iOS Safari auto-zoom on focus (font-size < 16px triggers it and page stays zoomed) */
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Kink rating pop — fires when a status is selected */
+@keyframes ks-select-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.ks-pop {
+  animation: ks-select-pop 200ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .accordion-content,
   .sheet-overlay,
@@ -169,7 +186,8 @@ html, body {
   .match-pulse,
   .ks-fade-in,
   .ks-icon-pop,
-  .ks-slide-up {
+  .ks-slide-up,
+  .ks-pop {
     animation: none;
   }
 }

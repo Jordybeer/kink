@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useStore } from "@/lib/store";
 
-const NAV_ITEMS = [
+const STATIC_ITEMS = [
   { href: "/",        label: "Home",     icon: "🖤" },
   { href: "/compare", label: "Vergelijk", icon: "⚡" },
   { href: "/session", label: "Sessie",   icon: "📡" },
@@ -10,17 +11,30 @@ const NAV_ITEMS = [
 
 export default function BottomNav() {
   const path = usePathname();
+  const profileId = useStore((s) => s.profiles[0]?.id);
+  const profileHref = profileId ? `/profile/${profileId}` : "/";
+
+  const allItems = [
+    ...STATIC_ITEMS,
+    { href: profileHref, label: "Profiel", icon: "👤" },
+  ];
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch"
       style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
       aria-label="Hoofdnavigatie"
     >
-      {NAV_ITEMS.map(({ href, label, icon }) => {
-        const active = path === href || (href !== "/" && path.startsWith(href));
+      {allItems.map(({ href, label, icon }) => {
+        const active =
+          label === "Profiel"
+            ? path.startsWith("/profile")
+            : href === "/"
+            ? path === "/"
+            : path.startsWith(href);
         return (
           <Link
-            key={href}
+            key={label}
             href={href}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 text-xs font-medium transition-colors focus-ring"
             style={{ color: active ? "var(--accent)" : "var(--text2)" }}

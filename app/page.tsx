@@ -343,7 +343,7 @@ function HomeContent() {
           </p>
         ) : (
           <>
-            <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col gap-3 mb-6">
               {profileGroups.map((group) => {
                 const groupName = group[0].name;
                 const isMulti = group.length > 1;
@@ -376,7 +376,7 @@ function HomeContent() {
                         )}
                       </div>
                     )}
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
                       {group.map((p) => {
                         const rated = Object.values(p.entries).filter((e) => e.status).length;
                         const maxKinks = KINKS.filter((k) => k.level <= LEVEL_MAX[p.experienceLevel ?? "beginner"]).length;
@@ -470,21 +470,21 @@ function HomeContent() {
                               </div>
                             ) : (
                               <>
-                                <div className="flex items-center gap-3 p-4 pb-3">
+                                <div className="flex items-center gap-2 px-3 py-2.5">
                                   {!isMulti && (
-                                    <div className="w-10 h-10 rounded-full flex-none overflow-hidden" aria-hidden="true">
+                                    <div className="w-8 h-8 rounded-full flex-none overflow-hidden" aria-hidden="true">
                                       {p.avatarDataUrl ? (
                                         <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
                                           {initial}
                                         </div>
                                       )}
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      {!isMulti && <span className="font-semibold truncate">{p.name}</span>}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      {!isMulti && <span className="text-sm font-semibold truncate">{p.name}</span>}
                                       <span
                                         className="text-xs px-2 py-0.5 rounded-full"
                                         style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -538,7 +538,7 @@ function HomeContent() {
                                     🗑
                                   </button>
                                 </div>
-                                <div className="h-1 mx-4 mb-4 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                                <div className="h-1 mx-3 mb-3 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                                   <div
                                     className="h-full rounded-full transition-[width] duration-500 ease-out"
                                     style={{

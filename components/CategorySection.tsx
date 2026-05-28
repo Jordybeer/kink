@@ -29,7 +29,7 @@ export default function CategorySection({
   onStatusChange, onExperiencedChange,
   onCommentChange, onTagsChange, onBulkSkip, onBulkRestore, compact, hideComments,
 }: Props) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [undoPending, setUndoPending] = useState(false);
   const undoSnapshot = useRef<Record<string, KinkEntry>>({});
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,7 +85,7 @@ export default function CategorySection({
             className="focus-ring rounded-full transition-colors"
             style={{
               fontSize: "10px",
-              padding: "5px 8px",
+              padding: "6px 8px",
               border: "1px solid var(--border)",
               color: "var(--text2)",
             }}

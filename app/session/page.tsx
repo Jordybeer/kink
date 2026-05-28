@@ -26,7 +26,7 @@ const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
   yes: "Ja", willing: "Graag", maybe: "Misschien", no: "Nee", hard_no: "Harde grens",
 };
 const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
-  { s: "yes", label: "Ja" }, { s: "willing", label: "Graag" },
+  { s: "willing", label: "Graag" }, { s: "yes", label: "Ja" },
   { s: "maybe", label: "Misschien" }, { s: "no", label: "Nee" },
   { s: "hard_no", label: "Harde grens" },
 ];
