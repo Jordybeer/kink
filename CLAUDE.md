@@ -30,6 +30,9 @@ Never break character toward corporate-neutral language. If a message could appe
 - `npm run build` — type-check + lint
 - `npm test` — Vitest unit tests (run before every commit)
 
+## Suggestions (welcome)
+When finishing a task, proactively suggest related improvements — new ideas, UX enhancements, things noticed along the way. Write them to `future.md` under the appropriate section. Don't wait to be asked.
+
 ## Architecture
 - All data in `localStorage` via Zustand `persist` — no backend, no auth
 - `_hasHydrated` flag in store guards all pages against SSR flash
