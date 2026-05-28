@@ -18,7 +18,7 @@ interface Props {
   hideComments?: boolean;
 }
 
-const MAX_PIPS = 20;
+const MAX_PIPS = 12;
 
 function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
   return kinks.filter((k) => entries[k.id]?.status != null).length;

@@ -16,6 +16,9 @@ interface State {
   profileTourComplete: boolean;
   installPromptDismissed: boolean;
   theme: Theme;
+  pinnedProfileId: string | null;
+  pinProfile: (id: string) => void;
+  unpinProfile: () => void;
   createProfile: (name: string, role: string, experienceLevel?: ExperienceLevel, relationshipStatus?: string) => string;
   deleteProfile: (id: string) => void;
   renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string, fetLifeUsername?: string) => void;
@@ -45,6 +48,15 @@ export const useStore = create<State>()(
       profileTourComplete: false,
       installPromptDismissed: false,
       theme: "midnight" as Theme,
+      pinnedProfileId: null,
+
+      pinProfile(id) {
+        set({ pinnedProfileId: id });
+      },
+
+      unpinProfile() {
+        set({ pinnedProfileId: null });
+      },
 
       createProfile(name, role, experienceLevel = "beginner", relationshipStatus) {
         const id = uid();
@@ -68,7 +80,10 @@ export const useStore = create<State>()(
       },
 
       deleteProfile(id) {
-        set((s) => ({ profiles: s.profiles.filter((p) => p.id !== id) }));
+        set((s) => ({
+          profiles: s.profiles.filter((p) => p.id !== id),
+          pinnedProfileId: s.pinnedProfileId === id ? null : s.pinnedProfileId,
+        }));
       },
 
       renameProfile(id, name, role, experienceLevel, relationshipStatus, fetLifeUsername) {
@@ -192,8 +207,9 @@ export const useStore = create<State>()(
         profileTourComplete: state.profileTourComplete,
         installPromptDismissed: state.installPromptDismissed,
         theme: state.theme,
+        pinnedProfileId: state.pinnedProfileId,
       }),
-      version: 6,
+      version: 7,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -202,6 +218,7 @@ export const useStore = create<State>()(
           profileTourComplete?: boolean;
           installPromptDismissed?: boolean;
           theme?: Theme;
+          pinnedProfileId?: string | null;
         };
         if (version < 2 && state.profiles) {
           state.profiles = state.profiles.map((p) => ({
@@ -221,6 +238,9 @@ export const useStore = create<State>()(
         // v5: desire + experienced + fetLifeUsername + avatarDataUrl — all optional, no migration needed
         if (version < 6) {
           state.profileTourComplete = false;
+        }
+        if (version < 7) {
+          state.pinnedProfileId = null;
         }
         return state;
       },

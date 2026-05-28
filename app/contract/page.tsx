@@ -76,11 +76,15 @@ function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 
-const TRAFFIC_LIGHTS: { value: "green" | "yellow" | "red"; label: string; color: string }[] = [
-  { value: "green",  label: "Alles OK",  color: "#22c55e" },
-  { value: "yellow", label: "Vertraag",  color: "#f59e0b" },
-  { value: "red",    label: "Stop",      color: "#ef4444" },
+type SignalKey = "green" | "yellow" | "red" | "black";
+type Signals = Record<SignalKey, string>;
+const SIGNAL_LEVELS: { key: SignalKey; color: string; meaning: string }[] = [
+  { key: "green",  color: "#22c55e", meaning: "Meer / harder" },
+  { key: "yellow", color: "#f59e0b", meaning: "Vertraag / check in" },
+  { key: "red",    color: "#ef4444", meaning: "Stop dit" },
+  { key: "black",  color: "#6b7280", meaning: "Stop alles" },
 ];
+const DEFAULT_SIGNALS: Signals = { green: "Meer", yellow: "Geel", red: "Rood", black: "Safeword" };
 
 function buildPreamble(
   nameA: string,
@@ -118,10 +122,8 @@ function ContractPage() {
   const [preambleOpen, setPreambleOpen] = useState(false);
 
   // Safeword & aftercare state
-  const [safewordA, setSafewordA] = useState("");
-  const [safewordB, setSafewordB] = useState("");
-  const [trafficA, setTrafficA] = useState<"green" | "yellow" | "red" | null>(null);
-  const [trafficB, setTrafficB] = useState<"green" | "yellow" | "red" | null>(null);
+  const [signalsA, setSignalsA] = useState<Signals>({ ...DEFAULT_SIGNALS });
+  const [signalsB, setSignalsB] = useState<Signals>({ ...DEFAULT_SIGNALS });
   const [aftercareA, setAftercareA] = useState<string[]>([]);
   const [aftercareB, setAftercareB] = useState<string[]>([]);
 
@@ -254,31 +256,26 @@ function ContractPage() {
       y += pLines.length * 4.5 + 4;
 
       // Safeword & Nazorg section in PDF
-      const hasSafewordData =
-        safewordA || safewordB || aftercareA.length > 0 || aftercareB.length > 0;
+      const hasSignalData = (s: Signals) => SIGNAL_LEVELS.some((l) => s[l.key] !== DEFAULT_SIGNALS[l.key] && s[l.key].trim());
+      const hasSafewordData = hasSignalData(signalsA) || hasSignalData(signalsB) || aftercareA.length > 0 || aftercareB.length > 0;
       if (hasSafewordData) {
         if (y > 250) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...accent);
-        doc.text("Safeword & Nazorg", margin, y);
+        doc.text("Signalen & Nazorg", margin, y);
         y += 5;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(220, 215, 240);
 
-        const trafficLabel = (t: "green" | "yellow" | "red" | null) => {
-          if (t === "green") return "Groen";
-          if (t === "yellow") return "Geel";
-          if (t === "red") return "Rood";
-          return null;
-        };
-
-        if (safewordA) { doc.text(`Safeword ${profileA.name}: ${safewordA}`, margin + 3, y); y += 4.5; }
-        if (trafficA) { doc.text(`Signaal ${profileA.name}: ${trafficLabel(trafficA)}`, margin + 3, y); y += 4.5; }
+        for (const [signals, profile] of [[signalsA, profileA], [signalsB, profileB]] as const) {
+          for (const l of SIGNAL_LEVELS) {
+            const word = signals[l.key].trim() || DEFAULT_SIGNALS[l.key];
+            doc.text(`${l.meaning} (${profile.name}): "${word}"`, margin + 3, y); y += 4.5;
+          }
+        }
         if (aftercareA.length) { doc.text(`Nazorg ${profileA.name}: ${aftercareA.join(", ")}`, margin + 3, y); y += 4.5; }
-        if (safewordB) { doc.text(`Safeword ${profileB.name}: ${safewordB}`, margin + 3, y); y += 4.5; }
-        if (trafficB) { doc.text(`Signaal ${profileB.name}: ${trafficLabel(trafficB)}`, margin + 3, y); y += 4.5; }
         if (aftercareB.length) { doc.text(`Nazorg ${profileB.name}: ${aftercareB.join(", ")}`, margin + 3, y); y += 4.5; }
         y += 3;
       }
@@ -435,7 +432,7 @@ function ContractPage() {
           </p>
           <button
             onClick={() => setPreambleOpen((v) => !v)}
-            className="focus-ring text-xs mt-2 transition-colors"
+            className="focus-ring text-xs mt-2 transition-colors py-2 px-1 inline-block"
             style={{ color: "var(--accent)" }}
           >
             {preambleOpen ? "Minder ↑" : "Lees meer ↓"}
@@ -453,34 +450,21 @@ function ContractPage() {
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_A }}>
                 {profileA.name}
               </div>
-              <input
-                type="text"
-                placeholder="Safeword…"
-                value={safewordA}
-                onChange={(e) => setSafewordA(e.target.value)}
-                className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
-                style={{
-                  background: "var(--surface2)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-                aria-label={`Safeword voor ${profileA.name}`}
-              />
-              <div className="flex gap-2">
-                {TRAFFIC_LIGHTS.map((tl) => (
-                  <button
-                    key={tl.value}
-                    onClick={() => setTrafficA((prev) => prev === tl.value ? null : tl.value)}
-                    aria-label={tl.label}
-                    className="rounded-full border-2 transition-all focus-ring"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      background: trafficA === tl.value ? tl.color : "transparent",
-                      borderColor: tl.color,
-                      opacity: trafficA !== null && trafficA !== tl.value ? 0.3 : 1,
-                    }}
-                  />
+              <div className="flex flex-col gap-1.5">
+                {SIGNAL_LEVELS.map((l) => (
+                  <div key={l.key} className="flex items-center gap-2">
+                    <span className="inline-block w-3 h-3 rounded-full flex-none" style={{ background: l.color }} />
+                    <span className="text-xs flex-none w-32" style={{ color: "var(--text2)" }}>{l.meaning}</span>
+                    <input
+                      type="text"
+                      placeholder={DEFAULT_SIGNALS[l.key]}
+                      value={signalsA[l.key]}
+                      onChange={(e) => setSignalsA((s) => ({ ...s, [l.key]: e.target.value }))}
+                      className="flex-1 text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 min-w-0"
+                      style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      aria-label={`${l.meaning} signaalwoord voor ${profileA.name}`}
+                    />
+                  </div>
                 ))}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -509,34 +493,21 @@ function ContractPage() {
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_B }}>
                 {profileB.name}
               </div>
-              <input
-                type="text"
-                placeholder="Safeword…"
-                value={safewordB}
-                onChange={(e) => setSafewordB(e.target.value)}
-                className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
-                style={{
-                  background: "var(--surface2)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-                aria-label={`Safeword voor ${profileB.name}`}
-              />
-              <div className="flex gap-2">
-                {TRAFFIC_LIGHTS.map((tl) => (
-                  <button
-                    key={tl.value}
-                    onClick={() => setTrafficB((prev) => prev === tl.value ? null : tl.value)}
-                    aria-label={tl.label}
-                    className="rounded-full border-2 transition-all focus-ring"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      background: trafficB === tl.value ? tl.color : "transparent",
-                      borderColor: tl.color,
-                      opacity: trafficB !== null && trafficB !== tl.value ? 0.3 : 1,
-                    }}
-                  />
+              <div className="flex flex-col gap-1.5">
+                {SIGNAL_LEVELS.map((l) => (
+                  <div key={l.key} className="flex items-center gap-2">
+                    <span className="inline-block w-3 h-3 rounded-full flex-none" style={{ background: l.color }} />
+                    <span className="text-xs flex-none w-32" style={{ color: "var(--text2)" }}>{l.meaning}</span>
+                    <input
+                      type="text"
+                      placeholder={DEFAULT_SIGNALS[l.key]}
+                      value={signalsB[l.key]}
+                      onChange={(e) => setSignalsB((s) => ({ ...s, [l.key]: e.target.value }))}
+                      className="flex-1 text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 min-w-0"
+                      style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      aria-label={`${l.meaning} signaalwoord voor ${profileB.name}`}
+                    />
+                  </div>
                 ))}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -577,10 +548,10 @@ function ContractPage() {
             Algemene afspraken
           </h3>
           <ul className="space-y-1.5 text-sm" style={{ color: "var(--text2)" }}>
-            <li>🔴 Safeword stopt alles — altijd en zonder uitleg.</li>
-            <li>🤍 Aftercare is geen optie, maar een afspraak.</li>
-            <li>✏️ Dit contract kan op elk moment door beiden worden herzien.</li>
-            <li>💬 Grenzen die hier niet staan, worden voor elke scène besproken.</li>
+            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--hard-no)" }} />Safeword stopt alles — altijd en zonder uitleg.</li>
+            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }} />Aftercare is geen optie, maar een afspraak.</li>
+            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--willing)" }} />Dit contract kan op elk moment door beiden worden herzien.</li>
+            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--maybe)" }} />Grenzen die hier niet staan, worden voor elke scène besproken.</li>
           </ul>
         </div>
       </div>
