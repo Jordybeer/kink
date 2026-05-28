@@ -211,13 +211,13 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
           </p>
           {profile.fetLifeUsername && (
             <a
-              href={`https://fetlife.com/users/${encodeURIComponent(profile.fetLifeUsername)}`}
+              href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs mt-1 inline-block hover:underline py-2"
               style={{ color: "var(--accent)" }}
             >
-              ↗ fetlife.com/users/{profile.fetLifeUsername}
+              ↗ fetlife.com/{profile.fetLifeUsername}
             </a>
           )}
           {profile.bdsmtestUrl && (
