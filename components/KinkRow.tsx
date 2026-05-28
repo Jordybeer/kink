@@ -81,7 +81,7 @@ export default function KinkRow({
             onClick={() => setInfoOpen(true)}
             aria-label={`Informatie over ${kink.name}`}
             className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs flex-none"
-            style={{ background: "#3b82f6", color: "#fff", border: "none" }}
+            style={{ background: "rgba(59,130,246,0.45)", color: "rgba(255,255,255,0.85)", border: "none" }}
           >
             ⓘ
           </button>

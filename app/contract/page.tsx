@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
-import BottomNav from "@/components/BottomNav";
 import type { KinkStatus } from "@/types";
 
 function isMatch(a: KinkStatus, b: KinkStatus) {
@@ -401,7 +400,7 @@ function ContractPage() {
 
   return (
     <>
-    <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-28">
+    <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
@@ -623,7 +622,6 @@ function ContractPage() {
         </div>
       )}
     </main>
-    <BottomNav />
     {ceremony && (
       <>
         <style>{`
@@ -715,11 +713,11 @@ function ContractSection({ title, items, colour }: { title: string; items: strin
       <h3 className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colour }}>
         {title}
       </h3>
-      <ul className="space-y-1">
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
         {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text)" }}>
+          <li key={i} className="flex items-start gap-2 text-sm min-w-0" style={{ color: "var(--text)" }}>
             <span style={{ color: colour, flexShrink: 0 }}>•</span>
-            {item}
+            <span className="break-words min-w-0">{item}</span>
           </li>
         ))}
       </ul>
