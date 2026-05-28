@@ -807,7 +807,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               onClick={handleExport}
               aria-label="Exporteer lijst als tekstbestand"
-              className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              className="px-3 py-3 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
               style={{ color: "var(--text)" }}
             >
               ↓ TXT
@@ -816,7 +816,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               onClick={handlePDFExport}
               aria-label="Exporteer lijst als PDF"
-              className="px-3 py-2.5 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              className="px-3 py-3 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
               style={{ color: "var(--accent)" }}
             >
               ↓ PDF

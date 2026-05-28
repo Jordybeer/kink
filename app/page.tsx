@@ -578,6 +578,7 @@ function HomeContent() {
                   className="rounded-xl p-5 text-center opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                   role="button"
+                  tabIndex={0}
                   aria-disabled="true"
                   aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
                 >
@@ -608,6 +609,7 @@ function HomeContent() {
                   className="rounded-xl p-5 text-center opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                   role="button"
+                  tabIndex={0}
                   aria-disabled="true"
                   aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
                 >
