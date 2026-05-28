@@ -1,13 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import InfoSheet from "./InfoSheet";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
 
 const PILLS: { status: NonNullable<KinkStatus>; label: string }[] = [
-  { status: "yes",     label: "Ja" },
   { status: "willing", label: "Graag" },
+  { status: "yes",     label: "Ja" },
   { status: "maybe",   label: "Misschien" },
   { status: "no",      label: "Nee" },
   { status: "hard_no", label: "Harde grens" },
@@ -38,8 +38,18 @@ export default function KinkRow({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const status = entry.status;
+
+  useEffect(() => {
+    if (!status) return;
+    const el = containerRef.current;
+    if (!el) return;
+    el.classList.remove("ks-pop");
+    void el.offsetWidth;
+    el.classList.add("ks-pop");
+  }, [status]);
   const tags = entry.tags ?? [];
   const commentLen = entry.comment.length;
   const isRated = status !== null;
@@ -65,6 +75,7 @@ export default function KinkRow({
   return (
     <>
       <div
+        ref={containerRef}
         className="rounded-xl overflow-hidden mb-1 transition-[border-left-color] duration-150"
         style={{
           background: "var(--surface)",
@@ -122,7 +133,7 @@ export default function KinkRow({
               key={s}
               onClick={() => onStatusChange(status === s ? null : s)}
               aria-pressed={status === s}
-              className={`focus-ring rounded-full border font-medium transition-colors ${
+              className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none ${
                 compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
               }${status === s ? ` status-${s}` : ""}`}
               style={status !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}

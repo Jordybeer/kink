@@ -619,12 +619,12 @@ export default function ProfilePage({ params }: Props) {
                     </button>
                   </div>
                   <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
-                    {(["yes","willing","maybe","no","hard_no"] as const).map((s) => (
+                    {(["willing","yes","maybe","no","hard_no"] as const).map((s) => (
                       <button
                         key={s}
                         onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
                         aria-pressed={ckStatus === s}
-                        className={`focus-ring rounded-full border text-[11px] font-medium transition-colors px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
+                        className={`focus-ring rounded-full border text-[11px] font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
                         style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                       >
                         {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}

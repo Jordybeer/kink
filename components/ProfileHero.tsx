@@ -13,28 +13,28 @@ interface ProfileHeroProps {
   onError?: (message: string) => void;
 }
 
-const STATUSES = ["yes", "willing", "maybe", "no", "hard_no"] as const;
+const STATUSES = ["willing", "yes", "maybe", "no", "hard_no"] as const;
 type Status = typeof STATUSES[number];
 
 const DNA_COLORS: Record<Status, string> = {
-  yes:     "#4ade80",
-  willing: "#60a5fa",
+  willing: "#4ade80",
+  yes:     "#60a5fa",
   maybe:   "#fbbf24",
   no:      "#f87171",
   hard_no: "#ef4444",
 };
 
 const DNA_ICONS: Record<Status, string> = {
-  yes:     "✓",
   willing: "↗",
+  yes:     "✓",
   maybe:   "♡",
   no:      "✕",
   hard_no: "✕✕",
 };
 
 const VIBE_MAP: Record<Status, string> = {
-  yes:     "Avontuurlijk 🔥",
-  willing: "Open-minded ✨",
+  willing: "Avontuurlijk 🔥",
+  yes:     "Open-minded ✨",
   maybe:   "Bedachtzaam 🌙",
   no:      "Selectief 🔒",
   hard_no: "Selectief 🔒",
@@ -224,6 +224,9 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
 
       {/* Kink DNA bar */}
       <div className="mb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text2)" }}>
+          Kink DNA
+        </p>
         {dnaSegments.length === 0 ? (
           <div
             className="h-2 rounded-full w-full"
@@ -272,7 +275,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
               ))}
             </div>
             <p className="text-[10px] mt-1" style={{ color: "var(--text2)" }}>
-              ✓ Ja · ↗ Graag · ♡ Misschien · ✕ Nee · ✕✕ Grens
+              ↗ Graag · ✓ Ja · ♡ Misschien · ✕ Nee · ✕✕ Grens
             </p>
           </>
         )}
