@@ -481,88 +481,86 @@ function HomeContent() {
                               </div>
                             ) : (
                               <>
-                                <div className="flex items-center gap-2 px-3 py-2.5">
+                                <div className="flex gap-3 px-3 pt-3 pb-2.5">
                                   {!isMulti && (
-                                    <div className="w-8 h-8 rounded-full flex-none overflow-hidden" aria-hidden="true">
+                                    <div className="w-10 h-10 rounded-full flex-none overflow-hidden mt-0.5" aria-hidden="true">
                                       {p.avatarDataUrl ? (
                                         <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
                                           {initial}
                                         </div>
                                       )}
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                    {/* Row 1: name + icon actions */}
+                                    <div className="flex items-center justify-between gap-2 mb-1">
                                       {!isMulti && <span className="text-sm font-semibold truncate">{p.name}</span>}
+                                      <div className="flex items-center gap-0 flex-none ml-auto">
+                                        <button
+                                          onClick={() => p.id === pinnedProfileId ? unpinProfile() : pinProfile(p.id)}
+                                          aria-label={p.id === pinnedProfileId ? `${p.name} losmaken als hoofdprofiel` : `${p.name} vastpinnen als hoofdprofiel`}
+                                          title={p.id === pinnedProfileId ? "Losmaken" : "Vastpinnen"}
+                                          className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                                          style={{ color: p.id === pinnedProfileId ? "var(--accent)" : "var(--text2)" }}
+                                        >
+                                          {p.id === pinnedProfileId ? <PinOff size={15} /> : <Pin size={15} />}
+                                        </button>
+                                        <button
+                                          onClick={() => startEdit(p)}
+                                          aria-label={`Profiel ${p.name} bewerken`}
+                                          title="Bewerken"
+                                          className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                                          style={{ color: "var(--text2)" }}
+                                        >
+                                          ✎
+                                        </button>
+                                        <button
+                                          onClick={() => promptDelete(p.id)}
+                                          aria-label={`Profiel ${p.name} verwijderen`}
+                                          title="Verwijderen"
+                                          className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                                          style={{ color: "var(--text2)" }}
+                                        >
+                                          🗑
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {/* Row 2: badges */}
+                                    <div className="flex items-center gap-1.5 flex-wrap mb-2">
                                       {p.id === pinnedProfileId && (
                                         <span className="text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)", border: "1px solid var(--accent)" }}>
                                           Mijn profiel
                                         </span>
                                       )}
-                                      <span
-                                        className="text-xs px-2 py-0.5 rounded-full"
-                                        style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                                      >
+                                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
                                         {p.role}
                                       </span>
                                       {lvl && (
-                                        <span
-                                          className="text-xs px-2 py-0.5 rounded-full"
-                                          style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}
-                                        >
+                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}>
                                           {lvl.label}
                                         </span>
                                       )}
                                       {p.relationshipStatus && (
-                                        <span
-                                          className="text-xs px-2 py-0.5 rounded-full"
-                                          style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                                        >
+                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
                                           {p.relationshipStatus}
                                         </span>
                                       )}
                                     </div>
-                                    <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
-                                      {rated} / {maxKinks} beoordeeld
+                                    {/* Row 3: progress count + open button */}
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                                        {rated} / {maxKinks} beoordeeld
+                                      </span>
+                                      <Link
+                                        href={`/profile/${p.id}`}
+                                        className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex-none"
+                                        style={{ background: "var(--accent)", color: "#000" }}
+                                      >
+                                        Open →
+                                      </Link>
                                     </div>
-                                  </div>
-                                  <Link
-                                    href={`/profile/${p.id}`}
-                                    className="focus-ring px-3 py-1.5 rounded-lg text-sm transition-colors flex-none"
-                                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                                  >
-                                    Open →
-                                  </Link>
-                                  <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => p.id === pinnedProfileId ? unpinProfile() : pinProfile(p.id)}
-                                    aria-label={p.id === pinnedProfileId ? `${p.name} losmaken als hoofdprofiel` : `${p.name} vastpinnen als hoofdprofiel`}
-                                    title={p.id === pinnedProfileId ? "Losmaken" : "Vastpinnen"}
-                                    className="focus-ring p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
-                                    style={{ color: p.id === pinnedProfileId ? "var(--accent)" : "var(--text2)" }}
-                                  >
-                                    {p.id === pinnedProfileId ? <PinOff size={16} /> : <Pin size={16} />}
-                                  </button>
-                                  <button
-                                    onClick={() => startEdit(p)}
-                                    aria-label={`Profiel ${p.name} bewerken`}
-                                    title="Bewerken"
-                                    className="focus-ring p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
-                                    style={{ color: "var(--text2)" }}
-                                  >
-                                    ✎
-                                  </button>
-                                  <button
-                                    onClick={() => promptDelete(p.id)}
-                                    aria-label={`Profiel ${p.name} verwijderen`}
-                                    title="Verwijderen"
-                                    className="focus-ring p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
-                                    style={{ color: "var(--text2)" }}
-                                  >
-                                    🗑
-                                  </button>
                                   </div>
                                 </div>
                                 <div className="h-1 mx-3 mb-3 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>

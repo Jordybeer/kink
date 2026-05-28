@@ -40,7 +40,7 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 32, stiffness: 320 }}
+            transition={{ type: "tween", ease: "easeOut", duration: 0.28 }}
             drag="y"
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0.05, bottom: 0.3 }}
