@@ -348,7 +348,7 @@ export default function ProfilePage({ params }: Props) {
   const customKinks = profile.customKinks ?? [];
 
   return (
-    <main className={`max-w-3xl mx-auto w-full ${!profile.isImported ? "pb-6" : "pb-6"}`}>
+    <main className="max-w-3xl mx-auto w-full pb-6">
       {!profileTourComplete && <ProfileTour onComplete={completeProfileTour} />}
 
       {/* Error toast */}

@@ -39,7 +39,7 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
             style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 151, y, touchAction: "none" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            exit={{ y: "100%", transition: { type: "tween", ease: "easeIn", duration: 0.22 } }}
             transition={{ type: "tween", ease: "easeOut", duration: 0.28 }}
             drag="y"
             dragConstraints={{ top: 0 }}

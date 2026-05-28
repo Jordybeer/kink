@@ -715,9 +715,9 @@ function ContractSection({ title, items, colour }: { title: string; items: strin
       </h3>
       <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
         {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text)" }}>
+          <li key={i} className="flex items-start gap-2 text-sm min-w-0" style={{ color: "var(--text)" }}>
             <span style={{ color: colour, flexShrink: 0 }}>•</span>
-            {item}
+            <span className="break-words min-w-0">{item}</span>
           </li>
         ))}
       </ul>
