@@ -494,9 +494,12 @@ function HomeContent() {
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    {/* Row 1: name + icon actions */}
+                                    {/* Row 1: name (or role in grouped view) + icon actions */}
                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                      {!isMulti && <span className="text-sm font-semibold truncate">{p.name}</span>}
+                                      {isMulti
+                                        ? <span className="text-sm font-medium truncate" style={{ color: "var(--text2)" }}>{p.role}</span>
+                                        : <span className="text-sm font-semibold truncate">{p.name}</span>
+                                      }
                                       <div className="flex items-center gap-0 flex-none ml-auto">
                                         <button
                                           onClick={() => p.id === pinnedProfileId ? unpinProfile() : pinProfile(p.id)}
@@ -534,9 +537,11 @@ function HomeContent() {
                                           Mijn profiel
                                         </span>
                                       )}
-                                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-                                        {p.role}
-                                      </span>
+                                      {!isMulti && (
+                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
+                                          {p.role}
+                                        </span>
+                                      )}
                                       {lvl && (
                                         <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}>
                                           {lvl.label}
