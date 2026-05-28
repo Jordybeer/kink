@@ -234,7 +234,7 @@ function ComparePage() {
           </div>
           <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
           <div className="flex-1 text-center">
-            <div className="text-xl font-bold tabular-nums" style={{ color: "var(--maybe)" }}>{discussCount}</div>
+            <div className="text-xl font-bold tabular-nums" style={{ color: "var(--willing)" }}>{discussCount}</div>
             <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>bespreken</div>
           </div>
           <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
@@ -364,7 +364,7 @@ function ComparePage() {
                 </div>
                 <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
                 <div className="flex-1 text-center min-w-[72px]">
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: "var(--maybe)" }}>
+                  <div className="text-2xl font-bold tabular-nums" style={{ color: "var(--willing)" }}>
                     {discussCount}
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>te bespreken</div>
