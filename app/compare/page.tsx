@@ -165,16 +165,7 @@ function ComparePage() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const confettiColors = [
-    "var(--accent)",
-    "var(--accent2)",
-    "var(--yes)",
-    "#f59e0b",
-    "#3b82f6",
-    "var(--maybe)",
-    "var(--accent)",
-    "var(--yes)",
-  ];
+  const confettiEmoji = ["🔗", "⛓️", "👑", "🖤", "🌹", "🕯️", "💋", "🩷"];
 
   return (
     <>
@@ -251,7 +242,7 @@ function ComparePage() {
       )}
 
       {/* Mobile-only filter strip */}
-      <div className="md:hidden flex flex-wrap items-center gap-2 mb-3">
+      <div className="md:hidden flex items-center gap-2 mb-3 overflow-x-auto no-scrollbar whitespace-nowrap">
         {(["all", "match", "conflict", "hardno"] as const).map((f) => (
           <button key={f} onClick={() => setFilterMode(f)}
             className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
@@ -386,30 +377,25 @@ function ComparePage() {
               className="rounded-xl p-4 mb-5 relative overflow-hidden"
               style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
             >
-              {/* CSS confetti dots */}
+              {/* BDSM emoji burst */}
               {showConfetti && (
                 <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                  {confettiColors.map((color, i) => (
+                  {confettiEmoji.map((emoji, i) => (
                     <span
                       key={i}
-                      className="absolute w-1 h-1 rounded-full"
+                      className="absolute"
                       style={{
-                        background: color,
-                        left: `${10 + i * 11}%`,
+                        fontSize: "1.1rem",
+                        left: `${7 + i * 12}%`,
                         top: "60%",
                         animation: `confetti-pop 0.6s ease-out ${i * 0.07}s both`,
                       }}
-                    />
+                    >
+                      {emoji}
+                    </span>
                   ))}
                 </div>
               )}
-              <style>{`
-                @keyframes confetti-pop {
-                  0%   { transform: translateY(0) scale(0); opacity: 1; }
-                  60%  { transform: translateY(-40px) scale(1); opacity: 1; }
-                  100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
-                }
-              `}</style>
 
               <div className="flex items-center gap-6 flex-wrap">
                 <div className="text-center">
@@ -514,7 +500,7 @@ function ComparePage() {
             {/* Discussion tracker controls */}
             {discussed.size > 0 && (
               <span className="text-xs ml-1" style={{ color: "var(--text2)" }}>
-                💬 {discussed.size} besproken
+                💬 {discussed.size} besproken (tijdelijk)
               </span>
             )}
             {discussed.size > 0 && (
@@ -602,7 +588,7 @@ function ComparePage() {
                                         }
                                   }
                                 >
-                                  {isDiscussed ? "✓ Besproken" : "Besproken"}
+                                  {isDiscussed ? "✓ Besproken" : "Bespreken"}
                                 </button>
                               </div>
                               <div className="flex items-center gap-2 mb-1">

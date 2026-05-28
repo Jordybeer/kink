@@ -139,7 +139,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
             <button
               type="button"
               onClick={() => onAvatarChange?.(undefined)}
-              className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] focus-ring border-2 border-[var(--bg)]"
+              className="absolute -top-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-[10px] focus-ring border-2 border-[var(--bg)]"
               style={{ background: "var(--hard-no)", color: "white" }}
               aria-label="Profielfoto verwijderen"
             >
@@ -282,7 +282,9 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
       </div>
 
       {/* Stats row */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 pb-0.5">
+      <div className="relative mb-4">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+
         <div
           className="ks-slide-up flex-none rounded-xl p-3 min-w-[96px]"
           style={{ background: "var(--surface2)", border: "1px solid var(--border)", animationDelay: "80ms" }}
@@ -319,6 +321,8 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
           </p>
           <p className="text-[10px] mt-1" style={{ color: "var(--text2)" }}>Meest actief</p>
         </div>
+      </div>
+      <div className="pointer-events-none absolute right-0 inset-y-0 w-8 bg-gradient-to-l from-[var(--bg)] to-transparent" />
       </div>
 
       {/* QR share CTA — hidden for imported profiles */}

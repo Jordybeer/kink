@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
+import { Settings, Pin, PinOff } from "lucide-react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -52,6 +54,9 @@ function HomeContent() {
     dismissInstallPrompt,
     theme,
     setTheme,
+    pinnedProfileId,
+    pinProfile,
+    unpinProfile,
   } = useStore();
   const _hasHydrated = useHasHydrated();
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -77,6 +82,8 @@ function HomeContent() {
   const [importDragY, setImportDragY] = useState(0);
   const [importDragging, setImportDragging] = useState(false);
   const importDragStart = useRef(0);
+  const settingsSheetRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(settingsSheetRef, settingsOpen);
 
   useEffect(() => {
     const count = parseInt(localStorage.getItem("ks-visits") ?? "0") + 1;
@@ -201,7 +208,10 @@ function HomeContent() {
     return <Onboarding onComplete={completeOnboarding} />;
   }
 
-  const compareProfiles = profiles.slice(0, 2).map((p) => p.id);
+  const pinnedProfile = profiles.find((p) => p.id === pinnedProfileId);
+  const compareProfiles = pinnedProfile
+    ? [pinnedProfile.id, profiles.find((p) => p.id !== pinnedProfileId)?.id ?? profiles[1]?.id].filter(Boolean)
+    : profiles.slice(0, 2).map((p) => p.id);
   const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
 
   // Group profiles by name for multi-role display
@@ -210,7 +220,9 @@ function HomeContent() {
     map.set(key, [...(map.get(key) ?? []), p]);
     return map;
   }, new Map());
-  const profileGroups = Array.from(grouped.values());
+  const profileGroups = Array.from(grouped.values()).sort((a, b) =>
+    a.some((p) => p.id === pinnedProfileId) ? -1 : b.some((p) => p.id === pinnedProfileId) ? 1 : 0
+  );
 
   return (
     <>
@@ -220,10 +232,10 @@ function HomeContent() {
           <button
             onClick={() => setSettingsOpen(true)}
             aria-label="Instellingen openen"
-            className="focus-ring absolute top-0 right-0 p-1 text-xl leading-none"
+            className="focus-ring absolute top-0 right-0 p-1 leading-none"
             style={{ color: "var(--text2)" }}
           >
-            ⚙
+            <Settings size={18} />
           </button>
           <h1
             className="text-3xl font-bold"
@@ -485,6 +497,11 @@ function HomeContent() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       {!isMulti && <span className="text-sm font-semibold truncate">{p.name}</span>}
+                                      {p.id === pinnedProfileId && (
+                                        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)", border: "1px solid var(--accent)" }}>
+                                          Mijn profiel
+                                        </span>
+                                      )}
                                       <span
                                         className="text-xs px-2 py-0.5 rounded-full"
                                         style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -519,11 +536,21 @@ function HomeContent() {
                                   >
                                     Open →
                                   </Link>
+                                  <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => p.id === pinnedProfileId ? unpinProfile() : pinProfile(p.id)}
+                                    aria-label={p.id === pinnedProfileId ? `${p.name} losmaken als hoofdprofiel` : `${p.name} vastpinnen als hoofdprofiel`}
+                                    title={p.id === pinnedProfileId ? "Losmaken" : "Vastpinnen"}
+                                    className="focus-ring p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
+                                    style={{ color: p.id === pinnedProfileId ? "var(--accent)" : "var(--text2)" }}
+                                  >
+                                    {p.id === pinnedProfileId ? <PinOff size={16} /> : <Pin size={16} />}
+                                  </button>
                                   <button
                                     onClick={() => startEdit(p)}
                                     aria-label={`Profiel ${p.name} bewerken`}
                                     title="Bewerken"
-                                    className="focus-ring p-2 rounded-lg transition-colors"
+                                    className="focus-ring p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
                                     style={{ color: "var(--text2)" }}
                                   >
                                     ✎
@@ -532,11 +559,12 @@ function HomeContent() {
                                     onClick={() => promptDelete(p.id)}
                                     aria-label={`Profiel ${p.name} verwijderen`}
                                     title="Verwijderen"
-                                    className="focus-ring p-2 rounded-lg transition-colors"
+                                    className="focus-ring p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
                                     style={{ color: "var(--text2)" }}
                                   >
                                     🗑
                                   </button>
+                                  </div>
                                 </div>
                                 <div className="h-1 mx-3 mb-3 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                                   <div
@@ -572,6 +600,9 @@ function HomeContent() {
                   <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
                     Ontdek waar jullie grenzen — en verlangens — overlappen.
                   </div>
+                  {profiles.length > 2 && (
+                    <div className="text-xs mt-1 opacity-50">{pinnedProfile ? `${pinnedProfile.name} + eerste andere` : "eerste twee profielen"}</div>
+                  )}
                 </Link>
               ) : (
                 <div
@@ -652,12 +683,12 @@ function HomeContent() {
 
       {/* Settings bottom sheet */}
       <div className={`sheet-overlay ${settingsOpen ? "open" : ""}`} onClick={() => setSettingsOpen(false)} aria-hidden="true" />
-      <div className={`sheet-panel ${settingsOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Instellingen">
+      <div ref={settingsSheetRef} className={`sheet-panel ${settingsOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Instellingen">
         <div
           className="rounded-t-2xl p-6"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
         >
-          <div className="mb-6" />
+          <div className="mx-auto mb-4 w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
           <h2 className="text-lg font-bold text-center mb-5">Instellingen</h2>
           <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
             Thema

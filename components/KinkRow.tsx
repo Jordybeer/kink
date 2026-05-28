@@ -96,7 +96,7 @@ export default function KinkRow({
             ⓘ
           </button>
 
-          <span className="flex-1 text-[17px] font-medium leading-snug">{kink.name}</span>
+          <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
 
           <button
             onClick={() => onExperiencedChange(entry.experienced ? null : true)}
@@ -110,7 +110,7 @@ export default function KinkRow({
                 : { borderColor: "var(--border)", color: "var(--text2)" }
             }
           >
-            Ervaring
+            {entry.experienced ? "Ervaring ✓" : "Ervaring"}
           </button>
 
           {!compact && !hideComments && (
@@ -158,7 +158,7 @@ export default function KinkRow({
                 onInput={handleInput}
                 rows={2}
                 maxLength={200}
-                style={{ resize: "none", maxHeight: "9rem" }}
+                style={{ resize: "none", overflowY: "auto" }}
                 className="focus-ring w-full text-sm rounded-lg border border-[var(--border)] bg-[var(--surface2)] px-3 py-2 pb-5 text-[var(--text)] placeholder-[color:var(--text2)] focus:outline-none focus:border-[var(--accent)]"
               />
               <span

@@ -10,6 +10,7 @@ import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import BottomNav from "@/components/BottomNav";
 import ProfileTour from "@/components/ProfileTour";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -66,6 +67,7 @@ export default function ProfilePage({ params }: Props) {
   const [editFetLife, setEditFetLife] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [editListOpen, setEditListOpen] = useState(false);
+  const [meerOpen, setMeerOpen] = useState(true);
   const editListInitialized = useRef(false);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
@@ -478,9 +480,16 @@ export default function ProfilePage({ params }: Props) {
       {/* Read-only overview — compare-style cards, only rated kinks */}
       <div className="px-4 pt-2 pb-3">
         {totalRated === 0 ? (
-          <p className="text-center text-sm py-6" style={{ color: "var(--text2)" }}>
-            Nog niets beoordeeld — open de bewerklijst hieronder om te beginnen.
-          </p>
+          <div className="text-center py-6">
+            <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
+            <button
+              onClick={() => setEditListOpen(true)}
+              className="focus-ring text-sm px-4 py-2 rounded-lg font-medium transition-colors"
+              style={{ background: "var(--accent)", color: "#000" }}
+            >
+              Bewerk je lijst om te beginnen →
+            </button>
+          </div>
         ) : (
           <>
             {CATEGORIES.map((cat) => {
@@ -640,7 +649,7 @@ export default function ProfilePage({ params }: Props) {
               <button
                 key={cat}
                 data-nav={cat}
-                onClick={() => scrollToCategory(cat)}
+                onClick={() => { setActiveCategory(cat); scrollToCategory(cat); }}
                 className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
                 style={
                   activeCategory === cat
@@ -716,17 +725,20 @@ export default function ProfilePage({ params }: Props) {
 
                 {/* Meer — custom kinks */}
                 <div ref={(el) => setSectionRef(el, "Meer")} data-category="Meer" className="mb-3">
-                  <div
-                    className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1"
+                  <button
+                    onClick={() => setMeerOpen((v) => !v)}
+                    aria-expanded={meerOpen}
+                    className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1"
                     style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "4px solid var(--accent)" }}
                   >
-                    <span className="font-semibold text-sm flex-1">Meer</span>
+                    {meerOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    <span className="font-semibold text-sm flex-1 text-left">Meer</span>
                     <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                       {customKinks.length} eigen
                     </span>
-                  </div>
+                  </button>
 
-                  <div className="flex flex-col pl-1 mb-2">
+                  {meerOpen && <div className="flex flex-col pl-1 mb-2">
                     {customKinks.map((ck) => {
                       const ckStatus = profile.entries[ck.id]?.status ?? null;
                       const ckBorderColor = ckStatus ? STATUS_COLORS[ckStatus] : "transparent";
@@ -763,9 +775,9 @@ export default function ProfilePage({ params }: Props) {
                         </div>
                       );
                     })}
-                  </div>
+                  </div>}
 
-                  <form onSubmit={handleAddCustom} className="flex gap-2">
+                  {meerOpen && <form onSubmit={handleAddCustom} className="flex gap-2">
                     <input
                       value={customInput}
                       onChange={(e) => setCustomInput(e.target.value)}
@@ -780,7 +792,7 @@ export default function ProfilePage({ params }: Props) {
                     >
                       + Voeg toe
                     </button>
-                  </form>
+                  </form>}
                 </div>
               </>
             )}
@@ -793,12 +805,12 @@ export default function ProfilePage({ params }: Props) {
 
       {/* FAB export — hidden for imported profiles (privacy) */}
       {profile.isImported && (
-        <div className="fixed bottom-6 right-4 z-10 px-3 py-2 rounded-full text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+        <div className="fixed bottom-20 right-4 z-[110] px-3 py-2 rounded-full text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
           🔒 Geïmporteerd profiel
         </div>
       )}
       {!profile.isImported && (
-        <div className="fixed bottom-6 right-4 z-10 flex flex-col items-end gap-1">
+        <div className="fixed bottom-20 right-4 z-[110] flex flex-col items-end gap-1">
           <span className="text-[10px] font-semibold px-2" style={{ color: "var(--text2)" }}>Exporteer</span>
           <div
             className="focus-ring flex items-center gap-1 rounded-full shadow-lg overflow-hidden"
@@ -807,7 +819,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               onClick={handleExport}
               aria-label="Exporteer lijst als tekstbestand"
-              className="px-3 py-3 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              className="px-3 py-3 min-h-[44px] text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
               style={{ color: "var(--text)" }}
             >
               ↓ TXT
@@ -816,7 +828,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               onClick={handlePDFExport}
               aria-label="Exporteer lijst als PDF"
-              className="px-3 py-3 text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
+              className="px-3 py-3 min-h-[44px] text-sm font-semibold hover:bg-[var(--surface)] transition-colors"
               style={{ color: "var(--accent)" }}
             >
               ↓ PDF
