@@ -32,3 +32,9 @@ test("scene populated", async ({ page }) => {
   await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", PROFILES);
   await page.screenshot({ path: "/tmp/ss-scene.png", fullPage: true });
 });
+
+test("contract print preview", async ({ page }) => {
+  await seedAndGo(page, "/contract?a=pw-alex-001&b=pw-sam-002", PROFILES);
+  await page.emulateMedia({ media: "print" });
+  await page.screenshot({ path: "/tmp/ss-contract-print.png", fullPage: true });
+});
