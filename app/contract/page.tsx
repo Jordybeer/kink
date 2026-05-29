@@ -479,7 +479,7 @@ function ContractPage() {
                       value={signalsA[l.key]}
                       onChange={(e) => setSignalsA((s) => ({ ...s, [l.key]: e.target.value }))}
                       className="flex-1 text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 min-w-0"
-                      style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                       aria-label={`${l.meaning} signaalwoord voor ${profileA.name}`}
                     />
                   </div>
@@ -522,7 +522,7 @@ function ContractPage() {
                       value={signalsB[l.key]}
                       onChange={(e) => setSignalsB((s) => ({ ...s, [l.key]: e.target.value }))}
                       className="flex-1 text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 min-w-0"
-                      style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                       aria-label={`${l.meaning} signaalwoord voor ${profileB.name}`}
                     />
                   </div>
