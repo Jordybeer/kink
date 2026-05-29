@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -129,13 +129,6 @@ function ContractPage() {
 
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
-  useDrawCanvas(canvasARef);
-  useDrawCanvas(canvasBRef);
-
-  function clearCanvas(ref: React.RefObject<HTMLCanvasElement | null>) {
-    const c = ref.current;
-    if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
-  }
 
   if (!_hasHydrated) return null;
 
@@ -758,10 +751,36 @@ function SignaturePad({
   colour: string;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  useDrawCanvas(canvasRef);
+  const [modalOpen, setModalOpen] = useState(false);
+  const modalCanvasRef = useRef<HTMLCanvasElement>(null);
+  useDrawCanvas(modalCanvasRef);
+
+  // Copy existing signature into modal canvas after it mounts
+  useEffect(() => {
+    if (!modalOpen) return;
+    const src = canvasRef.current;
+    const dst = modalCanvasRef.current;
+    if (!src || !dst || src.width === 0) return;
+    const ctx = dst.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    ctx.drawImage(src, 0, 0, dst.width / dpr, dst.height / dpr);
+  }, [modalOpen, canvasRef]);
+
+  function closeModal() {
+    const src = modalCanvasRef.current;
+    const dst = canvasRef.current;
+    if (src && dst) {
+      dst.width = src.width;
+      dst.height = src.height;
+      dst.getContext("2d")!.drawImage(src, 0, 0);
+    }
+    setModalOpen(false);
+  }
 
   function clear() {
+    const m = modalCanvasRef.current;
+    if (m) m.getContext("2d")!.clearRect(0, 0, m.width, m.height);
     const c = canvasRef.current;
     if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
   }
@@ -771,28 +790,27 @@ function SignaturePad({
       <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
         {label}
       </div>
+      {/* Read-only preview — actual drawing happens in modal */}
       <canvas
         ref={canvasRef}
-        width={320}
-        className="w-full rounded-xl touch-none"
+        className="w-full rounded-xl"
         style={{
           border: `1px solid ${colour}`,
           background: "var(--surface2)",
-          cursor: "crosshair",
           display: "block",
-          height: expanded ? "200px" : "120px",
-          transition: "height 300ms ease",
+          height: "80px",
+          pointerEvents: "none",
         }}
-        aria-label={`Handtekening voor ${label}`}
+        aria-hidden="true"
       />
       <div className="flex items-center gap-2">
         <button
-          onClick={() => setExpanded((v) => !v)}
-          aria-label={expanded ? "Verklein handtekeningveld" : "Vergroot handtekeningveld"}
-          className="focus-ring p-1 rounded-full border transition-colors"
-          style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+          onClick={() => setModalOpen(true)}
+          className="focus-ring text-xs px-3 py-1 rounded-full border transition-colors"
+          style={{ color: colour, borderColor: colour }}
+          aria-label={`Handtekeningveld openen voor ${label}`}
         >
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          Teken
         </button>
         <button
           onClick={clear}
@@ -805,6 +823,75 @@ function SignaturePad({
       <div className="text-xs text-center" style={{ color: "var(--text2)" }}>
         Teken hier met vinger of muis
       </div>
+
+      {modalOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.75)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "1rem",
+          }}
+          onClick={closeModal}
+        >
+          <div
+            style={{
+              background: "var(--surface)",
+              borderRadius: "1rem",
+              padding: "1.5rem",
+              width: "100%",
+              maxWidth: "480px",
+              border: `2px solid ${colour}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-bold uppercase tracking-widest" style={{ color: colour }}>
+                {label}
+              </span>
+              <button
+                onClick={closeModal}
+                className="focus-ring p-1 rounded-full"
+                style={{ color: "var(--text2)" }}
+                aria-label="Sluiten"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <canvas
+              ref={modalCanvasRef}
+              className="w-full rounded-xl touch-none"
+              style={{
+                border: `1px solid ${colour}`,
+                background: "var(--surface2)",
+                cursor: "crosshair",
+                display: "block",
+                height: "220px",
+              }}
+              aria-label={`Handtekening voor ${label}`}
+            />
+            <p className="text-xs text-center mt-2" style={{ color: "var(--text2)" }}>
+              Teken hier met vinger of muis
+            </p>
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={clear}
+                className="focus-ring text-xs px-3 py-1.5 rounded-full border"
+                style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+              >
+                Wis
+              </button>
+              <button
+                onClick={closeModal}
+                className="focus-ring text-xs px-4 py-1.5 rounded-full font-semibold"
+                style={{ background: colour, color: "#fff" }}
+              >
+                Klaar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
