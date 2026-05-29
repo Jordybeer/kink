@@ -114,11 +114,11 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
     expect(decoded.entries.spanking_implement.status).toBe("hard_no");
   });
 
-  it("round-trips desire and experienced", () => {
+  it("drops desire and experienced to keep QR url short", () => {
     const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand.desire).toBe(5);
-    expect(decoded.entries.spanking_hand.experienced).toBe(true);
-    expect(decoded.entries.flogging.desire).toBe(3);
+    expect(decoded.entries.spanking_hand.desire).toBeNull();
+    expect(decoded.entries.spanking_hand.experienced).toBeNull();
+    expect(decoded.entries.flogging.desire).toBeNull();
   });
 
   it("strips comments and tags (text doesn't travel via QR)", () => {
