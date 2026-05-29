@@ -692,6 +692,15 @@ function ComparePage() {
               })()}
             </>
           )}
+          <div className="pt-4 pb-2 flex justify-center">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="focus-ring text-xs px-4 py-2 rounded-full border transition-colors"
+              style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+            >
+              ↑ Terug naar boven
+            </button>
+          </div>
         </div>{/* end right panel */}
 
       </div>
