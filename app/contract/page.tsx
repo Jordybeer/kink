@@ -742,6 +742,46 @@ function ContractSection({ title, items, colour }: { title: string; items: Contr
   );
 }
 
+// Separate component so useDrawCanvas runs when the canvas actually mounts
+function DrawableCanvas({
+  canvasRef,
+  colour,
+  label,
+  sourceRef,
+}: {
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  colour: string;
+  label: string;
+  sourceRef: React.RefObject<HTMLCanvasElement | null>;
+}) {
+  useDrawCanvas(canvasRef);
+
+  useEffect(() => {
+    const src = sourceRef.current;
+    const dst = canvasRef.current;
+    if (!src || !dst || src.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = dst.getContext("2d");
+    if (ctx) ctx.drawImage(src, 0, 0, dst.width / dpr, dst.height / dpr);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="w-full rounded-xl touch-none"
+      style={{
+        border: `1px solid ${colour}`,
+        background: "var(--surface2)",
+        cursor: "crosshair",
+        display: "block",
+        height: "220px",
+      }}
+      aria-label={`Handtekening voor ${label}`}
+    />
+  );
+}
+
 function SignaturePad({
   label,
   colour,
@@ -753,19 +793,6 @@ function SignaturePad({
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
-  useDrawCanvas(modalCanvasRef);
-
-  // Copy existing signature into modal canvas after it mounts
-  useEffect(() => {
-    if (!modalOpen) return;
-    const src = canvasRef.current;
-    const dst = modalCanvasRef.current;
-    if (!src || !dst || src.width === 0) return;
-    const ctx = dst.getContext("2d");
-    if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.drawImage(src, 0, 0, dst.width / dpr, dst.height / dpr);
-  }, [modalOpen, canvasRef]);
 
   function closeModal() {
     const src = modalCanvasRef.current;
@@ -858,17 +885,11 @@ function SignaturePad({
                 <X size={18} />
               </button>
             </div>
-            <canvas
-              ref={modalCanvasRef}
-              className="w-full rounded-xl touch-none"
-              style={{
-                border: `1px solid ${colour}`,
-                background: "var(--surface2)",
-                cursor: "crosshair",
-                display: "block",
-                height: "220px",
-              }}
-              aria-label={`Handtekening voor ${label}`}
+            <DrawableCanvas
+              canvasRef={modalCanvasRef}
+              colour={colour}
+              label={label}
+              sourceRef={canvasRef}
             />
             <p className="text-xs text-center mt-2" style={{ color: "var(--text2)" }}>
               Teken hier met vinger of muis
