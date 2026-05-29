@@ -209,27 +209,39 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
           <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
             Lid sinds {memberSince} · {progressPct}% ingevuld
           </p>
-          {profile.fetLifeUsername && (
-            <a
-              href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs mt-1 inline-block hover:underline py-2"
-              style={{ color: "var(--accent)" }}
-            >
-              ↗ fetlife.com/{profile.fetLifeUsername}
-            </a>
-          )}
-          {profile.bdsmtestUrl && (
-            <a
-              href={profile.bdsmtestUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs mt-0.5 inline-block hover:underline py-2"
-              style={{ color: "var(--accent)" }}
-            >
-              ↗ BDSMTest resultaat
-            </a>
+          {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {profile.fetLifeUsername && (
+                <a
+                  href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+                  style={{
+                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                    color: "var(--accent)",
+                    border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+                  }}
+                >
+                  ↗ FetLife
+                </a>
+              )}
+              {profile.bdsmtestUrl && (
+                <a
+                  href={profile.bdsmtestUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+                  style={{
+                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                    color: "var(--accent)",
+                    border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+                  }}
+                >
+                  ↗ BDSMTest
+                </a>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -283,9 +295,14 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 </span>
               ))}
             </div>
-            <p className="text-[10px] mt-1" style={{ color: "var(--text2)" }}>
-              ↗ Graag · ✓ Ja · ♡ Misschien · ✕ Nee · ✕✕ Grens
-            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+              {(["willing", "yes", "maybe", "no", "hard_no"] as const).map((s) => (
+                <span key={s} className="text-[10px] flex items-center gap-1" style={{ color: "var(--text2)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full flex-none inline-block" style={{ background: DNA_COLORS[s] }} />
+                  {s === "willing" ? "Graag" : s === "yes" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Grens"}
+                </span>
+              ))}
+            </div>
           </>
         )}
       </div>
