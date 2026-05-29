@@ -284,7 +284,10 @@ function ContractPage() {
         y += 3;
       }
 
-      const section = (title: string, items: string[], colour: [number, number, number]) => {
+      const itemLabel = (item: ContractItem) =>
+        typeof item === "string" ? item : `${item.text} (${item.tag})`;
+
+      const section = (title: string, items: ContractItem[], colour: [number, number, number]) => {
         if (!items.length) return;
         const colW = (lineW - 10) / 2;
         doc.setFont("helvetica", "bold");
@@ -297,19 +300,23 @@ function ContractPage() {
         doc.setTextColor(220, 215, 240);
         let i = 0;
         while (i < items.length) {
-          if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-          const left = `• ${items[i]}`;
-          const right = items[i + 1] !== undefined ? `• ${items[i + 1]}` : null;
-          doc.text(left, margin + 3, y);
-          if (right) doc.text(right, margin + colW + 10 + 3, y);
-          y += 4.5;
-          i += right ? 2 : 1;
+          const leftText = `• ${itemLabel(items[i])}`;
+          const rightItem = items[i + 1];
+          const rightText = rightItem !== undefined ? `• ${itemLabel(rightItem)}` : null;
+          const leftLines = doc.splitTextToSize(leftText, colW - 4) as string[];
+          const rightLines = rightText ? doc.splitTextToSize(rightText, colW - 4) as string[] : [];
+          const rowH = Math.max(leftLines.length, rightLines.length) * 4.5;
+          if (y + rowH > 262) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(220, 215, 240); }
+          leftLines.forEach((line, li) => doc.text(line, margin + 3, y + li * 4.5));
+          rightLines.forEach((line, li) => doc.text(line, margin + colW + 10 + 3, y + li * 4.5));
+          y += rowH;
+          i += rightText !== null ? 2 : 1;
         }
         y += 3;
       };
 
       section("Gedeelde verlangens", [...shared, ...customShared], [74, 222, 128]);
-      section("Harde grenzen", hardLimits.map((h) => `${h.name} (${h.who})`), [239, 68, 68]);
+      section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), [239, 68, 68]);
       section("Zachte grenzen", softLimits, [251, 191, 36]);
       section("Bespreking nodig", discuss, [96, 165, 250]);
 
@@ -452,12 +459,12 @@ function ContractPage() {
 
         {/* Safeword & Nazorg */}
         <div className="mb-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--accent)" }}>
             Safeword &amp; Nazorg
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Column A */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_A }}>
                 {profileA.name}
               </div>
@@ -500,7 +507,7 @@ function ContractPage() {
             </div>
 
             {/* Column B */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_B }}>
                 {profileB.name}
               </div>
@@ -547,7 +554,7 @@ function ContractPage() {
         <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" />
         <ContractSection
           title="Harde grenzen"
-          items={hardLimits.map((h) => `${h.name} — ${h.who}`)}
+          items={hardLimits.map((h) => ({ text: h.name, tag: h.who }))}
           colour="var(--hard-no)"
         />
         <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" />
@@ -555,7 +562,7 @@ function ContractPage() {
 
         {/* General clauses */}
         <div className="mt-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--accent)" }}>
             Algemene afspraken
           </h3>
           <ul className="space-y-1.5 text-sm" style={{ color: "var(--text2)" }}>
@@ -712,21 +719,32 @@ function ContractPage() {
   );
 }
 
-function ContractSection({ title, items, colour }: { title: string; items: string[]; colour: string }) {
+type ContractItem = string | { text: string; tag: string };
+
+function ContractSection({ title, items, colour }: { title: string; items: ContractItem[]; colour: string }) {
   if (!items.length) return null;
   return (
     <div className="mb-5">
-      <h3 className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colour }}>
+      <h3 className="text-sm font-semibold mb-2" style={{ color: colour }}>
         {title}
       </h3>
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
+      <div className="flex flex-wrap gap-1.5">
         {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm min-w-0" style={{ color: "var(--text)" }}>
-            <span style={{ color: colour, flexShrink: 0 }}>•</span>
-            <span className="break-words min-w-0">{item}</span>
-          </li>
+          <span
+            key={i}
+            className="text-xs px-2.5 py-1 rounded-full"
+            style={{
+              background: `color-mix(in srgb, ${colour} 12%, transparent)`,
+              color: colour,
+              border: `1px solid color-mix(in srgb, ${colour} 30%, transparent)`,
+            }}
+          >
+            {typeof item === "string" ? item : (
+              <>{item.text} <span style={{ opacity: 0.65 }}>{item.tag}</span></>
+            )}
+          </span>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
