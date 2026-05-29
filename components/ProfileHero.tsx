@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, QrCode } from "lucide-react";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
@@ -161,6 +161,17 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="flex items-start gap-2">
             <h2 className="text-2xl font-bold truncate flex-1">{profile.name}</h2>
+            {onShare && (
+              <button
+                onClick={onShare}
+                aria-label="Deel profiel via QR"
+                title="Deel via QR"
+                className="focus-ring flex-none mt-0.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-colors"
+                style={{ color: "var(--accent)", border: "1px solid var(--border)" }}
+              >
+                <QrCode size={15} />
+              </button>
+            )}
             {onEdit && (
               <button
                 onClick={onEdit}
@@ -351,20 +362,6 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
       <div className="pointer-events-none absolute right-0 inset-y-0 w-8 bg-gradient-to-l from-[var(--bg)] to-transparent" />
       </div>
 
-      {/* QR share CTA — hidden for imported profiles */}
-      {onShare ? (
-        <button
-          onClick={onShare}
-          className="focus-ring w-full rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "var(--accent)", color: "#000" }}
-        >
-          ↗ Deel profiel via QR
-        </button>
-      ) : (
-        <p className="text-xs text-center py-2" style={{ color: "var(--text2)" }}>
-          🔒 Dit profiel is geïmporteerd — delen is uitgeschakeld voor privacy.
-        </p>
-      )}
     </section>
   );
 }

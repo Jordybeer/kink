@@ -589,6 +589,7 @@ function HomeContent() {
             </div>
 
             {/* Compare CTA */}
+            <div className="relative">
             <div className="flex flex-col gap-3">
               {profiles.length >= 2 ? (
                 <Link
@@ -678,6 +679,8 @@ function HomeContent() {
                   Plan activiteiten, intensiteit en timing vooraf.
                 </div>
               </Link>
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[var(--bg)] to-transparent" />
             </div>
           </>
         )}

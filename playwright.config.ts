@@ -5,15 +5,20 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: "list",
+  reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
     baseURL: "http://localhost:3000",
     screenshot: "only-on-failure",
-    trace: "off",
+    trace: "retain-on-failure",
+    video: "off",
   },
   projects: [
     {
-      name: "chromium",
+      name: "mobile",
+      use: { ...devices["Pixel 7"] },
+    },
+    {
+      name: "desktop",
       use: { ...devices["Desktop Chrome"] },
     },
   ],

@@ -754,7 +754,7 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
       {isKinkDetail(items[0]) ? (
         <div className="space-y-2">
           {(items as KinkDetailItem[]).map((item, i) => (
-            <div key={i} className="rounded-xl p-2.5 text-xs" style={{
+            <div key={i} className="rounded-xl p-2.5 text-[13px]" style={{
               background: `color-mix(in srgb, ${colour} 8%, transparent)`,
               border: `1px solid color-mix(in srgb, ${colour} 20%, transparent)`,
             }}>
