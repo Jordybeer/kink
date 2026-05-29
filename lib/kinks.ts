@@ -91,10 +91,10 @@ export const KINKS: Kink[] = [
   },
   {
     id: "shibari",
-    name: "Shibari / suspension",
+    name: "Shibari (rope art)",
     category: "Bondage",
-    level: 4,
-    description: "Japanse bindkunst waarbij touw esthetisch en sensueel om het lichaam wordt geweven. Suspensie (ophangen) is de meest gevorderde variant. Vereist uitgebreide training.",
+    level: 3,
+    description: "Japanse bindkunst waarbij touw esthetisch en sensueel om het lichaam wordt geweven. Vereist uitgebreide training; ophangen (suspensie) is een aparte, gevorderdere stap.",
   },
   {
     id: "handcuffs",
@@ -348,7 +348,7 @@ export const KINKS: Kink[] = [
   {
     id: "brat_tamer",
     name: "Brat / tamer dynamic",
-    category: "Role Play",
+    category: "Power Exchange",
     level: 2,
     description: "De submissieve partner (brat) daagt de dominant (tamer) bewust uit. Speels en provocerend. Duidelijke grenzen over straf en vergelding zijn noodzakelijk.",
   },
@@ -379,7 +379,7 @@ export const KINKS: Kink[] = [
     id: "needle_play",
     name: "Needle play",
     category: "Sensation Play",
-    level: 4,
+    level: 3,
     description: "Naalden door de huid steken voor intense sensaties en esthetische effecten. Vereist medische kennis, steriele materialen en ervaring. Altijd in veilige context.",
   },
   {
@@ -390,13 +390,6 @@ export const KINKS: Kink[] = [
     description: "Gebruik van vuur (vlam, alcohol) op of nabij de huid. Visueel indrukwekkend en thermisch intens. Vereist training, brandbestrijder bij de hand en ervaren speler.",
   },
   {
-    id: "electro_play",
-    name: "Electrostimulation",
-    category: "Sensation Play",
-    level: 3,
-    description: "Elektrische stimulatie via apparaten zoals tens-units. Geeft tintelende tot scherpe sensaties. Nooit boven de taille bij mensen met hartproblemen.",
-  },
-  {
     id: "wartenberg_wheel",
     name: "Wartenberg wheel",
     category: "Sensation Play",
@@ -405,10 +398,10 @@ export const KINKS: Kink[] = [
   },
   {
     id: "pinching",
-    name: "Pinching / nipple clamps",
+    name: "Pinching",
     category: "Sensation Play",
     level: 2,
-    description: "Knijpen van huid of tepels voor scherpe, gelokaliseerde pijn. Eenvoudig maar intens. Communiceer over voorkeurzones en intensiteit.",
+    description: "Knijpen van huid voor scherpe, gelokaliseerde pijn — vingers, nagels of een tang. Eenvoudig maar intens. Communiceer over voorkeurzones en intensiteit.",
   },
   {
     id: "scratching",
@@ -432,14 +425,6 @@ export const KINKS: Kink[] = [
     description: "Kietelen als onderdeel van spel, soms in combinatie met bondage. Kan intens en overweldigend zijn. Safeword is essentieel bij verzwakte positie.",
   },
   {
-    id: "temperature_play",
-    name: "Temperature play (general)",
-    category: "Sensation Play",
-    level: 1,
-    description: "Bewust variëren van temperatuursensaties (warm/koud). Breed begrip dat wax, ijs en andere technieken omvat. Beginnerspunt voor sensorisch spel.",
-  },
-
-  {
     id: "choking",
     name: "Choking / breath restriction",
     category: "Sensation Play",
@@ -449,7 +434,7 @@ export const KINKS: Kink[] = [
   {
     id: "facesitting",
     name: "Facesitting / smothering",
-    category: "Sensation Play",
+    category: "Power Exchange",
     level: 2,
     description: "Zitten op het gezicht van de partner, waarbij ademhaling gecontroleerd wordt. Vereist communicatie over ademruimte. Altijd een non-verbaal stopsignaal afspreken.",
   },
@@ -473,13 +458,6 @@ export const KINKS: Kink[] = [
     category: "Sensation Play",
     level: 4,
     description: "Permanente littekens aanbrengen als lichaamsmodi. Onomkeerbaar en vereist medische kennis. Uitsluitend voor gevorderden met professionele begeleiding.",
-  },
-  {
-    id: "piercing_temp",
-    name: "Temporary piercing play",
-    category: "Sensation Play",
-    level: 4,
-    description: "Tijdelijke piercings als sensorisch of esthetisch spel. Steriele naalden, medische kennis en aftercare zijn essentieel. Altijd professioneel materiaal gebruiken.",
   },
 
   // ─── Exhibition & Voyeurism ─────────────────────────────────────────────────
@@ -580,7 +558,7 @@ export const KINKS: Kink[] = [
     id: "furry",
     name: "Fursuit / furry play",
     category: "Pet Play",
-    level: 4,
+    level: 3,
     description: "Opwinding door het dragen van een dierenkostuum (fursuit) of furry-identiteit. Niche maar vergelijkbaar met andere rollenspelen. Communiceer over grenzen.",
   },
   {
@@ -621,13 +599,6 @@ export const KINKS: Kink[] = [
     description: "Spugen op de partner als daad van vernedering of dominantie. Vereist expliciete toestemming. Hygiënisch en emotioneel gevoelig.",
   },
   {
-    id: "watersports",
-    name: "Golden shower",
-    category: "Fluid & Bodily",
-    level: 3,
-    description: "Urineren op of bij de partner als erotisch spel. Vereist duidelijke toestemming en afspraken over locatie en hygiëne.",
-  },
-  {
     id: "scat",
     name: "Scat play",
     category: "Fluid & Bodily",
@@ -659,7 +630,7 @@ export const KINKS: Kink[] = [
     id: "menstrual_play",
     name: "Menstrual play",
     category: "Fluid & Bodily",
-    level: 4,
+    level: 2,
     description: "Seks of spel tijdens de menstruatie. Normaal en veilig voor de meesten, maar bespreek comfort en hygiëne van tevoren.",
   },
 
@@ -716,14 +687,14 @@ export const KINKS: Kink[] = [
   {
     id: "deep_throat",
     name: "Deep throat",
-    category: "Anal & Penetration",
+    category: "Sensation Play",
     level: 2,
     description: "Diep oraal seksueel contact waarbij de partner de keel penetreert. Communiceer over ademhaling en non-verbale stopsignalen.",
   },
   {
     id: "rough_sex",
     name: "Rough sex",
-    category: "Anal & Penetration",
+    category: "Power Exchange",
     level: 2,
     description: "Intens, ruw seksueel contact dat agressiviteit, kracht en dominantie omvat. Bespreek intensiteit, grenzen en aftercare van tevoren uitvoerig.",
   },
@@ -1403,7 +1374,7 @@ export const KINKS: Kink[] = [
     name: "Kniehousen / sokken fetisj",
     category: "Materiaal & Geur",
     level: 1,
-    description: "Opgewonden worden door kniehousen of speciale sokken. Populair in combinatie met schoolmeisjes-ageplay of eenvoudige kledingfetisj.",
+    description: "Opgewonden worden door kniekousen of speciale sokken. Populair in combinatie met schoolmeisjes-ageplay of eenvoudige kledingfetisj.",
   },
 
   // ─── Fluid & Bodily (uitbreiding) ──────────────────────────────────────────

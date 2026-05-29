@@ -253,10 +253,10 @@ function ComparePage() {
         ))}
       </div>
 
-      <div className="md:flex md:gap-6 md:items-start">
+      <div>
 
-        {/* Left panel — sticky sidebar on md+ (hidden on mobile, replaced by sticky strip above) */}
-        <div className="hidden md:block md:w-72 md:flex-none md:sticky md:top-6 md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+        {/* Left panel — desktop sidebar (removed; content lives in mobile sticky strip above) */}
+        <div className="hidden">
 
           {/* Profile selectors */}
           <div className="grid grid-cols-2 gap-4 mb-5">
@@ -520,8 +520,8 @@ function ComparePage() {
 
         </div>{/* end left panel */}
 
-        {/* Right panel — scrollable kink list (full width on mobile) */}
-        <div className="flex-1 mt-2 md:mt-0">
+        {/* Kink list */}
+        <div>
           {!profileA || !profileB ? (
             <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
               Kies twee spelers — dan kijken we wat jullie gemeen hebben.
