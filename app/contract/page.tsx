@@ -144,29 +144,32 @@ function ContractPage() {
     );
   }
 
-  const shared: string[] = [];
+  type KinkDetail = { name: string; statusA: KinkStatus | null; statusB: KinkStatus | null; commentA?: string; commentB?: string };
+  const shared: KinkDetail[] = [];
   const hardLimits: { name: string; who: string }[] = [];
-  const softLimits: string[] = [];
-  const discuss: string[] = [];
+  const softLimits: KinkDetail[] = [];
+  const discuss: KinkDetail[] = [];
 
   for (const kink of KINKS) {
-    const a = profileA.entries[kink.id]?.status ?? null;
-    const b = profileB.entries[kink.id]?.status ?? null;
+    const entryA = profileA.entries[kink.id];
+    const entryB = profileB.entries[kink.id];
+    const a = entryA?.status ?? null;
+    const b = entryB?.status ?? null;
     if (!a && !b) continue;
     if (isHardLimit(a, b)) {
       const who = a === "hard_no" && b === "hard_no" ? "beiden" : a === "hard_no" ? profileA.name : profileB.name;
       hardLimits.push({ name: kink.name, who });
     } else if (isMatch(a, b)) {
-      shared.push(kink.name);
+      shared.push({ name: kink.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
     } else if (a === "no" || b === "no") {
-      softLimits.push(kink.name);
+      softLimits.push({ name: kink.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
     } else if (a && b) {
-      discuss.push(kink.name);
+      discuss.push({ name: kink.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
     }
   }
 
   // Custom kinks
-  const customShared: string[] = [];
+  const customShared: KinkDetail[] = [];
   const allCustom = [
     ...(profileA.customKinks ?? []).map((k) => ({ ...k, side: "a" as const })),
     ...(profileB.customKinks ?? []).map((k) => ({ ...k, side: "b" as const })),
@@ -178,10 +181,12 @@ function ContractPage() {
     customMerged.set(key, ck.side === "a" ? { ...ex, aId: ck.id } : { ...ex, bId: ck.id });
   }
   for (const item of customMerged.values()) {
-    const a = item.aId ? (profileA.entries[item.aId]?.status ?? null) : null;
-    const b = item.bId ? (profileB.entries[item.bId]?.status ?? null) : null;
-    if (isMatch(a, b)) customShared.push(item.name);
-    else if (a || b) discuss.push(item.name);
+    const entryA = item.aId ? profileA.entries[item.aId] : null;
+    const entryB = item.bId ? profileB.entries[item.bId] : null;
+    const a = entryA?.status ?? null;
+    const b = entryB?.status ?? null;
+    if (isMatch(a, b)) customShared.push({ name: item.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
+    else if (a || b) discuss.push({ name: item.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
   }
 
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
@@ -277,8 +282,15 @@ function ContractPage() {
         y += 3;
       }
 
-      const itemLabel = (item: ContractItem) =>
-        typeof item === "string" ? item : `${item.text} (${item.tag})`;
+      const itemLabel = (item: ContractItem) => {
+        if (typeof item === "string") return item;
+        if ("statusA" in item) {
+          const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
+          const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
+          return `${item.name} (${profileA.name}: ${sA} / ${profileB.name}: ${sB})`;
+        }
+        return `${item.text} (${item.tag})`;
+      };
 
       const section = (title: string, items: ContractItem[], colour: [number, number, number]) => {
         if (!items.length) return;
@@ -544,14 +556,14 @@ function ContractPage() {
           </div>
         </div>
 
-        <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" />
+        <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
         <ContractSection
           title="Harde grenzen"
           items={hardLimits.map((h) => ({ text: h.name, tag: h.who }))}
           colour="var(--hard-no)"
         />
-        <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" />
-        <ContractSection title="Bespreking nodig" items={discuss} colour="var(--willing)" />
+        <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
+        <ContractSection title="Bespreking nodig" items={discuss} colour="var(--willing)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
 
         {/* General clauses */}
         <div className="mt-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
@@ -712,33 +724,127 @@ function ContractPage() {
   );
 }
 
-type ContractItem = string | { text: string; tag: string };
+type KinkDetailItem = { name: string; statusA: KinkStatus | null; statusB: KinkStatus | null; commentA?: string; commentB?: string };
+type ContractItem = string | { text: string; tag: string } | KinkDetailItem;
 
-function ContractSection({ title, items, colour }: { title: string; items: ContractItem[]; colour: string }) {
+function isKinkDetail(item: ContractItem): item is KinkDetailItem {
+  return typeof item === "object" && "statusA" in item;
+}
+
+function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB }: {
+  title: string;
+  items: ContractItem[];
+  colour: string;
+  nameA?: string;
+  nameB?: string;
+  colourA?: string;
+  colourB?: string;
+}) {
   if (!items.length) return null;
+  const cA = colourA ?? "var(--accent)";
+  const cB = colourB ?? "var(--accent2)";
+  const nA = nameA?.split(" ")[0] ?? "A";
+  const nB = nameB?.split(" ")[0] ?? "B";
+
   return (
     <div className="mb-5">
       <h3 className="text-sm font-semibold mb-2" style={{ color: colour }}>
         {title}
       </h3>
-      <div className="flex flex-wrap gap-1.5">
-        {items.map((item, i) => (
-          <span
-            key={i}
-            className="text-xs px-2.5 py-1 rounded-full"
-            style={{
+      {isKinkDetail(items[0]) ? (
+        <div className="space-y-2">
+          {(items as KinkDetailItem[]).map((item, i) => (
+            <div key={i} className="rounded-xl p-2.5 text-xs" style={{
+              background: `color-mix(in srgb, ${colour} 8%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${colour} 20%, transparent)`,
+            }}>
+              <div className="font-medium mb-1.5" style={{ color: "var(--text1)" }}>{item.name}</div>
+              <div className="flex items-center gap-2">
+                {item.statusA ? (
+                  <span className="px-1.5 py-0.5 rounded border whitespace-nowrap" style={{
+                    color: cA,
+                    borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`,
+                    background: `color-mix(in srgb, ${cA} 10%, transparent)`,
+                  }}>
+                    {nA}: {STATUS_NL[item.statusA]}
+                  </span>
+                ) : <span style={{ color: "var(--text2)" }}>{nA}: —</span>}
+                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
+                {item.statusB ? (
+                  <span className="px-1.5 py-0.5 rounded border whitespace-nowrap" style={{
+                    color: cB,
+                    borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`,
+                    background: `color-mix(in srgb, ${cB} 10%, transparent)`,
+                  }}>
+                    {STATUS_NL[item.statusB]}: {nB}
+                  </span>
+                ) : <span style={{ color: "var(--text2)" }}>—: {nB}</span>}
+              </div>
+              {(item.commentA || item.commentB) && (
+                <div className="mt-1.5 space-y-0.5" style={{ color: "var(--text2)" }}>
+                  {item.commentA && <div><span className="font-medium" style={{ color: cA }}>{nA}:</span> {item.commentA}</div>}
+                  {item.commentB && <div><span className="font-medium" style={{ color: cB }}>{nB}:</span> {item.commentB}</div>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {(items as (string | { text: string; tag: string })[]).map((item, i) => (
+            <span key={i} className="text-xs px-2.5 py-1 rounded-full" style={{
               background: `color-mix(in srgb, ${colour} 12%, transparent)`,
               color: colour,
               border: `1px solid color-mix(in srgb, ${colour} 30%, transparent)`,
-            }}
-          >
-            {typeof item === "string" ? item : (
-              <>{item.text} <span style={{ opacity: 0.65 }}>{item.tag}</span></>
-            )}
-          </span>
-        ))}
-      </div>
+            }}>
+              {typeof item === "string" ? item : (
+                <>{item.text} <span style={{ opacity: 0.65 }}>{item.tag}</span></>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+// Separate component so useDrawCanvas runs when the canvas actually mounts
+function DrawableCanvas({
+  canvasRef,
+  colour,
+  label,
+  sourceRef,
+}: {
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  colour: string;
+  label: string;
+  sourceRef: React.RefObject<HTMLCanvasElement | null>;
+}) {
+  useDrawCanvas(canvasRef);
+
+  useEffect(() => {
+    const src = sourceRef.current;
+    const dst = canvasRef.current;
+    if (!src || !dst || src.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = dst.getContext("2d");
+    if (ctx) ctx.drawImage(src, 0, 0, dst.width / dpr, dst.height / dpr);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="w-full rounded-xl touch-none"
+      style={{
+        border: `1px solid ${colour}`,
+        background: "var(--surface2)",
+        cursor: "crosshair",
+        display: "block",
+        height: "220px",
+      }}
+      aria-label={`Handtekening voor ${label}`}
+    />
   );
 }
 
@@ -753,19 +859,6 @@ function SignaturePad({
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
-  useDrawCanvas(modalCanvasRef);
-
-  // Copy existing signature into modal canvas after it mounts
-  useEffect(() => {
-    if (!modalOpen) return;
-    const src = canvasRef.current;
-    const dst = modalCanvasRef.current;
-    if (!src || !dst || src.width === 0) return;
-    const ctx = dst.getContext("2d");
-    if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.drawImage(src, 0, 0, dst.width / dpr, dst.height / dpr);
-  }, [modalOpen, canvasRef]);
 
   function closeModal() {
     const src = modalCanvasRef.current;
@@ -858,17 +951,11 @@ function SignaturePad({
                 <X size={18} />
               </button>
             </div>
-            <canvas
-              ref={modalCanvasRef}
-              className="w-full rounded-xl touch-none"
-              style={{
-                border: `1px solid ${colour}`,
-                background: "var(--surface2)",
-                cursor: "crosshair",
-                display: "block",
-                height: "220px",
-              }}
-              aria-label={`Handtekening voor ${label}`}
+            <DrawableCanvas
+              canvasRef={modalCanvasRef}
+              colour={colour}
+              label={label}
+              sourceRef={canvasRef}
             />
             <p className="text-xs text-center mt-2" style={{ color: "var(--text2)" }}>
               Teken hier met vinger of muis
