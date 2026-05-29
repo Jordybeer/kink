@@ -286,6 +286,7 @@ function ContractPage() {
 
       const section = (title: string, items: string[], colour: [number, number, number]) => {
         if (!items.length) return;
+        const colW = (lineW - 10) / 2;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...colour);
@@ -294,10 +295,15 @@ function ContractPage() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(220, 215, 240);
-        for (const item of items) {
+        let i = 0;
+        while (i < items.length) {
           if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-          doc.text(`• ${item}`, margin + 3, y);
+          const left = `• ${items[i]}`;
+          const right = items[i + 1] !== undefined ? `• ${items[i + 1]}` : null;
+          doc.text(left, margin + 3, y);
+          if (right) doc.text(right, margin + colW + 10 + 3, y);
           y += 4.5;
+          i += right ? 2 : 1;
         }
         y += 3;
       };
