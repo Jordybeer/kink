@@ -464,9 +464,9 @@ function ContractPage() {
 
   return (
     <>
-    <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-6">
+    <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-6 contract-print">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+      <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
         <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
@@ -496,8 +496,11 @@ function ContractPage() {
 
         {/* Preamble */}
         <div className="mb-6" style={{ borderLeft: "3px solid var(--border-accent)", paddingLeft: "1rem" }}>
-          <p className="text-sm italic leading-relaxed" style={{ color: "var(--text2)" }}>
+          <p className="text-sm italic leading-relaxed print:hidden" style={{ color: "var(--text2)" }}>
             {preambleOpen ? preamble : preamble.slice(0, preamble.indexOf(". ") + 1)}
+          </p>
+          <p className="hidden print:block text-sm italic leading-relaxed" style={{ color: "var(--text2)" }}>
+            {preamble}
           </p>
           <button
             onClick={() => setPreambleOpen((v) => !v)}
@@ -641,7 +644,7 @@ function ContractPage() {
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 print:hidden">
         <button
           onClick={handleGeneratePDF}
           disabled={generating || ceremony}
@@ -654,7 +657,7 @@ function ContractPage() {
 
       {/* Eerdere contracten */}
       {contracts.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-8 print:hidden">
           <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
             Eerdere contracten
           </h2>
