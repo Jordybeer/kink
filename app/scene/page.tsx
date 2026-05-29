@@ -347,7 +347,7 @@ function ScenePage() {
   const addedKinkNames = new Set(items.filter((it) => it.fromKink).map((it) => it.name));
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-6 pb-32 w-full">
+    <main className="max-w-2xl mx-auto px-4 py-6 pb-32 w-full flex flex-col min-h-dvh">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <Link href={backHref} className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
@@ -388,32 +388,39 @@ function ScenePage() {
               background: "var(--surface2)",
               border: "1px solid var(--border)",
               color: "var(--text2)",
+              colorScheme: "dark",
             }}
           />
         </div>
       </div>
 
       {/* Scene items list */}
-      {items.length === 0 ? (
-        <p className="text-sm text-center py-10" style={{ color: "var(--text2)" }}>
-          Voeg kinks toe vanuit jullie matches hieronder ↓
-        </p>
-      ) : (
-        <div>
-          {items.map((item, i) => (
-            <SceneItemCard
-              key={item.id}
-              item={item}
-              index={i}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-              onDragStart={handleDragStart}
-              onDragEnter={handleDragEnter}
-              onDragEnd={handleDragEnd}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex-1 flex flex-col">
+        {items.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center select-none">
+            <div className="text-3xl mb-3">🎯</div>
+            <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Nog geen activiteiten gepland</p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+              Tik op een chip hieronder om<br />toe te voegen aan de scène
+            </p>
+          </div>
+        ) : (
+          <div>
+            {items.map((item, i) => (
+              <SceneItemCard
+                key={item.id}
+                item={item}
+                index={i}
+                onUpdate={handleUpdate}
+                onDelete={handleDelete}
+                onDragStart={handleDragStart}
+                onDragEnter={handleDragEnter}
+                onDragEnd={handleDragEnd}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Add manual item */}
       <div className="flex gap-2 mt-3 mb-8">

@@ -10,7 +10,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Zap } from "lucide-react";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -348,9 +348,18 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       {/* Header */}
-      <div className="px-4 pt-6 pb-3">
+      <div className="px-4 pt-6 pb-3 flex items-center justify-between">
         <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors py-2 pr-2 inline-block" style={{ color: "var(--text2)" }}>
           ← Terug
+        </Link>
+        <Link
+          href={`/compare?a=${id}`}
+          aria-label="Vergelijk dit profiel"
+          className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
+          style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
+        >
+          <Zap size={13} />
+          Vergelijk
         </Link>
       </div>
 
