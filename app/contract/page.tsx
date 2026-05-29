@@ -247,13 +247,13 @@ function ContractPage() {
 
       // Preamble — paginate line by line so long text can't overflow the page
       doc.setFont("helvetica", "italic");
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(...muted);
       const pLines = doc.splitTextToSize(preamble, lineW) as string[];
       for (const line of pLines) {
-        if (y > 272) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(...muted); }
+        if (y > 272) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
         doc.text(line, margin, y);
-        y += 4.5;
+        y += 4;
       }
       y += 4;
 
@@ -282,47 +282,93 @@ function ContractPage() {
         y += 3;
       }
 
+      const newPage = () => {
+        doc.addPage();
+        doc.setFillColor(...dark);
+        doc.rect(0, 0, W, 297, "F");
+        y = 20;
+      };
+
       const itemLabel = (item: ContractItem) => {
         if (typeof item === "string") return item;
-        if ("statusA" in item) {
-          const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
-          const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
-          return `${item.name} (${profileA.name}: ${sA} / ${profileB.name}: ${sB})`;
-        }
-        return `${item.text} (${item.tag})`;
+        return `${(item as { text: string; tag: string }).text} (${(item as { text: string; tag: string }).tag})`;
       };
+
+      const col2X = margin + 82;
+      const col3X = margin + 82 + 44;
 
       const section = (title: string, items: ContractItem[], colour: [number, number, number]) => {
         if (!items.length) return;
-        const colW = (lineW - 10) / 2;
+
+        if (y > 258) { newPage(); }
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setTextColor(...colour);
         doc.text(title, margin, y);
-        y += 5;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(220, 215, 240);
-        let i = 0;
-        while (i < items.length) {
-          const leftText = `• ${itemLabel(items[i])}`;
-          const rightItem = items[i + 1];
-          const rightText = rightItem !== undefined ? `• ${itemLabel(rightItem)}` : null;
-          const leftLines = doc.splitTextToSize(leftText, colW - 4) as string[];
-          const rightLines = rightText ? doc.splitTextToSize(rightText, colW - 4) as string[] : [];
-          const rowH = Math.max(leftLines.length, rightLines.length) * 4.5;
-          if (y + rowH > 262) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(220, 215, 240); }
-          leftLines.forEach((line, li) => doc.text(line, margin + 3, y + li * 4.5));
-          rightLines.forEach((line, li) => doc.text(line, margin + colW + 10 + 3, y + li * 4.5));
-          y += rowH;
-          i += rightText !== null ? 2 : 1;
+        y += 2.5;
+        doc.setDrawColor(...colour);
+        doc.setLineWidth(0.25);
+        doc.line(margin, y, margin + lineW, y);
+        y += 4;
+
+        const isKinkRow = items.length > 0 && typeof items[0] === "object" && items[0] !== null && "name" in (items[0] as object);
+
+        if (isKinkRow) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...muted);
+          doc.text(profileA.name, col2X, y);
+          doc.text(profileB.name, col3X, y);
+          y += 4.5;
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          for (const item of items as KinkDetailItem[]) {
+            const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
+            const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
+            const nameLines = doc.splitTextToSize(`• ${item.name}`, 78) as string[];
+            const rowH = nameLines.length * 4.2 + 1;
+            if (y + rowH > 272) {
+              newPage();
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(8.5);
+            }
+            doc.setTextColor(220, 215, 240);
+            doc.text(nameLines, margin, y);
+            doc.text(sA, col2X, y);
+            doc.text(sB, col3X, y);
+            y += rowH;
+          }
+        } else {
+          const colW = (lineW - 10) / 2;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          doc.setTextColor(220, 215, 240);
+          let i = 0;
+          while (i < items.length) {
+            const left = `• ${itemLabel(items[i])}`;
+            const right = items[i + 1] !== undefined ? `• ${itemLabel(items[i + 1])}` : null;
+            const lLines = doc.splitTextToSize(left, colW - 4) as string[];
+            const rLines = right ? doc.splitTextToSize(right, colW - 4) as string[] : [];
+            const rowH = Math.max(lLines.length, rLines.length) * 4.2 + 1;
+            if (y + rowH > 272) {
+              newPage();
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(8.5);
+              doc.setTextColor(220, 215, 240);
+            }
+            lLines.forEach((l, li) => doc.text(l, margin + 3, y + li * 4.2));
+            rLines.forEach((l, li) => doc.text(l, margin + colW + 10, y + li * 4.2));
+            y += rowH;
+            i += right !== null ? 2 : 1;
+          }
         }
-        y += 3;
+        y += 4;
       };
 
       section("Gedeelde verlangens", [...shared, ...customShared], [74, 222, 128]);
       section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), [239, 68, 68]);
-      section("Zachte grenzen", softLimits, [251, 191, 36]);
+      section("Zachte grenzen", softLimits, [249, 115, 22]);
       section("Bespreking nodig", discuss, [96, 165, 250]);
 
       // Safeword clause
