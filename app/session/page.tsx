@@ -6,17 +6,7 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, Profile } from "@/types";
-import { encodeSdp, decodeSdp, waitForIceGathering, ICE_SERVERS } from "@/lib/webrtc";
-
-declare global {
-  interface Window {
-    BarcodeDetector?: {
-      new(opts?: { formats?: string[] }): {
-        detect(img: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
-      };
-    };
-  }
-}
+import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, ICE_SERVERS } from "@/lib/webrtc";
 
 const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
   yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)",
@@ -37,53 +27,21 @@ type Msg =
   | { t: "d" };
 
 type Phase =
-  | "host_idle" | "host_gathering" | "host_offering" | "host_connecting"
-  | "guest_idle" | "guest_gathering" | "guest_answering"
+  | "host_idle" | "host_gathering" | "host_waiting" | "host_connecting"
+  | "guest_idle" | "guest_gathering"
   | "connected" | "done_local" | "revealed";
 
-function RelayPage({ answer, sid }: { answer: string; sid: string }) {
-  useEffect(() => {
-    const bc = new BroadcastChannel("kinksync-session");
-    bc.postMessage({ type: "answer", answer, sid });
-    bc.close();
-  }, [answer, sid]);
-
-  return (
-    <main className="flex items-center justify-center min-h-screen p-6" style={{ background: "var(--bg)", color: "var(--text)" }}>
-      <div className="text-center">
-        <div className="text-4xl mb-4">🖤</div>
-        <h1 className="text-xl font-bold mb-2" style={{ color: "var(--accent)" }}>Verbonden!</h1>
-        <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
-          Je kunt dit venster sluiten — de sessie loopt in het andere tabblad.
-        </p>
-        <button
-          onClick={() => window.close()}
-          className="focus-ring px-6 py-2.5 rounded-xl text-sm border"
-          style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-        >
-          Sluit venster
-        </button>
-      </div>
-    </main>
-  );
-}
-
-function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidParam: string | null }) {
+function HostGuestSession({ codeParam }: { codeParam: string | null }) {
   const { profiles } = useStore();
   const _hasHydrated = useHasHydrated();
 
-  const isGuest = !!oParam;
+  const isGuest = !!codeParam;
 
   const [phase, setPhase] = useState<Phase>(isGuest ? "guest_idle" : "host_idle");
   const [profileId, setProfileId] = useState(() => profiles[0]?.id ?? "");
-  const [sessionId] = useState(() => Math.random().toString(36).slice(2, 10));
-  const [offerQr, setOfferQr] = useState("");
-  const [answerQr, setAnswerQr] = useState("");
-  const [answerEnc, setAnswerEnc] = useState("");
-  const [answerCopied, setAnswerCopied] = useState(false);
-  const [pasteAnswer, setPasteAnswer] = useState("");
-  const [scanning, setScanning] = useState(false);
-  const [hasBarcodeDetector, setHasBarcodeDetector] = useState(false);
+  const [code, setCode] = useState("");
+  const [codeInput, setCodeInput] = useState(() => codeParam ?? "");
+  const [codeQr, setCodeQr] = useState("");
   const [local, setLocal] = useState<Record<string, KinkStatus>>({});
   const [remote, setRemote] = useState<Record<string, KinkStatus>>({});
   const [remoteProfile, setRemoteProfile] = useState<{ name: string; role: string } | null>(null);
@@ -94,30 +52,10 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanFrameRef = useRef<number>(0);
-  const scanningRef = useRef(false);
-  const applyAnswerRef = useRef<((enc: string) => Promise<void>) | null>(null);
+  const pollAbortRef = useRef<AbortController | null>(null);
+  const applyAnswerRef = useRef<((sdp: string) => Promise<void>) | null>(null);
 
   const profile = profiles.find(p => p.id === profileId);
-  const effectiveSid = isGuest ? (sidParam ?? "") : sessionId;
-
-  useEffect(() => {
-    setHasBarcodeDetector(typeof window !== "undefined" && "BarcodeDetector" in window);
-  }, []);
-
-  // Host listens for relay answer via BroadcastChannel (fallback when native QR scan navigates)
-  useEffect(() => {
-    if (isGuest) return;
-    const bc = new BroadcastChannel("kinksync-session");
-    bc.onmessage = (e: MessageEvent) => {
-      if (e.data?.type === "answer" && e.data.sid === sessionId) {
-        applyAnswerRef.current?.(e.data.answer as string);
-      }
-    };
-    return () => bc.close();
-  }, [isGuest, sessionId]);
 
   function send(msg: Msg) {
     const ch = channelRef.current;
@@ -164,35 +102,27 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
     else ch.onopen = onOpen;
   }
 
-  function stopScanner() {
-    scanningRef.current = false;
-    cancelAnimationFrame(scanFrameRef.current);
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
-    setScanning(false);
-  }
-
-  const applyAnswerSdp = async (enc: string) => {
+  const applyAnswerSdp = async (sdp: string) => {
     const pc = pcRef.current;
     if (!pc) return;
     setError("");
     setPhase("host_connecting");
-    stopScanner();
+    pollAbortRef.current?.abort();
     try {
-      const sdp = decodeSdp(enc);
       await pc.setRemoteDescription({ type: "answer", sdp });
     } catch (err) {
       setError("Ongeldig antwoord: " + String(err));
-      setPhase("host_offering");
+      setPhase("host_waiting");
     }
   };
 
-  // Keep ref current so closures (BroadcastChannel, scanner) always call latest version
   useEffect(() => { applyAnswerRef.current = applyAnswerSdp; });
 
   async function handleStartHost() {
     if (!profile) return;
     const initial = initLocal(profile);
+    const newCode = genCode();
+    setCode(newCode);
     setPhase("host_gathering");
     setError("");
     try {
@@ -202,12 +132,18 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await waitForIceGathering(pc);
-      const offerEncoded = encodeSdp(pc.localDescription!.sdp);
-      const url = `${window.location.origin}/session?o=${offerEncoded}&sid=${sessionId}`;
-      const qr = await QRCode.toDataURL(url, { width: 240, margin: 2, color: { dark: "#c084fc", light: "#0a0a0f" } });
-      setOfferQr(qr);
+      await postOffer(newCode, pc.localDescription!.sdp);
+      const qrUrl = `${window.location.origin}/session?code=${newCode}`;
+      const qr = await QRCode.toDataURL(qrUrl, {
+        width: 200, margin: 2, errorCorrectionLevel: "L",
+        color: { dark: "#c084fc", light: "#0a0a0f" },
+      });
+      setCodeQr(qr);
       setupChannel(ch, profile, initial);
-      setPhase("host_offering");
+      setPhase("host_waiting");
+      const ac = new AbortController();
+      pollAbortRef.current = ac;
+      pollAnswer(newCode, (sdp) => applyAnswerRef.current?.(sdp), ac.signal);
     } catch (err) {
       setError(String(err));
       setPhase("host_idle");
@@ -215,12 +151,13 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
   }
 
   async function handleStartGuest() {
-    if (!profile || !oParam) return;
+    if (!profile || codeInput.length !== 6) return;
     const initial = initLocal(profile);
     setPhase("guest_gathering");
     setError("");
     try {
-      const offerSdp = decodeSdp(oParam);
+      const offerSdp = await getOffer(codeInput);
+      if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       pcRef.current = pc;
       let channelResolve!: (ch: RTCDataChannel) => void;
@@ -230,70 +167,12 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       await waitForIceGathering(pc);
-      const enc = encodeSdp(pc.localDescription!.sdp);
-      setAnswerEnc(enc);
-      const answerUrl = `${window.location.origin}/session?a=${enc}&sid=${effectiveSid}`;
-      const qr = await QRCode.toDataURL(answerUrl, { width: 240, margin: 2, color: { dark: "#c084fc", light: "#0a0a0f" } });
-      setAnswerQr(qr);
-      setPhase("guest_answering");
+      await postAnswer(codeInput, pc.localDescription!.sdp);
       const ch = await channelPromise;
       setupChannel(ch, profile, initial);
     } catch (err) {
       setError(String(err));
       setPhase("guest_idle");
-    }
-  }
-
-  async function startScanner() {
-    setScanning(true);
-    scanningRef.current = true;
-    setError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      const BD = window.BarcodeDetector;
-      if (!BD) { stopScanner(); return; }
-      const detector = new BD({ formats: ["qr_code"] });
-      const scan = async () => {
-        if (!videoRef.current || !scanningRef.current) return;
-        try {
-          const codes = await detector.detect(videoRef.current);
-          if (codes.length > 0) {
-            const raw = codes[0].rawValue;
-            let scannedA: string | null = null;
-            let scannedSid: string | null = null;
-            try {
-              const url = new URL(raw);
-              scannedA = url.searchParams.get("a");
-              scannedSid = url.searchParams.get("sid");
-            } catch {
-              scannedA = raw;
-            }
-            if (scannedA) {
-              // Validate session ID if present
-              if (scannedSid && scannedSid !== sessionId) {
-                setError("Sessie ID komt niet overeen.");
-                stopScanner();
-                return;
-              }
-              await applyAnswerRef.current?.(scannedA);
-            } else {
-              setError("Ongeldige QR-code.");
-              stopScanner();
-            }
-            return;
-          }
-        } catch { /* detector not ready yet, retry */ }
-        scanFrameRef.current = requestAnimationFrame(scan);
-      };
-      scanFrameRef.current = requestAnimationFrame(scan);
-    } catch (err) {
-      setError("Camera niet beschikbaar: " + String(err));
-      stopScanner();
     }
   }
 
@@ -329,7 +208,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
 
   useEffect(() => () => {
     pcRef.current?.close();
-    stopScanner();
+    pollAbortRef.current?.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -392,7 +271,7 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
       {phase === "host_idle" && (
         <div>
           <p className="text-sm mb-5" style={{ color: "var(--text2)" }}>
-            Start een live sessie — puur apparaat-tot-apparaat, geen server, geen cloud. Beide apparaten moeten op <strong>hetzelfde WiFi-netwerk</strong> zitten.
+            Start een live sessie — jij genereert een code, je partner typt die in. Verbinding loopt via een beveiligde relay en daarna direct apparaat-tot-apparaat.
           </p>
           {profilePicker()}
           {accentBtn("Sessie starten →", handleStartHost, !profile)}
@@ -402,68 +281,23 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
 
       {phase === "host_gathering" && spinner("Verbinding voorbereiden…")}
 
-      {phase === "host_offering" && (
-        <div>
-          <p className="text-sm mb-3 text-center" style={{ color: "var(--text2)" }}>
-            Laat je partner deze QR scannen met hun telefoon.
-          </p>
-          {offerQr && (
-            <img src={offerQr} width={240} height={240} alt="Sessie QR" className="mx-auto rounded-xl mb-5" />
+      {phase === "host_waiting" && (
+        <div className="text-center">
+          <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>Geef je partner deze code:</p>
+          <div className="text-6xl font-mono font-bold mb-1 tracking-widest" style={{ color: "var(--accent)", letterSpacing: "0.15em" }}>
+            {code}
+          </div>
+          <p className="text-xs mb-5" style={{ color: "var(--text2)" }}>of scan de QR-code</p>
+          {codeQr && (
+            <img src={codeQr} width={200} height={200} alt="Sessie QR" className="mx-auto rounded-xl mb-5" />
           )}
-
-          {scanning ? (
-            <div className="mb-4">
-              <div className="relative rounded-xl overflow-hidden mb-3" style={{ border: "2px solid var(--accent)" }}>
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <video ref={videoRef} playsInline className="w-full" style={{ maxHeight: 280, objectFit: "cover" }} />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div style={{ width: 160, height: 160, border: "2px solid rgba(255,255,255,0.7)", borderRadius: 12 }} />
-                </div>
-              </div>
-              <button onClick={stopScanner}
-                className="focus-ring w-full py-2.5 rounded-xl text-sm border"
-                style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
-                Annuleer
-              </button>
-            </div>
-          ) : hasBarcodeDetector ? (
-            <button onClick={startScanner}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold mb-3"
-              style={{ background: "var(--accent)", color: "#000" }}>
-              📷 Scan antwoord van partner
-            </button>
-          ) : (
-            <div className="mb-3">
-              <p className="text-xs mb-2 font-medium" style={{ color: "var(--text2)" }}>
-                Geen camera? Laat je partner via &ldquo;Kopieer als fallback-link&rdquo; een link kopiëren en plak die hier.
-              </p>
-              <textarea value={pasteAnswer} onChange={e => setPasteAnswer(e.target.value)}
-                rows={3} placeholder="https://kinksync.be/session?a=…&sid=…"
-                className="focus-ring w-full rounded-lg px-3 py-2 text-xs mb-2 focus:outline-none"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none", fontFamily: "monospace" }} />
-              <button onClick={() => {
-                try {
-                  const u = new URL(pasteAnswer.trim());
-                  const a = u.searchParams.get("a");
-                  const sid = u.searchParams.get("sid");
-                  if (!a) {
-                    setError("Geen antwoord gevonden in URL.");
-                    return;
-                  }
-                  if (sid && sid !== sessionId) {
-                    setError("Sessie ID komt niet overeen.");
-                    return;
-                  }
-                  applyAnswerSdp(a);
-                } catch { setError("Ongeldige URL."); }
-              }} disabled={!pasteAnswer.trim()}
-                className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "#000" }}>
-                Verbinden
-              </button>
-            </div>
-          )}
-          {error && <p className="text-xs mt-2" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          <p className="text-xs mb-5 animate-pulse" style={{ color: "var(--text2)" }}>Wacht op partner…</p>
+          <button onClick={() => { pollAbortRef.current?.abort(); setPhase("host_idle"); }}
+            className="focus-ring w-full py-2.5 rounded-xl text-sm border transition-colors"
+            style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
+            Annuleer
+          </button>
+          {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
         </div>
       )}
 
@@ -472,41 +306,23 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
       {phase === "guest_idle" && (
         <div>
           <p className="text-sm mb-5" style={{ color: "var(--text2)" }}>
-            Je hebt een sessie-uitnodiging ontvangen. Kies jouw profiel en verbind.
+            Voer de 6-letterige code in die de host ziet.
           </p>
           {profilePicker()}
-          {accentBtn("Verbinden →", handleStartGuest, !profile)}
+          <input
+            value={codeInput}
+            onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))}
+            placeholder="Bijv. H7K2PQ"
+            maxLength={6}
+            className="focus-ring w-full rounded-lg px-3 py-2.5 text-center text-2xl font-mono font-bold mb-4 tracking-widest focus:outline-none"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--accent)" }}
+          />
+          {accentBtn("Verbinden →", handleStartGuest, !profile || codeInput.length !== 6)}
           {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
         </div>
       )}
 
       {phase === "guest_gathering" && spinner("Antwoord voorbereiden…")}
-
-      {phase === "guest_answering" && (
-        <div>
-          <p className="text-sm mb-3 text-center" style={{ color: "var(--text2)" }}>
-            Laat de host jouw QR scannen via de &ldquo;Scan antwoord&rdquo; knop in de app.
-          </p>
-          {answerQr && (
-            <img src={answerQr} width={240} height={240} alt="Antwoord QR" className="mx-auto rounded-xl mb-4" />
-          )}
-          <button onClick={() => {
-            const url = `${window.location.origin}/session?a=${answerEnc}&sid=${effectiveSid}`;
-            navigator.clipboard.writeText(url);
-            setAnswerCopied(true);
-            setTimeout(() => setAnswerCopied(false), 2000);
-          }}
-            className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border mb-4 transition-colors"
-            style={answerCopied
-              ? { borderColor: "var(--yes)", color: "var(--yes)" }
-              : { borderColor: "var(--border)", color: "var(--text)" }}>
-            {answerCopied ? "✓ Gekopieerd!" : "⎘ Kopieer als fallback-link"}
-          </button>
-          <p className="text-xs text-center animate-pulse" style={{ color: "var(--text2)" }}>
-            Wacht op verbinding van de host…
-          </p>
-        </div>
-      )}
 
       {(phase === "connected" || phase === "done_local") && (
         <div>
@@ -651,14 +467,8 @@ function HostGuestSession({ oParam, sidParam }: { oParam: string | null; sidPara
 
 function SessionContent() {
   const searchParams = useSearchParams();
-  const aParam = searchParams.get("a");
-  const sidParam = searchParams.get("sid");
-  const oParam = searchParams.get("o");
-
-  if (aParam && sidParam) {
-    return <RelayPage answer={aParam} sid={sidParam} />;
-  }
-  return <HostGuestSession oParam={oParam} sidParam={sidParam} />;
+  const codeParam = searchParams.get("code");
+  return <HostGuestSession codeParam={codeParam} />;
 }
 
 export default function SessionPage() {
