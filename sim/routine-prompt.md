@@ -7,6 +7,8 @@
 
 ## Before starting
 
+IMPORTANT: Work on the sim branch. Run `git checkout sim && git pull origin sim` before reading any files.
+
 Read these files from the repo:
 - `sim/engine.md`
 - `sim/synthesis.md`
@@ -14,8 +16,7 @@ Read these files from the repo:
 - `.claude/routines/shared/boot.md` (if it exists)
 - `.claude/routines/shared/assertions.md` (if it exists)
 
-## Required environment secrets
-These must be configured in the routine's cloud credential vault:
+## Required environment variables
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_KEY` (service role key — never the anon key)
 - `TELEGRAM_BOT_TOKEN`
@@ -54,8 +55,11 @@ done
 ```
 
 If not ready after 30 seconds, send Telegram abort message and stop:
-```
-🔴 KinkSync Sim {date} — dev server failed to start. Run aborted.
+```bash
+curl -s -X POST \
+  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+  -d chat_id="$TELEGRAM_CHAT_ID" \
+  -d text="🔴 KinkSync Sim $(date +%Y-%m-%d) — dev server failed to start. Run aborted."
 ```
 
 ---
@@ -67,7 +71,8 @@ For each persona in this order: **robin**, **leo**, **iris**
 ### 3a. Derive session behaviour
 Read engine.md. Using the persona's current trait values, compose the
 session plan: which routes to visit, how to interact, what to fill in,
-whether to import/compare/contract/sign.
+whether to import/compare/contract/sign. Check interaction eligibility
+per the Persona Interactions section of engine.md.
 
 ### 3b. Seed localStorage
 Using Playwright, before navigation:
@@ -92,7 +97,8 @@ Take a screenshot at each of these moments:
 2. First meaningful interaction (first tap/click)
 3. Any failure, error, or unexpected empty state
 4. First visit to any route not in `featuresDiscovered`
-5. Final state at session end
+5. Any interaction cross-over moment (import, compare, contract with another persona's data)
+6. Final state at session end
 
 Name screenshots: `{persona_id}/{YYYY-MM-DD}_{step:02d}_{route_slug}.png`
 
@@ -106,7 +112,7 @@ curl -s -X POST \
   --data-binary @{filename}
 ```
 
-Capture the returned public URL for use in the report.
+Capture the returned URL for use in the report.
 
 ### 3f. Write report to Supabase
 ```bash
@@ -147,9 +153,26 @@ curl -s -X PATCH \
   }'
 ```
 
-### 3h. If a persona run fails entirely
-Note it as incomplete. Continue to the next persona. Do not abort the
-entire run because one persona failed.
+### 3h. Send per-persona heartbeat to Telegram
+After 3g completes successfully for this persona, immediately send:
+```bash
+curl -s -X POST \
+  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+  -d chat_id="$TELEGRAM_CHAT_ID" \
+  -d parse_mode="Markdown" \
+  -d text="{emoji} *{Name}* done (session {N}) — {pass}/{total} passed{milestone_line}"
+```
+
+Where:
+- emoji: ✅ if fail_count === 0, ⚠️ if fail_count > 0 but session completed, ❌ if session failed entirely
+- milestone_line: if a milestone was hit this session, append `\n🎯 {milestone label}` — otherwise omit
+
+This heartbeat fires before moving to the next persona. If the token window
+dies after this point, you still know exactly what ran.
+
+### 3i. If a persona run fails entirely
+Send heartbeat with ❌ emoji and reason. Note it as incomplete.
+Continue to the next persona. Do not abort the entire run.
 
 ---
 
@@ -162,6 +185,4 @@ Follow `sim/synthesis.md` exactly, in order from Step 1 through Step 9.
 ## Notes
 - The repo is read-only. Do not commit or push anything.
 - All state lives in Supabase. The repo provides instructions only.
-- If the token window feels tight, prioritise completing persona updates
-  (Step 3g) before moving to synthesis — partial data committed is
-  better than no data.
+- Priority order if window is tight: 3g (persona update) → 3h (heartbeat) → next persona → synthesis last.
