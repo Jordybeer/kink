@@ -460,6 +460,8 @@ function ContractPage() {
 
       saveContract({
         date: Date.now(),
+        profileAId: aId,
+        profileBId: bId,
         profileAName: profileA.name,
         profileBName: profileB.name,
         matchCount: shared.length + customShared.length,
@@ -683,10 +685,19 @@ function ContractPage() {
       {/* Eerdere contracten */}
       {contracts.length > 0 && (
         <div className="mt-8 print:hidden">
-          <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
-            Eerdere contracten
-          </h2>
-          <div className="flex flex-col gap-2 mt-3">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              Eerdere contracten
+            </h2>
+            <Link
+              href={`/timeline?a=${aId}&b=${bId}`}
+              className="focus-ring text-xs transition-colors"
+              style={{ color: "var(--text2)" }}
+            >
+              📈 Bekijk grafiek →
+            </Link>
+          </div>
+          <div className="flex flex-col gap-2">
             {contracts.map((c) => (
               <div
                 key={c.id}
