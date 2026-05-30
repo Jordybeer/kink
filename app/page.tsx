@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Settings, Pin, PinOff } from "lucide-react";
+import { Settings, Pin, PinOff, Pencil } from "lucide-react";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,6 +17,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const TOTAL_KINKS = KINKS.length;
+const DESTROY_PHRASE = "wis alles";
 
 const ROLE_GROUPS: { label: string; roles: string[] }[] = [
   { label: "D/s dynamiek",       roles: ["Switch", "Dominant", "Submissive"] },
@@ -74,6 +75,8 @@ function HomeContent() {
   const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [destroyOpen, setDestroyOpen] = useState(false);
+  const [destroyPhrase, setDestroyPhrase] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [visitCount, setVisitCount] = useState(0);
@@ -159,6 +162,11 @@ function HomeContent() {
   function cancelDelete() {
     setSheetOpen(false);
     setTimeout(() => setDeleteTarget(null), 300);
+  }
+
+  function handleDestroyAll() {
+    localStorage.clear();
+    window.location.reload();
   }
 
   function exportProfiles() {
@@ -531,7 +539,7 @@ function HomeContent() {
                                           className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
                                           style={{ color: "var(--text2)" }}
                                         >
-                                          ✎
+                                          <Pencil size={15} />
                                         </button>
                                         <button
                                           onClick={() => promptDelete(p.id)}
@@ -769,6 +777,60 @@ function HomeContent() {
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
               Sluit
+            </button>
+          </div>
+
+          <p className="text-xs uppercase tracking-widest font-semibold mb-3 mt-5" style={{ color: "var(--text2)" }}>
+            Gegevens
+          </p>
+          <button
+            onClick={() => { setSettingsOpen(false); setDestroyPhrase(""); setDestroyOpen(true); }}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}
+          >
+            Vernietig alle data
+          </button>
+        </div>
+      </div>
+
+      {/* Destroy-all bottom sheet */}
+      <div className={`sheet-overlay ${destroyOpen ? "open" : ""}`} onClick={() => setDestroyOpen(false)} aria-hidden="true" />
+      <div className={`sheet-panel ${destroyOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Alle data verwijderen">
+        <div
+          className="rounded-t-2xl p-6"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
+        >
+          <div className="mb-6" />
+          <h2 className="text-lg font-bold text-center mb-2">Vernietig alle data</h2>
+          <p className="text-center text-sm mb-4" style={{ color: "var(--text2)" }}>
+            Dit verwijdert alle profielen, contracten en instellingen permanent.{" "}
+            Typ <strong style={{ color: "var(--text)" }}>wis alles</strong> om te bevestigen.
+          </p>
+          <input
+            value={destroyPhrase}
+            onChange={(e) => setDestroyPhrase(e.target.value)}
+            placeholder="wis alles"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none text-center"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleDestroyAll}
+              disabled={destroyPhrase.trim().toLowerCase() !== DESTROY_PHRASE}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-30"
+              style={{ background: "#7f1d1d", border: "1px solid var(--hard-no)", color: "#fca5a5" }}
+            >
+              Vernietig voor altijd
+            </button>
+            <button
+              onClick={() => setDestroyOpen(false)}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              Annuleer
             </button>
           </div>
         </div>

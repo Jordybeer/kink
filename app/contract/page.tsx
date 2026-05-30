@@ -235,9 +235,9 @@ function ContractPage() {
       const lineW = W - margin * 2;
       let y = 20;
 
-      const accent = [192, 132, 252] as [number, number, number];
-      const dark = [20, 18, 28] as [number, number, number];
-      const muted = [120, 110, 160] as [number, number, number];
+      const accent = [109, 40, 217] as [number, number, number];
+      const dark = [255, 255, 255] as [number, number, number];
+      const muted = [107, 114, 128] as [number, number, number];
 
       // Background
       doc.setFillColor(...dark);
@@ -267,7 +267,7 @@ function ContractPage() {
       doc.setDrawColor(...accent);
       doc.setLineWidth(0.4);
       doc.line(margin, y, W - margin, y);
-      y += 6;
+      y += 10;
 
       // Preamble — paginate line by line so long text can't overflow the page
       doc.setFont("helvetica", "italic");
@@ -279,7 +279,7 @@ function ContractPage() {
         doc.text(line, margin, y);
         y += 4;
       }
-      y += 4;
+      y += 10;
 
       // Safeword & Nazorg section in PDF
       const hasSignalData = (s: Signals) => SIGNAL_LEVELS.some((l) => s[l.key] !== DEFAULT_SIGNALS[l.key] && s[l.key].trim());
@@ -293,7 +293,7 @@ function ContractPage() {
         y += 5;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(220, 215, 240);
+        doc.setTextColor(30, 27, 75);
 
         for (const [signals, profile] of [[signalsA, profileA], [signalsB, profileB]] as const) {
           for (const l of SIGNAL_LEVELS) {
@@ -303,7 +303,7 @@ function ContractPage() {
         }
         if (aftercareA.length) { doc.text(`Nazorg ${profileA.name}: ${aftercareA.join(", ")}`, margin + 3, y); y += 4.5; }
         if (aftercareB.length) { doc.text(`Nazorg ${profileB.name}: ${aftercareB.join(", ")}`, margin + 3, y); y += 4.5; }
-        y += 3;
+        y += 10;
       }
 
       const newPage = () => {
@@ -357,7 +357,7 @@ function ContractPage() {
               doc.setFont("helvetica", "normal");
               doc.setFontSize(8.5);
             }
-            doc.setTextColor(220, 215, 240);
+            doc.setTextColor(30, 27, 75);
             doc.text(nameLines, margin, y);
             doc.text(sA, col2X, y);
             doc.text(sB, col3X, y);
@@ -367,7 +367,7 @@ function ContractPage() {
           const colW = (lineW - 10) / 2;
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8.5);
-          doc.setTextColor(220, 215, 240);
+          doc.setTextColor(30, 27, 75);
           let i = 0;
           while (i < items.length) {
             const left = `• ${itemLabel(items[i])}`;
@@ -379,7 +379,7 @@ function ContractPage() {
               newPage();
               doc.setFont("helvetica", "normal");
               doc.setFontSize(8.5);
-              doc.setTextColor(220, 215, 240);
+              doc.setTextColor(30, 27, 75);
             }
             lLines.forEach((l, li) => doc.text(l, margin + 3, y + li * 4.2));
             rLines.forEach((l, li) => doc.text(l, margin + colW + 10, y + li * 4.2));
@@ -387,7 +387,7 @@ function ContractPage() {
             i += right !== null ? 2 : 1;
           }
         }
-        y += 4;
+        y += 10;
       };
 
       section("Gedeelde verlangens", [...shared, ...customShared], [74, 222, 128]);
@@ -404,7 +404,7 @@ function ContractPage() {
       y += 5;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.setTextColor(220, 215, 240);
+      doc.setTextColor(30, 27, 75);
       const clauses = [
         "Safeword stopt alles — altijd en zonder uitleg.",
         "Aftercare is geen optie, maar een afspraak.",
@@ -414,9 +414,9 @@ function ContractPage() {
       ];
       for (const c of clauses) {
         doc.text(`• ${c}`, margin + 3, y);
-        y += 4.5;
+        y += 5.5;
       }
-      y += 6;
+      y += 12;
 
       // Signatures
       if (y > 220) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
@@ -454,6 +454,7 @@ function ContractPage() {
       y += 4;
       doc.text(today, margin + sigW / 2, y, { align: "center" });
       doc.text(today, margin + sigW + 10 + sigW / 2, y, { align: "center" });
+      y += 14;
 
       doc.save(`contract-${profileA.name}-${profileB.name}.pdf`);
 

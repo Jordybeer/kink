@@ -227,6 +227,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                   href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Open FetLife profiel"
                   className="text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-opacity hover:opacity-80"
                   style={{
                     background: "color-mix(in srgb, var(--accent) 12%, transparent)",
@@ -234,7 +235,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                     border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
                   }}
                 >
-                  ↗ FetLife
+                  FetLife ↗
                 </a>
               )}
               {profile.bdsmtestUrl && (
@@ -242,6 +243,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                   href={profile.bdsmtestUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Open BDSMTest resultaat"
                   className="text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-opacity hover:opacity-80"
                   style={{
                     background: "color-mix(in srgb, var(--accent) 12%, transparent)",
@@ -249,7 +251,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                     border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
                   }}
                 >
-                  ↗ BDSMTest
+                  BDSMTest ↗
                 </a>
               )}
             </div>

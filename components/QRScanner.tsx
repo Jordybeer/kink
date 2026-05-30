@@ -26,7 +26,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          videoRef.current.play().catch(() => setError("Camera kon niet worden gestart. Probeer opnieuw."));
         }
         scan();
       })
@@ -44,7 +44,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   function scan() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.readyState < 2) {
+    if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) {
       rafRef.current = requestAnimationFrame(scan);
       return;
     }

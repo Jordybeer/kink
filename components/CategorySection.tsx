@@ -33,7 +33,7 @@ export default function CategorySection({
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   onBulkSkip, onBulkRestore, compact, hideComments,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [undoPending, setUndoPending] = useState(false);
   const undoSnapshot = useRef<Record<string, KinkEntry>>({});
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

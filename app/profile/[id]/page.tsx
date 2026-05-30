@@ -58,7 +58,7 @@ export default function ProfilePage({ params }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
-  const [hideComments, setHideComments] = useState(false);
+  const [hideComments] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -407,19 +407,6 @@ export default function ProfilePage({ params }: Props) {
               className="focus-ring flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
-            <button
-              onClick={() => setHideComments((v) => !v)}
-              aria-label={hideComments ? "Toon notities" : "Verberg notities"}
-              title={hideComments ? "Toon notities" : "Verberg notities"}
-              className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
-              style={{
-                border: "1px solid var(--border)",
-                color: hideComments ? "var(--accent)" : "var(--text2)",
-                background: hideComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
-              }}
-            >
-              💬
-            </button>
             <button
               onClick={() => setCompact((v) => !v)}
               aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
