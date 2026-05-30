@@ -64,6 +64,8 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
 
   const sg = KINKS.map(k => { const st = profile.entries[k.id]?.statusGive; return st ? (S_ENC[st] ?? " ") : " "; }).join("");
   const sr = KINKS.map(k => { const st = profile.entries[k.id]?.statusReceive; return st ? (S_ENC[st] ?? " ") : " "; }).join("");
+  const DIR_ENC: Record<string, string> = { give: "g", receive: "r", both: "b" };
+  const dr = KINKS.map(k => DIR_ENC[profile.entries[k.id]?.direction ?? ""] ?? " ").join("");
 
   const payload: Record<string, unknown> = {
     v: 2,
@@ -77,6 +79,7 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
   };
   if (sg.trim()) payload.sg = sg;
   if (sr.trim()) payload.sr = sr;
+  if (dr.trim()) payload.dr = dr;
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
@@ -94,11 +97,16 @@ export function decodeProfileCompact(encoded: string): Profile {
     const statusReceive = S_DEC[p.sr?.[i] ?? ""] ?? null;
     const desire = p.d?.[i] !== "0" && p.d?.[i] ? parseInt(p.d[i]) : null;
     const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
-    if (status !== null || statusGive !== null || statusReceive !== null || desire !== null || experienced !== null) {
+    const DIR_DEC: Record<string, import("@/types").KinkDirection> = { g: "give", r: "receive", b: "both" };
+    const direction: import("@/types").KinkDirection = DIR_DEC[p.dr?.[i] ?? ""] ??
+      ((statusGive !== null || statusReceive !== null)
+        ? (statusGive && statusReceive ? "both" : statusGive ? "give" : "receive")
+        : null);
+    if (status !== null || statusGive !== null || statusReceive !== null || desire !== null || experienced !== null || direction !== null) {
       const entry: import("@/types").KinkEntry = { status, desire, experienced, score: null, comment: "" };
       if (statusGive !== null) entry.statusGive = statusGive;
       if (statusReceive !== null) entry.statusReceive = statusReceive;
-      if (statusGive !== null || statusReceive !== null) entry.direction = statusGive && statusReceive ? "both" : statusGive ? "give" : "receive";
+      if (direction !== null) entry.direction = direction;
       entries[KINKS[i].id] = entry;
     }
   }
