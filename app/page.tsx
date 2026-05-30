@@ -683,6 +683,26 @@ function HomeContent() {
                   Plan activiteiten, intensiteit en timing vooraf.
                 </div>
               </Link>
+
+              <Link
+                href="/session"
+                className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90"
+                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+              >
+                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
+                  📡 Live sessie
+                </div>
+                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  Vergelijk kinks live met je partner — elk op eigen toestel.
+                </div>
+                <div
+                  className="mt-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed"
+                  style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                >
+                  <span className="font-semibold" style={{ color: "var(--text)" }}>🔒 Privacy — </span>
+                  Om verbinding te maken wisselen de twee toestellen eenmalig een klein technisch signaal uit via onze server, zodat ze elkaar kunnen vinden. Daarna verloopt alles rechtstreeks van toestel tot toestel. Je kinks, naam en andere gegevens verlaten je toestel nooit — ze worden nergens opgeslagen of doorgestuurd.
+                </div>
+              </Link>
             </div>
           </>
         )}
