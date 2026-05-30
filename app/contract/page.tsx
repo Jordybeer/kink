@@ -456,7 +456,7 @@ function ContractPage() {
       doc.text(today, margin + sigW + 10 + sigW / 2, y, { align: "center" });
       y += 14;
 
-      doc.save(`contract-${profileA.name}-${profileB.name}.pdf`);
+      try { doc.save(`contract-${profileA.name}-${profileB.name}.pdf`); } catch { /* PDF-fout is niet fataal */ }
 
       saveContract({
         date: Date.now(),
@@ -678,7 +678,7 @@ function ContractPage() {
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent)", color: "#000" }}
         >
-          {generating ? "Genereren…" : "↓ Opslaan / Afdrukken"}
+          {generating ? "Genereren…" : "↓ Contract als PDF downloaden"}
         </button>
       </div>
 
