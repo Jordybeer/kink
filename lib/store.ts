@@ -33,6 +33,7 @@ interface State {
   deleteContract: (id: string) => void;
   completeOnboarding: () => void;
   completeProfileTour: () => void;
+  resetProfileTour: () => void;
   importProfiles: (incoming: Profile[]) => void;
   dismissInstallPrompt: () => void;
   setTheme: (t: Theme) => void;
@@ -189,6 +190,10 @@ export const useStore = create<State>()(
 
       completeProfileTour() {
         set({ profileTourComplete: true });
+      },
+
+      resetProfileTour() {
+        set({ profileTourComplete: false });
       },
 
       importProfiles(incoming) {
