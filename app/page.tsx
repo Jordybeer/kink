@@ -58,6 +58,7 @@ function HomeContent() {
     pinnedProfileId,
     pinProfile,
     unpinProfile,
+    resetProfileTour,
   } = useStore();
   const _hasHydrated = useHasHydrated();
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -79,7 +80,6 @@ function HomeContent() {
   const [destroyPhrase, setDestroyPhrase] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
-  const [visitCount, setVisitCount] = useState(0);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [importDone, setImportDone] = useState(false);
@@ -88,12 +88,6 @@ function HomeContent() {
   const importDragStart = useRef(0);
   const settingsSheetRef = useRef<HTMLDivElement>(null);
   useFocusTrap(settingsSheetRef, settingsOpen);
-
-  useEffect(() => {
-    const count = parseInt(localStorage.getItem("ks-visits") ?? "0") + 1;
-    localStorage.setItem("ks-visits", String(count));
-    setVisitCount(count);
-  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -781,6 +775,17 @@ function HomeContent() {
           </div>
 
           <p className="text-xs uppercase tracking-widest font-semibold mb-3 mt-5" style={{ color: "var(--text2)" }}>
+            Rondleiding
+          </p>
+          <button
+            onClick={() => { resetProfileTour(); setSettingsOpen(false); }}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors mb-5"
+            style={{ borderColor: "var(--border)", color: "var(--text)" }}
+          >
+            🔍 Rondleiding opnieuw starten
+          </button>
+
+          <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
             Gegevens
           </p>
           <button
@@ -970,6 +975,7 @@ function HomeContent() {
                   if (!importPreview) return;
                   importProfiles([{ ...importPreview, isImported: true }]);
                   setImportDone(true);
+                  router.replace("/");
                   setTimeout(() => {
                     setImportPreview(null);
                     setImportDone(false);
@@ -982,7 +988,7 @@ function HomeContent() {
               </button>
             )}
             <button
-              onClick={() => setImportPreview(null)}
+              onClick={() => { setImportPreview(null); router.replace("/"); }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
@@ -993,7 +999,7 @@ function HomeContent() {
       </div>
 
       {/* Install prompt banner */}
-      {_hasHydrated && !installPromptDismissed && visitCount >= 3 && onboardingComplete && (
+      {_hasHydrated && !installPromptDismissed && onboardingComplete && (
         <div
           className="fixed bottom-0 left-0 right-0 z-[120] py-3 px-4 flex items-center gap-3"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
@@ -1013,14 +1019,14 @@ function HomeContent() {
           >
             Installeer
           </button>
-          <button
-            onClick={dismissInstallPrompt}
-            aria-label="Installatiebanner sluiten"
-            className="focus-ring p-1.5 flex-none"
-            style={{ color: "var(--text2)" }}
-          >
-            ✕
-          </button>
+          <label className="flex items-center gap-1.5 flex-none cursor-pointer select-none">
+            <input
+              type="checkbox"
+              onChange={(e) => { if (e.target.checked) dismissInstallPrompt(); }}
+              className="accent-[var(--accent)] w-4 h-4 flex-none"
+            />
+            <span className="text-xs" style={{ color: "var(--text2)" }}>Niet meer tonen</span>
+          </label>
         </div>
       )}
     </>

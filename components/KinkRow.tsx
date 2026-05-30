@@ -71,7 +71,16 @@ export default function KinkRow({
   }
 
   const showComment = !compact && !hideComments && (entry.comment || tags.length > 0 || isRated);
-  const effectiveStatus = entry.statusGive ?? entry.statusReceive ?? status;
+  const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "yes", "willing"];
+  const worstOf = (a: KinkStatus | undefined, b: KinkStatus | undefined): KinkStatus => {
+    for (const s of STATUS_ORDER) { if (a === s || b === s) return s; }
+    return null;
+  };
+  const effectiveStatus: KinkStatus =
+    entry.direction === "give"    ? (entry.statusGive    ?? status) :
+    entry.direction === "receive" ? (entry.statusReceive ?? status) :
+    entry.direction === "both"    ? (worstOf(entry.statusGive, entry.statusReceive) ?? status) :
+    status;
   const showDirection = !compact && !!onDirectionChange;
 
   return (
