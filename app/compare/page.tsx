@@ -555,6 +555,7 @@ function ComparePage() {
                           const eB = getEntry(profileB, kink.id);
                           const matched = isKinkMatch(eA, eB);
                           const hardLimit = isHardLimit(eA, eB);
+                          const conflict = !matched && !hardLimit && isConflict(eA, eB);
                           const isDiscussed = discussed.has(kink.id);
                           const matchDelay = matched ? `${Math.min(matchIdx++ * 60, 1500)}ms` : "0ms";
                           return (
@@ -564,7 +565,7 @@ function ComparePage() {
                               style={{
                                 background: "var(--surface)",
                                 border: "1px solid var(--border)",
-                                borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : "4px solid transparent",
+                                borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : conflict ? "4px solid #f59e0b" : "4px solid transparent",
                                 animationDelay: pulsed && matched ? matchDelay : "0ms",
                               }}
                             >
@@ -675,6 +676,7 @@ function ComparePage() {
                         const eB = item.bId ? (profileB.entries[item.bId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
                         const matched = isKinkMatch(eA, eB);
                         const hardLimit = isHardLimit(eA, eB);
+                        const conflict = !matched && !hardLimit && isConflict(eA, eB);
                         const rowKey = item.name.trim().toLowerCase();
                         if (!passesFilter(eA, eB)) return null;
                         if (hideDiscussed && discussed.has(rowKey)) return null;
@@ -687,7 +689,7 @@ function ComparePage() {
                             style={{
                               background: "var(--surface)",
                               border: "1px solid var(--border)",
-                              borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : "4px solid transparent",
+                              borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : conflict ? "4px solid #f59e0b" : "4px solid transparent",
                               animationDelay: pulsed && matched ? matchDelay : "0ms",
                             }}
                           >
