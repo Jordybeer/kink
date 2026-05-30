@@ -27,6 +27,7 @@ type Msg =
   | { t: "d" };
 
 type Phase =
+  | "choose"
   | "host_idle" | "host_gathering" | "host_waiting" | "host_connecting"
   | "guest_idle" | "guest_gathering"
   | "connected" | "done_local" | "revealed";
@@ -37,7 +38,7 @@ function HostGuestSession({ codeParam }: { codeParam: string | null }) {
 
   const isGuest = !!codeParam;
 
-  const [phase, setPhase] = useState<Phase>(isGuest ? "guest_idle" : "host_idle");
+  const [phase, setPhase] = useState<Phase>(isGuest ? "guest_idle" : "choose");
   const [profileId, setProfileId] = useState(() => profiles[0]?.id ?? "");
   const [code, setCode] = useState("");
   const [codeInput, setCodeInput] = useState(() => codeParam ?? "");
@@ -263,10 +264,49 @@ function HostGuestSession({ codeParam }: { codeParam: string | null }) {
   return (
     <main style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100vh" }} className="max-w-lg mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/" className="focus-ring text-sm" style={{ color: "var(--text2)" }}>← Terug</Link>
+        <button
+          onClick={() => {
+            if (phase === "host_idle" || phase === "guest_idle") {
+              pollAbortRef.current?.abort();
+              setPhase("choose");
+            } else {
+              window.history.back();
+            }
+          }}
+          className="focus-ring text-sm"
+          style={{ color: "var(--text2)" }}
+        >
+          ← Terug
+        </button>
         <h1 className="text-xl font-bold flex-1 text-center" style={{ color: "var(--accent)" }}>Live sessie</h1>
         <div className="w-16" />
       </div>
+
+      {phase === "choose" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>
+            Verbind live met je partner — jullie kinks worden direct vergeleken zonder dat ze worden opgeslagen.
+          </p>
+          <button
+            onClick={() => setPhase("host_idle")}
+            className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          >
+            <div className="text-2xl mb-1">📡</div>
+            <div className="text-sm font-bold mb-0.5">Sessie aanmaken</div>
+            <div className="text-xs" style={{ color: "var(--text2)" }}>Genereer een code en deel die met je partner.</div>
+          </button>
+          <button
+            onClick={() => setPhase("guest_idle")}
+            className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          >
+            <div className="text-2xl mb-1">🔑</div>
+            <div className="text-sm font-bold mb-0.5">Deelnemen met code</div>
+            <div className="text-xs" style={{ color: "var(--text2)" }}>Voer de 6-letterige code in van je partner.</div>
+          </button>
+        </div>
+      )}
 
       {phase === "host_idle" && (
         <div>
@@ -292,7 +332,7 @@ function HostGuestSession({ codeParam }: { codeParam: string | null }) {
             <img src={codeQr} width={200} height={200} alt="Sessie QR" className="mx-auto rounded-xl mb-5" />
           )}
           <p className="text-xs mb-5 animate-pulse" style={{ color: "var(--text2)" }}>Wacht op partner…</p>
-          <button onClick={() => { pollAbortRef.current?.abort(); setPhase("host_idle"); }}
+          <button onClick={() => { pollAbortRef.current?.abort(); setPhase("choose"); }}
             className="focus-ring w-full py-2.5 rounded-xl text-sm border transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
             Annuleer
