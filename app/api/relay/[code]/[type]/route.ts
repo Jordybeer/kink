@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 const VALID_CODE = /^[A-Z2-9]{6}$/;
 const VALID_TYPE = ["offer", "answer"];
-const TTL = 120;
+const TTL = 600;
 
 export async function GET(
   _req: NextRequest,
@@ -13,9 +13,14 @@ export async function GET(
   if (!VALID_CODE.test(code) || !VALID_TYPE.includes(type)) {
     return Response.json({ error: "not found" }, { status: 404 });
   }
-  const sdp = await kv.get<string>(`${code}:${type}`);
-  if (!sdp) return Response.json({ error: "not found" }, { status: 404 });
-  return Response.json({ [type]: sdp });
+  try {
+    const sdp = await kv.get<string>(`${code}:${type}`);
+    if (!sdp) return Response.json({ error: "not found" }, { status: 404 });
+    return Response.json({ [type]: sdp });
+  } catch (err) {
+    console.error("KV GET error:", err);
+    return Response.json({ error: "KV unavailable", detail: String(err) }, { status: 500 });
+  }
 }
 
 export async function POST(
@@ -31,6 +36,11 @@ export async function POST(
   if (!sdp || typeof sdp !== "string") {
     return Response.json({ error: "bad request" }, { status: 400 });
   }
-  await kv.set(`${code}:${type}`, sdp, { ex: TTL });
-  return Response.json({ ok: true });
+  try {
+    await kv.set(`${code}:${type}`, sdp, { ex: TTL });
+    return Response.json({ ok: true });
+  } catch (err) {
+    console.error("KV SET error:", err);
+    return Response.json({ error: "KV unavailable", detail: String(err) }, { status: 500 });
+  }
 }
