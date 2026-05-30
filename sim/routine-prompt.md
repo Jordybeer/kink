@@ -25,6 +25,26 @@ Read these files from the repo:
 
 ---
 
+## ⚠️ Context window guard
+
+Before starting **each step** (3a through 3i for every persona, and Step 4), check your context window usage.
+
+If usage exceeds **90%**:
+1. Immediately stop — do not begin the next step.
+2. Send this Telegram message:
+```bash
+curl -s -X POST \
+  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+  -d chat_id="$TELEGRAM_CHAT_ID" \
+  -d parse_mode="Markdown" \
+  -d text="⚠️ *KinkSync Sim $(date +%Y-%m-%d)* — context window limit (>90%) hit before {next_step}.\nCompleted: {comma-separated list of what finished}.\nSkipped: {comma-separated list of what was not reached}."
+```
+3. Exit cleanly. Do not attempt the remaining steps.
+
+This guard fires **before each step**, not after. At 90% there is still enough runway to compose and send the message.
+
+---
+
 ## Step 1 — Fetch all persona states from Supabase
 
 ```bash
