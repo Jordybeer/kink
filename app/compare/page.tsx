@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
+import { isKinkMatch, isHardLimit, isConflict } from "@/lib/matching";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "✓ Heel graag",
@@ -17,7 +18,7 @@ const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
 
-function StatusBadge({ status, colour }: { status: KinkStatus; colour: string }) {
+function StatusBadge({ status, colour, prefix }: { status: KinkStatus; colour: string; prefix?: string }) {
   if (!status) {
     return <span className="text-xs" style={{ color: "var(--text2)" }}>—</span>;
   }
@@ -30,22 +31,23 @@ function StatusBadge({ status, colour }: { status: KinkStatus; colour: string })
         background: `color-mix(in srgb, ${colour} 15%, transparent)`,
       }}
     >
-      {STATUS_LABEL[status]}
+      {prefix}{STATUS_LABEL[status]}
     </span>
   );
 }
 
-function isMatch(a: KinkStatus, b: KinkStatus) {
-  return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
-}
-function isHardLimit(a: KinkStatus, b: KinkStatus) {
-  return a === "hard_no" || b === "hard_no";
-}
-function isConflict(a: KinkStatus, b: KinkStatus) {
-  if (!a || !b) return false;
-  if (isHardLimit(a, b)) return false;
-  const ok = ["yes", "willing", "maybe"];
-  return !(ok.includes(a) && ok.includes(b));
+function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
+  if (entry.statusGive && entry.statusReceive) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        <StatusBadge status={entry.statusGive} colour={colour} prefix="↑ " />
+        <StatusBadge status={entry.statusReceive} colour={colour} prefix="↓ " />
+      </div>
+    );
+  }
+  if (entry.statusGive) return <StatusBadge status={entry.statusGive} colour={colour} prefix="↑ " />;
+  if (entry.statusReceive) return <StatusBadge status={entry.statusReceive} colour={colour} prefix="↓ " />;
+  return <StatusBadge status={entry.status} colour={colour} />;
 }
 
 /** Abbreviate a category name to its first word, max 8 chars. */
@@ -103,13 +105,15 @@ function ComparePage() {
   let matchCount = 0, hardLimitCount = 0, discussCount = 0, totalRated = 0;
   if (profileA && profileB) {
     for (const kink of KINKS) {
-      const a = profileA.entries[kink.id]?.status ?? null;
-      const b = profileB.entries[kink.id]?.status ?? null;
-      if (!a && !b) continue;
-      if (a && b) totalRated++;
-      if (isHardLimit(a, b)) hardLimitCount++;
-      else if (isMatch(a, b)) matchCount++;
-      else if (a && b) discussCount++;
+      const eA = profileA.entries[kink.id] ?? { status: null, score: null, comment: "" };
+      const eB = profileB.entries[kink.id] ?? { status: null, score: null, comment: "" };
+      const hasA = eA.status || eA.statusGive || eA.statusReceive;
+      const hasB = eB.status || eB.statusGive || eB.statusReceive;
+      if (!hasA && !hasB) continue;
+      if (hasA && hasB) totalRated++;
+      if (isHardLimit(eA, eB)) hardLimitCount++;
+      else if (isKinkMatch(eA, eB)) matchCount++;
+      else if (hasA && hasB) discussCount++;
     }
   }
 
@@ -132,12 +136,14 @@ function ComparePage() {
     return profile?.entries[kinkId] ?? { status: null, score: null, comment: "" };
   }
 
-  function passesFilter(a: KinkStatus, b: KinkStatus): boolean {
-    if (!showEmpty && !a && !b) return false;
+  function passesFilter(eA: KinkEntry, eB: KinkEntry): boolean {
+    const hasA = eA.status || eA.statusGive || eA.statusReceive;
+    const hasB = eB.status || eB.statusGive || eB.statusReceive;
+    if (!showEmpty && !hasA && !hasB) return false;
     if (filterMode === "all") return true;
-    if (filterMode === "hardno") return isHardLimit(a, b);
-    if (filterMode === "conflict") return isConflict(a, b);
-    if (filterMode === "match") return isMatch(a, b);
+    if (filterMode === "hardno") return isHardLimit(eA, eB);
+    if (filterMode === "conflict") return isConflict(eA, eB);
+    if (filterMode === "match") return isKinkMatch(eA, eB);
     return true;
   }
 
@@ -147,11 +153,13 @@ function ComparePage() {
         const kinks = getKinksByCategory(cat);
         let catMatches = 0, catRated = 0;
         for (const k of kinks) {
-          const a = profileA.entries[k.id]?.status ?? null;
-          const b = profileB.entries[k.id]?.status ?? null;
-          if (a || b) {
+          const eA = profileA.entries[k.id] ?? { status: null, score: null, comment: "" };
+          const eB = profileB.entries[k.id] ?? { status: null, score: null, comment: "" };
+          const hasA = eA.status || eA.statusGive || eA.statusReceive;
+          const hasB = eB.status || eB.statusGive || eB.statusReceive;
+          if (hasA || hasB) {
             catRated++;
-            if (isMatch(a, b)) catMatches++;
+            if (isKinkMatch(eA, eB)) catMatches++;
           }
         }
         const rate: number | null = catRated > 0 ? catMatches / catRated : null;
@@ -533,9 +541,7 @@ function ComparePage() {
                 return CATEGORIES.map((cat) => {
                   const kinks = getKinksByCategory(cat).filter((k) => {
                     if (hideDiscussed && discussed.has(k.id)) return false;
-                    const a = getEntry(profileA, k.id).status;
-                    const b = getEntry(profileB, k.id).status;
-                    return passesFilter(a, b);
+                    return passesFilter(getEntry(profileA, k.id), getEntry(profileB, k.id));
                   });
                   if (!kinks.length) return null;
                   return (
@@ -547,8 +553,8 @@ function ComparePage() {
                         {kinks.map((kink) => {
                           const eA = getEntry(profileA, kink.id);
                           const eB = getEntry(profileB, kink.id);
-                          const matched = isMatch(eA.status, eB.status);
-                          const hardLimit = isHardLimit(eA.status, eB.status);
+                          const matched = isKinkMatch(eA, eB);
+                          const hardLimit = isHardLimit(eA, eB);
                           const isDiscussed = discussed.has(kink.id);
                           const matchDelay = matched ? `${Math.min(matchIdx++ * 60, 1500)}ms` : "0ms";
                           return (
@@ -591,9 +597,9 @@ function ComparePage() {
                                 </button>
                               </div>
                               <div className="flex items-center gap-2 mb-1">
-                                <StatusBadge status={eA.status} colour={COLOUR_A} />
+                                <EntryBadge entry={eA} colour={COLOUR_A} />
                                 <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
-                                <StatusBadge status={eB.status} colour={COLOUR_B} />
+                                <EntryBadge entry={eB} colour={COLOUR_B} />
                               </div>
                               {(eA.comment || eB.comment) && (
                                 <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
@@ -633,10 +639,10 @@ function ComparePage() {
                       {Array.from(merged.values()).map((item) => {
                         const eA = item.aId ? (profileA.entries[item.aId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
                         const eB = item.bId ? (profileB.entries[item.bId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
-                        const matched = isMatch(eA.status, eB.status);
-                        const hardLimit = isHardLimit(eA.status, eB.status);
+                        const matched = isKinkMatch(eA, eB);
+                        const hardLimit = isHardLimit(eA, eB);
                         const rowKey = item.name.trim().toLowerCase();
-                        if (!passesFilter(eA.status, eB.status)) return null;
+                        if (!passesFilter(eA, eB)) return null;
                         if (hideDiscussed && discussed.has(rowKey)) return null;
                         const isDiscussed = discussed.has(rowKey);
                         const matchDelay = matched ? `${Math.min(matchIdx++ * 60, 1500)}ms` : "0ms";
@@ -679,9 +685,9 @@ function ComparePage() {
                               </button>
                             </div>
                             <div className="flex items-center gap-2">
-                              <StatusBadge status={eA.status} colour={COLOUR_A} />
+                              <EntryBadge entry={eA} colour={COLOUR_A} />
                               <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
-                              <StatusBadge status={eB.status} colour={COLOUR_B} />
+                              <EntryBadge entry={eB} colour={COLOUR_B} />
                             </div>
                           </div>
                         );

@@ -8,6 +8,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import type { ExperienceLevel, Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
+import QRScanner from "@/components/QRScanner";
 import { decodeAny } from "@/lib/shareProfile";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -77,6 +78,7 @@ function HomeContent() {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [visitCount, setVisitCount] = useState(0);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
   const [importDone, setImportDone] = useState(false);
   const [importDragY, setImportDragY] = useState(0);
   const [importDragging, setImportDragging] = useState(false);
@@ -346,6 +348,18 @@ function HomeContent() {
           </button>
         </form>
         )}
+
+        {/* Scan QR button */}
+        <button
+          onClick={() => setScanOpen(true)}
+          className="focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left transition-colors"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <span className="text-lg" aria-hidden="true">📷</span>
+          <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
+            Scan QR — importeer profiel van partner
+          </span>
+        </button>
 
         {/* Profile list */}
         {profiles.length === 0 ? (
@@ -655,18 +669,7 @@ function HomeContent() {
                   </div>
                 </div>
               )}
-              <Link
-                href="/session"
-                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
-                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-              >
-                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                  📡 Live sessie
-                </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Verbind direct met je partner — peer-to-peer, geen server, end-to-end versleuteld.
-                </div>
-              </Link>
+
               <Link
                 href="/scene"
                 className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
@@ -804,6 +807,15 @@ function HomeContent() {
           </div>
         </div>
       </div>
+
+      <QRScanner
+        open={scanOpen}
+        onResult={(p) => {
+          try { setImportPreview(decodeAny(p)); } catch { /* ongeldige QR */ }
+          setScanOpen(false);
+        }}
+        onClose={() => setScanOpen(false)}
+      />
 
       {/* Import profile sheet */}
       <div

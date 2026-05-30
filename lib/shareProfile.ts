@@ -5,11 +5,14 @@ import { KINKS } from "@/lib/kinks";
 
 function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
-  if (entry.status != null) out.status = entry.status;
-  if (entry.desire != null) out.desire = entry.desire;
-  if (entry.experienced != null) out.experienced = entry.experienced;
-  if (entry.comment) out.comment = entry.comment;
-  if (entry.tags?.length) out.tags = entry.tags;
+  if (entry.status != null)        out.status = entry.status;
+  if (entry.direction)             out.direction = entry.direction;
+  if (entry.statusGive != null)    out.statusGive = entry.statusGive;
+  if (entry.statusReceive != null) out.statusReceive = entry.statusReceive;
+  if (entry.desire != null)        out.desire = entry.desire;
+  if (entry.experienced != null)   out.experienced = entry.experienced;
+  if (entry.comment)               out.comment = entry.comment;
+  if (entry.tags?.length)          out.tags = entry.tags;
   // score is deprecated — never encoded
   return Object.keys(out).length > 0 ? out : null;
 }
@@ -59,6 +62,9 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     return [c.id, c.name, sc];
   });
 
+  const sg = KINKS.map(k => { const st = profile.entries[k.id]?.statusGive; return st ? (S_ENC[st] ?? " ") : " "; }).join("");
+  const sr = KINKS.map(k => { const st = profile.entries[k.id]?.statusReceive; return st ? (S_ENC[st] ?? " ") : " "; }).join("");
+
   const payload: Record<string, unknown> = {
     v: 2,
     id: profile.id,
@@ -69,6 +75,8 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     ua: profile.updatedAt,
     s,
   };
+  if (sg.trim()) payload.sg = sg;
+  if (sr.trim()) payload.sr = sr;
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
@@ -82,10 +90,16 @@ export function decodeProfileCompact(encoded: string): Profile {
 
   for (let i = 0; i < KINKS.length; i++) {
     const status = S_DEC[p.s?.[i] ?? ""] ?? null;
+    const statusGive = S_DEC[p.sg?.[i] ?? ""] ?? null;
+    const statusReceive = S_DEC[p.sr?.[i] ?? ""] ?? null;
     const desire = p.d?.[i] !== "0" && p.d?.[i] ? parseInt(p.d[i]) : null;
     const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
-    if (status !== null || desire !== null || experienced !== null) {
-      entries[KINKS[i].id] = { status, desire, experienced, score: null, comment: "" };
+    if (status !== null || statusGive !== null || statusReceive !== null || desire !== null || experienced !== null) {
+      const entry: import("@/types").KinkEntry = { status, desire, experienced, score: null, comment: "" };
+      if (statusGive !== null) entry.statusGive = statusGive;
+      if (statusReceive !== null) entry.statusReceive = statusReceive;
+      if (statusGive !== null || statusReceive !== null) entry.direction = statusGive && statusReceive ? "both" : statusGive ? "give" : "receive";
+      entries[KINKS[i].id] = entry;
     }
   }
 

@@ -5,14 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
-import type { KinkStatus } from "@/types";
-
-function isMatch(a: KinkStatus, b: KinkStatus) {
-  return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
-}
-function isHardLimit(a: KinkStatus, b: KinkStatus) {
-  return a === "hard_no" || b === "hard_no";
-}
+import type { KinkStatus, KinkEntry } from "@/types";
+import { isKinkMatch, isHardLimit } from "@/lib/matching";
 
 const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "Heel graag",
@@ -144,27 +138,47 @@ function ContractPage() {
     );
   }
 
-  type KinkDetail = { name: string; statusA: KinkStatus | null; statusB: KinkStatus | null; commentA?: string; commentB?: string };
+  type KinkDetail = {
+    name: string;
+    statusA: KinkStatus | null; statusB: KinkStatus | null;
+    statusGiveA?: KinkStatus; statusReceiveA?: KinkStatus;
+    statusGiveB?: KinkStatus; statusReceiveB?: KinkStatus;
+    commentA?: string; commentB?: string;
+  };
   const shared: KinkDetail[] = [];
   const hardLimits: { name: string; who: string }[] = [];
   const softLimits: KinkDetail[] = [];
   const discuss: KinkDetail[] = [];
 
+  const EMPTY: KinkEntry = { status: null, score: null, comment: "" };
+
   for (const kink of KINKS) {
-    const entryA = profileA.entries[kink.id];
-    const entryB = profileB.entries[kink.id];
-    const a = entryA?.status ?? null;
-    const b = entryB?.status ?? null;
-    if (!a && !b) continue;
-    if (isHardLimit(a, b)) {
-      const who = a === "hard_no" && b === "hard_no" ? "beiden" : a === "hard_no" ? profileA.name : profileB.name;
+    const entryA = profileA.entries[kink.id] ?? EMPTY;
+    const entryB = profileB.entries[kink.id] ?? EMPTY;
+    const hasA = entryA.status || entryA.statusGive || entryA.statusReceive;
+    const hasB = entryB.status || entryB.statusGive || entryB.statusReceive;
+    if (!hasA && !hasB) continue;
+    const detail: KinkDetail = {
+      name: kink.name,
+      statusA: entryA.status, statusB: entryB.status,
+      statusGiveA: entryA.statusGive ?? undefined,
+      statusReceiveA: entryA.statusReceive ?? undefined,
+      statusGiveB: entryB.statusGive ?? undefined,
+      statusReceiveB: entryB.statusReceive ?? undefined,
+      commentA: entryA.comment || undefined,
+      commentB: entryB.comment || undefined,
+    };
+    if (isHardLimit(entryA, entryB)) {
+      const aHard = entryA.status === "hard_no" || entryA.statusGive === "hard_no" || entryA.statusReceive === "hard_no";
+      const bHard = entryB.status === "hard_no" || entryB.statusGive === "hard_no" || entryB.statusReceive === "hard_no";
+      const who = aHard && bHard ? "beiden" : aHard ? profileA.name : profileB.name;
       hardLimits.push({ name: kink.name, who });
-    } else if (isMatch(a, b)) {
-      shared.push({ name: kink.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
-    } else if (a === "no" || b === "no") {
-      softLimits.push({ name: kink.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
-    } else if (a && b) {
-      discuss.push({ name: kink.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
+    } else if (isKinkMatch(entryA, entryB)) {
+      shared.push(detail);
+    } else if (entryA.status === "no" || entryB.status === "no") {
+      softLimits.push(detail);
+    } else if (hasA && hasB) {
+      discuss.push(detail);
     }
   }
 
@@ -181,12 +195,22 @@ function ContractPage() {
     customMerged.set(key, ck.side === "a" ? { ...ex, aId: ck.id } : { ...ex, bId: ck.id });
   }
   for (const item of customMerged.values()) {
-    const entryA = item.aId ? profileA.entries[item.aId] : null;
-    const entryB = item.bId ? profileB.entries[item.bId] : null;
-    const a = entryA?.status ?? null;
-    const b = entryB?.status ?? null;
-    if (isMatch(a, b)) customShared.push({ name: item.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
-    else if (a || b) discuss.push({ name: item.name, statusA: a, statusB: b, commentA: entryA?.comment, commentB: entryB?.comment });
+    const entryA = item.aId ? (profileA.entries[item.aId] ?? EMPTY) : EMPTY;
+    const entryB = item.bId ? (profileB.entries[item.bId] ?? EMPTY) : EMPTY;
+    const hasA = entryA.status || entryA.statusGive || entryA.statusReceive;
+    const hasB = entryB.status || entryB.statusGive || entryB.statusReceive;
+    const detail: KinkDetail = {
+      name: item.name,
+      statusA: entryA.status, statusB: entryB.status,
+      statusGiveA: entryA.statusGive ?? undefined,
+      statusReceiveA: entryA.statusReceive ?? undefined,
+      statusGiveB: entryB.statusGive ?? undefined,
+      statusReceiveB: entryB.statusReceive ?? undefined,
+      commentA: entryA.comment || undefined,
+      commentB: entryB.comment || undefined,
+    };
+    if (isKinkMatch(entryA, entryB)) customShared.push(detail);
+    else if (hasA || hasB) discuss.push(detail);
   }
 
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
@@ -773,7 +797,13 @@ function ContractPage() {
   );
 }
 
-type KinkDetailItem = { name: string; statusA: KinkStatus | null; statusB: KinkStatus | null; commentA?: string; commentB?: string };
+type KinkDetailItem = {
+  name: string;
+  statusA: KinkStatus | null; statusB: KinkStatus | null;
+  statusGiveA?: KinkStatus; statusReceiveA?: KinkStatus;
+  statusGiveB?: KinkStatus; statusReceiveB?: KinkStatus;
+  commentA?: string; commentB?: string;
+};
 type ContractItem = string | { text: string; tag: string } | KinkDetailItem;
 
 function isKinkDetail(item: ContractItem): item is KinkDetailItem {
@@ -809,25 +839,25 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
             }}>
               <div className="font-medium mb-1.5" style={{ color: "var(--text1)" }}>{item.name}</div>
               <div className="flex items-center gap-2">
-                {item.statusA ? (
-                  <span className="px-1.5 py-0.5 rounded border whitespace-nowrap" style={{
-                    color: cA,
-                    borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`,
-                    background: `color-mix(in srgb, ${cA} 10%, transparent)`,
-                  }}>
-                    {nA}: {STATUS_NL[item.statusA]}
-                  </span>
-                ) : <span style={{ color: "var(--text2)" }}>{nA}: —</span>}
+                <div className="flex flex-col gap-0.5">
+                  {item.statusGiveA && <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>↑ {STATUS_NL[item.statusGiveA]}</span>}
+                  {item.statusReceiveA && <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>↓ {STATUS_NL[item.statusReceiveA]}</span>}
+                  {!item.statusGiveA && !item.statusReceiveA && (
+                    item.statusA
+                      ? <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
+                      : <span style={{ color: "var(--text2)", fontSize: "11px" }}>{nA}: —</span>
+                  )}
+                </div>
                 <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
-                {item.statusB ? (
-                  <span className="px-1.5 py-0.5 rounded border whitespace-nowrap" style={{
-                    color: cB,
-                    borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`,
-                    background: `color-mix(in srgb, ${cB} 10%, transparent)`,
-                  }}>
-                    {STATUS_NL[item.statusB]}: {nB}
-                  </span>
-                ) : <span style={{ color: "var(--text2)" }}>—: {nB}</span>}
+                <div className="flex flex-col gap-0.5 items-end">
+                  {item.statusGiveB && <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>↑ {STATUS_NL[item.statusGiveB]}</span>}
+                  {item.statusReceiveB && <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>↓ {STATUS_NL[item.statusReceiveB]}</span>}
+                  {!item.statusGiveB && !item.statusReceiveB && (
+                    item.statusB
+                      ? <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
+                      : <span style={{ color: "var(--text2)", fontSize: "11px" }}>—: {nB}</span>
+                  )}
+                </div>
               </div>
               {(item.commentA || item.commentB) && (
                 <div className="mt-1.5 space-y-0.5" style={{ color: "var(--text2)" }}>

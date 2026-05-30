@@ -257,7 +257,8 @@ const THEMES = [
 ];
 
 function Step5({ onNext }: { onNext: () => void }) {
-  const { theme, setTheme } = useStore((s) => ({ theme: s.theme, setTheme: s.setTheme }));
+  const theme = useStore((s) => s.theme);
+  const setTheme = useStore((s) => s.setTheme);
 
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

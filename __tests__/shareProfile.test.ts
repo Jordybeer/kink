@@ -167,3 +167,38 @@ describe("decodeAny", () => {
     expect(decoded.entries.spanking_hand.status).toBe("yes");
   });
 });
+
+describe("give/receive encoding", () => {
+  const GR_PROFILE: Profile = {
+    ...BASE_PROFILE,
+    entries: {
+      spanking_hand: { status: null, statusGive: "yes", statusReceive: "no", direction: "both", score: null, comment: "" },
+      flogging:      { status: null, statusGive: "willing", statusReceive: null, direction: "give", score: null, comment: "" },
+    },
+  };
+
+  it("v1: round-trips statusGive and statusReceive", () => {
+    const decoded = decodeProfile(encodeProfile(GR_PROFILE));
+    expect(decoded.entries.spanking_hand.statusGive).toBe("yes");
+    expect(decoded.entries.spanking_hand.statusReceive).toBe("no");
+    expect(decoded.entries.spanking_hand.direction).toBe("both");
+    expect(decoded.entries.flogging.statusGive).toBe("willing");
+    expect(decoded.entries.flogging.statusReceive).toBeUndefined();
+  });
+
+  it("v2: round-trips statusGive and statusReceive via compact encoding", () => {
+    const decoded = decodeProfileCompact(encodeProfileCompact(GR_PROFILE));
+    expect(decoded.entries.spanking_hand.statusGive).toBe("yes");
+    expect(decoded.entries.spanking_hand.statusReceive).toBe("no");
+    expect(decoded.entries.spanking_hand.direction).toBe("both");
+    expect(decoded.entries.flogging.statusGive).toBe("willing");
+    expect(decoded.entries.flogging.statusReceive).toBeUndefined();
+  });
+
+  it("v2: omits sg/sr arrays when no give/receive ratings", () => {
+    const encoded = encodeProfileCompact(BASE_PROFILE);
+    const raw = JSON.parse(atob(encoded));
+    expect(raw.sg).toBeUndefined();
+    expect(raw.sr).toBeUndefined();
+  });
+});

@@ -475,9 +475,11 @@ export default function ProfilePage({ params }: Props) {
                         kink={kink}
                         entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
                         onStatusChange={(s) => handleStatus(kink.id, s)}
-                        onExperiencedChange={(v) => setEntry(profile.id, kink.id, { experienced: v })}
                         onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
                         onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
+                        onDirectionChange={(d) => setEntry(profile.id, kink.id, { direction: d })}
+                        onStatusGiveChange={(s) => setEntry(profile.id, kink.id, { statusGive: s })}
+                        onStatusReceiveChange={(s) => setEntry(profile.id, kink.id, { statusReceive: s })}
                         compact={compact}
                         hideComments={hideComments}
                       />
@@ -497,9 +499,11 @@ export default function ProfilePage({ params }: Props) {
                         kinks={kinks}
                         entries={profile.entries}
                         onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
-                        onExperiencedChange={(kinkId, v) => setEntry(profile.id, kinkId, { experienced: v })}
                         onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
                         onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
+                        onDirectionChange={(kinkId, d) => setEntry(profile.id, kinkId, { direction: d })}
+                        onStatusGiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusGive: s })}
+                        onStatusReceiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusReceive: s })}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
                             setEntry(profile.id, k.id, { status: "no", desire: null });
