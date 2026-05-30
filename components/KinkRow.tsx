@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { Kink, KinkEntry, KinkStatus } from "@/types";
+import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
 import InfoSheet from "./InfoSheet";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
@@ -28,13 +28,23 @@ interface Props {
   onExperiencedChange: (v: boolean | null) => void;
   onCommentChange: (c: string) => void;
   onTagsChange: (tags: string[]) => void;
+  onDirectionChange?: (d: KinkDirection) => void;
+  onStatusGiveChange?: (s: KinkStatus) => void;
+  onStatusReceiveChange?: (s: KinkStatus) => void;
   compact?: boolean;
   hideComments?: boolean;
 }
 
+const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
+  { dir: "give",    label: "↑ Geven" },
+  { dir: "receive", label: "↓ Ontvangen" },
+  { dir: "both",    label: "Beide" },
+];
+
 export default function KinkRow({
   kink, entry, onStatusChange, onExperiencedChange,
-  onCommentChange, onTagsChange, compact, hideComments,
+  onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
+  compact, hideComments,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -62,16 +72,18 @@ export default function KinkRow({
   }
 
   const showComment = !compact && !hideComments && (expanded || entry.comment || tags.length > 0 || isRated);
+  const effectiveStatus = entry.statusGive ?? entry.statusReceive ?? status;
+  const showDirection = !compact && !!onDirectionChange;
 
   return (
     <>
       <div
-        className={`rounded-xl mb-1 transition-[border-left-color] duration-150${status ? ` ks-glow-${status.replace("_", "-")}` : ""}`}
+        className={`rounded-xl mb-1 transition-[border-left-color] duration-150${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
         style={{
           overflow: "clip",
           background: "var(--surface)",
           border: "1px solid var(--border)",
-          borderLeft: `4px solid ${status ? STATUS_BORDER[status] : "transparent"}`,
+          borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "transparent"}`,
         }}
       >
         {/* Row 1: info + name + ervaring pill + comment toggle */}
@@ -117,22 +129,116 @@ export default function KinkRow({
           )}
         </div>
 
-        {/* Row 2: status pills */}
-        <div data-tour="pills" className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
-          {PILLS.map(({ status: s, label }) => (
-            <button
-              key={s}
-              onClick={() => onStatusChange(status === s ? null : s)}
-              aria-pressed={status === s}
-              className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none ${
-                compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
-              }${status === s ? ` status-${s}` : ""}`}
-              style={status !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {/* Direction selector */}
+        {showDirection && (
+          <div className="no-scrollbar flex items-center gap-1 px-3 pb-1.5 overflow-x-auto">
+            {DIRECTIONS.map(({ dir, label }) => {
+              const active = entry.direction === dir;
+              return (
+                <button
+                  key={dir}
+                  onClick={() => onDirectionChange!(active ? null : dir)}
+                  aria-pressed={active}
+                  className="focus-ring rounded-full border text-[11px] px-2.5 py-1 font-medium transition-colors whitespace-nowrap flex-none"
+                  style={active
+                    ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
+                    : { borderColor: "var(--border)", color: "var(--text2)" }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pill rows — direction-aware */}
+        {(!entry.direction || entry.direction === "give") && (
+          <div
+            data-tour="pills"
+            className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto"
+          >
+            {entry.direction === "give" && (
+              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↑</span>
+            )}
+            {PILLS.map(({ status: s, label }) => {
+              const active = entry.direction === "give" ? entry.statusGive === s : status === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => entry.direction === "give"
+                    ? onStatusGiveChange?.(active ? null : s)
+                    : onStatusChange(active ? null : s)}
+                  aria-pressed={active}
+                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none ${
+                    compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
+                  }${active ? ` status-${s}` : ""}`}
+                  style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {entry.direction === "receive" && (
+          <div className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
+            <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↓</span>
+            {PILLS.map(({ status: s, label }) => {
+              const active = entry.statusReceive === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => onStatusReceiveChange?.(active ? null : s)}
+                  aria-pressed={active}
+                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none ${
+                    compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
+                  }${active ? ` status-${s}` : ""}`}
+                  style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {entry.direction === "both" && (
+          <>
+            <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
+              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↑</span>
+              {PILLS.map(({ status: s, label }) => {
+                const active = entry.statusGive === s;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => onStatusGiveChange?.(active ? null : s)}
+                    aria-pressed={active}
+                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
+                    style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
+              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↓</span>
+              {PILLS.map(({ status: s, label }) => {
+                const active = entry.statusReceive === s;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => onStatusReceiveChange?.(active ? null : s)}
+                    aria-pressed={active}
+                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
+                    style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {showComment && (
           <div className="px-3 pb-3 pt-1">

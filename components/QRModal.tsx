@@ -27,7 +27,7 @@ export default function QRModal({ profile, onClose }: Props) {
       return;
     }
     setQrDataUrl(null);
-    const qrUrl = window.location.origin + "/import?p=" + encodeProfileCompact(profile, { includeFetLife });
+    const qrUrl = window.location.origin + "/?p=" + encodeProfileCompact(profile, { includeFetLife });
     setUrl(qrUrl);
     QRCode.toDataURL(qrUrl, {
       width: 280,

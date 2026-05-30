@@ -15,8 +15,13 @@ export interface Kink {
   description?: string;
 }
 
+export type KinkDirection = "give" | "receive" | "both" | null;
+
 export interface KinkEntry {
   status: KinkStatus;
+  statusGive?: KinkStatus;
+  statusReceive?: KinkStatus;
+  direction?: KinkDirection;
   desire?: number | null;       // 1–5 verlangen (vervangt pills visueel)
   experienced?: boolean | null; // ja/nee ervaring checkbox
   score: number | null;         // deprecated — bewaard voor achterwaartse compat
