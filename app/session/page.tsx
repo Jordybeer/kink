@@ -32,16 +32,16 @@ type Phase =
   | "guest_idle" | "guest_gathering"
   | "connected" | "done_local" | "revealed";
 
-function HostGuestSession({ codeParam }: { codeParam: string | null }) {
+function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const { profiles } = useStore();
   const _hasHydrated = useHasHydrated();
 
-  const isGuest = !!codeParam;
+  const isGuest = !!joinParam;
 
   const [phase, setPhase] = useState<Phase>(isGuest ? "guest_idle" : "choose");
   const [profileId, setProfileId] = useState(() => profiles[0]?.id ?? "");
   const [code, setCode] = useState("");
-  const [codeInput, setCodeInput] = useState(() => codeParam ?? "");
+  const [codeInput, setCodeInput] = useState(() => joinParam ?? "");
   const [codeQr, setCodeQr] = useState("");
   const [local, setLocal] = useState<Record<string, KinkStatus>>({});
   const [remote, setRemote] = useState<Record<string, KinkStatus>>({});
@@ -134,8 +134,8 @@ function HostGuestSession({ codeParam }: { codeParam: string | null }) {
       await pc.setLocalDescription(offer);
       await waitForIceGathering(pc);
       await postOffer(newCode, pc.localDescription!.sdp);
-      const qrUrl = `${window.location.origin}/session?code=${newCode}`;
-      const qr = await QRCode.toDataURL(qrUrl, {
+      // QR encodes KINKSYNC:<CODE> — no URL, no shareable link
+      const qr = await QRCode.toDataURL(`KINKSYNC:${newCode}`, {
         width: 200, margin: 2, errorCorrectionLevel: "L",
         color: { dark: "#c084fc", light: "#0a0a0f" },
       });
@@ -507,8 +507,9 @@ function HostGuestSession({ codeParam }: { codeParam: string | null }) {
 
 function SessionContent() {
   const searchParams = useSearchParams();
-  const codeParam = searchParams.get("code");
-  return <HostGuestSession codeParam={codeParam} />;
+  // Use ?join= param (set by QR scanner) — never exposes code in a shareable URL
+  const joinParam = searchParams.get("join");
+  return <HostGuestSession joinParam={joinParam} />;
 }
 
 export default function SessionPage() {

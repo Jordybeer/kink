@@ -18,26 +18,33 @@ export function genCode(): string {
 }
 
 export async function postOffer(code: string, sdp: string): Promise<void> {
-  await fetch(`${RELAY}/${code}/offer`, {
+  const r = await fetch(`${RELAY}/${code}/offer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ offer: sdp }),
   });
+  if (!r.ok) throw new Error(`Sessie aanmaken mislukt (${r.status}) — probeer opnieuw.`);
 }
 
-export async function getOffer(code: string): Promise<string | null> {
-  const r = await fetch(`${RELAY}/${code}/offer`);
-  if (!r.ok) return null;
-  const data = await r.json() as { offer?: string };
-  return data.offer ?? null;
+export async function getOffer(code: string, retries = 4, delayMs = 800): Promise<string | null> {
+  for (let i = 0; i <= retries; i++) {
+    const r = await fetch(`${RELAY}/${code}/offer`);
+    if (r.ok) {
+      const data = await r.json() as { offer?: string };
+      if (data.offer) return data.offer;
+    }
+    if (i < retries) await new Promise(res => setTimeout(res, delayMs));
+  }
+  return null;
 }
 
 export async function postAnswer(code: string, sdp: string): Promise<void> {
-  await fetch(`${RELAY}/${code}/answer`, {
+  const r = await fetch(`${RELAY}/${code}/answer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ answer: sdp }),
   });
+  if (!r.ok) throw new Error(`Verbinden mislukt (${r.status}) — probeer opnieuw.`);
 }
 
 export async function pollAnswer(

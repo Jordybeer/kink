@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import Sheet from "./Sheet";
+import { useRouter } from "next/navigation";
 
 interface Props {
   open: boolean;
@@ -15,6 +16,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
@@ -56,6 +58,15 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const result = jsQR(imageData.data, imageData.width, imageData.height);
     if (result?.data) {
+      // Handle KINKSYNC session QR — navigate to session page with code, no URL exposure
+      const sessionMatch = result.data.match(/^KINKSYNC:([A-Z2-9]{6})$/);
+      if (sessionMatch) {
+        stopCamera();
+        onClose();
+        router.push(`/session?join=${sessionMatch[1]}`);
+        return;
+      }
+      // Handle profile share QR (existing flow)
       try {
         const p = new URL(result.data).searchParams.get("p");
         if (p) {
@@ -112,7 +123,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               />
               {/* Corner brackets overlay */}
               <div className="absolute inset-0 pointer-events-none">
-                {[["top-4 left-4", "border-t-2 border-l-2"], ["top-4 right-4", "border-t-2 border-r-2"], ["bottom-4 left-4", "border-b-2 border-l-2"], ["bottom-4 right-4", "border-b-2 border-r-2"]].map(([pos, border]) => (
+                {([["top-4 left-4", "border-t-2 border-l-2"], ["top-4 right-4", "border-t-2 border-r-2"], ["bottom-4 left-4", "border-b-2 border-l-2"], ["bottom-4 right-4", "border-b-2 border-r-2"]] as [string, string][]).map(([pos, border]) => (
                   <div key={pos} className={`absolute ${pos} w-7 h-7 ${border} rounded-sm`} style={{ borderColor: "var(--accent)" }} />
                 ))}
               </div>
