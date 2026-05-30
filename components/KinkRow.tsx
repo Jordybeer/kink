@@ -35,8 +35,8 @@ interface Props {
 }
 
 const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
-  { dir: "give",    label: "↑ Geven" },
-  { dir: "receive", label: "↓ Ontvangen" },
+  { dir: "give",    label: "Geven" },
+  { dir: "receive", label: "Ontvangen" },
   { dir: "both",    label: "Beide" },
 ];
 
@@ -102,7 +102,8 @@ export default function KinkRow({
 
         {/* Direction selector */}
         {showDirection && (
-          <div className="no-scrollbar flex items-center gap-1 px-3 pb-1.5 overflow-x-auto">
+          <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-1.5 overflow-x-auto">
+            <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Richting:</span>
             {DIRECTIONS.map(({ dir, label }) => {
               const active = entry.direction === dir;
               return (

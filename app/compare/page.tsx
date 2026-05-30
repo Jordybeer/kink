@@ -66,7 +66,7 @@ function categoryPillStyle(rate: number | null): { background: string; borderCol
 
 function ComparePage() {
   const searchParams = useSearchParams();
-  const { profiles } = useStore();
+  const { profiles, setEntry } = useStore();
   const _hasHydrated = useHasHydrated();
 
   const [aId, setAId] = useState(searchParams.get("a") ?? "");
@@ -601,12 +601,46 @@ function ComparePage() {
                                 <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
                                 <EntryBadge entry={eB} colour={COLOUR_B} />
                               </div>
-                              {(eA.comment || eB.comment) && (
-                                <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
-                                  {eA.comment && <div><span className="font-medium" style={{ color: COLOUR_A }}>{profileA.name}:</span> {eA.comment}</div>}
-                                  {eB.comment && <div><span className="font-medium" style={{ color: COLOUR_B }}>{profileB.name}:</span> {eB.comment}</div>}
-                                </div>
-                              )}
+                              {(() => {
+                                const showReadOnlyA = profileA.isImported && !!eA.comment;
+                                const showReadOnlyB = profileB.isImported && !!eB.comment;
+                                return (
+                                  <>
+                                    {(showReadOnlyA || showReadOnlyB) && (
+                                      <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
+                                        {showReadOnlyA && <div><span className="font-medium" style={{ color: COLOUR_A }}>{profileA.name}:</span> {eA.comment}</div>}
+                                        {showReadOnlyB && <div><span className="font-medium" style={{ color: COLOUR_B }}>{profileB.name}:</span> {eB.comment}</div>}
+                                      </div>
+                                    )}
+                                    <div className="mt-2 space-y-1.5">
+                                      {!profileA.isImported && (
+                                        <textarea
+                                          aria-label={`Notitie ${profileA.name}`}
+                                          placeholder={`Notitie ${profileA.name}…`}
+                                          value={eA.comment}
+                                          onChange={(e) => setEntry(profileA.id, kink.id, { comment: e.target.value })}
+                                          rows={1}
+                                          maxLength={200}
+                                          className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
+                                          style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${COLOUR_A} 30%, var(--border))`, color: "var(--text)" }}
+                                        />
+                                      )}
+                                      {!profileB.isImported && (
+                                        <textarea
+                                          aria-label={`Notitie ${profileB.name}`}
+                                          placeholder={`Notitie ${profileB.name}…`}
+                                          value={eB.comment}
+                                          onChange={(e) => setEntry(profileB.id, kink.id, { comment: e.target.value })}
+                                          rows={1}
+                                          maxLength={200}
+                                          className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
+                                          style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${COLOUR_B} 30%, var(--border))`, color: "var(--text)" }}
+                                        />
+                                      )}
+                                    </div>
+                                  </>
+                                );
+                              })()}
                             </div>
                           );
                         })}
@@ -688,6 +722,32 @@ function ComparePage() {
                               <EntryBadge entry={eA} colour={COLOUR_A} />
                               <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", opacity: matched ? 1 : 0.18 }} />
                               <EntryBadge entry={eB} colour={COLOUR_B} />
+                            </div>
+                            <div className="mt-2 space-y-1.5">
+                              {!profileA.isImported && item.aId && (
+                                <textarea
+                                  aria-label={`Notitie ${profileA.name}`}
+                                  placeholder={`Notitie ${profileA.name}…`}
+                                  value={eA.comment}
+                                  onChange={(e) => setEntry(profileA.id, item.aId!, { comment: e.target.value })}
+                                  rows={1}
+                                  maxLength={200}
+                                  className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
+                                  style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${COLOUR_A} 30%, var(--border))`, color: "var(--text)" }}
+                                />
+                              )}
+                              {!profileB.isImported && item.bId && (
+                                <textarea
+                                  aria-label={`Notitie ${profileB.name}`}
+                                  placeholder={`Notitie ${profileB.name}…`}
+                                  value={eB.comment}
+                                  onChange={(e) => setEntry(profileB.id, item.bId!, { comment: e.target.value })}
+                                  rows={1}
+                                  maxLength={200}
+                                  className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
+                                  style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${COLOUR_B} 30%, var(--border))`, color: "var(--text)" }}
+                                />
+                              )}
                             </div>
                           </div>
                         );
