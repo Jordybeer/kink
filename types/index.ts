@@ -32,6 +32,8 @@ export interface KinkEntry {
 export interface ContractSnapshot {
   id: string;
   date: number;
+  profileAId?: string;
+  profileBId?: string;
   profileAName: string;
   profileBName: string;
   matchCount: number;
