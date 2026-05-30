@@ -1,0 +1,23 @@
+{
+  "_note": "Schema reference only. Live state lives in Supabase sim_personas table. This file documents the shape of each row.",
+  "id": "persona_id",
+  "name": "Display Name",
+  "role": "submissive | dominant | switch",
+  "experience_level": "beginner | gevorderd | ervaren | diepgaand",
+  "session_count": 0,
+  "last_active": null,
+  "traits": {
+    "curiosity": 0,
+    "trust": 0,
+    "impulsivity": 0,
+    "thoroughness": 0
+  },
+  "features_discovered": [],
+  "kinks_filled_count": 0,
+  "contracts_generated": 0,
+  "onboarding_complete": false,
+  "profile_tour_complete": false,
+  "partners": [],
+  "last_state": null,
+  "notes": "One-line narrative updated after each session by the routine."
+}
