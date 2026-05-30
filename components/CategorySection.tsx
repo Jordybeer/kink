@@ -9,7 +9,6 @@ interface Props {
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
-  onExperiencedChange: (kinkId: string, v: boolean | null) => void;
   onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
   onDirectionChange?: (kinkId: string, d: KinkDirection) => void;
@@ -29,7 +28,7 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 
 export default function CategorySection({
   category, kinks, entries,
-  onStatusChange, onExperiencedChange,
+  onStatusChange,
   onCommentChange, onTagsChange,
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   onBulkSkip, onBulkRestore, compact, hideComments,
@@ -133,7 +132,6 @@ export default function CategorySection({
                 kink={kink}
                 entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
-                onExperiencedChange={(v) => onExperiencedChange(kink.id, v)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
                 onDirectionChange={onDirectionChange ? (d) => onDirectionChange(kink.id, d) : undefined}

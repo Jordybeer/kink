@@ -25,7 +25,6 @@ interface Props {
   kink: Kink;
   entry: KinkEntry;
   onStatusChange: (s: KinkStatus) => void;
-  onExperiencedChange: (v: boolean | null) => void;
   onCommentChange: (c: string) => void;
   onTagsChange: (tags: string[]) => void;
   onDirectionChange?: (d: KinkDirection) => void;
@@ -42,11 +41,10 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
 ];
 
 export default function KinkRow({
-  kink, entry, onStatusChange, onExperiencedChange,
+  kink, entry, onStatusChange,
   onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   compact, hideComments,
 }: Props) {
-  const [expanded, setExpanded] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
 
   const status = entry.status;
@@ -60,6 +58,7 @@ export default function KinkRow({
     commentLen >= 160 ? "var(--maybe)" :
     "var(--text2)";
 
+
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget;
     el.style.height = "auto";
@@ -71,7 +70,7 @@ export default function KinkRow({
     onTagsChange(next);
   }
 
-  const showComment = !compact && !hideComments && (expanded || entry.comment || tags.length > 0 || isRated);
+  const showComment = !compact && !hideComments && (entry.comment || tags.length > 0 || isRated);
   const effectiveStatus = entry.statusGive ?? entry.statusReceive ?? status;
   const showDirection = !compact && !!onDirectionChange;
 
@@ -99,34 +98,6 @@ export default function KinkRow({
           </button>
 
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
-
-          <button
-            onClick={() => onExperiencedChange(entry.experienced ? null : true)}
-            aria-pressed={!!entry.experienced}
-            aria-label="Heb je hier ervaring mee"
-            title={entry.experienced ? "Ervaring: ja" : "Ervaring: nee"}
-            className="focus-ring flex-none rounded-full border text-[12px] px-2.5 py-1.5 font-medium transition-colors"
-            style={
-              entry.experienced
-                ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
-                : { borderColor: "var(--border)", color: "var(--text2)" }
-            }
-          >
-            {entry.experienced ? "Ervaring ✓" : "Ervaring"}
-          </button>
-
-          {!compact && !hideComments && (
-            <button
-              data-tour="comment"
-              onClick={() => setExpanded((v) => !v)}
-              aria-label={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
-              title={expanded ? "Notitie verbergen" : "Notitie toevoegen"}
-              className="focus-ring w-8 h-8 flex items-center justify-center rounded-lg text-base transition-colors border border-[var(--border)]"
-              style={{ opacity: entry.comment ? 1 : 0.45 }}
-            >
-              💬
-            </button>
-          )}
         </div>
 
         {/* Direction selector */}
