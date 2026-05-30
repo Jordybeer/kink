@@ -84,22 +84,25 @@ When a trait crosses these values, note it in the session report as a milestone:
 
 1. Read all 4 trait values from Supabase `sim_personas`
 2. For each trait, identify which band (low / mid / high) applies
-3. Compose the session plan:
+3. Check interaction eligibility (see Persona Interactions section below)
+4. Compose the session plan:
    - Which pages to visit
    - How carefully to read and interact
    - What kink categories and depth to fill
    - Whether to import a partner / generate a contract / sign it
    - Whether to use shortcuts or read carefully
-4. Execute the plan using Playwright
-5. Take screenshots at:
+   - Whether to use another persona's last_state as an import target
+5. Execute the plan using Playwright
+6. Take screenshots at:
    - First page load
    - First meaningful interaction
    - Any failure or unexpected state
    - Any first-visit to a new route (not in `featuresDiscovered`)
+   - Any interaction cross-over moment (import, compare, contract with another persona's data)
    - Final state of the session
-6. Upload each screenshot to Supabase Storage:
+7. Upload each screenshot to Supabase Storage:
    `sim-screenshots/{persona_id}/{YYYY-MM-DD}_{step:02d}_{route_slug}.png`
-7. After the session, compute trait deltas and update `sim_personas` in Supabase
+8. After the session, compute trait deltas and update `sim_personas` in Supabase
 
 ---
 
@@ -113,3 +116,155 @@ Derive the localStorage state from the persona's Supabase record:
 
 After the session ends, capture the current localStorage state and write it
 back to `sim_personas.last_state` so the next run can resume accurately.
+
+---
+
+## Persona Interactions
+
+Personas run in order: robin → leo → iris. Each session completes fully
+before the next begins. This ordering is intentional — it allows earlier
+personas' output to serve as input for later personas in the same run.
+
+Interactions are opt-in and gated by trait thresholds and session count.
+If prerequisites are not met, the persona runs in isolation as normal.
+Never force an interaction — if the data is not available or the trait
+threshold is not met, skip it silently.
+
+---
+
+### Interaction 1 — Leo imports Robin's profile
+
+**When eligible:**
+- Robin `session_count >= 2` AND Robin `last_state` is not null
+- Leo `trust >= 4`
+
+**What happens:**
+Before Leo's Playwright session starts, extract Robin's profile data from
+her `last_state` snapshot and make it available as an importable partner
+file (JSON export format the app uses). Seed Leo's localStorage with his
+own state as normal, then during the session:
+- Leo navigates to the import flow
+- Imports Robin's exported profile
+- Views the compare page
+- If Leo `trust >= 7`: attempts to generate a contract
+- If Leo `trust < 7`: views compare only, does not generate
+
+**Trait evolution additions:**
+| Event | Trait change |
+|---|---|
+| Import of Robin succeeded | leo trust +1 |
+| Compare page rendered correctly with Robin's data | leo curiosity +1 |
+| Contract generated with Robin's data | leo trust +1, robin contracts_generated +1 |
+| Import failed or data was malformed | leo trust -1 |
+
+**Report note:** Label this session as `interaction: leo_imports_robin`
+in the report observations.
+
+---
+
+### Interaction 2 — Robin receives Leo's contract
+
+**When eligible:**
+- Leo has generated at least one contract in a previous session
+  (`contracts_generated >= 1`) AND Leo `last_state` contains a contract snapshot
+- Robin `session_count >= 3`
+- Robin `trust >= 3`
+
+**What happens:**
+Seed Robin's localStorage as normal, then additionally inject a pre-generated
+contract (from Leo's last_state) into her incoming state. During Robin's session:
+- Robin sees an incoming contract notification or entry
+- Navigates to the contract view
+- Reads through it (thoroughness >= 6: reads every field)
+- If Robin `trust >= 5`: signs the contract
+- If Robin `trust < 5`: views it, does not sign, exits
+
+**What this tests:**
+- Contract view renders correctly for the receiving party
+- Signing flow works end-to-end from the receiver's perspective
+- Empty/graceful state if no contract exists yet
+
+**Trait evolution additions:**
+| Event | Trait change |
+|---|---|
+| Robin viewed contract successfully | robin trust +1 |
+| Robin signed contract | robin trust +1 |
+| Contract view had layout issues | note in report, no trait change |
+
+**Report note:** Label as `interaction: robin_receives_leo_contract`.
+
+---
+
+### Interaction 3 — Iris compares Robin and Leo
+
+**When eligible:**
+- Both Robin and Leo `session_count >= 2` AND both `last_state` not null
+- Iris `trust >= 5`
+
+**What happens:**
+Before Iris's session, prepare two importable partner profiles — one from
+Robin's `last_state`, one from Leo's `last_state`. During Iris's session:
+- Iris imports Robin as partner 1
+- Iris imports Leo as partner 2
+- Navigates to the compare page with both loaded
+- If the app supports multi-partner compare: tests it
+- If not: notes the limitation in the report as a suggestion
+- If Iris `trust >= 7`: generates a contract targeting Robin
+
+**What this tests:**
+- Multi-import flow
+- Compare page with two different partner profiles loaded
+- DNA bar rendering with two data sets
+- Whether the UI handles a dominant-perspective user managing multiple partners
+
+**Trait evolution additions:**
+| Event | Trait change |
+|---|---|
+| Both imports succeeded | iris trust +1 |
+| Compare rendered with both profiles | iris curiosity +1 |
+| Multi-partner compare not supported | note as suggestion: "multi-partner compare not yet available" |
+
+**Report note:** Label as `interaction: iris_compares_robin_and_leo`.
+
+---
+
+## Interaction run order summary
+
+```
+Run order each night:
+  1. Robin   — always solo (no prerequisites to check)
+  2. Leo     — check Interaction 1 (import Robin)
+  3. Iris    — check Interaction 3 (compare Robin + Leo)
+
+Robin also checks Interaction 2 (receive Leo's contract)
+but only if Leo ran successfully this session or in a previous one.
+If Robin runs before Leo has ever generated a contract: solo run.
+```
+
+---
+
+## Interaction eligibility check (routine step)
+
+Before each persona session, run this check:
+
+```
+For leo:
+  eligible_for_import = (robin.session_count >= 2
+                         AND robin.last_state != null
+                         AND leo.traits.trust >= 4)
+
+For robin (contract receive):
+  eligible_for_contract = (leo.contracts_generated >= 1
+                           AND robin.session_count >= 3
+                           AND robin.traits.trust >= 3)
+
+For iris:
+  eligible_for_compare = (robin.session_count >= 2
+                          AND leo.session_count >= 2
+                          AND robin.last_state != null
+                          AND leo.last_state != null
+                          AND iris.traits.trust >= 5)
+```
+
+If eligible: run the interaction version of the session.
+If not eligible: run solo as normal. Do not mention it in the report.
