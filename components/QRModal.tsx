@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
-import { encodeProfile, encodeProfileCompact } from "@/lib/shareProfile";
+import { encodeProfileCompact } from "@/lib/shareProfile";
 import Sheet from "./Sheet";
 
 interface Props {
@@ -28,11 +28,11 @@ export default function QRModal({ profile, onClose }: Props) {
     }
     setQrDataUrl(null);
     const qrUrl = window.location.origin + "/import?p=" + encodeProfileCompact(profile, { includeFetLife });
-    const fullUrl = window.location.origin + "/import?p=" + encodeProfile(profile, { includeFetLife });
-    setUrl(fullUrl);
+    setUrl(qrUrl);
     QRCode.toDataURL(qrUrl, {
-      width: 240,
+      width: 280,
       margin: 2,
+      errorCorrectionLevel: "L",
       color: { dark: "#c084fc", light: "#0a0a0f" },
     }).then(setQrDataUrl);
   }, [profile, includeFetLife]);
@@ -67,24 +67,22 @@ export default function QRModal({ profile, onClose }: Props) {
         {qrDataUrl ? (
           <img
             src={qrDataUrl}
-            width={240}
-            height={240}
+            width={280}
+            height={280}
             alt="QR-code voor profielimport"
             className="mx-auto rounded-xl my-4"
           />
         ) : (
           <div
             className="mx-auto my-4 rounded-xl animate-pulse"
-            style={{ width: 240, height: 240, background: "var(--surface2)" }}
+            style={{ width: 280, height: 280, background: "var(--surface2)" }}
             aria-label="QR-code laden…"
           />
         )}
 
-        {profile && Object.values(profile.entries).some(e => e.comment || e.tags?.length) && (
-          <p className="text-[11px] text-center mb-1" style={{ color: "var(--text2)" }}>
-            QR deelt statussen — gebruik de link voor volledige notities.
-          </p>
-        )}
+        <p className="text-[11px] text-center mb-1" style={{ color: "var(--text2)" }}>
+          Deelt statussen — notities en wensen blijven privé.
+        </p>
 
         {profile?.fetLifeUsername && (
           <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer select-none">

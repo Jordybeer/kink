@@ -47,24 +47,16 @@ const S_DEC: Record<string, KinkStatus> = {
 };
 
 export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?: boolean }): string {
-  // One char per kink in KINKS order: status, desire, experienced
+  // One char per kink in KINKS order — status only (desire/experienced omitted to keep QR scannable)
   const s = KINKS.map(k => {
     const st = profile.entries[k.id]?.status;
     return (st ? S_ENC[st] : undefined) ?? " ";
-  }).join("");
-  const d = KINKS.map(k => {
-    const v = profile.entries[k.id]?.desire;
-    return v != null ? String(v) : "0";
-  }).join("");
-  const x = KINKS.map(k => {
-    const v = profile.entries[k.id]?.experienced;
-    return v === true ? "1" : v === false ? "0" : "?";
   }).join("");
 
   const ck = (profile.customKinks ?? []).map(c => {
     const e = profile.entries[c.id];
     const sc = (e?.status ? S_ENC[e.status] : undefined) ?? " ";
-    return [c.id, c.name, sc, e?.desire ?? 0, e?.experienced ?? null];
+    return [c.id, c.name, sc];
   });
 
   const payload: Record<string, unknown> = {
@@ -75,7 +67,7 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     e: profile.experienceLevel,
     ca: profile.createdAt,
     ua: profile.updatedAt,
-    s, d, x,
+    s,
   };
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
