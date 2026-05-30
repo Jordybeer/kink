@@ -351,8 +351,8 @@ function HomeContent() {
         </form>
         )}
 
-        {/* Scan QR button */}
-        <button
+        {/* Scan QR button — verborgen terwijl import-sheet open is */}
+        {!importPreview && <button
           onClick={() => setScanOpen(true)}
           className="focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left transition-colors"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
@@ -361,7 +361,7 @@ function HomeContent() {
           <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
             Scan QR — importeer profiel van partner
           </span>
-        </button>
+        </button>}
 
         {/* Profile list */}
         {profiles.length === 0 ? (
@@ -605,7 +605,6 @@ function HomeContent() {
             </div>
 
             {/* Compare CTA */}
-            <div className="relative">
             <div className="flex flex-col gap-3">
               {profiles.length >= 2 ? (
                 <Link
@@ -684,8 +683,6 @@ function HomeContent() {
                   Plan activiteiten, intensiteit en timing vooraf.
                 </div>
               </Link>
-            </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[var(--bg)] to-transparent" />
             </div>
           </>
         )}
