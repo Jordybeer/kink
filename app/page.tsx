@@ -655,18 +655,7 @@ function HomeContent() {
                   </div>
                 </div>
               )}
-              <Link
-                href="/session"
-                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
-                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-              >
-                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                  📡 Live sessie
-                </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Verbind direct met je partner — peer-to-peer, geen server, end-to-end versleuteld.
-                </div>
-              </Link>
+
               <Link
                 href="/scene"
                 className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
