@@ -176,7 +176,7 @@ function ComparePage() {
 
   return (
     <>
-    <main className="max-w-5xl mx-auto px-4 py-6 pb-20 w-full">
+    <main className="max-w-5xl mx-auto px-4 py-6 pb-10 w-full">
       {/* Header — back link + title only */}
       <div className="flex items-center gap-3 mb-4">
         <Link href="/" className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
@@ -215,7 +215,7 @@ function ComparePage() {
               🎭 Plan een scène
             </Link>
             <Link href={`/contract?a=${aId}&b=${bId}`}
-              className="focus-ring px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 flex-1 text-center"
+              className="focus-ring px-3 py-1.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-90 flex-1 text-center"
               style={{ background: "var(--accent)", color: "#000" }}>
               ✍ Contract
             </Link>
@@ -339,7 +339,7 @@ function ComparePage() {
               </Link>
               <Link
                 href={`/contract?a=${aId}&b=${bId}`}
-                className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90 flex-1 text-center"
+                className="focus-ring px-3 py-1.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-90 flex-1 text-center"
                 style={{ background: "var(--accent)", color: "#000" }}
               >
                 ✍ Contract
