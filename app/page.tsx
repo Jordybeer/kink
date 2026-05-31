@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
+import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import type { ExperienceLevel, Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import QRScanner from "@/components/QRScanner";
@@ -19,26 +20,6 @@ interface BeforeInstallPromptEvent extends Event {
 const TOTAL_KINKS = KINKS.length;
 const DESTROY_PHRASE = "wis alles";
 
-const ROLE_GROUPS: { label: string; roles: string[] }[] = [
-  { label: "D/s dynamiek",       roles: ["Switch", "Dominant", "Submissive"] },
-  { label: "Zorgzame D/s",       roles: ["Daddy Dom", "Mommy Dom", "little", "Middle", "Caregiver"] },
-  { label: "Impact & touw",      roles: ["Top", "Bottom", "Sadist", "Masochist", "Rigger", "Rope Bunny"] },
-  { label: "Karakter",           roles: ["Brat", "Brat Tamer", "Primal Hunter", "Primal Prey"] },
-  { label: "Dier & spel",        roles: ["Handler/Owner", "Pet"] },
-  { label: "Overig",             roles: ["Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)"] },
-];
-
-const RELATIONSHIP_STATUSES = [
-  "Single", "Taken", "Getrouwd", "Gecollared",
-  "Polyamoreus", "Open relatie", "Geowned", "Het is ingewikkeld",
-];
-
-const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[] = [
-  { value: "beginner",  label: "Beginner",   sub: "kort" },
-  { value: "gevorderd", label: "Gevorderd",  sub: "normaal" },
-  { value: "ervaren",   label: "Ervaren",    sub: "lang" },
-  { value: "diepgaand", label: "Diepgaand",  sub: "alles" },
-];
 
 function HomeContent() {
   const router = useRouter();

@@ -13,6 +13,12 @@ const PILLS: { status: NonNullable<KinkStatus>; label: string }[] = [
   { status: "hard_no", label: "Harde grens" },
 ];
 
+const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "yes", "willing"];
+const worstOf = (a: KinkStatus | undefined, b: KinkStatus | undefined): KinkStatus => {
+  for (const s of STATUS_ORDER) { if (a === s || b === s) return s; }
+  return null;
+};
+
 const STATUS_BORDER: Record<NonNullable<KinkStatus>, string> = {
   yes:     "var(--yes)",
   willing: "var(--willing)",
@@ -71,11 +77,6 @@ export default function KinkRow({
   }
 
   const showComment = !compact && !hideComments && (entry.comment || tags.length > 0 || isRated);
-  const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "yes", "willing"];
-  const worstOf = (a: KinkStatus | undefined, b: KinkStatus | undefined): KinkStatus => {
-    for (const s of STATUS_ORDER) { if (a === s || b === s) return s; }
-    return null;
-  };
   const effectiveStatus: KinkStatus =
     entry.direction === "give"    ? (entry.statusGive    ?? status) :
     entry.direction === "receive" ? (entry.statusReceive ?? status) :

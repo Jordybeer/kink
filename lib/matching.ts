@@ -16,9 +16,10 @@ export function isHardLimit(a: KinkEntry, b: KinkEntry): boolean {
   return anyHard(a) || anyHard(b);
 }
 
+export const hasRating = (e: KinkEntry): boolean =>
+  e.status != null || e.statusGive != null || e.statusReceive != null;
+
 export function isConflict(a: KinkEntry, b: KinkEntry): boolean {
   if (isHardLimit(a, b)) return false;
-  const hasRating = (e: KinkEntry) =>
-    e.status != null || e.statusGive != null || e.statusReceive != null;
   return !isKinkMatch(a, b) && hasRating(a) && hasRating(b);
 }

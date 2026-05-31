@@ -17,6 +17,7 @@
   --maybe: #fbbf24;
   --no: #fb923c;
   --hard-no: #ef4444;
+  --conflict: #f59e0b;
 }
 
 * { box-sizing: border-box; }

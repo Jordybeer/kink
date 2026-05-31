@@ -87,8 +87,8 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
   return toBase64Url(JSON.stringify(payload));
 }
 
-export function decodeProfileCompact(encoded: string): Profile {
-  const p = JSON.parse(fromBase64Url(encoded));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
   const entries: Record<string, KinkEntry> = {};
 
   for (let i = 0; i < KINKS.length; i++) {
@@ -137,11 +137,14 @@ export function decodeProfileCompact(encoded: string): Profile {
   };
 }
 
+export function decodeProfileCompact(encoded: string): Profile {
+  return decodeProfileCompactFromParsed(JSON.parse(fromBase64Url(encoded)));
+}
+
 // Decodes either v1 or v2 — use this on the import path
 export function decodeAny(encoded: string): Profile {
-  const raw = fromBase64Url(encoded);
-  const parsed = JSON.parse(raw);
-  if (parsed.v === 2) return decodeProfileCompact(encoded);
+  const parsed = JSON.parse(fromBase64Url(encoded));
+  if (parsed.v === 2) return decodeProfileCompactFromParsed(parsed);
   return parsed as Profile;
 }
 

@@ -48,8 +48,10 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
       rafRef.current = requestAnimationFrame(scan);
       return;
     }
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    }
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
