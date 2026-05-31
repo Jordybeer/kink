@@ -1,5 +1,7 @@
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import { NextRequest } from "next/server";
+
+const kv = Redis.fromEnv();
 
 const VALID_CODE = /^[A-Z2-9]{6}$/;
 const VALID_TYPE = ["offer", "answer"];
