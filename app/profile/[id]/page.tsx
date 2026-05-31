@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<NonNullable<KinkStatus>, string> = {
   no: "var(--no)", hard_no: "var(--hard-no)",
 };
 const STATUS_LABELS: Record<NonNullable<KinkStatus>, string> = {
-  willing: "Graag", yes: "Ja", maybe: "Misschien", no: "Nee", hard_no: "Harde grens",
+  yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
 };
 
 
@@ -231,7 +231,7 @@ export default function ProfilePage({ params }: Props) {
       no: [120, 110, 160], hard_no: [239, 68, 68],
     };
     const STATUS_NL: Record<string, string> = {
-      yes: "Heel graag", willing: "Interesse", maybe: "Voor hen", no: "Liever niet", hard_no: "Harde grens",
+      yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
     };
 
     for (const cat of CATEGORIES) {
@@ -536,7 +536,7 @@ export default function ProfilePage({ params }: Props) {
                                   className={`focus-ring rounded-full border text-[11px] font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
                                   style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                                 >
-                                  {s === "yes" ? "Ja" : s === "willing" ? "Graag" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Harde grens"}
+                                  {s === "yes" ? "Heel graag" : s === "willing" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Voor hen" : "Harde grens"}
                                 </button>
                               ))}
                             </div>

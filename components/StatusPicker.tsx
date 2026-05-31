@@ -3,9 +3,9 @@ import type { KinkStatus } from "@/types";
 
 const OPTIONS: { value: NonNullable<KinkStatus>; icon: string; label: string; title: string }[] = [
   { value: "yes",     icon: "✓",  label: "Heel graag",  title: "Heel graag — ik wil dit erg graag" },
-  { value: "willing", icon: "↗",  label: "Interesse",   title: "Interesse — ik sta er open voor" },
-  { value: "maybe",   icon: "♡",  label: "Voor hen",    title: "Voor hen — ik doe het voor jou" },
-  { value: "no",      icon: "✕",  label: "Liever niet", title: "Liever niet — niet mijn ding" },
+  { value: "willing", icon: "↗",  label: "Ja",          title: "Ja — ik sta er open voor" },
+  { value: "maybe",   icon: "♡",  label: "Misschien",   title: "Misschien — nieuwsgierig maar onzeker" },
+  { value: "no",      icon: "↘",  label: "Voor hen",    title: "Voor hen — ik doe het voor jou, niet voor mezelf" },
   { value: "hard_no", icon: "✕✕", label: "Harde grens", title: "Harde grens — absolute limiet" },
 ];
 

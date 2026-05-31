@@ -5,12 +5,11 @@ import InfoSheet from "./InfoSheet";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
 
-const PILLS: { status: NonNullable<KinkStatus>; label: string }[] = [
-  { status: "willing", label: "Graag" },
-  { status: "yes",     label: "Ja" },
+const PREF_PILLS: { status: NonNullable<KinkStatus>; label: string }[] = [
+  { status: "yes",     label: "Heel graag" },
+  { status: "willing", label: "Ja" },
   { status: "maybe",   label: "Misschien" },
-  { status: "no",      label: "Nee" },
-  { status: "hard_no", label: "Harde grens" },
+  { status: "no",      label: "Voor hen" },
 ];
 
 const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "yes", "willing"];
@@ -89,7 +88,7 @@ export default function KinkRow({
       <div
         className={`rounded-xl mb-1 transition-[border-left-color] duration-150${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
         style={{
-          overflow: "clip",
+          overflow: "hidden",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "transparent"}`,
@@ -137,12 +136,12 @@ export default function KinkRow({
         {(!entry.direction || entry.direction === "give") && (
           <div
             data-tour="pills"
-            className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto"
+            className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto"
           >
             {entry.direction === "give" && (
               <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↑</span>
             )}
-            {PILLS.map(({ status: s, label }) => {
+            {PREF_PILLS.map(({ status: s, label }) => {
               const active = entry.direction === "give" ? entry.statusGive === s : status === s;
               return (
                 <button
@@ -163,9 +162,9 @@ export default function KinkRow({
           </div>
         )}
         {entry.direction === "receive" && (
-          <div className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
+          <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
             <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↓</span>
-            {PILLS.map(({ status: s, label }) => {
+            {PREF_PILLS.map(({ status: s, label }) => {
               const active = entry.statusReceive === s;
               return (
                 <button
@@ -187,7 +186,7 @@ export default function KinkRow({
           <>
             <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
               <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↑</span>
-              {PILLS.map(({ status: s, label }) => {
+              {PREF_PILLS.map(({ status: s, label }) => {
                 const active = entry.statusGive === s;
                 return (
                   <button
@@ -202,9 +201,9 @@ export default function KinkRow({
                 );
               })}
             </div>
-            <div className="no-scrollbar flex items-center gap-1 px-3 pb-2.5 overflow-x-auto">
+            <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
               <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↓</span>
-              {PILLS.map(({ status: s, label }) => {
+              {PREF_PILLS.map(({ status: s, label }) => {
                 const active = entry.statusReceive === s;
                 return (
                   <button
@@ -221,6 +220,46 @@ export default function KinkRow({
             </div>
           </>
         )}
+
+        {/* Hard limit — separate row, visually distinct */}
+        {!compact && (() => {
+          const isGive    = entry.direction === "give";
+          const isReceive = entry.direction === "receive";
+          const isBoth    = entry.direction === "both";
+          const active =
+            isBoth    ? entry.statusGive === "hard_no" && entry.statusReceive === "hard_no" :
+            isGive    ? entry.statusGive    === "hard_no" :
+            isReceive ? entry.statusReceive === "hard_no" :
+            status === "hard_no";
+          const handleClick = () => {
+            if (isBoth) {
+              onStatusGiveChange?.(active ? null : "hard_no");
+              onStatusReceiveChange?.(active ? null : "hard_no");
+            } else if (isGive) {
+              onStatusGiveChange?.(active ? null : "hard_no");
+            } else if (isReceive) {
+              onStatusReceiveChange?.(active ? null : "hard_no");
+            } else {
+              onStatusChange(active ? null : "hard_no");
+            }
+          };
+          return (
+            <div className="px-3 pb-2.5 pt-0.5 border-t border-[var(--border)]">
+              <button
+                onClick={handleClick}
+                aria-pressed={active}
+                className={`focus-ring w-full rounded-lg border text-[12px] font-semibold py-1.5 transition-colors${active ? " status-hard_no" : ""}`}
+                style={!active ? {
+                  color: "var(--hard-no)",
+                  borderColor: "color-mix(in srgb, var(--hard-no) 30%, transparent)",
+                  background: "color-mix(in srgb, var(--hard-no) 6%, transparent)",
+                } : {}}
+              >
+                ✕✕ Harde grens
+              </button>
+            </div>
+          );
+        })()}
 
         {showComment && (
           <div className="px-3 pb-3 pt-1">
