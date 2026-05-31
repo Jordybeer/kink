@@ -244,7 +244,7 @@ export default function KinkRow({
             }
           };
           return (
-            <div className="px-3 pb-2.5 pt-0.5 border-t border-[var(--border)]">
+            <div data-tour="hard-no" className="px-3 pb-2.5 pt-0.5 border-t border-[var(--border)]">
               <button
                 onClick={handleClick}
                 aria-pressed={active}
@@ -262,7 +262,7 @@ export default function KinkRow({
         })()}
 
         {showComment && (
-          <div className="px-3 pb-3 pt-1">
+          <div data-tour="comment" className="px-3 pb-3 pt-1">
             <p className="text-[11px] uppercase tracking-wider mb-1 font-semibold" style={{ color: "var(--text2)" }}>
               Notitie
             </p>

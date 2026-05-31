@@ -18,10 +18,10 @@ const STEPS = [
     pad: 4,
   },
   {
-    selector: '[data-tour="comment"]',
-    title: "Notities & tags",
-    body: "Tap 💬 voor een grenstoelichting of opmerking. Verschijnt ook automatisch na het kiezen van een status.",
-    pad: 6,
+    selector: '[data-tour="hard-no"]',
+    title: "Harde grens",
+    body: "Staat apart van de rest — een harde grens is geen onderhandelingspositie.",
+    pad: 4,
   },
 ];
 
@@ -32,13 +32,21 @@ export default function ProfileTour({ onComplete }: Props) {
   const [rects, setRects] = useState<(TourRect | null)[]>([null, null, null]);
 
   useEffect(() => {
-    const measured = STEPS.map(s => {
-      const el = document.querySelector(s.selector);
-      if (!el) return null;
-      const r = el.getBoundingClientRect();
-      return { top: r.top, left: r.left, width: r.width, height: r.height };
-    });
-    setRects(measured);
+    let attempts = 0;
+    function measure() {
+      const measured = STEPS.map(s => {
+        const el = document.querySelector(s.selector);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { top: r.top, left: r.left, width: r.width, height: r.height };
+      });
+      if (measured.every(r => r !== null)) {
+        setRects(measured as TourRect[]);
+      } else if (attempts++ < 30) {
+        requestAnimationFrame(measure);
+      }
+    }
+    requestAnimationFrame(measure);
   }, []);
 
   const current = STEPS[step];

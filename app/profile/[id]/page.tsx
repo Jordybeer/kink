@@ -317,7 +317,7 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className="max-w-3xl mx-auto w-full pb-6">
-      {!profileTourComplete && <ProfileTour onComplete={completeProfileTour} />}
+      {!profileTourComplete && activeTab === "bewerken" && <ProfileTour onComplete={completeProfileTour} />}
 
       {errorMessage && (
         <div
