@@ -22,9 +22,9 @@ const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
 ];
 
 type Msg =
-  | { t: "e"; k: string; s: KinkStatus }
+  | { t: "a" }
   | { t: "p"; n: string; r: string }
-  | { t: "d" };
+  | { t: "d"; entries: Record<string, KinkStatus> };
 
 type Phase =
   | "choose"
@@ -55,6 +55,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const channelRef = useRef<RTCDataChannel | null>(null);
   const pollAbortRef = useRef<AbortController | null>(null);
   const applyAnswerRef = useRef<((sdp: string) => Promise<void>) | null>(null);
+  const partnerActiveTimerRef  = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const partnerShimmerTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const partnerActiveDebounceRef = useRef<number>(0);
+  const [partnerActive,  setPartnerActive]  = useState(false);
+  const [partnerShimmer, setPartnerShimmer] = useState(false);
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const revealCancelRef = useRef(false);
 
   const profile = profiles.find(p => p.id === profileId);
 
@@ -72,20 +79,28 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     return entries;
   }
 
-  function setupChannel(ch: RTCDataChannel, p: Profile, initial: Record<string, KinkStatus>) {
+  function setupChannel(ch: RTCDataChannel, p: Profile) {
     channelRef.current = ch;
     ch.onmessage = (e: MessageEvent) => {
       try {
         const msg = JSON.parse(e.data as string) as Msg;
         if (!msg || typeof msg !== "object" || typeof msg.t !== "string") return;
-        if (msg.t === "e") {
-          if (typeof msg.k !== "string" || (msg.s !== null && typeof msg.s !== "string")) return;
-          setRemote(r => ({ ...r, [msg.k]: msg.s }));
-        } else if (msg.t === "p") {
+        if (msg.t === "p") {
           if (typeof msg.n !== "string" || typeof msg.r !== "string") return;
           setRemoteProfile({ name: msg.n, role: msg.r });
         } else if (msg.t === "d") {
+          setRemote(msg.entries);
           setPartnerDone(true);
+        } else if (msg.t === "a") {
+          clearTimeout(partnerActiveTimerRef.current);
+          setPartnerActive(true);
+          partnerActiveTimerRef.current = setTimeout(() => setPartnerActive(false), 3000);
+          if (Date.now() - partnerActiveDebounceRef.current > 500) {
+            clearTimeout(partnerShimmerTimerRef.current);
+            setPartnerShimmer(true);
+            partnerActiveDebounceRef.current = Date.now();
+            partnerShimmerTimerRef.current = setTimeout(() => setPartnerShimmer(false), 620);
+          }
         }
       } catch (err) {
         console.error("Invalid message received:", err);
@@ -93,11 +108,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     };
     const onOpen = () => {
       setPhase("connected");
-      const ch2 = channelRef.current!;
-      ch2.send(JSON.stringify({ t: "p", n: p.name, r: p.role } as Msg));
-      for (const [k, s] of Object.entries(initial)) {
-        if (s) ch2.send(JSON.stringify({ t: "e", k, s } as Msg));
-      }
+      channelRef.current!.send(JSON.stringify({ t: "p", n: p.name, r: p.role } as Msg));
     };
     if (ch.readyState === "open") onOpen();
     else ch.onopen = onOpen;
@@ -121,7 +132,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   async function handleStartHost() {
     if (!profile) return;
-    const initial = initLocal(profile);
+    initLocal(profile);
     const newCode = genCode();
     setCode(newCode);
     setPhase("host_gathering");
@@ -129,10 +140,23 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     try {
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       pcRef.current = pc;
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          setError("Verbinding verloren — probeer opnieuw.");
+          setPhase("host_idle");
+          pollAbortRef.current?.abort();
+          pc.close();
+        }
+      };
       const ch = pc.createDataChannel("kink", { ordered: true });
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      await waitForIceGathering(pc);
+      await Promise.race([
+        waitForIceGathering(pc),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
+        ),
+      ]);
       await postOffer(newCode, pc.localDescription!.sdp);
       // QR encodes KINKSYNC:<CODE> — no URL, no shareable link
       const qr = await QRCode.toDataURL(`KINKSYNC:${newCode}`, {
@@ -140,20 +164,20 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         color: { dark: "#c084fc", light: "#0a0a0f" },
       });
       setCodeQr(qr);
-      setupChannel(ch, profile, initial);
+      setupChannel(ch, profile);
       setPhase("host_waiting");
       const ac = new AbortController();
       pollAbortRef.current = ac;
       pollAnswer(newCode, (sdp) => applyAnswerRef.current?.(sdp), ac.signal);
     } catch (err) {
-      setError(String(err));
+      setError((err as Error).message ?? String(err));
       setPhase("host_idle");
     }
   }
 
   async function handleStartGuest() {
     if (!profile || codeInput.length !== 6) return;
-    const initial = initLocal(profile);
+    initLocal(profile);
     setPhase("guest_gathering");
     setError("");
     try {
@@ -161,29 +185,42 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       pcRef.current = pc;
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          setError("Verbinding verloren — probeer opnieuw.");
+          setPhase("guest_idle");
+          pollAbortRef.current?.abort();
+          pc.close();
+        }
+      };
       let channelResolve!: (ch: RTCDataChannel) => void;
       const channelPromise = new Promise<RTCDataChannel>(res => { channelResolve = res; });
       pc.ondatachannel = (e) => channelResolve(e.channel);
       await pc.setRemoteDescription({ type: "offer", sdp: offerSdp });
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-      await waitForIceGathering(pc);
+      await Promise.race([
+        waitForIceGathering(pc),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
+        ),
+      ]);
       await postAnswer(codeInput, pc.localDescription!.sdp);
       const ch = await channelPromise;
-      setupChannel(ch, profile, initial);
+      setupChannel(ch, profile);
     } catch (err) {
-      setError(String(err));
+      setError((err as Error).message ?? String(err));
       setPhase("guest_idle");
     }
   }
 
   function handleStatusChange(kinkId: string, s: KinkStatus) {
     setLocal(l => ({ ...l, [kinkId]: s }));
-    send({ t: "e", k: kinkId, s });
+    send({ t: "a" });
   }
 
   function handleDone() {
-    send({ t: "d" });
+    send({ t: "d", entries: local });
     setPhase("done_local");
   }
 
@@ -210,8 +247,61 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   useEffect(() => () => {
     pcRef.current?.close();
     pollAbortRef.current?.abort();
+    clearTimeout(partnerActiveTimerRef.current);
+    clearTimeout(partnerShimmerTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (phase !== "revealed" || Object.keys(remote).length === 0) return;
+    revealCancelRef.current = false;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const allIds = Object.keys(remote);
+    const matchIds = allIds.filter(
+      id => ["yes", "willing"].includes(local[id] as string) && ["yes", "willing"].includes(remote[id] as string)
+    );
+    const nonMatchIds = allIds.filter(id => !matchIds.includes(id));
+    const ordered = [...nonMatchIds, ...matchIds];
+    if (reducedMotion) {
+      setRevealedIds(new Set(ordered));
+      return;
+    }
+    const delayPerItem = Math.min(40, 2500 / Math.max(ordered.length, 1));
+    let startTime: number | null = null;
+    let lastIndex = -1;
+    let frame: number = 0;
+    const matchTimeouts: ReturnType<typeof setTimeout>[] = [];
+    const step = (timestamp: number) => {
+      if (revealCancelRef.current) return;
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const nextIndex = Math.min(Math.floor(elapsed / delayPerItem), ordered.length);
+      if (nextIndex > lastIndex) {
+        lastIndex = nextIndex;
+        setRevealedIds(new Set(ordered.slice(0, nextIndex)));
+      }
+      if (nextIndex < ordered.length) {
+        frame = requestAnimationFrame(step);
+      } else {
+        matchIds.forEach((id, i) => {
+          const delay = delayPerItem * (nonMatchIds.length + i) + 50;
+          const tid = setTimeout(() => {
+            if (revealCancelRef.current) return;
+            document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => {
+              el.classList.add("match-pulse");
+            });
+          }, delay);
+          matchTimeouts.push(tid);
+        });
+      }
+    };
+    frame = requestAnimationFrame(step);
+    return () => {
+      revealCancelRef.current = true;
+      cancelAnimationFrame(frame);
+      matchTimeouts.forEach(clearTimeout);
+    };
+  }, [phase, remote, local]);
 
   if (!_hasHydrated) return null;
 
@@ -376,6 +466,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               <div className="text-[10px] mt-0.5 truncate" style={{ color: "var(--text2)" }}>
                 {profile?.role}{remoteProfile ? ` · ${remoteProfile.role}` : ""}
               </div>
+              {partnerActive && (
+                <div className="text-[10px] mt-0.5 animate-pulse" style={{ color: "var(--accent)" }}>
+                  Partner is aan het invullen…
+                </div>
+              )}
             </div>
             <div className="w-2 h-2 rounded-full flex-none animate-pulse" style={{ background: "var(--yes)" }} />
             <span className="text-[10px] font-medium flex-none" style={{ color: "var(--yes)" }}>Live</span>
@@ -409,7 +504,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                             <div className="flex items-center gap-2 mb-1.5">
                               <span className="text-sm font-medium flex-1 leading-snug">{kink.name}</span>
                               {theirStatus && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded border flex-none"
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded border flex-none partner-hidden${partnerShimmer ? " partner-shimmer" : ""}`}
                                   style={{ color: STATUS_COLOR[theirStatus], borderColor: `color-mix(in srgb, ${STATUS_COLOR[theirStatus]} 35%, transparent)`, background: `color-mix(in srgb, ${STATUS_COLOR[theirStatus]} 15%, transparent)` }}>
                                   {STATUS_LABEL[theirStatus]}
                                 </span>
@@ -471,8 +566,10 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               </p>
               {matched.map(id => {
                 const kink = KINKS.find(k => k.id === id);
+                const revealed = revealedIds.has(id);
                 return kink ? (
-                  <div key={id} className="match-pulse rounded-xl px-3 py-2.5 mb-1.5 flex items-center gap-2"
+                  <div key={id} data-kink-id={id}
+                    className={`rounded-xl px-3 py-2.5 mb-1.5 flex items-center gap-2${revealed ? " partner-reveal" : ` partner-hidden${partnerShimmer ? " partner-shimmer" : ""}`}`}
                     style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
                     <span className="text-sm font-medium flex-1">{kink.name}</span>
                     <span className="text-[10px] font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
