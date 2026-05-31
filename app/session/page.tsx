@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, Profile } from "@/types";
-import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, ICE_SERVERS } from "@/lib/webrtc";
+import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, fetchIceServers } from "@/lib/webrtc";
 
 const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
   yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)",
@@ -62,8 +62,10 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const [partnerShimmer, setPartnerShimmer] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const revealCancelRef = useRef(false);
+  const [showZeroState, setShowZeroState] = useState(false);
 
   const profile = profiles.find(p => p.id === profileId);
+  const partnerName = remoteProfile?.name ?? "partner";
 
   function send(msg: Msg) {
     const ch = channelRef.current;
@@ -132,13 +134,16 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   async function handleStartHost() {
     if (!profile) return;
+    setRevealedIds(new Set());
+    setShowZeroState(false);
     initLocal(profile);
     const newCode = genCode();
     setCode(newCode);
     setPhase("host_gathering");
     setError("");
     try {
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      const iceServers = await fetchIceServers();
+      const pc = new RTCPeerConnection({ iceServers });
       pcRef.current = pc;
       pc.oniceconnectionstatechange = () => {
         if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
@@ -177,13 +182,15 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   async function handleStartGuest() {
     if (!profile || codeInput.length !== 6) return;
+    setRevealedIds(new Set());
+    setShowZeroState(false);
     initLocal(profile);
     setPhase("guest_gathering");
     setError("");
     try {
-      const offerSdp = await getOffer(codeInput);
+      const [offerSdp, iceServers] = await Promise.all([getOffer(codeInput), fetchIceServers()]);
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      const pc = new RTCPeerConnection({ iceServers });
       pcRef.current = pc;
       pc.oniceconnectionstatechange = () => {
         if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
@@ -258,48 +265,83 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const allIds = Object.keys(remote);
     const matchIds = allIds.filter(
-      id => ["yes", "willing"].includes(local[id] as string) && ["yes", "willing"].includes(remote[id] as string)
+      id => ["yes","willing"].includes(local[id] as string) && ["yes","willing"].includes(remote[id] as string)
     );
     const nonMatchIds = allIds.filter(id => !matchIds.includes(id));
-    const ordered = [...nonMatchIds, ...matchIds];
+
     if (reducedMotion) {
-      setRevealedIds(new Set(ordered));
+      setRevealedIds(new Set(allIds));
+      if (matchIds.length === 0) setShowZeroState(true);
       return;
     }
-    const delayPerItem = Math.min(40, 2500 / Math.max(ordered.length, 1));
-    let startTime: number | null = null;
-    let lastIndex = -1;
-    let frame: number = 0;
-    const matchTimeouts: ReturnType<typeof setTimeout>[] = [];
-    const step = (timestamp: number) => {
-      if (revealCancelRef.current) return;
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const nextIndex = Math.min(Math.floor(elapsed / delayPerItem), ordered.length);
-      if (nextIndex > lastIndex) {
-        lastIndex = nextIndex;
-        setRevealedIds(new Set(ordered.slice(0, nextIndex)));
-      }
-      if (nextIndex < ordered.length) {
-        frame = requestAnimationFrame(step);
-      } else {
-        matchIds.forEach((id, i) => {
-          const delay = delayPerItem * (nonMatchIds.length + i) + 50;
+
+    const categoryMap = new Map<string, string[]>();
+    for (const id of nonMatchIds) {
+      const cat = KINKS.find(k => k.id === id)?.category ?? "overig";
+      if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+      categoryMap.get(cat)!.push(id);
+    }
+    const groups: { ids: string[]; isMatchGroup: boolean }[] = [
+      ...[...categoryMap.entries()].map(([, ids]) => ({ ids, isMatchGroup: false })),
+      ...(matchIds.length > 0 ? [{ ids: matchIds, isMatchGroup: true }] : []),
+    ];
+
+    const pausePerGroup = Math.min(300, 2500 / Math.max(groups.length, 1));
+    const allTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+    (async () => {
+      for (const [groupIndex, { ids, isMatchGroup }] of groups.entries()) {
+        if (revealCancelRef.current) return;
+
+        const groupRevealDelay = ids.length * 30;
+        await new Promise<void>(r => {
           const tid = setTimeout(() => {
             if (revealCancelRef.current) return;
-            document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => {
-              el.classList.add("match-pulse");
-            });
-          }, delay);
-          matchTimeouts.push(tid);
+            setRevealedIds(prev => new Set([...prev, ...ids]));
+            r();
+          }, groupRevealDelay);
+          allTimeouts.push(tid);
         });
+
+        if (!isMatchGroup) {
+          const cat = KINKS.find(k => k.id === ids[0])?.category;
+          if (cat) {
+            document.querySelector(`[data-category="${cat}"]`)
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+
+        if (isMatchGroup) {
+          ids.forEach((id, i) => {
+            const tid = setTimeout(() => {
+              if (revealCancelRef.current) return;
+              document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => {
+                el.classList.add("match-pulse");
+              });
+            }, i * 30 + 50);
+            allTimeouts.push(tid);
+          });
+        }
+
+        if (groupIndex < groups.length - 1) {
+          await new Promise<void>(r => {
+            const tid = setTimeout(r, pausePerGroup);
+            allTimeouts.push(tid);
+          });
+        }
       }
-    };
-    frame = requestAnimationFrame(step);
+
+      if (matchIds.length === 0) {
+        const tid = setTimeout(() => {
+          if (!revealCancelRef.current) setShowZeroState(true);
+        }, 600);
+        allTimeouts.push(tid);
+      }
+    })().catch(console.error);
+
     return () => {
       revealCancelRef.current = true;
-      cancelAnimationFrame(frame);
-      matchTimeouts.forEach(clearTimeout);
+      allTimeouts.forEach(clearTimeout);
     };
   }, [phase, remote, local]);
 
@@ -422,7 +464,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             <img src={codeQr} width={200} height={200} alt="Sessie QR" className="mx-auto rounded-xl mb-5" />
           )}
           <p className="text-xs mb-5 animate-pulse" style={{ color: "var(--text2)" }}>Wacht op partner…</p>
-          <button onClick={() => { pollAbortRef.current?.abort(); setPhase("choose"); }}
+          <button onClick={() => { pollAbortRef.current?.abort(); setPhase("host_idle"); setRevealedIds(new Set()); setShowZeroState(false); }}
             className="focus-ring w-full py-2.5 rounded-xl text-sm border transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
             Annuleer
@@ -454,23 +496,18 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
       {phase === "guest_gathering" && spinner("Antwoord voorbereiden…")}
 
-      {(phase === "connected" || phase === "done_local") && (
+      {phase === "connected" && (
         <div>
           <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate">
                 <span style={{ color: "var(--accent)" }}>{profile?.name}</span>
                 <span style={{ color: "var(--text2)" }}> vs </span>
-                <span style={{ color: "var(--accent)" }}>{remoteProfile?.name ?? "partner"}</span>
+                <span style={{ color: "var(--text)" }}>{partnerName}</span><span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
               </div>
               <div className="text-[10px] mt-0.5 truncate" style={{ color: "var(--text2)" }}>
                 {profile?.role}{remoteProfile ? ` · ${remoteProfile.role}` : ""}
               </div>
-              {partnerActive && (
-                <div className="text-[10px] mt-0.5 animate-pulse" style={{ color: "var(--accent)" }}>
-                  Partner is aan het invullen…
-                </div>
-              )}
             </div>
             <div className="w-2 h-2 rounded-full flex-none animate-pulse" style={{ background: "var(--yes)" }} />
             <span className="text-[10px] font-medium flex-none" style={{ color: "var(--yes)" }}>Live</span>
@@ -532,19 +569,29 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             })}
           </div>
 
-          {phase === "connected" ? (
-            <div className="fixed bottom-0 left-0 right-0 p-4" style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}>
-              <button onClick={handleDone}
-                className="focus-ring w-full max-w-lg mx-auto block py-3 rounded-xl text-sm font-bold"
-                style={{ background: "var(--surface)", border: "2px solid var(--accent)", color: "var(--accent)" }}>
-                🔒 Sluit af &amp; onthul matches
-              </button>
-            </div>
-          ) : (
-            <div className="fixed bottom-0 left-0 right-0 p-4 text-center" style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}>
-              <p className="text-sm animate-pulse" style={{ color: "var(--text2)" }}>Wacht op partner…</p>
-            </div>
-          )}
+          <div className="fixed bottom-0 left-0 right-0 p-4" style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}>
+            <button onClick={handleDone}
+              className="focus-ring w-full max-w-lg mx-auto block py-3 rounded-xl text-sm font-bold"
+              style={{ background: "var(--surface)", border: "2px solid var(--accent)", color: "var(--accent)" }}>
+              🔒 Sluit af &amp; onthul matches
+            </button>
+          </div>
+        </div>
+      )}
+
+      {phase === "done_local" && !partnerDone && (
+        <div className="ks-fade-in flex flex-col items-center justify-center gap-4 text-center" style={{ minHeight: "60vh" }}>
+          <div className="ks-icon-pop animate-pulse text-4xl">🔒</div>
+          <div className="text-base" style={{ color: "var(--text)" }}>
+            <span>{partnerName}</span>
+            <span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
+          </div>
+          <div className="ks-dot-pulse flex gap-1">
+            <span /><span /><span />
+          </div>
+          <p className="text-sm" style={{ color: "var(--text2)", maxWidth: "36ch" }}>
+            Zodra je partner klaar is, worden jullie antwoorden onthuld.
+          </p>
         </div>
       )}
 
@@ -555,27 +602,65 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             <h2 className="text-3xl font-bold mb-1">{matchCount} matches</h2>
             <p className="text-sm" style={{ color: "var(--text2)" }}>
               {hardCount > 0 && `${hardCount} harde grens${hardCount !== 1 ? "en" : ""} · `}
-              {profile?.name} &amp; {remoteProfile?.name ?? "partner"}
+              {profile?.name} &amp; <span style={{ color: "var(--text)" }}>{partnerName}</span><span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
             </p>
           </div>
 
-          {matched.length > 0 && (
-            <div className="mb-6">
-              <p className="text-[10px] uppercase tracking-widest font-bold mb-2 px-1" style={{ color: "var(--accent)" }}>
-                Jullie gedeeld verlangen
+          {CATEGORIES.map(cat => {
+            const kinks = getKinksByCategory(cat).filter(k => remote[k.id]);
+            if (kinks.length === 0) return null;
+            return (
+              <div key={cat} className="mb-4">
+                <div
+                  data-category={cat}
+                  className="text-[10px] uppercase tracking-widest font-bold mb-2 px-1"
+                  style={{ color: "var(--accent)" }}
+                >
+                  {cat}
+                </div>
+                {kinks.map((kink, index) => {
+                  const revealed = revealedIds.has(kink.id);
+                  const isMatchKink = matched.includes(kink.id);
+                  return (
+                    <div
+                      key={kink.id}
+                      data-kink-id={kink.id}
+                      className={`rounded-xl px-3 py-2.5 mb-1.5 flex items-center gap-2${revealed ? " partner-reveal" : " partner-hidden"}`}
+                      style={{
+                        background: "var(--surface)",
+                        border: `1px solid ${isMatchKink ? "var(--yes)" : "var(--border)"}`,
+                        ...(revealed ? { animationDelay: `${index * 30}ms` } : {}),
+                      }}
+                    >
+                      <span className="text-sm font-medium flex-1">{kink.name}</span>
+                      {isMatchKink ? (
+                        <span className="text-[10px] font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
+                      ) : (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded border flex-none"
+                          style={{
+                            color: STATUS_COLOR[remote[kink.id]!],
+                            borderColor: `color-mix(in srgb, ${STATUS_COLOR[remote[kink.id]!]} 35%, transparent)`,
+                            background: `color-mix(in srgb, ${STATUS_COLOR[remote[kink.id]!]} 15%, transparent)`,
+                          }}
+                        >
+                          {STATUS_LABEL[remote[kink.id]!]}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {showZeroState && (
+            <div className="ks-fade-in text-center my-6 p-8 rounded-xl" style={{ background: "var(--surface)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+              <div className="ks-icon-pop text-4xl mb-3">🖤</div>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Geen matches — en dat is oké.</h3>
+              <p className="text-sm mx-auto" style={{ color: "var(--text2)", maxWidth: "36ch" }}>
+                Jullie lijsten overlappen niet, maar eerlijkheid is het begin van alles.
               </p>
-              {matched.map(id => {
-                const kink = KINKS.find(k => k.id === id);
-                const revealed = revealedIds.has(id);
-                return kink ? (
-                  <div key={id} data-kink-id={id}
-                    className={`rounded-xl px-3 py-2.5 mb-1.5 flex items-center gap-2${revealed ? " partner-reveal" : ` partner-hidden${partnerShimmer ? " partner-shimmer" : ""}`}`}
-                    style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-                    <span className="text-sm font-medium flex-1">{kink.name}</span>
-                    <span className="text-[10px] font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
-                  </div>
-                ) : null;
-              })}
             </div>
           )}
 
