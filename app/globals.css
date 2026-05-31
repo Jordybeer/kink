@@ -13,7 +13,7 @@
   --accent2: #f472b6;
   --accent-glow: rgba(192, 132, 252, 0.15);
   --yes: #4ade80;
-  --willing: #60a5fa;
+  --willing: #e879f9;
   --maybe: #fbbf24;
   --no: #fb923c;
   --hard-no: #ef4444;
@@ -34,10 +34,10 @@ html, body {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 .status-yes     { background: color-mix(in srgb, var(--yes) 15%, transparent);     color: var(--yes);     border-color: color-mix(in srgb, var(--yes) 35%, transparent); }
-.status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: color-mix(in srgb, var(--willing) 35%, transparent); }
+.status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: color-mix(in srgb, var(--willing) 35%, transparent); animation: ks-glow-willing 1.4s ease-in-out infinite; }
 .status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: color-mix(in srgb, var(--maybe) 35%, transparent); }
 .status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: color-mix(in srgb, var(--no) 35%, transparent); }
-.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: color-mix(in srgb, var(--hard-no) 35%, transparent); }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: color-mix(in srgb, var(--hard-no) 35%, transparent); animation: ks-glow-hard-no 1.4s ease-in-out infinite; }
 
 .focus-ring:focus-visible {
   outline: none;
@@ -171,7 +171,7 @@ select {
 
 /* Per-status sustained glow — one pulse per 1.8s, color-matched */
 @keyframes ks-glow-yes     { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0);  } 50% { box-shadow: 0 0 8px 2px rgba(74,222,128,0.25);  } }
-@keyframes ks-glow-willing { 0%,100% { box-shadow: 0 0 0 0 rgba(96,165,250,0);  } 50% { box-shadow: 0 0 8px 2px rgba(96,165,250,0.2);   } }
+@keyframes ks-glow-willing { 0%,100% { box-shadow: 0 0 0 0 rgba(232,121,249,0);  } 50% { box-shadow: 0 0 8px 2px rgba(232,121,249,0.3);   } }
 @keyframes ks-glow-maybe   { 0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0);  } 50% { box-shadow: 0 0 8px 2px rgba(251,191,36,0.2);   } }
 @keyframes ks-glow-no      { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0);  } 50% { box-shadow: 0 0 8px 2px rgba(251,146,60,0.2);   } }
 @keyframes ks-glow-hard-no { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);   } 50% { box-shadow: 0 0 8px 2px rgba(239,68,68,0.25);  } }
@@ -196,7 +196,9 @@ select {
   .ks-glow-willing,
   .ks-glow-maybe,
   .ks-glow-no,
-  .ks-glow-hard-no {
+  .ks-glow-hard-no,
+  .status-willing,
+  .status-hard_no {
     animation: none;
   }
 }

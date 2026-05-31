@@ -9,9 +9,9 @@ import { isKinkMatch, isHardLimit, isConflict } from "@/lib/matching";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "✓ Heel graag",
-  willing: "↗ Interesse",
-  maybe:   "♡ Voor hen",
-  no:      "✕ Liever niet",
+  willing: "↗ Ja",
+  maybe:   "♡ Misschien",
+  no:      "↘ Voor hen",
   hard_no: "✕✕ Harde grens",
 };
 

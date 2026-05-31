@@ -13,11 +13,11 @@ const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
   no: "var(--no)", hard_no: "var(--hard-no)",
 };
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Ja", willing: "Graag", maybe: "Misschien", no: "Nee", hard_no: "Harde grens",
+  yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
 };
 const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
-  { s: "willing", label: "Graag" }, { s: "yes", label: "Ja" },
-  { s: "maybe", label: "Misschien" }, { s: "no", label: "Nee" },
+  { s: "yes", label: "Heel graag" }, { s: "willing", label: "Ja" },
+  { s: "maybe", label: "Misschien" }, { s: "no", label: "Voor hen" },
   { s: "hard_no", label: "Harde grens" },
 ];
 

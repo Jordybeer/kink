@@ -309,10 +309,10 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
               ))}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-              {(["willing", "yes", "maybe", "no", "hard_no"] as const).map((s) => (
+              {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => (
                 <span key={s} className="text-[10px] flex items-center gap-1" style={{ color: "var(--text2)" }}>
                   <span className="w-1.5 h-1.5 rounded-full flex-none inline-block" style={{ background: DNA_COLORS[s] }} />
-                  {s === "willing" ? "Graag" : s === "yes" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Nee" : "Grens"}
+                  {s === "yes" ? "Heel graag" : s === "willing" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Voor hen" : "Harde grens"}
                 </span>
               ))}
             </div>
