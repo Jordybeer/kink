@@ -1,5 +1,10 @@
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
+  {
+    urls: "turn:turn.cloudflare.com:3478",
+    username: process.env.NEXT_PUBLIC_TURN_USER!,
+    credential: process.env.NEXT_PUBLIC_TURN_PASS!,
+  },
 ];
 
 export function encodeSdp(sdp: string): string {
