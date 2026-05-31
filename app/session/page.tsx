@@ -416,9 +416,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
       {phase === "choose" && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>
-            Verbind live met je partner — jullie kinks worden direct vergeleken zonder dat ze worden opgeslagen.
-          </p>
+          <div
+            className="rounded-xl px-4 py-3 text-xs leading-relaxed"
+            style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+          >
+            <span className="font-semibold" style={{ color: "var(--text)" }}>🔒 End-to-end versleuteld — </span>
+            ook wij kunnen niet meelezen. Je toestel regelt via onze server een verbinding met dat van je partner; daarna gaat alles direct tussen jullie twee. Je kinks en naam verlaten je toestel nooit.
+          </div>
           <button
             onClick={() => setPhase("host_idle")}
             className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90"

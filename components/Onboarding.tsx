@@ -162,10 +162,16 @@ function Step1({ onNext }: { onNext: () => void }) {
         <span style={{ fontSize: '2.25rem' }}>🔒</span>
       </div>
       <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        Geen account, geen server, geen tracking.<br />
-        Alles blijft in jouw browser — live sessies reizen direct van apparaat naar apparaat.
-      </p>
+      <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>De app</div>
+          Geen account, geen server, geen tracking. Alles staat in je browser en nergens anders.
+        </div>
+        <div style={{ background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>Live sessie</div>
+          End-to-end versleuteld — ook wij kunnen niet meelezen. De verbinding loopt eerst via onze server, daarna gaat alles direct tussen jullie twee. Je kinks en naam verlaten je toestel nooit.
+        </div>
+      </div>
       <NextButton onClick={onNext} />
     </div>
   );
@@ -179,10 +185,10 @@ function Step2({ onNext }: { onNext: () => void }) {
       <div style={ICON_CIRCLE} aria-hidden="true">
         <span style={{ fontSize: '2.25rem' }}>💾</span>
       </div>
-      <h2 style={TITLE}>Maak regelmatig een back-up</h2>
+      <h2 style={TITLE}>Jij bent je eigen cloud</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
-        Geen cloud-sync — jij bewaart je data.<br />
-        Exporteer via <strong style={{ color: 'rgba(255,255,255,0.7)' }}>⚙ Instellingen</strong> als JSON en herstel het later.
+        Geen automatische sync — jij bewaart je data.<br />
+        Exporteer je profiel via <strong style={{ color: 'rgba(255,255,255,0.7)' }}>⚙ Instellingen</strong> en bewaar het bestand veilig.
       </p>
       <NextButton onClick={onNext} />
     </div>
@@ -194,9 +200,9 @@ function Step2({ onNext }: { onNext: () => void }) {
 const FEATURE_ROWS: { icon: string; title: string; sub: string }[] = [
   { icon: '👤', title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
   { icon: '🏷',  title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
-  { icon: '⚡',  title: 'Vergelijken',    sub: 'Heatmap + compatibiliteitsscore' },
-  { icon: '📡',  title: 'Live sessie',    sub: 'Peer-to-peer QR — zelfde WiFi, geen server' },
-  { icon: '🎬',  title: 'Scène planner', sub: 'Activiteiten, intensiteit en timing plannen' },
+  { icon: '⚡',  title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
+  { icon: '📡',  title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
+  { icon: '🎬',  title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
   { icon: '✍',  title: 'Contract',       sub: 'Safeword, aftercare, handtekening → PDF' },
 ];
 
@@ -304,7 +310,7 @@ function Step6({ onComplete, onLockout }: { onComplete: () => void; onLockout: (
       </div>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#fff', marginBottom: '1rem' }}>Voor volwassenen</h2>
       <p style={{ ...BODY, animation: 'ks-slide-up 0.4s ease 0.15s both' }}>
-        KinkSync bevat inhoud voor volwassenen over seksuele grenzen en consent.
+        Hier praten we open over kinks, grenzen en alles daartussen.
         Ga alleen verder als je 18 jaar of ouder bent.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
