@@ -1,7 +1,5 @@
-import Redis from "ioredis";
+import { kv } from "@vercel/kv";
 import { NextRequest } from "next/server";
-
-const kv = new Redis(process.env.REDIS_URL!);
 
 const VALID_CODE = /^[A-Z2-9]{6}$/;
 const VALID_TYPE = ["offer", "answer"];
@@ -39,7 +37,7 @@ export async function POST(
     return Response.json({ error: "bad request" }, { status: 400 });
   }
   try {
-    await kv.set(`${code}:${type}`, sdp, "EX", TTL);
+    await kv.set(`${code}:${type}`, sdp, { ex: TTL });
     return Response.json({ ok: true });
   } catch (err) {
     console.error("KV SET error:", err);
