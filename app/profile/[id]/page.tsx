@@ -3,6 +3,7 @@ import { use, useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
+import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import CategorySection from "@/components/CategorySection";
 import KinkRow from "@/components/KinkRow";
 import Sheet from "@/components/Sheet";
@@ -22,26 +23,6 @@ const STATUS_LABELS: Record<NonNullable<KinkStatus>, string> = {
   willing: "Graag", yes: "Ja", maybe: "Misschien", no: "Nee", hard_no: "Harde grens",
 };
 
-const ROLE_GROUPS: { label: string; roles: string[] }[] = [
-  { label: "D/s dynamiek",   roles: ["Switch", "Dominant", "Submissive"] },
-  { label: "Zorgzame D/s",   roles: ["Daddy Dom", "Mommy Dom", "little", "Middle", "Caregiver"] },
-  { label: "Impact & touw",  roles: ["Top", "Bottom", "Sadist", "Masochist", "Rigger", "Rope Bunny"] },
-  { label: "Karakter",       roles: ["Brat", "Brat Tamer", "Primal Hunter", "Primal Prey"] },
-  { label: "Dier & spel",    roles: ["Handler/Owner", "Pet"] },
-  { label: "Overig",         roles: ["Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)"] },
-];
-
-const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[] = [
-  { value: "beginner",  label: "Beginner",  sub: "kort" },
-  { value: "gevorderd", label: "Gevorderd", sub: "normaal" },
-  { value: "ervaren",   label: "Ervaren",   sub: "lang" },
-  { value: "diepgaand", label: "Diepgaand", sub: "alles" },
-];
-
-const RELATIONSHIP_STATUSES = [
-  "Single", "Taken", "Getrouwd", "Gecollared",
-  "Polyamoreus", "Open relatie", "Geowned", "Het is ingewikkeld",
-];
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -58,7 +39,7 @@ export default function ProfilePage({ params }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
-  const [hideComments] = useState(true);
+  const hideComments = true;
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -332,6 +313,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const customKinks = profile.customKinks ?? [];
+  const ratedCustomKinks = customKinks.filter((ck) => profile.entries[ck.id]?.status);
 
   return (
     <main className="max-w-3xl mx-auto w-full pb-6">
@@ -676,13 +658,13 @@ export default function ProfilePage({ params }: Props) {
                 );
               })}
 
-              {customKinks.filter((ck) => profile.entries[ck.id]?.status).length > 0 && (
+              {ratedCustomKinks.length > 0 && (
                 <div className="mb-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 px-0.5" style={{ color: "var(--text2)" }}>
                     Meer
                   </p>
                   <div className="flex flex-col gap-1.5">
-                    {customKinks.filter((ck) => profile.entries[ck.id]?.status).map((ck) => {
+                    {ratedCustomKinks.map((ck) => {
                       const s = profile.entries[ck.id].status!;
                       return (
                         <div

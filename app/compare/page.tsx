@@ -59,7 +59,7 @@ function catAbbrev(cat: string): string {
 function categoryPillStyle(rate: number | null): { background: string; borderColor: string } {
   if (rate === null) return { background: "var(--border)", borderColor: "var(--border)" };
   if (rate === 0)    return { background: "color-mix(in srgb, var(--hard-no) 20%, transparent)", borderColor: "color-mix(in srgb, var(--hard-no) 50%, transparent)" };
-  if (rate < 0.4)   return { background: "color-mix(in srgb, #f59e0b 20%, transparent)", borderColor: "color-mix(in srgb, #f59e0b 50%, transparent)" };
+  if (rate < 0.4)   return { background: "color-mix(in srgb, var(--conflict) 20%, transparent)", borderColor: "color-mix(in srgb, var(--conflict) 50%, transparent)" };
   if (rate < 0.7)   return { background: "color-mix(in srgb, #3b82f6 20%, transparent)", borderColor: "color-mix(in srgb, #3b82f6 50%, transparent)" };
   return { background: "color-mix(in srgb, var(--yes) 20%, transparent)", borderColor: "color-mix(in srgb, var(--yes) 50%, transparent)" };
 }
@@ -565,7 +565,7 @@ function ComparePage() {
                               style={{
                                 background: "var(--surface)",
                                 border: "1px solid var(--border)",
-                                borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : conflict ? "4px solid #f59e0b" : "4px solid transparent",
+                                borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : conflict ? "4px solid var(--conflict)" : "4px solid transparent",
                                 animationDelay: pulsed && matched ? matchDelay : "0ms",
                               }}
                             >
@@ -689,7 +689,7 @@ function ComparePage() {
                             style={{
                               background: "var(--surface)",
                               border: "1px solid var(--border)",
-                              borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : conflict ? "4px solid #f59e0b" : "4px solid transparent",
+                              borderLeft: hardLimit ? "4px solid var(--hard-no)" : matched ? "4px solid var(--yes)" : conflict ? "4px solid var(--conflict)" : "4px solid transparent",
                               animationDelay: pulsed && matched ? matchDelay : "0ms",
                             }}
                           >
