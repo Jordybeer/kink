@@ -1,11 +1,15 @@
-export const ICE_SERVERS: RTCIceServer[] = [
-  { urls: "stun:stun.l.google.com:19302" },
-  {
-    urls: "turn:turn.cloudflare.com:3478",
-    username: process.env.NEXT_PUBLIC_TURN_USER!,
-    credential: process.env.NEXT_PUBLIC_TURN_PASS!,
-  },
-];
+const STUN_ONLY: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
+
+export async function fetchIceServers(): Promise<RTCIceServer[]> {
+  try {
+    const r = await fetch("/api/turn", { method: "POST" });
+    if (!r.ok) return STUN_ONLY;
+    const data = await r.json() as { iceServers?: RTCIceServer[] };
+    return data.iceServers ?? STUN_ONLY;
+  } catch {
+    return STUN_ONLY;
+  }
+}
 
 export function encodeSdp(sdp: string): string {
   return btoa(unescape(encodeURIComponent(sdp)));

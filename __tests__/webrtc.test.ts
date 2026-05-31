@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { encodeSdp, decodeSdp, waitForIceGathering, ICE_SERVERS } from "@/lib/webrtc";
+import { encodeSdp, decodeSdp, waitForIceGathering, fetchIceServers } from "@/lib/webrtc";
 
 // ---------------------------------------------------------------------------
 // encodeSdp / decodeSdp
@@ -17,15 +17,36 @@ describe("encodeSdp / decodeSdp", () => {
 });
 
 // ---------------------------------------------------------------------------
-// ICE_SERVERS
+// fetchIceServers
 // ---------------------------------------------------------------------------
-describe("ICE_SERVERS", () => {
-  it("contains at least one STUN URL", () => {
-    const hasStun = ICE_SERVERS.some((s) => {
+describe("fetchIceServers", () => {
+  it("falls back to STUN-only when fetch fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+    const servers = await fetchIceServers();
+    const hasStun = servers.some((s) => {
       const urls = Array.isArray(s.urls) ? s.urls : [s.urls];
       return urls.some((u) => u.startsWith("stun:"));
     });
     expect(hasStun).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("falls back to STUN-only when response is not ok", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+    const servers = await fetchIceServers();
+    expect(servers).toHaveLength(1);
+    vi.unstubAllGlobals();
+  });
+
+  it("returns iceServers from a successful response", async () => {
+    const mockServers = [{ urls: "turn:example.com:3478", username: "u", credential: "p" }];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: mockServers }),
+    }));
+    const servers = await fetchIceServers();
+    expect(servers).toEqual(mockServers);
+    vi.unstubAllGlobals();
   });
 });
 
