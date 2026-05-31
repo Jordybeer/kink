@@ -29,7 +29,7 @@ function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 
     const ctx = canvas.getContext("2d")!;
     ctx.scale(dpr, dpr);
-    ctx.strokeStyle = "#c084fc";
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c084fc";
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -73,10 +73,10 @@ const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tij
 type SignalKey = "green" | "yellow" | "red" | "black";
 type Signals = Record<SignalKey, string>;
 const SIGNAL_LEVELS: { key: SignalKey; color: string; meaning: string }[] = [
-  { key: "green",  color: "#22c55e", meaning: "Meer / harder" },
-  { key: "yellow", color: "#f59e0b", meaning: "Vertraag / check in" },
-  { key: "red",    color: "#ef4444", meaning: "Stop dit" },
-  { key: "black",  color: "#6b7280", meaning: "Stop alles" },
+  { key: "green",  color: "var(--yes)",   meaning: "Meer / harder" },
+  { key: "yellow", color: "var(--maybe)", meaning: "Vertraag / check in" },
+  { key: "red",    color: "var(--no)",    meaning: "Stop dit" },
+  { key: "black",  color: "var(--text2)", meaning: "Stop alles" },
 ];
 const DEFAULT_SIGNALS: Signals = { green: "Meer", yellow: "Geel", red: "Rood", black: "Safeword" };
 
@@ -131,9 +131,14 @@ function ContractPage() {
 
   if (!profileA || !profileB) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="mb-4" style={{ color: "var(--text2)" }}>Geen twee profielen geselecteerd.</p>
-        <Link href="/compare" className="focus-ring text-sm py-2 inline-block" style={{ color: "var(--accent)" }}>← Terug naar vergelijking</Link>
+      <main className="max-w-3xl mx-auto px-4 py-6 pb-10 w-full">
+        <div className="flex items-center gap-3 mb-4">
+          <Link href="/compare" className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>← Terug</Link>
+          <h1 className="text-xl font-bold flex-1">Teken het contract</h1>
+        </div>
+        <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
+          Kies twee profielen via de vergelijkingspagina om een contract op te stellen.
+        </p>
       </main>
     );
   }
@@ -491,7 +496,7 @@ function ContractPage() {
 
   return (
     <>
-    <main className="max-w-3xl mx-auto px-4 py-6 w-full pb-6 contract-print">
+    <main className="max-w-3xl mx-auto px-4 py-6 pb-10 w-full contract-print">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
         <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
@@ -531,7 +536,7 @@ function ContractPage() {
           </p>
           <button
             onClick={() => setPreambleOpen((v) => !v)}
-            className="focus-ring text-xs mt-2 transition-colors py-2 px-1 inline-block"
+            className="focus-ring text-xs mt-2 transition-colors py-2 px-3 inline-block"
             style={{ color: "var(--accent)" }}
           >
             {preambleOpen ? "Minder ↑" : "Lees meer ↓"}
@@ -540,7 +545,7 @@ function ContractPage() {
 
         {/* Safeword & Nazorg */}
         <div className="mb-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--accent)" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
             Safeword &amp; Nazorg
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -575,9 +580,9 @@ function ContractPage() {
                       onClick={() => toggleAftercareA(option)}
                       className="text-xs px-2 py-1 rounded-full border transition-all focus-ring"
                       style={{
-                        background: active ? "color-mix(in srgb, #22c55e 20%, transparent)" : "transparent",
-                        borderColor: active ? "#22c55e" : "var(--border)",
-                        color: active ? "#22c55e" : "var(--text2)",
+                        background: active ? "color-mix(in srgb, var(--yes) 20%, transparent)" : "transparent",
+                        borderColor: active ? "var(--yes)" : "var(--border)",
+                        color: active ? "var(--yes)" : "var(--text2)",
                       }}
                     >
                       {option}
@@ -618,9 +623,9 @@ function ContractPage() {
                       onClick={() => toggleAftercareB(option)}
                       className="text-xs px-2 py-1 rounded-full border transition-all focus-ring"
                       style={{
-                        background: active ? "color-mix(in srgb, #22c55e 20%, transparent)" : "transparent",
-                        borderColor: active ? "#22c55e" : "var(--border)",
-                        color: active ? "#22c55e" : "var(--text2)",
+                        background: active ? "color-mix(in srgb, var(--yes) 20%, transparent)" : "transparent",
+                        borderColor: active ? "var(--yes)" : "var(--border)",
+                        color: active ? "var(--yes)" : "var(--text2)",
                       }}
                     >
                       {option}
@@ -643,7 +648,7 @@ function ContractPage() {
 
         {/* General clauses */}
         <div className="mt-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--accent)" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
             Algemene afspraken
           </h3>
           <ul className="space-y-1.5 text-sm" style={{ color: "var(--text2)" }}>
@@ -745,8 +750,8 @@ function ContractPage() {
               100%    { opacity: 0; }
             }
             @keyframes ceremony-glow {
-              0%, 100% { box-shadow: 0 0 60px rgba(192,132,252,0.1); }
-              50%      { box-shadow: 0 0 120px rgba(192,132,252,0.3); }
+              0%, 100% { box-shadow: 0 0 60px color-mix(in srgb, var(--accent) 10%, transparent); }
+              50%      { box-shadow: 0 0 120px color-mix(in srgb, var(--accent) 30%, transparent); }
             }
           `}</style>
           <div
@@ -771,8 +776,8 @@ function ContractPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "linear-gradient(135deg, rgba(192,132,252,0.15), rgba(244,114,182,0.15))",
-                  border: "1px solid rgba(192,132,252,0.3)",
+                  background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), color-mix(in srgb, var(--accent2) 15%, transparent))",
+                  border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
                   animation: "ceremony-glow 2s ease infinite",
                   fontSize: "1.875rem",
                 }}
@@ -783,7 +788,7 @@ function ContractPage() {
                 style={{
                   fontSize: "1.5rem",
                   fontWeight: 600,
-                  color: "#ffffff",
+                  color: "var(--text)",
                   letterSpacing: "0.02em",
                   animation: "ceremony-text 2.2s ease forwards",
                   margin: 0,
@@ -794,7 +799,7 @@ function ContractPage() {
               <p
                 style={{
                   fontSize: "0.875rem",
-                  color: "rgba(192,132,252,0.7)",
+                  color: "color-mix(in srgb, var(--accent) 70%, transparent)",
                   marginTop: "0.75rem",
                   animation: "ceremony-sub 2.2s ease forwards",
                 }}
@@ -839,7 +844,7 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
 
   return (
     <div className="mb-5">
-      <h3 className="text-sm font-semibold mb-2" style={{ color: colour }}>
+      <h3 className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: colour }}>
         {title}
       </h3>
       {isKinkDetail(items[0]) ? (
@@ -1015,6 +1020,7 @@ function SignaturePad({
             background: "rgba(0,0,0,0.75)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "1rem",
+            paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
           }}
           onClick={closeModal}
         >
@@ -1030,7 +1036,7 @@ function SignaturePad({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-bold uppercase tracking-widest" style={{ color: colour }}>
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
                 {label}
               </span>
               <button
@@ -1062,7 +1068,7 @@ function SignaturePad({
               <button
                 onClick={closeModal}
                 className="focus-ring text-xs px-4 py-1.5 rounded-full font-semibold"
-                style={{ background: colour, color: "#fff" }}
+                style={{ background: colour, color: "#000" }}
               >
                 Klaar
               </button>
