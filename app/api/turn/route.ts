@@ -14,6 +14,7 @@ export async function POST() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ ttl: 86400 }),
+        signal: AbortSignal.timeout(5000),
       }
     );
     if (!r.ok) {
