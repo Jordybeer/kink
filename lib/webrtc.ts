@@ -1,25 +1,25 @@
 const STUN_ONLY: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 
-export async function fetchIceServers(): Promise<RTCIceServer[]> {
+export async function fetchIceServers(log: (msg: string) => void = console.log): Promise<RTCIceServer[]> {
   try {
     const r = await fetch("/api/turn", { method: "POST" });
-    console.log("[turn] status:", r.status);
     if (!r.ok) {
-      console.warn("[turn] non-ok, falling back to STUN");
+      log(`[turn] HTTP ${r.status} — val terug op STUN`);
       return STUN_ONLY;
     }
     const data = await r.json() as { iceServers?: RTCIceServer[] };
-    console.log("[turn] response:", JSON.stringify(data));
-    if (!Array.isArray(data.iceServers)) return STUN_ONLY;
+    if (!Array.isArray(data.iceServers)) {
+      log(`[turn] geen iceServers in response — val terug op STUN`);
+      return STUN_ONLY;
+    }
     // iOS Safari chokes on multi-url RTCIceServer entries — expand to one entry per URL
     const normalized = data.iceServers.flatMap(server => {
       const urls = Array.isArray(server.urls) ? server.urls : [server.urls as string];
       return urls.map(url => ({ ...server, urls: url }));
     });
-    console.log("[turn] normalized:", JSON.stringify(normalized));
     return normalized.length ? normalized : STUN_ONLY;
   } catch (err) {
-    console.error("[turn] fetch error:", err);
+    log(`[turn] fetch fout: ${String(err)}`);
     return STUN_ONLY;
   }
 }

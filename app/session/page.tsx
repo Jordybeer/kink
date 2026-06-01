@@ -164,7 +164,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setDebugLog([]);
     try {
       log("[host] TURN ophalen...");
-      const iceServers = await fetchIceServers();
+      const iceServers = await fetchIceServers(log);
       log("[host] ICE servers: " + iceServersSummary(iceServers));
       let pc: RTCPeerConnection;
       try {
@@ -242,7 +242,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setDebugLog([]);
     try {
       log("[guest] offer + TURN ophalen...");
-      const [offerSdp, iceServers] = await Promise.all([getOffer(codeInput), fetchIceServers()]);
+      const [offerSdp, iceServers] = await Promise.all([getOffer(codeInput), fetchIceServers(log)]);
       log("[guest] ICE servers: " + iceServersSummary(iceServers));
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
       console.log("[guest] offer received, creating RTCPeerConnection");
