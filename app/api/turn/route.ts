@@ -20,8 +20,11 @@ export async function POST() {
     if (!r.ok) {
       return Response.json({ error: "upstream error" }, { status: 502 });
     }
-    const data = await r.json() as { iceServers: RTCIceServer[] };
-    return Response.json({ iceServers: data.iceServers });
+    const data = await r.json() as { iceServers: RTCIceServer[] | RTCIceServer };
+    // Cloudflare returns a single object, not an array
+    const raw = data.iceServers;
+    const servers: RTCIceServer[] = Array.isArray(raw) ? raw : [raw];
+    return Response.json({ iceServers: servers });
   } catch {
     return Response.json({ error: "fetch failed" }, { status: 502 });
   }

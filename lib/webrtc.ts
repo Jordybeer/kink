@@ -7,13 +7,16 @@ export async function fetchIceServers(log: (msg: string) => void = console.log):
       log(`[turn] HTTP ${r.status} — val terug op STUN`);
       return STUN_ONLY;
     }
-    const data = await r.json() as { iceServers?: RTCIceServer[] };
-    if (!Array.isArray(data.iceServers)) {
+    const data = await r.json() as { iceServers?: RTCIceServer[] | RTCIceServer };
+    const raw = data.iceServers;
+    if (!raw) {
       log(`[turn] geen iceServers in response — val terug op STUN`);
       return STUN_ONLY;
     }
+    // Cloudflare returns a single object; normalize to array
+    const servers: RTCIceServer[] = Array.isArray(raw) ? raw : [raw];
     // iOS Safari chokes on multi-url RTCIceServer entries — expand to one entry per URL
-    const normalized = data.iceServers.flatMap(server => {
+    const normalized = servers.flatMap(server => {
       const urls = Array.isArray(server.urls) ? server.urls : [server.urls as string];
       return urls.map(url => ({ ...server, urls: url }));
     });
