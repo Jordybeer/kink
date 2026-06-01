@@ -36,7 +36,7 @@ const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
 ];
 
 type Msg =
-  | { t: "a" }
+  | { t: "a"; id?: string }
   | { t: "p"; n: string; r: string }
   | { t: "d"; entries: Record<string, KinkStatus> };
 
@@ -73,8 +73,10 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const partnerActiveTimerRef  = useRef<ReturnType<typeof setTimeout>>(undefined);
   const partnerShimmerTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const partnerActiveDebounceRef = useRef<number>(0);
-  const [partnerActive,  setPartnerActive]  = useState(false);
-  const [partnerShimmer, setPartnerShimmer] = useState(false);
+  const [partnerActive,    setPartnerActive]    = useState(false);
+  const [partnerShimmer,   setPartnerShimmer]   = useState(false);
+  const [partnerTappedId,  setPartnerTappedId]  = useState<string | null>(null);
+  const partnerTapTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const revealCancelRef = useRef(false);
   const [showZeroState, setShowZeroState] = useState(false);
@@ -117,6 +119,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           clearTimeout(partnerActiveTimerRef.current);
           setPartnerActive(true);
           partnerActiveTimerRef.current = setTimeout(() => setPartnerActive(false), 3000);
+          if (msg.id) {
+            clearTimeout(partnerTapTimerRef.current);
+            setPartnerTappedId(msg.id);
+            partnerTapTimerRef.current = setTimeout(() => setPartnerTappedId(null), 700);
+          }
           if (Date.now() - partnerActiveDebounceRef.current > 500) {
             clearTimeout(partnerShimmerTimerRef.current);
             setPartnerShimmer(true);
@@ -310,7 +317,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   function handleStatusChange(kinkId: string, s: KinkStatus) {
     setLocal(l => ({ ...l, [kinkId]: s }));
-    send({ t: "a" });
+    send({ t: "a", id: kinkId });
   }
 
   function handleDone() {
@@ -343,92 +350,90 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     pollAbortRef.current?.abort();
     clearTimeout(partnerActiveTimerRef.current);
     clearTimeout(partnerShimmerTimerRef.current);
+    clearTimeout(partnerTapTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (phase !== "revealed" || Object.keys(remote).length === 0) return;
     revealCancelRef.current = false;
+
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const allIds = Object.keys(remote);
-    const matchIds = allIds.filter(
+    const matchIds = new Set(allIds.filter(
       id => ["yes","willing"].includes(local[id] as string) && ["yes","willing"].includes(remote[id] as string)
-    );
-    const nonMatchIds = allIds.filter(id => !matchIds.includes(id));
+    ));
 
     if (reducedMotion) {
       setRevealedIds(new Set(allIds));
-      if (matchIds.length === 0) setShowZeroState(true);
+      if (matchIds.size === 0) setShowZeroState(true);
       return;
     }
 
-    const categoryMap = new Map<string, string[]>();
-    for (const id of nonMatchIds) {
-      const cat = KINKS.find(k => k.id === id)?.category ?? "overig";
-      if (!categoryMap.has(cat)) categoryMap.set(cat, []);
-      categoryMap.get(cat)!.push(id);
-    }
-    const groups: { ids: string[]; isMatchGroup: boolean }[] = [
-      ...[...categoryMap.entries()].map(([, ids]) => ({ ids, isMatchGroup: false })),
-      ...(matchIds.length > 0 ? [{ ids: matchIds, isMatchGroup: true }] : []),
-    ];
+    // Groups follow DOM order (by CATEGORIES) so scroll stays coherent
+    const groups = CATEGORIES
+      .map(cat => ({ cat, ids: getKinksByCategory(cat).map(k => k.id).filter(id => remote[id]) }))
+      .filter(g => g.ids.length > 0);
 
-    const pausePerGroup = Math.min(300, 2500 / Math.max(groups.length, 1));
     const allTimeouts: ReturnType<typeof setTimeout>[] = [];
+    const observers: IntersectionObserver[] = [];
+
+    function wait(ms: number): Promise<void> {
+      return new Promise(r => { const t = setTimeout(r, ms); allTimeouts.push(t); });
+    }
+
+    function waitVisible(el: Element): Promise<void> {
+      return new Promise(resolve => {
+        if (revealCancelRef.current) { resolve(); return; }
+        // Auto-advance after 6s so a category never stays permanently hidden
+        const fallback = setTimeout(resolve, 6000);
+        allTimeouts.push(fallback);
+        const obs = new IntersectionObserver(entries => {
+          if (entries[0].isIntersecting) { clearTimeout(fallback); obs.disconnect(); resolve(); }
+        }, { threshold: 0.15 });
+        obs.observe(el);
+        observers.push(obs);
+      });
+    }
+
+    async function revealGroup(cat: string, ids: string[]) {
+      document.querySelector(`[data-category="${cat}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      await wait(350);
+      for (const id of ids) {
+        if (revealCancelRef.current) return;
+        setRevealedIds(prev => new Set([...prev, id]));
+        if (matchIds.has(id)) {
+          const t = setTimeout(() => {
+            document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => el.classList.add("match-pulse"));
+          }, 220);
+          allTimeouts.push(t);
+        }
+        await wait(75);
+      }
+    }
 
     (async () => {
-      for (const [groupIndex, { ids, isMatchGroup }] of groups.entries()) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      await wait(450);
+
+      for (const [i, { cat, ids }] of groups.entries()) {
         if (revealCancelRef.current) return;
-
-        const groupRevealDelay = ids.length * 30;
-        await new Promise<void>(r => {
-          const tid = setTimeout(() => {
-            if (revealCancelRef.current) return;
-            setRevealedIds(prev => new Set([...prev, ...ids]));
-            r();
-          }, groupRevealDelay);
-          allTimeouts.push(tid);
-        });
-
-        if (!isMatchGroup) {
-          const cat = KINKS.find(k => k.id === ids[0])?.category;
-          if (cat) {
-            document.querySelector(`[data-category="${cat}"]`)
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
+        if (i > 0) {
+          const el = document.querySelector(`[data-category="${cat}"]`);
+          if (el) await waitVisible(el);
+          if (revealCancelRef.current) return;
         }
-
-        if (isMatchGroup) {
-          ids.forEach((id, i) => {
-            const tid = setTimeout(() => {
-              if (revealCancelRef.current) return;
-              document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => {
-                el.classList.add("match-pulse");
-              });
-            }, i * 30 + 50);
-            allTimeouts.push(tid);
-          });
-        }
-
-        if (groupIndex < groups.length - 1) {
-          await new Promise<void>(r => {
-            const tid = setTimeout(r, pausePerGroup);
-            allTimeouts.push(tid);
-          });
-        }
+        await revealGroup(cat, ids);
       }
 
-      if (matchIds.length === 0) {
-        const tid = setTimeout(() => {
-          if (!revealCancelRef.current) setShowZeroState(true);
-        }, 600);
-        allTimeouts.push(tid);
-      }
+      if (matchIds.size === 0 && !revealCancelRef.current) setShowZeroState(true);
     })().catch(console.error);
 
     return () => {
       revealCancelRef.current = true;
       allTimeouts.forEach(clearTimeout);
+      observers.forEach(o => o.disconnect());
     };
   }, [phase, remote, local]);
 
@@ -610,7 +615,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
       {phase === "connected" && (
         <div>
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="sticky top-0 z-10 -mx-4 px-4 pt-2 pb-3 mb-4 flex items-center gap-3" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate">
                 <span style={{ color: "var(--accent)" }}>{profile?.name}</span>
@@ -648,7 +653,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                         const myStatus = local[kink.id] ?? null;
                         const theirStatus = remote[kink.id] ?? null;
                         return (
-                          <div key={kink.id} className="rounded-xl mb-1 px-3 py-2"
+                          <div key={kink.id} className={`rounded-xl mb-1 px-3 py-2${partnerTappedId === kink.id ? " partner-card-tap" : ""}`}
                             style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `3px solid ${myStatus ? STATUS_COLOR[myStatus] : "transparent"}` }}>
                             <div className="flex items-center gap-2 mb-1.5">
                               <span className="text-sm font-medium flex-1 leading-snug">{kink.name}</span>
@@ -741,7 +746,6 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                       style={{
                         background: "var(--surface)",
                         border: `1px solid ${isMatchKink ? "var(--yes)" : "var(--border)"}`,
-                        ...(revealed ? { animationDelay: `${index * 30}ms` } : {}),
                       }}
                     >
                       <span className="text-sm font-medium flex-1">{kink.name}</span>
