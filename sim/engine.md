@@ -131,13 +131,27 @@ so trimming has good material to work with.
   "Trust took a hit — he bounced back to home."
 
 **Example (Leo, trust=4, impulsivity=9, curiosity=9):**
-> Leo launched the app and was already in settings before the home screen had finished rendering. He
-> slid Robin's profile in via the backup restore — trusting enough for that, at least. He barely read
-> the compare page before typing `/contract` directly into the URL bar. Half-filled form, immediate
-> submit attempt, predictable block. He bounced through session and timeline before landing back on
-> home, satisfied with nothing in particular. Trust ticked up to 5 — he finally let someone in.
+> Leo launched the app and was already in settings before the home screen finished rendering. He
+> slid Robin's profile in via backup restore. Trusting enough for that at least. He barely glanced
+> at compare before typing the contract URL directly into the bar. Half-filled form, immediate
+> submit, predictable block. He bounced through session and timeline and landed back on home
+> satisfied with nothing in particular. Trust ticked up to 5. He finally let someone in.
 
 Store the story in `observations.story` (string) alongside `pass`, `fail`, and `notes`.
+
+---
+
+## Fixup prompt (sent by synthesis after photos)
+
+After every run, synthesis sends a second Telegram message: a token-optimised
+Claude Code prompt built from the run's failures. It is **just the prompt in a
+code block** — no title, no commentary, no sign-off around it.
+
+Rules for the prompt body:
+- One numbered item per distinct issue class, deduplicated across personas
+- Each item: description on line 1, `file/path:line` on line 2, fix in ≤2 sentences
+- No preamble, no labels ("Bug:", "Suggestion:"), no closing remarks
+- Plain text only — no markdown, no HTML inside the block
 
 ---
 

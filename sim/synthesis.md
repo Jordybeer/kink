@@ -161,12 +161,8 @@ After the three persona photos, send one final message: a token-optimised
 Claude Code prompt the developer can copy-paste directly to fix every issue
 found this run.
 
-Format:
+Format — just the prompt in a code block, nothing else:
 ```html
-<b>🔧 Sim fixup prompt — {YYYY-MM-DD}</b>
-
-Copy-paste into Claude Code on the <code>dev</code> branch:
-
 <pre><code>{prompt}</code></pre>
 ```
 
