@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
-import type { ExperienceLevel, Profile } from "@/types";
+import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import QRScanner from "@/components/QRScanner";
 import { decodeAny } from "@/lib/shareProfile";
@@ -36,6 +36,8 @@ function HomeContent() {
     dismissInstallPrompt,
     theme,
     setTheme,
+    contracts,
+    restoreContracts,
     pinnedProfileId,
     pinProfile,
     unpinProfile,
@@ -145,7 +147,7 @@ function HomeContent() {
   }
 
   function exportProfiles() {
-    const data = JSON.stringify({ version: 1, profiles }, null, 2);
+    const data = JSON.stringify({ version: 1, profiles, contracts }, null, 2);
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -172,12 +174,14 @@ function HomeContent() {
         const incoming = parsed.profiles as Profile[];
         const existing = new Set(profiles.map((p: Profile) => p.id));
         const newOnes = incoming.filter((p: Profile) => !existing.has(p.id));
-        if (!newOnes.length) {
+        if (!newOnes.length && !(parsed.contracts as ContractSnapshot[] | undefined)?.length) {
           setImportError("Alle profielen in dit bestand bestaan al.");
           return;
         }
-        importProfiles(newOnes.map((p: Profile) => ({ ...p, isImported: true })));
-        setImportSuccess(`${newOnes.length} profiel(en) toegevoegd.`);
+        if (newOnes.length) importProfiles(newOnes);
+        const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
+        if (restoredContracts.length) restoreContracts(restoredContracts);
+        setImportSuccess(`${newOnes.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
       } catch {
         setImportError("Bestand kon niet worden gelezen.");
       }

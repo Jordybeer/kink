@@ -30,6 +30,7 @@ interface State {
   addCustomKink: (profileId: string, name: string) => void;
   removeCustomKink: (profileId: string, kinkId: string) => void;
   saveContract: (snapshot: Omit<ContractSnapshot, "id">) => void;
+  restoreContracts: (snapshots: ContractSnapshot[]) => void;
   deleteContract: (id: string) => void;
   completeOnboarding: () => void;
   completeProfileTour: () => void;
@@ -178,6 +179,14 @@ export const useStore = create<State>()(
         set((s) => ({
           contracts: [{ id, ...snapshot }, ...s.contracts].slice(0, 20),
         }));
+      },
+
+      restoreContracts(snapshots) {
+        set((s) => {
+          const existingIds = new Set(s.contracts.map((c) => c.id));
+          const novel = snapshots.filter((c) => !existingIds.has(c.id));
+          return novel.length === 0 ? s : { contracts: [...novel, ...s.contracts].slice(0, 20) };
+        });
       },
 
       deleteContract(id) {
