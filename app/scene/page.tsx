@@ -350,7 +350,7 @@ function ScenePage() {
     <main className="max-w-2xl mx-auto px-4 py-6 pb-32 w-full flex flex-col min-h-dvh">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <Link href={backHref} className="focus-ring text-sm transition-colors" style={{ color: "var(--text2)" }}>
+        <Link href={backHref} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <div className="flex-1">

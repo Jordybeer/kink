@@ -8,6 +8,7 @@ export default function ThemeProvider() {
     const html = document.documentElement;
     html.classList.remove("theme-red", "theme-forest", "theme-mono");
     if (theme !== "midnight") html.classList.add(`theme-${theme}`);
+    html.setAttribute("data-theme", theme);
   }, [theme]);
   return null;
 }

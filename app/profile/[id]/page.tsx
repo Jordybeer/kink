@@ -122,7 +122,7 @@ export default function ProfilePage({ params }: Props) {
     setEditing(false);
   }
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full" />;
 
   if (!profile) {
     return (
@@ -331,7 +331,7 @@ export default function ProfilePage({ params }: Props) {
 
       {/* Header */}
       <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors py-2 pr-2 inline-block" style={{ color: "var(--text2)" }}>
+        <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <Link
@@ -345,6 +345,7 @@ export default function ProfilePage({ params }: Props) {
         </Link>
       </div>
 
+      <h1 className="sr-only">{profile.name}</h1>
       <ProfileHero
         profile={profile}
         maxLevel={maxLevel}
@@ -574,16 +575,18 @@ export default function ProfilePage({ params }: Props) {
       {/* ── OVERZICHT TAB ────────────────────────────────────────── */}
       {(activeTab === "overzicht" || profile.isImported) && (
         <div className="px-4 pt-2 pb-3">
-          {totalRated === 0 && !profile.isImported ? (
+          {totalRated === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
-              <button
-                onClick={() => setActiveTab("bewerken")}
-                className="focus-ring text-sm px-4 py-2 rounded-lg font-medium transition-colors"
-                style={{ background: "var(--accent)", color: "#000" }}
-              >
-                Bewerken om te beginnen →
-              </button>
+              {!profile.isImported && (
+                <button
+                  onClick={() => setActiveTab("bewerken")}
+                  className="focus-ring text-sm px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ background: "var(--accent)", color: "#000" }}
+                >
+                  Bewerken om te beginnen →
+                </button>
+              )}
             </div>
           ) : (
             <>
@@ -718,33 +721,6 @@ export default function ProfilePage({ params }: Props) {
             </div>
           )}
 
-          {/* Export — own profiles only */}
-          {!profile.isImported && (
-            <div className="pt-4 pb-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: "var(--text2)" }}>
-                Exporteer
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleExport}
-                  aria-label="Exporteer als tekstbestand"
-                  className="focus-ring flex-1 py-3 rounded-xl text-sm font-semibold border transition-colors hover:opacity-90"
-                  style={{ borderColor: "var(--border)", color: "var(--text)" }}
-                >
-                  ↓ TXT
-                </button>
-                <button
-                  onClick={handlePDFExport}
-                  aria-label="Exporteer als PDF"
-                  className="focus-ring flex-1 py-3 rounded-xl text-sm font-semibold border transition-colors hover:opacity-90"
-                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-                >
-                  ↓ PDF
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="pt-4 pb-2 flex justify-center">
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -754,6 +730,28 @@ export default function ProfilePage({ params }: Props) {
               ↑ Terug naar boven
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Export FAB — own profiles, overzicht tab only */}
+      {activeTab === "overzicht" && !profile.isImported && (
+        <div className="fixed bottom-20 right-4 z-50 flex gap-2">
+          <button
+            onClick={handleExport}
+            aria-label="Exporteer als tekstbestand"
+            className="focus-ring w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-lg border"
+            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
+          >
+            TXT
+          </button>
+          <button
+            onClick={handlePDFExport}
+            aria-label="Exporteer als PDF"
+            className="focus-ring w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-lg border"
+            style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "#000" }}
+          >
+            PDF
+          </button>
         </div>
       )}
 

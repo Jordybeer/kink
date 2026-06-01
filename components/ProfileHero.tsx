@@ -151,7 +151,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            className="sr-only"
+            className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none"
             onChange={handleAvatarUpload}
             aria-hidden="true"
             tabIndex={-1}
@@ -166,7 +166,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 onClick={onShare}
                 aria-label="Deel profiel via QR"
                 title="Deel via QR"
-                className="focus-ring flex-none mt-0.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-colors"
+                className="focus-ring flex-none mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
                 style={{ color: "var(--accent)", border: "1px solid var(--border)" }}
               >
                 <QrCode size={15} />
@@ -177,7 +177,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 onClick={onEdit}
                 aria-label="Profiel bewerken"
                 title="Bewerken"
-                className="focus-ring flex-none mt-0.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-colors"
+                className="focus-ring flex-none mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
                 style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
               >
                 <Pencil size={15} />

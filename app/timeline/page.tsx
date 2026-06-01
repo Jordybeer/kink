@@ -41,7 +41,7 @@ function TimelinePage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 pb-20 w-full">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/" className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
+        <Link href="/" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">📈 Geschiedenis</h1>
