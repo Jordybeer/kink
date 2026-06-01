@@ -171,7 +171,8 @@ The prompt body must be:
 - One numbered item per distinct issue class (not per persona — deduplicate)
 - Each item: one-line description, then `file/path:line` reference, then the
   exact fix in ≤2 sentences
-- No preamble, no sign-off, no labels like "Bug:" or "Suggestion:"
+- First line: `Fix these sim findings from {date}. Work on the redesign branch.`
+- No other preamble, no sign-off, no labels like "Bug:" or "Suggestion:"
 - Token-efficient: assume the reader knows the codebase
 
 Build the prompt from `observations.fail` and `recommendations` across all

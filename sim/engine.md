@@ -148,6 +148,7 @@ Claude Code prompt built from the run's failures. It is **just the prompt in a
 code block** — no title, no commentary, no sign-off around it.
 
 Rules for the prompt body:
+- First line: `Fix these sim findings from {date}. Work on the redesign branch.`
 - One numbered item per distinct issue class, deduplicated across personas
 - Each item: description on line 1, `file/path:line` on line 2, fix in ≤2 sentences
 - No preamble, no labels ("Bug:", "Suggestion:"), no closing remarks
