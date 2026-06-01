@@ -1,11 +1,11 @@
 /**
- * KinkSync Sim Runner — 2026-06-01 (session 3)
+ * KinkSync Sim Runner — 2026-06-01 (session run 4/5/4)
  * Executes persona sessions: Robin → Leo → Iris
  * Derives session behaviour from engine.md trait rules.
  *
- * Session 3 interactions:
- *   Leo  → leo_imports_robin          (eligible: robin SC=2, leo trust=4)
- *   Iris → iris_compares_robin_and_leo (eligible: both SC=2, iris trust=5)
+ * This run interactions:
+ *   Leo  → leo_imports_robin          (eligible: robin SC=3, leo trust=4)
+ *   Iris → iris_compares_robin_and_leo (eligible: both SC>=2, iris trust=5)
  *   Robin → robin_receives_leo_contract: NOT eligible (leo contracts_generated=0)
  */
 
