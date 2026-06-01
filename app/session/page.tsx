@@ -153,13 +153,26 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       }
       pcRef.current = pc;
+      let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
         console.log("[host] iceConnectionState:", pc.iceConnectionState);
-        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
-          setError("Verbinding verloren — probeer opnieuw.");
+        if (pc.iceConnectionState === "failed") {
+          clearTimeout(disconnectTimer);
+          setError("Verbinding mislukt — zorg dat beide toestellen online zijn en probeer opnieuw.");
           setPhase("host_idle");
           pollAbortRef.current?.abort();
           pc.close();
+        } else if (pc.iceConnectionState === "disconnected") {
+          disconnectTimer = setTimeout(() => {
+            if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+              setError("Verbinding verloren — probeer opnieuw.");
+              setPhase("host_idle");
+              pollAbortRef.current?.abort();
+              pc.close();
+            }
+          }, 6000);
+        } else {
+          clearTimeout(disconnectTimer);
         }
       };
       const ch = pc.createDataChannel("kink", { ordered: true });
@@ -214,13 +227,26 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       }
       pcRef.current = pc;
+      let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
         console.log("[guest] iceConnectionState:", pc.iceConnectionState);
-        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
-          setError("Verbinding verloren — probeer opnieuw.");
+        if (pc.iceConnectionState === "failed") {
+          clearTimeout(disconnectTimer);
+          setError("Verbinding mislukt — zorg dat beide toestellen online zijn en probeer opnieuw.");
           setPhase("guest_idle");
           pollAbortRef.current?.abort();
           pc.close();
+        } else if (pc.iceConnectionState === "disconnected") {
+          disconnectTimer = setTimeout(() => {
+            if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+              setError("Verbinding verloren — probeer opnieuw.");
+              setPhase("guest_idle");
+              pollAbortRef.current?.abort();
+              pc.close();
+            }
+          }, 6000);
+        } else {
+          clearTimeout(disconnectTimer);
         }
       };
       let channelResolve!: (ch: RTCDataChannel) => void;
