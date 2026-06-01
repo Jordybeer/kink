@@ -1050,7 +1050,7 @@ function HomeContent() {
 
       {/* Export password modal */}
       {exportPwOpen && (
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
           <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <h2 className="text-base font-bold">Backup versleutelen</h2>
             <div className="rounded-xl p-3 text-xs flex flex-col gap-1.5" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--text)" }}>
@@ -1097,7 +1097,7 @@ function HomeContent() {
 
       {/* Import password modal */}
       {importPwOpen && (
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
           <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
             <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
