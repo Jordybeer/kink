@@ -7,10 +7,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
-import type { ExperienceLevel, Profile } from "@/types";
+import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import QRScanner from "@/components/QRScanner";
 import { decodeAny } from "@/lib/shareProfile";
+import { encryptBackup, decryptBackup, type EncryptedBackup } from "@/lib/crypto";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -36,6 +37,8 @@ function HomeContent() {
     dismissInstallPrompt,
     theme,
     setTheme,
+    contracts,
+    restoreContracts,
     pinnedProfileId,
     pinProfile,
     unpinProfile,
@@ -61,6 +64,16 @@ function HomeContent() {
   const [destroyPhrase, setDestroyPhrase] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [exportPwOpen, setExportPwOpen] = useState(false);
+  const [exportPw, setExportPw] = useState("");
+  const [exportPwConfirm, setExportPwConfirm] = useState("");
+  const [exportPwError, setExportPwError] = useState<string | null>(null);
+  const [exportPwLoading, setExportPwLoading] = useState(false);
+  const [importPwOpen, setImportPwOpen] = useState(false);
+  const [importPw, setImportPw] = useState("");
+  const [importPwError, setImportPwError] = useState<string | null>(null);
+  const [importPwLoading, setImportPwLoading] = useState(false);
+  const [pendingEncrypted, setPendingEncrypted] = useState<EncryptedBackup | null>(null);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [importDone, setImportDone] = useState(false);
@@ -145,15 +158,49 @@ function HomeContent() {
   }
 
   function exportProfiles() {
-    const data = JSON.stringify({ version: 1, profiles }, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const date = new Date().toISOString().slice(0, 10);
-    a.download = `kinksync-backup-${date}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    setExportPw("");
+    setExportPwConfirm("");
+    setExportPwError(null);
+    setExportPwOpen(true);
+  }
+
+  async function handleExportEncrypted() {
+    if (exportPw.length < 8) { setExportPwError("Wachtwoord moet minstens 8 tekens zijn."); return; }
+    if (exportPw !== exportPwConfirm) { setExportPwError("Wachtwoorden komen niet overeen."); return; }
+    setExportPwLoading(true);
+    try {
+      const plain = JSON.stringify({ version: 1, source: "backup", profiles, contracts });
+      const encrypted = await encryptBackup(plain, exportPw);
+      const blob = new Blob([JSON.stringify(encrypted)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `kinksync-backup-${new Date().toISOString().slice(0, 10)}.enc.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setExportPwOpen(false);
+    } finally {
+      setExportPwLoading(false);
+    }
+  }
+
+  function restoreFromParsed(parsed: Record<string, unknown>) {
+    if (!parsed.profiles || !Array.isArray(parsed.profiles)) {
+      setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+      return;
+    }
+    const incoming = parsed.profiles as Profile[];
+    const existing = new Set(profiles.map((p: Profile) => p.id));
+    const newOnes = incoming.filter((p: Profile) => !existing.has(p.id));
+    const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
+    if (!newOnes.length && !restoredContracts.length) {
+      setImportError("Alle profielen in dit bestand bestaan al.");
+      return;
+    }
+    const isOwnBackup = parsed.source === "backup";
+    if (newOnes.length) importProfiles(isOwnBackup ? newOnes : newOnes.map((p: Profile) => ({ ...p, isImported: true })));
+    if (restoredContracts.length) restoreContracts(restoredContracts);
+    setImportSuccess(`${newOnes.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
   }
 
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -165,25 +212,37 @@ function HomeContent() {
     reader.onload = (ev) => {
       try {
         const parsed = JSON.parse(ev.target?.result as string);
-        if (!parsed.profiles || !Array.isArray(parsed.profiles)) {
-          setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
-          return;
+        if (parsed.encrypted === true) {
+          setPendingEncrypted(parsed as EncryptedBackup);
+          setImportPw("");
+          setImportPwError(null);
+          setImportPwOpen(true);
+        } else {
+          restoreFromParsed(parsed as Record<string, unknown>);
         }
-        const incoming = parsed.profiles as Profile[];
-        const existing = new Set(profiles.map((p: Profile) => p.id));
-        const newOnes = incoming.filter((p: Profile) => !existing.has(p.id));
-        if (!newOnes.length) {
-          setImportError("Alle profielen in dit bestand bestaan al.");
-          return;
-        }
-        importProfiles(newOnes.map((p: Profile) => ({ ...p, isImported: true })));
-        setImportSuccess(`${newOnes.length} profiel(en) toegevoegd.`);
       } catch {
         setImportError("Bestand kon niet worden gelezen.");
       }
     };
     reader.readAsText(file);
     e.target.value = "";
+  }
+
+  async function handleImportDecrypt() {
+    if (!pendingEncrypted) return;
+    setImportPwLoading(true);
+    setImportPwError(null);
+    try {
+      const plain = await decryptBackup(pendingEncrypted, importPw);
+      const parsed = JSON.parse(plain) as Record<string, unknown>;
+      setImportPwOpen(false);
+      setPendingEncrypted(null);
+      restoreFromParsed(parsed);
+    } catch {
+      setImportPwError("Verkeerd wachtwoord — probeer opnieuw.");
+    } finally {
+      setImportPwLoading(false);
+    }
   }
 
   if (!_hasHydrated) return null;
@@ -988,6 +1047,89 @@ function HomeContent() {
           </div>
         </div>
       </div>
+
+      {/* Export password modal */}
+      {exportPwOpen && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <h2 className="text-base font-bold">Backup versleutelen</h2>
+            <div className="rounded-xl p-3 text-xs flex flex-col gap-1.5" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--text)" }}>
+              <p><strong>Waarom versleuteld?</strong> Je kinklijst is gevoelige data. Zonder wachtwoord kan iedereen die het bestand vindt alles lezen — je grenzen, verlangens, alles. Met encryptie is het bestand waardeloos zonder jouw wachtwoord.</p>
+              <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
+            </div>
+            <input
+              type="password"
+              placeholder="Wachtwoord (min. 8 tekens)"
+              value={exportPw}
+              onChange={(e) => setExportPw(e.target.value)}
+              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+              autoFocus
+            />
+            <input
+              type="password"
+              placeholder="Herhaal wachtwoord"
+              value={exportPwConfirm}
+              onChange={(e) => setExportPwConfirm(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleExportEncrypted(); }}
+              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+            {exportPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{exportPwError}</p>}
+            <button
+              onClick={handleExportEncrypted}
+              disabled={exportPwLoading}
+              className="w-full py-3 rounded-xl text-sm font-semibold"
+              style={{ background: "var(--accent)", color: "#000" }}
+            >
+              {exportPwLoading ? "Versleutelen…" : "⬇ Versleuteld exporteren"}
+            </button>
+            <button
+              onClick={() => setExportPwOpen(false)}
+              className="w-full py-3 rounded-xl text-sm"
+              style={{ color: "var(--text2)" }}
+            >
+              Annuleer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Import password modal */}
+      {importPwOpen && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
+            <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
+            <input
+              type="password"
+              placeholder="Wachtwoord"
+              value={importPw}
+              onChange={(e) => setImportPw(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
+              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+              autoFocus
+            />
+            {importPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{importPwError}</p>}
+            <button
+              onClick={handleImportDecrypt}
+              disabled={importPwLoading}
+              className="w-full py-3 rounded-xl text-sm font-semibold"
+              style={{ background: "var(--accent)", color: "#000" }}
+            >
+              {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
+            </button>
+            <button
+              onClick={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
+              className="w-full py-3 rounded-xl text-sm"
+              style={{ color: "var(--text2)" }}
+            >
+              Annuleer
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && onboardingComplete && (
