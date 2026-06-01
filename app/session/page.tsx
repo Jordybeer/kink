@@ -147,12 +147,17 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       console.log("[host] iceServers:", JSON.stringify(iceServers));
       let pc: RTCPeerConnection;
       try {
-        pc = new RTCPeerConnection({ iceServers });
+        pc = new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 2 });
       } catch (e) {
         console.warn("[host] RTCPeerConnection met TURN mislukt, val terug op STUN:", e);
-        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }], iceCandidatePoolSize: 2 });
       }
       pcRef.current = pc;
+      const hostCandTypes: string[] = [];
+      pc.onicecandidate = (e) => {
+        if (e.candidate?.type) hostCandTypes.push(e.candidate.type);
+        else console.log("[host] ICE gathering done, kandidaat-types:", hostCandTypes);
+      };
       let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
         console.log("[host] iceConnectionState:", pc.iceConnectionState);
@@ -180,11 +185,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       await pc.setLocalDescription(offer);
       console.log("[host] local description set, gathering ICE...");
       await Promise.race([
-        waitForIceGathering(pc),
+        waitForIceGathering(pc, 8000),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
+      console.log("[host] ICE kandidaat-types na gathering:", hostCandTypes);
       console.log("[host] ICE gathered, posting offer");
       await postOffer(newCode, pc.localDescription!.sdp);
       const qr = await QRCode.toDataURL(`${location.origin}/session?join=${newCode}`, {
@@ -220,12 +226,17 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       console.log("[guest] offer received, creating RTCPeerConnection");
       let pc: RTCPeerConnection;
       try {
-        pc = new RTCPeerConnection({ iceServers });
+        pc = new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 2 });
       } catch (e) {
         console.warn("[guest] RTCPeerConnection met TURN mislukt, val terug op STUN:", e);
-        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }], iceCandidatePoolSize: 2 });
       }
       pcRef.current = pc;
+      const guestCandTypes: string[] = [];
+      pc.onicecandidate = (e) => {
+        if (e.candidate?.type) guestCandTypes.push(e.candidate.type);
+        else console.log("[guest] ICE gathering done, kandidaat-types:", guestCandTypes);
+      };
       let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
         console.log("[guest] iceConnectionState:", pc.iceConnectionState);
@@ -256,11 +267,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       await pc.setLocalDescription(answer);
       console.log("[guest] local description set, gathering ICE...");
       await Promise.race([
-        waitForIceGathering(pc),
+        waitForIceGathering(pc, 8000),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
+      console.log("[guest] ICE kandidaat-types na gathering:", guestCandTypes);
       console.log("[guest] ICE gathered, posting answer");
       await postAnswer(codeInput, pc.localDescription!.sdp);
       console.log("[guest] answer posted, waiting for data channel");
