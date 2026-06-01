@@ -147,7 +147,7 @@ function HomeContent() {
   }
 
   function exportProfiles() {
-    const data = JSON.stringify({ version: 1, profiles, contracts }, null, 2);
+    const data = JSON.stringify({ version: 1, source: "backup", profiles, contracts }, null, 2);
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -178,7 +178,8 @@ function HomeContent() {
           setImportError("Alle profielen in dit bestand bestaan al.");
           return;
         }
-        if (newOnes.length) importProfiles(newOnes);
+        const isOwnBackup = parsed.source === "backup";
+        if (newOnes.length) importProfiles(isOwnBackup ? newOnes : newOnes.map((p: Profile) => ({ ...p, isImported: true })));
         const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
         if (restoredContracts.length) restoreContracts(restoredContracts);
         setImportSuccess(`${newOnes.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
