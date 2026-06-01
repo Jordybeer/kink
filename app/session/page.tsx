@@ -497,7 +497,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               window.history.back();
             }
           }}
-          className="focus-ring text-sm"
+          className="focus-ring text-sm min-h-[44px] px-3 inline-flex items-center"
           style={{ color: "var(--text2)" }}
         >
           ← Terug

@@ -80,11 +80,10 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
     (k) => profile.entries[k.id]?.status
   );
 
-  const memberSince = new Date(profile.createdAt).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const createdAtDate = profile.createdAt ? new Date(profile.createdAt) : null;
+  const memberSince = createdAtDate && !isNaN(createdAtDate.getTime())
+    ? createdAtDate.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+    : null;
 
   const initial = profile.name.charAt(0).toUpperCase();
 
@@ -151,7 +150,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            className="sr-only"
+            className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none"
             onChange={handleAvatarUpload}
             aria-hidden="true"
             tabIndex={-1}
@@ -166,7 +165,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 onClick={onShare}
                 aria-label="Deel profiel via QR"
                 title="Deel via QR"
-                className="focus-ring flex-none mt-0.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-colors"
+                className="focus-ring flex-none mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
                 style={{ color: "var(--accent)", border: "1px solid var(--border)" }}
               >
                 <QrCode size={15} />
@@ -177,7 +176,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 onClick={onEdit}
                 aria-label="Profiel bewerken"
                 title="Bewerken"
-                className="focus-ring flex-none mt-0.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-colors"
+                className="focus-ring flex-none mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
                 style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
               >
                 <Pencil size={15} />
@@ -218,7 +217,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
             )}
           </div>
           <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-            Lid sinds {memberSince} · {progressPct}% ingevuld
+            {memberSince && <>Lid sinds {memberSince} · </>}{progressPct}% ingevuld
           </p>
           {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
             <div className="flex flex-wrap gap-1.5 mt-1.5">

@@ -191,10 +191,12 @@ function HomeContent() {
     }
     const incoming = parsed.profiles as Profile[];
     const existing = new Set(profiles.map((p: Profile) => p.id));
-    const newOnes = incoming.filter((p: Profile) => !existing.has(p.id));
+    const newOnes = incoming.map((p: Profile) =>
+      existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p
+    );
     const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
-    if (!newOnes.length && !restoredContracts.length) {
-      setImportError("Alle profielen in dit bestand bestaan al.");
+    if (!incoming.length && !restoredContracts.length) {
+      setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
       return;
     }
     const isOwnBackup = parsed.source === "backup";
@@ -245,7 +247,11 @@ function HomeContent() {
     }
   }
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return (
+    <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full flex items-start justify-center pt-24">
+      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
+    </main>
+  );
 
   if (!onboardingComplete) {
     return <Onboarding onComplete={completeOnboarding} />;
@@ -275,7 +281,7 @@ function HomeContent() {
           <button
             onClick={() => setSettingsOpen(true)}
             aria-label="Instellingen openen"
-            className="focus-ring absolute top-0 right-0 p-1 leading-none"
+            className="focus-ring absolute top-0 right-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             style={{ color: "var(--text2)" }}
           >
             <Settings size={18} />
@@ -561,7 +567,7 @@ function HomeContent() {
                                           onClick={() => p.id === pinnedProfileId ? unpinProfile() : pinProfile(p.id)}
                                           aria-label={p.id === pinnedProfileId ? `${p.name} losmaken als hoofdprofiel` : `${p.name} vastpinnen als hoofdprofiel`}
                                           title={p.id === pinnedProfileId ? "Losmaken" : "Vastpinnen"}
-                                          className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                                          className="focus-ring w-11 h-11 flex items-center justify-center rounded-lg transition-colors"
                                           style={{ color: p.id === pinnedProfileId ? "var(--accent)" : "var(--text2)" }}
                                         >
                                           {p.id === pinnedProfileId ? <PinOff size={15} /> : <Pin size={15} />}
@@ -570,7 +576,7 @@ function HomeContent() {
                                           onClick={() => startEdit(p)}
                                           aria-label={`Profiel ${p.name} bewerken`}
                                           title="Bewerken"
-                                          className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                                          className="focus-ring w-11 h-11 flex items-center justify-center rounded-lg transition-colors"
                                           style={{ color: "var(--text2)" }}
                                         >
                                           <Pencil size={15} />
@@ -579,7 +585,7 @@ function HomeContent() {
                                           onClick={() => promptDelete(p.id)}
                                           aria-label={`Profiel ${p.name} verwijderen`}
                                           title="Verwijderen"
-                                          className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                                          className="focus-ring w-11 h-11 flex items-center justify-center rounded-lg transition-colors"
                                           style={{ color: "var(--text2)" }}
                                         >
                                           🗑
@@ -806,7 +812,7 @@ function HomeContent() {
                 type="file"
                 accept=".json"
                 onChange={handleImport}
-                className="sr-only"
+                className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none"
               />
             </label>
             {importError && (

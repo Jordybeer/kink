@@ -179,7 +179,7 @@ function ComparePage() {
     <main className="max-w-5xl mx-auto px-4 py-6 pb-10 w-full">
       {/* Header — back link + title only */}
       <div className="flex items-center gap-3 mb-4">
-        <Link href="/" className="focus-ring text-sm transition-colors py-2 pr-2" style={{ color: "var(--text2)" }}>
+        <Link href="/" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">Vergelijk profielen</h1>
