@@ -145,7 +145,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       console.log("[host] fetchIceServers start");
       const iceServers = await fetchIceServers();
       console.log("[host] iceServers:", JSON.stringify(iceServers));
-      const pc = new RTCPeerConnection({ iceServers });
+      let pc: RTCPeerConnection;
+      try {
+        pc = new RTCPeerConnection({ iceServers });
+      } catch (e) {
+        console.warn("[host] RTCPeerConnection met TURN mislukt, val terug op STUN:", e);
+        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+      }
       pcRef.current = pc;
       pc.oniceconnectionstatechange = () => {
         console.log("[host] iceConnectionState:", pc.iceConnectionState);
@@ -200,7 +206,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       console.log("[guest] iceServers:", JSON.stringify(iceServers));
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
       console.log("[guest] offer received, creating RTCPeerConnection");
-      const pc = new RTCPeerConnection({ iceServers });
+      let pc: RTCPeerConnection;
+      try {
+        pc = new RTCPeerConnection({ iceServers });
+      } catch (e) {
+        console.warn("[guest] RTCPeerConnection met TURN mislukt, val terug op STUN:", e);
+        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+      }
       pcRef.current = pc;
       pc.oniceconnectionstatechange = () => {
         console.log("[guest] iceConnectionState:", pc.iceConnectionState);

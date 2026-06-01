@@ -10,7 +10,14 @@ export async function fetchIceServers(): Promise<RTCIceServer[]> {
     }
     const data = await r.json() as { iceServers?: RTCIceServer[] };
     console.log("[turn] response:", JSON.stringify(data));
-    return data.iceServers ?? STUN_ONLY;
+    if (!Array.isArray(data.iceServers)) return STUN_ONLY;
+    // iOS Safari chokes on multi-url RTCIceServer entries — expand to one entry per URL
+    const normalized = data.iceServers.flatMap(server => {
+      const urls = Array.isArray(server.urls) ? server.urls : [server.urls as string];
+      return urls.map(url => ({ ...server, urls: url }));
+    });
+    console.log("[turn] normalized:", JSON.stringify(normalized));
+    return normalized.length ? normalized : STUN_ONLY;
   } catch (err) {
     console.error("[turn] fetch error:", err);
     return STUN_ONLY;
