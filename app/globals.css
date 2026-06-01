@@ -197,6 +197,14 @@ select {
 .partner-shimmer {
   animation: ks-blur-pulse 600ms ease-out;
 }
+@keyframes ks-card-tap {
+  0%   { box-shadow: 0 0 0 0   color-mix(in srgb, var(--accent) 55%, transparent); }
+  45%  { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent); }
+  100% { box-shadow: 0 0 0 0   color-mix(in srgb, var(--accent) 0%,  transparent); }
+}
+.partner-card-tap {
+  animation: ks-card-tap 620ms ease-out;
+}
 @keyframes ks-unblur {
   from { filter: blur(8px); opacity: 0.3; transform: scale(0.97); }
   to   { filter: blur(0);   opacity: 1;   transform: scale(1); }
@@ -240,6 +248,7 @@ select {
   }
   .partner-hidden  { filter: none; opacity: 1; }
   .partner-shimmer,
+  .partner-card-tap,
   .partner-reveal  { animation: none; filter: none; opacity: 1; }
   .ks-dot-pulse span { animation: none; opacity: 1; transform: none; }
 }

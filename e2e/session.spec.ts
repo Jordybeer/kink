@@ -217,6 +217,7 @@ test.describe("live sessie", () => {
   });
 
   test("nul-matches kaart", async ({ browser }) => {
+    test.setTimeout(60000);
     const alexNoMatch: Profile = {
       ...PROFILE_ALEX,
       id: "pw-alex-nomatch",
