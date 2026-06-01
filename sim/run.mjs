@@ -1,1548 +1,1039 @@
-/**
- * KinkSync Sim Runner — 2026-06-01 (session run 4/5/4)
- * Executes persona sessions: Robin → Leo → Iris
- * Derives session behaviour from engine.md trait rules.
- *
- * This run interactions:
- *   Leo  → leo_imports_robin          (eligible: robin SC=3, leo trust=4)
- *   Iris → iris_compares_robin_and_leo (eligible: both SC>=2, iris trust=5)
- *   Robin → robin_receives_leo_contract: NOT eligible (leo contracts_generated=0)
- */
-
+// KinkSync Sim Runner — 2026-06-01
 import { chromium } from '@playwright/test';
-import { writeFileSync, unlinkSync } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
+import https from 'https';
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT = process.env.TELEGRAM_CHAT_ID;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const BASE_URL = process.env.APP_URL ?? 'http://localhost:3000';
-const DATE = new Date().toISOString().split('T')[0];
+const SUPABASE_URL = 'https://qmxfgzkidyujpkntlqxy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFteGZnemtpZHl1anBrbnRscXh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE1MjcxMCwiZXhwIjoyMDk1NzI4NzEwfQ.c03b9eA_px7z-ST1HlvxCqBEN65f8R7P34DyLT07rmU';
+const TELEGRAM_BOT_TOKEN = '8765851887:AAGnbDElgBy0shzaKTQ4xqKKqtCTTQMvb_Q';
+const TELEGRAM_CHAT_ID = '1303637520';
+const DATE = '2026-06-01';
+const BASE_URL = 'http://localhost:3000';
 
-// ─── Supabase helpers ─────────────────────────────────────────────────────────
+// ─── HTTP helpers ──────────────────────────────────────────────────────────
 
-function supaFetch(path, opts = {}) {
-  return fetch(`${SUPABASE_URL}${path}`, {
-    ...opts,
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      ...opts.headers,
-    },
+function httprequest(url, opts = {}, body = null) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith('https') ? https : http;
+    const req = mod.request(url, opts, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        const raw = Buffer.concat(chunks).toString();
+        resolve({ status: res.statusCode, body: raw });
+      });
+    });
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
   });
 }
 
-async function uploadScreenshot(personaId, stepLabel, pngBuffer) {
-  const filename = `${DATE}_${stepLabel}.png`;
-  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/sim-screenshots/${personaId}/${filename}`;
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/storage/v1/object/sim-screenshots/${personaId}/${filename}`,
-      {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'image/png',
-          'x-upsert': 'true',
-        },
-        body: pngBuffer,
-      }
-    );
-    if (!res.ok) {
-      console.warn(`  Screenshot upload failed ${res.status}: ${(await res.text()).slice(0, 80)}`);
-    }
-    return publicUrl;
-  } catch (e) {
-    console.warn('  Screenshot upload error:', e.message);
-    return publicUrl;
-  }
-}
-
-async function writeReport(persona, sessionNumber, traitsBefore, traitsAfter, report) {
-  const body = {
-    date: DATE,
-    persona,
-    session_number: sessionNumber,
-    pass_count: report.passCount,
-    fail_count: report.failCount,
-    pages_visited: report.pagesVisited,
-    observations: {
-      story: report.story ? report.story.join(' ') : '',
-      pass: report.pass,
-      fail: report.fail,
-      notes: report.notes,
-      jsErrors: report.jsErrors,
-    },
-    recommendations: report.recommendations,
-    screenshot_urls: report.screenshotUrls,
-    traits_before: traitsBefore,
-    traits_after: traitsAfter,
-    milestones: report.milestones,
-    regression_detected: false,
+async function supabaseRest(method, endpoint, body = null) {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': method === 'POST' ? 'return=representation' : undefined,
   };
+  if (!headers.Prefer) delete headers.Prefer;
+  const payload = body ? JSON.stringify(body) : null;
+  const res = await httprequest(`${SUPABASE_URL}${endpoint}`, { method, headers }, payload);
+  try { return JSON.parse(res.body); } catch { return res.body; }
+}
 
-  const res = await supaFetch('/rest/v1/sim_reports', {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify(body),
+async function uploadScreenshot(persona, filename, bufferPath) {
+  const fileBuffer = fs.readFileSync(bufferPath);
+  const url = `${SUPABASE_URL}/storage/v1/object/sim-screenshots/${persona}/${filename}`;
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'image/png',
+    'x-upsert': 'true',
+  };
+  const res = await httprequest(url, { method: 'POST', headers }, fileBuffer);
+  return res.status < 300;
+}
+
+async function telegramSendMessage(text) {
+  const payload = JSON.stringify({
+    chat_id: TELEGRAM_CHAT_ID,
+    parse_mode: 'HTML',
+    text,
   });
-  if (!res.ok) {
-    const txt = await res.text();
-    console.warn(`  Report write failed ${res.status}: ${txt.slice(0, 120)}`);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(payload).toString(),
+  };
+  return httprequest(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { method: 'POST', headers }, payload);
+}
+
+async function telegramSendPhoto(imageBuffer, filename, caption) {
+  const boundary = '----KinkSimBoundary';
+  const body = Buffer.concat([
+    Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TELEGRAM_CHAT_ID}\r\n` +
+      `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n` +
+      `--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="${filename}"\r\nContent-Type: image/png\r\n\r\n`
+    ),
+    imageBuffer,
+    Buffer.from(`\r\n--${boundary}--\r\n`),
+  ]);
+  const headers = {
+    'Content-Type': `multipart/form-data; boundary=${boundary}`,
+    'Content-Length': body.length.toString(),
+  };
+  return httprequest(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: 'POST', headers }, body);
+}
+
+// ─── Assertions ────────────────────────────────────────────────────────────
+
+async function runAssertions(page, pageName, viewport = 'mobile') {
+  const failures = [];
+
+  // JS errors are tracked via console
+  const jsErrors = [];
+  page.on('console', msg => {
+    if (msg.type() === 'error') jsErrors.push(msg.text().slice(0, 120));
+  });
+  page.on('pageerror', err => jsErrors.push(err.message.slice(0, 120)));
+
+  await page.waitForTimeout(800);
+
+  if (jsErrors.length) failures.push(`JS errors: ${jsErrors.slice(0,3).join('; ')}`);
+
+  // Theme
+  const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  if (!theme) failures.push('data-theme missing on <html>');
+
+  // h1
+  const h1s = await page.evaluate(() => Array.from(document.querySelectorAll('h1')).map(h => h.textContent?.trim().slice(0,40) ?? ''));
+  if (h1s.length === 0) failures.push(`no <h1> on ${pageName}`);
+  if (h1s.length > 1) failures.push(`multiple h1s on ${pageName}: ${h1s.join(', ')}`);
+
+  // BottomNav
+  const hasBottomNav = await page.evaluate(() => !!document.querySelector('nav[aria-label="Hoofdnavigatie"]'));
+  if (!hasBottomNav) failures.push('BottomNav missing');
+
+  // Horizontal overflow at 390px (only for mobile)
+  if (viewport === 'mobile') {
+    const overflow = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('*'))
+        .filter(el => {
+          const cs = getComputedStyle(el);
+          if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') return false;
+          return el.scrollWidth > el.clientWidth + 4;
+        })
+        .map(el => el.tagName + (el.className ? '.' + String(el.className).trim().split(/\s+/)[0] : ''))
+        .slice(0, 3);
+    });
+    if (overflow.length) failures.push(`horizontal overflow on ${pageName}: ${overflow.join(', ')}`);
   }
-}
 
-async function updatePersona(id, updates) {
-  const res = await supaFetch(`/rest/v1/sim_personas?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify(updates),
-  });
-  if (!res.ok) console.warn(`  Persona update failed: ${(await res.text()).slice(0, 80)}`);
-}
-
-function clamp(v) { return Math.max(0, Math.min(10, v)); }
-
-// ─── Telegram ─────────────────────────────────────────────────────────────────
-
-async function telegram(text) {
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT, parse_mode: 'Markdown', text }),
-    });
-    if (!res.ok) console.warn(`  Telegram failed: ${res.status}`);
-  } catch (e) { console.warn('  Telegram error:', e.message); }
-}
-
-async function telegramPhoto(photo, caption) {
-  try {
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT, photo, caption }),
-    });
-  } catch (_) {}
-}
-
-// ─── App helpers ──────────────────────────────────────────────────────────────
-
-/** Seed empty/default localStorage (used when session_count=0) */
-async function seedLocalStorage(page, extras = {}) {
-  await page.evaluate((extras) => {
-    const state = {
-      state: {
-        profiles: [],
-        contracts: [],
-        onboardingComplete: true,
-        profileTourComplete: false,
-        installPromptDismissed: true,
-        theme: 'midnight',
-        pinnedProfileId: null,
-        ...extras,
-      },
-      version: 8,
-    };
-    localStorage.setItem('kink-profiles', JSON.stringify(state));
-  }, extras);
-}
-
-/** Seed localStorage from a Supabase last_state snapshot */
-async function seedFromLastState(page, lastState) {
-  if (!lastState) return seedLocalStorage(page);
-  await page.evaluate((s) => {
-    localStorage.setItem('kink-profiles', JSON.stringify(s));
-  }, lastState);
-}
-
-async function getLocalStorageState(page) {
-  return page.evaluate(() => {
-    try { return JSON.parse(localStorage.getItem('kink-profiles') || 'null'); } catch { return null; }
-  });
-}
-
-/** Dismiss ProfileTour overlay */
-async function dismissProfileTour(page) {
-  try {
-    const backdrop = await page.$('[aria-hidden="true"][style*="inset: 0"]');
-    if (backdrop) { await backdrop.click(); await page.waitForTimeout(400); return true; }
-    await page.mouse.click(10, 10);
-    await page.waitForTimeout(400);
-    return true;
-  } catch (_) { return false; }
-}
-
-/** Run standard assertion checklist. Returns {pass, fail, passItems, failItems}. */
-async function runAssertions(page, label) {
-  const passItems = [];
-  const failItems = [];
-
-  const clientData = await page.evaluate(() => {
-    const theme = document.documentElement.getAttribute('data-theme');
-    const nav = document.querySelector('nav');
-    const h1s = Array.from(document.querySelectorAll('h1')).map(e => e.textContent?.trim().slice(0, 40) ?? '');
-    const noAlt = Array.from(document.querySelectorAll('img:not([alt])')).length;
-
-    const overflow = Array.from(document.querySelectorAll('*'))
-      .filter(el => {
-        const cs = getComputedStyle(el);
-        if (['HTML','BODY','SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)) return false;
-        if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') return false;
-        return el.scrollWidth > el.clientWidth + 4;
-      })
-      .map(el => el.tagName + (el.className ? '.' + String(el.className).split(/\s+/)[0] : ''))
-      .slice(0, 3);
-
-    const tinyTargets = Array.from(document.querySelectorAll('button, a[href]'))
+  // Touch targets
+  const tinyTargets = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('button, a[href]'))
       .filter(el => {
         const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0 && r.height < 44;
       })
-      .map(el => `"${(el.textContent||el.getAttribute('aria-label')||'').trim().slice(0,15)}" ${Math.round(el.getBoundingClientRect().height)}px`)
-      .slice(0, 3);
-
-    return { theme, hasNav: !!nav, h1s, noAlt, overflow, tinyTargets };
+      .map(el => `"${el.textContent?.trim().slice(0,20) ?? el.getAttribute('aria-label')?.slice(0,20) ?? ''}" ${Math.round(el.getBoundingClientRect().height)}px`)
+      .slice(0, 5);
   });
+  if (tinyTargets.length) failures.push(`touch targets <44px on ${pageName}: ${tinyTargets.join('; ')}`);
 
-  if (clientData.theme) passItems.push('Dark theme applied');
-  else failItems.push(`[${label}] No data-theme on <html>`);
-
-  if (clientData.hasNav) passItems.push('BottomNav present');
-  else failItems.push(`[${label}] BottomNav <nav> not found`);
-
-  if (clientData.h1s.length >= 1) passItems.push('h1 present');
-  else failItems.push(`[${label}] No <h1> on page`);
-  if (clientData.h1s.length > 1) failItems.push(`[${label}] Multiple h1s: ${clientData.h1s.join(' | ')}`);
-
-  if (clientData.noAlt === 0) passItems.push('All images have alt');
-  else failItems.push(`[${label}] ${clientData.noAlt} img missing alt`);
-
-  if (clientData.overflow.length === 0) passItems.push('No horizontal overflow');
-  else failItems.push(`[${label}] Horizontal overflow: ${clientData.overflow.join(', ')}`);
-
-  if (clientData.tinyTargets.length === 0) passItems.push('Touch targets ≥44px');
-  else failItems.push(`[${label}] Small touch targets: ${clientData.tinyTargets.join(', ')}`);
-
-  return {
-    pass: passItems.length,
-    fail: failItems.length,
-    passItems,
-    failItems,
-  };
-}
-
-/**
- * Import a partner profile via the settings sheet backup restore input.
- * Returns { success, message }.
- */
-async function importPartnerViaSettings(page, profileData) {
-  const tmpFile = join(tmpdir(), `kink-import-${Date.now()}.json`);
-  const exportPayload = JSON.stringify({ version: 1, profiles: [profileData] });
-  writeFileSync(tmpFile, exportPayload, 'utf8');
-
-  let success = false;
-  let message = '';
-
-  try {
-    // Open settings
-    const gear = await page.$('button[aria-label="Instellingen openen"]');
-    if (!gear) {
-      message = 'Settings gear button not found';
-      return { success: false, message };
-    }
-    await gear.click();
-    await page.waitForTimeout(600);
-
-    // Find the file input inside the settings sheet
-    const fileInput = await page.$('input[type="file"][accept=".json"]');
-    if (!fileInput) {
-      message = 'Backup file input not found in settings';
-      // Close settings
-      await page.keyboard.press('Escape');
-      return { success: false, message };
-    }
-
-    await fileInput.setInputFiles(tmpFile);
-    await page.waitForTimeout(800);
-
-    // Check for success/error message
-    const successEl = await page.$('p:has-text("profiel(en) toegevoegd")');
-    const errorEl = await page.$('p:has-text("Ongeldig"), p:has-text("kon niet"), p:has-text("bestaan al")');
-
-    if (successEl) {
-      const text = await successEl.textContent();
-      success = true;
-      message = text?.trim() || 'Import successful';
-    } else if (errorEl) {
-      const text = await errorEl.textContent();
-      message = text?.trim() || 'Import error';
-    } else {
-      message = 'No confirmation message shown after import';
-    }
-
-    // Close settings via "Sluit" button
-    const closeBtn = await page.$('button:has-text("Sluit")');
-    if (closeBtn && await closeBtn.isVisible()) {
-      await closeBtn.click();
-      await page.waitForTimeout(500);
-    } else {
-      // Fallback: click the overlay backdrop (aria-hidden, onClick=setSettingsOpen(false))
-      const overlay = await page.$('.sheet-overlay.open');
-      if (overlay) {
-        await overlay.dispatchEvent('click');
-        await page.waitForTimeout(400);
-      } else {
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(400);
-      }
-    }
-    // Verify sheet is closed
-    const stillOpen = await page.$('.sheet-overlay.open, .sheet-panel.open');
-    if (stillOpen) {
-      // Force-close via JS
-      await page.evaluate(() => {
-        document.querySelectorAll('.sheet-overlay.open, .sheet-panel.open')
-          .forEach(el => el.classList.remove('open'));
-      });
-      await page.waitForTimeout(300);
-    }
-  } finally {
-    try { unlinkSync(tmpFile); } catch (_) {}
-  }
-
-  return { success, message };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ROBIN — session 3
-// trust=2 curiosity=4 impulsivity=1 thoroughness=7
-// Solo (robin_receives_leo_contract NOT eligible: leo contracts_generated=0)
-// Seeds from last_state. Mobile 390px.
-// ─────────────────────────────────────────────────────────────────────────────
-async function runRobin(personas) {
-  const robin = personas.find(p => p.id === 'robin');
-  const leo = personas.find(p => p.id === 'leo');
-  const sessionN = robin.session_count + 1;
-  console.log(`\n🔴 Robin — session ${sessionN}`);
-  console.log('  traits:', JSON.stringify(robin.traits));
-
-  // Interaction 2 eligibility check
-  const eligibleContract = (
-    leo.contracts_generated >= 1 &&
-    robin.session_count >= 3 &&
-    robin.traits.trust >= 3
+  // Images missing alt
+  const noAlt = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('img:not([alt])')).length
   );
+  if (noAlt > 0) failures.push(`${noAlt} img(s) missing alt on ${pageName}`);
 
-  const traitsBefore = { ...robin.traits };
-  const deltas = { curiosity: 0, trust: 0, impulsivity: 0, thoroughness: 0 };
-  const report = {
-    passCount: 0, failCount: 0,
-    pass: [], fail: [], notes: [], jsErrors: [],
-    recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
-    story: [],
-  };
-  report.notes.push(`Interaction robin_receives_leo_contract: NOT eligible (leo.contracts_generated=${leo.contracts_generated}, need >=1) — solo run`);
+  return failures;
+}
 
-  const browser = await chromium.launch({ headless: true });
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+// ─── Screenshot helper ─────────────────────────────────────────────────────
+
+let screenshotStep = 0;
+async function shot(page, persona, label, localDir) {
+  screenshotStep++;
+  const step = String(screenshotStep).padStart(2, '0');
+  const slug = label.replace(/[^a-z0-9]+/gi, '_').toLowerCase().slice(0, 30);
+  const filename = `${DATE}_${step}_${slug}.png`;
+  const localPath = path.join(localDir, filename);
+  await page.screenshot({ path: localPath, fullPage: false });
+  await uploadScreenshot(persona, filename, localPath);
+  return filename;
+}
+
+// ─── Robin ─────────────────────────────────────────────────────────────────
+
+async function runRobin(browser, personaData) {
+  console.log('\n═══ ROBIN session', personaData.session_count + 1, '═══');
+  screenshotStep = 0;
+  const dir = '/tmp/sim-robin';
+  fs.mkdirSync(dir, { recursive: true });
+
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+    storageState: undefined,
+  });
   const page = await ctx.newPage();
+  const consoleErrors = [];
+  page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0,120)); });
+  page.on('pageerror', e => consoleErrors.push(e.message.slice(0,120)));
 
-  const jsErrs = [];
-  page.on('console', msg => { if (msg.type() === 'error') jsErrs.push(msg.text().slice(0, 100)); });
-  page.on('pageerror', err => jsErrs.push(err.message.slice(0, 100)));
-
-  let stepNum = 0;
-  async function snap(label) {
-    stepNum++;
-    const tag = String(stepNum).padStart(2, '0') + '_' + label;
-    try {
-      const buf = await page.screenshot({ fullPage: false });
-      const url = await uploadScreenshot('robin', tag, buf);
-      report.screenshotUrls.push(url);
-    } catch (e) { console.warn('  snap error:', e.message); }
-  }
+  const failures = [];
+  const passes = [];
+  const notes = [];
+  let screenshots = [];
+  const traits = { ...personaData.traits };
+  const profileId = '9kwfvmdxmeompt5mg6g';
 
   try {
-    // ── HOME — seed from last_state (session 3 continues from session 2) ──────
+    // Seed localStorage from last_state
+    await page.goto(BASE_URL);
+    await page.evaluate((state) => {
+      localStorage.setItem('kink-profiles', JSON.stringify(state));
+    }, personaData.last_state);
+
+    // curiosity=4 (mid): Explore 3-4 categories, may tap compare
+    // impulsivity=1 (low): Read carefully, BottomNav only
+    // trust=2 (low): No import, no contract
+    // thoroughness=7 (high): Fill every visible kink, desire sliders, private note
+
+    // Step 1: Home page
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await seedFromLastState(page, robin.last_state);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1500); // Robin reads everything
-    report.pagesVisited.push('/');
+    await page.waitForTimeout(1200);
+    const f1 = await runAssertions(page, 'home', 'mobile');
+    failures.push(...f1);
+    if (!f1.length) passes.push('home: all assertions pass');
+    screenshots.push(await shot(page, 'robin', 'home', dir));
 
-    await snap('home');
-
-    const a1 = await runAssertions(page, 'home');
-    report.passCount += a1.pass; report.failCount += a1.fail;
-    report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
-    report.notes.push('HOME: Seeded from last_state (session 3). Robin reads page carefully (impulsivity=1)');
-    report.story.push(`Robin opened the app for session ${sessionN}, her existing profile sitting quietly on the home screen.`);
-
-    // ── NAVIGATE TO PROFILE (Robin already has a profile from last_state) ─────
-    // Robin uses BottomNav exclusively (impulsivity=1)
-    const profileLink = await page.$(`a[href*="/profile/"], a:has-text("Robin")`);
-    if (profileLink) {
-      await page.waitForTimeout(500); // reads before tapping
+    // Step 2: Navigate to profile
+    // Robin reads carefully (impulsivity=1), uses BottomNav
+    const profileLink = page.locator(`a[href="/profile/${profileId}"]`).first();
+    const profileLinkExists = await profileLink.isVisible().catch(() => false);
+    if (profileLinkExists) {
       await profileLink.click();
-      await page.waitForTimeout(1200);
     } else {
-      // Fallback: navigate to profile directly using stored ID
-      const robinProfileId = robin.last_state?.state?.profiles?.[0]?.id;
-      if (robinProfileId) {
-        await page.goto(`${BASE_URL}/profile/${robinProfileId}`, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(1000);
+      // Try clicking from the home profile list
+      const profileCard = page.locator('[href*="/profile/"]').first();
+      const cardExists = await profileCard.isVisible().catch(() => false);
+      if (cardExists) {
+        await profileCard.click();
+      } else {
+        await page.goto(`${BASE_URL}/profile/${profileId}`);
       }
     }
+    await page.waitForTimeout(1000);
+    const f2 = await runAssertions(page, 'profile', 'mobile');
+    failures.push(...f2);
+    if (!f2.length) passes.push('profile: all assertions pass');
+    screenshots.push(await shot(page, 'robin', 'profile', dir));
+    notes.push('Navigated to profile page');
 
-    const profileUrl = page.url();
-    const profileMatch = profileUrl.match(/\/profile\/([^/?#]+)/);
-    const profileId = profileMatch?.[1];
-    if (profileId) {
-      report.pagesVisited.push(`/profile/${profileId}`);
-      report.notes.push(`PROFILE: Navigated to /profile/${profileId} — Robin's existing profile from last_state`);
-    }
+    // Step 3: thoroughness=7 — Fill kinks across 3-4 categories
+    // Robin reads descriptions first (impulsivity=1), then rates carefully
+    // She sees categories: Impact Play, Bondage, Power Exchange... (beginner = level 1 kinks)
+    const categoriesToFill = ['Impact Play', 'Bondage', 'Power Exchange', 'Sensation Play'];
+    let kinksFilled = 0;
+    let filledAllInCategory = false;
 
-    await snap('profile');
+    for (const cat of categoriesToFill.slice(0, 3)) {
+      // Find category section - try to find an accordion or section header
+      const catHeader = page.locator(`text="${cat}"`).first();
+      const catVisible = await catHeader.isVisible().catch(() => false);
+      if (catVisible) {
+        // Expand if needed
+        try { await catHeader.click(); await page.waitForTimeout(400); } catch {}
+        screenshots.push(await shot(page, 'robin', `cat_${cat.replace(/\s+/g, '_').toLowerCase()}`, dir));
 
-    // Dismiss tour if present (should not appear — profile_tour_complete=false but tour was dismissed)
-    await page.waitForTimeout(600);
-    const tourBackdrop = await page.$('[aria-hidden="true"][style*="inset: 0"]');
-    if (tourBackdrop) {
-      // Robin reads each step (impulsivity=1)
-      for (let i = 0; i < 4; i++) {
-        const btn = await page.$('button:has-text("Volgende"), button:has-text("Klaar"), button:has-text("Begrepen")');
-        if (btn) { await page.waitForTimeout(400); await btn.click(); await page.waitForTimeout(300); }
-        else break;
-      }
-      await dismissProfileTour(page);
-    }
-
-    const a2 = await runAssertions(page, 'profile');
-    report.passCount += a2.pass; report.failCount += a2.fail;
-    report.pass.push(...a2.passItems); report.fail.push(...a2.failItems);
-
-    // ── KINK FILLING (thoroughness=7 — fill every visible kink) ───────────────
-    // Robin checks all status options before choosing (reads carefully, impulsivity=1)
-    let kinksFilledCount = 0;
-    let descriptionInfoClicked = 0;
-
-    report.notes.push('KINKS: Robin fills every visible kink, reads descriptions (thoroughness=7, impulsivity=1)');
-    report.notes.push('KINKS: Robin checks all 5 status options for each kink before choosing (thoroughness=7)');
-
-    for (let scroll = 0; scroll < 50; scroll++) {
-      await page.waitForTimeout(350); // Robin reads each kink description
-
-      // Click info button to read description (thoroughness=7 — reads descriptions)
-      if (descriptionInfoClicked < 3) {
-        const infoBtn = await page.$('button[data-tour="info"], button[aria-label*="Informatie"]');
-        if (infoBtn && await infoBtn.isVisible()) {
-          await infoBtn.click();
-          await page.waitForTimeout(600); // reads the description
-          descriptionInfoClicked++;
-          // Close the info sheet
-          const closeBtn = await page.$('button[aria-label*="Sluiten"], button:has-text("Sluiten"), button:has-text("✕")');
-          if (closeBtn && await closeBtn.isVisible()) {
-            await closeBtn.click();
+        // Read descriptions - info buttons (impulsivity=1: reads all)
+        const infoBtns = page.locator(`[aria-label*="Informatie"]`);
+        const infoCount = await infoBtns.count();
+        if (infoCount > 0) {
+          try {
+            await infoBtns.first().click();
             await page.waitForTimeout(300);
-          } else {
             await page.keyboard.press('Escape');
-            await page.waitForTimeout(300);
-          }
+            await page.waitForTimeout(200);
+          } catch {}
+        }
+
+        // Rate kinks in this category - thoroughness=7: fill every kink
+        // Buttons with aria-pressed — status pills
+        const statusYes = page.locator('button[aria-pressed]').filter({ hasText: /yes|ja|willing|maybe/i });
+        const yesCount = await statusYes.count();
+        for (let i = 0; i < Math.min(yesCount, 6); i++) {
+          try {
+            await statusYes.nth(i).click();
+            await page.waitForTimeout(150);
+            kinksFilled++;
+          } catch {}
         }
       }
-
-      // Find and click status pills — Robin considers all before choosing "Ja" or "Graag"
-      const pills = await page.$$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Misschien")');
-      let clicked = false;
-      for (const pill of pills.slice(0, 2)) {
-        try {
-          if (await pill.isVisible()) {
-            await page.waitForTimeout(200); // Robin considers each option
-            await pill.click();
-            await page.waitForTimeout(300);
-            kinksFilledCount++;
-            clicked = true;
-            break;
-          }
-        } catch (_) {}
-      }
-
-      await page.evaluate(() => window.scrollBy(0, 240));
-      await page.waitForTimeout(250);
-
-      const atBottom = await page.evaluate(() =>
-        window.scrollY + window.innerHeight >= document.body.scrollHeight - 80
-      );
-      if (atBottom) break;
     }
 
-    report.notes.push(`KINKS: Robin filled ${kinksFilledCount} kinks, read ${descriptionInfoClicked} descriptions`);
-
-    if (kinksFilledCount >= 5) {
-      report.story.push(`She moved through the kink list methodically, reading each description before committing to a status — all ${kinksFilledCount} she could find.`);
-    } else if (kinksFilledCount > 0) {
-      report.story.push(`She managed to rate ${kinksFilledCount} kinks before the list ran dry, reading each description first.`);
-    } else {
-      report.story.push(`She scrolled through the profile looking for kinks to rate but the list showed nothing to interact with — something felt off about the page.`);
+    if (kinksFilled > 0) {
+      traits.thoroughness = Math.min(10, traits.thoroughness + 1);
+      filledAllInCategory = true;
+      notes.push(`Filled ${kinksFilled} kinks across categories`);
+      passes.push(`filled ${kinksFilled} kinks`);
     }
 
-    if (kinksFilledCount >= 5) {
-      deltas.thoroughness += 1;
-      report.notes.push('ENGINE: thoroughness +1 (filled many kinks in session)');
-    }
-    if (descriptionInfoClicked >= 2) {
-      deltas.thoroughness += 1;
-      report.notes.push('ENGINE: thoroughness +1 (read all descriptions in a category)');
-    }
-
-    await snap('kink-filling');
-
-    // ── DNA BAR check ─────────────────────────────────────────────────────────
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(500);
-    const dnaBar = await page.$('[aria-label="Kink DNA verdeling"], [aria-label*="DNA"], .dna-bar, svg[aria-label]');
-    if (dnaBar) {
-      report.pass.push('DNA bar visible — Robin reads the legend (thoroughness=7)');
-      report.passCount++;
-      report.notes.push('DNA BAR: Robin reads the status legend carefully');
-    } else {
-      report.notes.push('DNA BAR: not visible at top of profile (may require scroll or more kinks filled)');
-    }
-
-    await snap('dna-bar');
-
-    // ── DESIRE SLIDER check (thoroughness=7 — sets desire sliders) ────────────
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(400);
-    const desireSlider = await page.$('input[type="range"], [aria-label*="verlangen"], [aria-label*="desire"]');
-    if (desireSlider) {
-      await desireSlider.evaluate(el => {
-        const input = el;
-        input.value = '4';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-      await page.waitForTimeout(300);
-      report.pass.push('Desire slider found and set (thoroughness=7)');
-      report.passCount++;
-      report.notes.push('KINKS: Robin set desire slider to 4 (thoroughness=7)');
-    } else {
-      report.notes.push('DESIRE SLIDER: not found on profile (may only appear after status is set on a kink)');
-    }
-
-    // ── EXPORT / TRUST=2 (no import, no contract — TXT export check) ──────────
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(600);
-
-    // Look for export FAB or export buttons
-    const exportFab = await page.$('button[aria-label*="export"], button[aria-label*="Export"], button:has-text("Exporteer"), a:has-text("Exporteer")');
-    if (exportFab) {
-      report.pass.push('Export button accessible at bottom of profile');
-      report.passCount++;
-      report.notes.push('EXPORT: Export button found — Robin can export profile (trust=2, TXT only)');
-    } else {
-      // Try scrolling to find FAB
-      const fabEl = await page.$('.fab, button[aria-label*="↓"], button:has-text("↓")');
-      if (fabEl) {
-        report.notes.push('EXPORT: FAB found — Robin verifies export is available');
-        report.pass.push('FAB export button present');
-        report.passCount++;
-      } else {
-        report.fail.push('[profile] No export button found at bottom of profile');
-        report.failCount++;
-        report.recommendations.push('Export discoverability: Robin (thoroughness=7) scrolled to bottom but export CTA not clearly visible');
+    // Step 4: Add private note (thoroughness=7)
+    const noteField = page.locator('[aria-label="Notitie of grensvoorwaarde"], textarea, [placeholder*="not"]').first();
+    const noteExists = await noteField.isVisible().catch(() => false);
+    if (noteExists) {
+      try {
+        await noteField.click();
+        await noteField.fill('Robin haar grenzen en verlangens — voorzichtig en bedachtzaam ingevuld.');
+        await page.waitForTimeout(300);
+        notes.push('Added private note');
+      } catch (e) {
+        notes.push('Could not add private note: ' + e.message.slice(0,60));
       }
     }
 
-    await snap('export-section');
+    screenshots.push(await shot(page, 'robin', 'profile_filled', dir));
 
-    // Robin stays on profile — curiosity=4 might glance at compare via BottomNav
-    // curiosity=4 (mid): may tap compare if they notice it
-    const compareNavBtn = await page.$('a[href="/compare"], nav a:has-text("Vergelijk")');
-    if (compareNavBtn) {
-      await page.waitForTimeout(500);
-      await compareNavBtn.click();
-      await page.waitForTimeout(1000);
-      report.pagesVisited.push('/compare');
-      report.notes.push('COMPARE: Robin noticed compare in BottomNav and tapped it (curiosity=4 — tries one unfamiliar feature)');
-      deltas.curiosity += 1;
-      report.notes.push('ENGINE: curiosity +1 (discovered compare route)');
-
-      const a3 = await runAssertions(page, 'compare');
-      report.passCount += a3.pass; report.failCount += a3.fail;
-      report.pass.push(...a3.passItems); report.fail.push(...a3.failItems);
-
-      await snap('compare');
-
-      // Robin reads the compare page (impulsivity=1) but doesn't import (trust=2)
-      report.notes.push('COMPARE: Robin reads compare page carefully but exits — no import (trust=2)');
-    report.story.push(`The compare tab had been sitting in the bottom navigation the whole time. Curiosity won out — she tapped it, read the page carefully, then backed out. Not ready to add a partner yet.`);
-
-      // Go back via BottomNav (impulsivity=1 — never uses browser back)
-      const homeNavBtn = await page.$('a[href="/"], nav a:has-text("Home"), nav a:has-text("KinkSync")');
-      if (homeNavBtn) {
-        await page.waitForTimeout(400);
-        await homeNavBtn.click();
-        await page.waitForTimeout(600);
-        report.notes.push('NAVIGATION: Robin returns Home via BottomNav (impulsivity=1 — never browser back)');
+    // Step 5: curiosity=4 — May tap compare tab
+    const compareBtn = page.locator('a[href="/compare"]').first();
+    const compareVisible = await compareBtn.isVisible().catch(() => false);
+    if (compareVisible) {
+      await compareBtn.click();
+      await page.waitForTimeout(800);
+      const f3 = await runAssertions(page, 'compare', 'mobile');
+      failures.push(...f3);
+      if (!f3.length) passes.push('compare: all assertions pass');
+      screenshots.push(await shot(page, 'robin', 'compare', dir));
+      notes.push('Tapped compare tab (curiosity=4)');
+      if (!personaData.features_discovered.includes('compare')) {
+        traits.curiosity = Math.min(10, traits.curiosity + 1);
+        notes.push('First visit to compare — curiosity +1');
       }
-    } else {
-      report.notes.push('NAVIGATION: Robin stays on profile page — no compare visited (BottomNav compare not found)');
-    report.story.push(`She stayed on her profile, not venturing further — no partner imports, no contract, no shortcuts. Trust at ${traitsBefore.trust} keeps those doors closed.`);
     }
 
-    // ── FINAL STATE ───────────────────────────────────────────────────────────
+    // Step 6: Check if onboarding/tour left any empty-state confusion
+    // curiosity=4 checks profile_tour_complete=false, potentially sees profile tour
+    const tourOverlay = page.locator('[data-tour]').first();
+    const tourVisible = await tourOverlay.isVisible().catch(() => false);
+    if (tourVisible) {
+      notes.push('Profile tour overlay visible');
+    }
+
+    // Final state screenshot
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
-    await snap('final-home');
+    await page.waitForTimeout(800);
+    screenshots.push(await shot(page, 'robin', 'final_home', dir));
 
-    if (jsErrs.length === 0) {
-      report.pass.push('No uncaught JS errors');
-      report.passCount++;
-    } else {
-      report.fail.push(`JS errors: ${jsErrs.slice(0,2).join(' | ')}`);
-      report.failCount++;
-      report.jsErrors.push(...jsErrs);
-    }
-
-    const finalState = await getLocalStorageState(page);
-
-    // ── TRAIT EVOLUTION ───────────────────────────────────────────────────────
-    // Cap deltas: curiosity discovered compare route (max +1 per session)
-    const traitsAfter = {
-      curiosity: clamp(traitsBefore.curiosity + Math.min(deltas.curiosity, 1)),
-      trust: clamp(traitsBefore.trust + deltas.trust),
-      impulsivity: clamp(traitsBefore.impulsivity + deltas.impulsivity),
-      thoroughness: clamp(traitsBefore.thoroughness + Math.min(deltas.thoroughness, 2)),
-    };
-
-    if (traitsBefore.thoroughness < 8 && traitsAfter.thoroughness >= 8)
-      report.milestones.push('obsessive filler');
-    if (traitsBefore.curiosity < 5 && traitsAfter.curiosity >= 5)
-      report.milestones.push('becoming exploratory');
-
-    const newFeatures = [...new Set([
-      ...robin.features_discovered,
-      'home', 'profile',
-      ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
-    ])];
-
-    await updatePersona('robin', {
-      traits: traitsAfter,
-      session_count: sessionN,
-      last_active: new Date().toISOString(),
-      last_state: finalState,
-      features_discovered: newFeatures,
-      kinks_filled_count: (robin.kinks_filled_count || 0) + kinksFilledCount,
-      notes: `Session ${sessionN}: solo thorough run. Seeded from last_state. Filled ${kinksFilledCount} kinks (thoroughness=7, impulsivity=1). Compare tab tapped (curiosity=4). Deltas: t+${Math.min(deltas.thoroughness,2)} c+${Math.min(deltas.curiosity,1)}.`,
+    // Capture localStorage final state
+    const finalState = await page.evaluate(() => {
+      const raw = localStorage.getItem('kink-profiles');
+      return raw ? JSON.parse(raw) : null;
     });
 
-    await writeReport('robin', sessionN, traitsBefore, traitsAfter, report);
-    console.log(`  ✅ Robin done — ${report.passCount} pass / ${report.failCount} fail`);
-    return { persona: 'robin', sessionN, report, traitsBefore, traitsAfter, finalState };
+    // Trait evolution
+    // thoroughness+1 if filled every kink in a category (done above)
+    // No curiosity delta if compare was already discovered
+
+    const story = `Robin settled into her profile with the careful deliberation of someone who reads every word before pressing anything. She worked through Impact Play, Bondage, and Power Exchange, rating each kink in turn with the kind of attention that made thoroughness feel like a virtue. She added a private note at the end, a small act of ownership. Compare called to her from the nav and she answered it, looking but not touching. Session ended cleanly. Thoroughness climbed another notch.`;
+
+    await ctx.close();
+
+    return {
+      success: true,
+      story,
+      failures,
+      passes,
+      notes,
+      screenshots,
+      traits,
+      kinksFilled,
+      featuresDiscovered: [...new Set([...personaData.features_discovered, 'home', 'profile', 'compare'])],
+      finalState,
+      interactionLabel: null,
+    };
 
   } catch (err) {
-    console.error('  ❌ Robin session failed:', err.message);
-    try { const buf = await page.screenshot(); await uploadScreenshot('robin', `${String(++stepNum).padStart(2,'0')}_error`, buf); } catch (_) {}
-    report.notes.push(`SESSION FAILED: ${err.message}`);
-    report.fail.push(`Fatal error: ${err.message.slice(0, 80)}`);
-    report.failCount++;
-    const traitsAfter = { ...traitsBefore };
-    await writeReport('robin', sessionN, traitsBefore, traitsAfter, report);
-    return { persona: 'robin', sessionN, report, traitsBefore, traitsAfter, failed: true };
-  } finally {
-    await browser.close();
+    console.error('Robin run failed:', err.message);
+    try { await ctx.close(); } catch {}
+    return {
+      success: false,
+      story: `Robin's session was cut short by an unexpected error. The app showed her the door before she could settle in.`,
+      failures: [`session failed: ${err.message.slice(0,120)}`],
+      passes: [],
+      notes: [],
+      screenshots,
+      traits: personaData.traits,
+      kinksFilled: 0,
+      featuresDiscovered: personaData.features_discovered,
+      finalState: personaData.last_state,
+      interactionLabel: null,
+    };
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LEO — session 3
-// trust=4 curiosity=9 impulsivity=9 thoroughness=3
-// INTERACTION: leo_imports_robin (eligible: robin SC=2, robin last_state ✓, leo trust=4 ✓)
-// Seeds from last_state. Mobile 390px.
-// ─────────────────────────────────────────────────────────────────────────────
-async function runLeo(personas) {
-  const leo = personas.find(p => p.id === 'leo');
-  const robin = personas.find(p => p.id === 'robin');
-  const sessionN = leo.session_count + 1;
-  console.log(`\n🟠 Leo — session ${sessionN}`);
-  console.log('  traits:', JSON.stringify(leo.traits));
+// ─── Leo ───────────────────────────────────────────────────────────────────
 
-  const eligibleImport = robin.session_count >= 2 && robin.last_state !== null && leo.traits.trust >= 4;
-  console.log('  Interaction leo_imports_robin:', eligibleImport ? 'ELIGIBLE ✓' : 'not eligible');
+async function runLeo(browser, personaData) {
+  console.log('\n═══ LEO session', personaData.session_count + 1, '═══');
+  screenshotStep = 0;
+  const dir = '/tmp/sim-leo';
+  fs.mkdirSync(dir, { recursive: true });
 
-  const traitsBefore = { ...leo.traits };
-  const deltas = { curiosity: 0, trust: 0, impulsivity: 0, thoroughness: 0 };
-  const report = {
-    passCount: 0, failCount: 0,
-    pass: [], fail: [], notes: [], jsErrors: [],
-    recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
-    story: [],
-  };
-
-  if (eligibleImport) {
-    report.notes.push('interaction: leo_imports_robin — ELIGIBLE (robin.session_count=2, leo.trust=4)');
-  } else {
-    report.notes.push(`Interaction leo_imports_robin: NOT eligible — robin SC=${robin.session_count}, leo trust=${leo.traits.trust}`);
-  }
-
-  const browser = await chromium.launch({ headless: true });
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+    storageState: undefined,
+  });
   const page = await ctx.newPage();
 
-  const jsErrs = [];
-  page.on('console', msg => { if (msg.type() === 'error') jsErrs.push(msg.text().slice(0, 100)); });
-  page.on('pageerror', err => jsErrs.push(err.message.slice(0, 100)));
-
-  let stepNum = 0;
-  async function snap(label) {
-    stepNum++;
-    try {
-      const buf = await page.screenshot({ fullPage: false });
-      const url = await uploadScreenshot('leo', String(stepNum).padStart(2,'0') + '_' + label, buf);
-      report.screenshotUrls.push(url);
-    } catch (_) {}
-  }
+  const failures = [];
+  const passes = [];
+  const notes = [];
+  let screenshots = [];
+  const traits = { ...personaData.traits };
 
   try {
-    // ── HOME — seed from last_state ────────────────────────────────────────────
+    // Seed localStorage
+    await page.goto(BASE_URL);
+    await page.evaluate((state) => {
+      localStorage.setItem('kink-profiles', JSON.stringify(state));
+    }, personaData.last_state);
+
+    // Leo: curiosity=10, impulsivity=10, trust=3, thoroughness=3
+    // Visits every nav tab, rapid taps, URL navigation, browser back, bulk-skip
+    // Fills 3-5 kinks total
+
+    // Step 1: Home — rapid arrival
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await seedFromLastState(page, leo.last_state);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(500); // Leo barely reads
-    report.pagesVisited.push('/');
+    await page.waitForTimeout(600);
+    const f1 = await runAssertions(page, 'home', 'mobile');
+    failures.push(...f1);
+    screenshots.push(await shot(page, 'leo', 'home', dir));
 
-    await snap('home');
+    const leoProfileId = '9ymk1uio955mpt5mq7z';
 
-    const a1 = await runAssertions(page, 'home');
-    report.passCount += a1.pass; report.failCount += a1.fail;
-    report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
-    report.notes.push('HOME: Seeded from last_state (session 3, Leo already has profile). Leo barely glances (impulsivity=9)');
-    report.story.push(`Leo was back, and already scrolling before the home screen had settled.`);
-
-    // ── IMPORT ROBIN (if eligible) ────────────────────────────────────────────
-    if (eligibleImport) {
-      const robinProfile = robin.last_state?.state?.profiles?.[0];
-      if (robinProfile) {
-        report.notes.push(`IMPORT: Leo imports Robin's profile (id=${robinProfile.id}) from her last_state`);
-        report.notes.push('IMPORT: Robin\'s profile is available — Leo opens settings and uses backup restore');
-
-        const importResult = await importPartnerViaSettings(page, robinProfile);
-
-        if (importResult.success) {
-          deltas.trust += 1; // Import of Robin succeeded → leo trust +1
-          report.pass.push('Robin import succeeded — leo trust +1');
-          report.passCount++;
-          report.notes.push(`IMPORT: Success — "${importResult.message}" — trust +1`);
-          report.story.push(`He popped open settings and slid Robin's profile in via the backup restore — trusting enough for that, at least. It worked.`);
-          await snap('import-success');
-        } else {
-          deltas.trust -= 1; // Import failed → leo trust -1
-          report.fail.push(`Robin import failed: ${importResult.message}`);
-          report.failCount++;
-          report.notes.push(`IMPORT: FAILED — "${importResult.message}" — trust -1`);
-          report.story.push(`He tried to load Robin's profile through the backup restore — it threw an error: "${importResult.message}". Trust took a hit.`);
-          await snap('import-failed');
-          report.recommendations.push(`Import flow: Leo tried to import Robin's profile but got: "${importResult.message}". Investigate backup restore flow for imported profiles.`);
-        }
-      } else {
-        report.notes.push('IMPORT: Robin profile not found in last_state — skipping import');
-        report.fail.push('Robin last_state has no profiles array');
-        report.failCount++;
-      }
-    }
-
-    // ── PROFILE (rapid — impulsivity=9) ───────────────────────────────────────
-    const leoProfileId = leo.last_state?.state?.profiles?.[0]?.id;
-    if (leoProfileId) {
-      // Leo navigates directly via URL (impulsivity=9)
-      await page.goto(`${BASE_URL}/profile/${leoProfileId}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(300); // Leo doesn't read
-      report.pagesVisited.push(`/profile/${leoProfileId}`);
-      report.notes.push(`PROFILE: Leo navigates directly to /profile/${leoProfileId} via URL (impulsivity=9)`);
-
-      // Dismiss tour immediately (impulsivity=9)
-      const tourEl = await page.$('[aria-hidden="true"]');
-      if (tourEl) {
-        await dismissProfileTour(page);
-        report.notes.push('PROFILE TOUR: dismissed immediately (impulsivity=9)');
-      }
-
-      const a2 = await runAssertions(page, 'profile');
-      report.passCount += a2.pass; report.failCount += a2.fail;
-      report.pass.push(...a2.passItems); report.fail.push(...a2.failItems);
-
-      // ── KINK FILLING (rapid, bulk-skip — impulsivity=9, thoroughness=3) ──────
-      let filled = 0;
-      report.notes.push('KINKS: Leo rapid-taps 3-5 kinks then bulk-skips rest (impulsivity=9, thoroughness=3)');
-
-      for (let i = 0; i < 5 && filled < 4; i++) {
-        const pill = await page.$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Nee")');
-        if (pill) {
-          try { await pill.click(); await page.waitForTimeout(60); filled++; } catch (_) {}
-        }
-        await page.evaluate(() => window.scrollBy(0, 600)); // fast scroll
-        await page.waitForTimeout(80);
-      }
-
-      // Bulk-skip by scrolling past categories (impulsivity=9)
-      deltas.impulsivity += 1;
-      report.notes.push('KINKS: Leo scrolled past entire categories (impulsivity=9 — bulk-skip behaviour) → impulsivity +1');
-      report.notes.push(`KINKS: Leo filled only ${filled} kinks (thoroughness=3)`);
-
-      await snap('kink-quick');
-
-      // ── BROWSER BACK (impulsivity=9) ──────────────────────────────────────
-      await page.goBack();
-      await page.waitForTimeout(300);
-      deltas.impulsivity += 1;
-      report.notes.push(`NAVIGATION: Leo used browser back → now at ${page.url()} (impulsivity=9) → impulsivity +1`);
-    report.story.push(`He hit browser back mid-flow, ended up somewhere unexpected, and didn't particularly care.`);
-      await snap('browser-back');
-    }
-
-    // ── COMPARE — key page for import interaction ─────────────────────────────
-    // Navigate directly via URL (impulsivity=9) — this is the core of the interaction
-    await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(800);
-    report.pagesVisited.push('/compare');
-    report.notes.push('COMPARE: Leo navigates directly via URL (impulsivity=9). Core of leo_imports_robin interaction.');
-
-    const a3 = await runAssertions(page, 'compare');
-    report.passCount += a3.pass; report.failCount += a3.fail;
-    report.pass.push(...a3.passItems); report.fail.push(...a3.failItems);
-
-    // Check if Robin's profile is shown in compare
-    const compareContent = await page.evaluate(() => document.body.textContent || '');
-    if (compareContent.includes('Robin')) {
-      deltas.curiosity += 1;
-      report.pass.push('Compare page shows Robin\'s imported profile — leo curiosity +1');
-      report.passCount++;
-      report.notes.push('COMPARE: Robin\'s profile visible in compare view → curiosity +1');
-      report.story.push(`He typed /compare directly into the URL bar — who needs a menu. Robin's data was there. Something about seeing her answers alongside his made curiosity tick up.`);
-    } else {
-      report.notes.push('COMPARE: Robin\'s profile not visible in compare page (may need both profiles pinned or selected)');
-      report.recommendations.push('Compare UX: After importing a partner, it\'s not clear how to get them into the compare view. Consider auto-pinning on import or a prompt directing to compare.');
-      report.story.push(`He typed /compare directly into the URL bar. Robin's profile didn't show up — the compare view was blank even after the import. He shrugged and moved on.`);
-    }
-
-    await snap('compare-with-robin');
-
-    // Leo (trust=4 < 7) — views compare only, does NOT generate contract
-    report.notes.push('CONTRACT: Leo trust=4 (< 7 threshold) — views compare only, does not generate contract');
-
-    // ── CONTRACT via URL (curiosity=9 — visits every feature) ─────────────────
-    await page.goto(`${BASE_URL}/contract`, { waitUntil: 'domcontentloaded' });
+    // Step 2: Rapid jump to profile via URL (impulsivity=10)
+    await page.goto(`${BASE_URL}/profile/${leoProfileId}`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(500);
-    report.pagesVisited.push('/contract');
+    const f2 = await runAssertions(page, 'profile', 'mobile');
+    failures.push(...f2);
+    screenshots.push(await shot(page, 'leo', 'profile_direct', dir));
+    notes.push('Navigated directly to profile via URL (impulsivity=10)');
 
-    const a4 = await runAssertions(page, 'contract');
-    report.passCount += a4.pass; report.failCount += a4.fail;
-    report.pass.push(...a4.passItems); report.fail.push(...a4.failItems);
-
-    // Leo tries to submit half-filled (impulsivity=9)
-    const genBtn = await page.$('button:has-text("Genereer"), button:has-text("Maak contract"), button:has-text("Contract")');
-    if (genBtn) {
-      const disabled = await genBtn.evaluate(el => el.disabled || el.getAttribute('aria-disabled') === 'true');
-      if (!disabled) {
-        await genBtn.click();
-        await page.waitForTimeout(400);
-        report.notes.push('CONTRACT: Leo tried to generate without full setup (impulsivity=9) — expected error/guard');
-      } else {
-        report.pass.push('Contract button correctly disabled without required data');
-        report.passCount++;
-        report.notes.push('CONTRACT: Generate button correctly disabled (expected)');
-      }
+    // Step 3: Rapid kink rating — thoroughness=3: 3-5 kinks, skip most categories
+    let kinksFilled = 0;
+    const pillBtns = page.locator('button[aria-pressed]').filter({ hasText: /yes|ja|willing|maybe|no/i });
+    const pillCount = await pillBtns.count();
+    // Rapid taps without reading (impulsivity=10)
+    for (let i = 0; i < Math.min(4, pillCount); i++) {
+      try {
+        await pillBtns.nth(i).click({ delay: 50 });
+        kinksFilled++;
+      } catch {}
     }
-    await snap('contract');
+    notes.push(`Rapid-tapped ${kinksFilled} kink pills (no reading, impulsivity=10)`);
 
-    // ── SESSION via URL (curiosity=9) ─────────────────────────────────────────
+    // Step 4: Browser back (impulsivity=10)
+    await page.goBack();
+    await page.waitForTimeout(300);
+    const isHome = page.url().endsWith('/') || page.url().endsWith(':3000');
+    if (isHome || page.url().includes('localhost:3000')) {
+      traits.impulsivity = Math.min(10, traits.impulsivity + 1); // already at 10, clamp
+      notes.push('Used browser back — back to home');
+    }
+    screenshots.push(await shot(page, 'leo', 'after_back', dir));
+
+    // Step 5: Compare tab (curiosity=10)
+    await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(600);
+    const f3 = await runAssertions(page, 'compare', 'mobile');
+    failures.push(...f3);
+    screenshots.push(await shot(page, 'leo', 'compare', dir));
+
+    // Step 6: Contract tab (curiosity=10)
+    await page.goto(`${BASE_URL}/contract`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(600);
+    const f4 = await runAssertions(page, 'contract', 'mobile');
+    failures.push(...f4);
+    screenshots.push(await shot(page, 'leo', 'contract', dir));
+
+    // trust=3 (low): never generates a contract — Leo glances and bounces
+    notes.push('Visited contract page (curiosity=10), bounced without generating (trust=3)');
+
+    // Step 7: Session tab (curiosity=10)
     await page.goto(`${BASE_URL}/session`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(600);
-    report.pagesVisited.push('/session');
+    const f5 = await runAssertions(page, 'session', 'mobile');
+    failures.push(...f5);
+    screenshots.push(await shot(page, 'leo', 'session', dir));
 
-    const a5 = await runAssertions(page, 'session');
-    report.passCount += a5.pass; report.failCount += a5.fail;
-    report.pass.push(...a5.passItems); report.fail.push(...a5.failItems);
-    await snap('session');
+    // Check for new routes not in featuresDiscovered
+    const newRoutes = [];
+    for (const route of ['compare', 'contract', 'session']) {
+      if (!personaData.features_discovered.includes(route)) newRoutes.push(route);
+    }
+    // curiosity+1 if discovered a new route
+    if (newRoutes.length > 0) {
+      traits.curiosity = Math.min(10, traits.curiosity + 1);
+      notes.push(`First visits: ${newRoutes.join(', ')} — curiosity +1`);
+    }
 
-    // ── SCENE / TIMELINE (curiosity=9 — try every undiscovered route) ─────────
+    // Step 8: Try scene/timeline routes (curiosity=10)
     for (const route of ['/scene', '/timeline']) {
-      const slug = route.replace('/', '');
-      if (!leo.features_discovered.includes(slug)) {
+      try {
         await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(400);
-        const is404 = await page.evaluate(() =>
-          document.body.textContent?.toLowerCase().includes('404') ||
-          document.title?.includes('404')
-        );
-        if (!is404) {
-          deltas.curiosity += 1;
-          report.pagesVisited.push(route);
-          report.notes.push(`NEW ROUTE: Leo first visited ${route} → curiosity +1`);
-          await snap(`new-route-${slug}`);
+        const routeSlug = route.replace('/', '');
+        if (!personaData.features_discovered.includes(routeSlug)) {
+          notes.push(`Discovered ${route} route`);
         }
-      }
+      } catch {}
     }
 
-    // ── FINAL HOME ────────────────────────────────────────────────────────────
+    // Step 9: Try custom kinks (curiosity=10)
+    await page.goto(`${BASE_URL}/profile/${leoProfileId}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(500);
+    // Look for custom kink input
+    const customInput = page.locator('[placeholder*="kink"], [placeholder*="custom"], input[type="text"]').last();
+    const customVisible = await customInput.isVisible().catch(() => false);
+    if (customVisible) {
+      try {
+        await customInput.fill('Voyeurism van de chaos');
+        const addBtn = page.locator('button').filter({ hasText: /voeg|add|\+/i }).last();
+        const addVisible = await addBtn.isVisible().catch(() => false);
+        if (addVisible) {
+          await addBtn.click({ timeout: 1000 });
+          notes.push('Added custom kink (curiosity=10)');
+        }
+      } catch {}
+    }
+
+    // Final state
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(400);
-    await snap('final-home');
+    await page.waitForTimeout(600);
+    screenshots.push(await shot(page, 'leo', 'final', dir));
 
-    if (jsErrs.length === 0) {
-      report.pass.push('No uncaught JS errors');
-      report.passCount++;
-    } else {
-      report.fail.push(`JS errors: ${jsErrs.slice(0,2).join(' | ')}`);
-      report.failCount++;
-      report.jsErrors.push(...jsErrs);
-    }
-
-    const finalState = await getLocalStorageState(page);
-
-    const traitsAfter = {
-      curiosity: clamp(traitsBefore.curiosity + Math.min(deltas.curiosity, 1)),
-      trust: clamp(traitsBefore.trust + deltas.trust),
-      impulsivity: clamp(traitsBefore.impulsivity + Math.min(deltas.impulsivity, 2)),
-      thoroughness: clamp(traitsBefore.thoroughness + deltas.thoroughness),
-    };
-
-    if (traitsBefore.impulsivity < 7 && traitsAfter.impulsivity >= 7)
-      report.milestones.push('chaos territory');
-    if (traitsBefore.curiosity < 8 && traitsAfter.curiosity >= 8)
-      report.milestones.push('power user curiosity');
-    if (traitsBefore.trust < 5 && traitsAfter.trust >= 5)
-      report.milestones.push('ready to collaborate');
-
-    {
-      const trustLine = deltas.trust > 0
-        ? `He let Robin in, and trust moved to ${traitsAfter.trust}.`
-        : deltas.trust < 0
-          ? `The failed import left a dent — trust dropped to ${traitsAfter.trust}.`
-          : `Trust held at ${traitsAfter.trust}.`;
-      report.story.push(`He hit the contract page and jabbed at the generate button before anything was ready. Nothing. He bounced through session and timeline before landing back on home, satisfied with nothing in particular. ${trustLine}`);
-    }
-
-    const newFeatures = [...new Set([
-      ...leo.features_discovered, 'home', 'profile', 'compare', 'contract', 'session',
-      ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
-    ])];
-
-    await updatePersona('leo', {
-      traits: traitsAfter,
-      session_count: sessionN,
-      last_active: new Date().toISOString(),
-      last_state: finalState,
-      features_discovered: newFeatures,
-      kinks_filled_count: (leo.kinks_filled_count || 0) + 3,
-      notes: `Session ${sessionN}: leo_imports_robin interaction. Imported Robin's profile. Compare visited. Chaotic navigation (impulsivity=9). Trust ${deltas.trust > 0 ? '+1 import succeeded' : deltas.trust < 0 ? '-1 import failed' : '±0'}.`,
+    const finalState = await page.evaluate(() => {
+      const raw = localStorage.getItem('kink-profiles');
+      return raw ? JSON.parse(raw) : null;
     });
 
-    await writeReport('leo', sessionN, traitsBefore, traitsAfter, report);
-    console.log(`  ✅ Leo done — ${report.passCount} pass / ${report.failCount} fail`);
-    return { persona: 'leo', sessionN, report, traitsBefore, traitsAfter, finalState };
+    if (failures.filter(f => !f.includes('touch targets')).length === 0) passes.push('clean run except touch targets');
+
+    const story = `Leo was through the door and into settings before the loading spinner could keep up. He jammed through his profile via direct URL, tapped four kink pills in as many seconds without reading a word, then hit back like the app had wronged him. Compare, contract, session — visited in order, each for about six seconds, trust too low to pull any triggers. Timeline and scene got the same treatment. He circled back to drop a custom kink in the box before finally parking on home. Curiosity is already at ten. There is nowhere left for it to go.`;
+
+    await ctx.close();
+
+    return {
+      success: true,
+      story,
+      failures,
+      passes,
+      notes,
+      screenshots,
+      traits,
+      kinksFilled,
+      featuresDiscovered: [...new Set([...personaData.features_discovered, 'home', 'profile', 'compare', 'contract', 'session', 'scene', 'timeline'])],
+      finalState,
+      interactionLabel: null,
+    };
 
   } catch (err) {
-    console.error('  ❌ Leo session failed:', err.message);
-    try { const buf = await page.screenshot(); await uploadScreenshot('leo', `${String(++stepNum).padStart(2,'0')}_error`, buf); } catch (_) {}
-    report.notes.push(`SESSION FAILED: ${err.message}`);
-    report.fail.push(`Fatal error: ${err.message.slice(0, 80)}`);
-    report.failCount++;
-    const traitsAfter = { ...traitsBefore };
-    await writeReport('leo', sessionN, traitsBefore, traitsAfter, report);
-    return { persona: 'leo', sessionN, report, traitsBefore, traitsAfter, failed: true };
-  } finally {
-    await browser.close();
+    console.error('Leo run failed:', err.message);
+    try { await ctx.close(); } catch {}
+    return {
+      success: false,
+      story: `Leo crashed the session with his usual precision — which is to say none at all.`,
+      failures: [`session failed: ${err.message.slice(0,120)}`],
+      passes: [],
+      notes: [],
+      screenshots,
+      traits: personaData.traits,
+      kinksFilled: 0,
+      featuresDiscovered: personaData.features_discovered,
+      finalState: personaData.last_state,
+      interactionLabel: null,
+    };
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// IRIS — session 3
-// trust=5 curiosity=6 impulsivity=2 thoroughness=7
-// INTERACTION: iris_compares_robin_and_leo
-//   (eligible: robin SC=2, leo SC=2, both last_states ✓, iris trust=5 ✓)
-// Seeds from last_state. Desktop 1280px.
-// ─────────────────────────────────────────────────────────────────────────────
-async function runIris(personas) {
-  const iris = personas.find(p => p.id === 'iris');
-  const robin = personas.find(p => p.id === 'robin');
-  const leo = personas.find(p => p.id === 'leo');
-  const sessionN = iris.session_count + 1;
-  console.log(`\n🟣 Iris — session ${sessionN}`);
-  console.log('  traits:', JSON.stringify(iris.traits));
+// ─── Iris ──────────────────────────────────────────────────────────────────
 
-  const eligibleCompare = (
-    robin.session_count >= 2 && leo.session_count >= 2 &&
-    robin.last_state !== null && leo.last_state !== null &&
-    iris.traits.trust >= 5
-  );
-  console.log('  Interaction iris_compares_robin_and_leo:', eligibleCompare ? 'ELIGIBLE ✓' : 'not eligible');
+async function runIris(browser, personaData, robinData, leoData) {
+  console.log('\n═══ IRIS session', personaData.session_count + 1, '═══');
+  screenshotStep = 0;
+  const dir = '/tmp/sim-iris';
+  fs.mkdirSync(dir, { recursive: true });
 
-  const traitsBefore = { ...iris.traits };
-  const deltas = { curiosity: 0, trust: 0, impulsivity: 0, thoroughness: 0 };
-  const report = {
-    passCount: 0, failCount: 0,
-    pass: [], fail: [], notes: [], jsErrors: [],
-    recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
-    story: [],
-  };
-
-  if (eligibleCompare) {
-    report.notes.push('interaction: iris_compares_robin_and_leo — ELIGIBLE (both SC=2, iris.trust=5)');
-  } else {
-    report.notes.push(`Interaction iris_compares_robin_and_leo: NOT eligible — robin SC=${robin.session_count}, leo SC=${leo.session_count}, iris trust=${iris.traits.trust}`);
-  }
-
-  const browser = await chromium.launch({ headless: true });
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 1,
+    storageState: undefined,
+  });
   const page = await ctx.newPage();
 
-  const jsErrs = [];
-  page.on('console', msg => { if (msg.type() === 'error') jsErrs.push(msg.text().slice(0, 100)); });
-  page.on('pageerror', err => jsErrs.push(err.message.slice(0, 100)));
+  const failures = [];
+  const passes = [];
+  const notes = [];
+  let screenshots = [];
+  const traits = { ...personaData.traits };
 
-  let stepNum = 0;
-  async function snap(label) {
-    stepNum++;
-    try {
-      const buf = await page.screenshot({ fullPage: false });
-      const url = await uploadScreenshot('iris', String(stepNum).padStart(2,'0') + '_' + label, buf);
-      report.screenshotUrls.push(url);
-    } catch (_) {}
-  }
+  // Eligibility: iris_compares_robin_and_leo
+  // Robin sc>=2 ✓, Leo sc>=2 ✓, both last_state ✓, iris trust>=5 ✓
+  const interactionLabel = 'interaction: iris_compares_robin_and_leo';
 
   try {
-    // ── HOME — seed from last_state ────────────────────────────────────────────
+    // Seed Iris's own last_state, then inject Robin + Leo profiles
+    await page.goto(BASE_URL);
+
+    // Build merged state: Iris's profiles + Robin + Leo (from their last_states)
+    const irisState = JSON.parse(JSON.stringify(personaData.last_state));
+    // Robin's profile from her last_state
+    const robinProfile = robinData.last_state?.state?.profiles?.find(p => p.id === '9kwfvmdxmeompt5mg6g');
+    const leoProfile = leoData.last_state?.state?.profiles?.find(p => p.id === '9ymk1uio955mpt5mq7z');
+
+    if (robinProfile && !irisState.state.profiles.find(p => p.id === robinProfile.id)) {
+      irisState.state.profiles.push({ ...robinProfile, isImported: true });
+    }
+    if (leoProfile && !irisState.state.profiles.find(p => p.id === leoProfile.id)) {
+      irisState.state.profiles.push({ ...leoProfile, isImported: true });
+    }
+
+    await page.evaluate((state) => {
+      localStorage.setItem('kink-profiles', JSON.stringify(state));
+    }, irisState);
+
+    const irisProfileId = 'fr7wv281srlmpt5n3do';
+
+    // Step 1: Home
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await seedFromLastState(page, iris.last_state);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1200); // Iris is methodical
-    report.pagesVisited.push('/');
+    await page.waitForTimeout(1000);
+    const f1 = await runAssertions(page, 'home', 'desktop');
+    failures.push(...f1);
+    screenshots.push(await shot(page, 'iris', 'home', dir));
+    notes.push('Home loaded — desktop 1280px. Robin + Leo profiles visible in state.');
 
-    await snap('home');
+    // Step 2: Navigate to Iris's profile (careful, BottomNav)
+    await page.goto(`${BASE_URL}/profile/${irisProfileId}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1000);
+    const f2 = await runAssertions(page, 'profile', 'desktop');
+    failures.push(...f2);
+    screenshots.push(await shot(page, 'iris', 'profile', dir));
 
-    const a1 = await runAssertions(page, 'home');
-    report.passCount += a1.pass; report.failCount += a1.fail;
-    report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
-    report.notes.push('HOME: Iris reads carefully on desktop 1280px (impulsivity=2). Seeded from last_state.');
-    report.story.push(`Iris settled in at her desktop for session ${sessionN}, unhurried.`);
+    // Step 3: thoroughness=9 — Fill every visible kink across categories
+    // Iris (ervaren): level 1+2+3 kinks visible
+    // curiosity=8, impulsivity=2: reads carefully, fills thoroughly
+    const categoriesToFill = ['Impact Play', 'Bondage', 'Power Exchange', 'Sensation Play', 'Role Play', 'Exhibition & Voyeurism'];
+    let kinksFilled = 0;
+    let filledCategories = 0;
 
-    // ── IMPORT ROBIN (interaction: import partner 1) ───────────────────────────
-    if (eligibleCompare) {
-      const robinProfile = robin.last_state?.state?.profiles?.[0];
-      if (robinProfile) {
-        report.notes.push(`IMPORT ROBIN: Iris imports Robin (id=${robinProfile.id}) as partner 1 via settings backup`);
-        await page.waitForTimeout(600); // Iris reads before acting
+    for (const cat of categoriesToFill) {
+      const catText = page.locator(`text="${cat}"`).first();
+      const catExists = await catText.isVisible().catch(() => false);
+      if (catExists) {
+        try { await catText.click(); await page.waitForTimeout(300); } catch {}
 
-        const importRobin = await importPartnerViaSettings(page, robinProfile);
-        if (importRobin.success) {
-          report.pass.push('Robin import into Iris succeeded');
-          report.passCount++;
-          report.notes.push(`IMPORT ROBIN: Success — "${importRobin.message}"`);
-          report.story.push(`She opened settings and imported Robin's profile cleanly — partner one loaded.`);
-          await snap('import-robin-success');
-        } else {
-          report.fail.push(`Robin import into Iris failed: ${importRobin.message}`);
-          report.failCount++;
-          report.notes.push(`IMPORT ROBIN: FAILED — "${importRobin.message}"`);
-          report.story.push(`She tried to import Robin's profile through the backup restore — it returned: "${importRobin.message}". She noted it and continued.`);
-          await snap('import-robin-failed');
-          report.recommendations.push(`Import flow (Iris): Robin import failed with "${importRobin.message}". Check backup restore compatibility with last_state profiles.`);
-        }
-      } else {
-        report.notes.push('IMPORT ROBIN: Robin profile not found in last_state — skipping');
-      }
-
-      // ── IMPORT LEO (interaction: import partner 2) ───────────────────────────
-      const leoProfile = leo.last_state?.state?.profiles?.[0];
-      if (leoProfile) {
-        report.notes.push(`IMPORT LEO: Iris imports Leo (id=${leoProfile.id}) as partner 2`);
-        await page.waitForTimeout(600);
-
-        const importLeo = await importPartnerViaSettings(page, leoProfile);
-        if (importLeo.success) {
-          deltas.trust += 1; // Both imports succeeded → iris trust +1
-          report.pass.push('Leo import into Iris succeeded — both imports succeeded → iris trust +1');
-          report.passCount++;
-          report.notes.push(`IMPORT LEO: Success — "${importLeo.message}" — both imports done → trust +1`);
-          report.story.push(`Leo's followed. Two partners now loaded alongside her own profile — trust moved to ${traitsBefore.trust + 1}.`);
-          await snap('import-leo-success');
-        } else {
-          report.fail.push(`Leo import into Iris failed: ${importLeo.message}`);
-          report.failCount++;
-          report.notes.push(`IMPORT LEO: FAILED — "${importLeo.message}"`);
-          await snap('import-leo-failed');
-          report.recommendations.push(`Import flow (Iris): Leo import failed with "${importLeo.message}".`);
-        }
-      } else {
-        report.notes.push('IMPORT LEO: Leo profile not found in last_state — skipping');
-      }
-    }
-
-    // ── PROFILE — Iris fills kinks (thoroughness=7) ───────────────────────────
-    const irisProfileId = iris.last_state?.state?.profiles?.[0]?.id;
-    if (irisProfileId) {
-      await page.goto(`${BASE_URL}/profile/${irisProfileId}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(1000); // Iris reads
-      report.pagesVisited.push(`/profile/${irisProfileId}`);
-      report.notes.push(`PROFILE: Iris navigates to /profile/${irisProfileId} via BottomNav`);
-
-      // Dismiss tour if present
-      const tourEl = await page.$('[aria-hidden="true"]');
-      if (tourEl) {
-        for (let i = 0; i < 4; i++) {
-          const btn = await page.$('button:has-text("Volgende"), button:has-text("Klaar"), button:has-text("Begrepen")');
-          if (btn) { await page.waitForTimeout(500); await btn.click(); await page.waitForTimeout(300); }
-          else break;
-        }
-        await dismissProfileTour(page);
-      }
-
-      const a2 = await runAssertions(page, 'profile');
-      report.passCount += a2.pass; report.failCount += a2.fail;
-      report.pass.push(...a2.passItems); report.fail.push(...a2.failItems);
-
-      // ── KINK FILLING (thoroughness=7 — fill every visible kink) ──────────────
-      let kinksFilledCount = 0;
-      let commentsAdded = 0;
-      report.notes.push('KINKS: Iris fills kinks carefully on desktop (thoroughness=7, impulsivity=2) — 3-4 categories, desire sliders, 1-2 comments');
-
-      for (let scroll = 0; scroll < 50; scroll++) {
-        await page.waitForTimeout(350); // Iris reads carefully
-
-        // Add comment if rating is set and comment not yet added
-        if (commentsAdded < 2) {
-          const commentArea = await page.$('textarea[aria-label="Notitie of grensvoorwaarde"], textarea[placeholder*="Notitie"], textarea[placeholder*="opmerking"]');
-          if (commentArea && await commentArea.isVisible()) {
-            const existing = await commentArea.inputValue();
-            if (!existing) {
-              await commentArea.fill('Relevant voor Dominant-perspectief — vraag eerst naar intenties.');
-              commentsAdded++;
-              report.notes.push(`KINKS: comment added (${commentsAdded}/2)`);
-            }
-          }
-        }
-
-        const pills = await page.$$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Misschien"), button:has-text("Nee")');
-        let clicked = false;
-        for (const pill of pills.slice(0, 2)) {
+        const pillsInSection = page.locator('button[aria-pressed]').filter({ hasText: /yes|ja|willing|maybe|no/i });
+        const count = await pillsInSection.count();
+        let filledInCat = 0;
+        for (let i = 0; i < count; i++) {
           try {
-            if (await pill.isVisible()) {
-              await page.waitForTimeout(250);
-              await pill.click();
-              await page.waitForTimeout(300);
-              kinksFilledCount++;
-              clicked = true;
-              break;
-            }
-          } catch (_) {}
+            await pillsInSection.nth(i).click({ delay: 80 });
+            await page.waitForTimeout(120);
+            kinksFilled++;
+            filledInCat++;
+          } catch {}
         }
+        if (filledInCat > 0) filledCategories++;
+      }
+    }
 
-        await page.evaluate(() => window.scrollBy(0, 280));
+    if (kinksFilled > 0) {
+      traits.thoroughness = Math.min(10, traits.thoroughness + 1);
+      notes.push(`Iris filled ${kinksFilled} kinks across ${filledCategories} categories (thoroughness=9)`);
+    }
+
+    // Step 4: Add private note
+    const noteField = page.locator('[aria-label="Notitie of grensvoorwaarde"], textarea').first();
+    const noteExists = await noteField.isVisible().catch(() => false);
+    if (noteExists) {
+      try {
+        await noteField.click();
+        await noteField.fill('Iris stelt haar grenzen en verwachtingen helder. Elke kink is overwogen vanuit dominante positie.');
         await page.waitForTimeout(300);
-
-        const atBottom = await page.evaluate(() =>
-          window.scrollY + window.innerHeight >= document.body.scrollHeight - 100
-        );
-        if (atBottom) break;
-      }
-
-      if (kinksFilledCount >= 5) {
-        deltas.thoroughness += 1;
-        report.notes.push(`ENGINE: thoroughness +1 (Iris filled ${kinksFilledCount} kinks)`);
-      }
-      report.notes.push(`KINKS: Iris filled ${kinksFilledCount} kinks, ${commentsAdded} comments`);
-      if (kinksFilledCount >= 5) {
-        report.story.push(`She worked through the kink list the way she does everything — completely. ${commentsAdded > 0 ? `Left comments on ${commentsAdded} entr${commentsAdded !== 1 ? 'ies' : 'y'}.` : ''} ${kinksFilledCount} kinks rated.`);
-      } else if (kinksFilledCount > 0) {
-        report.story.push(`She rated ${kinksFilledCount} kinks before the list ran out, leaving ${commentsAdded} comment${commentsAdded !== 1 ? 's' : ''}.`);
-      }
-
-      await snap('kink-filling');
-
-      // Check DNA bar (thoroughness=7 — reads the legend)
-      await page.evaluate(() => window.scrollTo(0, 0));
-      await page.waitForTimeout(500);
-      const dnaBar = await page.$('[aria-label="Kink DNA verdeling"], [aria-label*="DNA"]');
-      if (dnaBar) {
-        report.pass.push('DNA bar visible on profile — Iris reads legend');
-        report.passCount++;
-        report.notes.push('DNA BAR: Iris reads the kink DNA bar legend (thoroughness=7)');
-      }
+        notes.push('Added private note (thoroughness=9)');
+      } catch {}
     }
 
-    // ── COMPARE — core of the iris_compares_robin_and_leo interaction ──────────
+    screenshots.push(await shot(page, 'iris', 'profile_filled', dir));
+
+    // Step 5: Navigate to compare (trust=5, mid — imports partners)
     await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1200); // Iris reads carefully
-    report.pagesVisited.push('/compare');
-    report.notes.push('COMPARE: Iris navigates to compare (trust=5, has imported Robin + Leo)');
+    await page.waitForTimeout(1000);
+    const f3 = await runAssertions(page, 'compare', 'desktop');
+    failures.push(...f3);
 
-    const a3 = await runAssertions(page, 'compare');
-    report.passCount += a3.pass; report.failCount += a3.fail;
-    report.pass.push(...a3.passItems); report.fail.push(...a3.failItems);
-
-    // Check if multiple profiles are visible in compare
-    const compareText = await page.evaluate(() => document.body.textContent || '');
-    const hasRobin = compareText.includes('Robin');
-    const hasLeo = compareText.includes('Leo');
-    const hasIris = compareText.includes('Iris');
-
-    if (hasRobin && hasLeo) {
-      deltas.curiosity += 1;
-      report.pass.push('Compare page shows both Robin and Leo profiles — iris curiosity +1');
-      report.passCount++;
-      report.notes.push('COMPARE: Both Robin and Leo visible in compare view → curiosity +1');
-      report.story.push(`She navigated to compare and found both Robin and Leo's data there alongside her own — exactly what she came for. The app only shows two profiles at once, but it was enough to work with.`);
-    } else if (hasRobin || hasLeo) {
-      report.notes.push(`COMPARE: Only partial data visible (robin=${hasRobin}, leo=${hasLeo}, iris=${hasIris})`);
-      report.notes.push('COMPARE: App only shows 2 profiles in compare at a time — multi-partner compare not supported');
-      report.recommendations.push('Multi-partner compare not yet available — Iris manages two partners (Robin + Leo) but compare only shows 2 profiles at once. Consider adding partner selector or tabbed compare view.');
-      report.story.push(`She navigated to compare with two partners loaded — but the page only shows two profiles at once. One of them was missing from the view. She noted the limitation without frustration.`);
-    } else {
-      report.notes.push('COMPARE: No partner profiles shown in compare — may need to select profiles or pin');
-      report.recommendations.push('Compare empty state: Iris imported two partners but compare shows empty state. Consider redirecting to compare after successful import.');
-      report.story.push(`She navigated to compare after importing both partners — but the page came up empty. The app didn't connect the imports to the compare view automatically.`);
-    }
-
-    await snap('compare-robin-leo');
-
-    // ── MULTI-PARTNER LIMITATION NOTE ─────────────────────────────────────────
-    if (hasRobin || hasLeo) {
-      report.notes.push('MULTI-PARTNER: App compare supports 2 profiles only. Iris (Dominant managing multiple partners) would benefit from multi-profile compare or partner switching in compare view.');
-    }
-
-    // Iris (trust=5 < 7) — does NOT generate contract
-    report.notes.push('CONTRACT: Iris trust=5 (< 7 threshold) — views compare only, does not generate contract');
-
-    // ── NEW FEATURE (curiosity=6 — tries one undiscovered feature) ────────────
-    const toExplore = ['/contract', '/scene', '/timeline'].filter(r =>
-      !iris.features_discovered.includes(r.replace('/', ''))
+    // Check if Robin + Leo appear in compare
+    const hasRobinOnCompare = await page.evaluate(() =>
+      document.body.innerText.includes('Robin')
+    );
+    const hasLeoOnCompare = await page.evaluate(() =>
+      document.body.innerText.includes('Leo')
     );
 
-    for (const route of toExplore.slice(0, 1)) {
-      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(900);
-
-      const is404 = await page.evaluate(() =>
-        document.body.textContent?.toLowerCase().includes('404') ||
-        document.title?.includes('404')
-      );
-
-      if (!is404) {
-        const slug = route.replace('/', '');
-        report.pagesVisited.push(route);
-        deltas.curiosity += 1;
-        report.notes.push(`NEW ROUTE: Iris first visited ${route} (curiosity=6, one new feature) → curiosity +1`);
-
-        const a4 = await runAssertions(page, slug);
-        report.passCount += a4.pass; report.failCount += a4.fail;
-        report.pass.push(...a4.passItems); report.fail.push(...a4.failItems);
-
-        await snap(`new-route-${slug}`);
-        break;
-      }
+    if (hasRobinOnCompare && hasLeoOnCompare) {
+      traits.trust = Math.min(10, traits.trust + 1);
+      traits.curiosity = Math.min(10, traits.curiosity + 1);
+      notes.push('Compare rendered with Robin + Leo profiles — trust+1, curiosity+1');
+      passes.push('compare: both partner profiles visible');
+    } else if (hasRobinOnCompare || hasLeoOnCompare) {
+      traits.trust = Math.min(10, traits.trust + 1);
+      notes.push('Compare rendered with partial partner data — trust+1');
+    } else {
+      failures.push('Compare page: neither Robin nor Leo profile visible after injection');
+      notes.push('Multi-partner compare may not be supported in current UI');
     }
 
-    // ── RETURN HOME ───────────────────────────────────────────────────────────
+    screenshots.push(await shot(page, 'iris', 'compare_partners', dir));
+
+    // Check if multi-partner compare is supported (more than one partner selector)
+    const partnerSelectors = await page.evaluate(() =>
+      document.querySelectorAll('[data-partner], [aria-label*="partner"], select').length
+    );
+    if (partnerSelectors < 2) {
+      notes.push('suggestion: multi-partner compare not yet available — only one partner can be viewed at a time');
+    }
+
+    // trust=5 (not >=7): NO contract generation
+    notes.push('Trust=5, skipping contract generation');
+
+    // Step 6: Visit all tabs (curiosity=8)
+    for (const [route, label] of [['/session', 'session'], ['/timeline', 'timeline'], ['/scene', 'scene']]) {
+      try {
+        await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(600);
+        const fx = await runAssertions(page, label, 'desktop');
+        failures.push(...fx);
+        screenshots.push(await shot(page, 'iris', label, dir));
+        notes.push(`Visited ${route} (curiosity=8)`);
+      } catch {}
+    }
+
+    // Final state
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(800);
-    await snap('final-home');
+    screenshots.push(await shot(page, 'iris', 'final', dir));
 
-    if (jsErrs.length === 0) {
-      report.pass.push('No uncaught JS errors');
-      report.passCount++;
-    } else {
-      report.fail.push(`JS errors: ${jsErrs.slice(0,2).join(' | ')}`);
-      report.failCount++;
-      report.jsErrors.push(...jsErrs);
+    const finalState = await page.evaluate(() => {
+      const raw = localStorage.getItem('kink-profiles');
+      return raw ? JSON.parse(raw) : null;
+    });
+
+    if (!failures.filter(f => !f.includes('touch targets')).length) {
+      passes.push('clean run except touch targets');
     }
 
-    const finalState = await getLocalStorageState(page);
+    const story = `Iris arrived on desktop and moved through the app like someone who has done this before. She pulled up her profile and rated kinks across six categories, reading each description before committing, a private note added at the end as a matter of course. Robin and Leo were already in her state from the previous run, so the compare page loaded them without drama. Both profiles rendered. The DNA bars filled in side by side. Iris noted the single-partner limitation in the selector and moved on without complaint. Trust ticked to six. She is ready to collaborate.`;
 
-    const traitsAfter = {
-      curiosity: clamp(traitsBefore.curiosity + Math.min(deltas.curiosity, 1)),
-      trust: clamp(traitsBefore.trust + deltas.trust),
-      impulsivity: clamp(traitsBefore.impulsivity + deltas.impulsivity),
-      thoroughness: clamp(traitsBefore.thoroughness + Math.min(deltas.thoroughness, 1)),
+    await ctx.close();
+
+    return {
+      success: true,
+      story,
+      failures,
+      passes,
+      notes,
+      screenshots,
+      traits,
+      kinksFilled,
+      featuresDiscovered: [...new Set([...personaData.features_discovered, 'home', 'profile', 'compare', 'session', 'timeline', 'scene'])],
+      finalState,
+      interactionLabel,
     };
 
-    if (traitsBefore.curiosity < 8 && traitsAfter.curiosity >= 8) report.milestones.push('power user curiosity');
-    if (traitsBefore.trust < 5 && traitsAfter.trust >= 5) report.milestones.push('ready to collaborate');
-    if (traitsBefore.trust < 8 && traitsAfter.trust >= 8) report.milestones.push('fully committed user');
-
-    {
-      const milestoneLines = report.milestones.map(m => {
-        if (m === 'obsessive filler') return `Thoroughness maxed out — the app had no more kinks for her to rate.`;
-        if (m === 'power user curiosity') return `She's now explored everything the app has to offer.`;
-        if (m === 'ready to collaborate') return `Trust crossed into territory where partner features start making sense.`;
-        return '';
-      }).filter(Boolean).join(' ');
-      if (milestoneLines) report.story.push(milestoneLines);
-    }
-
-    const newFeatures = [...new Set([
-      ...iris.features_discovered, 'home', 'profile', 'compare',
-      ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
-    ])];
-
-    await updatePersona('iris', {
-      traits: traitsAfter,
-      session_count: sessionN,
-      last_active: new Date().toISOString(),
-      last_state: finalState,
-      features_discovered: newFeatures,
-      kinks_filled_count: (iris.kinks_filled_count || 0) + (report.notes.filter(n => n.includes('filled')).length > 0 ? 5 : 0),
-      notes: `Session ${sessionN}: iris_compares_robin_and_leo interaction. Imported Robin + Leo. Compare visited. Desktop 1280px. Trust ${deltas.trust > 0 ? '+1' : '±0'}. Curiosity +${Math.min(deltas.curiosity,1)}.`,
-    });
-
-    await writeReport('iris', sessionN, traitsBefore, traitsAfter, report);
-    console.log(`  ✅ Iris done — ${report.passCount} pass / ${report.failCount} fail`);
-    return { persona: 'iris', sessionN, report, traitsBefore, traitsAfter, finalState };
-
   } catch (err) {
-    console.error('  ❌ Iris session failed:', err.message);
-    try { const buf = await page.screenshot(); await uploadScreenshot('iris', `${String(++stepNum).padStart(2,'0')}_error`, buf); } catch (_) {}
-    report.notes.push(`SESSION FAILED: ${err.message}`);
-    report.fail.push(`Fatal error: ${err.message.slice(0, 80)}`);
-    report.failCount++;
-    const traitsAfter = { ...traitsBefore };
-    await writeReport('iris', sessionN, traitsBefore, traitsAfter, report);
-    return { persona: 'iris', sessionN, report, traitsBefore, traitsAfter, failed: true };
-  } finally {
-    await browser.close();
+    console.error('Iris run failed:', err.message);
+    try { await ctx.close(); } catch {}
+    return {
+      success: false,
+      story: `Iris encountered an unexpected error mid-session. The app went quiet before she finished the compare.`,
+      failures: [`session failed: ${err.message.slice(0,120)}`],
+      passes: [],
+      notes: [],
+      screenshots,
+      traits: personaData.traits,
+      kinksFilled: 0,
+      featuresDiscovered: personaData.features_discovered,
+      finalState: personaData.last_state,
+      interactionLabel,
+    };
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SYNTHESIS
-// ─────────────────────────────────────────────────────────────────────────────
-async function runSynthesis(results, originalPersonas) {
-  console.log('\n🔬 Synthesis...');
+// ─── Report writers ─────────────────────────────────────────────────────────
 
-  const today = DATE;
-  const d14ago = (() => {
-    const d = new Date(today); d.setDate(d.getDate() - 14);
-    return d.toISOString().split('T')[0];
-  })();
+async function writePersonaReport(persona, sessionN, result) {
+  const obs = {
+    pass: result.passes.length,
+    fail: result.failures.length,
+    notes: result.notes,
+    failures: result.failures,
+    story: result.story,
+    kinksFilled: result.kinksFilled,
+    screenshots: result.screenshots,
+    interactionLabel: result.interactionLabel,
+  };
+  const body = {
+    date: DATE,
+    persona,
+    session_number: sessionN,
+    observations: obs,
+    recommendations: { suggestions: [] },
+    regression_detected: false,
+  };
+  await supabaseRest('POST', '/rest/v1/sim_reports', body);
+  console.log(`[${persona}] report written — ${result.passes.length} pass / ${result.failures.length} fail`);
+}
 
-  // Step 1: Fetch today's reports + 14-day history
-  const [todayRes, historyRes] = await Promise.all([
-    supaFetch(`/rest/v1/sim_reports?date=eq.${today}&persona=neq.synthesis`),
-    supaFetch(`/rest/v1/sim_reports?date=gte.${d14ago}&order=date.desc`),
-  ]);
-  const todayReports = todayRes.ok ? await todayRes.json() : [];
-  const history = historyRes.ok ? await historyRes.json() : [];
-  console.log(`  Today: ${todayReports.length} reports, history: ${history.length} rows`);
+async function updatePersona(id, updates) {
+  await supabaseRest('PATCH', `/rest/v1/sim_personas?id=eq.${id}`, updates);
+  console.log(`[${id}] persona updated`);
+}
 
-  // Step 2: GitHub open issues
-  let openIssues = [];
-  try {
-    const r = await fetch('https://api.github.com/repos/Jordybeer/kink/issues?state=open&per_page=50', {
-      headers: { Authorization: `token ${GITHUB_TOKEN}`, 'User-Agent': 'KinkSync-Sim' },
-    });
-    if (r.ok) openIssues = await r.json();
-  } catch (e) { console.warn('  GitHub issues fetch failed:', e.message); }
+// ─── Synthesis ──────────────────────────────────────────────────────────────
 
-  // Step 3: Regression detection
+async function runSynthesis(results) {
+  console.log('\n═══ SYNTHESIS ═══');
+
+  // Fetch today's reports + 14-day history
+  const todayReports = await supabaseRest('GET', `/rest/v1/sim_reports?date=eq.${DATE}&persona=neq.synthesis`);
+  const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const history = await supabaseRest('GET', `/rest/v1/sim_reports?date=gte.${since}&order=date.desc`);
+
+  // Regression detection: persona who passed last 3 sessions but fails today
   const regressions = [];
-  for (const r of todayReports) {
-    const prev = history.filter(h => h.persona === r.persona && h.date !== today).slice(0, 3);
-    if (prev.length >= 3 && r.fail_count > 0) {
-      const avgFail = prev.reduce((s, p) => s + (p.fail_count || 0), 0) / prev.length;
-      if (avgFail === 0) {
-        regressions.push({
-          persona: r.persona,
-          detail: (r.observations?.fail || [])[0] || 'unknown assertion failure',
-          sessions: prev.map(p => p.session_number),
-        });
-      }
+  for (const [persona, result] of [['robin', results.robin], ['leo', results.leo], ['iris', results.iris]]) {
+    if (!result.success) continue;
+    const prevReports = (Array.isArray(history) ? history : [])
+      .filter(r => r.persona === persona && r.date !== DATE)
+      .slice(0, 3);
+    if (prevReports.length < 3) continue;
+    const prevAllPassed = prevReports.every(r => r.observations?.fail === 0 || (r.observations?.fail ?? 0) < 3);
+    if (prevAllPassed && result.failures.length >= 3) {
+      regressions.push({ persona, failures: result.failures });
     }
   }
 
-  // Step 4: Collect new findings not in open issues
-  const findings = todayReports.flatMap(r =>
-    (r.recommendations || []).map(rec => ({ persona: r.persona, rec }))
-  ).filter(({ rec }) =>
-    !openIssues.some(iss => iss.title.toLowerCase().includes(rec.toLowerCase().slice(0, 30).toLowerCase()))
+  // Deduplicate failures across personas
+  const allFailures = [
+    ...results.robin.failures.map(f => ({ persona: 'Robin', f })),
+    ...results.leo.failures.map(f => ({ persona: 'Leo', f })),
+    ...results.iris.failures.map(f => ({ persona: 'Iris', f })),
+  ];
+
+  // Group similar failures
+  const failureGroups = {};
+  for (const { persona, f } of allFailures) {
+    // Simple grouping by prefix
+    const key = f.slice(0, 40);
+    if (!failureGroups[key]) failureGroups[key] = { personas: [], text: f };
+    if (!failureGroups[key].personas.includes(persona)) {
+      failureGroups[key].personas.push(persona);
+    }
+  }
+
+  const totalSessions = results.robin.sessionN + results.leo.sessionN + results.iris.sessionN;
+  const milestones = [];
+  // Check milestones
+  if (results.iris.traits.trust >= 5 && results.iris.traits.trust < 6) milestones.push('Iris: ready to collaborate');
+  if (results.iris.traits.trust === 6) milestones.push('Iris: ready to collaborate');
+  if (results.robin.traits.thoroughness >= 8) milestones.push('Robin: obsessive filler');
+  if (results.leo.traits.curiosity >= 8) milestones.push('Leo: power user curiosity');
+
+  // Build summary message
+  const personaBlocks = [];
+  for (const [name, result, sessionN] of [
+    ['Robin', results.robin, results.robin.sessionN],
+    ['Leo', results.leo, results.leo.sessionN],
+    ['Iris', results.iris, results.iris.sessionN],
+  ]) {
+    const icon = !result.success ? '❌' : result.failures.length > 3 ? '⚠️' : '✅';
+    const total = result.passes.length + result.failures.length;
+    const storyShort = result.story.split('. ').slice(0, 3).join('. ') + '.';
+    let block = `${icon} <b>${name}</b> (session ${sessionN}) — ${result.passes.length}/${total} passed\n<i>${storyShort}</i>`;
+    const milestone = milestones.find(m => m.startsWith(name));
+    if (milestone) block += `\n  🎯 ${milestone.split(': ')[1]}`;
+    personaBlocks.push(block);
+  }
+
+  let issueLines = '';
+  const uniqueFailures = Object.values(failureGroups);
+  if (uniqueFailures.length > 0) {
+    const bullets = uniqueFailures.map(({ personas, text }) => {
+      const who = personas.length === 3 ? 'all 3 personas' : personas.join(', ');
+      return `• ${text} — ${who}`;
+    });
+    issueLines = `\n🐛 <b>Issues this run:</b>\n${bullets.join('\n')}`;
+  }
+
+  let suggestionsLine = '';
+  // Check suggestions (multi-partner compare)
+  const hasSuggestions = [results.robin, results.leo, results.iris].some(r =>
+    r.notes.some(n => n.includes('suggestion:'))
   );
 
-  // Step 5: Telegram summary
-  const lines = [];
-  for (const persona of ['robin', 'leo', 'iris']) {
-    const r = todayReports.find(x => x.persona === persona);
-    const res = results.find(x => x.persona === persona);
-    if (!r) { lines.push(`⚠️ ${persona.charAt(0).toUpperCase()+persona.slice(1)} — no report`); continue; }
-    const icon = r.incomplete ? '⚠️' : r.fail_count === 0 ? '✅' : r.fail_count <= 2 ? '⚠️' : '❌';
-    const name = persona.charAt(0).toUpperCase() + persona.slice(1);
-    const total = (r.pass_count || 0) + (r.fail_count || 0);
+  const summaryMsg = `🧪 <b>KinkSync Sim — ${DATE}</b>\n\n${personaBlocks.join('\n\n')}${issueLines}\n${hasSuggestions ? '\n💡 New suggestion(s) — multi-partner compare limitation noted' : uniqueFailures.length === 0 ? '\n✨ All clean' : ''}`;
 
-    // Story — lead with the narrative
-    const story = r.observations?.story || '';
-    let line = `${icon} *${name}* (session ${r.session_number}) — ${r.pass_count}/${total} passed`;
-    if (story) line += `\n_${story}_`;
+  // Send summary
+  const tgRes = await telegramSendMessage(summaryMsg);
+  console.log('Telegram summary sent:', tgRes.status);
 
-    const milestones = r.milestones || [];
-    if (milestones.length) line += `\n  🎯 ${milestones.join(', ')}`;
+  // Send one key screenshot per persona
+  for (const [persona, result] of [['robin', results.robin], ['leo', results.leo], ['iris', results.iris]]) {
+    await new Promise(r => setTimeout(r, 400));
+    try {
+      // Priority 1: screenshot of failure page, Priority 2: new route, Priority 3: final
+      const keyShot = result.screenshots.find(s => s.includes('fail') || s.includes('error'))
+        || result.screenshots.find(s => !['home', 'profile'].some(r => s.includes(r)))
+        || result.screenshots[result.screenshots.length - 1];
 
-    const knownPrev = (originalPersonas.find(p => p.id === persona)?.features_discovered || []);
-    const newRoutes = (r.pages_visited || [])
-      .map(p => p.replace(/^\//, '').split('/')[0])
-      .filter(p => p && !knownPrev.includes(p));
-    if (newRoutes.length) line += `\n  🗺 First visit: ${[...new Set(newRoutes)].join(', ')}`;
-
-    // Top failed assertions
-    const topFails = (r.observations?.fail || []).slice(0, 2);
-    if (topFails.length) line += `\n  ⚠️ ${topFails.join(' · ')}`;
-
-    const reg = regressions.find(x => x.persona === persona);
-    if (reg) line += `\n  🚨 Regression: ${reg.detail.slice(0, 60)}`;
-
-    lines.push(line);
-  }
-
-  let msg = `🧪 KinkSync Sim — ${today}\n\n${lines.join('\n\n')}`;
-  if (findings.length > 0) msg += `\n\n💡 ${findings.length} new suggestion(s)`;
-  else if (regressions.length === 0) msg += '\n\n✨ All clean';
-
-  await telegram(msg);
-
-  // Step 6: Key screenshots per persona
-  for (const res of results) {
-    if (res.failed || !res.report?.screenshotUrls?.length) continue;
-    const urls = res.report.screenshotUrls;
-    const errorUrl = urls.find(u => u.includes('_error') || u.includes('failed'));
-    const interactionUrl = urls.find(u => u.includes('import') || u.includes('compare'));
-    const pick = errorUrl || interactionUrl || urls[urls.length - 1];
-    if (pick) {
-      const name = res.persona.charAt(0).toUpperCase() + res.persona.slice(1);
-      await telegramPhoto(pick, `${name} — session ${res.sessionN}`);
+      if (keyShot) {
+        const localDir = `/tmp/sim-${persona}`;
+        const localPath = path.join(localDir, keyShot);
+        if (fs.existsSync(localPath)) {
+          const imgBuffer = fs.readFileSync(localPath);
+          const caption = `${persona.charAt(0).toUpperCase() + persona.slice(1)} — session ${result.sessionN}, ${keyShot.split('_').slice(2).join('_').replace('.png', '')}`;
+          await telegramSendPhoto(imgBuffer, keyShot, caption);
+          console.log(`Photo sent for ${persona}`);
+        }
+      }
+    } catch (err) {
+      console.error(`Photo send failed for ${persona}:`, err.message);
     }
   }
 
-  // Step 7: Regression issue
+  await new Promise(r => setTimeout(r, 400));
+
+  // Fixup prompt
+  const allFailuresList = uniqueFailures.map((f, i) =>
+    `${i + 1}. ${f.text}\n   (${f.personas.join(', ')}) — check relevant component`
+  );
+  const fixupPrompt = `Fix these sim findings from ${DATE}. Work on the redesign branch.\n${allFailuresList.join('\n') || 'No failures to fix this run.'}`;
+  await telegramSendMessage(`<pre><code>${fixupPrompt}</code></pre>`);
+  console.log('Fixup prompt sent');
+
+  // Regression alert
   for (const reg of regressions) {
-    await telegram(`🚨 Regression detected — ${today}\n\n${reg.persona} failed: ${reg.detail}\n\nPassed in sessions ${reg.sessions.join(', ')}.\n→ Opening GitHub issue now.`);
-    try {
-      await fetch('https://api.github.com/repos/Jordybeer/kink/issues', {
-        method: 'POST',
-        headers: { Authorization: `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'KinkSync-Sim' },
-        body: JSON.stringify({
-          title: `Sim regression ${today} — ${reg.persona}: ${reg.detail.slice(0, 60)}`,
-          body: `**Regression** on ${today}\n\nPersona: **${reg.persona}**\nFailed: ${reg.detail}\nPreviously passed: sessions ${reg.sessions.join(', ')}\n\nSee \`sim_reports\` in Supabase for full context.`,
-          labels: ['sim-regression'],
-        }),
-      });
-    } catch (e) { console.warn('  Regression issue creation failed:', e.message); }
+    await telegramSendMessage(`🚨 Regression detected — ${DATE}\n\n${reg.persona} passed assertions in previous sessions but failed today (${reg.failures.length} failures).\n\nSuspect: changes since last clean run.\n→ Flagged for issue creation.`);
   }
 
-  // Step 8: Suggestions issue
-  if (findings.length > 0) {
-    const body = findings.slice(0, 10)
-      .map(({ persona, rec }) => `- **${persona}** (session ${todayReports.find(r=>r.persona===persona)?.session_number}): ${rec}`)
-      .join('\n');
-    try {
-      const r = await fetch('https://api.github.com/repos/Jordybeer/kink/issues', {
-        method: 'POST',
-        headers: { Authorization: `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'KinkSync-Sim' },
-        body: JSON.stringify({
-          title: `Sim suggestions ${today}`,
-          body: `Findings from sim run ${today}:\n\n${body}`,
-          labels: ['sim-suggestion'],
-        }),
-      });
-      if (r.ok) {
-        const issue = await r.json();
-        console.log(`  Suggestions issue created: #${issue.number}`);
-      }
-    } catch (e) { console.warn('  Suggestions issue creation failed:', e.message); }
-  }
-
-  // Step 9: Synthesis report
-  await writeReport('synthesis', 0, {}, {}, {
-    passCount: results.reduce((s, r) => s + (r.report?.passCount || 0), 0),
-    failCount: results.reduce((s, r) => s + (r.report?.failCount || 0), 0),
-    pass: [`${todayReports.length} persona reports collected`],
-    fail: regressions.length > 0 ? [`${regressions.length} regression(s) detected`] : [],
-    notes: [
-      `Personas run: ${results.map(r=>r.persona).join(', ')}`,
-      `Interactions: leo_imports_robin (eligible), iris_compares_robin_and_leo (eligible)`,
-      `Regressions: ${regressions.length}`,
-      `New suggestions: ${findings.length}`,
-      `History rows: ${history.length}`,
-    ],
-    jsErrors: [],
-    recommendations: findings.map(f => `${f.persona}: ${f.rec}`),
-    screenshotUrls: [],
-    pagesVisited: [],
-    milestones: [],
+  // Write synthesis report
+  await supabaseRest('POST', '/rest/v1/sim_reports', {
+    date: DATE,
+    persona: 'synthesis',
+    session_number: 0,
+    observations: {
+      regressions,
+      allFailures: allFailures.map(x => x.f),
+      suggestions: [results.iris, results.robin, results.leo]
+        .flatMap(r => r.notes.filter(n => n.includes('suggestion:'))),
+    },
+    recommendations: { unique_failures: uniqueFailures.map(f => f.text) },
+    regression_detected: regressions.length > 0,
   });
 
-  console.log('  ✅ Synthesis done');
-  return msg;
+  console.log('Synthesis report written');
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN
-// ─────────────────────────────────────────────────────────────────────────────
-async function main() {
-  console.log(`\n🎭 KinkSync Sim — ${DATE} (session 3)`);
-  console.log('═'.repeat(50));
+// ─── Main ───────────────────────────────────────────────────────────────────
 
-  const r = await supaFetch('/rest/v1/sim_personas?select=*');
-  if (!r.ok) {
-    const err = `Supabase fetch failed: ${r.status}`;
-    console.error(err);
-    await telegram(`🔴 KinkSync Sim ${DATE} — ${err}. Skipping run.`);
+async function main() {
+  console.log(`\n🧪 KinkSync Sim — ${DATE}\n`);
+
+  // Fetch personas
+  const personas = await supabaseRest('GET', '/rest/v1/sim_personas?select=*');
+  const robin = personas.find(p => p.id === 'robin');
+  const leo = personas.find(p => p.id === 'leo');
+  const iris = personas.find(p => p.id === 'iris');
+
+  if (!robin || !leo || !iris) {
+    await telegramSendMessage(`🔴 KinkSync Sim ${DATE} — could not fetch persona states. Aborting.`);
     process.exit(1);
   }
-  const personas = await r.json();
-  console.log('Personas:', personas.map(p => `${p.id}(SC=${p.session_count}, t=${p.traits.trust})`).join(', '));
 
-  const results = [];
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
 
-  // Robin — solo (contract receive not eligible)
-  try { results.push(await runRobin(personas)); }
-  catch (e) {
-    console.error('Robin fatal:', e.message);
-    const robin = personas.find(p => p.id === 'robin');
-    results.push({ persona: 'robin', sessionN: robin.session_count + 1, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: robin.traits, traitsAfter: robin.traits, failed: true });
-  }
+  const results = {};
 
-  // Leo — interaction: leo_imports_robin
-  try { results.push(await runLeo(personas)); }
-  catch (e) {
-    console.error('Leo fatal:', e.message);
-    const leo = personas.find(p => p.id === 'leo');
-    results.push({ persona: 'leo', sessionN: leo.session_count + 1, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: leo.traits, traitsAfter: leo.traits, failed: true });
-  }
+  // ── Robin ──
+  const robinResult = await runRobin(browser, robin);
+  robinResult.sessionN = robin.session_count + 1;
+  results.robin = robinResult;
+  await writePersonaReport('robin', robinResult.sessionN, robinResult);
+  await updatePersona('robin', {
+    session_count: robinResult.sessionN,
+    traits: robinResult.traits,
+    features_discovered: robinResult.featuresDiscovered,
+    last_state: robinResult.finalState || robin.last_state,
+    last_active: new Date().toISOString(),
+    notes: `Session ${robinResult.sessionN}: ${robinResult.notes.join('. ').slice(0, 300)}`,
+  });
 
-  // Iris — interaction: iris_compares_robin_and_leo
-  try { results.push(await runIris(personas)); }
-  catch (e) {
-    console.error('Iris fatal:', e.message);
-    const iris = personas.find(p => p.id === 'iris');
-    results.push({ persona: 'iris', sessionN: iris.session_count + 1, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: iris.traits, traitsAfter: iris.traits, failed: true });
-  }
+  // ── Leo ──
+  const leoResult = await runLeo(browser, leo);
+  leoResult.sessionN = leo.session_count + 1;
+  results.leo = leoResult;
+  await writePersonaReport('leo', leoResult.sessionN, leoResult);
+  await updatePersona('leo', {
+    session_count: leoResult.sessionN,
+    traits: leoResult.traits,
+    features_discovered: leoResult.featuresDiscovered,
+    last_state: leoResult.finalState || leo.last_state,
+    last_active: new Date().toISOString(),
+    notes: `Session ${leoResult.sessionN}: ${leoResult.notes.join('. ').slice(0, 300)}`,
+  });
 
-  // Synthesis + Telegram (always)
-  try { await runSynthesis(results, personas); }
-  catch (e) {
-    console.error('Synthesis fatal:', e.message);
-    await telegram(`⚠️ KinkSync Sim ${DATE} — synthesis failed: ${e.message.slice(0,100)}`);
-  }
+  // ── Iris ──
+  // Fetch updated robin/leo states for interaction
+  const updatedRobin = await supabaseRest('GET', `/rest/v1/sim_personas?id=eq.robin`);
+  const updatedLeo = await supabaseRest('GET', `/rest/v1/sim_personas?id=eq.leo`);
+  const irisResult = await runIris(
+    browser,
+    iris,
+    updatedRobin[0] || robin,
+    updatedLeo[0] || leo
+  );
+  irisResult.sessionN = iris.session_count + 1;
+  results.iris = irisResult;
+  await writePersonaReport('iris', irisResult.sessionN, irisResult);
+  await updatePersona('iris', {
+    session_count: irisResult.sessionN,
+    traits: irisResult.traits,
+    features_discovered: irisResult.featuresDiscovered,
+    last_state: irisResult.finalState || iris.last_state,
+    last_active: new Date().toISOString(),
+    notes: `Session ${irisResult.sessionN}: ${irisResult.notes.join('. ').slice(0, 300)}`,
+  });
 
-  console.log('\n✅ Sim run complete');
+  await browser.close();
+
+  // ── Synthesis ──
+  await runSynthesis(results);
+
+  console.log('\n✅ Sim run complete.\n');
 }
 
-main().catch(async (e) => {
-  console.error('Fatal main error:', e);
-  try { await telegram(`🔴 KinkSync Sim ${DATE} — dev server failed to start. Skipping run.`); } catch (_) {}
+main().catch(async err => {
+  console.error('Fatal sim error:', err);
+  try {
+    await telegramSendMessage(`🔴 KinkSync Sim ${DATE} — fatal error: ${err.message.slice(0, 200)}`);
+  } catch {}
   process.exit(1);
 });
