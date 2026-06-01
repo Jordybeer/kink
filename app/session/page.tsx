@@ -182,7 +182,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       console.log("[host] waiting for guest answer");
     } catch (err) {
       console.error("[host] error:", err);
-      setError((err as Error).message ?? String(err));
+      setError(String(err));
       setPhase("host_idle");
     }
   }
@@ -232,7 +232,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       setupChannel(ch, profile);
     } catch (err) {
       console.error("[guest] error:", err);
-      setError((err as Error).message ?? String(err));
+      setError(String(err));
       setPhase("guest_idle");
     }
   }
@@ -471,7 +471,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         </div>
       )}
 
-      {phase === "host_gathering" && spinner("Verbinding voorbereiden…")}
+      {phase === "host_gathering" && spinner("Verbinding voorbereiden… (TURN ophalen → ICE → offer posten)")}
 
       {phase === "host_waiting" && (
         <div className="text-center">
@@ -514,7 +514,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         </div>
       )}
 
-      {phase === "guest_gathering" && spinner("Antwoord voorbereiden…")}
+      {phase === "guest_gathering" && spinner("Antwoord voorbereiden… (TURN ophalen → ICE → answer posten)")}
 
       {phase === "connected" && (
         <div>
