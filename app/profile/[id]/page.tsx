@@ -42,6 +42,7 @@ export default function ProfilePage({ params }: Props) {
   const hideComments = true;
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [tourVisible, setTourVisible] = useState(false);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
@@ -93,6 +94,12 @@ export default function ProfilePage({ params }: Props) {
     setActiveTab(hasRatings ? "overzicht" : "bewerken");
   }, [_hasHydrated, profile]);
 
+  useEffect(() => {
+    if (profileTourComplete || activeTab !== "bewerken") { setTourVisible(false); return; }
+    const t = setTimeout(() => setTourVisible(true), 1500);
+    return () => clearTimeout(t);
+  }, [profileTourComplete, activeTab]);
+
   function handleStartEdit() {
     if (!profile) return;
     setEditName(profile.name);
@@ -122,7 +129,11 @@ export default function ProfilePage({ params }: Props) {
     setEditing(false);
   }
 
-  if (!_hasHydrated) return <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full" />;
+  if (!_hasHydrated) return (
+    <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full flex items-start justify-center pt-24">
+      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
+    </main>
+  );
 
   if (!profile) {
     return (
@@ -317,7 +328,7 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className="max-w-3xl mx-auto w-full pb-6">
-      {!profileTourComplete && activeTab === "bewerken" && <ProfileTour onComplete={completeProfileTour} />}
+      {tourVisible && <ProfileTour onComplete={completeProfileTour} />}
 
       {errorMessage && (
         <div

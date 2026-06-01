@@ -247,7 +247,11 @@ function HomeContent() {
     }
   }
 
-  if (!_hasHydrated) return <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full" />;
+  if (!_hasHydrated) return (
+    <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full flex items-start justify-center pt-24">
+      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
+    </main>
+  );
 
   if (!onboardingComplete) {
     return <Onboarding onComplete={completeOnboarding} />;
