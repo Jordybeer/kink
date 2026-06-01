@@ -142,10 +142,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setPhase("host_gathering");
     setError("");
     try {
+      console.log("[host] fetchIceServers start");
       const iceServers = await fetchIceServers();
+      console.log("[host] iceServers:", JSON.stringify(iceServers));
       const pc = new RTCPeerConnection({ iceServers });
       pcRef.current = pc;
       pc.oniceconnectionstatechange = () => {
+        console.log("[host] iceConnectionState:", pc.iceConnectionState);
         if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
           setError("Verbinding verloren — probeer opnieuw.");
           setPhase("host_idle");
@@ -156,12 +159,14 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       const ch = pc.createDataChannel("kink", { ordered: true });
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      console.log("[host] local description set, gathering ICE...");
       await Promise.race([
         waitForIceGathering(pc),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
+      console.log("[host] ICE gathered, posting offer");
       await postOffer(newCode, pc.localDescription!.sdp);
       // QR encodes KINKSYNC:<CODE> — no URL, no shareable link
       const qr = await QRCode.toDataURL(`KINKSYNC:${newCode}`, {
@@ -174,7 +179,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       const ac = new AbortController();
       pollAbortRef.current = ac;
       pollAnswer(newCode, (sdp) => applyAnswerRef.current?.(sdp), ac.signal);
+      console.log("[host] waiting for guest answer");
     } catch (err) {
+      console.error("[host] error:", err);
       setError((err as Error).message ?? String(err));
       setPhase("host_idle");
     }
@@ -188,11 +195,15 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setPhase("guest_gathering");
     setError("");
     try {
+      console.log("[guest] fetching offer + iceServers");
       const [offerSdp, iceServers] = await Promise.all([getOffer(codeInput), fetchIceServers()]);
+      console.log("[guest] iceServers:", JSON.stringify(iceServers));
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
+      console.log("[guest] offer received, creating RTCPeerConnection");
       const pc = new RTCPeerConnection({ iceServers });
       pcRef.current = pc;
       pc.oniceconnectionstatechange = () => {
+        console.log("[guest] iceConnectionState:", pc.iceConnectionState);
         if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
           setError("Verbinding verloren — probeer opnieuw.");
           setPhase("guest_idle");
@@ -206,16 +217,21 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       await pc.setRemoteDescription({ type: "offer", sdp: offerSdp });
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+      console.log("[guest] local description set, gathering ICE...");
       await Promise.race([
         waitForIceGathering(pc),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
+      console.log("[guest] ICE gathered, posting answer");
       await postAnswer(codeInput, pc.localDescription!.sdp);
+      console.log("[guest] answer posted, waiting for data channel");
       const ch = await channelPromise;
+      console.log("[guest] data channel open");
       setupChannel(ch, profile);
     } catch (err) {
+      console.error("[guest] error:", err);
       setError((err as Error).message ?? String(err));
       setPhase("guest_idle");
     }
