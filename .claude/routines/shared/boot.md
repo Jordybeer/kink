@@ -2,6 +2,11 @@
 
 ## Starting the dev server
 
+0. **Checkout the redesign branch** — the sim always runs against redesign, not dev:
+   ```bash
+   git checkout redesign && git pull origin redesign
+   ```
+
 1. Install dependencies if `node_modules` is missing:
    ```bash
    npm ci
