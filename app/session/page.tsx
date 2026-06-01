@@ -187,8 +187,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       ]);
       console.log("[host] ICE gathered, posting offer");
       await postOffer(newCode, pc.localDescription!.sdp);
-      // QR encodes KINKSYNC:<CODE> — no URL, no shareable link
-      const qr = await QRCode.toDataURL(`KINKSYNC:${newCode}`, {
+      const qr = await QRCode.toDataURL(`${location.origin}/session?join=${newCode}`, {
         width: 200, margin: 2, errorCorrectionLevel: "L",
         color: { dark: "#c084fc", light: "#0a0a0f" },
       });
