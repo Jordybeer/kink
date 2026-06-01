@@ -3,10 +3,16 @@ const STUN_ONLY: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 export async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
     const r = await fetch("/api/turn", { method: "POST" });
-    if (!r.ok) return STUN_ONLY;
+    console.log("[turn] status:", r.status);
+    if (!r.ok) {
+      console.warn("[turn] non-ok, falling back to STUN");
+      return STUN_ONLY;
+    }
     const data = await r.json() as { iceServers?: RTCIceServer[] };
+    console.log("[turn] response:", JSON.stringify(data));
     return data.iceServers ?? STUN_ONLY;
-  } catch {
+  } catch (err) {
+    console.error("[turn] fetch error:", err);
     return STUN_ONLY;
   }
 }
