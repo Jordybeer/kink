@@ -8,6 +8,20 @@ import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, Profile } from "@/types";
 import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, fetchIceServers } from "@/lib/webrtc";
 
+function iceServersSummary(servers: RTCIceServer[]): string {
+  const urls = servers.map(s => String(s.urls));
+  const turn = urls.filter(u => u.startsWith("turn:")).length;
+  const stun = urls.filter(u => u.startsWith("stun:")).length;
+  return `${servers.length} servers — ${turn} TURN, ${stun} STUN${turn === 0 ? " ⚠ GEEN TURN" : ""}`;
+}
+
+function iceCandSummary(types: string[]): string {
+  const counts: Record<string, number> = {};
+  for (const t of types) counts[t] = (counts[t] ?? 0) + 1;
+  const parts = Object.entries(counts).map(([t, n]) => `${n}× ${t}`).join(", ") || "geen";
+  return `${types.length} kandidaten (${parts})${counts.relay ? " ✓ relay aanwezig" : " ⚠ GEEN relay — cross-netwerk zal falen"}`;
+}
+
 const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
   yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)",
   no: "var(--no)", hard_no: "var(--hard-no)",
@@ -142,9 +156,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setPhase("host_gathering");
     setError("");
     try {
-      console.log("[host] fetchIceServers start");
+      console.log("[host] TURN ophalen...");
       const iceServers = await fetchIceServers();
-      console.log("[host] iceServers:", JSON.stringify(iceServers));
+      console.log("[host] ICE servers:", iceServersSummary(iceServers));
       let pc: RTCPeerConnection;
       try {
         pc = new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 2 });
@@ -156,7 +170,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       const hostCandTypes: string[] = [];
       pc.onicecandidate = (e) => {
         if (e.candidate?.type) hostCandTypes.push(e.candidate.type);
-        else console.log("[host] ICE gathering done, kandidaat-types:", hostCandTypes);
+        else console.log("[host] ICE gathering klaar:", iceCandSummary(hostCandTypes));
       };
       let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
@@ -190,8 +204,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
-      console.log("[host] ICE kandidaat-types na gathering:", hostCandTypes);
-      console.log("[host] ICE gathered, posting offer");
+      console.log("[host] ICE na timeout/klaar:", iceCandSummary(hostCandTypes));
+      console.log("[host] offer posten...");
       await postOffer(newCode, pc.localDescription!.sdp);
       const qr = await QRCode.toDataURL(`${location.origin}/session?join=${newCode}`, {
         width: 200, margin: 2, errorCorrectionLevel: "L",
@@ -219,9 +233,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setPhase("guest_gathering");
     setError("");
     try {
-      console.log("[guest] fetching offer + iceServers");
+      console.log("[guest] offer + TURN ophalen...");
       const [offerSdp, iceServers] = await Promise.all([getOffer(codeInput), fetchIceServers()]);
-      console.log("[guest] iceServers:", JSON.stringify(iceServers));
+      console.log("[guest] ICE servers:", iceServersSummary(iceServers));
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
       console.log("[guest] offer received, creating RTCPeerConnection");
       let pc: RTCPeerConnection;
@@ -235,7 +249,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       const guestCandTypes: string[] = [];
       pc.onicecandidate = (e) => {
         if (e.candidate?.type) guestCandTypes.push(e.candidate.type);
-        else console.log("[guest] ICE gathering done, kandidaat-types:", guestCandTypes);
+        else console.log("[guest] ICE gathering klaar:", iceCandSummary(guestCandTypes));
       };
       let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
@@ -272,8 +286,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
-      console.log("[guest] ICE kandidaat-types na gathering:", guestCandTypes);
-      console.log("[guest] ICE gathered, posting answer");
+      console.log("[guest] ICE na timeout/klaar:", iceCandSummary(guestCandTypes));
+      console.log("[guest] answer posten...");
       await postAnswer(codeInput, pc.localDescription!.sdp);
       console.log("[guest] answer posted, waiting for data channel");
       const ch = await channelPromise;
