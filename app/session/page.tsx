@@ -615,7 +615,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
       {phase === "connected" && (
         <div>
-          <div className="sticky top-0 z-10 -mx-4 px-4 pt-2 pb-3 mb-4 flex items-center gap-3" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+          <div className="sticky top-0 z-10 pt-2 pb-3 mb-4 flex items-center gap-3" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate">
                 <span style={{ color: "var(--accent)" }}>{profile?.name}</span>
