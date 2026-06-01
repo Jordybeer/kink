@@ -63,6 +63,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const [partnerDone, setPartnerDone] = useState(false);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const [debugLog, setDebugLog] = useState<string[]>([]);
   const [gatheringElapsed, setGatheringElapsed] = useState(0);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -80,6 +81,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   const profile = profiles.find(p => p.id === profileId);
   const partnerName = remoteProfile?.name ?? "partner";
+
+  function log(msg: string) {
+    console.log(msg);
+    setDebugLog(prev => [...prev.slice(-19), msg]);
+  }
 
   function send(msg: Msg) {
     const ch = channelRef.current;
@@ -155,10 +161,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setCode(newCode);
     setPhase("host_gathering");
     setError("");
+    setDebugLog([]);
     try {
-      console.log("[host] TURN ophalen...");
+      log("[host] TURN ophalen...");
       const iceServers = await fetchIceServers();
-      console.log("[host] ICE servers:", iceServersSummary(iceServers));
+      log("[host] ICE servers: " + iceServersSummary(iceServers));
       let pc: RTCPeerConnection;
       try {
         pc = new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 2 });
@@ -170,11 +177,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       const hostCandTypes: string[] = [];
       pc.onicecandidate = (e) => {
         if (e.candidate?.type) hostCandTypes.push(e.candidate.type);
-        else console.log("[host] ICE gathering klaar:", iceCandSummary(hostCandTypes));
+        else log("[host] ICE klaar: " + iceCandSummary(hostCandTypes));
       };
       let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
-        console.log("[host] iceConnectionState:", pc.iceConnectionState);
+        log("[host] ICE state: " + pc.iceConnectionState);
         if (pc.iceConnectionState === "failed") {
           clearTimeout(disconnectTimer);
           setError("Verbinding mislukt — zorg dat beide toestellen online zijn en probeer opnieuw.");
@@ -204,8 +211,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
-      console.log("[host] ICE na timeout/klaar:", iceCandSummary(hostCandTypes));
-      console.log("[host] offer posten...");
+      log("[host] ICE na timeout: " + iceCandSummary(hostCandTypes));
+      log("[host] offer posten...");
       await postOffer(newCode, pc.localDescription!.sdp);
       const qr = await QRCode.toDataURL(`${location.origin}/session?join=${newCode}`, {
         width: 200, margin: 2, errorCorrectionLevel: "L",
@@ -232,10 +239,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     initLocal(profile);
     setPhase("guest_gathering");
     setError("");
+    setDebugLog([]);
     try {
-      console.log("[guest] offer + TURN ophalen...");
+      log("[guest] offer + TURN ophalen...");
       const [offerSdp, iceServers] = await Promise.all([getOffer(codeInput), fetchIceServers()]);
-      console.log("[guest] ICE servers:", iceServersSummary(iceServers));
+      log("[guest] ICE servers: " + iceServersSummary(iceServers));
       if (!offerSdp) { setError("Code niet gevonden of verlopen."); setPhase("guest_idle"); return; }
       console.log("[guest] offer received, creating RTCPeerConnection");
       let pc: RTCPeerConnection;
@@ -249,11 +257,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       const guestCandTypes: string[] = [];
       pc.onicecandidate = (e) => {
         if (e.candidate?.type) guestCandTypes.push(e.candidate.type);
-        else console.log("[guest] ICE gathering klaar:", iceCandSummary(guestCandTypes));
+        else log("[guest] ICE klaar: " + iceCandSummary(guestCandTypes));
       };
       let disconnectTimer: ReturnType<typeof setTimeout> | undefined;
       pc.oniceconnectionstatechange = () => {
-        console.log("[guest] iceConnectionState:", pc.iceConnectionState);
+        log("[guest] ICE state: " + pc.iceConnectionState);
         if (pc.iceConnectionState === "failed") {
           clearTimeout(disconnectTimer);
           setError("Verbinding mislukt — zorg dat beide toestellen online zijn en probeer opnieuw.");
@@ -286,8 +294,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           setTimeout(() => reject(new Error("Verbinding mislukt — zelfde WiFi proberen of opnieuw.")), 15000)
         ),
       ]);
-      console.log("[guest] ICE na timeout/klaar:", iceCandSummary(guestCandTypes));
-      console.log("[guest] answer posten...");
+      log("[guest] ICE na timeout: " + iceCandSummary(guestCandTypes));
+      log("[guest] answer posten...");
       await postAnswer(codeInput, pc.localDescription!.sdp);
       console.log("[guest] answer posted, waiting for data channel");
       const ch = await channelPromise;
@@ -531,6 +539,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           {profilePicker()}
           {accentBtn("Sessie starten →", handleStartHost, !profile)}
           {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          {debugLog.length > 0 && (
+            <div className="mt-3 rounded-xl p-3 text-left" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+              {debugLog.map((line, i) => (
+                <p key={i} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("⚠") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -553,6 +568,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             Annuleer
           </button>
           {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          {debugLog.length > 0 && (
+            <div className="mt-3 rounded-xl p-3 text-left" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+              {debugLog.map((line, i) => (
+                <p key={i} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("⚠") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -574,6 +596,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           />
           {accentBtn("Verbinden →", handleStartGuest, !profile || codeInput.length !== 6)}
           {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          {debugLog.length > 0 && (
+            <div className="mt-3 rounded-xl p-3 text-left" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+              {debugLog.map((line, i) => (
+                <p key={i} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("⚠") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
