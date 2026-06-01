@@ -53,17 +53,28 @@ A regression is: a persona who **passed** an assertion in each of the last
 
 Always send this, even on fully clean runs.
 
-```
-🧪 KinkSync Sim — {YYYY-MM-DD}
+**Use `parse_mode: HTML`** — not Markdown. Underscores in identifiers like
+`last_state` break Telegram's Markdown v1 parser.
+
+```html
+🧪 <b>KinkSync Sim — {YYYY-MM-DD}</b>
 
 {for each persona: robin, leo, iris}
-{✅|⚠️|❌} *{Name}* (session {N}) — {pass}/{total} passed
-_{session story — 2–3 sentences from observations.story}_
+{✅|⚠️|❌} <b>{Name}</b> (session {N}) — {pass}/{total} passed
+<i>{session story — 2–3 sentences from observations.story}</i>
 {if milestone hit}  🎯 {milestone label}
 {if new route discovered}  🗺 First visit to {route}
-{if failed assertions exist}  ⚠️ Failed: {top 2 fail items}
 {if regression}  🚨 Regression: {assertion}
 {/for}
+
+🐛 <b>Issues this run:</b>
+{• one line per unique failure group, deduplicated across all personas:
+• Hydration: data-theme + BottomNav absent on first paint — all pages, all N personas
+• Import: backup restore rejects profiles already in last_state — cross-persona blocked
+• Touch targets: {element} {X}px, ... (below 44px minimum)
+• {route}: {specific issue — e.g. missing h1, horizontal scroll}
+...
+omit if no failures}
 
 {if new suggestions exist}
 💡 {N} new suggestion(s) → #{issue_number}
@@ -74,16 +85,27 @@ _{session story — 2–3 sentences from observations.story}_
 {/if}
 ```
 
-Each persona block leads with the human story, not the numbers. The numbers are supporting
-context, not the headline.
+Rules:
+- Each persona block leads with the human story, not the numbers
+- The `🐛 Issues` section groups and deduplicates failures from all three personas —
+  don't repeat the same failure three times; say "all 3 personas" instead
+- Failures that are identical across all pages and personas belong in one bullet, not six
 
-Send via:
-```bash
-curl -s -X POST \
-  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-  -d chat_id="$TELEGRAM_CHAT_ID" \
-  -d parse_mode="Markdown" \
-  -d text="{message}"
+Send via Python (curl cannot reliably handle special characters):
+```python
+import urllib.request, json
+payload = json.dumps({
+    "chat_id": TELEGRAM_CHAT_ID,
+    "parse_mode": "HTML",
+    "text": message
+}).encode()
+req = urllib.request.Request(
+    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+    data=payload,
+    headers={"Content-Type": "application/json"},
+    method="POST"
+)
+urllib.request.urlopen(req)
 ```
 
 ---
@@ -95,14 +117,41 @@ For each persona, pick the single most interesting screenshot from today:
 - **Priority 2**: first visit to a route not in `featuresDiscovered` before today
 - **Priority 3**: final state of the session
 
-Send via:
-```bash
-curl -s -X POST \
-  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendPhoto" \
-  -F chat_id="$TELEGRAM_CHAT_ID" \
-  -F photo="{supabase_public_url}" \
-  -F caption="{Name} — session {N}, {route}"
+**Supabase Storage requires auth headers** — Telegram cannot fetch the URL
+directly. Download each image first, then upload as multipart:
+
+```python
+import urllib.request, json, time
+
+def download_screenshot(persona, filename):
+    url = f"{SUPABASE_URL}/storage/v1/object/sim-screenshots/{persona}/{filename}"
+    req = urllib.request.Request(url, headers={
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+    })
+    with urllib.request.urlopen(req) as r:
+        return r.read()
+
+def send_photo(chat_id, image_bytes, filename, caption):
+    boundary = "----KinkSimBoundary"
+    body = (
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{chat_id}\r\n"
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"{filename}\"\r\n"
+        f"Content-Type: image/png\r\n\r\n"
+    ).encode() + image_bytes + f"\r\n--{boundary}--\r\n".encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto",
+        data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        method="POST"
+    )
+    urllib.request.urlopen(req)
+
+# caption format: "{Name} — session {N}, {route}"
 ```
+
+Send one photo per persona, then sleep 0.4s between each to avoid rate limits.
 
 ---
 

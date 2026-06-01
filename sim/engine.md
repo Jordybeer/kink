@@ -112,6 +112,11 @@ When a trait crosses these values, note it in the session report as a milestone:
 After each session, compose a 3–6 sentence third-person narrative describing what the persona
 actually experienced. This is not a test log — it is a human-readable account of their visit.
 
+**This story is sent verbatim in the Telegram summary.** Write it as if someone who cares about
+the product will read it on their phone. Keep sentences punchy. The Telegram block shows 2–3
+sentences; if the story is longer, the synthesis step trims it — but write the full version here
+so trimming has good material to work with.
+
 **Rules:**
 - Write in past tense, third person ("Robin opened…", "Leo barely glanced…")
 - Let the trait values drive the voice and detail: impulsivity=9 means rushed sentences; thoroughness=7 means careful, deliberate ones
@@ -119,6 +124,8 @@ actually experienced. This is not a test log — it is a human-readable account 
 - Note emotional texture where trait context allows: trust thresholds, confusion at empty states, delight at working features
 - If a cross-persona interaction ran, narrate it like an encounter — not just "import succeeded"
 - End with one sentence about what changed: a trait bump, a milestone, a finding to follow up
+- Avoid identifiers and underscored tokens (e.g. `last_state`, `profile_tour_complete`) —
+  the story goes into a Telegram HTML message; use plain language instead
 
 **Example (Leo, trust=4, impulsivity=9, curiosity=9):**
 > Leo launched the app and was already in settings before the home screen had finished rendering. He
