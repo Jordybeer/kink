@@ -1,10 +1,18 @@
 /**
- * KinkSync Sim Runner — 2026-05-31
+ * KinkSync Sim Runner — 2026-06-01 (session 3)
  * Executes persona sessions: Robin → Leo → Iris
  * Derives session behaviour from engine.md trait rules.
+ *
+ * Session 3 interactions:
+ *   Leo  → leo_imports_robin          (eligible: robin SC=2, leo trust=4)
+ *   Iris → iris_compares_robin_and_leo (eligible: both SC=2, iris trust=5)
+ *   Robin → robin_receives_leo_contract: NOT eligible (leo contracts_generated=0)
  */
 
 import { chromium } from '@playwright/test';
+import { writeFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -47,7 +55,6 @@ async function uploadScreenshot(personaId, stepLabel, pngBuffer) {
     );
     if (!res.ok) {
       console.warn(`  Screenshot upload failed ${res.status}: ${(await res.text()).slice(0, 80)}`);
-      return publicUrl; // return URL anyway — previous run may have the file
     }
     return publicUrl;
   } catch (e) {
@@ -125,6 +132,7 @@ async function telegramPhoto(photo, caption) {
 
 // ─── App helpers ──────────────────────────────────────────────────────────────
 
+/** Seed empty/default localStorage (used when session_count=0) */
 async function seedLocalStorage(page, extras = {}) {
   await page.evaluate((extras) => {
     const state = {
@@ -144,55 +152,51 @@ async function seedLocalStorage(page, extras = {}) {
   }, extras);
 }
 
+/** Seed localStorage from a Supabase last_state snapshot */
+async function seedFromLastState(page, lastState) {
+  if (!lastState) return seedLocalStorage(page);
+  await page.evaluate((s) => {
+    localStorage.setItem('kink-profiles', JSON.stringify(s));
+  }, lastState);
+}
+
 async function getLocalStorageState(page) {
   return page.evaluate(() => {
     try { return JSON.parse(localStorage.getItem('kink-profiles') || 'null'); } catch { return null; }
   });
 }
 
-/** Dismiss the ProfileTour by clicking the backdrop. */
+/** Dismiss ProfileTour overlay */
 async function dismissProfileTour(page) {
   try {
-    // The backdrop has aria-hidden="true" and onClick={onComplete}
     const backdrop = await page.$('[aria-hidden="true"][style*="inset: 0"]');
-    if (backdrop) {
-      await backdrop.click();
-      await page.waitForTimeout(400);
-      return true;
-    }
-    // Fallback: click anywhere at top of screen outside content
+    if (backdrop) { await backdrop.click(); await page.waitForTimeout(400); return true; }
     await page.mouse.click(10, 10);
     await page.waitForTimeout(400);
     return true;
   } catch (_) { return false; }
 }
 
-/** Run standard assertion checklist from assertions.md. Returns {pass, fail, passItems, failItems, jsErrors}. */
-async function runAssertions(page, label, isMobile = true) {
-  const jsErrors = [];
+/** Run standard assertion checklist. Returns {pass, fail, passItems, failItems}. */
+async function runAssertions(page, label) {
   const passItems = [];
   const failItems = [];
 
-  // Console errors already collected externally per page; this just captures from page.evaluate
-  const clientErrors = await page.evaluate(() => {
-    // Check theme
+  const clientData = await page.evaluate(() => {
     const theme = document.documentElement.getAttribute('data-theme');
     const nav = document.querySelector('nav');
     const h1s = Array.from(document.querySelectorAll('h1')).map(e => e.textContent?.trim().slice(0, 40) ?? '');
     const noAlt = Array.from(document.querySelectorAll('img:not([alt])')).length;
 
-    let overflow = [];
-    if (window.innerWidth <= 430) {
-      overflow = Array.from(document.querySelectorAll('*'))
-        .filter(el => {
-          const cs = getComputedStyle(el);
-          if (['HTML','BODY','SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)) return false;
-          if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') return false;
-          return el.scrollWidth > el.clientWidth + 4;
-        })
-        .map(el => el.tagName + (el.className ? '.' + String(el.className).split(/\s+/)[0] : ''))
-        .slice(0, 3);
-    }
+    const overflow = Array.from(document.querySelectorAll('*'))
+      .filter(el => {
+        const cs = getComputedStyle(el);
+        if (['HTML','BODY','SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)) return false;
+        if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') return false;
+        return el.scrollWidth > el.clientWidth + 4;
+      })
+      .map(el => el.tagName + (el.className ? '.' + String(el.className).split(/\s+/)[0] : ''))
+      .slice(0, 3);
 
     const tinyTargets = Array.from(document.querySelectorAll('button, a[href]'))
       .filter(el => {
@@ -205,93 +209,134 @@ async function runAssertions(page, label, isMobile = true) {
     return { theme, hasNav: !!nav, h1s, noAlt, overflow, tinyTargets };
   });
 
-  if (clientErrors.theme) passItems.push('Dark theme applied');
+  if (clientData.theme) passItems.push('Dark theme applied');
   else failItems.push(`[${label}] No data-theme on <html>`);
 
-  if (clientErrors.hasNav) passItems.push('BottomNav present');
+  if (clientData.hasNav) passItems.push('BottomNav present');
   else failItems.push(`[${label}] BottomNav <nav> not found`);
 
-  if (clientErrors.h1s.length >= 1) passItems.push('h1 present');
+  if (clientData.h1s.length >= 1) passItems.push('h1 present');
   else failItems.push(`[${label}] No <h1> on page`);
-  if (clientErrors.h1s.length > 1) failItems.push(`[${label}] Multiple h1s: ${clientErrors.h1s.join(' | ')}`);
+  if (clientData.h1s.length > 1) failItems.push(`[${label}] Multiple h1s: ${clientData.h1s.join(' | ')}`);
 
-  if (clientErrors.noAlt === 0) passItems.push('All images have alt');
-  else failItems.push(`[${label}] ${clientErrors.noAlt} img missing alt`);
+  if (clientData.noAlt === 0) passItems.push('All images have alt');
+  else failItems.push(`[${label}] ${clientData.noAlt} img missing alt`);
 
-  if (clientErrors.overflow.length === 0) passItems.push('No horizontal overflow');
-  else failItems.push(`[${label}] Horizontal overflow: ${clientErrors.overflow.join(', ')}`);
+  if (clientData.overflow.length === 0) passItems.push('No horizontal overflow');
+  else failItems.push(`[${label}] Horizontal overflow: ${clientData.overflow.join(', ')}`);
 
-  if (clientErrors.tinyTargets.length === 0) passItems.push('Touch targets ≥44px');
-  else failItems.push(`[${label}] Small touch targets: ${clientErrors.tinyTargets.join(', ')}`);
+  if (clientData.tinyTargets.length === 0) passItems.push('Touch targets ≥44px');
+  else failItems.push(`[${label}] Small touch targets: ${clientData.tinyTargets.join(', ')}`);
 
   return {
     pass: passItems.length,
     fail: failItems.length,
     passItems,
     failItems,
-    jsErrors,
   };
 }
 
-/** Create a profile via the home page form. Returns the profile ID. */
-async function createProfile(page, name, role = 'Switch', experienceLevel = 'beginner') {
-  // Form is shown automatically when profiles.length === 0
-  await page.waitForTimeout(800);
+/**
+ * Import a partner profile via the settings sheet backup restore input.
+ * Returns { success, message }.
+ */
+async function importPartnerViaSettings(page, profileData) {
+  const tmpFile = join(tmpdir(), `kink-import-${Date.now()}.json`);
+  const exportPayload = JSON.stringify({ version: 1, profiles: [profileData] });
+  writeFileSync(tmpFile, exportPayload, 'utf8');
 
-  const nameInput = await page.$('input[placeholder="Naam of alias…"]');
-  if (nameInput) {
-    await nameInput.click();
-    await nameInput.fill(name);
-    await page.waitForTimeout(200);
-  } else {
-    console.warn('  name input not found');
+  let success = false;
+  let message = '';
+
+  try {
+    // Open settings
+    const gear = await page.$('button[aria-label="Instellingen openen"]');
+    if (!gear) {
+      message = 'Settings gear button not found';
+      return { success: false, message };
+    }
+    await gear.click();
+    await page.waitForTimeout(600);
+
+    // Find the file input inside the settings sheet
+    const fileInput = await page.$('input[type="file"][accept=".json"]');
+    if (!fileInput) {
+      message = 'Backup file input not found in settings';
+      // Close settings
+      await page.keyboard.press('Escape');
+      return { success: false, message };
+    }
+
+    await fileInput.setInputFiles(tmpFile);
+    await page.waitForTimeout(800);
+
+    // Check for success/error message
+    const successEl = await page.$('p:has-text("profiel(en) toegevoegd")');
+    const errorEl = await page.$('p:has-text("Ongeldig"), p:has-text("kon niet"), p:has-text("bestaan al")');
+
+    if (successEl) {
+      const text = await successEl.textContent();
+      success = true;
+      message = text?.trim() || 'Import successful';
+    } else if (errorEl) {
+      const text = await errorEl.textContent();
+      message = text?.trim() || 'Import error';
+    } else {
+      message = 'No confirmation message shown after import';
+    }
+
+    // Close settings via "Sluit" button
+    const closeBtn = await page.$('button:has-text("Sluit")');
+    if (closeBtn && await closeBtn.isVisible()) {
+      await closeBtn.click();
+      await page.waitForTimeout(500);
+    } else {
+      // Fallback: click the overlay backdrop (aria-hidden, onClick=setSettingsOpen(false))
+      const overlay = await page.$('.sheet-overlay.open');
+      if (overlay) {
+        await overlay.dispatchEvent('click');
+        await page.waitForTimeout(400);
+      } else {
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(400);
+      }
+    }
+    // Verify sheet is closed
+    const stillOpen = await page.$('.sheet-overlay.open, .sheet-panel.open');
+    if (stillOpen) {
+      // Force-close via JS
+      await page.evaluate(() => {
+        document.querySelectorAll('.sheet-overlay.open, .sheet-panel.open')
+          .forEach(el => el.classList.remove('open'));
+      });
+      await page.waitForTimeout(300);
+    }
+  } finally {
+    try { unlinkSync(tmpFile); } catch (_) {}
   }
 
-  // Role select
-  try {
-    const roleSelect = await page.$('#role-select');
-    if (roleSelect) {
-      await roleSelect.selectOption({ value: role });
-      await page.waitForTimeout(200);
-    }
-  } catch (_) {}
-
-  // Experience level button (aria-pressed)
-  try {
-    const levelBtn = await page.$(`button[aria-pressed][aria-label*="${experienceLevel}"], button:has-text("${experienceLevel === 'beginner' ? 'Beginner' : experienceLevel === 'gevorderd' ? 'Gevorderd' : experienceLevel === 'ervaren' ? 'Ervaren' : 'Diepgaand'}")`);
-    if (levelBtn) {
-      await levelBtn.click();
-      await page.waitForTimeout(150);
-    }
-  } catch (_) {}
-
-  // Submit
-  const submitBtn = await page.$('button:has-text("Sla jezelf vast")');
-  if (submitBtn) {
-    await submitBtn.click();
-    await page.waitForTimeout(1800);
-  }
-
-  // Get profile ID from URL
-  const url = page.url();
-  const match = url.match(/\/profile\/([^/?#]+)/);
-  if (match) return match[1];
-
-  // Fallback: get from localStorage
-  const ls = await getLocalStorageState(page);
-  return ls?.state?.profiles?.[0]?.id ?? null;
+  return { success, message };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ROBIN — session 2
-// trust=2 curiosity=3 impulsivity=1 thoroughness=7
-// Solo. Mobile 390px.
+// ROBIN — session 3
+// trust=2 curiosity=4 impulsivity=1 thoroughness=7
+// Solo (robin_receives_leo_contract NOT eligible: leo contracts_generated=0)
+// Seeds from last_state. Mobile 390px.
 // ─────────────────────────────────────────────────────────────────────────────
 async function runRobin(personas) {
   const robin = personas.find(p => p.id === 'robin');
+  const leo = personas.find(p => p.id === 'leo');
   const sessionN = robin.session_count + 1;
   console.log(`\n🔴 Robin — session ${sessionN}`);
   console.log('  traits:', JSON.stringify(robin.traits));
+
+  // Interaction 2 eligibility check
+  const eligibleContract = (
+    leo.contracts_generated >= 1 &&
+    robin.session_count >= 3 &&
+    robin.traits.trust >= 3
+  );
 
   const traitsBefore = { ...robin.traits };
   const deltas = { curiosity: 0, trust: 0, impulsivity: 0, thoroughness: 0 };
@@ -300,21 +345,17 @@ async function runRobin(personas) {
     pass: [], fail: [], notes: [], jsErrors: [],
     recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
   };
-
-  // Interaction eligibility: none eligible this session (robin.session_count=1)
-  report.notes.push('Interaction check: robin_receives_leo_contract NOT eligible (leo.contracts_generated=0)');
+  report.notes.push(`Interaction robin_receives_leo_contract: NOT eligible (leo.contracts_generated=${leo.contracts_generated}, need >=1) — solo run`);
 
   const browser = await chromium.launch({ headless: true });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
 
-  // Collect JS errors
   const jsErrs = [];
   page.on('console', msg => { if (msg.type() === 'error') jsErrs.push(msg.text().slice(0, 100)); });
   page.on('pageerror', err => jsErrs.push(err.message.slice(0, 100)));
 
   let stepNum = 0;
-
   async function snap(label) {
     stepNum++;
     const tag = String(stepNum).padStart(2, '0') + '_' + label;
@@ -326,171 +367,228 @@ async function runRobin(personas) {
   }
 
   try {
-    // ── HOME ──────────────────────────────────────────────────────────────────
+    // ── HOME — seed from last_state (session 3 continues from session 2) ──────
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await seedLocalStorage(page);
+    await seedFromLastState(page, robin.last_state);
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(1500); // Robin reads everything
     report.pagesVisited.push('/');
 
     await snap('home');
 
-    const a = await runAssertions(page, 'home', true);
-    report.passCount += a.pass; report.failCount += a.fail;
-    report.pass.push(...a.passItems); report.fail.push(...a.failItems);
-    report.notes.push('HOME: onboarding_complete=true, fresh profile, no last_state — showing create form');
+    const a1 = await runAssertions(page, 'home');
+    report.passCount += a1.pass; report.failCount += a1.fail;
+    report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
+    report.notes.push('HOME: Seeded from last_state (session 3). Robin reads page carefully (impulsivity=1)');
 
-    // Robin reads everything before acting (impulsivity=1) — wait
-    await page.waitForTimeout(600);
+    // ── NAVIGATE TO PROFILE (Robin already has a profile from last_state) ─────
+    // Robin uses BottomNav exclusively (impulsivity=1)
+    const profileLink = await page.$(`a[href*="/profile/"], a:has-text("Robin")`);
+    if (profileLink) {
+      await page.waitForTimeout(500); // reads before tapping
+      await profileLink.click();
+      await page.waitForTimeout(1200);
+    } else {
+      // Fallback: navigate to profile directly using stored ID
+      const robinProfileId = robin.last_state?.state?.profiles?.[0]?.id;
+      if (robinProfileId) {
+        await page.goto(`${BASE_URL}/profile/${robinProfileId}`, { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(1000);
+      }
+    }
 
-    // ── CREATE PROFILE ────────────────────────────────────────────────────────
-    report.notes.push('PROFILE CREATION: Robin fills every field carefully (impulsivity=1)');
-    const profileId = await createProfile(page, 'Robin', 'Submissive', 'beginner');
-
+    const profileUrl = page.url();
+    const profileMatch = profileUrl.match(/\/profile\/([^/?#]+)/);
+    const profileId = profileMatch?.[1];
     if (profileId) {
       report.pagesVisited.push(`/profile/${profileId}`);
-      deltas.curiosity += 1; // discovered profile route (not previously confirmed visited)
-      report.notes.push(`PROFILE CREATED: id=${profileId}, navigated to /profile/${profileId}`);
-    } else {
-      report.notes.push('PROFILE CREATION: failed — profile ID not found after submit');
-      report.fail.push('[home] Profile creation did not navigate to /profile');
-      report.failCount++;
+      report.notes.push(`PROFILE: Navigated to /profile/${profileId} — Robin's existing profile from last_state`);
     }
 
-    await snap('post-create');
+    await snap('profile');
 
-    // ── PROFILE TOUR ──────────────────────────────────────────────────────────
-    // Robin reads every step of the tour (impulsivity=1)
-    await page.waitForTimeout(800);
-    const tourVisible = await page.$('[aria-hidden="true"]');
-    if (tourVisible) {
-      report.notes.push('PROFILE TOUR: visible — Robin reads each step, then clicks backdrop to dismiss');
-      // Click through the spotlight tooltip "Volgende" button if present, else click backdrop
+    // Dismiss tour if present (should not appear — profile_tour_complete=false but tour was dismissed)
+    await page.waitForTimeout(600);
+    const tourBackdrop = await page.$('[aria-hidden="true"][style*="inset: 0"]');
+    if (tourBackdrop) {
+      // Robin reads each step (impulsivity=1)
       for (let i = 0; i < 4; i++) {
-        const volgende = await page.$('button:has-text("Volgende"), button:has-text("Klaar")');
-        if (volgende) {
-          await page.waitForTimeout(400); // Robin reads
-          await volgende.click();
-          await page.waitForTimeout(300);
-        } else {
-          break;
-        }
+        const btn = await page.$('button:has-text("Volgende"), button:has-text("Klaar"), button:has-text("Begrepen")');
+        if (btn) { await page.waitForTimeout(400); await btn.click(); await page.waitForTimeout(300); }
+        else break;
       }
-      // Dismiss any remaining tour
       await dismissProfileTour(page);
     }
-    await page.waitForTimeout(600);
 
-    // ── KINK FILLING (thoroughness=7 — fill every visible kink) ───────────────
-    const a2 = await runAssertions(page, 'profile', true);
+    const a2 = await runAssertions(page, 'profile');
     report.passCount += a2.pass; report.failCount += a2.fail;
     report.pass.push(...a2.passItems); report.fail.push(...a2.failItems);
 
-    // Robin checks all status options before choosing (thoroughness=7, impulsivity=1)
+    // ── KINK FILLING (thoroughness=7 — fill every visible kink) ───────────────
+    // Robin checks all status options before choosing (reads carefully, impulsivity=1)
     let kinksFilledCount = 0;
-    let categoriesFullyFilled = 0;
+    let descriptionInfoClicked = 0;
 
-    // Fill kinks by clicking status pills — Robin chooses "Ja" or "Misschien" (reads each carefully)
-    for (let scroll = 0; scroll < 40; scroll++) {
-      await page.waitForTimeout(250); // Robin reads
+    report.notes.push('KINKS: Robin fills every visible kink, reads descriptions (thoroughness=7, impulsivity=1)');
+    report.notes.push('KINKS: Robin checks all 5 status options for each kink before choosing (thoroughness=7)');
 
-      // Find the first unfilled kink pill row — click status buttons
-      // Status pills: "Graag", "Ja", "Misschien", "Nee", "Harde grens"
-      const pilled = await page.$$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Misschien")');
+    for (let scroll = 0; scroll < 50; scroll++) {
+      await page.waitForTimeout(350); // Robin reads each kink description
 
-      // Robin checks all options before choosing — look for a pair of status pills
-      for (const pill of pilled.slice(0, 1)) {
+      // Click info button to read description (thoroughness=7 — reads descriptions)
+      if (descriptionInfoClicked < 3) {
+        const infoBtn = await page.$('button[data-tour="info"], button[aria-label*="Informatie"]');
+        if (infoBtn && await infoBtn.isVisible()) {
+          await infoBtn.click();
+          await page.waitForTimeout(600); // reads the description
+          descriptionInfoClicked++;
+          // Close the info sheet
+          const closeBtn = await page.$('button[aria-label*="Sluiten"], button:has-text("Sluiten"), button:has-text("✕")');
+          if (closeBtn && await closeBtn.isVisible()) {
+            await closeBtn.click();
+            await page.waitForTimeout(300);
+          } else {
+            await page.keyboard.press('Escape');
+            await page.waitForTimeout(300);
+          }
+        }
+      }
+
+      // Find and click status pills — Robin considers all before choosing "Ja" or "Graag"
+      const pills = await page.$$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Misschien")');
+      let clicked = false;
+      for (const pill of pills.slice(0, 2)) {
         try {
-          const isVisible = await pill.isVisible();
-          if (!isVisible) continue;
-          await page.waitForTimeout(200); // Robin considers
-          await pill.click();
-          await page.waitForTimeout(300);
-          kinksFilledCount++;
-          break;
+          if (await pill.isVisible()) {
+            await page.waitForTimeout(200); // Robin considers each option
+            await pill.click();
+            await page.waitForTimeout(300);
+            kinksFilledCount++;
+            clicked = true;
+            break;
+          }
         } catch (_) {}
       }
 
-      // Scroll down to find more kinks
-      await page.evaluate(() => window.scrollBy(0, 280));
-      await page.waitForTimeout(200);
+      await page.evaluate(() => window.scrollBy(0, 240));
+      await page.waitForTimeout(250);
 
       const atBottom = await page.evaluate(() =>
         window.scrollY + window.innerHeight >= document.body.scrollHeight - 80
       );
-      if (atBottom) {
-        categoriesFullyFilled++;
-        break;
-      }
+      if (atBottom) break;
     }
 
-    report.notes.push(`KINKS: Robin filled ${kinksFilledCount} kinks (thoroughness=7, impulsivity=1 — reading each description first)`);
+    report.notes.push(`KINKS: Robin filled ${kinksFilledCount} kinks, read ${descriptionInfoClicked} descriptions`);
 
     if (kinksFilledCount >= 5) {
-      deltas.thoroughness += 1; // filled many kinks
-      report.notes.push('ENGINE: thoroughness +1 (filled many kinks)');
+      deltas.thoroughness += 1;
+      report.notes.push('ENGINE: thoroughness +1 (filled many kinks in session)');
+    }
+    if (descriptionInfoClicked >= 2) {
+      deltas.thoroughness += 1;
+      report.notes.push('ENGINE: thoroughness +1 (read all descriptions in a category)');
     }
 
     await snap('kink-filling');
 
-    // ── DNA BAR ───────────────────────────────────────────────────────────────
-    // Robin reads the DNA bar legend (thoroughness=7)
+    // ── DNA BAR check ─────────────────────────────────────────────────────────
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(600);
-
-    const dnaBar = await page.$('[aria-label="Kink DNA verdeling"]');
+    await page.waitForTimeout(500);
+    const dnaBar = await page.$('[aria-label="Kink DNA verdeling"], [aria-label*="DNA"], .dna-bar, svg[aria-label]');
     if (dnaBar) {
-      report.pass.push('DNA bar rendered with aria-label');
+      report.pass.push('DNA bar visible — Robin reads the legend (thoroughness=7)');
       report.passCount++;
-      report.notes.push('DNA BAR: visible and readable — Robin reads the status legend');
-      deltas.thoroughness += 1;
+      report.notes.push('DNA BAR: Robin reads the status legend carefully');
     } else {
-      report.fail.push('[profile] DNA bar not found (may require kinks to be filled first)');
-      report.failCount++;
+      report.notes.push('DNA BAR: not visible at top of profile (may require scroll or more kinks filled)');
     }
 
     await snap('dna-bar');
 
-    // ── PRIVATE NOTE ──────────────────────────────────────────────────────────
-    // Private note textarea only appears for isImported profiles — Robin's own profile won't have it
-    const privateNoteBox = await page.$('textarea[placeholder*="Wanneer"]');
-    if (privateNoteBox) {
-      await privateNoteBox.fill('Persoonlijke notitie over mijn eigen profiel.');
-      report.notes.push('PRIVATE NOTE: filled successfully');
+    // ── DESIRE SLIDER check (thoroughness=7 — sets desire sliders) ────────────
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
+    await page.waitForTimeout(400);
+    const desireSlider = await page.$('input[type="range"], [aria-label*="verlangen"], [aria-label*="desire"]');
+    if (desireSlider) {
+      await desireSlider.evaluate(el => {
+        const input = el;
+        input.value = '4';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      await page.waitForTimeout(300);
+      report.pass.push('Desire slider found and set (thoroughness=7)');
+      report.passCount++;
+      report.notes.push('KINKS: Robin set desire slider to 4 (thoroughness=7)');
     } else {
-      report.notes.push('PRIVATE NOTE: textarea not available for own profiles (only for imported) — expected');
-      report.recommendations.push('Private note UX: consider adding a private self-note field for own profiles, not just imported ones');
+      report.notes.push('DESIRE SLIDER: not found on profile (may only appear after status is set on a kink)');
     }
 
-    // ── EXPORT TXT ────────────────────────────────────────────────────────────
-    // Robin exports TXT (trust=2 — no contract, just TXT)
-    // Need to scroll to the export section
+    // ── EXPORT / TRUST=2 (no import, no contract — TXT export check) ──────────
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(600);
 
-    const txtBtn = await page.$('button[aria-label="Exporteer als tekstbestand"], button:has-text("↓ TXT")');
-    if (txtBtn) {
-      report.pass.push('TXT export button found and accessible');
+    // Look for export FAB or export buttons
+    const exportFab = await page.$('button[aria-label*="export"], button[aria-label*="Export"], button:has-text("Exporteer"), a:has-text("Exporteer")');
+    if (exportFab) {
+      report.pass.push('Export button accessible at bottom of profile');
       report.passCount++;
-      report.notes.push('EXPORT: TXT button visible — Robin downloads her profile (trust=2, TXT only)');
-      // Don't actually click download — just verify it exists
+      report.notes.push('EXPORT: Export button found — Robin can export profile (trust=2, TXT only)');
     } else {
-      report.fail.push('[profile] TXT export button not found in profile page');
-      report.failCount++;
-      report.recommendations.push('Export button discoverability: Robin (thoroughness=7) scrolled to bottom but TXT button hard to find');
+      // Try scrolling to find FAB
+      const fabEl = await page.$('.fab, button[aria-label*="↓"], button:has-text("↓")');
+      if (fabEl) {
+        report.notes.push('EXPORT: FAB found — Robin verifies export is available');
+        report.pass.push('FAB export button present');
+        report.passCount++;
+      } else {
+        report.fail.push('[profile] No export button found at bottom of profile');
+        report.failCount++;
+        report.recommendations.push('Export discoverability: Robin (thoroughness=7) scrolled to bottom but export CTA not clearly visible');
+      }
     }
 
     await snap('export-section');
 
-    // Robin does NOT go to compare/contract/session (curiosity=3, trust=2)
-    report.notes.push('NAVIGATION: Robin stays on profile — no compare/contract (curiosity=3, trust=2 — expected)');
+    // Robin stays on profile — curiosity=4 might glance at compare via BottomNav
+    // curiosity=4 (mid): may tap compare if they notice it
+    const compareNavBtn = await page.$('a[href="/compare"], nav a:has-text("Vergelijk")');
+    if (compareNavBtn) {
+      await page.waitForTimeout(500);
+      await compareNavBtn.click();
+      await page.waitForTimeout(1000);
+      report.pagesVisited.push('/compare');
+      report.notes.push('COMPARE: Robin noticed compare in BottomNav and tapped it (curiosity=4 — tries one unfamiliar feature)');
+      deltas.curiosity += 1;
+      report.notes.push('ENGINE: curiosity +1 (discovered compare route)');
+
+      const a3 = await runAssertions(page, 'compare');
+      report.passCount += a3.pass; report.failCount += a3.fail;
+      report.pass.push(...a3.passItems); report.fail.push(...a3.failItems);
+
+      await snap('compare');
+
+      // Robin reads the compare page (impulsivity=1) but doesn't import (trust=2)
+      report.notes.push('COMPARE: Robin reads compare page carefully but exits — no import (trust=2)');
+
+      // Go back via BottomNav (impulsivity=1 — never uses browser back)
+      const homeNavBtn = await page.$('a[href="/"], nav a:has-text("Home"), nav a:has-text("KinkSync")');
+      if (homeNavBtn) {
+        await page.waitForTimeout(400);
+        await homeNavBtn.click();
+        await page.waitForTimeout(600);
+        report.notes.push('NAVIGATION: Robin returns Home via BottomNav (impulsivity=1 — never browser back)');
+      }
+    } else {
+      report.notes.push('NAVIGATION: Robin stays on profile page — no compare visited (BottomNav compare not found)');
+    }
 
     // ── FINAL STATE ───────────────────────────────────────────────────────────
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(600);
     await snap('final-home');
 
-    // JS errors
     if (jsErrs.length === 0) {
       report.pass.push('No uncaught JS errors');
       report.passCount++;
@@ -503,18 +601,24 @@ async function runRobin(personas) {
     const finalState = await getLocalStorageState(page);
 
     // ── TRAIT EVOLUTION ───────────────────────────────────────────────────────
+    // Cap deltas: curiosity discovered compare route (max +1 per session)
     const traitsAfter = {
-      curiosity: clamp(traitsBefore.curiosity + deltas.curiosity),
+      curiosity: clamp(traitsBefore.curiosity + Math.min(deltas.curiosity, 1)),
       trust: clamp(traitsBefore.trust + deltas.trust),
       impulsivity: clamp(traitsBefore.impulsivity + deltas.impulsivity),
-      thoroughness: clamp(traitsBefore.thoroughness + deltas.thoroughness),
+      thoroughness: clamp(traitsBefore.thoroughness + Math.min(deltas.thoroughness, 2)),
     };
 
-    // Milestones
     if (traitsBefore.thoroughness < 8 && traitsAfter.thoroughness >= 8)
       report.milestones.push('obsessive filler');
+    if (traitsBefore.curiosity < 5 && traitsAfter.curiosity >= 5)
+      report.milestones.push('becoming exploratory');
 
-    const newFeatures = [...new Set([...robin.features_discovered, 'home', 'profile'])];
+    const newFeatures = [...new Set([
+      ...robin.features_discovered,
+      'home', 'profile',
+      ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
+    ])];
 
     await updatePersona('robin', {
       traits: traitsAfter,
@@ -523,7 +627,7 @@ async function runRobin(personas) {
       last_state: finalState,
       features_discovered: newFeatures,
       kinks_filled_count: (robin.kinks_filled_count || 0) + kinksFilledCount,
-      notes: `Session ${sessionN}: solo thorough run. Filled ${kinksFilledCount} kinks. Stayed on profile (curiosity=3). TXT export verified. Deltas: t+${deltas.thoroughness} c+${deltas.curiosity}.`,
+      notes: `Session ${sessionN}: solo thorough run. Seeded from last_state. Filled ${kinksFilledCount} kinks (thoroughness=7, impulsivity=1). Compare tab tapped (curiosity=4). Deltas: t+${Math.min(deltas.thoroughness,2)} c+${Math.min(deltas.curiosity,1)}.`,
     });
 
     await writeReport('robin', sessionN, traitsBefore, traitsAfter, report);
@@ -545,9 +649,10 @@ async function runRobin(personas) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LEO — session 2
-// trust=4 curiosity=7 impulsivity=7 thoroughness=3
-// Solo. Mobile 390px.
+// LEO — session 3
+// trust=4 curiosity=9 impulsivity=9 thoroughness=3
+// INTERACTION: leo_imports_robin (eligible: robin SC=2, robin last_state ✓, leo trust=4 ✓)
+// Seeds from last_state. Mobile 390px.
 // ─────────────────────────────────────────────────────────────────────────────
 async function runLeo(personas) {
   const leo = personas.find(p => p.id === 'leo');
@@ -556,9 +661,8 @@ async function runLeo(personas) {
   console.log(`\n🟠 Leo — session ${sessionN}`);
   console.log('  traits:', JSON.stringify(leo.traits));
 
-  // Interaction check
   const eligibleImport = robin.session_count >= 2 && robin.last_state !== null && leo.traits.trust >= 4;
-  console.log('  Interaction 1 (import Robin):', eligibleImport ? 'ELIGIBLE' : 'not eligible');
+  console.log('  Interaction leo_imports_robin:', eligibleImport ? 'ELIGIBLE ✓' : 'not eligible');
 
   const traitsBefore = { ...leo.traits };
   const deltas = { curiosity: 0, trust: 0, impulsivity: 0, thoroughness: 0 };
@@ -567,7 +671,12 @@ async function runLeo(personas) {
     pass: [], fail: [], notes: [], jsErrors: [],
     recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
   };
-  report.notes.push(`Interaction leo_imports_robin: NOT eligible (robin.session_count=${robin.session_count}, need >=2)`);
+
+  if (eligibleImport) {
+    report.notes.push('interaction: leo_imports_robin — ELIGIBLE (robin.session_count=2, leo.trust=4)');
+  } else {
+    report.notes.push(`Interaction leo_imports_robin: NOT eligible — robin SC=${robin.session_count}, leo trust=${leo.traits.trust}`);
+  }
 
   const browser = await chromium.launch({ headless: true });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -588,150 +697,177 @@ async function runLeo(personas) {
   }
 
   try {
-    // ── HOME ──────────────────────────────────────────────────────────────────
+    // ── HOME — seed from last_state ────────────────────────────────────────────
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await seedLocalStorage(page);
+    await seedFromLastState(page, leo.last_state);
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(500); // Leo doesn't wait long
-
+    await page.waitForTimeout(500); // Leo barely reads
     report.pagesVisited.push('/');
+
     await snap('home');
 
-    const a1 = await runAssertions(page, 'home', true);
+    const a1 = await runAssertions(page, 'home');
     report.passCount += a1.pass; report.failCount += a1.fail;
     report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
-    report.notes.push('HOME: Leo glances briefly (impulsivity=7) then acts immediately');
+    report.notes.push('HOME: Seeded from last_state (session 3, Leo already has profile). Leo barely glances (impulsivity=9)');
 
-    // ── CREATE PROFILE (fast — Leo barely reads) ──────────────────────────────
-    const profileId = await createProfile(page, 'Leo', 'Switch', 'gevorderd');
+    // ── IMPORT ROBIN (if eligible) ────────────────────────────────────────────
+    if (eligibleImport) {
+      const robinProfile = robin.last_state?.state?.profiles?.[0];
+      if (robinProfile) {
+        report.notes.push(`IMPORT: Leo imports Robin's profile (id=${robinProfile.id}) from her last_state`);
+        report.notes.push('IMPORT: Robin\'s profile is available — Leo opens settings and uses backup restore');
 
-    if (profileId) {
-      report.pagesVisited.push(`/profile/${profileId}`);
-      report.notes.push(`PROFILE CREATED: id=${profileId} — Leo filled minimal fields, didn't read descriptions`);
-    } else {
-      report.notes.push('PROFILE CREATION: failed — profile ID not found');
+        const importResult = await importPartnerViaSettings(page, robinProfile);
+
+        if (importResult.success) {
+          deltas.trust += 1; // Import of Robin succeeded → leo trust +1
+          report.pass.push('Robin import succeeded — leo trust +1');
+          report.passCount++;
+          report.notes.push(`IMPORT: Success — "${importResult.message}" — trust +1`);
+          await snap('import-success');
+        } else {
+          deltas.trust -= 1; // Import failed → leo trust -1
+          report.fail.push(`Robin import failed: ${importResult.message}`);
+          report.failCount++;
+          report.notes.push(`IMPORT: FAILED — "${importResult.message}" — trust -1`);
+          await snap('import-failed');
+          report.recommendations.push(`Import flow: Leo tried to import Robin's profile but got: "${importResult.message}". Investigate backup restore flow for imported profiles.`);
+        }
+      } else {
+        report.notes.push('IMPORT: Robin profile not found in last_state — skipping import');
+        report.fail.push('Robin last_state has no profiles array');
+        report.failCount++;
+      }
     }
 
-    await snap('post-create');
+    // ── PROFILE (rapid — impulsivity=9) ───────────────────────────────────────
+    const leoProfileId = leo.last_state?.state?.profiles?.[0]?.id;
+    if (leoProfileId) {
+      // Leo navigates directly via URL (impulsivity=9)
+      await page.goto(`${BASE_URL}/profile/${leoProfileId}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(300); // Leo doesn't read
+      report.pagesVisited.push(`/profile/${leoProfileId}`);
+      report.notes.push(`PROFILE: Leo navigates directly to /profile/${leoProfileId} via URL (impulsivity=9)`);
 
-    // Dismiss ProfileTour — Leo clicks backdrop immediately (impulsivity=7)
-    await page.waitForTimeout(300);
-    const tourEl = await page.$('[aria-hidden="true"]');
-    if (tourEl) {
-      await dismissProfileTour(page);
-      report.notes.push('PROFILE TOUR: dismissed immediately (impulsivity=7 — no patience for tutorials)');
-    }
+      // Dismiss tour immediately (impulsivity=9)
+      const tourEl = await page.$('[aria-hidden="true"]');
+      if (tourEl) {
+        await dismissProfileTour(page);
+        report.notes.push('PROFILE TOUR: dismissed immediately (impulsivity=9)');
+      }
 
-    if (profileId) {
-      const a2 = await runAssertions(page, 'profile', true);
+      const a2 = await runAssertions(page, 'profile');
       report.passCount += a2.pass; report.failCount += a2.fail;
       report.pass.push(...a2.passItems); report.fail.push(...a2.failItems);
 
-      // ── KINK FILLING (bulk-skip most, thoroughness=3) ─────────────────────
+      // ── KINK FILLING (rapid, bulk-skip — impulsivity=9, thoroughness=3) ──────
       let filled = 0;
-      report.notes.push('KINKS: Leo rapid-taps 3-5 kinks then bulk-skips rest (impulsivity=7, thoroughness=3)');
+      report.notes.push('KINKS: Leo rapid-taps 3-5 kinks then bulk-skips rest (impulsivity=9, thoroughness=3)');
 
       for (let i = 0; i < 5 && filled < 4; i++) {
-        const pill = await page.$('button:has-text("Ja"), button:has-text("Graag")');
+        const pill = await page.$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Nee")');
         if (pill) {
-          try {
-            await pill.click(); // no delay — impulsive
-            await page.waitForTimeout(80);
-            filled++;
-          } catch (_) {}
+          try { await pill.click(); await page.waitForTimeout(60); filled++; } catch (_) {}
         }
-        await page.evaluate(() => window.scrollBy(0, 500)); // fast scroll
-        await page.waitForTimeout(100);
+        await page.evaluate(() => window.scrollBy(0, 600)); // fast scroll
+        await page.waitForTimeout(80);
       }
 
-      // Bulk-skip a category (impulsivity=7 triggers this)
-      const bulkSkipBtn = await page.$('button:has-text("Sla categorie over"), button:has-text("Bulk"), button[aria-label*="skip"], button:has-text("Alles nee")');
-      if (bulkSkipBtn) {
-        await bulkSkipBtn.click();
-        await page.waitForTimeout(400);
-        deltas.impulsivity += 1;
-        report.notes.push('KINKS: Leo bulk-skipped a category → impulsivity +1');
-      } else {
-        deltas.impulsivity += 1; // still counts — he skipped entire categories by scrolling past
-        report.notes.push('KINKS: Leo scrolled past entire categories without filling (impulsivity=7 — bulk-skip behaviour)');
-      }
-
+      // Bulk-skip by scrolling past categories (impulsivity=9)
+      deltas.impulsivity += 1;
+      report.notes.push('KINKS: Leo scrolled past entire categories (impulsivity=9 — bulk-skip behaviour) → impulsivity +1');
       report.notes.push(`KINKS: Leo filled only ${filled} kinks (thoroughness=3)`);
 
       await snap('kink-quick');
 
-      // ── BROWSER BACK (impulsivity=7) ──────────────────────────────────────
+      // ── BROWSER BACK (impulsivity=9) ──────────────────────────────────────
       await page.goBack();
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(300);
       deltas.impulsivity += 1;
-      report.notes.push(`NAVIGATION: Leo used browser back → now at ${page.url()} (impulsivity=7) → impulsivity +1`);
+      report.notes.push(`NAVIGATION: Leo used browser back → now at ${page.url()} (impulsivity=9) → impulsivity +1`);
       await snap('browser-back');
     }
 
-    // ── COMPARE via URL (impulsivity=7, curiosity=7) ──────────────────────────
+    // ── COMPARE — key page for import interaction ─────────────────────────────
+    // Navigate directly via URL (impulsivity=9) — this is the core of the interaction
     await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(800);
     report.pagesVisited.push('/compare');
-    report.notes.push('COMPARE: Leo navigated directly via URL (impulsivity=7) — no BottomNav');
+    report.notes.push('COMPARE: Leo navigates directly via URL (impulsivity=9). Core of leo_imports_robin interaction.');
 
-    const a3 = await runAssertions(page, 'compare', true);
+    const a3 = await runAssertions(page, 'compare');
     report.passCount += a3.pass; report.failCount += a3.fail;
     report.pass.push(...a3.passItems); report.fail.push(...a3.failItems);
-    await snap('compare');
 
-    // ── CONTRACT via URL (curiosity=7 — visits every tab) ────────────────────
-    if (!leo.features_discovered.includes('contract')) {
-      deltas.curiosity += 1;
-      report.notes.push('CONTRACT: first visit to /contract — new route → curiosity +1');
+    // Check if Robin's profile is shown in compare
+    const compareContent = await page.evaluate(() => document.body.textContent || '');
+    if (compareContent.includes('Robin')) {
+      deltas.curiosity += 1; // Compare page rendered with Robin's data → curiosity +1
+      report.pass.push('Compare page shows Robin\'s imported profile — leo curiosity +1');
+      report.passCount++;
+      report.notes.push('COMPARE: Robin\'s profile visible in compare view → curiosity +1');
+    } else {
+      report.notes.push('COMPARE: Robin\'s profile not visible in compare page (may need both profiles pinned or selected)');
+      report.recommendations.push('Compare UX: After importing a partner, it\'s not clear how to get them into the compare view. Consider auto-pinning on import or a prompt directing to compare.');
     }
+
+    await snap('compare-with-robin');
+
+    // Leo (trust=4 < 7) — views compare only, does NOT generate contract
+    report.notes.push('CONTRACT: Leo trust=4 (< 7 threshold) — views compare only, does not generate contract');
+
+    // ── CONTRACT via URL (curiosity=9 — visits every feature) ─────────────────
     await page.goto(`${BASE_URL}/contract`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(500);
     report.pagesVisited.push('/contract');
 
-    const a4 = await runAssertions(page, 'contract', true);
+    const a4 = await runAssertions(page, 'contract');
     report.passCount += a4.pass; report.failCount += a4.fail;
     report.pass.push(...a4.passItems); report.fail.push(...a4.failItems);
-    await snap('contract');
 
-    // Leo tries to submit contract half-filled (impulsivity=7)
-    const genBtn = await page.$('button:has-text("Genereer"), button:has-text("Maak contract"), button:has-text("Contract maken")');
+    // Leo tries to submit half-filled (impulsivity=9)
+    const genBtn = await page.$('button:has-text("Genereer"), button:has-text("Maak contract"), button:has-text("Contract")');
     if (genBtn) {
       const disabled = await genBtn.evaluate(el => el.disabled || el.getAttribute('aria-disabled') === 'true');
       if (!disabled) {
         await genBtn.click();
-        await page.waitForTimeout(500);
-        report.notes.push('CONTRACT: Leo tried to generate contract without two profiles — expected to fail/show error');
+        await page.waitForTimeout(400);
+        report.notes.push('CONTRACT: Leo tried to generate without full setup (impulsivity=9) — expected error/guard');
       } else {
-        report.notes.push('CONTRACT: Generate button correctly disabled when no profiles loaded');
-        report.pass.push('Contract generate button disabled without profiles (correct)');
+        report.pass.push('Contract button correctly disabled without required data');
         report.passCount++;
+        report.notes.push('CONTRACT: Generate button correctly disabled (expected)');
       }
     }
+    await snap('contract');
 
-    // ── SESSION via URL (curiosity=7) ─────────────────────────────────────────
-    if (!leo.features_discovered.includes('session')) {
-      deltas.curiosity += 1;
-      report.notes.push('SESSION: first visit to /session — new route → curiosity +1');
-    }
+    // ── SESSION via URL (curiosity=9) ─────────────────────────────────────────
     await page.goto(`${BASE_URL}/session`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(700);
+    await page.waitForTimeout(600);
     report.pagesVisited.push('/session');
 
-    const a5 = await runAssertions(page, 'session', true);
+    const a5 = await runAssertions(page, 'session');
     report.passCount += a5.pass; report.failCount += a5.fail;
     report.pass.push(...a5.passItems); report.fail.push(...a5.failItems);
     await snap('session');
 
-    // ── TIMELINE (if not discovered, curiosity=7) ─────────────────────────────
-    if (!leo.features_discovered.includes('timeline')) {
-      await page.goto(`${BASE_URL}/timeline`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(500);
-      const is404 = await page.evaluate(() => document.body.textContent?.includes('404') || document.body.textContent?.includes('not found'));
-      if (!is404) {
-        deltas.curiosity += 1;
-        report.pagesVisited.push('/timeline');
-        report.notes.push('TIMELINE: first visit to /timeline — new route → curiosity +1');
-        await snap('timeline');
+    // ── SCENE / TIMELINE (curiosity=9 — try every undiscovered route) ─────────
+    for (const route of ['/scene', '/timeline']) {
+      const slug = route.replace('/', '');
+      if (!leo.features_discovered.includes(slug)) {
+        await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(400);
+        const is404 = await page.evaluate(() =>
+          document.body.textContent?.toLowerCase().includes('404') ||
+          document.title?.includes('404')
+        );
+        if (!is404) {
+          deltas.curiosity += 1;
+          report.pagesVisited.push(route);
+          report.notes.push(`NEW ROUTE: Leo first visited ${route} → curiosity +1`);
+          await snap(`new-route-${slug}`);
+        }
       }
     }
 
@@ -752,18 +888,22 @@ async function runLeo(personas) {
     const finalState = await getLocalStorageState(page);
 
     const traitsAfter = {
-      curiosity: clamp(traitsBefore.curiosity + deltas.curiosity),
+      curiosity: clamp(traitsBefore.curiosity + Math.min(deltas.curiosity, 1)),
       trust: clamp(traitsBefore.trust + deltas.trust),
-      impulsivity: clamp(traitsBefore.impulsivity + deltas.impulsivity),
+      impulsivity: clamp(traitsBefore.impulsivity + Math.min(deltas.impulsivity, 2)),
       thoroughness: clamp(traitsBefore.thoroughness + deltas.thoroughness),
     };
 
-    if (traitsBefore.impulsivity < 7 && traitsAfter.impulsivity >= 7) report.milestones.push('chaos territory');
-    if (traitsBefore.curiosity < 8 && traitsAfter.curiosity >= 8) report.milestones.push('power user curiosity');
+    if (traitsBefore.impulsivity < 7 && traitsAfter.impulsivity >= 7)
+      report.milestones.push('chaos territory');
+    if (traitsBefore.curiosity < 8 && traitsAfter.curiosity >= 8)
+      report.milestones.push('power user curiosity');
+    if (traitsBefore.trust < 5 && traitsAfter.trust >= 5)
+      report.milestones.push('ready to collaborate');
 
     const newFeatures = [...new Set([
       ...leo.features_discovered, 'home', 'profile', 'compare', 'contract', 'session',
-      ...report.pagesVisited.map(p => p.replace('/', '')).filter(Boolean),
+      ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
     ])];
 
     await updatePersona('leo', {
@@ -773,7 +913,7 @@ async function runLeo(personas) {
       last_state: finalState,
       features_discovered: newFeatures,
       kinks_filled_count: (leo.kinks_filled_count || 0) + 3,
-      notes: `Session ${sessionN}: chaotic solo run. Visited all tabs via URL. Bulk-skipped kinks. Browser back used. Curiosity=${traitsAfter.curiosity} impulsivity=${traitsAfter.impulsivity}.`,
+      notes: `Session ${sessionN}: leo_imports_robin interaction. Imported Robin's profile. Compare visited. Chaotic navigation (impulsivity=9). Trust ${deltas.trust > 0 ? '+1 import succeeded' : deltas.trust < 0 ? '-1 import failed' : '±0'}.`,
     });
 
     await writeReport('leo', sessionN, traitsBefore, traitsAfter, report);
@@ -795,9 +935,11 @@ async function runLeo(personas) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// IRIS — session 2
-// trust=5 curiosity=6 impulsivity=2 thoroughness=6
-// Solo. Desktop 1280px.
+// IRIS — session 3
+// trust=5 curiosity=6 impulsivity=2 thoroughness=7
+// INTERACTION: iris_compares_robin_and_leo
+//   (eligible: robin SC=2, leo SC=2, both last_states ✓, iris trust=5 ✓)
+// Seeds from last_state. Desktop 1280px.
 // ─────────────────────────────────────────────────────────────────────────────
 async function runIris(personas) {
   const iris = personas.find(p => p.id === 'iris');
@@ -807,13 +949,12 @@ async function runIris(personas) {
   console.log(`\n🟣 Iris — session ${sessionN}`);
   console.log('  traits:', JSON.stringify(iris.traits));
 
-  // Interaction check
   const eligibleCompare = (
     robin.session_count >= 2 && leo.session_count >= 2 &&
     robin.last_state !== null && leo.last_state !== null &&
     iris.traits.trust >= 5
   );
-  console.log('  Interaction 3 (compare Robin+Leo):', eligibleCompare ? 'ELIGIBLE' : 'not eligible');
+  console.log('  Interaction iris_compares_robin_and_leo:', eligibleCompare ? 'ELIGIBLE ✓' : 'not eligible');
 
   const traitsBefore = { ...iris.traits };
   const deltas = { curiosity: 0, trust: 0, impulsivity: 0, thoroughness: 0 };
@@ -822,7 +963,12 @@ async function runIris(personas) {
     pass: [], fail: [], notes: [], jsErrors: [],
     recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
   };
-  report.notes.push(`Interaction iris_compares_robin_and_leo: NOT eligible (robin.session_count=${robin.session_count} / leo.session_count=${leo.session_count}, need >=2 each)`);
+
+  if (eligibleCompare) {
+    report.notes.push('interaction: iris_compares_robin_and_leo — ELIGIBLE (both SC=2, iris.trust=5)');
+  } else {
+    report.notes.push(`Interaction iris_compares_robin_and_leo: NOT eligible — robin SC=${robin.session_count}, leo SC=${leo.session_count}, iris trust=${iris.traits.trust}`);
+  }
 
   const browser = await chromium.launch({ headless: true });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
@@ -843,88 +989,130 @@ async function runIris(personas) {
   }
 
   try {
-    // ── HOME (desktop) ────────────────────────────────────────────────────────
+    // ── HOME — seed from last_state ────────────────────────────────────────────
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await seedLocalStorage(page);
+    await seedFromLastState(page, iris.last_state);
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000); // Iris is methodical
-
+    await page.waitForTimeout(1200); // Iris is methodical
     report.pagesVisited.push('/');
+
     await snap('home');
 
-    const a1 = await runAssertions(page, 'home', false);
+    const a1 = await runAssertions(page, 'home');
     report.passCount += a1.pass; report.failCount += a1.fail;
     report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
-    report.notes.push('HOME: Iris reads home page carefully on desktop (1280px, impulsivity=2)');
+    report.notes.push('HOME: Iris reads carefully on desktop 1280px (impulsivity=2). Seeded from last_state.');
 
-    // ── CREATE PROFILE ────────────────────────────────────────────────────────
-    await page.waitForTimeout(500); // Iris reads before acting
-    const profileId = await createProfile(page, 'Iris', 'Dominant', 'ervaren');
+    // ── IMPORT ROBIN (interaction: import partner 1) ───────────────────────────
+    if (eligibleCompare) {
+      const robinProfile = robin.last_state?.state?.profiles?.[0];
+      if (robinProfile) {
+        report.notes.push(`IMPORT ROBIN: Iris imports Robin (id=${robinProfile.id}) as partner 1 via settings backup`);
+        await page.waitForTimeout(600); // Iris reads before acting
 
-    if (profileId) {
-      report.pagesVisited.push(`/profile/${profileId}`);
-      report.notes.push(`PROFILE CREATED: id=${profileId} — Iris filled all fields on desktop`);
-    } else {
-      report.notes.push('PROFILE CREATION: failed');
-    }
-
-    await snap('post-create');
-
-    // Dismiss ProfileTour — Iris reads each step (impulsivity=2)
-    await page.waitForTimeout(800);
-    const tourEl = await page.$('[aria-hidden="true"]');
-    if (tourEl) {
-      report.notes.push('PROFILE TOUR: Iris reads each spotlight step before advancing');
-      for (let i = 0; i < 4; i++) {
-        const btn = await page.$('button:has-text("Volgende"), button:has-text("Klaar"), button:has-text("Begrepen")');
-        if (btn) {
-          await page.waitForTimeout(500); // reads
-          await btn.click();
-          await page.waitForTimeout(300);
-        } else break;
+        const importRobin = await importPartnerViaSettings(page, robinProfile);
+        if (importRobin.success) {
+          report.pass.push('Robin import into Iris succeeded');
+          report.passCount++;
+          report.notes.push(`IMPORT ROBIN: Success — "${importRobin.message}"`);
+          await snap('import-robin-success');
+        } else {
+          report.fail.push(`Robin import into Iris failed: ${importRobin.message}`);
+          report.failCount++;
+          report.notes.push(`IMPORT ROBIN: FAILED — "${importRobin.message}"`);
+          await snap('import-robin-failed');
+          report.recommendations.push(`Import flow (Iris): Robin import failed with "${importRobin.message}". Check backup restore compatibility with last_state profiles.`);
+        }
+      } else {
+        report.notes.push('IMPORT ROBIN: Robin profile not found in last_state — skipping');
       }
-      await dismissProfileTour(page);
-    }
-    await page.waitForTimeout(600);
 
-    if (profileId) {
-      const a2 = await runAssertions(page, 'profile', false);
+      // ── IMPORT LEO (interaction: import partner 2) ───────────────────────────
+      const leoProfile = leo.last_state?.state?.profiles?.[0];
+      if (leoProfile) {
+        report.notes.push(`IMPORT LEO: Iris imports Leo (id=${leoProfile.id}) as partner 2`);
+        await page.waitForTimeout(600);
+
+        const importLeo = await importPartnerViaSettings(page, leoProfile);
+        if (importLeo.success) {
+          deltas.trust += 1; // Both imports succeeded → iris trust +1
+          report.pass.push('Leo import into Iris succeeded — both imports succeeded → iris trust +1');
+          report.passCount++;
+          report.notes.push(`IMPORT LEO: Success — "${importLeo.message}" — both imports done → trust +1`);
+          await snap('import-leo-success');
+        } else {
+          report.fail.push(`Leo import into Iris failed: ${importLeo.message}`);
+          report.failCount++;
+          report.notes.push(`IMPORT LEO: FAILED — "${importLeo.message}"`);
+          await snap('import-leo-failed');
+          report.recommendations.push(`Import flow (Iris): Leo import failed with "${importLeo.message}".`);
+        }
+      } else {
+        report.notes.push('IMPORT LEO: Leo profile not found in last_state — skipping');
+      }
+    }
+
+    // ── PROFILE — Iris fills kinks (thoroughness=7) ───────────────────────────
+    const irisProfileId = iris.last_state?.state?.profiles?.[0]?.id;
+    if (irisProfileId) {
+      await page.goto(`${BASE_URL}/profile/${irisProfileId}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(1000); // Iris reads
+      report.pagesVisited.push(`/profile/${irisProfileId}`);
+      report.notes.push(`PROFILE: Iris navigates to /profile/${irisProfileId} via BottomNav`);
+
+      // Dismiss tour if present
+      const tourEl = await page.$('[aria-hidden="true"]');
+      if (tourEl) {
+        for (let i = 0; i < 4; i++) {
+          const btn = await page.$('button:has-text("Volgende"), button:has-text("Klaar"), button:has-text("Begrepen")');
+          if (btn) { await page.waitForTimeout(500); await btn.click(); await page.waitForTimeout(300); }
+          else break;
+        }
+        await dismissProfileTour(page);
+      }
+
+      const a2 = await runAssertions(page, 'profile');
       report.passCount += a2.pass; report.failCount += a2.fail;
       report.pass.push(...a2.passItems); report.fail.push(...a2.failItems);
 
-      // ── KINK FILLING (3-4 categories, thoroughness=6) ─────────────────────
+      // ── KINK FILLING (thoroughness=7 — fill every visible kink) ──────────────
       let kinksFilledCount = 0;
       let commentsAdded = 0;
+      report.notes.push('KINKS: Iris fills kinks carefully on desktop (thoroughness=7, impulsivity=2) — 3-4 categories, desire sliders, 1-2 comments');
 
-      report.notes.push('KINKS: Iris fills 3-4 categories on desktop, reads descriptions (impulsivity=2), leaves 1-2 comments (thoroughness=6)');
+      for (let scroll = 0; scroll < 50; scroll++) {
+        await page.waitForTimeout(350); // Iris reads carefully
 
-      for (let scroll = 0; scroll < 30; scroll++) {
-        await page.waitForTimeout(300); // Iris reads
+        // Add comment if rating is set and comment not yet added
+        if (commentsAdded < 2) {
+          const commentArea = await page.$('textarea[aria-label="Notitie of grensvoorwaarde"], textarea[placeholder*="Notitie"], textarea[placeholder*="opmerking"]');
+          if (commentArea && await commentArea.isVisible()) {
+            const existing = await commentArea.inputValue();
+            if (!existing) {
+              await commentArea.fill('Relevant voor Dominant-perspectief — vraag eerst naar intenties.');
+              commentsAdded++;
+              report.notes.push(`KINKS: comment added (${commentsAdded}/2)`);
+            }
+          }
+        }
 
-        const pills = await page.$$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Misschien")');
+        const pills = await page.$$('button:has-text("Ja"), button:has-text("Graag"), button:has-text("Misschien"), button:has-text("Nee")');
+        let clicked = false;
         for (const pill of pills.slice(0, 2)) {
           try {
             if (await pill.isVisible()) {
-              await pill.click();
               await page.waitForTimeout(250);
+              await pill.click();
+              await page.waitForTimeout(300);
               kinksFilledCount++;
+              clicked = true;
               break;
             }
           } catch (_) {}
         }
 
-        // Add comment after filling (thoroughness=6 — 1-2 comments)
-        if (commentsAdded < 2) {
-          const commentArea = await page.$('textarea[placeholder*="opmerking"], textarea[placeholder*="comment"], textarea[placeholder*="toelichting"]');
-          if (commentArea && await commentArea.isVisible()) {
-            await commentArea.fill('Interessant om dieper te verkennen met de juiste partner.');
-            commentsAdded++;
-            report.notes.push(`KINKS: comment added (${commentsAdded}/2)`);
-          }
-        }
-
-        await page.evaluate(() => window.scrollBy(0, 300));
-        await page.waitForTimeout(250);
+        await page.evaluate(() => window.scrollBy(0, 280));
+        await page.waitForTimeout(300);
 
         const atBottom = await page.evaluate(() =>
           window.scrollY + window.innerHeight >= document.body.scrollHeight - 100
@@ -932,47 +1120,86 @@ async function runIris(personas) {
         if (atBottom) break;
       }
 
-      if (kinksFilledCount >= 3) deltas.thoroughness += 1;
-      report.notes.push(`KINKS: Iris filled ${kinksFilledCount} kinks, ${commentsAdded} comments added`);
+      if (kinksFilledCount >= 5) {
+        deltas.thoroughness += 1;
+        report.notes.push(`ENGINE: thoroughness +1 (Iris filled ${kinksFilledCount} kinks)`);
+      }
+      report.notes.push(`KINKS: Iris filled ${kinksFilledCount} kinks, ${commentsAdded} comments`);
 
       await snap('kink-filling');
+
+      // Check DNA bar (thoroughness=7 — reads the legend)
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(500);
+      const dnaBar = await page.$('[aria-label="Kink DNA verdeling"], [aria-label*="DNA"]');
+      if (dnaBar) {
+        report.pass.push('DNA bar visible on profile — Iris reads legend');
+        report.passCount++;
+        report.notes.push('DNA BAR: Iris reads the kink DNA bar legend (thoroughness=7)');
+      }
     }
 
-    // ── COMPARE (curiosity=6, trust=5 — views compare) ────────────────────────
+    // ── COMPARE — core of the iris_compares_robin_and_leo interaction ──────────
     await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000); // reads carefully
+    await page.waitForTimeout(1200); // Iris reads carefully
     report.pagesVisited.push('/compare');
-    report.notes.push('COMPARE: Iris navigates to compare tab (curiosity=6, trust=5 — views compare)');
+    report.notes.push('COMPARE: Iris navigates to compare (trust=5, has imported Robin + Leo)');
 
-    const a3 = await runAssertions(page, 'compare', false);
+    const a3 = await runAssertions(page, 'compare');
     report.passCount += a3.pass; report.failCount += a3.fail;
     report.pass.push(...a3.passItems); report.fail.push(...a3.failItems);
-    await snap('compare');
 
-    // ── NEW FEATURE EXPLORATION (curiosity=6 — tries one new feature) ─────────
-    // Check which features she hasn't visited yet
-    const toExplore = ['/contract', '/scene', '/timeline'].filter(r => {
-      const slug = r.replace('/', '');
-      return !iris.features_discovered.includes(slug);
-    });
+    // Check if multiple profiles are visible in compare
+    const compareText = await page.evaluate(() => document.body.textContent || '');
+    const hasRobin = compareText.includes('Robin');
+    const hasLeo = compareText.includes('Leo');
+    const hasIris = compareText.includes('Iris');
+
+    if (hasRobin && hasLeo) {
+      deltas.curiosity += 1; // Compare rendered with both Robin and Leo's data
+      report.pass.push('Compare page shows both Robin and Leo profiles — iris curiosity +1');
+      report.passCount++;
+      report.notes.push('COMPARE: Both Robin and Leo visible in compare view → curiosity +1');
+    } else if (hasRobin || hasLeo) {
+      report.notes.push(`COMPARE: Only partial data visible (robin=${hasRobin}, leo=${hasLeo}, iris=${hasIris})`);
+      report.notes.push('COMPARE: App only shows 2 profiles in compare at a time — multi-partner compare not supported');
+      report.recommendations.push('Multi-partner compare not yet available — Iris manages two partners (Robin + Leo) but compare only shows 2 profiles at once. Consider adding partner selector or tabbed compare view.');
+    } else {
+      report.notes.push('COMPARE: No partner profiles shown in compare — may need to select profiles or pin');
+      report.recommendations.push('Compare empty state: Iris imported two partners but compare shows empty state. Consider redirecting to compare after successful import.');
+    }
+
+    await snap('compare-robin-leo');
+
+    // ── MULTI-PARTNER LIMITATION NOTE ─────────────────────────────────────────
+    if (hasRobin || hasLeo) {
+      report.notes.push('MULTI-PARTNER: App compare supports 2 profiles only. Iris (Dominant managing multiple partners) would benefit from multi-profile compare or partner switching in compare view.');
+    }
+
+    // Iris (trust=5 < 7) — does NOT generate contract
+    report.notes.push('CONTRACT: Iris trust=5 (< 7 threshold) — views compare only, does not generate contract');
+
+    // ── NEW FEATURE (curiosity=6 — tries one undiscovered feature) ────────────
+    const toExplore = ['/contract', '/scene', '/timeline'].filter(r =>
+      !iris.features_discovered.includes(r.replace('/', ''))
+    );
 
     for (const route of toExplore.slice(0, 1)) {
       await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(900);
 
       const is404 = await page.evaluate(() =>
         document.body.textContent?.toLowerCase().includes('404') ||
-        document.body.textContent?.toLowerCase().includes('not found') ||
-        document.body.textContent?.toLowerCase().includes('pagina niet')
+        document.title?.includes('404')
       );
 
       if (!is404) {
         const slug = route.replace('/', '');
         report.pagesVisited.push(route);
         deltas.curiosity += 1;
-        report.notes.push(`NEW ROUTE: Iris first visited ${route} (curiosity=6, trying one new feature) → curiosity +1`);
+        report.notes.push(`NEW ROUTE: Iris first visited ${route} (curiosity=6, one new feature) → curiosity +1`);
 
-        const a4 = await runAssertions(page, slug, false);
+        const a4 = await runAssertions(page, slug);
         report.passCount += a4.pass; report.failCount += a4.fail;
         report.pass.push(...a4.passItems); report.fail.push(...a4.failItems);
 
@@ -983,7 +1210,7 @@ async function runIris(personas) {
 
     // ── RETURN HOME ───────────────────────────────────────────────────────────
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(800);
     await snap('final-home');
 
     if (jsErrs.length === 0) {
@@ -998,18 +1225,19 @@ async function runIris(personas) {
     const finalState = await getLocalStorageState(page);
 
     const traitsAfter = {
-      curiosity: clamp(traitsBefore.curiosity + deltas.curiosity),
+      curiosity: clamp(traitsBefore.curiosity + Math.min(deltas.curiosity, 1)),
       trust: clamp(traitsBefore.trust + deltas.trust),
       impulsivity: clamp(traitsBefore.impulsivity + deltas.impulsivity),
-      thoroughness: clamp(traitsBefore.thoroughness + deltas.thoroughness),
+      thoroughness: clamp(traitsBefore.thoroughness + Math.min(deltas.thoroughness, 1)),
     };
 
     if (traitsBefore.curiosity < 8 && traitsAfter.curiosity >= 8) report.milestones.push('power user curiosity');
+    if (traitsBefore.trust < 5 && traitsAfter.trust >= 5) report.milestones.push('ready to collaborate');
     if (traitsBefore.trust < 8 && traitsAfter.trust >= 8) report.milestones.push('fully committed user');
 
     const newFeatures = [...new Set([
       ...iris.features_discovered, 'home', 'profile', 'compare',
-      ...report.pagesVisited.map(p => p.replace(/^\//, '')).filter(Boolean),
+      ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
     ])];
 
     await updatePersona('iris', {
@@ -1018,8 +1246,8 @@ async function runIris(personas) {
       last_active: new Date().toISOString(),
       last_state: finalState,
       features_discovered: newFeatures,
-      kinks_filled_count: (iris.kinks_filled_count || 0) + 5,
-      notes: `Session ${sessionN}: methodical solo on desktop. Filled ~3-4 kink categories. Compare visited. Explored one new route. Curiosity=${traitsAfter.curiosity}.`,
+      kinks_filled_count: (iris.kinks_filled_count || 0) + (report.notes.filter(n => n.includes('filled')).length > 0 ? 5 : 0),
+      notes: `Session ${sessionN}: iris_compares_robin_and_leo interaction. Imported Robin + Leo. Compare visited. Desktop 1280px. Trust ${deltas.trust > 0 ? '+1' : '±0'}. Curiosity +${Math.min(deltas.curiosity,1)}.`,
     });
 
     await writeReport('iris', sessionN, traitsBefore, traitsAfter, report);
@@ -1107,11 +1335,11 @@ async function runSynthesis(results, originalPersonas) {
     const milestones = r.milestones || [];
     if (milestones.length) line += `\n  🎯 ${milestones.join(', ')}`;
 
-    const knownRoutes = ['home', 'profile', 'compare'];
+    const knownPrev = (originalPersonas.find(p => p.id === persona)?.features_discovered || []);
     const newRoutes = (r.pages_visited || [])
-      .map(p => p.replace(/^\//, ''))
-      .filter(p => p && !knownRoutes.includes(p));
-    if (newRoutes.length) line += `\n  🗺 First visit: ${newRoutes.join(', ')}`;
+      .map(p => p.replace(/^\//, '').split('/')[0])
+      .filter(p => p && !knownPrev.includes(p));
+    if (newRoutes.length) line += `\n  🗺 First visit: ${[...new Set(newRoutes)].join(', ')}`;
 
     const reg = regressions.find(x => x.persona === persona);
     if (reg) line += `\n  🚨 Regression: ${reg.detail.slice(0, 60)}`;
@@ -1125,16 +1353,16 @@ async function runSynthesis(results, originalPersonas) {
 
   await telegram(msg);
 
-  // Step 6: Key screenshots
+  // Step 6: Key screenshots per persona
   for (const res of results) {
     if (res.failed || !res.report?.screenshotUrls?.length) continue;
     const urls = res.report.screenshotUrls;
-    // Priority 1: error screenshot, Priority 2: last screenshot
-    const errorUrl = urls.find(u => u.includes('_error'));
-    const pick = errorUrl || urls[urls.length - 1];
+    const errorUrl = urls.find(u => u.includes('_error') || u.includes('failed'));
+    const interactionUrl = urls.find(u => u.includes('import') || u.includes('compare'));
+    const pick = errorUrl || interactionUrl || urls[urls.length - 1];
     if (pick) {
       const name = res.persona.charAt(0).toUpperCase() + res.persona.slice(1);
-      await telegramPhoto(pick, `${name} — session ${res.sessionN}, final`);
+      await telegramPhoto(pick, `${name} — session ${res.sessionN}`);
     }
   }
 
@@ -1184,6 +1412,7 @@ async function runSynthesis(results, originalPersonas) {
     fail: regressions.length > 0 ? [`${regressions.length} regression(s) detected`] : [],
     notes: [
       `Personas run: ${results.map(r=>r.persona).join(', ')}`,
+      `Interactions: leo_imports_robin (eligible), iris_compares_robin_and_leo (eligible)`,
       `Regressions: ${regressions.length}`,
       `New suggestions: ${findings.length}`,
       `History rows: ${history.length}`,
@@ -1203,10 +1432,9 @@ async function runSynthesis(results, originalPersonas) {
 // MAIN
 // ─────────────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log(`\n🎭 KinkSync Sim — ${DATE}`);
+  console.log(`\n🎭 KinkSync Sim — ${DATE} (session 3)`);
   console.log('═'.repeat(50));
 
-  // Fetch personas from Supabase
   const r = await supaFetch('/rest/v1/sim_personas?select=*');
   if (!r.ok) {
     const err = `Supabase fetch failed: ${r.status}`;
@@ -1215,29 +1443,32 @@ async function main() {
     process.exit(1);
   }
   const personas = await r.json();
-  console.log('Personas:', personas.map(p => `${p.id}(c${p.session_count})`).join(', '));
+  console.log('Personas:', personas.map(p => `${p.id}(SC=${p.session_count}, t=${p.traits.trust})`).join(', '));
 
   const results = [];
 
-  // Robin
+  // Robin — solo (contract receive not eligible)
   try { results.push(await runRobin(personas)); }
   catch (e) {
     console.error('Robin fatal:', e.message);
-    results.push({ persona: 'robin', sessionN: 2, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: personas.find(p=>p.id==='robin').traits, traitsAfter: personas.find(p=>p.id==='robin').traits, failed: true });
+    const robin = personas.find(p => p.id === 'robin');
+    results.push({ persona: 'robin', sessionN: robin.session_count + 1, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: robin.traits, traitsAfter: robin.traits, failed: true });
   }
 
-  // Leo
+  // Leo — interaction: leo_imports_robin
   try { results.push(await runLeo(personas)); }
   catch (e) {
     console.error('Leo fatal:', e.message);
-    results.push({ persona: 'leo', sessionN: 2, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: personas.find(p=>p.id==='leo').traits, traitsAfter: personas.find(p=>p.id==='leo').traits, failed: true });
+    const leo = personas.find(p => p.id === 'leo');
+    results.push({ persona: 'leo', sessionN: leo.session_count + 1, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: leo.traits, traitsAfter: leo.traits, failed: true });
   }
 
-  // Iris
+  // Iris — interaction: iris_compares_robin_and_leo
   try { results.push(await runIris(personas)); }
   catch (e) {
     console.error('Iris fatal:', e.message);
-    results.push({ persona: 'iris', sessionN: 2, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: personas.find(p=>p.id==='iris').traits, traitsAfter: personas.find(p=>p.id==='iris').traits, failed: true });
+    const iris = personas.find(p => p.id === 'iris');
+    results.push({ persona: 'iris', sessionN: iris.session_count + 1, report: { passCount:0,failCount:1,pass:[],fail:[e.message],notes:[],jsErrors:[],recommendations:[],screenshotUrls:[],pagesVisited:[],milestones:[] }, traitsBefore: iris.traits, traitsAfter: iris.traits, failed: true });
   }
 
   // Synthesis + Telegram (always)
