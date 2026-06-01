@@ -126,6 +126,9 @@ so trimming has good material to work with.
 - End with one sentence about what changed: a trait bump, a milestone, a finding to follow up
 - Avoid identifiers and underscored tokens (e.g. `last_state`, `profile_tour_complete`) —
   the story goes into a Telegram HTML message; use plain language instead
+- **No dashes.** No em-dashes (—), no en-dashes (–), no hyphens used as pauses.
+  Use short sentences instead. "Trust took a hit. He bounced back to home." not
+  "Trust took a hit — he bounced back to home."
 
 **Example (Leo, trust=4, impulsivity=9, curiosity=9):**
 > Leo launched the app and was already in settings before the home screen had finished rendering. He

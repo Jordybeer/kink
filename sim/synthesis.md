@@ -155,6 +155,42 @@ Send one photo per persona, then sleep 0.4s between each to avoid rate limits.
 
 ---
 
+## Step 5b — Send fixup prompt (always, after photos)
+
+After the three persona photos, send one final message: a token-optimised
+Claude Code prompt the developer can copy-paste directly to fix every issue
+found this run.
+
+Format:
+```html
+<b>🔧 Sim fixup prompt — {YYYY-MM-DD}</b>
+
+Copy-paste into Claude Code on the <code>dev</code> branch:
+
+<pre><code>{prompt}</code></pre>
+```
+
+The prompt body must be:
+- Plain text only (no HTML inside the `<pre>` block)
+- One numbered item per distinct issue class (not per persona — deduplicate)
+- Each item: one-line description, then `file/path:line` reference, then the
+  exact fix in ≤2 sentences
+- No preamble, no sign-off, no labels like "Bug:" or "Suggestion:"
+- Token-efficient: assume the reader knows the codebase
+
+Build the prompt from `observations.fail` and `recommendations` across all
+three persona reports, plus any regression findings. Group identical failures
+(e.g. the same assertion failing on all three personas) into one item.
+
+Example item format:
+```
+3. Touch targets below 44px — multiple files
+   Settings gear (app/page.tsx:237): 26px. Profile pin/edit: 36px. Back
+   buttons: 36px. Session back: 20px. Add min-h-[44px] to each.
+```
+
+---
+
 ## Step 6 — Regression alert (only if regression detected)
 
 Send a **separate** Telegram message immediately after the summary:
