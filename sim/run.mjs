@@ -72,6 +72,7 @@ async function writeReport(persona, sessionNumber, traitsBefore, traitsAfter, re
     fail_count: report.failCount,
     pages_visited: report.pagesVisited,
     observations: {
+      story: report.story ? report.story.join(' ') : '',
       pass: report.pass,
       fail: report.fail,
       notes: report.notes,
@@ -344,6 +345,7 @@ async function runRobin(personas) {
     passCount: 0, failCount: 0,
     pass: [], fail: [], notes: [], jsErrors: [],
     recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
+    story: [],
   };
   report.notes.push(`Interaction robin_receives_leo_contract: NOT eligible (leo.contracts_generated=${leo.contracts_generated}, need >=1) — solo run`);
 
@@ -380,6 +382,7 @@ async function runRobin(personas) {
     report.passCount += a1.pass; report.failCount += a1.fail;
     report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
     report.notes.push('HOME: Seeded from last_state (session 3). Robin reads page carefully (impulsivity=1)');
+    report.story.push(`Robin opened the app for session ${sessionN}, her existing profile sitting quietly on the home screen.`);
 
     // ── NAVIGATE TO PROFILE (Robin already has a profile from last_state) ─────
     // Robin uses BottomNav exclusively (impulsivity=1)
@@ -482,6 +485,14 @@ async function runRobin(personas) {
     report.notes.push(`KINKS: Robin filled ${kinksFilledCount} kinks, read ${descriptionInfoClicked} descriptions`);
 
     if (kinksFilledCount >= 5) {
+      report.story.push(`She moved through the kink list methodically, reading each description before committing to a status — all ${kinksFilledCount} she could find.`);
+    } else if (kinksFilledCount > 0) {
+      report.story.push(`She managed to rate ${kinksFilledCount} kinks before the list ran dry, reading each description first.`);
+    } else {
+      report.story.push(`She scrolled through the profile looking for kinks to rate but the list showed nothing to interact with — something felt off about the page.`);
+    }
+
+    if (kinksFilledCount >= 5) {
       deltas.thoroughness += 1;
       report.notes.push('ENGINE: thoroughness +1 (filled many kinks in session)');
     }
@@ -571,6 +582,7 @@ async function runRobin(personas) {
 
       // Robin reads the compare page (impulsivity=1) but doesn't import (trust=2)
       report.notes.push('COMPARE: Robin reads compare page carefully but exits — no import (trust=2)');
+    report.story.push(`The compare tab had been sitting in the bottom navigation the whole time. Curiosity won out — she tapped it, read the page carefully, then backed out. Not ready to add a partner yet.`);
 
       // Go back via BottomNav (impulsivity=1 — never uses browser back)
       const homeNavBtn = await page.$('a[href="/"], nav a:has-text("Home"), nav a:has-text("KinkSync")');
@@ -582,6 +594,7 @@ async function runRobin(personas) {
       }
     } else {
       report.notes.push('NAVIGATION: Robin stays on profile page — no compare visited (BottomNav compare not found)');
+    report.story.push(`She stayed on her profile, not venturing further — no partner imports, no contract, no shortcuts. Trust at ${traitsBefore.trust} keeps those doors closed.`);
     }
 
     // ── FINAL STATE ───────────────────────────────────────────────────────────
@@ -670,6 +683,7 @@ async function runLeo(personas) {
     passCount: 0, failCount: 0,
     pass: [], fail: [], notes: [], jsErrors: [],
     recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
+    story: [],
   };
 
   if (eligibleImport) {
@@ -710,6 +724,7 @@ async function runLeo(personas) {
     report.passCount += a1.pass; report.failCount += a1.fail;
     report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
     report.notes.push('HOME: Seeded from last_state (session 3, Leo already has profile). Leo barely glances (impulsivity=9)');
+    report.story.push(`Leo was back, and already scrolling before the home screen had settled.`);
 
     // ── IMPORT ROBIN (if eligible) ────────────────────────────────────────────
     if (eligibleImport) {
@@ -725,12 +740,14 @@ async function runLeo(personas) {
           report.pass.push('Robin import succeeded — leo trust +1');
           report.passCount++;
           report.notes.push(`IMPORT: Success — "${importResult.message}" — trust +1`);
+          report.story.push(`He popped open settings and slid Robin's profile in via the backup restore — trusting enough for that, at least. It worked.`);
           await snap('import-success');
         } else {
           deltas.trust -= 1; // Import failed → leo trust -1
           report.fail.push(`Robin import failed: ${importResult.message}`);
           report.failCount++;
           report.notes.push(`IMPORT: FAILED — "${importResult.message}" — trust -1`);
+          report.story.push(`He tried to load Robin's profile through the backup restore — it threw an error: "${importResult.message}". Trust took a hit.`);
           await snap('import-failed');
           report.recommendations.push(`Import flow: Leo tried to import Robin's profile but got: "${importResult.message}". Investigate backup restore flow for imported profiles.`);
         }
@@ -786,6 +803,7 @@ async function runLeo(personas) {
       await page.waitForTimeout(300);
       deltas.impulsivity += 1;
       report.notes.push(`NAVIGATION: Leo used browser back → now at ${page.url()} (impulsivity=9) → impulsivity +1`);
+    report.story.push(`He hit browser back mid-flow, ended up somewhere unexpected, and didn't particularly care.`);
       await snap('browser-back');
     }
 
@@ -803,13 +821,15 @@ async function runLeo(personas) {
     // Check if Robin's profile is shown in compare
     const compareContent = await page.evaluate(() => document.body.textContent || '');
     if (compareContent.includes('Robin')) {
-      deltas.curiosity += 1; // Compare page rendered with Robin's data → curiosity +1
+      deltas.curiosity += 1;
       report.pass.push('Compare page shows Robin\'s imported profile — leo curiosity +1');
       report.passCount++;
       report.notes.push('COMPARE: Robin\'s profile visible in compare view → curiosity +1');
+      report.story.push(`He typed /compare directly into the URL bar — who needs a menu. Robin's data was there. Something about seeing her answers alongside his made curiosity tick up.`);
     } else {
       report.notes.push('COMPARE: Robin\'s profile not visible in compare page (may need both profiles pinned or selected)');
       report.recommendations.push('Compare UX: After importing a partner, it\'s not clear how to get them into the compare view. Consider auto-pinning on import or a prompt directing to compare.');
+      report.story.push(`He typed /compare directly into the URL bar. Robin's profile didn't show up — the compare view was blank even after the import. He shrugged and moved on.`);
     }
 
     await snap('compare-with-robin');
@@ -901,6 +921,15 @@ async function runLeo(personas) {
     if (traitsBefore.trust < 5 && traitsAfter.trust >= 5)
       report.milestones.push('ready to collaborate');
 
+    {
+      const trustLine = deltas.trust > 0
+        ? `He let Robin in, and trust moved to ${traitsAfter.trust}.`
+        : deltas.trust < 0
+          ? `The failed import left a dent — trust dropped to ${traitsAfter.trust}.`
+          : `Trust held at ${traitsAfter.trust}.`;
+      report.story.push(`He hit the contract page and jabbed at the generate button before anything was ready. Nothing. He bounced through session and timeline before landing back on home, satisfied with nothing in particular. ${trustLine}`);
+    }
+
     const newFeatures = [...new Set([
       ...leo.features_discovered, 'home', 'profile', 'compare', 'contract', 'session',
       ...report.pagesVisited.map(p => p.replace(/^\//, '').split('/')[0]).filter(Boolean),
@@ -962,6 +991,7 @@ async function runIris(personas) {
     passCount: 0, failCount: 0,
     pass: [], fail: [], notes: [], jsErrors: [],
     recommendations: [], screenshotUrls: [], pagesVisited: [], milestones: [],
+    story: [],
   };
 
   if (eligibleCompare) {
@@ -1002,6 +1032,7 @@ async function runIris(personas) {
     report.passCount += a1.pass; report.failCount += a1.fail;
     report.pass.push(...a1.passItems); report.fail.push(...a1.failItems);
     report.notes.push('HOME: Iris reads carefully on desktop 1280px (impulsivity=2). Seeded from last_state.');
+    report.story.push(`Iris settled in at her desktop for session ${sessionN}, unhurried.`);
 
     // ── IMPORT ROBIN (interaction: import partner 1) ───────────────────────────
     if (eligibleCompare) {
@@ -1015,11 +1046,13 @@ async function runIris(personas) {
           report.pass.push('Robin import into Iris succeeded');
           report.passCount++;
           report.notes.push(`IMPORT ROBIN: Success — "${importRobin.message}"`);
+          report.story.push(`She opened settings and imported Robin's profile cleanly — partner one loaded.`);
           await snap('import-robin-success');
         } else {
           report.fail.push(`Robin import into Iris failed: ${importRobin.message}`);
           report.failCount++;
           report.notes.push(`IMPORT ROBIN: FAILED — "${importRobin.message}"`);
+          report.story.push(`She tried to import Robin's profile through the backup restore — it returned: "${importRobin.message}". She noted it and continued.`);
           await snap('import-robin-failed');
           report.recommendations.push(`Import flow (Iris): Robin import failed with "${importRobin.message}". Check backup restore compatibility with last_state profiles.`);
         }
@@ -1039,6 +1072,7 @@ async function runIris(personas) {
           report.pass.push('Leo import into Iris succeeded — both imports succeeded → iris trust +1');
           report.passCount++;
           report.notes.push(`IMPORT LEO: Success — "${importLeo.message}" — both imports done → trust +1`);
+          report.story.push(`Leo's followed. Two partners now loaded alongside her own profile — trust moved to ${traitsBefore.trust + 1}.`);
           await snap('import-leo-success');
         } else {
           report.fail.push(`Leo import into Iris failed: ${importLeo.message}`);
@@ -1125,6 +1159,11 @@ async function runIris(personas) {
         report.notes.push(`ENGINE: thoroughness +1 (Iris filled ${kinksFilledCount} kinks)`);
       }
       report.notes.push(`KINKS: Iris filled ${kinksFilledCount} kinks, ${commentsAdded} comments`);
+      if (kinksFilledCount >= 5) {
+        report.story.push(`She worked through the kink list the way she does everything — completely. ${commentsAdded > 0 ? `Left comments on ${commentsAdded} entr${commentsAdded !== 1 ? 'ies' : 'y'}.` : ''} ${kinksFilledCount} kinks rated.`);
+      } else if (kinksFilledCount > 0) {
+        report.story.push(`She rated ${kinksFilledCount} kinks before the list ran out, leaving ${commentsAdded} comment${commentsAdded !== 1 ? 's' : ''}.`);
+      }
 
       await snap('kink-filling');
 
@@ -1156,17 +1195,20 @@ async function runIris(personas) {
     const hasIris = compareText.includes('Iris');
 
     if (hasRobin && hasLeo) {
-      deltas.curiosity += 1; // Compare rendered with both Robin and Leo's data
+      deltas.curiosity += 1;
       report.pass.push('Compare page shows both Robin and Leo profiles — iris curiosity +1');
       report.passCount++;
       report.notes.push('COMPARE: Both Robin and Leo visible in compare view → curiosity +1');
+      report.story.push(`She navigated to compare and found both Robin and Leo's data there alongside her own — exactly what she came for. The app only shows two profiles at once, but it was enough to work with.`);
     } else if (hasRobin || hasLeo) {
       report.notes.push(`COMPARE: Only partial data visible (robin=${hasRobin}, leo=${hasLeo}, iris=${hasIris})`);
       report.notes.push('COMPARE: App only shows 2 profiles in compare at a time — multi-partner compare not supported');
       report.recommendations.push('Multi-partner compare not yet available — Iris manages two partners (Robin + Leo) but compare only shows 2 profiles at once. Consider adding partner selector or tabbed compare view.');
+      report.story.push(`She navigated to compare with two partners loaded — but the page only shows two profiles at once. One of them was missing from the view. She noted the limitation without frustration.`);
     } else {
       report.notes.push('COMPARE: No partner profiles shown in compare — may need to select profiles or pin');
       report.recommendations.push('Compare empty state: Iris imported two partners but compare shows empty state. Consider redirecting to compare after successful import.');
+      report.story.push(`She navigated to compare after importing both partners — but the page came up empty. The app didn't connect the imports to the compare view automatically.`);
     }
 
     await snap('compare-robin-leo');
@@ -1234,6 +1276,16 @@ async function runIris(personas) {
     if (traitsBefore.curiosity < 8 && traitsAfter.curiosity >= 8) report.milestones.push('power user curiosity');
     if (traitsBefore.trust < 5 && traitsAfter.trust >= 5) report.milestones.push('ready to collaborate');
     if (traitsBefore.trust < 8 && traitsAfter.trust >= 8) report.milestones.push('fully committed user');
+
+    {
+      const milestoneLines = report.milestones.map(m => {
+        if (m === 'obsessive filler') return `Thoroughness maxed out — the app had no more kinks for her to rate.`;
+        if (m === 'power user curiosity') return `She's now explored everything the app has to offer.`;
+        if (m === 'ready to collaborate') return `Trust crossed into territory where partner features start making sense.`;
+        return '';
+      }).filter(Boolean).join(' ');
+      if (milestoneLines) report.story.push(milestoneLines);
+    }
 
     const newFeatures = [...new Set([
       ...iris.features_discovered, 'home', 'profile', 'compare',
@@ -1330,7 +1382,11 @@ async function runSynthesis(results, originalPersonas) {
     const icon = r.incomplete ? '⚠️' : r.fail_count === 0 ? '✅' : r.fail_count <= 2 ? '⚠️' : '❌';
     const name = persona.charAt(0).toUpperCase() + persona.slice(1);
     const total = (r.pass_count || 0) + (r.fail_count || 0);
-    let line = `${icon} ${name} (session ${r.session_number}) — ${r.pass_count}/${total} passed`;
+
+    // Story — lead with the narrative
+    const story = r.observations?.story || '';
+    let line = `${icon} *${name}* (session ${r.session_number}) — ${r.pass_count}/${total} passed`;
+    if (story) line += `\n_${story}_`;
 
     const milestones = r.milestones || [];
     if (milestones.length) line += `\n  🎯 ${milestones.join(', ')}`;
@@ -1340,6 +1396,10 @@ async function runSynthesis(results, originalPersonas) {
       .map(p => p.replace(/^\//, '').split('/')[0])
       .filter(p => p && !knownPrev.includes(p));
     if (newRoutes.length) line += `\n  🗺 First visit: ${[...new Set(newRoutes)].join(', ')}`;
+
+    // Top failed assertions
+    const topFails = (r.observations?.fail || []).slice(0, 2);
+    if (topFails.length) line += `\n  ⚠️ ${topFails.join(' · ')}`;
 
     const reg = regressions.find(x => x.persona === persona);
     if (reg) line += `\n  🚨 Regression: ${reg.detail.slice(0, 60)}`;

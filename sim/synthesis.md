@@ -57,9 +57,11 @@ Always send this, even on fully clean runs.
 🧪 KinkSync Sim — {YYYY-MM-DD}
 
 {for each persona: robin, leo, iris}
-{✅|⚠️|❌} {Name} (session {N}) — {pass}/{total} passed
+{✅|⚠️|❌} *{Name}* (session {N}) — {pass}/{total} passed
+_{session story — 2–3 sentences from observations.story}_
 {if milestone hit}  🎯 {milestone label}
 {if new route discovered}  🗺 First visit to {route}
+{if failed assertions exist}  ⚠️ Failed: {top 2 fail items}
 {if regression}  🚨 Regression: {assertion}
 {/for}
 
@@ -71,6 +73,9 @@ Always send this, even on fully clean runs.
 ✨ All clean
 {/if}
 ```
+
+Each persona block leads with the human story, not the numbers. The numbers are supporting
+context, not the headline.
 
 Send via:
 ```bash

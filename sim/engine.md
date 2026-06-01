@@ -103,6 +103,31 @@ When a trait crosses these values, note it in the session report as a milestone:
 7. Upload each screenshot to Supabase Storage:
    `sim-screenshots/{persona_id}/{YYYY-MM-DD}_{step:02d}_{route_slug}.png`
 8. After the session, compute trait deltas and update `sim_personas` in Supabase
+9. Write a third-person session story (see below) and store it in `sim_reports.observations.story`
+
+---
+
+## Session story (mandatory)
+
+After each session, compose a 3–6 sentence third-person narrative describing what the persona
+actually experienced. This is not a test log — it is a human-readable account of their visit.
+
+**Rules:**
+- Write in past tense, third person ("Robin opened…", "Leo barely glanced…")
+- Let the trait values drive the voice and detail: impulsivity=9 means rushed sentences; thoroughness=7 means careful, deliberate ones
+- Name specific things that happened: routes visited, imports attempted, kinks rated, failures hit
+- Note emotional texture where trait context allows: trust thresholds, confusion at empty states, delight at working features
+- If a cross-persona interaction ran, narrate it like an encounter — not just "import succeeded"
+- End with one sentence about what changed: a trait bump, a milestone, a finding to follow up
+
+**Example (Leo, trust=4, impulsivity=9, curiosity=9):**
+> Leo launched the app and was already in settings before the home screen had finished rendering. He
+> slid Robin's profile in via the backup restore — trusting enough for that, at least. He barely read
+> the compare page before typing `/contract` directly into the URL bar. Half-filled form, immediate
+> submit attempt, predictable block. He bounced through session and timeline before landing back on
+> home, satisfied with nothing in particular. Trust ticked up to 5 — he finally let someone in.
+
+Store the story in `observations.story` (string) alongside `pass`, `fail`, and `notes`.
 
 ---
 
