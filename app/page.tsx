@@ -195,16 +195,18 @@ function HomeContent() {
     }
     const incoming = parsed.profiles as Profile[];
     const existing = new Set(profiles.map((p: Profile) => p.id));
-    const newOnes = incoming.map((p: Profile) =>
-      existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p
-    );
+    const isOwnBackup = parsed.source === "backup";
+    const newOnes = isOwnBackup
+      ? incoming.filter((p: Profile) => !existing.has(p.id))
+      : incoming.map((p: Profile) =>
+          existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p
+        ).map((p: Profile) => ({ ...p, isImported: true as const }));
     const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
     if (!incoming.length && !restoredContracts.length) {
       setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
       return;
     }
-    const isOwnBackup = parsed.source === "backup";
-    if (newOnes.length) importProfiles(isOwnBackup ? newOnes : newOnes.map((p: Profile) => ({ ...p, isImported: true })));
+    if (newOnes.length) importProfiles(newOnes);
     if (restoredContracts.length) restoreContracts(restoredContracts);
     setImportSuccess(`${newOnes.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
   }
