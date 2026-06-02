@@ -35,6 +35,7 @@ interface Props {
   onDirectionChange?: (d: KinkDirection) => void;
   onStatusGiveChange?: (s: KinkStatus) => void;
   onStatusReceiveChange?: (s: KinkStatus) => void;
+  onDesireChange?: (d: number | null) => void;
   compact?: boolean;
   hideComments?: boolean;
 }
@@ -48,7 +49,7 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
 export default function KinkRow({
   kink, entry, onStatusChange,
   onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  compact, hideComments,
+  onDesireChange, compact, hideComments,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
 
@@ -139,7 +140,7 @@ export default function KinkRow({
             className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto"
           >
             {entry.direction === "give" && (
-              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↑</span>
+              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Geven:</span>
             )}
             {PREF_PILLS.map(({ status: s, label }) => {
               const active = entry.direction === "give" ? entry.statusGive === s : status === s;
@@ -163,7 +164,7 @@ export default function KinkRow({
         )}
         {entry.direction === "receive" && (
           <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
-            <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↓</span>
+            <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Ontvangen:</span>
             {PREF_PILLS.map(({ status: s, label }) => {
               const active = entry.statusReceive === s;
               return (
@@ -185,7 +186,7 @@ export default function KinkRow({
         {entry.direction === "both" && (
           <>
             <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
-              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↑</span>
+              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Geven:</span>
               {PREF_PILLS.map(({ status: s, label }) => {
                 const active = entry.statusGive === s;
                 return (
@@ -202,7 +203,7 @@ export default function KinkRow({
               })}
             </div>
             <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
-              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>↓</span>
+              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Ontvangen:</span>
               {PREF_PILLS.map(({ status: s, label }) => {
                 const active = entry.statusReceive === s;
                 return (
@@ -219,6 +220,25 @@ export default function KinkRow({
               })}
             </div>
           </>
+        )}
+
+        {!compact && entry.status && entry.status !== "hard_no" && (
+          <div className="px-3 pb-2 flex items-center gap-2">
+            <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Verlangen</span>
+            <input
+              type="range"
+              min={1}
+              max={5}
+              step={1}
+              value={entry.desire ?? 3}
+              onChange={(e) => onDesireChange?.(Number(e.target.value))}
+              className="flex-1 accent-[var(--accent)]"
+              aria-label="Verlangenniveau 1 tot 5"
+            />
+            <span className="text-[11px] w-3 text-center tabular-nums flex-none" style={{ color: "var(--accent)" }}>
+              {entry.desire ?? "—"}
+            </span>
+          </div>
         )}
 
         {/* Hard limit — separate row, visually distinct */}

@@ -149,6 +149,7 @@ function ContractPage() {
     statusGiveA?: KinkStatus; statusReceiveA?: KinkStatus;
     statusGiveB?: KinkStatus; statusReceiveB?: KinkStatus;
     commentA?: string; commentB?: string;
+    desireA?: number | null; desireB?: number | null;
   };
   const shared: KinkDetail[] = [];
   const hardLimits: { name: string; who: string }[] = [];
@@ -172,6 +173,8 @@ function ContractPage() {
       statusReceiveB: entryB.statusReceive ?? undefined,
       commentA: entryA.comment || undefined,
       commentB: entryB.comment || undefined,
+      desireA: entryA.desire ?? null,
+      desireB: entryB.desire ?? null,
     };
     if (isHardLimit(entryA, entryB)) {
       const aHard = entryA.status === "hard_no" || entryA.statusGive === "hard_no" || entryA.statusReceive === "hard_no";
@@ -820,6 +823,7 @@ type KinkDetailItem = {
   statusGiveA?: KinkStatus; statusReceiveA?: KinkStatus;
   statusGiveB?: KinkStatus; statusReceiveB?: KinkStatus;
   commentA?: string; commentB?: string;
+  desireA?: number | null; desireB?: number | null;
 };
 type ContractItem = string | { text: string; tag: string } | KinkDetailItem;
 
@@ -876,8 +880,10 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
                   )}
                 </div>
               </div>
-              {(item.commentA || item.commentB) && (
+              {(item.desireA != null || item.desireB != null || item.commentA || item.commentB) && (
                 <div className="mt-1.5 space-y-0.5" style={{ color: "var(--text2)" }}>
+                  {item.desireA != null && <div className="text-[11px]"><span className="font-medium" style={{ color: cA }}>{nA} verlangen:</span> {item.desireA}/5</div>}
+                  {item.desireB != null && <div className="text-[11px]"><span className="font-medium" style={{ color: cB }}>{nB} verlangen:</span> {item.desireB}/5</div>}
                   {item.commentA && <div><span className="font-medium" style={{ color: cA }}>{nA}:</span> {item.commentA}</div>}
                   {item.commentB && <div><span className="font-medium" style={{ color: cB }}>{nB}:</span> {item.commentB}</div>}
                 </div>
