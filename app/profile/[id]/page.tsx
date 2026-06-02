@@ -155,6 +155,16 @@ export default function ProfilePage({ params }: Props) {
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
 
+  const DNA_COLORS_PAGE: Record<string, string> = {
+    yes: "#4ade80", willing: "#60a5fa", maybe: "#fbbf24", no: "#fb923c", hard_no: "#ef4444",
+  };
+  const dnaSegments = (["yes", "willing", "maybe", "no", "hard_no"] as const)
+    .map((s) => ({
+      status: s,
+      count: visibleKinks.filter((k) => profile.entries[k.id]?.status === s).length,
+    }))
+    .filter((seg) => seg.count > 0);
+
   const searchTrimmed = search.trim();
   const searchResults = searchTrimmed
     ? visibleKinks.filter((k) => k.name.toLowerCase().includes(searchTrimmed.toLowerCase()))
@@ -418,24 +428,43 @@ export default function ProfilePage({ params }: Props) {
 
           <div
             ref={navRef}
-            className="no-scrollbar sticky top-0 z-10 flex gap-1.5 overflow-x-auto px-4 py-2"
+            className="no-scrollbar sticky top-0 z-10 px-4 pt-2 pb-1.5"
             style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
           >
-            {ALL_CATS.map((cat) => (
-              <button
-                key={cat}
-                data-nav={cat}
-                onClick={() => { setActiveCategory(cat); scrollToCategory(cat); }}
-                className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
-                style={
-                  activeCategory === cat
-                    ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
-                    : { color: "var(--text2)", border: "1px solid var(--border)" }
-                }
-              >
-                {cat}
-              </button>
-            ))}
+            <div className="h-1.5 rounded-full overflow-hidden flex mb-1.5" style={{ background: "var(--surface2)" }}>
+              {dnaSegments.map((seg, i) => (
+                <div
+                  key={seg.status}
+                  className="h-full"
+                  style={{
+                    flex: seg.count,
+                    background: DNA_COLORS_PAGE[seg.status],
+                    borderRadius:
+                      dnaSegments.length === 1 ? "9999px"
+                      : i === 0 ? "9999px 0 0 9999px"
+                      : i === dnaSegments.length - 1 ? "0 9999px 9999px 0"
+                      : "0",
+                  }}
+                />
+              ))}
+            </div>
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
+              {ALL_CATS.map((cat) => (
+                <button
+                  key={cat}
+                  data-nav={cat}
+                  onClick={() => { setActiveCategory(cat); scrollToCategory(cat); }}
+                  className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+                  style={
+                    activeCategory === cat
+                      ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
+                      : { color: "var(--text2)", border: "1px solid var(--border)" }
+                  }
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="px-4 pt-3">
@@ -461,6 +490,7 @@ export default function ProfilePage({ params }: Props) {
                         onDirectionChange={(d) => setEntry(profile.id, kink.id, { direction: d })}
                         onStatusGiveChange={(s) => setEntry(profile.id, kink.id, { statusGive: s })}
                         onStatusReceiveChange={(s) => setEntry(profile.id, kink.id, { statusReceive: s })}
+                        onDesireChange={(d) => setEntry(profile.id, kink.id, { desire: d })}
                         compact={compact}
                         hideComments={hideComments}
                       />
@@ -485,6 +515,7 @@ export default function ProfilePage({ params }: Props) {
                         onDirectionChange={(kinkId, d) => setEntry(profile.id, kinkId, { direction: d })}
                         onStatusGiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusGive: s })}
                         onStatusReceiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusReceive: s })}
+                        onDesireChange={(kinkId, d) => setEntry(profile.id, kinkId, { desire: d })}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
                             setEntry(profile.id, k.id, { status: "no", desire: null });
