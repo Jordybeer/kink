@@ -130,7 +130,11 @@ function ComparePage() {
     }
   }, [aId, bId, score]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return (
+    <main className="max-w-5xl mx-auto px-4 py-6 pb-10 w-full flex items-start justify-center pt-24">
+      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
+    </main>
+  );
 
   function getEntry(profile: typeof profileA, kinkId: string): KinkEntry {
     return profile?.entries[kinkId] ?? { status: null, score: null, comment: "" };

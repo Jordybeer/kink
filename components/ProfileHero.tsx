@@ -262,13 +262,14 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
       <div className="mb-4">
         {dnaSegments.length === 0 ? (
           <div
-            className="h-2 rounded-full w-full"
+            className="h-3 rounded-full w-full"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
             aria-label="Nog geen keuzes gemaakt"
+            role="img"
           />
         ) : (
           <div
-            className="h-2 rounded-full overflow-hidden flex"
+            className="h-3 rounded-full overflow-hidden flex"
             style={{ background: "var(--surface2)" }}
             role="img"
             aria-label="Kink DNA verdeling"
