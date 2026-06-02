@@ -52,6 +52,7 @@ export interface Profile {
   privateNote?: string;
   avatarDataUrl?: string;
   isImported?: boolean;
+  origin?: "own" | "shared";
   experienceLevel: ExperienceLevel;
   customKinks: CustomKink[];
   createdAt: number;

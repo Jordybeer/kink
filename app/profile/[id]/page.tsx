@@ -12,6 +12,7 @@ import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
 import { ChevronDown, ChevronRight, Zap } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -147,6 +148,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"];
+  const isShared = profile.origin === "shared" || (!profile.origin && !!profile.isImported);
 
   function handleStatus(kinkId: string, s: KinkStatus) {
     setEntry(profile!.id, kinkId, { status: s, desire: null });
@@ -380,8 +382,8 @@ export default function ProfilePage({ params }: Props) {
       <ProfileHero
         profile={profile}
         maxLevel={maxLevel}
-        onShare={profile.isImported ? undefined : () => setShareOpen(true)}
-        onEdit={profile.isImported ? undefined : handleStartEdit}
+        onShare={isShared ? undefined : () => setShareOpen(true)}
+        onEdit={isShared ? undefined : handleStartEdit}
         onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
         onError={(msg) => {
           setErrorMessage(msg);
@@ -390,7 +392,7 @@ export default function ProfilePage({ params }: Props) {
       />
 
       {/* Tab bar — own profiles only */}
-      {!profile.isImported && activeTab && (
+      {!isShared && activeTab && (
         <div className="flex gap-1.5 px-4 pb-4">
           {(["overzicht", "bewerken"] as const).map((tab) => (
             <button
@@ -411,8 +413,15 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       {/* ── BEWERKEN TAB ─────────────────────────────────────────── */}
-      {activeTab === "bewerken" && !profile.isImported && (
-        <>
+      <AnimatePresence mode="wait">
+      {activeTab === "bewerken" && !isShared && (
+        <motion.div
+          key="bewerken"
+          initial={{ opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -8 }}
+          transition={{ duration: 0.18 }}
+        >
           <div className="px-4 pb-2 flex gap-2">
             <input
               value={search}
@@ -621,16 +630,25 @@ export default function ProfilePage({ params }: Props) {
               </>
             )}
           </div>
-        </>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* ── OVERZICHT TAB ────────────────────────────────────────── */}
-      {(activeTab === "overzicht" || profile.isImported) && (
+      <AnimatePresence mode="wait">
+      {(activeTab === "overzicht" || isShared) && (
+        <motion.div
+          key="overzicht"
+          initial={{ opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -8 }}
+          transition={{ duration: 0.18 }}
+        >
         <div className="px-4 pt-2 pb-3">
           {totalRated === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
-              {!profile.isImported && (
+              {!isShared && (
                 <button
                   onClick={() => setActiveTab("bewerken")}
                   className="focus-ring text-sm px-4 py-2 rounded-lg font-medium transition-colors"
@@ -754,7 +772,7 @@ export default function ProfilePage({ params }: Props) {
           )}
 
           {/* Private notes — imported profiles only */}
-          {profile.isImported && (
+          {isShared && (
             <div className="mt-2 mb-4">
               <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text2)" }}>
                 Persoonlijke notitie
@@ -783,10 +801,12 @@ export default function ProfilePage({ params }: Props) {
             </button>
           </div>
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Export FAB — own profiles, overzicht tab only */}
-      {activeTab === "overzicht" && !profile.isImported && (
+      {activeTab === "overzicht" && !isShared && (
         <div className="fixed bottom-20 right-4 z-50 flex gap-2">
           <button
             onClick={handleExport}
@@ -808,7 +828,7 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       {/* Edit form — bottom sheet */}
-      <Sheet open={editing && !profile.isImported} onClose={() => setEditing(false)} aria-label="Profiel bewerken">
+      <Sheet open={editing && !isShared} onClose={() => setEditing(false)} aria-label="Profiel bewerken">
         <div
           className="rounded-t-2xl p-6 max-h-[90dvh] overflow-y-auto"
           style={{
@@ -926,7 +946,7 @@ export default function ProfilePage({ params }: Props) {
         </div>
       </Sheet>
 
-      <QRModal profile={shareOpen && !profile.isImported ? profile : null} onClose={() => setShareOpen(false)} />
+      <QRModal profile={shareOpen && !isShared ? profile : null} onClose={() => setShareOpen(false)} />
     </main>
   );
 }

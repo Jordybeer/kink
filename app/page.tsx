@@ -197,10 +197,14 @@ function HomeContent() {
     const existing = new Set(profiles.map((p: Profile) => p.id));
     const isOwnBackup = parsed.source === "backup";
     const newOnes = isOwnBackup
-      ? incoming.filter((p: Profile) => !existing.has(p.id))
-      : incoming.map((p: Profile) =>
-          existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p
-        ).map((p: Profile) => ({ ...p, isImported: true as const }));
+      ? incoming
+          .filter((p: Profile) => !existing.has(p.id))
+          .map((p: Profile) => p.origin === "shared"
+            ? p
+            : { ...p, origin: "own" as const, isImported: false })
+      : incoming
+          .map((p: Profile) => existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p)
+          .map((p: Profile) => ({ ...p, isImported: true as const, origin: "shared" as const }));
     const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
     if (!incoming.length && !restoredContracts.length) {
       setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
@@ -422,12 +426,20 @@ function HomeContent() {
           </p>
         ) : (
           <>
-            <div className="flex flex-col gap-3 mb-6">
+            <motion.div
+              className="flex flex-col gap-3 mb-6"
+              initial="hidden"
+              animate="show"
+              variants={{ show: { transition: { staggerChildren: 0.07 } } }}
+            >
               {profileGroups.map((group) => {
                 const groupName = group[0].name;
                 const isMulti = group.length > 1;
                 return (
-                  <div key={groupName.toLowerCase().trim()}>
+                  <motion.div
+                    key={groupName.toLowerCase().trim()}
+                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.22 } } }}
+                  >
                     {isMulti && (
                       <div className="flex items-center gap-2 mb-2 px-1">
                         <div
@@ -651,10 +663,10 @@ function HomeContent() {
                         );
                       })}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
 
             {/* Compare CTA */}
             <div className="flex flex-col gap-3">
@@ -1035,7 +1047,7 @@ function HomeContent() {
               <button
                 onClick={() => {
                   if (!importPreview) return;
-                  importProfiles([{ ...importPreview, isImported: true }]);
+                  importProfiles([{ ...importPreview, isImported: true, origin: "shared" }]);
                   setImportDone(true);
                   router.replace("/");
                   setTimeout(() => {
@@ -1169,51 +1181,69 @@ function HomeContent() {
       )}
 
       {/* Import password modal */}
-      {importPwOpen && (
-        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
-          <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
-            <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
-            <div className="relative">
-              <input
-                type={importPwShow ? "text" : "password"}
-                placeholder="Wachtwoord"
-                value={importPw}
-                onChange={(e) => setImportPw(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
-                className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-                autoFocus
-              />
+      <AnimatePresence>
+        {importPwOpen && (
+          <motion.div
+            key="import-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.6)" }}
+          >
+            <motion.div
+              key="import-card"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+            >
+              <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
+              <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
+              <div className="relative">
+                <input
+                  type={importPwShow ? "text" : "password"}
+                  placeholder="Wachtwoord"
+                  value={importPw}
+                  onChange={(e) => setImportPw(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
+                  className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setImportPwShow((v) => !v)}
+                  aria-label={importPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                  style={{ color: "var(--text2)" }}
+                >
+                  {importPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {importPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{importPwError}</p>}
               <button
-                type="button"
-                onClick={() => setImportPwShow((v) => !v)}
-                aria-label={importPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                onClick={handleImportDecrypt}
+                disabled={importPwLoading}
+                className="w-full py-3 rounded-xl text-sm font-semibold"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
+              </button>
+              <button
+                onClick={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
+                className="w-full py-3 rounded-xl text-sm"
                 style={{ color: "var(--text2)" }}
               >
-                {importPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                Annuleer
               </button>
-            </div>
-            {importPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{importPwError}</p>}
-            <button
-              onClick={handleImportDecrypt}
-              disabled={importPwLoading}
-              className="w-full py-3 rounded-xl text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "#000" }}
-            >
-              {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
-            </button>
-            <button
-              onClick={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
-              className="w-full py-3 rounded-xl text-sm"
-              style={{ color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && onboardingComplete && (

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
 import KinkRow from "./KinkRow";
@@ -111,18 +112,26 @@ export default function CategorySection({
         </button>
       </div>
 
-      {undoPending && onBulkRestore && (
-        <div className="fixed bottom-20 left-4 right-4 z-[300] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
-          style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", maxWidth: "28rem", margin: "0 auto" }}>
-          <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
-          <button
-            onClick={() => { onBulkRestore(undoSnapshot.current); setUndoPending(false); if (undoTimer.current) clearTimeout(undoTimer.current); }}
-            className="focus-ring text-sm font-semibold flex-none"
-            style={{ color: "var(--accent)" }}>
-            Ongedaan maken
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {undoPending && onBulkRestore && (
+          <motion.div
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 24, opacity: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="fixed bottom-20 left-4 right-4 z-[300] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", maxWidth: "28rem", margin: "0 auto" }}
+          >
+            <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
+            <button
+              onClick={() => { onBulkRestore(undoSnapshot.current); setUndoPending(false); if (undoTimer.current) clearTimeout(undoTimer.current); }}
+              className="focus-ring text-sm font-semibold flex-none"
+              style={{ color: "var(--accent)" }}>
+              Ongedaan maken
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className={`accordion-content ${open ? "open" : ""}`}>
         <div className="accordion-inner">
