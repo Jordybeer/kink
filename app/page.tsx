@@ -161,10 +161,17 @@ function HomeContent() {
     window.location.reload();
   }
 
-  function exportProfiles() {
+  function resetExportPwState() {
+    setExportPwStep(0);
     setExportPw("");
     setExportPwConfirm("");
+    setExportPwShow(false);
     setExportPwError(null);
+    setExportPwLoading(false);
+  }
+
+  function exportProfiles() {
+    resetExportPwState();
     setExportPwOpen(true);
   }
 
@@ -182,6 +189,7 @@ function HomeContent() {
       a.download = `kinksync-backup-${new Date().toISOString().slice(0, 10)}.enc.json`;
       a.click();
       URL.revokeObjectURL(url);
+      resetExportPwState();
       setExportPwOpen(false);
     } finally {
       setExportPwLoading(false);
@@ -199,8 +207,8 @@ function HomeContent() {
     const newOnes = isOwnBackup
       ? incoming
           .filter((p: Profile) => !existing.has(p.id))
-          .map((p: Profile) => p.origin === "shared"
-            ? p
+          .map((p: Profile) => (p.origin === "shared" || p.isImported === true)
+            ? { ...p, origin: "shared" as const, isImported: true }
             : { ...p, origin: "own" as const, isImported: false })
       : incoming
           .map((p: Profile) => existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p)
@@ -1100,7 +1108,7 @@ function HomeContent() {
                     Doorgaan
                   </button>
                   <button
-                    onClick={() => { setExportPwOpen(false); setExportPwStep(0); setExportPw(""); setExportPwConfirm(""); setExportPwShow(false); }}
+                    onClick={() => { resetExportPwState(); setExportPwOpen(false); }}
                     className="w-full py-3 rounded-xl text-sm"
                     style={{ color: "var(--text2)" }}
                   >

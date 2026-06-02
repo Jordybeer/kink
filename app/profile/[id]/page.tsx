@@ -149,6 +149,7 @@ export default function ProfilePage({ params }: Props) {
 
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"];
   const isShared = profile.origin === "shared" || (!profile.origin && !!profile.isImported);
+  const effectiveTab = isShared ? "overzicht" : activeTab;
 
   function handleStatus(kinkId: string, s: KinkStatus) {
     setEntry(profile!.id, kinkId, { status: s, desire: null });
@@ -414,7 +415,7 @@ export default function ProfilePage({ params }: Props) {
 
       {/* ── BEWERKEN TAB ─────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
-      {activeTab === "bewerken" && !isShared && (
+      {effectiveTab === "bewerken" && (
         <motion.div
           key="bewerken"
           initial={{ opacity: 0, x: 8 }}
@@ -636,7 +637,7 @@ export default function ProfilePage({ params }: Props) {
 
       {/* ── OVERZICHT TAB ────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
-      {(activeTab === "overzicht" || isShared) && (
+      {effectiveTab === "overzicht" && (
         <motion.div
           key="overzicht"
           initial={{ opacity: 0, x: 8 }}
@@ -806,7 +807,7 @@ export default function ProfilePage({ params }: Props) {
       </AnimatePresence>
 
       {/* Export FAB — own profiles, overzicht tab only */}
-      {activeTab === "overzicht" && !isShared && (
+      {effectiveTab === "overzicht" && !isShared && (
         <div className="fixed bottom-20 right-4 z-50 flex gap-2">
           <button
             onClick={handleExport}
