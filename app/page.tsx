@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Settings, Pin, PinOff, Pencil } from "lucide-react";
+import { Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -69,10 +69,12 @@ function HomeContent() {
   const [exportPwConfirm, setExportPwConfirm] = useState("");
   const [exportPwError, setExportPwError] = useState<string | null>(null);
   const [exportPwLoading, setExportPwLoading] = useState(false);
+  const [exportPwShow, setExportPwShow] = useState(false);
   const [importPwOpen, setImportPwOpen] = useState(false);
   const [importPw, setImportPw] = useState("");
   const [importPwError, setImportPwError] = useState<string | null>(null);
   const [importPwLoading, setImportPwLoading] = useState(false);
+  const [importPwShow, setImportPwShow] = useState(false);
   const [pendingEncrypted, setPendingEncrypted] = useState<EncryptedBackup | null>(null);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
@@ -1063,24 +1065,46 @@ function HomeContent() {
               <p><strong>Waarom versleuteld?</strong> Je kinklijst is gevoelige data. Zonder wachtwoord kan iedereen die het bestand vindt alles lezen — je grenzen, verlangens, alles. Met encryptie is het bestand waardeloos zonder jouw wachtwoord.</p>
               <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
             </div>
-            <input
-              type="password"
-              placeholder="Wachtwoord (min. 8 tekens)"
-              value={exportPw}
-              onChange={(e) => setExportPw(e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-              autoFocus
-            />
-            <input
-              type="password"
-              placeholder="Herhaal wachtwoord"
-              value={exportPwConfirm}
-              onChange={(e) => setExportPwConfirm(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleExportEncrypted(); }}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-            />
+            <div className="relative">
+              <input
+                type={exportPwShow ? "text" : "password"}
+                placeholder="Wachtwoord (min. 8 tekens)"
+                value={exportPw}
+                onChange={(e) => setExportPw(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setExportPwShow((v) => !v)}
+                aria-label={exportPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                style={{ color: "var(--text2)" }}
+              >
+                {exportPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={exportPwShow ? "text" : "password"}
+                placeholder="Herhaal wachtwoord"
+                value={exportPwConfirm}
+                onChange={(e) => setExportPwConfirm(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleExportEncrypted(); }}
+                className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+              <button
+                type="button"
+                onClick={() => setExportPwShow((v) => !v)}
+                aria-label={exportPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                style={{ color: "var(--text2)" }}
+              >
+                {exportPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             {exportPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{exportPwError}</p>}
             <button
               onClick={handleExportEncrypted}
@@ -1107,16 +1131,27 @@ function HomeContent() {
           <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
             <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
-            <input
-              type="password"
-              placeholder="Wachtwoord"
-              value={importPw}
-              onChange={(e) => setImportPw(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-              autoFocus
-            />
+            <div className="relative">
+              <input
+                type={importPwShow ? "text" : "password"}
+                placeholder="Wachtwoord"
+                value={importPw}
+                onChange={(e) => setImportPw(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
+                className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setImportPwShow((v) => !v)}
+                aria-label={importPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                style={{ color: "var(--text2)" }}
+              >
+                {importPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             {importPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{importPwError}</p>}
             <button
               onClick={handleImportDecrypt}
