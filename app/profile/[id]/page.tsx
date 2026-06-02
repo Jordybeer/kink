@@ -11,7 +11,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Zap, Clapperboard } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
@@ -369,12 +369,13 @@ export default function ProfilePage({ params }: Props) {
             Vergelijk
           </Link>
           <Link
-            href="/session"
-            aria-label="Live sessie starten"
+            href="/scene"
+            aria-label="Scène planner"
             className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
             style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
           >
-            📡 Sessie
+            <Clapperboard size={13} />
+            Scène
           </Link>
         </div>
       </div>

@@ -758,7 +758,7 @@ function HomeContent() {
 
               <Link
                 href="/session"
-                className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90"
+                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
                 style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
               >
                 <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
