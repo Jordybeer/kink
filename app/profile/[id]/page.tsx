@@ -355,15 +355,25 @@ export default function ProfilePage({ params }: Props) {
         <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
           ← Terug
         </Link>
-        <Link
-          href={`/compare?a=${id}`}
-          aria-label="Vergelijk dit profiel"
-          className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
-          style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
-        >
-          <Zap size={13} />
-          Vergelijk
-        </Link>
+        <div className="flex items-center gap-2 pwa-hidden">
+          <Link
+            href={`/compare?a=${id}`}
+            aria-label="Vergelijk dit profiel"
+            className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
+            style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
+          >
+            <Zap size={13} />
+            Vergelijk
+          </Link>
+          <Link
+            href="/session"
+            aria-label="Live sessie starten"
+            className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
+            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+          >
+            📡 Sessie
+          </Link>
+        </div>
       </div>
 
       <h1 className="sr-only">{profile.name}</h1>
