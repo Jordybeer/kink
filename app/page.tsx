@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Settings, Pin, PinOff, Pencil } from "lucide-react";
+import { Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -69,10 +70,13 @@ function HomeContent() {
   const [exportPwConfirm, setExportPwConfirm] = useState("");
   const [exportPwError, setExportPwError] = useState<string | null>(null);
   const [exportPwLoading, setExportPwLoading] = useState(false);
+  const [exportPwShow, setExportPwShow] = useState(false);
+  const [exportPwStep, setExportPwStep] = useState(0);
   const [importPwOpen, setImportPwOpen] = useState(false);
   const [importPw, setImportPw] = useState("");
   const [importPwError, setImportPwError] = useState<string | null>(null);
   const [importPwLoading, setImportPwLoading] = useState(false);
+  const [importPwShow, setImportPwShow] = useState(false);
   const [pendingEncrypted, setPendingEncrypted] = useState<EncryptedBackup | null>(null);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
@@ -157,10 +161,17 @@ function HomeContent() {
     window.location.reload();
   }
 
-  function exportProfiles() {
+  function resetExportPwState() {
+    setExportPwStep(0);
     setExportPw("");
     setExportPwConfirm("");
+    setExportPwShow(false);
     setExportPwError(null);
+    setExportPwLoading(false);
+  }
+
+  function exportProfiles() {
+    resetExportPwState();
     setExportPwOpen(true);
   }
 
@@ -178,6 +189,7 @@ function HomeContent() {
       a.download = `kinksync-backup-${new Date().toISOString().slice(0, 10)}.enc.json`;
       a.click();
       URL.revokeObjectURL(url);
+      resetExportPwState();
       setExportPwOpen(false);
     } finally {
       setExportPwLoading(false);
@@ -191,16 +203,22 @@ function HomeContent() {
     }
     const incoming = parsed.profiles as Profile[];
     const existing = new Set(profiles.map((p: Profile) => p.id));
-    const newOnes = incoming.map((p: Profile) =>
-      existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p
-    );
+    const isOwnBackup = parsed.source === "backup";
+    const newOnes = isOwnBackup
+      ? incoming
+          .filter((p: Profile) => !existing.has(p.id))
+          .map((p: Profile) => (p.origin === "shared" || p.isImported === true)
+            ? { ...p, origin: "shared" as const, isImported: true }
+            : { ...p, origin: "own" as const, isImported: false })
+      : incoming
+          .map((p: Profile) => existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p)
+          .map((p: Profile) => ({ ...p, isImported: true as const, origin: "shared" as const }));
     const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
     if (!incoming.length && !restoredContracts.length) {
       setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
       return;
     }
-    const isOwnBackup = parsed.source === "backup";
-    if (newOnes.length) importProfiles(isOwnBackup ? newOnes : newOnes.map((p: Profile) => ({ ...p, isImported: true })));
+    if (newOnes.length) importProfiles(newOnes);
     if (restoredContracts.length) restoreContracts(restoredContracts);
     setImportSuccess(`${newOnes.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
   }
@@ -416,12 +434,20 @@ function HomeContent() {
           </p>
         ) : (
           <>
-            <div className="flex flex-col gap-3 mb-6">
+            <motion.div
+              className="flex flex-col gap-3 mb-6"
+              initial="hidden"
+              animate="show"
+              variants={{ show: { transition: { staggerChildren: 0.07 } } }}
+            >
               {profileGroups.map((group) => {
                 const groupName = group[0].name;
                 const isMulti = group.length > 1;
                 return (
-                  <div key={groupName.toLowerCase().trim()}>
+                  <motion.div
+                    key={groupName.toLowerCase().trim()}
+                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.22 } } }}
+                  >
                     {isMulti && (
                       <div className="flex items-center gap-2 mb-2 px-1">
                         <div
@@ -645,10 +671,10 @@ function HomeContent() {
                         );
                       })}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
 
             {/* Compare CTA */}
             <div className="flex flex-col gap-3">
@@ -1029,7 +1055,7 @@ function HomeContent() {
               <button
                 onClick={() => {
                   if (!importPreview) return;
-                  importProfiles([{ ...importPreview, isImported: true }]);
+                  importProfiles([{ ...importPreview, isImported: true, origin: "shared" }]);
                   setImportDone(true);
                   router.replace("/");
                   setTimeout(() => {
@@ -1057,85 +1083,175 @@ function HomeContent() {
       {/* Export password modal */}
       {exportPwOpen && (
         <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
-          <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <h2 className="text-base font-bold">Backup versleutelen</h2>
-            <div className="rounded-xl p-3 text-xs flex flex-col gap-1.5" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--text)" }}>
-              <p><strong>Waarom versleuteld?</strong> Je kinklijst is gevoelige data. Zonder wachtwoord kan iedereen die het bestand vindt alles lezen — je grenzen, verlangens, alles. Met encryptie is het bestand waardeloos zonder jouw wachtwoord.</p>
-              <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
-            </div>
-            <input
-              type="password"
-              placeholder="Wachtwoord (min. 8 tekens)"
-              value={exportPw}
-              onChange={(e) => setExportPw(e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-              autoFocus
-            />
-            <input
-              type="password"
-              placeholder="Herhaal wachtwoord"
-              value={exportPwConfirm}
-              onChange={(e) => setExportPwConfirm(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleExportEncrypted(); }}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-            />
-            {exportPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{exportPwError}</p>}
-            <button
-              onClick={handleExportEncrypted}
-              disabled={exportPwLoading}
-              className="w-full py-3 rounded-xl text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "#000" }}
-            >
-              {exportPwLoading ? "Versleutelen…" : "⬇ Versleuteld exporteren"}
-            </button>
-            <button
-              onClick={() => setExportPwOpen(false)}
-              className="w-full py-3 rounded-xl text-sm"
-              style={{ color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <AnimatePresence mode="wait" initial={false}>
+              {exportPwStep === 0 ? (
+                <motion.div
+                  key="warning"
+                  initial={{ x: -40, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -40, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="p-6 flex flex-col gap-4"
+                >
+                  <h2 className="text-base font-bold">Backup versleutelen</h2>
+                  <div className="rounded-xl p-4 text-sm flex flex-col gap-3" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
+                    <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen — informatie die niemand anders mag zien.</p>
+                    <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Zonder encryptie kan iedereen die het bestand vindt alles lezen.</p>
+                    <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
+                  </div>
+                  <button
+                    onClick={() => setExportPwStep(1)}
+                    className="w-full py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: "var(--accent)", color: "#000" }}
+                  >
+                    Doorgaan
+                  </button>
+                  <button
+                    onClick={() => { resetExportPwState(); setExportPwOpen(false); }}
+                    className="w-full py-3 rounded-xl text-sm"
+                    style={{ color: "var(--text2)" }}
+                  >
+                    ← Terug
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="fields"
+                  initial={{ x: 40, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 40, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="p-6 flex flex-col gap-4"
+                >
+                  <h2 className="text-base font-bold">Kies een wachtwoord</h2>
+                  <div className="relative">
+                    <input
+                      type={exportPwShow ? "text" : "password"}
+                      placeholder="Wachtwoord (min. 8 tekens)"
+                      value={exportPw}
+                      onChange={(e) => setExportPw(e.target.value)}
+                      className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setExportPwShow((v) => !v)}
+                      aria-label={exportPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                      style={{ color: "var(--text2)" }}
+                    >
+                      {exportPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={exportPwShow ? "text" : "password"}
+                      placeholder="Herhaal wachtwoord"
+                      value={exportPwConfirm}
+                      onChange={(e) => setExportPwConfirm(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleExportEncrypted(); }}
+                      className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setExportPwShow((v) => !v)}
+                      aria-label={exportPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                      style={{ color: "var(--text2)" }}
+                    >
+                      {exportPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {exportPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{exportPwError}</p>}
+                  <button
+                    onClick={handleExportEncrypted}
+                    disabled={exportPwLoading}
+                    className="w-full py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: "var(--accent)", color: "#000" }}
+                  >
+                    {exportPwLoading ? "Versleutelen…" : "⬇ Versleuteld exporteren"}
+                  </button>
+                  <button
+                    onClick={() => setExportPwStep(0)}
+                    className="w-full py-3 rounded-xl text-sm"
+                    style={{ color: "var(--text2)" }}
+                  >
+                    ← Terug
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}
 
       {/* Import password modal */}
-      {importPwOpen && (
-        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
-          <div className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
-            <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
-            <input
-              type="password"
-              placeholder="Wachtwoord"
-              value={importPw}
-              onChange={(e) => setImportPw(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-              autoFocus
-            />
-            {importPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{importPwError}</p>}
-            <button
-              onClick={handleImportDecrypt}
-              disabled={importPwLoading}
-              className="w-full py-3 rounded-xl text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "#000" }}
+      <AnimatePresence>
+        {importPwOpen && (
+          <motion.div
+            key="import-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.6)" }}
+          >
+            <motion.div
+              key="import-card"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
-              {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
-            </button>
-            <button
-              onClick={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
-              className="w-full py-3 rounded-xl text-sm"
-              style={{ color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
-          </div>
-        </div>
-      )}
+              <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
+              <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
+              <div className="relative">
+                <input
+                  type={importPwShow ? "text" : "password"}
+                  placeholder="Wachtwoord"
+                  value={importPw}
+                  onChange={(e) => setImportPw(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleImportDecrypt(); }}
+                  className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setImportPwShow((v) => !v)}
+                  aria-label={importPwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                  style={{ color: "var(--text2)" }}
+                >
+                  {importPwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {importPwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{importPwError}</p>}
+              <button
+                onClick={handleImportDecrypt}
+                disabled={importPwLoading}
+                className="w-full py-3 rounded-xl text-sm font-semibold"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
+              </button>
+              <button
+                onClick={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
+                className="w-full py-3 rounded-xl text-sm"
+                style={{ color: "var(--text2)" }}
+              >
+                Annuleer
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Install prompt banner */}
       {_hasHydrated && !installPromptDismissed && onboardingComplete && (

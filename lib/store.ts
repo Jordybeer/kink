@@ -72,6 +72,7 @@ export const useStore = create<State>()(
               role,
               experienceLevel,
               relationshipStatus: relationshipStatus || undefined,
+              origin: "own" as const,
               customKinks: [],
               createdAt: Date.now(),
               updatedAt: Date.now(),

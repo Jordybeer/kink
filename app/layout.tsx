@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import BottomNav from "@/components/BottomNav";
+import UpdateBanner from "@/components/UpdateBanner";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider />
         {children}
         <BottomNav />
+        <UpdateBanner />
       </body>
     </html>
   );
