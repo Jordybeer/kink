@@ -12,6 +12,7 @@ const STATIC_ITEMS = [
 export default function BottomNav() {
   const path = usePathname();
   const firstProfileId = useStore((s) => s.profiles[0]?.id);
+
   const currentProfileMatch = path.match(/^\/profile\/([^/]+)/);
   const profileHref = currentProfileMatch
     ? `/profile/${currentProfileMatch[1]}`
@@ -24,7 +25,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
+      className="pwa-only fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
       style={{
         background: "var(--surface)",
         borderTop: "1px solid var(--border)",
@@ -43,12 +44,12 @@ export default function BottomNav() {
           <Link
             key={label}
             href={href}
-            className="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 text-xs font-medium transition-colors focus-ring"
+            className="flex-1 flex items-center justify-center py-2.5 focus-ring"
             style={{ color: active ? "var(--accent)" : "var(--text2)" }}
+            aria-label={label}
             aria-current={active ? "page" : undefined}
           >
-            <span aria-hidden="true" className="text-base leading-none">{icon}</span>
-            {label}
+            <span aria-hidden="true" className="text-xl leading-none">{icon}</span>
           </Link>
         );
       })}
