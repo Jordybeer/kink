@@ -150,7 +150,7 @@ export default function KinkRow({
                     ? onStatusGiveChange?.(active ? null : s)
                     : onStatusChange(active ? null : s)}
                   aria-pressed={active}
-                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none ${
+                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] ${
                     compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
                   }${active ? ` status-${s}` : ""}`}
                   style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
@@ -171,7 +171,7 @@ export default function KinkRow({
                   key={s}
                   onClick={() => onStatusReceiveChange?.(active ? null : s)}
                   aria-pressed={active}
-                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none ${
+                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] ${
                     compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
                   }${active ? ` status-${s}` : ""}`}
                   style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
@@ -193,7 +193,7 @@ export default function KinkRow({
                     key={s}
                     onClick={() => onStatusGiveChange?.(active ? null : s)}
                     aria-pressed={active}
-                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
+                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
                     style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                   >
                     {label}
@@ -210,7 +210,7 @@ export default function KinkRow({
                     key={s}
                     onClick={() => onStatusReceiveChange?.(active ? null : s)}
                     aria-pressed={active}
-                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
+                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
                     style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                   >
                     {label}
@@ -248,7 +248,7 @@ export default function KinkRow({
               <button
                 onClick={handleClick}
                 aria-pressed={active}
-                className={`focus-ring w-full rounded-lg border text-[12px] font-semibold py-1.5 transition-colors${active ? " status-hard_no" : ""}`}
+                className={`focus-ring w-full rounded-lg border text-[12px] font-semibold py-1.5 min-h-[44px] transition-colors${active ? " status-hard_no" : ""}`}
                 style={!active ? {
                   color: "var(--hard-no)",
                   borderColor: "color-mix(in srgb, var(--hard-no) 30%, transparent)",
