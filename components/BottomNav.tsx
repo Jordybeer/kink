@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
@@ -11,15 +10,8 @@ const STATIC_ITEMS = [
 ];
 
 export default function BottomNav() {
-  const [isPwa, setIsPwa] = useState(false);
   const path = usePathname();
   const firstProfileId = useStore((s) => s.profiles[0]?.id);
-
-  useEffect(() => {
-    setIsPwa(window.matchMedia("(display-mode: standalone)").matches);
-  }, []);
-
-  if (!isPwa) return null;
 
   const currentProfileMatch = path.match(/^\/profile\/([^/]+)/);
   const profileHref = currentProfileMatch
@@ -33,7 +25,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
+      className="pwa-only fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
       style={{
         background: "var(--surface)",
         borderTop: "1px solid var(--border)",

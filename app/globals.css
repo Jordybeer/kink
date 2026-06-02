@@ -278,6 +278,9 @@ select {
   .contract-print button { display: none !important; }
 }
 
+.pwa-only { display: none !important; }
+
 @media (display-mode: standalone) {
   .pwa-hidden { display: none !important; }
+  .pwa-only { display: flex !important; }
 }
