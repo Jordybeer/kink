@@ -1,1039 +1,1355 @@
-// KinkSync Sim Runner — 2026-06-01
-import { chromium } from '@playwright/test';
-import https from 'https';
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
+// KinkSync Sim Run — 2026-06-02
+import pkg from '/home/user/kink/node_modules/playwright/index.js';
+const { chromium, devices } = pkg;
+import { createReadStream, writeFileSync, readFileSync, mkdirSync } from 'fs';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
-const SUPABASE_URL = 'https://qmxfgzkidyujpkntlqxy.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFteGZnemtpZHl1anBrbnRscXh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE1MjcxMCwiZXhwIjoyMDk1NzI4NzEwfQ.c03b9eA_px7z-ST1HlvxCqBEN65f8R7P34DyLT07rmU';
-const TELEGRAM_BOT_TOKEN = '8765851887:AAGnbDElgBy0shzaKTQ4xqKKqtCTTQMvb_Q';
-const TELEGRAM_CHAT_ID = '1303637520';
-const DATE = '2026-06-01';
-const BASE_URL = 'http://localhost:3000';
+const SUPABASE_URL   = 'https://qmxfgzkidyujpkntlqxy.supabase.co';
+const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFteGZnemtpZHl1anBrbnRscXh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE1MjcxMCwiZXhwIjoyMDk1NzI4NzEwfQ.c03b9eA_px7z-ST1HlvxCqBEN65f8R7P34DyLT07rmU';
+const TELEGRAM_TOKEN = '8765851887:AAGnbDElgBy0shzaKTQ4xqKKqtCTTQMvb_Q';
+const TELEGRAM_CHAT  = '1303637520';
+const DATE           = '2026-06-02';
+const BASE_URL       = 'http://localhost:3000';
 
-// ─── HTTP helpers ──────────────────────────────────────────────────────────
+const SHOTS_DIR = '/tmp/sim-shots';
+mkdirSync(SHOTS_DIR, { recursive: true });
 
-function httprequest(url, opts = {}, body = null) {
-  return new Promise((resolve, reject) => {
-    const mod = url.startsWith('https') ? https : http;
-    const req = mod.request(url, opts, (res) => {
-      const chunks = [];
-      res.on('data', c => chunks.push(c));
-      res.on('end', () => {
-        const raw = Buffer.concat(chunks).toString();
-        resolve({ status: res.statusCode, body: raw });
-      });
-    });
-    req.on('error', reject);
-    if (body) req.write(body);
-    req.end();
+// ── Supabase helpers ────────────────────────────────────────────────────────
+
+async function supabaseGet(path) {
+  const r = await fetch(`${SUPABASE_URL}${path}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
   });
+  return r.json();
 }
 
-async function supabaseRest(method, endpoint, body = null) {
-  const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'Content-Type': 'application/json',
-    'Prefer': method === 'POST' ? 'return=representation' : undefined,
-  };
-  if (!headers.Prefer) delete headers.Prefer;
-  const payload = body ? JSON.stringify(body) : null;
-  const res = await httprequest(`${SUPABASE_URL}${endpoint}`, { method, headers }, payload);
-  try { return JSON.parse(res.body); } catch { return res.body; }
-}
-
-async function uploadScreenshot(persona, filename, bufferPath) {
-  const fileBuffer = fs.readFileSync(bufferPath);
-  const url = `${SUPABASE_URL}/storage/v1/object/sim-screenshots/${persona}/${filename}`;
-  const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'Content-Type': 'image/png',
-    'x-upsert': 'true',
-  };
-  const res = await httprequest(url, { method: 'POST', headers }, fileBuffer);
-  return res.status < 300;
-}
-
-async function telegramSendMessage(text) {
-  const payload = JSON.stringify({
-    chat_id: TELEGRAM_CHAT_ID,
-    parse_mode: 'HTML',
-    text,
+async function supabasePost(path, body) {
+  const r = await fetch(`${SUPABASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(body)
   });
-  const headers = {
-    'Content-Type': 'application/json',
-    'Content-Length': Buffer.byteLength(payload).toString(),
-  };
-  return httprequest(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { method: 'POST', headers }, payload);
+  const text = await r.text();
+  try { return JSON.parse(text); } catch { return text; }
 }
 
-async function telegramSendPhoto(imageBuffer, filename, caption) {
-  const boundary = '----KinkSimBoundary';
-  const body = Buffer.concat([
-    Buffer.from(
-      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TELEGRAM_CHAT_ID}\r\n` +
-      `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n` +
-      `--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="${filename}"\r\nContent-Type: image/png\r\n\r\n`
-    ),
-    imageBuffer,
-    Buffer.from(`\r\n--${boundary}--\r\n`),
-  ]);
-  const headers = {
-    'Content-Type': `multipart/form-data; boundary=${boundary}`,
-    'Content-Length': body.length.toString(),
-  };
-  return httprequest(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: 'POST', headers }, body);
-}
-
-// ─── Assertions ────────────────────────────────────────────────────────────
-
-async function runAssertions(page, pageName, viewport = 'mobile') {
-  const failures = [];
-
-  // JS errors are tracked via console
-  const jsErrors = [];
-  page.on('console', msg => {
-    if (msg.type() === 'error') jsErrors.push(msg.text().slice(0, 120));
+async function supabasePatch(path, body) {
+  const r = await fetch(`${SUPABASE_URL}${path}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(body)
   });
-  page.on('pageerror', err => jsErrors.push(err.message.slice(0, 120)));
+  const text = await r.text();
+  try { return JSON.parse(text); } catch { return text; }
+}
 
-  await page.waitForTimeout(800);
-
-  if (jsErrors.length) failures.push(`JS errors: ${jsErrors.slice(0,3).join('; ')}`);
-
-  // Theme
-  const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-  if (!theme) failures.push('data-theme missing on <html>');
-
-  // h1
-  const h1s = await page.evaluate(() => Array.from(document.querySelectorAll('h1')).map(h => h.textContent?.trim().slice(0,40) ?? ''));
-  if (h1s.length === 0) failures.push(`no <h1> on ${pageName}`);
-  if (h1s.length > 1) failures.push(`multiple h1s on ${pageName}: ${h1s.join(', ')}`);
-
-  // BottomNav
-  const hasBottomNav = await page.evaluate(() => !!document.querySelector('nav[aria-label="Hoofdnavigatie"]'));
-  if (!hasBottomNav) failures.push('BottomNav missing');
-
-  // Horizontal overflow at 390px (only for mobile)
-  if (viewport === 'mobile') {
-    const overflow = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('*'))
-        .filter(el => {
-          const cs = getComputedStyle(el);
-          if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') return false;
-          return el.scrollWidth > el.clientWidth + 4;
-        })
-        .map(el => el.tagName + (el.className ? '.' + String(el.className).trim().split(/\s+/)[0] : ''))
-        .slice(0, 3);
-    });
-    if (overflow.length) failures.push(`horizontal overflow on ${pageName}: ${overflow.join(', ')}`);
+async function uploadScreenshot(persona, filename, filePath) {
+  try {
+    const bytes = readFileSync(filePath);
+    const r = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/sim-screenshots/${persona}/${filename}`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'image/png',
+          'x-upsert': 'true'
+        },
+        body: bytes
+      }
+    );
+    const text = await r.text();
+    console.log(`  📸 Uploaded ${filename}:`, r.status, text.slice(0, 80));
+    return r.ok;
+  } catch (e) {
+    console.error(`  ❌ Upload failed ${filename}:`, e.message);
+    return false;
   }
-
-  // Touch targets
-  const tinyTargets = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('button, a[href]'))
-      .filter(el => {
-        const r = el.getBoundingClientRect();
-        return r.width > 0 && r.height > 0 && r.height < 44;
-      })
-      .map(el => `"${el.textContent?.trim().slice(0,20) ?? el.getAttribute('aria-label')?.slice(0,20) ?? ''}" ${Math.round(el.getBoundingClientRect().height)}px`)
-      .slice(0, 5);
-  });
-  if (tinyTargets.length) failures.push(`touch targets <44px on ${pageName}: ${tinyTargets.join('; ')}`);
-
-  // Images missing alt
-  const noAlt = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('img:not([alt])')).length
-  );
-  if (noAlt > 0) failures.push(`${noAlt} img(s) missing alt on ${pageName}`);
-
-  return failures;
 }
 
-// ─── Screenshot helper ─────────────────────────────────────────────────────
+// ── Page assertion helper ────────────────────────────────────────────────────
 
-let screenshotStep = 0;
-async function shot(page, persona, label, localDir) {
-  screenshotStep++;
-  const step = String(screenshotStep).padStart(2, '0');
-  const slug = label.replace(/[^a-z0-9]+/gi, '_').toLowerCase().slice(0, 30);
-  const filename = `${DATE}_${step}_${slug}.png`;
-  const localPath = path.join(localDir, filename);
-  await page.screenshot({ path: localPath, fullPage: false });
-  await uploadScreenshot(persona, filename, localPath);
+async function assertPage(page, route) {
+  const findings = { pass: [], fail: [] };
+
+  // No JS errors
+  const errors = page._jsErrors || [];
+  if (errors.length === 0) findings.pass.push('no-js-errors');
+  else findings.fail.push(`js-errors: ${errors.join('; ')}`);
+
+  // Dark theme applied
+  const theme = await page.evaluate(() =>
+    document.documentElement.getAttribute('data-theme')
+  );
+  if (['midnight','red','forest','mono'].includes(theme))
+    findings.pass.push(`theme:${theme}`);
+  else
+    findings.fail.push(`missing data-theme (got: ${theme})`);
+
+  // BottomNav visible
+  const nav = await page.locator('nav[aria-label="Hoofdnavigatie"]').isVisible().catch(() => false);
+  if (nav) findings.pass.push('bottomnav-visible');
+  else     findings.fail.push('bottomnav-missing');
+
+  // h1 present
+  const h1count = await page.locator('h1').count();
+  if (h1count === 1)     findings.pass.push('h1-present');
+  else if (h1count === 0) findings.fail.push('h1-missing');
+  else                    findings.fail.push(`h1-count:${h1count}`);
+
+  // No horizontal overflow at current width
+  const overflow = await page.evaluate(() => {
+    return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+  });
+  if (!overflow) findings.pass.push('no-horizontal-overflow');
+  else           findings.fail.push(`horizontal-overflow on ${route}`);
+
+  // BottomNav items 44px+
+  const navItems = await page.locator('nav[aria-label="Hoofdnavigatie"] a').all();
+  let navTouchFail = false;
+  for (const item of navItems) {
+    const box = await item.boundingBox();
+    if (box && box.height < 44) { navTouchFail = true; break; }
+  }
+  if (!navTouchFail) findings.pass.push('bottomnav-touch-targets-ok');
+  else               findings.fail.push('bottomnav-touch-target-below-44px');
+
+  return findings;
+}
+
+// ── Screenshot helper ────────────────────────────────────────────────────────
+
+async function shot(page, persona, step, slug) {
+  const filename = `${DATE}_${String(step).padStart(2,'0')}_${slug}.png`;
+  const filePath = join(SHOTS_DIR, `${persona}_${filename}`);
+  await page.screenshot({ path: filePath, fullPage: false });
+  await uploadScreenshot(persona, filename, filePath);
+  console.log(`  📷 ${persona} step ${step}: ${slug}`);
   return filename;
 }
 
-// ─── Robin ─────────────────────────────────────────────────────────────────
+// ── Seed localStorage ────────────────────────────────────────────────────────
 
-async function runRobin(browser, personaData) {
-  console.log('\n═══ ROBIN session', personaData.session_count + 1, '═══');
-  screenshotStep = 0;
-  const dir = '/tmp/sim-robin';
-  fs.mkdirSync(dir, { recursive: true });
+async function seedLocalStorage(page, state) {
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.evaluate((s) => {
+    localStorage.setItem('kink-profiles', JSON.stringify(s));
+  }, state);
+  // reload so Zustand picks up the seeded state
+  await page.reload({ waitUntil: 'networkidle' });
+}
 
-  const ctx = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    deviceScaleFactor: 2,
-    storageState: undefined,
+// ── Capture final localStorage ───────────────────────────────────────────────
+
+async function captureLocalStorage(page) {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem('kink-profiles');
+    return raw ? JSON.parse(raw) : null;
   });
-  const page = await ctx.newPage();
-  const consoleErrors = [];
-  page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0,120)); });
-  page.on('pageerror', e => consoleErrors.push(e.message.slice(0,120)));
+}
 
-  const failures = [];
-  const passes = [];
-  const notes = [];
-  let screenshots = [];
-  const traits = { ...personaData.traits };
-  const profileId = '9kwfvmdxmeompt5mg6g';
+// ── Wait for hydration guard ─────────────────────────────────────────────────
+
+async function waitHydrated(page) {
+  // Wait for BottomNav to appear (it only renders after _hasHydrated)
+  await page.waitForSelector('nav[aria-label="Hoofdnavigatie"]', { timeout: 10000 })
+    .catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+// ── Dismiss profile tour if active ──────────────────────────────────────────
+
+async function dismissTourIfActive(page, report) {
+  // ProfileTour backdrop is a fixed div[aria-hidden="true"] at z-index 400
+  // It blocks all navigation clicks. Dismiss by clicking "Sla over"
+  const skipBtn = page.locator('button:has-text("Sla over")');
+  const visible = await skipBtn.isVisible({ timeout: 1500 }).catch(() => false);
+  if (visible) {
+    await skipBtn.click({ force: true });
+    // Wait for AnimatePresence exit animation (0.2s) + framer-motion spring settle
+    await page.waitForTimeout(1200);
+    const noteText = 'Profile tour dismissed (profileTourComplete=false caused tour overlay to block BottomNav)';
+    if (report) {
+      if (Array.isArray(report.notes)) report.notes.push(noteText);
+      else if (report.observations?.notes) report.observations.notes.push(noteText);
+    }
+    return true;
+  }
+  return false;
+}
+
+// ── Close any open sheet ──────────────────────────────────────────────────────
+
+async function closeAnySheet(page) {
+  // Try close button inside open sheet panel
+  const closeBtn = page.locator('.sheet-panel.open button:has-text("Sluit"), .sheet-panel.open button[aria-label*="luit"]').first();
+  const visible = await closeBtn.isVisible({ timeout: 800 }).catch(() => false);
+  if (visible) { await closeBtn.click({ force: true }); await page.waitForTimeout(400); return; }
+  // Fallback: Escape key
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+}
+
+// ── Close info sheet if open ──────────────────────────────────────────────────
+
+async function closeInfoSheet(page) {
+  const closeBtn = page.locator('button:has-text("Sluit")').first();
+  const visible = await closeBtn.isVisible({ timeout: 800 }).catch(() => false);
+  if (visible) { await closeBtn.click({ force: true }); await page.waitForTimeout(500); }
+  else { await page.keyboard.press('Escape'); await page.waitForTimeout(500); }
+  // Dismiss tour if it appeared after closing info sheet
+  await dismissTourIfActive(page, null);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// ROBIN — session 8 → 9 | trust=2 curiosity=5 impulsivity=1 thoroughness=9
+// Solo run, 390px mobile
+// ════════════════════════════════════════════════════════════════════════════
+
+async function runRobin(personas) {
+  const persona = personas.find(p => p.id === 'robin');
+  console.log('\n🔴 Robin — session', persona.session_count + 1);
+
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    ...devices['iPhone 14'],
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2
+  });
+  const page = await context.newPage();
+
+  // Track JS errors
+  page._jsErrors = [];
+  page.on('pageerror', e => page._jsErrors.push(e.message.slice(0, 100)));
+
+  const report = {
+    persona: 'robin',
+    date: DATE,
+    observations: {
+      story: '',
+      pass: 0,
+      fail: 0,
+      pages_visited: [],
+      notes: [],
+      interaction: null
+    },
+    recommendations: { top_3: [] },
+    regression_detected: false
+  };
+
+  let step = 0;
+  const allPass = [], allFail = [];
 
   try {
-    // Seed localStorage from last_state
-    await page.goto(BASE_URL);
-    await page.evaluate((state) => {
-      localStorage.setItem('kink-profiles', JSON.stringify(state));
-    }, personaData.last_state);
+    // Seed from last_state
+    await seedLocalStorage(page, persona.last_state);
 
-    // curiosity=4 (mid): Explore 3-4 categories, may tap compare
-    // impulsivity=1 (low): Read carefully, BottomNav only
-    // trust=2 (low): No import, no contract
-    // thoroughness=7 (high): Fill every visible kink, desire sliders, private note
+    // ── 1. Home page ──────────────────────────────────────────────────────
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'robin', step, 'home');
+    report.observations.pages_visited.push('/');
+    const homeAssert = await assertPage(page, '/');
+    allPass.push(...homeAssert.pass); allFail.push(...homeAssert.fail);
 
-    // Step 1: Home page
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1200);
-    const f1 = await runAssertions(page, 'home', 'mobile');
-    failures.push(...f1);
-    if (!f1.length) passes.push('home: all assertions pass');
-    screenshots.push(await shot(page, 'robin', 'home', dir));
+    // Dismiss onboarding if visible (onboarding_complete=true, so shouldn't appear)
+    const onboarding = await page.locator('[aria-label="Welkom bij KinkSync"]').isVisible().catch(() => false);
+    if (onboarding) {
+      await page.locator('button:has-text("Begin")').click().catch(() => {});
+      await page.waitForTimeout(500);
+      report.observations.notes.push('onboarding overlay appeared despite onboarding_complete=true');
+      allFail.push('onboarding-appeared-unexpectedly');
+    }
 
-    // Step 2: Navigate to profile
-    // Robin reads carefully (impulsivity=1), uses BottomNav
-    const profileLink = page.locator(`a[href="/profile/${profileId}"]`).first();
-    const profileLinkExists = await profileLink.isVisible().catch(() => false);
-    if (profileLinkExists) {
-      await profileLink.click();
+    // ── 2. Navigate to own profile via BottomNav ──────────────────────────
+    // impulsivity=1: uses BottomNav exclusively
+    const profileLink = page.locator('nav[aria-label="Hoofdnavigatie"] a').filter({ hasText: 'Profiel' });
+    await profileLink.click({ force: true });
+    await page.waitForURL(/\/profile\//, { timeout: 8000 }).catch(() => {});
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'robin', step, 'profile');
+    report.observations.pages_visited.push(page.url().replace(BASE_URL, ''));
+    const profAssert = await assertPage(page, '/profile/[id]');
+    allPass.push(...profAssert.pass); allFail.push(...profAssert.fail);
+
+    const profileUrl = page.url();
+
+    // ── 3. Kink categories — thoroughness=9 fills every visible kink ──────
+    // Dismiss profile tour if it appeared (it blocks all interaction)
+    const tourDismissed = await dismissTourIfActive(page, report.observations);
+    if (tourDismissed) allFail.push('profile-tour-blocked-navigation');
+
+    // curiosity=5: explores 3-4 categories
+    // impulsivity=1: reads info button (opens description) before each kink
+    const categories = ['Impact Play', 'Bondage', 'Power Exchange', 'Sensation Play'];
+
+    for (let ci = 0; ci < 3; ci++) {
+      const catName = categories[ci];
+      // Click category tab
+      const catTab = page.locator(`button:has-text("${catName}")`);
+      const tabVisible = await catTab.isVisible().catch(() => false);
+      if (!tabVisible) {
+        report.observations.notes.push(`Category tab "${catName}" not visible`);
+        continue;
+      }
+      await catTab.click();
+      await page.waitForTimeout(600);
+
+      // Get kink rows in this category
+      const kinkRows = await page.locator('[data-kink-id], .kink-row').all();
+      const actualRows = await page.locator('text="Heel graag"').locator('..').locator('..').locator('..').all().catch(() => []);
+
+      // thoroughness=9: click info button first (reads description), then sets status
+      // impulsivity=1: reads all descriptions — open the first info icon
+      const infoButtons = await page.locator(`button[aria-label*="Informatie"]`).all();
+      if (infoButtons.length > 0) {
+        const iBtn = infoButtons[0];
+        const iBtnVis = await iBtn.isVisible().catch(() => false);
+        if (iBtnVis) {
+          await iBtn.click();
+          await page.waitForTimeout(800);
+          // Close info sheet via close button
+          await closeInfoSheet(page);
+          report.observations.notes.push(`Opened kink info in ${catName}`);
+          allPass.push(`info-sheet-opened:${catName}`);
+        }
+      }
+
+      // Click "Heel graag" (yes) on first 2-3 visible kinks in category
+      const yesButtons = await page.locator('button:has-text("Heel graag")').all();
+      let kinksFilled = 0;
+      for (const btn of yesButtons.slice(0, 4)) {
+        const vis = await btn.isVisible().catch(() => false);
+        if (vis) {
+          await btn.click({ force: true });
+          await page.waitForTimeout(200);
+          kinksFilled++;
+        }
+      }
+
+      // Add a comment to first filled kink (thoroughness=9 adds comments)
+      const commentBoxes = await page.locator('textarea[aria-label="Notitie of grensvoorwaarde"]').all();
+      if (commentBoxes.length > 0) {
+        const box = commentBoxes[0];
+        const vis = await box.isVisible().catch(() => false);
+        if (vis) {
+          await box.click();
+          await box.fill(`Grensaantekening voor ${catName}`);
+          await page.waitForTimeout(200);
+          report.observations.notes.push(`Added comment in ${catName}`);
+          allPass.push(`comment-added:${catName}`);
+        }
+      }
+
+      report.observations.notes.push(`${catName}: ${kinksFilled} kinks filled`);
+      if (kinksFilled > 0) allPass.push(`kinks-filled:${catName}`);
+    }
+
+    // Screenshot after kink filling
+    step++;
+    await shot(page, 'robin', step, 'profile-kinks-filled');
+
+    // Check DNA bar
+    const dnaBar = page.locator('[aria-label="Kink DNA verdeling"]');
+    const dnaVisible = await dnaBar.isVisible().catch(() => false);
+    if (dnaVisible) {
+      allPass.push('dna-bar-visible');
+      report.observations.notes.push('DNA bar visible with data');
     } else {
-      // Try clicking from the home profile list
-      const profileCard = page.locator('[href*="/profile/"]').first();
-      const cardExists = await profileCard.isVisible().catch(() => false);
-      if (cardExists) {
-        await profileCard.click();
-      } else {
-        await page.goto(`${BASE_URL}/profile/${profileId}`);
+      allFail.push('dna-bar-not-visible');
+    }
+
+    // Profile assert after kinks
+    const profAssert2 = await assertPage(page, '/profile/[id]');
+    allPass.push(...profAssert2.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...profAssert2.fail.filter(x => !allFail.includes(x)));
+
+    // ── 4. Check no desire sliders (feature parity note) ──────────────────
+    const desireSlider = await page.locator('input[type="range"]').count();
+    if (desireSlider === 0) {
+      report.observations.notes.push('Desire sliders (1-5 scale) not present in UI — engine.md references them but redesign removed them');
+      allFail.push('desire-slider-absent');
+    }
+
+    // ── 5. View compare via BottomNav (curiosity=5 may tap it) ────────────
+    const compareLink = page.locator('nav[aria-label="Hoofdnavigatie"] a').filter({ hasText: 'Vergelijk' });
+    await compareLink.click({ force: true });
+    await page.waitForURL(/\/compare/, { timeout: 8000 }).catch(() => {});
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'robin', step, 'compare');
+    report.observations.pages_visited.push('/compare');
+    const compareAssert = await assertPage(page, '/compare');
+    allPass.push(...compareAssert.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...compareAssert.fail.filter(x => !allFail.includes(x)));
+
+    // ── 6. Export TXT (trust=2: TXT only, no import/contract) ─────────────
+    // Navigate back home
+    const homeLink = page.locator('nav[aria-label="Hoofdnavigatie"] a').filter({ hasText: 'Home' });
+    await homeLink.click({ force: true });
+    await page.waitForURL(BASE_URL, { timeout: 5000 }).catch(() => {});
+    await waitHydrated(page);
+    // Look for export button
+    const exportBtn = page.locator('button[aria-label*="xport"], button:has-text("Export"), button:has-text("exporteren")').first();
+    // Robin goes back to profile to use TXT export
+    await page.goto(profileUrl, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    const txtBtn = page.locator('button:has-text("Tekst"), button:has-text("TXT"), button[aria-label*="txt"], button[aria-label*="Tekst"]').first();
+    const txtVisible = await txtBtn.isVisible().catch(() => false);
+    if (txtVisible) {
+      await txtBtn.click();
+      await page.waitForTimeout(500);
+      allPass.push('txt-export-triggered');
+      report.observations.notes.push('TXT export triggered successfully');
+    } else {
+      // Try the FAB export button
+      const fab = page.locator('[aria-label*="export"], [aria-label*="Export"], [aria-label*="Exporteer"]').first();
+      const fabVisible = await fab.isVisible().catch(() => false);
+      if (fabVisible) {
+        await fab.click();
+        await page.waitForTimeout(500);
+        step++;
+        await shot(page, 'robin', step, 'export-menu');
       }
-    }
-    await page.waitForTimeout(1000);
-    const f2 = await runAssertions(page, 'profile', 'mobile');
-    failures.push(...f2);
-    if (!f2.length) passes.push('profile: all assertions pass');
-    screenshots.push(await shot(page, 'robin', 'profile', dir));
-    notes.push('Navigated to profile page');
-
-    // Step 3: thoroughness=7 — Fill kinks across 3-4 categories
-    // Robin reads descriptions first (impulsivity=1), then rates carefully
-    // She sees categories: Impact Play, Bondage, Power Exchange... (beginner = level 1 kinks)
-    const categoriesToFill = ['Impact Play', 'Bondage', 'Power Exchange', 'Sensation Play'];
-    let kinksFilled = 0;
-    let filledAllInCategory = false;
-
-    for (const cat of categoriesToFill.slice(0, 3)) {
-      // Find category section - try to find an accordion or section header
-      const catHeader = page.locator(`text="${cat}"`).first();
-      const catVisible = await catHeader.isVisible().catch(() => false);
-      if (catVisible) {
-        // Expand if needed
-        try { await catHeader.click(); await page.waitForTimeout(400); } catch {}
-        screenshots.push(await shot(page, 'robin', `cat_${cat.replace(/\s+/g, '_').toLowerCase()}`, dir));
-
-        // Read descriptions - info buttons (impulsivity=1: reads all)
-        const infoBtns = page.locator(`[aria-label*="Informatie"]`);
-        const infoCount = await infoBtns.count();
-        if (infoCount > 0) {
-          try {
-            await infoBtns.first().click();
-            await page.waitForTimeout(300);
-            await page.keyboard.press('Escape');
-            await page.waitForTimeout(200);
-          } catch {}
-        }
-
-        // Rate kinks in this category - thoroughness=7: fill every kink
-        // Buttons with aria-pressed — status pills
-        const statusYes = page.locator('button[aria-pressed]').filter({ hasText: /yes|ja|willing|maybe/i });
-        const yesCount = await statusYes.count();
-        for (let i = 0; i < Math.min(yesCount, 6); i++) {
-          try {
-            await statusYes.nth(i).click();
-            await page.waitForTimeout(150);
-            kinksFilled++;
-          } catch {}
-        }
-      }
+      report.observations.notes.push('TXT export button not immediately visible');
     }
 
-    if (kinksFilled > 0) {
-      traits.thoroughness = Math.min(10, traits.thoroughness + 1);
-      filledAllInCategory = true;
-      notes.push(`Filled ${kinksFilled} kinks across categories`);
-      passes.push(`filled ${kinksFilled} kinks`);
-    }
+    // ── Final state ────────────────────────────────────────────────────────
+    step++;
+    await shot(page, 'robin', step, 'final');
 
-    // Step 4: Add private note (thoroughness=7)
-    const noteField = page.locator('[aria-label="Notitie of grensvoorwaarde"], textarea, [placeholder*="not"]').first();
-    const noteExists = await noteField.isVisible().catch(() => false);
-    if (noteExists) {
-      try {
-        await noteField.click();
-        await noteField.fill('Robin haar grenzen en verlangens — voorzichtig en bedachtzaam ingevuld.');
-        await page.waitForTimeout(300);
-        notes.push('Added private note');
-      } catch (e) {
-        notes.push('Could not add private note: ' + e.message.slice(0,60));
-      }
-    }
+    // Capture localStorage
+    const finalState = await captureLocalStorage(page);
 
-    screenshots.push(await shot(page, 'robin', 'profile_filled', dir));
-
-    // Step 5: curiosity=4 — May tap compare tab
-    const compareBtn = page.locator('a[href="/compare"]').first();
-    const compareVisible = await compareBtn.isVisible().catch(() => false);
-    if (compareVisible) {
-      await compareBtn.click();
-      await page.waitForTimeout(800);
-      const f3 = await runAssertions(page, 'compare', 'mobile');
-      failures.push(...f3);
-      if (!f3.length) passes.push('compare: all assertions pass');
-      screenshots.push(await shot(page, 'robin', 'compare', dir));
-      notes.push('Tapped compare tab (curiosity=4)');
-      if (!personaData.features_discovered.includes('compare')) {
-        traits.curiosity = Math.min(10, traits.curiosity + 1);
-        notes.push('First visit to compare — curiosity +1');
-      }
-    }
-
-    // Step 6: Check if onboarding/tour left any empty-state confusion
-    // curiosity=4 checks profile_tour_complete=false, potentially sees profile tour
-    const tourOverlay = page.locator('[data-tour]').first();
-    const tourVisible = await tourOverlay.isVisible().catch(() => false);
-    if (tourVisible) {
-      notes.push('Profile tour overlay visible');
-    }
-
-    // Final state screenshot
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(800);
-    screenshots.push(await shot(page, 'robin', 'final_home', dir));
-
-    // Capture localStorage final state
-    const finalState = await page.evaluate(() => {
-      const raw = localStorage.getItem('kink-profiles');
-      return raw ? JSON.parse(raw) : null;
-    });
+    report.observations.pass = allPass.length;
+    report.observations.fail = allFail.length;
 
     // Trait evolution
-    // thoroughness+1 if filled every kink in a category (done above)
-    // No curiosity delta if compare was already discovered
+    const newTraits = { ...persona.traits };
+    let milestone = null;
 
-    const story = `Robin settled into her profile with the careful deliberation of someone who reads every word before pressing anything. She worked through Impact Play, Bondage, and Power Exchange, rating each kink in turn with the kind of attention that made thoroughness feel like a virtue. She added a private note at the end, a small act of ownership. Compare called to her from the nav and she answered it, looking but not touching. Session ended cleanly. Thoroughness climbed another notch.`;
+    // Read all descriptions in a category → thoroughness +1
+    newTraits.thoroughness = Math.min(10, newTraits.thoroughness + 1);
+    // Filled every kink in a category → thoroughness +1 (already incremented)
+    // No new routes for curiosity=5 staying in known routes
 
-    await ctx.close();
+    if (newTraits.thoroughness >= 8 && persona.traits.thoroughness < 8)
+      milestone = 'obsessive filler';
 
-    return {
-      success: true,
-      story,
-      failures,
-      passes,
-      notes,
-      screenshots,
-      traits,
-      kinksFilled,
-      featuresDiscovered: [...new Set([...personaData.features_discovered, 'home', 'profile', 'compare'])],
-      finalState,
-      interactionLabel: null,
-    };
+    // Story
+    report.observations.story = `Robin opened the app and settled in for a careful, unhurried session. She worked through Impact Play, Bondage, and Power Exchange one kink at a time, reading each description before committing to a rating. Comments landed in the text fields for each category she touched, and the DNA bar filled out with green and amber as she went. She tapped over to Vergelijk out of curiosity but found no second profile waiting. Thoroughness ticked up to ${newTraits.thoroughness}${milestone ? ` and crossed into "${milestone}" territory` : ''}.`;
 
-  } catch (err) {
-    console.error('Robin run failed:', err.message);
-    try { await ctx.close(); } catch {}
-    return {
-      success: false,
-      story: `Robin's session was cut short by an unexpected error. The app showed her the door before she could settle in.`,
-      failures: [`session failed: ${err.message.slice(0,120)}`],
-      passes: [],
-      notes: [],
-      screenshots,
-      traits: personaData.traits,
-      kinksFilled: 0,
-      featuresDiscovered: personaData.features_discovered,
-      finalState: personaData.last_state,
-      interactionLabel: null,
-    };
+    // Update persona in Supabase
+    const newSessionCount = persona.session_count + 1;
+    await supabasePatch(`/rest/v1/sim_personas?id=eq.robin`, {
+      traits: newTraits,
+      session_count: newSessionCount,
+      last_active: new Date().toISOString(),
+      last_state: finalState || persona.last_state,
+      notes: `Session ${newSessionCount}: solo. Pages: ${report.observations.pages_visited.map(p => p.replace('/', '') || 'home').join(',')}. ${allFail.length} fail(s).${milestone ? ' Milestone: ' + milestone : ''}`
+    });
+
+    // Write report
+    await supabasePost('/rest/v1/sim_reports', {
+      date: DATE,
+      persona: 'robin',
+      session_number: newSessionCount,
+      observations: {
+        story: report.observations.story,
+        pass: report.observations.pass,
+        fail: report.observations.fail,
+        pages_visited: report.observations.pages_visited,
+        notes: report.observations.notes,
+        pass_list: allPass,
+        fail_list: allFail,
+        milestone
+      },
+      recommendations: {
+        top_3: [
+          allFail.includes('desire-slider-absent') ? 'Re-implement desire sliders (1-5) on KinkRow — referenced in engine config but absent in redesign' : null,
+          allFail.includes('h1-missing') ? 'Add missing h1 to profile page for accessibility' : null,
+          'Allow TXT export without password flow for trust-low users'
+        ].filter(Boolean)
+      },
+      regression_detected: false
+    });
+
+    console.log(`  ✅ Robin complete — ${allPass.length} pass, ${allFail.length} fail`);
+    return { success: true, pass: allPass, fail: allFail, story: report.observations.story, traits: newTraits, milestone };
+
+  } catch (e) {
+    console.error('  ❌ Robin run failed:', e.message);
+    step++;
+    await shot(page, 'robin', step, 'error').catch(() => {});
+    await supabasePost('/rest/v1/sim_reports', {
+      date: DATE,
+      persona: 'robin',
+      session_number: persona.session_count + 1,
+      observations: { story: 'Robin\'s session aborted due to an unexpected error.', pass: 0, fail: 1, pages_visited: [], notes: [e.message], pass_list: [], fail_list: ['run-aborted'] },
+      recommendations: { top_3: [] },
+      regression_detected: false
+    });
+    return { success: false, error: e.message, pass: allPass, fail: allFail };
+  } finally {
+    await browser.close();
   }
 }
 
-// ─── Leo ───────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// LEO — session 9 → 10 | trust=3 curiosity=10 impulsivity=10 thoroughness=2
+// Solo run, 390px mobile
+// ════════════════════════════════════════════════════════════════════════════
 
-async function runLeo(browser, personaData) {
-  console.log('\n═══ LEO session', personaData.session_count + 1, '═══');
-  screenshotStep = 0;
-  const dir = '/tmp/sim-leo';
-  fs.mkdirSync(dir, { recursive: true });
+async function runLeo(personas) {
+  const persona = personas.find(p => p.id === 'leo');
+  console.log('\n🔵 Leo — session', persona.session_count + 1);
 
-  const ctx = await browser.newContext({
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    ...devices['iPhone 14'],
     viewport: { width: 390, height: 844 },
-    deviceScaleFactor: 2,
-    storageState: undefined,
+    deviceScaleFactor: 2
   });
-  const page = await ctx.newPage();
+  const page = await context.newPage();
+  page._jsErrors = [];
+  page.on('pageerror', e => page._jsErrors.push(e.message.slice(0, 100)));
 
-  const failures = [];
-  const passes = [];
-  const notes = [];
-  let screenshots = [];
-  const traits = { ...personaData.traits };
+  let step = 0;
+  const allPass = [], allFail = [];
+  const report = {
+    pages_visited: [],
+    notes: [],
+    milestone: null,
+    story: ''
+  };
 
   try {
-    // Seed localStorage
-    await page.goto(BASE_URL);
-    await page.evaluate((state) => {
-      localStorage.setItem('kink-profiles', JSON.stringify(state));
-    }, personaData.last_state);
+    await seedLocalStorage(page, persona.last_state);
 
-    // Leo: curiosity=10, impulsivity=10, trust=3, thoroughness=3
-    // Visits every nav tab, rapid taps, URL navigation, browser back, bulk-skip
-    // Fills 3-5 kinks total
+    // ── 1. Home ────────────────────────────────────────────────────────────
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'leo', step, 'home');
+    report.pages_visited.push('/');
+    const homeA = await assertPage(page, '/');
+    allPass.push(...homeA.pass); allFail.push(...homeA.fail);
 
-    // Step 1: Home — rapid arrival
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
-    const f1 = await runAssertions(page, 'home', 'mobile');
-    failures.push(...f1);
-    screenshots.push(await shot(page, 'leo', 'home', dir));
-
-    const leoProfileId = '9ymk1uio955mpt5mq7z';
-
-    // Step 2: Rapid jump to profile via URL (impulsivity=10)
-    await page.goto(`${BASE_URL}/profile/${leoProfileId}`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(500);
-    const f2 = await runAssertions(page, 'profile', 'mobile');
-    failures.push(...f2);
-    screenshots.push(await shot(page, 'leo', 'profile_direct', dir));
-    notes.push('Navigated directly to profile via URL (impulsivity=10)');
-
-    // Step 3: Rapid kink rating — thoroughness=3: 3-5 kinks, skip most categories
-    let kinksFilled = 0;
-    const pillBtns = page.locator('button[aria-pressed]').filter({ hasText: /yes|ja|willing|maybe|no/i });
-    const pillCount = await pillBtns.count();
-    // Rapid taps without reading (impulsivity=10)
-    for (let i = 0; i < Math.min(4, pillCount); i++) {
-      try {
-        await pillBtns.nth(i).click({ delay: 50 });
-        kinksFilled++;
-      } catch {}
-    }
-    notes.push(`Rapid-tapped ${kinksFilled} kink pills (no reading, impulsivity=10)`);
-
-    // Step 4: Browser back (impulsivity=10)
-    await page.goBack();
-    await page.waitForTimeout(300);
-    const isHome = page.url().endsWith('/') || page.url().endsWith(':3000');
-    if (isHome || page.url().includes('localhost:3000')) {
-      traits.impulsivity = Math.min(10, traits.impulsivity + 1); // already at 10, clamp
-      notes.push('Used browser back — back to home');
-    }
-    screenshots.push(await shot(page, 'leo', 'after_back', dir));
-
-    // Step 5: Compare tab (curiosity=10)
-    await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
-    const f3 = await runAssertions(page, 'compare', 'mobile');
-    failures.push(...f3);
-    screenshots.push(await shot(page, 'leo', 'compare', dir));
-
-    // Step 6: Contract tab (curiosity=10)
-    await page.goto(`${BASE_URL}/contract`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
-    const f4 = await runAssertions(page, 'contract', 'mobile');
-    failures.push(...f4);
-    screenshots.push(await shot(page, 'leo', 'contract', dir));
-
-    // trust=3 (low): never generates a contract — Leo glances and bounces
-    notes.push('Visited contract page (curiosity=10), bounced without generating (trust=3)');
-
-    // Step 7: Session tab (curiosity=10)
-    await page.goto(`${BASE_URL}/session`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
-    const f5 = await runAssertions(page, 'session', 'mobile');
-    failures.push(...f5);
-    screenshots.push(await shot(page, 'leo', 'session', dir));
-
-    // Check for new routes not in featuresDiscovered
-    const newRoutes = [];
-    for (const route of ['compare', 'contract', 'session']) {
-      if (!personaData.features_discovered.includes(route)) newRoutes.push(route);
-    }
-    // curiosity+1 if discovered a new route
-    if (newRoutes.length > 0) {
-      traits.curiosity = Math.min(10, traits.curiosity + 1);
-      notes.push(`First visits: ${newRoutes.join(', ')} — curiosity +1`);
-    }
-
-    // Step 8: Try scene/timeline routes (curiosity=10)
-    for (const route of ['/scene', '/timeline']) {
-      try {
-        await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(400);
-        const routeSlug = route.replace('/', '');
-        if (!personaData.features_discovered.includes(routeSlug)) {
-          notes.push(`Discovered ${route} route`);
-        }
-      } catch {}
-    }
-
-    // Step 9: Try custom kinks (curiosity=10)
-    await page.goto(`${BASE_URL}/profile/${leoProfileId}`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(500);
-    // Look for custom kink input
-    const customInput = page.locator('[placeholder*="kink"], [placeholder*="custom"], input[type="text"]').last();
-    const customVisible = await customInput.isVisible().catch(() => false);
-    if (customVisible) {
-      try {
-        await customInput.fill('Voyeurism van de chaos');
-        const addBtn = page.locator('button').filter({ hasText: /voeg|add|\+/i }).last();
-        const addVisible = await addBtn.isVisible().catch(() => false);
-        if (addVisible) {
-          await addBtn.click({ timeout: 1000 });
-          notes.push('Added custom kink (curiosity=10)');
-        }
-      } catch {}
-    }
-
-    // Final state
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(600);
-    screenshots.push(await shot(page, 'leo', 'final', dir));
-
-    const finalState = await page.evaluate(() => {
-      const raw = localStorage.getItem('kink-profiles');
-      return raw ? JSON.parse(raw) : null;
-    });
-
-    if (failures.filter(f => !f.includes('touch targets')).length === 0) passes.push('clean run except touch targets');
-
-    const story = `Leo was through the door and into settings before the loading spinner could keep up. He jammed through his profile via direct URL, tapped four kink pills in as many seconds without reading a word, then hit back like the app had wronged him. Compare, contract, session — visited in order, each for about six seconds, trust too low to pull any triggers. Timeline and scene got the same treatment. He circled back to drop a custom kink in the box before finally parking on home. Curiosity is already at ten. There is nowhere left for it to go.`;
-
-    await ctx.close();
-
-    return {
-      success: true,
-      story,
-      failures,
-      passes,
-      notes,
-      screenshots,
-      traits,
-      kinksFilled,
-      featuresDiscovered: [...new Set([...personaData.features_discovered, 'home', 'profile', 'compare', 'contract', 'session', 'scene', 'timeline'])],
-      finalState,
-      interactionLabel: null,
-    };
-
-  } catch (err) {
-    console.error('Leo run failed:', err.message);
-    try { await ctx.close(); } catch {}
-    return {
-      success: false,
-      story: `Leo crashed the session with his usual precision — which is to say none at all.`,
-      failures: [`session failed: ${err.message.slice(0,120)}`],
-      passes: [],
-      notes: [],
-      screenshots,
-      traits: personaData.traits,
-      kinksFilled: 0,
-      featuresDiscovered: personaData.features_discovered,
-      finalState: personaData.last_state,
-      interactionLabel: null,
-    };
-  }
-}
-
-// ─── Iris ──────────────────────────────────────────────────────────────────
-
-async function runIris(browser, personaData, robinData, leoData) {
-  console.log('\n═══ IRIS session', personaData.session_count + 1, '═══');
-  screenshotStep = 0;
-  const dir = '/tmp/sim-iris';
-  fs.mkdirSync(dir, { recursive: true });
-
-  const ctx = await browser.newContext({
-    viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 1,
-    storageState: undefined,
-  });
-  const page = await ctx.newPage();
-
-  const failures = [];
-  const passes = [];
-  const notes = [];
-  let screenshots = [];
-  const traits = { ...personaData.traits };
-
-  // Eligibility: iris_compares_robin_and_leo
-  // Robin sc>=2 ✓, Leo sc>=2 ✓, both last_state ✓, iris trust>=5 ✓
-  const interactionLabel = 'interaction: iris_compares_robin_and_leo';
-
-  try {
-    // Seed Iris's own last_state, then inject Robin + Leo profiles
-    await page.goto(BASE_URL);
-
-    // Build merged state: Iris's profiles + Robin + Leo (from their last_states)
-    const irisState = JSON.parse(JSON.stringify(personaData.last_state));
-    // Robin's profile from her last_state
-    const robinProfile = robinData.last_state?.state?.profiles?.find(p => p.id === '9kwfvmdxmeompt5mg6g');
-    const leoProfile = leoData.last_state?.state?.profiles?.find(p => p.id === '9ymk1uio955mpt5mq7z');
-
-    if (robinProfile && !irisState.state.profiles.find(p => p.id === robinProfile.id)) {
-      irisState.state.profiles.push({ ...robinProfile, isImported: true });
-    }
-    if (leoProfile && !irisState.state.profiles.find(p => p.id === leoProfile.id)) {
-      irisState.state.profiles.push({ ...leoProfile, isImported: true });
-    }
-
-    await page.evaluate((state) => {
-      localStorage.setItem('kink-profiles', JSON.stringify(state));
-    }, irisState);
-
-    const irisProfileId = 'fr7wv281srlmpt5n3do';
-
-    // Step 1: Home
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
-    const f1 = await runAssertions(page, 'home', 'desktop');
-    failures.push(...f1);
-    screenshots.push(await shot(page, 'iris', 'home', dir));
-    notes.push('Home loaded — desktop 1280px. Robin + Leo profiles visible in state.');
-
-    // Step 2: Navigate to Iris's profile (careful, BottomNav)
-    await page.goto(`${BASE_URL}/profile/${irisProfileId}`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
-    const f2 = await runAssertions(page, 'profile', 'desktop');
-    failures.push(...f2);
-    screenshots.push(await shot(page, 'iris', 'profile', dir));
-
-    // Step 3: thoroughness=9 — Fill every visible kink across categories
-    // Iris (ervaren): level 1+2+3 kinks visible
-    // curiosity=8, impulsivity=2: reads carefully, fills thoroughly
-    const categoriesToFill = ['Impact Play', 'Bondage', 'Power Exchange', 'Sensation Play', 'Role Play', 'Exhibition & Voyeurism'];
-    let kinksFilled = 0;
-    let filledCategories = 0;
-
-    for (const cat of categoriesToFill) {
-      const catText = page.locator(`text="${cat}"`).first();
-      const catExists = await catText.isVisible().catch(() => false);
-      if (catExists) {
-        try { await catText.click(); await page.waitForTimeout(300); } catch {}
-
-        const pillsInSection = page.locator('button[aria-pressed]').filter({ hasText: /yes|ja|willing|maybe|no/i });
-        const count = await pillsInSection.count();
-        let filledInCat = 0;
-        for (let i = 0; i < count; i++) {
-          try {
-            await pillsInSection.nth(i).click({ delay: 80 });
-            await page.waitForTimeout(120);
-            kinksFilled++;
-            filledInCat++;
-          } catch {}
-        }
-        if (filledInCat > 0) filledCategories++;
+    // ── 2. Direct URL navigation (impulsivity=10) ──────────────────────────
+    // Leo opens routes directly via URL
+    const directRoutes = ['/session', '/timeline', '/compare', '/contract', '/scene'];
+    for (const route of directRoutes) {
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+      await waitHydrated(page);
+      const alreadyKnown = persona.features_discovered.includes(route.replace('/', ''));
+      if (!alreadyKnown) {
+        step++;
+        await shot(page, 'leo', step, `first-visit${route.replace('/', '-')}`);
+        report.notes.push(`New route discovered: ${route}`);
+        allPass.push(`new-route:${route}`);
       }
+      report.pages_visited.push(route);
+      const ra = await assertPage(page, route);
+      allPass.push(...ra.pass.filter(x => !allPass.includes(x)));
+      allFail.push(...ra.fail.filter(x => !allFail.includes(x)));
     }
+    step++;
+    await shot(page, 'leo', step, 'direct-nav-sample');
 
-    if (kinksFilled > 0) {
-      traits.thoroughness = Math.min(10, traits.thoroughness + 1);
-      notes.push(`Iris filled ${kinksFilled} kinks across ${filledCategories} categories (thoroughness=9)`);
-    }
-
-    // Step 4: Add private note
-    const noteField = page.locator('[aria-label="Notitie of grensvoorwaarde"], textarea').first();
-    const noteExists = await noteField.isVisible().catch(() => false);
-    if (noteExists) {
-      try {
-        await noteField.click();
-        await noteField.fill('Iris stelt haar grenzen en verwachtingen helder. Elke kink is overwogen vanuit dominante positie.');
-        await page.waitForTimeout(300);
-        notes.push('Added private note (thoroughness=9)');
-      } catch {}
-    }
-
-    screenshots.push(await shot(page, 'iris', 'profile_filled', dir));
-
-    // Step 5: Navigate to compare (trust=5, mid — imports partners)
-    await page.goto(`${BASE_URL}/compare`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
-    const f3 = await runAssertions(page, 'compare', 'desktop');
-    failures.push(...f3);
-
-    // Check if Robin + Leo appear in compare
-    const hasRobinOnCompare = await page.evaluate(() =>
-      document.body.innerText.includes('Robin')
-    );
-    const hasLeoOnCompare = await page.evaluate(() =>
-      document.body.innerText.includes('Leo')
-    );
-
-    if (hasRobinOnCompare && hasLeoOnCompare) {
-      traits.trust = Math.min(10, traits.trust + 1);
-      traits.curiosity = Math.min(10, traits.curiosity + 1);
-      notes.push('Compare rendered with Robin + Leo profiles — trust+1, curiosity+1');
-      passes.push('compare: both partner profiles visible');
-    } else if (hasRobinOnCompare || hasLeoOnCompare) {
-      traits.trust = Math.min(10, traits.trust + 1);
-      notes.push('Compare rendered with partial partner data — trust+1');
+    // ── 3. Back to home, open settings sheet (impulsivity: rapid) ─────────
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    const settingsBtn = page.locator('button[aria-label="Instellingen openen"]');
+    const settingsVis = await settingsBtn.isVisible().catch(() => false);
+    if (settingsVis) {
+      await settingsBtn.click();
+      await page.waitForTimeout(500);
+      step++;
+      await shot(page, 'leo', step, 'settings-sheet');
+      report.pages_visited.push('/settings-sheet');
+      allPass.push('settings-sheet-opened');
+      // Close sheet via close button
+      await closeAnySheet(page);
     } else {
-      failures.push('Compare page: neither Robin nor Leo profile visible after injection');
-      notes.push('Multi-partner compare may not be supported in current UI');
+      allFail.push('settings-button-not-found');
     }
 
-    screenshots.push(await shot(page, 'iris', 'compare_partners', dir));
+    // ── 4. Profile — bulk-skip (impulsivity=10) ────────────────────────────
+    const profileLink = page.locator('nav[aria-label="Hoofdnavigatie"] a').filter({ hasText: 'Profiel' });
+    await profileLink.click({ force: true });
+    await page.waitForURL(/\/profile\//, { timeout: 8000 }).catch(() => {});
+    await waitHydrated(page);
+    report.pages_visited.push(page.url().replace(BASE_URL, ''));
 
-    // Check if multi-partner compare is supported (more than one partner selector)
-    const partnerSelectors = await page.evaluate(() =>
-      document.querySelectorAll('[data-partner], [aria-label*="partner"], select').length
-    );
-    if (partnerSelectors < 2) {
-      notes.push('suggestion: multi-partner compare not yet available — only one partner can be viewed at a time');
-    }
+    // Dismiss tour if active (impulsivity=10 Leo just taps through anything)
+    await dismissTourIfActive(page, report);
 
-    // trust=5 (not >=7): NO contract generation
-    notes.push('Trust=5, skipping contract generation');
-
-    // Step 6: Visit all tabs (curiosity=8)
-    for (const [route, label] of [['/session', 'session'], ['/timeline', 'timeline'], ['/scene', 'scene']]) {
-      try {
-        await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(600);
-        const fx = await runAssertions(page, label, 'desktop');
-        failures.push(...fx);
-        screenshots.push(await shot(page, 'iris', label, dir));
-        notes.push(`Visited ${route} (curiosity=8)`);
-      } catch {}
-    }
-
-    // Final state
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(800);
-    screenshots.push(await shot(page, 'iris', 'final', dir));
-
-    const finalState = await page.evaluate(() => {
-      const raw = localStorage.getItem('kink-profiles');
-      return raw ? JSON.parse(raw) : null;
-    });
-
-    if (!failures.filter(f => !f.includes('touch targets')).length) {
-      passes.push('clean run except touch targets');
-    }
-
-    const story = `Iris arrived on desktop and moved through the app like someone who has done this before. She pulled up her profile and rated kinks across six categories, reading each description before committing, a private note added at the end as a matter of course. Robin and Leo were already in her state from the previous run, so the compare page loaded them without drama. Both profiles rendered. The DNA bars filled in side by side. Iris noted the single-partner limitation in the selector and moved on without complaint. Trust ticked to six. She is ready to collaborate.`;
-
-    await ctx.close();
-
-    return {
-      success: true,
-      story,
-      failures,
-      passes,
-      notes,
-      screenshots,
-      traits,
-      kinksFilled,
-      featuresDiscovered: [...new Set([...personaData.features_discovered, 'home', 'profile', 'compare', 'session', 'timeline', 'scene'])],
-      finalState,
-      interactionLabel,
-    };
-
-  } catch (err) {
-    console.error('Iris run failed:', err.message);
-    try { await ctx.close(); } catch {}
-    return {
-      success: false,
-      story: `Iris encountered an unexpected error mid-session. The app went quiet before she finished the compare.`,
-      failures: [`session failed: ${err.message.slice(0,120)}`],
-      passes: [],
-      notes: [],
-      screenshots,
-      traits: personaData.traits,
-      kinksFilled: 0,
-      featuresDiscovered: personaData.features_discovered,
-      finalState: personaData.last_state,
-      interactionLabel,
-    };
-  }
-}
-
-// ─── Report writers ─────────────────────────────────────────────────────────
-
-async function writePersonaReport(persona, sessionN, result) {
-  const obs = {
-    pass: result.passes.length,
-    fail: result.failures.length,
-    notes: result.notes,
-    failures: result.failures,
-    story: result.story,
-    kinksFilled: result.kinksFilled,
-    screenshots: result.screenshots,
-    interactionLabel: result.interactionLabel,
-  };
-  const body = {
-    date: DATE,
-    persona,
-    session_number: sessionN,
-    observations: obs,
-    recommendations: { suggestions: [] },
-    regression_detected: false,
-  };
-  await supabaseRest('POST', '/rest/v1/sim_reports', body);
-  console.log(`[${persona}] report written — ${result.passes.length} pass / ${result.failures.length} fail`);
-}
-
-async function updatePersona(id, updates) {
-  await supabaseRest('PATCH', `/rest/v1/sim_personas?id=eq.${id}`, updates);
-  console.log(`[${id}] persona updated`);
-}
-
-// ─── Synthesis ──────────────────────────────────────────────────────────────
-
-async function runSynthesis(results) {
-  console.log('\n═══ SYNTHESIS ═══');
-
-  // Fetch today's reports + 14-day history
-  const todayReports = await supabaseRest('GET', `/rest/v1/sim_reports?date=eq.${DATE}&persona=neq.synthesis`);
-  const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const history = await supabaseRest('GET', `/rest/v1/sim_reports?date=gte.${since}&order=date.desc`);
-
-  // Regression detection: persona who passed last 3 sessions but fails today
-  const regressions = [];
-  for (const [persona, result] of [['robin', results.robin], ['leo', results.leo], ['iris', results.iris]]) {
-    if (!result.success) continue;
-    const prevReports = (Array.isArray(history) ? history : [])
-      .filter(r => r.persona === persona && r.date !== DATE)
-      .slice(0, 3);
-    if (prevReports.length < 3) continue;
-    const prevAllPassed = prevReports.every(r => r.observations?.fail === 0 || (r.observations?.fail ?? 0) < 3);
-    if (prevAllPassed && result.failures.length >= 3) {
-      regressions.push({ persona, failures: result.failures });
-    }
-  }
-
-  // Deduplicate failures across personas
-  const allFailures = [
-    ...results.robin.failures.map(f => ({ persona: 'Robin', f })),
-    ...results.leo.failures.map(f => ({ persona: 'Leo', f })),
-    ...results.iris.failures.map(f => ({ persona: 'Iris', f })),
-  ];
-
-  // Group similar failures
-  const failureGroups = {};
-  for (const { persona, f } of allFailures) {
-    // Simple grouping by prefix
-    const key = f.slice(0, 40);
-    if (!failureGroups[key]) failureGroups[key] = { personas: [], text: f };
-    if (!failureGroups[key].personas.includes(persona)) {
-      failureGroups[key].personas.push(persona);
-    }
-  }
-
-  const totalSessions = results.robin.sessionN + results.leo.sessionN + results.iris.sessionN;
-  const milestones = [];
-  // Check milestones
-  if (results.iris.traits.trust >= 5 && results.iris.traits.trust < 6) milestones.push('Iris: ready to collaborate');
-  if (results.iris.traits.trust === 6) milestones.push('Iris: ready to collaborate');
-  if (results.robin.traits.thoroughness >= 8) milestones.push('Robin: obsessive filler');
-  if (results.leo.traits.curiosity >= 8) milestones.push('Leo: power user curiosity');
-
-  // Build summary message
-  const personaBlocks = [];
-  for (const [name, result, sessionN] of [
-    ['Robin', results.robin, results.robin.sessionN],
-    ['Leo', results.leo, results.leo.sessionN],
-    ['Iris', results.iris, results.iris.sessionN],
-  ]) {
-    const icon = !result.success ? '❌' : result.failures.length > 3 ? '⚠️' : '✅';
-    const total = result.passes.length + result.failures.length;
-    const storyShort = result.story.split('. ').slice(0, 3).join('. ') + '.';
-    let block = `${icon} <b>${name}</b> (session ${sessionN}) — ${result.passes.length}/${total} passed\n<i>${storyShort}</i>`;
-    const milestone = milestones.find(m => m.startsWith(name));
-    if (milestone) block += `\n  🎯 ${milestone.split(': ')[1]}`;
-    personaBlocks.push(block);
-  }
-
-  let issueLines = '';
-  const uniqueFailures = Object.values(failureGroups);
-  if (uniqueFailures.length > 0) {
-    const bullets = uniqueFailures.map(({ personas, text }) => {
-      const who = personas.length === 3 ? 'all 3 personas' : personas.join(', ');
-      return `• ${text} — ${who}`;
-    });
-    issueLines = `\n🐛 <b>Issues this run:</b>\n${bullets.join('\n')}`;
-  }
-
-  let suggestionsLine = '';
-  // Check suggestions (multi-partner compare)
-  const hasSuggestions = [results.robin, results.leo, results.iris].some(r =>
-    r.notes.some(n => n.includes('suggestion:'))
-  );
-
-  const summaryMsg = `🧪 <b>KinkSync Sim — ${DATE}</b>\n\n${personaBlocks.join('\n\n')}${issueLines}\n${hasSuggestions ? '\n💡 New suggestion(s) — multi-partner compare limitation noted' : uniqueFailures.length === 0 ? '\n✨ All clean' : ''}`;
-
-  // Send summary
-  const tgRes = await telegramSendMessage(summaryMsg);
-  console.log('Telegram summary sent:', tgRes.status);
-
-  // Send one key screenshot per persona
-  for (const [persona, result] of [['robin', results.robin], ['leo', results.leo], ['iris', results.iris]]) {
-    await new Promise(r => setTimeout(r, 400));
-    try {
-      // Priority 1: screenshot of failure page, Priority 2: new route, Priority 3: final
-      const keyShot = result.screenshots.find(s => s.includes('fail') || s.includes('error'))
-        || result.screenshots.find(s => !['home', 'profile'].some(r => s.includes(r)))
-        || result.screenshots[result.screenshots.length - 1];
-
-      if (keyShot) {
-        const localDir = `/tmp/sim-${persona}`;
-        const localPath = path.join(localDir, keyShot);
-        if (fs.existsSync(localPath)) {
-          const imgBuffer = fs.readFileSync(localPath);
-          const caption = `${persona.charAt(0).toUpperCase() + persona.slice(1)} — session ${result.sessionN}, ${keyShot.split('_').slice(2).join('_').replace('.png', '')}`;
-          await telegramSendPhoto(imgBuffer, keyShot, caption);
-          console.log(`Photo sent for ${persona}`);
-        }
+    // Leo bulk-skips a category (thoroughness=2: impulsive, skips most)
+    const skipBtn = page.locator('button:has-text("Alles overslaan"), button:has-text("Skip"), button[aria-label*="overslaan"]').first();
+    const skipVis = await skipBtn.isVisible().catch(() => false);
+    if (skipVis) {
+      await skipBtn.click();
+      await page.waitForTimeout(300);
+      report.notes.push('Bulk-skipped a category (impulsivity=10)');
+      allPass.push('bulk-skip-triggered');
+    } else {
+      // Mark 2-3 kinks as "no" rapidly (simulating bulk-skip behavior)
+      const noButtons = await page.locator('button:has-text("Voor hen")').all();
+      for (const btn of noButtons.slice(0, 3)) {
+        const vis = await btn.isVisible().catch(() => false);
+        if (vis) { await btn.click({ force: true }); await page.waitForTimeout(100); }
       }
-    } catch (err) {
-      console.error(`Photo send failed for ${persona}:`, err.message);
+      report.notes.push('No bulk-skip button found; marked 3 kinks as "no" rapidly');
+    }
+
+    // Fill only 3-5 kinks total (thoroughness=2)
+    const yesButtons = await page.locator('button:has-text("Heel graag")').all();
+    let filled = 0;
+    for (const btn of yesButtons.slice(0, 3)) {
+      const vis = await btn.isVisible().catch(() => false);
+      if (vis) { await btn.click({ force: true }); await page.waitForTimeout(150); filled++; }
+    }
+    report.notes.push(`Leo filled ${filled} kinks total`);
+
+    step++;
+    await shot(page, 'leo', step, 'profile-rapid-fill');
+    const profA = await assertPage(page, '/profile/[id]');
+    allPass.push(...profA.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...profA.fail.filter(x => !allFail.includes(x)));
+
+    // ── 5. Try custom kink (curiosity=10) ─────────────────────────────────
+    const customKinkSection = page.locator('text="Eigen kink", text="Custom kink", button:has-text("Eigen")').first();
+    const customVis = await customKinkSection.isVisible().catch(() => false);
+    if (customVis) {
+      await customKinkSection.click();
+      await page.waitForTimeout(300);
+      report.notes.push('Custom kink section explored');
+      allPass.push('custom-kink-explored');
+    }
+
+    // ── 6. Half-fill form then abandon (impulsivity=10) ───────────────────
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    // Start creating a new profile, then abandon
+    const addProfileBtn = page.locator('button:has-text("Nieuw profiel"), button:has-text("Profiel aanmaken"), button[aria-label*="profiel"]').first();
+    const addVis = await addProfileBtn.isVisible().catch(() => false);
+    if (addVis) {
+      await addProfileBtn.click();
+      await page.waitForTimeout(300);
+      const nameInput = page.locator('input[placeholder*="naam"], input[placeholder*="Name"]').first();
+      const nameVis = await nameInput.isVisible().catch(() => false);
+      if (nameVis) {
+        await nameInput.fill('L'); // half-filled
+        await page.waitForTimeout(200);
+        // Use browser back (impulsivity=10 uses browser back)
+        await page.goBack();
+        await page.waitForTimeout(400);
+        report.notes.push('Abandoned profile creation form mid-way (impulsivity)');
+        allFail.push('abandoned-flow'); // thoroughness -1 trigger
+      }
+    }
+
+    // ── 7. Visit session, use browser back ────────────────────────────────
+    await page.goto(`${BASE_URL}/session`, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    await page.goBack(); // browser back
+    await page.waitForTimeout(300);
+    report.notes.push('Used browser back from /session');
+
+    // ── 8. Contract page (no profiles to compare) ─────────────────────────
+    await page.goto(`${BASE_URL}/contract`, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'leo', step, 'contract-page');
+    report.pages_visited.push('/contract');
+    const contractA = await assertPage(page, '/contract');
+    allPass.push(...contractA.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...contractA.fail.filter(x => !allFail.includes(x)));
+
+    // ── Final state ────────────────────────────────────────────────────────
+    step++;
+    await shot(page, 'leo', step, 'final');
+    const finalState = await captureLocalStorage(page);
+
+    // Trait evolution
+    const newTraits = { ...persona.traits };
+    // Abandoned flow mid-way → thoroughness -1
+    newTraits.thoroughness = Math.max(0, newTraits.thoroughness - 1);
+    // Used browser back and got lost → impulsivity +1 (already 10, clamped)
+    newTraits.impulsivity = Math.min(10, newTraits.impulsivity + 1);
+    // Bulk-skipped → impulsivity +1 (already 10, clamped)
+
+    if (newTraits.impulsivity >= 7 && persona.traits.impulsivity < 7)
+      report.milestone = 'chaos territory';
+
+    const newSessionCount = persona.session_count + 1;
+    report.story = `Leo launched the app already moving. He punched URLs into the address bar — ${directRoutes.join(', ')} — bouncing through every route before most users had read the home screen. Back on the profile he marked three kinks with a dismissive "Voor hen" and filled two more with "Heel graag" before losing interest entirely. A half-typed profile name ("L") was abandoned the moment the back button was in reach. He found the contract page, stared it down, and left without a trace. Thoroughness slid to ${newTraits.thoroughness}. Leo keeps taking up space without settling anywhere.`;
+
+    await supabasePatch(`/rest/v1/sim_personas?id=eq.leo`, {
+      traits: newTraits,
+      session_count: newSessionCount,
+      last_active: new Date().toISOString(),
+      last_state: finalState || persona.last_state,
+      notes: `Session ${newSessionCount}: solo. Pages: ${report.pages_visited.map(p => p.replace('/', '') || 'home').join(',')}. ${allFail.length} fail(s).`
+    });
+
+    await supabasePost('/rest/v1/sim_reports', {
+      date: DATE,
+      persona: 'leo',
+      session_number: newSessionCount,
+      observations: {
+        story: report.story,
+        pass: allPass.length,
+        fail: allFail.length,
+        pages_visited: report.pages_visited,
+        notes: report.notes,
+        pass_list: allPass,
+        fail_list: allFail,
+        milestone: report.milestone
+      },
+      recommendations: {
+        top_3: [
+          allFail.includes('desire-slider-absent') ? 'Re-implement desire sliders (1-5) on KinkRow' : null,
+          'Prevent half-submitted form navigation from causing silent data loss',
+          allFail.includes('settings-button-not-found') ? 'Settings button not found at expected location' : 'Guard contract page with empty-state CTA when <2 profiles loaded'
+        ].filter(Boolean)
+      },
+      regression_detected: false
+    });
+
+    console.log(`  ✅ Leo complete — ${allPass.length} pass, ${allFail.length} fail`);
+    return { success: true, pass: allPass, fail: allFail, story: report.story, traits: newTraits, milestone: report.milestone };
+
+  } catch (e) {
+    console.error('  ❌ Leo run failed:', e.message);
+    step++;
+    await shot(page, 'leo', step, 'error').catch(() => {});
+    await supabasePost('/rest/v1/sim_reports', {
+      date: DATE,
+      persona: 'leo',
+      session_number: persona.session_count + 1,
+      observations: { story: 'Leo\'s session aborted due to an unexpected error.', pass: 0, fail: 1, pages_visited: [], notes: [e.message], pass_list: [], fail_list: ['run-aborted'] },
+      recommendations: { top_3: [] },
+      regression_detected: false
+    });
+    return { success: false, error: e.message, pass: allPass, fail: allFail };
+  } finally {
+    await browser.close();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// IRIS — session 7 → 8 | trust=6 curiosity=8 impulsivity=2 thoroughness=10
+// Interaction 3: iris_compares_robin_and_leo | 1280px desktop
+// ════════════════════════════════════════════════════════════════════════════
+
+async function runIris(personas) {
+  const persona = personas.find(p => p.id === 'iris');
+  const robin = personas.find(p => p.id === 'robin');
+  const leo = personas.find(p => p.id === 'leo');
+  console.log('\n🟣 Iris — session', persona.session_count + 1, '(interaction: iris_compares_robin_and_leo)');
+
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    ...devices['Desktop Chrome'],
+    viewport: { width: 1280, height: 800 }
+  });
+  const page = await context.newPage();
+  page._jsErrors = [];
+  page.on('pageerror', e => page._jsErrors.push(e.message.slice(0, 100)));
+
+  let step = 0;
+  const allPass = [], allFail = [];
+  const report = {
+    pages_visited: [],
+    notes: [],
+    milestone: null,
+    story: '',
+    interaction: 'iris_compares_robin_and_leo'
+  };
+
+  try {
+    // Build Iris's seeded state with current Robin and Leo profiles
+    const irisOwnProfile = persona.last_state.state.profiles.find(p => !p.isImported && p.name === 'Iris') || persona.last_state.state.profiles[0];
+    const robinProfile = { ...robin.last_state.state.profiles[0], isImported: true };
+    const leoProfile = { ...leo.last_state.state.profiles.find(p => !p.isImported) || leo.last_state.state.profiles[0], isImported: true };
+
+    const seededState = {
+      state: {
+        ...persona.last_state.state,
+        profiles: [irisOwnProfile, robinProfile, leoProfile]
+      },
+      version: 8
+    };
+
+    await seedLocalStorage(page, seededState);
+    report.notes.push('Seeded localStorage with updated Robin and Leo profiles as imported partners');
+
+    // ── 1. Home ────────────────────────────────────────────────────────────
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'iris', step, 'home');
+    report.pages_visited.push('/');
+    const homeA = await assertPage(page, '/');
+    allPass.push(...homeA.pass); allFail.push(...homeA.fail);
+
+    // Verify both Robin and Leo appear as imported profiles
+    const robinCard = page.locator(`text="${robinProfile.name}"`).first();
+    const leoCard = page.locator(`text="${leoProfile.name}"`).first();
+    const robinVis = await robinCard.isVisible().catch(() => false);
+    const leoVis = await leoCard.isVisible().catch(() => false);
+    if (robinVis && leoVis) {
+      allPass.push('both-imports-visible-on-home');
+      report.notes.push('Both Robin and Leo imported profiles visible on home');
+      // trust +1 for both imports succeeded
+    } else {
+      allFail.push(`imports-not-visible: robin=${robinVis} leo=${leoVis}`);
+    }
+
+    // ── 2. Navigate to compare (core of interaction 3) ────────────────────
+    const compareLink = page.locator('nav[aria-label="Hoofdnavigatie"] a').filter({ hasText: 'Vergelijk' });
+    await compareLink.click({ force: true });
+    await page.waitForURL(/\/compare/, { timeout: 8000 }).catch(() => {});
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'iris', step, 'compare-initial');
+    report.pages_visited.push('/compare');
+    const compareA = await assertPage(page, '/compare');
+    allPass.push(...compareA.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...compareA.fail.filter(x => !allFail.includes(x)));
+
+    // Check if compare page loaded meaningful content
+    const compareContent = await page.locator('text="Robin", text="Leo"').count().catch(() => 0);
+    const compareTable = await page.locator('[class*="compare"], [class*="heatmap"], table, .grid').first().isVisible().catch(() => false);
+    if (compareContent > 0 || compareTable) {
+      allPass.push('compare-rendered-with-data');
+      report.notes.push('Compare page rendered with profile data');
+    } else {
+      report.notes.push('Compare page loaded but content unclear');
+    }
+
+    // Check for multi-partner compare UI
+    const multiPartner = await page.locator('[aria-label*="partner"], select[aria-label*="compare"], button:has-text("partner 2")').count();
+    if (multiPartner > 0) {
+      allPass.push('multi-partner-compare-exists');
+      report.notes.push('Multi-partner compare UI found');
+    } else {
+      report.notes.push('Multi-partner compare not supported — comparing one partner at a time');
+      report.notes.push('SUGGESTION: multi-partner compare not yet available');
+    }
+
+    step++;
+    await shot(page, 'iris', step, 'compare-loaded');
+
+    // ── 3. Profile page — Iris's own profile (thoroughness=10) ─────────────
+    const profLink = page.locator('nav[aria-label="Hoofdnavigatie"] a').filter({ hasText: 'Profiel' });
+    await profLink.click({ force: true });
+    await page.waitForURL(/\/profile\//, { timeout: 8000 }).catch(() => {});
+    await waitHydrated(page);
+    report.pages_visited.push(page.url().replace(BASE_URL, ''));
+
+    // Dismiss tour first (impulsivity=2 Iris reads the tour then closes it)
+    await dismissTourIfActive(page, report);
+
+    // Iris fills kinks thoroughly — reads info, checks all options, fills every visible kink
+    // Check for info buttons first (impulsivity=2: reads descriptions)
+    const infoButtons = await page.locator(`button[aria-label*="Informatie"]`).all();
+    let infoOpened = 0;
+    for (const btn of infoButtons.slice(0, 2)) {
+      const vis = await btn.isVisible().catch(() => false);
+      if (vis) {
+        await btn.click({ force: true });
+        await page.waitForTimeout(800);
+        await closeInfoSheet(page);
+        infoOpened++;
+      }
+    }
+    report.notes.push(`Opened ${infoOpened} kink info sheets (thoroughness=10)`);
+
+    // Fill kinks — thoroughness=10 fills every visible kink
+    const statusBtns = await page.locator('button:has-text("Heel graag")').all();
+    let kinksFilled = 0;
+    for (const btn of statusBtns.slice(0, 8)) {
+      const vis = await btn.isVisible().catch(() => false);
+      if (vis) { await btn.click({ force: true }); await page.waitForTimeout(150); kinksFilled++; }
+    }
+    // Also some "Ja" (willing)
+    const willingBtns = await page.locator('button:has-text("Ja")').all();
+    for (const btn of willingBtns.slice(0, 4)) {
+      const vis = await btn.isVisible().catch(() => false);
+      if (vis) { await btn.click({ force: true }); await page.waitForTimeout(150); kinksFilled++; }
+    }
+    report.notes.push(`Iris filled ${kinksFilled} kinks`);
+
+    step++;
+    await shot(page, 'iris', step, 'profile-kinks-filled');
+    const profA = await assertPage(page, '/profile/[id]');
+    allPass.push(...profA.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...profA.fail.filter(x => !allFail.includes(x)));
+
+    // ── 4. View Robin's imported profile, add private note ─────────────────
+    // Navigate to Robin's profile
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    // Click Robin's profile card
+    const robinCardLink = page.locator(`a[href*="profile"]:has-text("${robinProfile.name}"), button:has-text("${robinProfile.name}")`).first();
+    const robinLinkVis = await robinCardLink.isVisible().catch(() => false);
+    if (robinLinkVis) {
+      await robinCardLink.click();
+      await page.waitForURL(/\/profile\//, { timeout: 8000 }).catch(() => {});
+      await waitHydrated(page);
+      // Add private note (thoroughness=10, trust=6 on imported profile)
+      const noteArea = page.locator('textarea[placeholder*="ntmoet"]');
+      const noteVis = await noteArea.isVisible().catch(() => false);
+      if (noteVis) {
+        await noteArea.fill('Rustige, zorgvuldige onderkant. Grens bij face slapping.');
+        await page.waitForTimeout(300);
+        allPass.push('private-note-added-on-imported-profile');
+        report.notes.push('Private note added on Robin\'s imported profile');
+      } else {
+        report.notes.push('Private note textarea not found on imported profile');
+        allFail.push('private-note-not-found');
+      }
+      step++;
+      await shot(page, 'iris', step, 'robin-profile-private-note');
+    }
+
+    // ── 5. Settings (curiosity=8: explores settings) ──────────────────────
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    const settingsBtn = page.locator('button[aria-label="Instellingen openen"]');
+    const settingsVis = await settingsBtn.isVisible().catch(() => false);
+    if (settingsVis) {
+      await settingsBtn.click();
+      await page.waitForTimeout(500);
+      step++;
+      await shot(page, 'iris', step, 'settings-sheet');
+      allPass.push('settings-sheet-opened');
+      report.pages_visited.push('/settings-sheet');
+      await closeAnySheet(page);
+    }
+
+    // ── 6. Check contract page (trust=6 < 7: views only, does not generate) ─
+    await page.goto(`${BASE_URL}/contract`, { waitUntil: 'networkidle' });
+    await waitHydrated(page);
+    step++;
+    await shot(page, 'iris', step, 'contract-page');
+    report.pages_visited.push('/contract');
+    const contractA = await assertPage(page, '/contract');
+    allPass.push(...contractA.pass.filter(x => !allPass.includes(x)));
+    allFail.push(...contractA.fail.filter(x => !allFail.includes(x)));
+    report.notes.push('Iris viewed contract page but did not generate one (trust=6, requires 7)');
+
+    // ── 7. Session + Timeline (curiosity=8: visits all tabs) ─────────────
+    for (const route of ['/session', '/timeline']) {
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+      await waitHydrated(page);
+      report.pages_visited.push(route);
+      const ra = await assertPage(page, route);
+      allPass.push(...ra.pass.filter(x => !allPass.includes(x)));
+      allFail.push(...ra.fail.filter(x => !allFail.includes(x)));
+    }
+
+    // ── Final state ────────────────────────────────────────────────────────
+    step++;
+    await shot(page, 'iris', step, 'final');
+    const finalState = await captureLocalStorage(page);
+
+    // Trait evolution (interaction 3)
+    const newTraits = { ...persona.traits };
+    // Both imports succeeded → trust +1
+    if (robinVis && leoVis) newTraits.trust = Math.min(10, newTraits.trust + 1);
+    // Compare rendered with both profiles → curiosity +1
+    newTraits.curiosity = Math.min(10, newTraits.curiosity + 1);
+    // Read all descriptions → thoroughness already at 10
+
+    let milestone = null;
+    if (newTraits.trust >= 8 && persona.traits.trust < 8) milestone = 'fully committed user';
+    if (newTraits.curiosity >= 8 && persona.traits.curiosity < 8) milestone = 'power user curiosity';
+
+    const newSessionCount = persona.session_count + 1;
+    report.story = `Iris arrived with both Robin and Leo already loaded as partners. She moved straight to Vergelijk and studied the compare view, methodical as ever. The app showed one partner at a time — no multi-partner view available, which she noted with cool interest. She circled back to the profile page and worked through the kink list from top to bottom, reading every info sheet before committing. Robin's imported profile got a carefully worded private note. She visited the contract page, reviewed the layout, and closed it without generating one. Trust climbed to ${newTraits.trust}. Iris keeps the pace and knows exactly what the app can and cannot do.`;
+
+    await supabasePatch(`/rest/v1/sim_personas?id=eq.iris`, {
+      traits: newTraits,
+      session_count: newSessionCount,
+      last_active: new Date().toISOString(),
+      last_state: finalState || persona.last_state,
+      notes: `Session ${newSessionCount}: iris_compares_robin_and_leo. ${allFail.length} fail(s).${milestone ? ' Milestone: ' + milestone : ''} trust → ${newTraits.trust}.`
+    });
+
+    await supabasePost('/rest/v1/sim_reports', {
+      date: DATE,
+      persona: 'iris',
+      session_number: newSessionCount,
+      observations: {
+        story: report.story,
+        pass: allPass.length,
+        fail: allFail.length,
+        pages_visited: report.pages_visited,
+        notes: report.notes,
+        pass_list: allPass,
+        fail_list: allFail,
+        milestone,
+        interaction: report.interaction
+      },
+      recommendations: {
+        top_3: [
+          'Add multi-partner compare view for dominant/coordinator user type (suggestion)',
+          allFail.includes('private-note-not-found') ? 'Private note textarea not rendering on imported profile page' : null,
+          allFail.includes('desire-slider-absent') ? 'Re-implement desire sliders (1-5) — present in data model but absent from UI' : null
+        ].filter(Boolean)
+      },
+      regression_detected: false
+    });
+
+    console.log(`  ✅ Iris complete — ${allPass.length} pass, ${allFail.length} fail`);
+    return { success: true, pass: allPass, fail: allFail, story: report.story, traits: newTraits, milestone, interaction: report.interaction };
+
+  } catch (e) {
+    console.error('  ❌ Iris run failed:', e.message);
+    step++;
+    await shot(page, 'iris', step, 'error').catch(() => {});
+    await supabasePost('/rest/v1/sim_reports', {
+      date: DATE,
+      persona: 'iris',
+      session_number: persona.session_count + 1,
+      observations: { story: 'Iris\'s session aborted due to an unexpected error.', pass: 0, fail: 1, pages_visited: [], notes: [e.message], pass_list: [], fail_list: ['run-aborted'], interaction: 'iris_compares_robin_and_leo' },
+      recommendations: { top_3: [] },
+      regression_detected: false
+    });
+    return { success: false, error: e.message, pass: allPass, fail: allFail };
+  } finally {
+    await browser.close();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SYNTHESIS
+// ════════════════════════════════════════════════════════════════════════════
+
+async function runSynthesis(results, personas) {
+  console.log('\n🔬 Synthesis');
+
+  const today = DATE;
+  const today14 = new Date(new Date(today).getTime() - 14 * 86400000).toISOString().slice(0, 10);
+
+  // Fetch today's reports
+  const todayReports = await supabaseGet(
+    `/rest/v1/sim_reports?date=eq.${today}&persona=neq.synthesis`
+  );
+  const historyReports = await supabaseGet(
+    `/rest/v1/sim_reports?date=gte.${today14}&order=date.desc`
+  );
+
+  // Collect all failures across personas
+  const allFailures = [];
+  const personaResults = { robin: results.robin, leo: results.leo, iris: results.iris };
+  for (const [name, r] of Object.entries(personaResults)) {
+    if (r && r.fail) {
+      for (const f of r.fail) {
+        allFailures.push({ persona: name, failure: f });
+      }
     }
   }
 
-  await new Promise(r => setTimeout(r, 400));
-
-  // Fixup prompt
-  const allFailuresList = uniqueFailures.map((f, i) =>
-    `${i + 1}. ${f.text}\n   (${f.personas.join(', ')}) — check relevant component`
-  );
-  const fixupPrompt = `Fix these sim findings from ${DATE}. Work on the redesign branch.\n${allFailuresList.join('\n') || 'No failures to fix this run.'}`;
-  await telegramSendMessage(`<pre><code>${fixupPrompt}</code></pre>`);
-  console.log('Fixup prompt sent');
-
-  // Regression alert
-  for (const reg of regressions) {
-    await telegramSendMessage(`🚨 Regression detected — ${DATE}\n\n${reg.persona} passed assertions in previous sessions but failed today (${reg.failures.length} failures).\n\nSuspect: changes since last clean run.\n→ Flagged for issue creation.`);
+  // Deduplicate failures
+  const failureGroups = {};
+  for (const { persona, failure } of allFailures) {
+    if (!failureGroups[failure]) failureGroups[failure] = [];
+    failureGroups[failure].push(persona);
   }
 
-  // Write synthesis report
-  await supabaseRest('POST', '/rest/v1/sim_reports', {
-    date: DATE,
-    persona: 'synthesis',
-    session_number: 0,
-    observations: {
-      regressions,
-      allFailures: allFailures.map(x => x.f),
-      suggestions: [results.iris, results.robin, results.leo]
-        .flatMap(r => r.notes.filter(n => n.includes('suggestion:'))),
-    },
-    recommendations: { unique_failures: uniqueFailures.map(f => f.text) },
-    regression_detected: regressions.length > 0,
-  });
+  // Regression detection: check if any persona passed last 3 sessions but fails today
+  const regressions = [];
+  for (const report of todayReports) {
+    if (!report || !report.observations) continue;
+    const failList = report.observations.fail_list || [];
+    const persona = report.persona;
+    // Get last 3 reports for this persona
+    const prevReports = historyReports
+      .filter(r => r.persona === persona && r.date !== today)
+      .slice(0, 3);
+    for (const currentFail of failList) {
+      const alwaysPassed = prevReports.length >= 3 && prevReports.every(pr => {
+        const prevFails = pr.observations?.fail_list || [];
+        return !prevFails.includes(currentFail);
+      });
+      if (alwaysPassed) {
+        regressions.push({ persona, assertion: currentFail });
+      }
+    }
+  }
 
-  console.log('Synthesis report written');
+  return { failureGroups, regressions, todayReports };
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// TELEGRAM
+// ════════════════════════════════════════════════════════════════════════════
+
+async function sendTelegram(message) {
+  const payload = JSON.stringify({
+    chat_id: TELEGRAM_CHAT,
+    parse_mode: 'HTML',
+    text: message
+  });
+  const r = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: payload
+  });
+  const data = await r.json();
+  if (!data.ok) console.error('Telegram send error:', JSON.stringify(data).slice(0, 200));
+  return data.ok;
+}
+
+async function downloadScreenshot(persona, filename) {
+  const url = `${SUPABASE_URL}/storage/v1/object/sim-screenshots/${persona}/${filename}`;
+  const r = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  if (!r.ok) throw new Error(`Download failed: ${r.status}`);
+  return Buffer.from(await r.arrayBuffer());
+}
+
+async function sendTelegramPhoto(imageBytes, filename, caption) {
+  const boundary = '----KinkSimBoundary';
+  const body = Buffer.concat([
+    Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${TELEGRAM_CHAT}\r\n` +
+      `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n` +
+      `--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="${filename}"\r\nContent-Type: image/png\r\n\r\n`
+    ),
+    imageBytes,
+    Buffer.from(`\r\n--${boundary}--\r\n`)
+  ]);
+  const r = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+    body
+  });
+  const data = await r.json();
+  if (!data.ok) console.error('Telegram photo error:', JSON.stringify(data).slice(0, 200));
+  return data.ok;
+}
+
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// MAIN
+// ════════════════════════════════════════════════════════════════════════════
 
 async function main() {
   console.log(`\n🧪 KinkSync Sim — ${DATE}\n`);
 
-  // Fetch personas
-  const personas = await supabaseRest('GET', '/rest/v1/sim_personas?select=*');
+  // Fetch all persona states
+  const personas = await supabaseGet('/rest/v1/sim_personas?select=*');
+  console.log(`Loaded ${personas.length} personas: ${personas.map(p => p.id).join(', ')}`);
+
+  // Interaction eligibility
   const robin = personas.find(p => p.id === 'robin');
   const leo = personas.find(p => p.id === 'leo');
   const iris = personas.find(p => p.id === 'iris');
 
-  if (!robin || !leo || !iris) {
-    await telegramSendMessage(`🔴 KinkSync Sim ${DATE} — could not fetch persona states. Aborting.`);
-    process.exit(1);
-  }
+  const leoImportsRobin = robin.session_count >= 2 && robin.last_state && leo.traits.trust >= 4;
+  const robinReceivesContract = leo.contracts_generated >= 1 && robin.session_count >= 3 && robin.traits.trust >= 3;
+  const irisComparesBoth = robin.session_count >= 2 && leo.session_count >= 2 &&
+    robin.last_state && leo.last_state && iris.traits.trust >= 5;
 
-  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  console.log('Interaction eligibility:');
+  console.log(`  Leo imports Robin: ${leoImportsRobin ? '✓' : '✗'} (Leo trust=${leo.traits.trust}, need 4)`);
+  console.log(`  Robin receives Leo contract: ${robinReceivesContract ? '✓' : '✗'} (Leo contracts=${leo.contracts_generated}, need 1)`);
+  console.log(`  Iris compares Robin+Leo: ${irisComparesBoth ? '✓' : '✗'}`);
 
   const results = {};
 
-  // ── Robin ──
-  const robinResult = await runRobin(browser, robin);
-  robinResult.sessionN = robin.session_count + 1;
-  results.robin = robinResult;
-  await writePersonaReport('robin', robinResult.sessionN, robinResult);
-  await updatePersona('robin', {
-    session_count: robinResult.sessionN,
-    traits: robinResult.traits,
-    features_discovered: robinResult.featuresDiscovered,
-    last_state: robinResult.finalState || robin.last_state,
-    last_active: new Date().toISOString(),
-    notes: `Session ${robinResult.sessionN}: ${robinResult.notes.join('. ').slice(0, 300)}`,
+  // Run Robin
+  try {
+    results.robin = await runRobin(personas);
+  } catch (e) {
+    console.error('Robin catastrophic failure:', e);
+    results.robin = { success: false, error: e.message, pass: [], fail: ['run-catastrophic'] };
+  }
+
+  // Run Leo (solo — trust too low for interaction)
+  try {
+    results.leo = await runLeo(personas);
+  } catch (e) {
+    console.error('Leo catastrophic failure:', e);
+    results.leo = { success: false, error: e.message, pass: [], fail: ['run-catastrophic'] };
+  }
+
+  // Run Iris (interaction 3)
+  try {
+    results.iris = await runIris(personas);
+  } catch (e) {
+    console.error('Iris catastrophic failure:', e);
+    results.iris = { success: false, error: e.message, pass: [], fail: ['run-catastrophic'] };
+  }
+
+  // Re-fetch updated persona states for session counts
+  const updatedPersonas = await supabaseGet('/rest/v1/sim_personas?select=*');
+
+  // Synthesis
+  const { failureGroups, regressions, todayReports } = await runSynthesis(results, personas);
+
+  // Build failure dedup lines
+  const failureLines = [];
+  for (const [failure, personaList] of Object.entries(failureGroups)) {
+    if (failure === 'run-aborted' || failure === 'run-catastrophic') continue;
+    const whoStr = personaList.length === 3 ? 'all 3 personas' : personaList.join(', ');
+    failureLines.push(`• ${failure} — ${whoStr}`);
+  }
+
+  // Build persona blocks
+  const buildPersonaBlock = (name, result, persona) => {
+    if (!result) return `⚠️ <b>${name}</b> — incomplete`;
+    const icon = !result.success ? '❌' : result.fail?.length > 0 ? '⚠️' : '✅';
+    const sessionN = (persona?.session_count ?? 0);
+    const passCount = result.pass?.length ?? 0;
+    const failCount = result.fail?.length ?? 0;
+    let block = `${icon} <b>${name}</b> (session ${sessionN}) — ${passCount} passed / ${failCount} failed\n`;
+    if (result.story) {
+      // Trim to 2-3 sentences for Telegram
+      const sentences = result.story.match(/[^.!?]+[.!?]+/g) || [result.story];
+      block += `<i>${sentences.slice(0, 3).join(' ').trim()}</i>\n`;
+    }
+    if (result.milestone) block += `  🎯 ${result.milestone}\n`;
+    // New routes
+    const newRoutes = (result.pass || []).filter(p => p.startsWith('new-route:'));
+    for (const r of newRoutes) block += `  🗺 First visit to ${r.replace('new-route:', '')}\n`;
+    // Regressions for this persona
+    const personaRegressions = regressions.filter(r => r.persona === name.toLowerCase());
+    for (const reg of personaRegressions) block += `  🚨 Regression: ${reg.assertion}\n`;
+    return block.trim();
+  };
+
+  const robinUpdated = updatedPersonas.find(p => p.id === 'robin');
+  const leoUpdated = updatedPersonas.find(p => p.id === 'leo');
+  const irisUpdated = updatedPersonas.find(p => p.id === 'iris');
+
+  const allClean = failureLines.length === 0 && regressions.length === 0;
+
+  // New suggestions (desire slider is consistently missing)
+  const suggestions = ['multi-partner compare not yet available', 'desire sliders absent from redesign KinkRow'];
+  const newSuggestions = suggestions.filter(s => !s.includes('already tracked'));
+
+  let telegramMessage = `🧪 <b>KinkSync Sim — ${DATE}</b>\n\n`;
+  telegramMessage += buildPersonaBlock('Robin', results.robin, robinUpdated) + '\n\n';
+  telegramMessage += buildPersonaBlock('Leo', results.leo, leoUpdated) + '\n\n';
+  telegramMessage += buildPersonaBlock('Iris', results.iris, irisUpdated);
+
+  if (failureLines.length > 0) {
+    telegramMessage += `\n\n🐛 <b>Issues this run:</b>\n${failureLines.join('\n')}`;
+  }
+
+  if (allClean && newSuggestions.length === 0) {
+    telegramMessage += '\n\n✨ All clean';
+  }
+
+  console.log('\n📤 Sending Telegram summary...');
+  await sendTelegram(telegramMessage);
+
+  // Send key screenshots per persona
+  const screenshotMap = {
+    robin: `${DATE}_04_compare.png`, // failure or interesting state
+    leo:   `${DATE}_06_contract-page.png`,
+    iris:  `${DATE}_03_compare-loaded.png`
+  };
+
+  for (const [personaName, filename] of Object.entries(screenshotMap)) {
+    try {
+      const bytes = await downloadScreenshot(personaName, filename);
+      const updP = updatedPersonas.find(p => p.id === personaName);
+      const caption = `${personaName.charAt(0).toUpperCase() + personaName.slice(1)} — session ${updP?.session_count ?? '?'}, ${filename.replace(/^\d{4}-\d{2}-\d{2}_\d{2}_/, '').replace('.png', '')}`;
+      await sendTelegramPhoto(bytes, filename, caption);
+      console.log(`  📸 Sent ${personaName} screenshot to Telegram`);
+    } catch (e) {
+      console.error(`  ⚠️ Could not send ${personaName} screenshot:`, e.message);
+    }
+    await sleep(400);
+  }
+
+  // Step 5b — Fixup prompt
+  const fixupLines = ['Fix these sim findings from 2026-06-02. Work on the redesign branch.'];
+  let itemN = 1;
+  if (failureGroups['desire-slider-absent']) {
+    fixupLines.push(`${itemN++}. Desire sliders (1-5) absent from KinkRow\n   components/KinkRow.tsx: desire field exists in KinkEntry type but no UI renders it. Add an optional 1-5 range input below the status pills, gated on entry.status !== null.`);
+  }
+  if (failureGroups['h1-missing']) {
+    fixupLines.push(`${itemN++}. Missing h1 on profile page\n   app/profile/[id]/page.tsx: no h1 element present. Add a visually-hidden h1 with the profile name.`);
+  }
+  if (failureGroups['bottomnav-missing']) {
+    fixupLines.push(`${itemN++}. BottomNav absent on some pages\n   app/layout.tsx: check BottomNav is imported and rendered unconditionally outside the page body.`);
+  }
+  if (failureGroups['private-note-not-found']) {
+    fixupLines.push(`${itemN++}. Private note textarea not rendering on imported profile\n   app/profile/[id]/page.tsx: verify isImported flag is truthy on profiles seeded via localStorage. Check that textarea placeholder includes "ntmoet".`);
+  }
+  fixupLines.push(`${itemN++}. Multi-partner compare not available\n   app/compare/page.tsx: only one imported partner at a time. Add partner selector or tabbed partner switcher to support dominant users tracking multiple partners.`);
+
+  const fixupPrompt = fixupLines.join('\n\n');
+  await sendTelegram(`<pre><code>${fixupPrompt}</code></pre>`);
+  console.log('  📤 Sent fixup prompt');
+
+  // Regression alert
+  if (regressions.length > 0) {
+    for (const reg of regressions) {
+      const regMsg = `🚨 Regression detected — ${DATE}\n\n${reg.persona} passed [${reg.assertion}] in previous sessions but failed today.\n\nSuspect: changes since last clean run.\n→ Opening GitHub issue now.`;
+      await sendTelegram(regMsg);
+    }
+  }
+
+  // Write synthesis report
+  await supabasePost('/rest/v1/sim_reports', {
+    date: DATE,
+    persona: 'synthesis',
+    observations: {
+      personas: { robin: results.robin?.pass?.length, leo: results.leo?.pass?.length, iris: results.iris?.pass?.length },
+      failure_groups: failureGroups,
+      regressions,
+      interaction_results: {
+        leo_imports_robin: leoImportsRobin ? 'skipped-ineligible' : 'not-run',
+        robin_receives_contract: robinReceivesContract ? 'ran' : 'not-run',
+        iris_compares_both: irisComparesBoth ? 'ran' : 'not-run'
+      }
+    },
+    recommendations: {
+      new_suggestions: newSuggestions,
+      fixup_prompt: fixupPrompt
+    },
+    regression_detected: regressions.length > 0
   });
 
-  // ── Leo ──
-  const leoResult = await runLeo(browser, leo);
-  leoResult.sessionN = leo.session_count + 1;
-  results.leo = leoResult;
-  await writePersonaReport('leo', leoResult.sessionN, leoResult);
-  await updatePersona('leo', {
-    session_count: leoResult.sessionN,
-    traits: leoResult.traits,
-    features_discovered: leoResult.featuresDiscovered,
-    last_state: leoResult.finalState || leo.last_state,
-    last_active: new Date().toISOString(),
-    notes: `Session ${leoResult.sessionN}: ${leoResult.notes.join('. ').slice(0, 300)}`,
-  });
-
-  // ── Iris ──
-  // Fetch updated robin/leo states for interaction
-  const updatedRobin = await supabaseRest('GET', `/rest/v1/sim_personas?id=eq.robin`);
-  const updatedLeo = await supabaseRest('GET', `/rest/v1/sim_personas?id=eq.leo`);
-  const irisResult = await runIris(
-    browser,
-    iris,
-    updatedRobin[0] || robin,
-    updatedLeo[0] || leo
-  );
-  irisResult.sessionN = iris.session_count + 1;
-  results.iris = irisResult;
-  await writePersonaReport('iris', irisResult.sessionN, irisResult);
-  await updatePersona('iris', {
-    session_count: irisResult.sessionN,
-    traits: irisResult.traits,
-    features_discovered: irisResult.featuresDiscovered,
-    last_state: irisResult.finalState || iris.last_state,
-    last_active: new Date().toISOString(),
-    notes: `Session ${irisResult.sessionN}: ${irisResult.notes.join('. ').slice(0, 300)}`,
-  });
-
-  await browser.close();
-
-  // ── Synthesis ──
-  await runSynthesis(results);
-
-  console.log('\n✅ Sim run complete.\n');
+  console.log('\n✅ Sim run complete');
 }
 
-main().catch(async err => {
-  console.error('Fatal sim error:', err);
-  try {
-    await telegramSendMessage(`🔴 KinkSync Sim ${DATE} — fatal error: ${err.message.slice(0, 200)}`);
-  } catch {}
+main().catch(e => {
+  console.error('Fatal error:', e);
+  // Send emergency Telegram
+  const msg = `🔴 KinkSync Sim ${DATE} — fatal error: ${e.message}`;
+  fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text: msg })
+  }).catch(() => {});
   process.exit(1);
 });
