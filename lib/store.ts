@@ -38,6 +38,10 @@ interface State {
   importProfiles: (incoming: Profile[]) => void;
   dismissInstallPrompt: () => void;
   setTheme: (t: Theme) => void;
+  appLockEnabled: boolean;
+  appLockPin: string | null;
+  setAppLockPin: (hash: string) => void;
+  clearAppLockPin: () => void;
 }
 
 const EMPTY_ENTRY: KinkEntry = { status: null, score: null, comment: "" };
@@ -52,6 +56,8 @@ export const useStore = create<State>()(
       installPromptDismissed: false,
       theme: "midnight" as Theme,
       pinnedProfileId: null,
+      appLockEnabled: false,
+      appLockPin: null,
 
       pinProfile(id) {
         set({ pinnedProfileId: id });
@@ -221,6 +227,14 @@ export const useStore = create<State>()(
       setTheme(t) {
         set({ theme: t });
       },
+
+      setAppLockPin(hash) {
+        set({ appLockEnabled: true, appLockPin: hash });
+      },
+
+      clearAppLockPin() {
+        set({ appLockEnabled: false, appLockPin: null });
+      },
     }),
     {
       name: "kink-profiles",
@@ -232,8 +246,10 @@ export const useStore = create<State>()(
         installPromptDismissed: state.installPromptDismissed,
         theme: state.theme,
         pinnedProfileId: state.pinnedProfileId,
+        appLockEnabled: state.appLockEnabled,
+        appLockPin: state.appLockPin,
       }),
-      version: 8,
+      version: 9,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -243,6 +259,8 @@ export const useStore = create<State>()(
           installPromptDismissed?: boolean;
           theme?: Theme;
           pinnedProfileId?: string | null;
+          appLockEnabled?: boolean;
+          appLockPin?: string | null;
         };
         if (version < 2 && state.profiles) {
           state.profiles = state.profiles.map((p) => ({
@@ -267,6 +285,10 @@ export const useStore = create<State>()(
           state.pinnedProfileId = null;
         }
         // v8: bdsmtestUrl + privateNote — both optional, no migration needed
+        if (version < 9) {
+          state.appLockEnabled = false;
+          state.appLockPin = null;
+        }
         return state;
       },
     }

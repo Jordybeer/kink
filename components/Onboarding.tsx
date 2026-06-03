@@ -39,6 +39,7 @@ const BODY: React.CSSProperties = {
 const NEXT_BTN: React.CSSProperties = {
   ...BTN_BASE,
   animation: 'ks-slide-up 0.4s ease 0.3s both', opacity: 0,
+  position: 'fixed', bottom: '5.5rem', left: '50%', transform: 'translateX(-50%)',
 };
 
 function NextButton({ onClick, label = 'Volgende →' }: { onClick: () => void; label?: string }) {
@@ -95,7 +96,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         ) : (
           <>
             <div key={step} className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem' }}>
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 8rem' }}>
               {step === 0 && <Step0 onNext={advance} onSkip={onComplete} />}
               {step === 1 && <Step1 onNext={advance} />}
               {step === 2 && <Step2 onNext={advance} />}

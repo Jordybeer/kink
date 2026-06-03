@@ -10,9 +10,11 @@ import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
+import PwaInstallGuide from "@/components/PwaInstallGuide";
+import AppLock from "@/components/AppLock";
 import QRScanner from "@/components/QRScanner";
 import { decodeAny } from "@/lib/shareProfile";
-import { encryptBackup, decryptBackup, type EncryptedBackup } from "@/lib/crypto";
+import { encryptBackup, decryptBackup, hashPin, type EncryptedBackup } from "@/lib/crypto";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -44,12 +46,17 @@ function HomeContent() {
     pinProfile,
     unpinProfile,
     resetProfileTour,
+    appLockEnabled,
+    appLockPin,
+    setAppLockPin,
+    clearAppLockPin,
   } = useStore();
   const _hasHydrated = useHasHydrated();
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   const [hasNativePrompt, setHasNativePrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
@@ -64,6 +71,11 @@ function HomeContent() {
   const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [pinFlowOpen, setPinFlowOpen] = useState(false);
+  const [pinFlowStep, setPinFlowStep] = useState(0);
+  const [pinInput, setPinInput] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
   const [destroyOpen, setDestroyOpen] = useState(false);
   const [destroyPhrase, setDestroyPhrase] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -89,6 +101,10 @@ function HomeContent() {
   const importDragStart = useRef(0);
   const settingsSheetRef = useRef<HTMLDivElement>(null);
   useFocusTrap(settingsSheetRef, settingsOpen);
+
+  useEffect(() => {
+    if (_hasHydrated && appLockEnabled) setLockState("locked");
+  }, [_hasHydrated, appLockEnabled]);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -166,6 +182,29 @@ function HomeContent() {
   function handleDestroyAll() {
     localStorage.clear();
     window.location.reload();
+  }
+
+  function openPinFlow(startStep = 0) {
+    setPinInput(""); setPinConfirm(""); setPinError(null);
+    setPinFlowStep(startStep); setPinFlowOpen(true);
+  }
+
+  function closePinFlow() {
+    setPinFlowOpen(false);
+    setTimeout(() => { setPinInput(""); setPinConfirm(""); setPinError(null); setPinFlowStep(0); }, 300);
+  }
+
+  async function handleSavePin() {
+    if (pinInput.length < 4) { setPinError("PIN moet minimaal 4 cijfers zijn."); return; }
+    if (pinInput !== pinConfirm) { setPinError("PINs komen niet overeen."); return; }
+    const hash = await hashPin(pinInput);
+    setAppLockPin(hash);
+    closePinFlow();
+  }
+
+  function handleRemovePin() {
+    clearAppLockPin();
+    closePinFlow();
   }
 
   function resetExportPwState() {
@@ -277,6 +316,10 @@ function HomeContent() {
       <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
     </main>
   );
+
+  if (appLockEnabled && lockState === "locked" && appLockPin) {
+    return <AppLock storedHash={appLockPin} onUnlock={() => setLockState("unlocked")} />;
+  }
 
   if (!onboardingComplete) {
     return <Onboarding onComplete={completeOnboarding} />;
@@ -784,11 +827,14 @@ function HomeContent() {
       <div className={`sheet-overlay ${settingsOpen ? "open" : ""}`} onClick={() => setSettingsOpen(false)} aria-hidden="true" />
       <div ref={settingsSheetRef} className={`sheet-panel ${settingsOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Instellingen">
         <div
-          className="rounded-t-2xl p-6"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
+          className="rounded-t-2xl flex flex-col"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)", maxHeight: "85svh" }}
         >
-          <div className="mx-auto mb-4 w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
-          <h2 className="text-lg font-bold text-center mb-5">Instellingen</h2>
+          <div className="px-6 pt-6 pb-4 flex-none">
+            <div className="mx-auto mb-4 w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
+            <h2 className="text-lg font-bold text-center">Instellingen</h2>
+          </div>
+          <div className="overflow-y-auto flex-1 px-6 pb-2">
           <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
             Thema
           </p>
@@ -854,13 +900,6 @@ function HomeContent() {
             {importSuccess && (
               <p className="text-xs text-center" style={{ color: "var(--accent)" }}>{importSuccess}</p>
             )}
-            <button
-              onClick={() => setSettingsOpen(false)}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors mt-1"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              Sluit
-            </button>
           </div>
 
           <p className="text-xs uppercase tracking-widest font-semibold mb-3 mt-5" style={{ color: "var(--text2)" }}>
@@ -874,16 +913,58 @@ function HomeContent() {
             🔍 Rondleiding opnieuw starten
           </button>
 
+          <p className="text-xs uppercase tracking-widest font-semibold mb-3 mt-5" style={{ color: "var(--text2)" }}>
+            Beveiliging
+          </p>
+          <div className="flex flex-col gap-2 mb-5">
+            {appLockEnabled ? (
+              <>
+                <button
+                  onClick={() => openPinFlow(0)}
+                  className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                  style={{ borderColor: "var(--border)", color: "var(--text)" }}
+                >
+                  🔑 PIN wijzigen
+                </button>
+                <button
+                  onClick={() => openPinFlow(2)}
+                  className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                  style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}
+                >
+                  PIN verwijderen
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => openPinFlow(0)}
+                className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+              >
+                🔒 PIN-vergrendeling instellen
+              </button>
+            )}
+          </div>
+
           <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
             Gegevens
           </p>
           <button
             onClick={() => { setSettingsOpen(false); setDestroyPhrase(""); setDestroyOpen(true); }}
-            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors mb-4"
             style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}
           >
             Vernietig alle data
           </button>
+          </div>{/* end scroll */}
+          <div className="px-6 py-4 flex-none" style={{ borderTop: "1px solid var(--border)" }}>
+            <button
+              onClick={() => setSettingsOpen(false)}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              Sluit
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1260,86 +1341,98 @@ function HomeContent() {
         )}
       </AnimatePresence>
 
-      {/* PWA install toast */}
-      <AnimatePresence>
-        {_hasHydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="fixed bottom-4 left-4 right-4 z-[120] mx-auto"
-            style={{
-              maxWidth: "28rem",
-              background: "var(--surface2)",
-              border: "1px solid var(--border)",
-              borderRadius: "1rem",
-              padding: "1.125rem 1.125rem 0.875rem",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-              <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
-                📱 KinkSync installeren
-              </h3>
-              <button
-                onClick={dismissInstallPrompt}
-                className="focus-ring flex-none ml-2"
-                style={{ fontSize: "0.75rem", color: "var(--text2)", background: "none", border: "none", cursor: "pointer" }}
-                aria-label="Sluiten"
-              >
-                ✕
-              </button>
-            </div>
+      {/* PWA install guide */}
+      {_hasHydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
+        <PwaInstallGuide
+          isIos={isIos}
+          onInstall={handleInstall}
+          onDismiss={dismissInstallPrompt}
+        />
+      )}
 
-            {isIos ? (
-              <>
-                <p style={{ margin: "0 0 0.75rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
-                  Open KinkSync in <strong style={{ color: "var(--text)" }}>Safari</strong> en tap het deel-icoon onderaan.
-                  Kies daarna <strong style={{ color: "var(--text)" }}>"Zet op beginscherm"</strong> en tap <strong style={{ color: "var(--text)" }}>Voeg toe</strong>.
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.75rem", color: "var(--text2)", flexWrap: "wrap" }}>
-                  <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem 0.5rem" }}>1. Tap □↑</span>
-                  <span>→</span>
-                  <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem 0.5rem" }}>2. "Zet op beginscherm"</span>
-                  <span>→</span>
-                  <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem 0.5rem" }}>3. Voeg toe</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p style={{ margin: "0 0 0.75rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
-                  Installeer KinkSync als app — werkt offline en zonder browserbalk.
-                </p>
-                <button
-                  onClick={handleInstall}
-                  className="focus-ring w-full"
-                  style={{
-                    background: "var(--accent)", color: "#000", fontWeight: 600,
-                    padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
-                    fontSize: "0.8125rem", cursor: "pointer",
-                  }}
+      {/* PIN flow modal */}
+      {pinFlowOpen && (
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <AnimatePresence mode="wait" initial={false}>
+              {pinFlowStep === 0 && (
+                <motion.div key="pin-intro"
+                  initial={{ x: -40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="p-6 flex flex-col gap-4"
                 >
-                  Installeer als app
-                </button>
-              </>
-            )}
-
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "0.75rem" }}>
-              <button
-                onClick={dismissInstallPrompt}
-                style={{
-                  background: "transparent", border: "1px solid var(--border)",
-                  color: "var(--text2)", padding: "0.375rem 0.875rem",
-                  borderRadius: "9999px", fontSize: "0.75rem", cursor: "pointer",
-                }}
-              >
-                Niet meer tonen
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <h2 className="text-base font-bold">PIN-vergrendeling</h2>
+                  <p className="text-sm" style={{ color: "var(--text2)" }}>
+                    Stel een PIN in om de app te beveiligen. Je hebt deze nodig bij elke herstart.
+                  </p>
+                  <button onClick={() => setPinFlowStep(1)}
+                    className="w-full py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: "var(--accent)", color: "#000" }}>
+                    PIN instellen →
+                  </button>
+                  <button onClick={closePinFlow} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
+                    Annuleer
+                  </button>
+                </motion.div>
+              )}
+              {pinFlowStep === 1 && (
+                <motion.div key="pin-enter"
+                  initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="p-6 flex flex-col gap-4"
+                >
+                  <h2 className="text-base font-bold">Kies een PIN</h2>
+                  <input
+                    type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8}
+                    placeholder="Minimaal 4 cijfers"
+                    value={pinInput} onChange={e => { setPinInput(e.target.value.replace(/\D/g, "")); setPinError(null); }}
+                    className="w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
+                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)", fontSize: "1.5rem" }}
+                    autoFocus
+                  />
+                  <input
+                    type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8}
+                    placeholder="Herhaal PIN"
+                    value={pinConfirm} onChange={e => { setPinConfirm(e.target.value.replace(/\D/g, "")); setPinError(null); }}
+                    onKeyDown={e => { if (e.key === "Enter") handleSavePin(); }}
+                    className="w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
+                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)", fontSize: "1.5rem" }}
+                  />
+                  {pinError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
+                  <button onClick={handleSavePin}
+                    className="w-full py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: "var(--accent)", color: "#000" }}>
+                    PIN opslaan
+                  </button>
+                  <button onClick={() => setPinFlowStep(0)} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
+                    ← Terug
+                  </button>
+                </motion.div>
+              )}
+              {pinFlowStep === 2 && (
+                <motion.div key="pin-remove"
+                  initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="p-6 flex flex-col gap-4"
+                >
+                  <h2 className="text-base font-bold">PIN verwijderen</h2>
+                  <p className="text-sm" style={{ color: "var(--text2)" }}>
+                    De app wordt niet meer vergrendeld bij het herstarten.
+                  </p>
+                  <button onClick={handleRemovePin}
+                    className="w-full py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: "var(--hard-no)", color: "#fff" }}>
+                    Ja, verwijder PIN
+                  </button>
+                  <button onClick={closePinFlow} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
+                    Annuleer
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
     </>
   );
 }
