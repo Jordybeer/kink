@@ -55,7 +55,7 @@ export default function ProfilePage({ params }: Props) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [meerOpen, setMeerOpen] = useState(true);
   const [showSaved, setShowSaved] = useState(false);
-  const savedTimer = useRef<ReturnType<typeof setTimeout>>();
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tabInitialized = useRef(false);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
