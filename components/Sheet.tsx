@@ -1,6 +1,7 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import type { ReactNode } from "react";
+import { useMotionSafe } from "@/lib/motion";
 
 /** Standardized sheet content wrapper: surface bg, border, rounded top, drag handle. */
 export function SheetContent({ children, className = "px-6 pb-6 pt-4" }: { children: ReactNode; className?: string }) {
@@ -23,8 +24,8 @@ interface Props {
 }
 
 export default function Sheet({ open, onClose, children, "aria-label": ariaLabel }: Props) {
+  const t = useMotionSafe();
   const y = useMotionValue(0);
-  // Dim backdrop as the sheet is dragged down
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
 
   return (
@@ -41,7 +42,7 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
+            transition={t.fast}
             onClick={onClose}
           />
 
@@ -52,8 +53,8 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
             style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 151, y, touchAction: "none" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%", transition: { type: "tween", ease: "easeIn", duration: 0.22 } }}
-            transition={{ type: "tween", ease: "easeOut", duration: 0.28 }}
+            exit={{ y: "100%", transition: t.sheetExit }}
+            transition={t.sheet}
             drag="y"
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0.05, bottom: 0.3 }}

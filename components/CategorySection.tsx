@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
 import KinkRow from "./KinkRow";
@@ -34,6 +35,7 @@ export default function CategorySection({
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   onBulkSkip, onBulkRestore, compact, hideComments,
 }: Props) {
+  const t = useMotionSafe();
   const [open, setOpen] = useState(true);
   const [undoPending, setUndoPending] = useState(false);
   const undoSnapshot = useRef<Record<string, KinkEntry>>({});
@@ -117,17 +119,18 @@ export default function CategorySection({
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 24, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            transition={t.fast}
             className="fixed bottom-20 left-4 right-4 z-[300] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
             style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", maxWidth: "28rem", margin: "0 auto" }}
           >
             <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
-            <button
+            <motion.button
               onClick={() => { onBulkRestore(undoSnapshot.current); setUndoPending(false); if (undoTimer.current) clearTimeout(undoTimer.current); }}
+              whileTap={TAP_SPRING}
               className="focus-ring text-sm font-semibold flex-none"
               style={{ color: "var(--accent)" }}>
               Ongedaan maken
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

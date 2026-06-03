@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SPRING_MODAL, SPRING_TOOLTIP } from "@/lib/motion";
+import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface TourRect { top: number; left: number; width: number; height: number }
 
@@ -31,6 +31,7 @@ interface Props { onComplete: () => void }
 export default function ProfileTour({ onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [rects, setRects] = useState<(TourRect | null)[]>([null, null, null]);
+  const t = useMotionSafe();
 
   useEffect(() => {
     let attempts = 0;
@@ -88,23 +89,29 @@ export default function ProfileTour({ onComplete }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={t.fast}
         onClick={onComplete}
       />
 
-      {/* Spotlight cutout — springs between targets */}
+      {/*
+        Spotlight cutout.
+        layout prop: Framer Motion animates position/size changes via CSS
+        transforms internally — avoids reflow from top/left/width/height.
+      */}
       <motion.div
         key="spotlight"
+        layout
         style={{
           position: "fixed", zIndex: 401, pointerEvents: "none",
+          top: spotTop, left: spotLeft, width: spotW, height: spotH,
           boxShadow: "0 0 0 9999px rgba(0,0,0,0.78)",
           borderRadius: 10,
           border: "2px solid rgba(255,255,255,0.25)",
         }}
-        initial={{ opacity: 0, top: spotTop, left: spotLeft, width: spotW, height: spotH }}
-        animate={{ opacity: 1, top: spotTop, left: spotLeft, width: spotW, height: spotH }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={SPRING_MODAL}
+        transition={t.modal}
       />
 
       {/* Tooltip card — re-enters per step */}
@@ -124,7 +131,7 @@ export default function ProfileTour({ onComplete }: Props) {
           initial={{ opacity: 0, y: below ? 8 : -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: below ? -4 : 4 }}
-          transition={SPRING_TOOLTIP}
+          transition={t.tooltip}
         >
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
             <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
@@ -140,8 +147,9 @@ export default function ProfileTour({ onComplete }: Props) {
           </p>
 
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <button
+            <motion.button
               onClick={advance}
+              whileTap={TAP_SPRING}
               style={{
                 flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
                 padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
@@ -149,9 +157,10 @@ export default function ProfileTour({ onComplete }: Props) {
               }}
             >
               {isLast ? "Aan de slag 🖤" : "Volgende →"}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={onComplete}
+              whileTap={TAP_SPRING}
               style={{
                 background: "transparent", border: "1px solid var(--border)",
                 color: "var(--text2)", padding: "0.5rem 0.875rem",
@@ -159,7 +168,7 @@ export default function ProfileTour({ onComplete }: Props) {
               }}
             >
               Sla over
-            </button>
+            </motion.button>
           </div>
 
           {/* Step dots */}
