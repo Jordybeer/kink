@@ -47,6 +47,9 @@ function HomeContent() {
   } = useStore();
   const _hasHydrated = useHasHydrated();
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
+  const [hasNativePrompt, setHasNativePrompt] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
@@ -88,9 +91,13 @@ function HomeContent() {
   useFocusTrap(settingsSheetRef, settingsOpen);
 
   useEffect(() => {
+    const ua = navigator.userAgent;
+    setIsIos(/iPhone|iPad|iPod/.test(ua) && !/Chrome/.test(ua));
+    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
     const handler = (e: Event) => {
       e.preventDefault();
       deferredPrompt.current = e as BeforeInstallPromptEvent;
+      setHasNativePrompt(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
@@ -1253,37 +1260,86 @@ function HomeContent() {
         )}
       </AnimatePresence>
 
-      {/* Install prompt banner */}
-      {_hasHydrated && !installPromptDismissed && onboardingComplete && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-[120] py-3 px-4 flex items-center gap-3"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
-          role="banner"
-        >
-          <span className="text-xl" aria-hidden="true">📱</span>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold">Installeer KinkSync</div>
-            <div className="text-xs" style={{ color: "var(--text2)" }}>
-              Bewaar op je beginscherm voor snelle toegang.
-            </div>
-          </div>
-          <button
-            onClick={handleInstall}
-            className="focus-ring px-3 py-1.5 rounded-lg text-xs font-semibold flex-none"
-            style={{ background: "var(--accent)", color: "#000" }}
+      {/* PWA install toast */}
+      <AnimatePresence>
+        {_hasHydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 260 }}
+            className="fixed bottom-4 left-4 right-4 z-[120] mx-auto"
+            style={{
+              maxWidth: "28rem",
+              background: "var(--surface2)",
+              border: "1px solid var(--border)",
+              borderRadius: "1rem",
+              padding: "1.125rem 1.125rem 0.875rem",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            }}
           >
-            Installeer
-          </button>
-          <label className="flex items-center gap-1.5 flex-none cursor-pointer select-none">
-            <input
-              type="checkbox"
-              onChange={(e) => { if (e.target.checked) dismissInstallPrompt(); }}
-              className="accent-[var(--accent)] w-4 h-4 flex-none"
-            />
-            <span className="text-xs" style={{ color: "var(--text2)" }}>Niet meer tonen</span>
-          </label>
-        </div>
-      )}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
+              <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
+                📱 KinkSync installeren
+              </h3>
+              <button
+                onClick={dismissInstallPrompt}
+                className="focus-ring flex-none ml-2"
+                style={{ fontSize: "0.75rem", color: "var(--text2)", background: "none", border: "none", cursor: "pointer" }}
+                aria-label="Sluiten"
+              >
+                ✕
+              </button>
+            </div>
+
+            {isIos ? (
+              <>
+                <p style={{ margin: "0 0 0.75rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
+                  Open KinkSync in <strong style={{ color: "var(--text)" }}>Safari</strong> en tap het deel-icoon onderaan.
+                  Kies daarna <strong style={{ color: "var(--text)" }}>"Zet op beginscherm"</strong> en tap <strong style={{ color: "var(--text)" }}>Voeg toe</strong>.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.75rem", color: "var(--text2)", flexWrap: "wrap" }}>
+                  <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem 0.5rem" }}>1. Tap □↑</span>
+                  <span>→</span>
+                  <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem 0.5rem" }}>2. "Zet op beginscherm"</span>
+                  <span>→</span>
+                  <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem 0.5rem" }}>3. Voeg toe</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ margin: "0 0 0.75rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
+                  Installeer KinkSync als app — werkt offline en zonder browserbalk.
+                </p>
+                <button
+                  onClick={handleInstall}
+                  className="focus-ring w-full"
+                  style={{
+                    background: "var(--accent)", color: "#000", fontWeight: 600,
+                    padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
+                    fontSize: "0.8125rem", cursor: "pointer",
+                  }}
+                >
+                  Installeer als app
+                </button>
+              </>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "0.75rem" }}>
+              <button
+                onClick={dismissInstallPrompt}
+                style={{
+                  background: "transparent", border: "1px solid var(--border)",
+                  color: "var(--text2)", padding: "0.375rem 0.875rem",
+                  borderRadius: "9999px", fontSize: "0.75rem", cursor: "pointer",
+                }}
+              >
+                Niet meer tonen
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

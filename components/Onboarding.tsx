@@ -83,7 +83,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         }
       `}</style>
 
-      <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', transition: 'background 200ms ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
         role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync">
 
         {lockout ? (
@@ -273,6 +273,25 @@ function Step5({ onNext }: { onNext: () => void }) {
       </div>
       <h2 style={TITLE}>Kies je sfeer</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</p>
+      <div style={{
+        width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: '0.875rem', padding: '0.875rem 1rem',
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+        marginBottom: '1rem',
+        animation: 'ks-slide-up 0.4s ease 0.15s both', opacity: 0,
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.125rem' }}>Voorbeeld</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>Zo ziet de app eruit</div>
+        </div>
+        <div style={{
+          background: 'var(--accent)', color: '#000',
+          borderRadius: '9999px', padding: '0.3125rem 0.75rem',
+          fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
+        }}>
+          Ja
+        </div>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%', marginBottom: '2.5rem', animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0 }}>
         {THEMES.map((t) => {
           const selected = theme === t.value;
