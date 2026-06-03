@@ -35,7 +35,6 @@ interface Props {
   onDirectionChange?: (d: KinkDirection) => void;
   onStatusGiveChange?: (s: KinkStatus) => void;
   onStatusReceiveChange?: (s: KinkStatus) => void;
-  onDesireChange?: (d: number | null) => void;
   compact?: boolean;
   hideComments?: boolean;
 }
@@ -49,7 +48,7 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
 export default function KinkRow({
   kink, entry, onStatusChange,
   onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  onDesireChange, compact, hideComments,
+  compact, hideComments,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
 
@@ -222,24 +221,6 @@ export default function KinkRow({
           </>
         )}
 
-        {!compact && entry.status && entry.status !== "hard_no" && (
-          <div className="px-3 pb-2 flex items-center gap-2">
-            <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Verlangen</span>
-            <input
-              type="range"
-              min={1}
-              max={5}
-              step={1}
-              value={entry.desire ?? 3}
-              onChange={(e) => onDesireChange?.(Number(e.target.value))}
-              className="flex-1 accent-[var(--accent)]"
-              aria-label="Verlangenniveau 1 tot 5"
-            />
-            <span className="text-[11px] w-3 text-center tabular-nums flex-none" style={{ color: "var(--accent)" }}>
-              {entry.desire ?? "—"}
-            </span>
-          </div>
-        )}
 
         {/* Hard limit — separate row, visually distinct */}
         {!compact && (() => {
@@ -264,11 +245,11 @@ export default function KinkRow({
             }
           };
           return (
-            <div data-tour="hard-no" className="px-3 pb-2.5 pt-0.5 border-t border-[var(--border)]">
+            <div data-tour="hard-no" className="px-3 pb-3 pt-2 border-t border-[var(--border)]">
               <button
                 onClick={handleClick}
                 aria-pressed={active}
-                className={`focus-ring w-full rounded-lg border text-[12px] font-semibold py-1.5 min-h-[44px] transition-colors${active ? " status-hard_no" : ""}`}
+                className={`focus-ring w-full rounded-lg border text-[12px] font-semibold py-3 min-h-[44px] transition-colors${active ? " status-hard_no" : ""}`}
                 style={!active ? {
                   color: "var(--hard-no)",
                   borderColor: "color-mix(in srgb, var(--hard-no) 30%, transparent)",

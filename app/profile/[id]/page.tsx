@@ -511,7 +511,6 @@ export default function ProfilePage({ params }: Props) {
                         onDirectionChange={(d) => setEntry(profile.id, kink.id, { direction: d })}
                         onStatusGiveChange={(s) => setEntry(profile.id, kink.id, { statusGive: s })}
                         onStatusReceiveChange={(s) => setEntry(profile.id, kink.id, { statusReceive: s })}
-                        onDesireChange={(d) => setEntry(profile.id, kink.id, { desire: d })}
                         compact={compact}
                         hideComments={hideComments}
                       />
@@ -536,10 +535,9 @@ export default function ProfilePage({ params }: Props) {
                         onDirectionChange={(kinkId, d) => setEntry(profile.id, kinkId, { direction: d })}
                         onStatusGiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusGive: s })}
                         onStatusReceiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusReceive: s })}
-                        onDesireChange={(kinkId, d) => setEntry(profile.id, kinkId, { desire: d })}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
-                            setEntry(profile.id, k.id, { status: "no", desire: null });
+                            setEntry(profile.id, k.id, { status: "no" });
                           }
                         }}
                         onBulkRestore={(snapshot) => {

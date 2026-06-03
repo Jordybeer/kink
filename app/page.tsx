@@ -658,105 +658,95 @@ function HomeContent() {
                                     Annuleer
                                   </button>
                                 </div>
+                                <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--border)" }}>
+                                  {(() => {
+                                    const ep = profiles.find((pr) => pr.id === editId);
+                                    if (!ep) return null;
+                                    return (<>
+                                      <button
+                                        onClick={() => ep.id === pinnedProfileId ? unpinProfile() : pinProfile(ep.id)}
+                                        className="focus-ring flex-1 py-2 rounded-lg text-xs border transition-colors flex items-center justify-center gap-1.5"
+                                        style={ep.id === pinnedProfileId
+                                          ? { borderColor: "var(--accent)", color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }
+                                          : { borderColor: "var(--border)", color: "var(--text2)" }}
+                                      >
+                                        {ep.id === pinnedProfileId ? <><PinOff size={12} /> Losmaken</> : <><Pin size={12} /> Mijn profiel</>}
+                                      </button>
+                                      <button
+                                        onClick={() => { setEditId(null); promptDelete(ep.id); }}
+                                        className="focus-ring px-4 py-2 rounded-lg text-xs border transition-colors"
+                                        style={{ borderColor: "color-mix(in srgb, var(--hard-no) 40%, transparent)", color: "var(--hard-no)" }}
+                                      >
+                                        Verwijderen
+                                      </button>
+                                    </>);
+                                  })()}
+                                </div>
                               </div>
                             ) : (
                               <>
-                                <div className="flex gap-3 px-3 pt-3 pb-2.5">
+                                {/* Card header */}
+                                <div className="flex items-center gap-3 px-3 pt-3 pb-2">
                                   {!isMulti && (
-                                    <div className="w-10 h-10 rounded-full flex-none overflow-hidden mt-0.5" aria-hidden="true">
-                                      {p.avatarDataUrl ? (
-                                        <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
-                                          {initial}
+                                    <div className="relative flex-none">
+                                      <div className="w-11 h-11 rounded-full overflow-hidden" aria-hidden="true">
+                                        {p.avatarDataUrl ? (
+                                          <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                            {initial}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {p.id === pinnedProfileId && (
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "var(--accent)" }} aria-label="Mijn profiel">
+                                          <Pin size={9} color="#000" />
                                         </div>
                                       )}
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    {/* Row 1: name (or role in grouped view) + icon actions */}
-                                    <div className="flex items-center justify-between gap-2 mb-1">
-                                      {isMulti
-                                        ? <span className="text-sm font-medium truncate" style={{ color: "var(--text2)" }}>{p.role}</span>
-                                        : <span className="text-sm font-semibold truncate">{p.name}</span>
-                                      }
-                                      <div className="flex items-center gap-0 flex-none ml-auto">
-                                        <button
-                                          onClick={() => p.id === pinnedProfileId ? unpinProfile() : pinProfile(p.id)}
-                                          aria-label={p.id === pinnedProfileId ? `${p.name} losmaken als hoofdprofiel` : `${p.name} vastpinnen als hoofdprofiel`}
-                                          title={p.id === pinnedProfileId ? "Losmaken" : "Vastpinnen"}
-                                          className="focus-ring w-11 h-11 flex items-center justify-center rounded-lg transition-colors"
-                                          style={{ color: p.id === pinnedProfileId ? "var(--accent)" : "var(--text2)" }}
-                                        >
-                                          {p.id === pinnedProfileId ? <PinOff size={15} /> : <Pin size={15} />}
-                                        </button>
-                                        <button
-                                          onClick={() => startEdit(p)}
-                                          aria-label={`Profiel ${p.name} bewerken`}
-                                          title="Bewerken"
-                                          className="focus-ring w-11 h-11 flex items-center justify-center rounded-lg transition-colors"
-                                          style={{ color: "var(--text2)" }}
-                                        >
-                                          <Pencil size={15} />
-                                        </button>
-                                        <button
-                                          onClick={() => promptDelete(p.id)}
-                                          aria-label={`Profiel ${p.name} verwijderen`}
-                                          title="Verwijderen"
-                                          className="focus-ring w-11 h-11 flex items-center justify-center rounded-lg transition-colors"
-                                          style={{ color: "var(--text2)" }}
-                                        >
-                                          🗑
-                                        </button>
-                                      </div>
-                                    </div>
-                                    {/* Row 2: badges */}
-                                    <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                                      {p.id === pinnedProfileId && (
-                                        <span className="text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)", border: "1px solid var(--accent)" }}>
-                                          Mijn profiel
-                                        </span>
-                                      )}
-                                      {!isMulti && (
-                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-                                          {p.role}
-                                        </span>
-                                      )}
-                                      {lvl && (
-                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}>
-                                          {lvl.label}
-                                        </span>
-                                      )}
-                                      {p.relationshipStatus && (
-                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-                                          {p.relationshipStatus}
-                                        </span>
-                                      )}
-                                    </div>
-                                    {/* Row 3: progress count + open button */}
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-                                        {rated} / {maxKinks} beoordeeld
-                                      </span>
-                                      <Link
-                                        href={`/profile/${p.id}`}
-                                        className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex-none"
-                                        style={{ background: "var(--accent)", color: "#000" }}
-                                      >
-                                        Open →
-                                      </Link>
-                                    </div>
+                                    <p className="text-sm font-semibold truncate leading-tight">
+                                      {isMulti ? p.role : p.name}
+                                    </p>
+                                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
+                                      {isMulti ? null : p.role}{lvl ? (isMulti ? lvl.label : ` · ${lvl.label}`) : null}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-1 flex-none">
+                                    <button
+                                      onClick={() => startEdit(p)}
+                                      aria-label={`Profiel ${p.name} bewerken`}
+                                      className="focus-ring w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
+                                      style={{ color: "var(--text2)" }}
+                                    >
+                                      <Pencil size={14} />
+                                    </button>
+                                    <Link
+                                      href={`/profile/${p.id}`}
+                                      className="focus-ring px-3 h-9 rounded-lg text-sm font-semibold transition-colors flex-none flex items-center"
+                                      style={{ background: "var(--accent)", color: "#000" }}
+                                    >
+                                      Open →
+                                    </Link>
                                   </div>
                                 </div>
-                                <div className="h-1 mx-3 mb-3 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-                                  <div
-                                    className="h-full rounded-full transition-[width] duration-500 ease-out"
-                                    style={{
-                                      width: `${progress}%`,
-                                      background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-                                    }}
-                                  />
-                                </div>
+
+                                {/* Status DNA bar */}
+                                {rated > 0 ? (
+                                  <div className="flex h-1.5 mx-3 mb-3 rounded-full overflow-hidden gap-px">
+                                    {(["yes","willing","maybe","no","hard_no"] as const).map((s) => {
+                                      const cnt = Object.values(p.entries).filter((e) => e.status === s).length;
+                                      if (!cnt) return null;
+                                      const pct = (cnt / maxKinks) * 100;
+                                      const c = { yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)" }[s];
+                                      return <div key={s} style={{ width: `${pct}%`, background: c }} />;
+                                    })}
+                                    <div style={{ flex: 1, background: "var(--border)" }} />
+                                  </div>
+                                ) : (
+                                  <div className="h-1.5 mx-3 mb-3 rounded-full" style={{ background: "var(--border)" }} />
+                                )}
                               </>
                             )}
                           </div>

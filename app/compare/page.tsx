@@ -208,28 +208,46 @@ function ComparePage() {
 
       {/* Mobile-only sticky selector strip */}
       <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", paddingTop: "env(safe-area-inset-top)" }}>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {(
             [
-              { id: aId, setId: setAId, label: "Profiel A", colour: COLOUR_A },
-              { id: bId, setId: setBId, label: "Profiel B", colour: COLOUR_B },
+              { id: aId, setId: setAId, colour: COLOUR_A },
+              { id: bId, setId: setBId, colour: COLOUR_B },
             ] as const
-          ).map(({ id, setId, label, colour }) => (
-            <div key={label}>
-              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>{label}</label>
-              <select value={id} onChange={(e) => setId(e.target.value)}
-                className="focus-ring w-full rounded-lg px-2 py-2 text-sm focus:outline-none"
-                style={{ background: "var(--surface)", border: `1px solid ${colour}`, color: "var(--text)" }}>
-                <option value="">— selecteer —</option>
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.role})</option>
-                ))}
-              </select>
+          ).map(({ id, setId, colour }) => (
+            <div key={colour} className="flex flex-col gap-1.5">
+              <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-0.5">
+                {profiles.map((p) => {
+                  const active = id === p.id;
+                  const init = p.name[0].toUpperCase();
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setId(p.id)}
+                      aria-pressed={active}
+                      className="focus-ring flex-none flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-colors"
+                      style={active
+                        ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 12%, transparent)` }
+                        : { borderColor: "var(--border)", background: "var(--surface)" }}
+                    >
+                      <div className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold text-black flex-shrink-0" style={{ background: active ? colour : "var(--surface2)" }}>
+                        {p.avatarDataUrl
+                          ? <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                          : <span style={{ color: active ? "#000" : "var(--text2)" }}>{init}</span>}
+                      </div>
+                      <div className="text-left min-w-0">
+                        <p className="text-xs font-semibold truncate leading-tight" style={{ color: active ? "var(--text)" : "var(--text2)" }}>{p.name}</p>
+                        <p className="text-[10px] truncate" style={{ color: active ? colour : "var(--text2)", opacity: 0.8 }}>{p.role}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
         {profileA && profileB && (
-          <div className="flex gap-2 mt-2 flex-wrap">
+          <div className="flex gap-2 mt-2">
             <Link href={`/scene?a=${aId}&b=${bId}`}
               className="focus-ring px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 border flex-1 text-center"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}>
