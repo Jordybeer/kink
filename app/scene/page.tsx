@@ -119,17 +119,6 @@ function ScenePage() {
     setSaved(true);
   }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-add matches on new scene
-  useEffect(() => {
-    if (!_hasHydrated || sceneIdParam || !profileA || !profileB) return;
-    const toAdd = KINKS.filter((k) => {
-      const a = profileA.entries[k.id]?.status ?? null;
-      const b = profileB.entries[k.id]?.status ?? null;
-      return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
-    });
-    setItems(toAdd.map((k) => ({ id: uid(), name: k.name, kinkId: k.id, intensity: "midden" as const, duration: "", note: "", fromKink: true })));
-  }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleDragStart = useCallback((i: number) => { dragItem.current = i; }, []);
   const handleDragEnter = useCallback((i: number) => { dragOver.current = i; }, []);
   const handleDragEnd = useCallback(() => {
@@ -152,20 +141,6 @@ function ScenePage() {
 
   function addFromKink(kinkName: string, kinkId: string) {
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true }]);
-  }
-
-  function addMaybes() {
-    if (!profileA || !profileB) return;
-    const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
-    const maybes = KINKS.filter((k) => {
-      if (addedKinkIds.has(k.id)) return false;
-      const a = profileA.entries[k.id]?.status ?? null;
-      const b = profileB.entries[k.id]?.status ?? null;
-      if (!a || !b) return false;
-      if (a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
-      return a === "maybe" || b === "maybe";
-    });
-    setItems((prev) => [...prev, ...maybes.map((k) => ({ id: uid(), name: k.name, kinkId: k.id, intensity: "midden" as const, duration: "", note: "", fromKink: true }))]);
   }
 
   function addManualItem() {
@@ -276,18 +251,19 @@ function ScenePage() {
         .slice(0, 5)
     : [];
 
-  const matchedKinks = KINKS.filter((k) => {
+  const mutualKinks = KINKS.filter((k) => {
     const a = profileA?.entries[k.id]?.status ?? null;
     const b = profileB?.entries[k.id]?.status ?? null;
     return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
   });
 
-  const hasMaybes = profileA && profileB && KINKS.some((k) => {
-    if (addedKinkIds.has(k.id)) return false;
-    const a = profileA.entries[k.id]?.status ?? null;
-    const b = profileB.entries[k.id]?.status ?? null;
-    if (!a || !b || a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
-    return a === "maybe" || b === "maybe";
+  const spanningKinks = KINKS.filter((k) => {
+    const a = profileA?.entries[k.id]?.status ?? null;
+    const b = profileB?.entries[k.id]?.status ?? null;
+    if (!a || !b) return false;
+    if (a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
+    const isMutual = (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
+    return !isMutual && (a === "maybe" || b === "maybe");
   });
 
   return (
@@ -354,22 +330,39 @@ function ScenePage() {
           </div>
         )}
 
-        {/* Matches quick-add */}
-        {matchedKinks.length > 0 && (
+        {/* Kink chips */}
+        {(mutualKinks.length > 0 || spanningKinks.length > 0) && (
           <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>Jullie matches</p>
-              {hasMaybes && (
-                <button onClick={addMaybes} className="text-xs px-2.5 py-1 rounded-full border transition-colors focus-ring" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>+ Maybes toevoegen</button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {matchedKinks.map((k) => (
-                <button key={k.id} onClick={() => addFromKink(k.name, k.id)} disabled={addedKinkIds.has(k.id)} className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring disabled:opacity-40" style={addedKinkIds.has(k.id) ? { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" } : { background: `color-mix(in srgb, var(--accent) 12%, transparent)`, borderColor: `color-mix(in srgb, var(--accent) 40%, transparent)`, color: "var(--accent)" }}>
-                  {k.name}
-                </button>
-              ))}
-            </div>
+            {mutualKinks.length > 0 && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2.5" style={{ color: "var(--accent)" }}>Mutual</p>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {mutualKinks.map((k) => {
+                    const added = addedKinkIds.has(k.id);
+                    return (
+                      <button key={k.id} onClick={() => !added && addFromKink(k.name, k.id)} disabled={added} className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring disabled:opacity-40 flex items-center gap-1" style={added ? { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" } : { background: "color-mix(in srgb, #4ade80 12%, transparent)", borderColor: "color-mix(in srgb, #4ade80 45%, transparent)", color: "#4ade80" }}>
+                        {!added && <span aria-hidden="true">+</span>}{k.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {spanningKinks.length > 0 && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2.5" style={{ color: "#fb923c" }}>Spanning</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {spanningKinks.map((k) => {
+                    const added = addedKinkIds.has(k.id);
+                    return (
+                      <button key={k.id} onClick={() => !added && addFromKink(k.name, k.id)} disabled={added} className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring disabled:opacity-40 flex items-center gap-1" style={added ? { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" } : { background: "color-mix(in srgb, #fb923c 12%, transparent)", borderColor: "color-mix(in srgb, #fb923c 45%, transparent)", color: "#fb923c" }}>
+                        {!added && <span aria-hidden="true">+</span>}{k.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>
