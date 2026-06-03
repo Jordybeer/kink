@@ -15,7 +15,6 @@ interface Props {
   onDirectionChange?: (kinkId: string, d: KinkDirection) => void;
   onStatusGiveChange?: (kinkId: string, s: KinkStatus) => void;
   onStatusReceiveChange?: (kinkId: string, s: KinkStatus) => void;
-  onDesireChange?: (kinkId: string, d: number | null) => void;
   onBulkSkip: () => void;
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
@@ -32,7 +31,7 @@ export default function CategorySection({
   category, kinks, entries,
   onStatusChange,
   onCommentChange, onTagsChange,
-  onDirectionChange, onStatusGiveChange, onStatusReceiveChange, onDesireChange,
+  onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   onBulkSkip, onBulkRestore, compact, hideComments,
 }: Props) {
   const [open, setOpen] = useState(true);
@@ -147,7 +146,6 @@ export default function CategorySection({
                 onDirectionChange={onDirectionChange ? (d) => onDirectionChange(kink.id, d) : undefined}
                 onStatusGiveChange={onStatusGiveChange ? (s) => onStatusGiveChange(kink.id, s) : undefined}
                 onStatusReceiveChange={onStatusReceiveChange ? (s) => onStatusReceiveChange(kink.id, s) : undefined}
-                onDesireChange={onDesireChange ? (d) => onDesireChange(kink.id, d) : undefined}
                 compact={compact}
                 hideComments={hideComments}
               />
