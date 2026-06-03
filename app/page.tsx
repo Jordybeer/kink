@@ -15,6 +15,7 @@ import AppLock from "@/components/AppLock";
 import QRScanner from "@/components/QRScanner";
 import { decodeAny } from "@/lib/shareProfile";
 import { encryptBackup, decryptBackup, hashPin, type EncryptedBackup } from "@/lib/crypto";
+import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -50,6 +51,10 @@ function HomeContent() {
     appLockPin,
     setAppLockPin,
     clearAppLockPin,
+    biometricEnabled,
+    biometricCredentialId,
+    enableBiometric,
+    disableBiometric,
   } = useStore();
   const _hasHydrated = useHasHydrated();
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -76,6 +81,9 @@ function HomeContent() {
   const [pinInput, setPinInput] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
+  const [platformBioAvailable, setPlatformBioAvailable] = useState(false);
+  const [bioRegistering, setBioRegistering] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
   const [destroyOpen, setDestroyOpen] = useState(false);
   const [destroyPhrase, setDestroyPhrase] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -105,6 +113,10 @@ function HomeContent() {
   useEffect(() => {
     if (_hasHydrated && appLockEnabled) setLockState("locked");
   }, [_hasHydrated, appLockEnabled]);
+
+  useEffect(() => {
+    isPlatformAuthenticatorAvailable().then(setPlatformBioAvailable);
+  }, []);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -182,6 +194,19 @@ function HomeContent() {
   function handleDestroyAll() {
     localStorage.clear();
     window.location.reload();
+  }
+
+  async function handleEnableBiometric() {
+    setBioRegistering(true);
+    setBioError(null);
+    try {
+      const credId = await registerBiometric();
+      enableBiometric(credId);
+    } catch (e) {
+      setBioError(e instanceof Error ? e.message : "Biometrische registratie mislukt");
+    } finally {
+      setBioRegistering(false);
+    }
   }
 
   function openPinFlow(startStep = 0) {
@@ -317,8 +342,14 @@ function HomeContent() {
     </main>
   );
 
-  if (appLockEnabled && lockState === "locked" && appLockPin) {
-    return <AppLock storedHash={appLockPin} onUnlock={() => setLockState("unlocked")} />;
+  if (appLockEnabled && lockState === "locked") {
+    return (
+      <AppLock
+        storedHash={appLockPin}
+        biometricCredentialId={biometricEnabled ? biometricCredentialId : null}
+        onUnlock={() => setLockState("unlocked")}
+      />
+    );
   }
 
   if (!onboardingComplete) {
@@ -919,27 +950,38 @@ function HomeContent() {
           <div className="flex flex-col gap-2 mb-5">
             {appLockEnabled ? (
               <>
-                <button
-                  onClick={() => openPinFlow(0)}
+                <button onClick={() => openPinFlow(0)}
                   className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                  style={{ borderColor: "var(--border)", color: "var(--text)" }}
-                >
+                  style={{ borderColor: "var(--border)", color: "var(--text)" }}>
                   🔑 PIN wijzigen
                 </button>
-                <button
-                  onClick={() => openPinFlow(2)}
+                {/* Face ID — alleen beschikbaar als PIN al ingesteld is */}
+                {platformBioAvailable && (
+                  biometricEnabled ? (
+                    <button onClick={() => disableBiometric()}
+                      className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                      style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
+                      🔓 Face ID / vingerafdruk uitschakelen
+                    </button>
+                  ) : (
+                    <button onClick={handleEnableBiometric} disabled={bioRegistering}
+                      className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                      style={{ borderColor: "var(--accent)", color: "var(--accent)", opacity: bioRegistering ? 0.6 : 1 }}>
+                      {bioRegistering ? "Bezig…" : "🔓 Face ID / vingerafdruk inschakelen"}
+                    </button>
+                  )
+                )}
+                {bioError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{bioError}</p>}
+                <button onClick={() => openPinFlow(2)}
                   className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                  style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}
-                >
+                  style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}>
                   PIN verwijderen
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => openPinFlow(0)}
+              <button onClick={() => openPinFlow(0)}
                 className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-              >
+                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
                 🔒 PIN-vergrendeling instellen
               </button>
             )}
