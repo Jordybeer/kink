@@ -62,6 +62,9 @@ function HomeContent() {
   const [isIos, setIsIos] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
+  const sessionUnlocked = useRef(
+    typeof sessionStorage !== "undefined" && sessionStorage.getItem("app_unlocked") === "1"
+  );
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
@@ -111,7 +114,7 @@ function HomeContent() {
   useFocusTrap(settingsSheetRef, settingsOpen);
 
   useEffect(() => {
-    if (_hasHydrated && appLockEnabled) setLockState("locked");
+    if (_hasHydrated && appLockEnabled && !sessionUnlocked.current) setLockState("locked");
   }, [_hasHydrated, appLockEnabled]);
 
   useEffect(() => {
@@ -347,7 +350,11 @@ function HomeContent() {
       <AppLock
         storedHash={appLockPin}
         biometricCredentialId={biometricEnabled ? biometricCredentialId : null}
-        onUnlock={() => setLockState("unlocked")}
+        onUnlock={() => {
+          sessionStorage.setItem("app_unlocked", "1");
+          sessionUnlocked.current = true;
+          setLockState("unlocked");
+        }}
       />
     );
   }
