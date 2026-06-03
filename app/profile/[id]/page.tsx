@@ -54,6 +54,8 @@ export default function ProfilePage({ params }: Props) {
   const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [meerOpen, setMeerOpen] = useState(true);
+  const [showSaved, setShowSaved] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>();
   const tabInitialized = useRef(false);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const navRef = useRef<HTMLDivElement>(null);
@@ -151,8 +153,15 @@ export default function ProfilePage({ params }: Props) {
   const isShared = profile.origin === "shared" || (!profile.origin && !!profile.isImported);
   const effectiveTab = isShared ? "overzicht" : activeTab;
 
+  function markSaved() {
+    setShowSaved(true);
+    clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setShowSaved(false), 1800);
+  }
+
   function handleStatus(kinkId: string, s: KinkStatus) {
     setEntry(profile!.id, kinkId, { status: s, desire: null });
+    markSaved();
   }
 
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
@@ -355,9 +364,16 @@ export default function ProfilePage({ params }: Props) {
 
       {/* Header */}
       <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-          ← Terug
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
+            ← Terug
+          </Link>
+          {showSaved && (
+            <span className="text-[11px] font-medium" style={{ color: "var(--accent)" }}>
+              Opgeslagen ✓
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/compare?a=${id}`}
@@ -506,11 +522,11 @@ export default function ProfilePage({ params }: Props) {
                         kink={kink}
                         entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
                         onStatusChange={(s) => handleStatus(kink.id, s)}
-                        onCommentChange={(c) => setEntry(profile.id, kink.id, { comment: c })}
-                        onTagsChange={(tags) => setEntry(profile.id, kink.id, { tags })}
-                        onDirectionChange={(d) => setEntry(profile.id, kink.id, { direction: d })}
-                        onStatusGiveChange={(s) => setEntry(profile.id, kink.id, { statusGive: s })}
-                        onStatusReceiveChange={(s) => setEntry(profile.id, kink.id, { statusReceive: s })}
+                        onCommentChange={(c) => { setEntry(profile.id, kink.id, { comment: c }); markSaved(); }}
+                        onTagsChange={(tags) => { setEntry(profile.id, kink.id, { tags }); markSaved(); }}
+                        onDirectionChange={(d) => { setEntry(profile.id, kink.id, { direction: d }); markSaved(); }}
+                        onStatusGiveChange={(s) => { setEntry(profile.id, kink.id, { statusGive: s }); markSaved(); }}
+                        onStatusReceiveChange={(s) => { setEntry(profile.id, kink.id, { statusReceive: s }); markSaved(); }}
                         compact={compact}
                         hideComments={hideComments}
                       />
@@ -530,20 +546,22 @@ export default function ProfilePage({ params }: Props) {
                         kinks={kinks}
                         entries={profile.entries}
                         onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
-                        onCommentChange={(kinkId, c) => setEntry(profile.id, kinkId, { comment: c })}
-                        onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
-                        onDirectionChange={(kinkId, d) => setEntry(profile.id, kinkId, { direction: d })}
-                        onStatusGiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusGive: s })}
-                        onStatusReceiveChange={(kinkId, s) => setEntry(profile.id, kinkId, { statusReceive: s })}
+                        onCommentChange={(kinkId, c) => { setEntry(profile.id, kinkId, { comment: c }); markSaved(); }}
+                        onTagsChange={(kinkId, tags) => { setEntry(profile.id, kinkId, { tags }); markSaved(); }}
+                        onDirectionChange={(kinkId, d) => { setEntry(profile.id, kinkId, { direction: d }); markSaved(); }}
+                        onStatusGiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusGive: s }); markSaved(); }}
+                        onStatusReceiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusReceive: s }); markSaved(); }}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
                             setEntry(profile.id, k.id, { status: "no" });
                           }
+                          markSaved();
                         }}
                         onBulkRestore={(snapshot) => {
                           for (const [kinkId, entry] of Object.entries(snapshot)) {
                             setEntry(profile.id, kinkId, { status: entry.status ?? null });
                           }
+                          markSaved();
                         }}
                         compact={compact}
                         hideComments={hideComments}
