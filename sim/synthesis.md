@@ -28,12 +28,17 @@ GET $SUPABASE_URL/rest/v1/sim_reports
 
 ## Step 2 — Cross-reference open GitHub issues
 
-Using the GitHub MCP (GITHUB_TOKEN must be set):
-- Fetch all open issues on `Jordybeer/kink`
-- Extract titles and bodies into a lookup list
+**Complete this step before writing the Telegram message.**
+
+Use `GITHUB_TOKEN` with the REST API — no MCP connector is required:
+```bash
+curl -s -H "Authorization: token $GITHUB_TOKEN" \
+  "https://api.github.com/repos/Jordybeer/kink/issues?state=open&per_page=100"
+```
+- Extract titles and bodies into a lookup set
 - For each finding in today's reports:
-  - If a similar issue already exists: note "already tracked in #N"
-  - If not: mark as new finding eligible for a suggestions issue
+  - If a similar issue already exists: mark it `already_tracked:#N` — **do not include it in the 🐛 issues section of the Telegram summary**
+  - If no similar issue exists: mark it `new_finding` — include in 🐛 section and eligible for Step 7
 
 ---
 
@@ -51,45 +56,59 @@ A regression is: a persona who **passed** an assertion in each of the last
 
 ## Step 4 — Build Telegram summary message
 
-Always send this, even on fully clean runs.
+Always send, even on fully clean runs.
 
-**Use `parse_mode: HTML`** — not Markdown. Underscores in identifiers like
-`last_state` break Telegram's Markdown v1 parser.
+**Use `parse_mode: HTML`** — not Markdown. Underscores in identifiers like `last_state` break Telegram's Markdown v1 parser.
+
+### Message structure — strict order, do not reorder sections
 
 ```html
 🧪 <b>KinkSync Sim — {YYYY-MM-DD}</b>
+<b>{X}/3 passed</b> · {total_pass}/{total_assertions} checks
 
-{for each persona: robin, leo, iris}
-{✅|⚠️|❌} <b>{Name}</b> (session {N}) — {pass}/{total} passed
-<i>{session story — 2–3 sentences from observations.story}</i>
-{if milestone hit}  🎯 {milestone label}
-{if new route discovered}  🗺 First visit to {route}
-{if regression}  🚨 Regression: {assertion}
-{/for}
+{✅|⚠️|❌} <b>Robin</b> · session {N}
+<i>{story — exactly 2 sentences, no dashes}</i>
+{if milestone}🎯 {label}
+{if regression}🚨 Regression: {assertion}
 
-🐛 <b>Issues this run:</b>
-{• one line per unique failure group, deduplicated across all personas:
-• Hydration: data-theme + BottomNav absent on first paint — all pages, all N personas
-• Import: backup restore rejects profiles already in last_state — cross-persona blocked
-• Touch targets: {element} {X}px, ... (below 44px minimum)
-• {route}: {specific issue — e.g. missing h1, horizontal scroll}
-...
-omit if no failures}
+{✅|⚠️|❌} <b>Leo</b> · session {N}
+<i>{story — exactly 2 sentences, no dashes}</i>
+{if milestone}🎯 {label}
+{if regression}🚨 Regression: {assertion}
 
-{if new suggestions exist}
-💡 {N} new suggestion(s) → #{issue_number}
-{/if}
+{✅|⚠️|❌} <b>Iris</b> · session {N}
+<i>{story — exactly 2 sentences, no dashes}</i>
+{if milestone}🎯 {label}
+{if regression}🚨 Regression: {assertion}
 
-{if all clean and no suggestions}
+{ONLY if new_finding issues exist — omit section entirely if all issues are already_tracked}
+🐛 <b>Issues ({N} unique):</b>
+1. {description} — {personas} — {route}
+2. ...
+
+{ONLY if new_finding suggestions exist from Step 2}
+💡 <b>{N} new suggestion(s)</b> → #{issue_number}
+
+{ONLY if zero new_finding issues AND zero new suggestions}
 ✨ All clean
-{/if}
 ```
 
-Rules:
-- Each persona block leads with the human story, not the numbers
-- The `🐛 Issues` section groups and deduplicates failures from all three personas —
-  don't repeat the same failure three times; say "all 3 personas" instead
-- Failures that are identical across all pages and personas belong in one bullet, not six
+### Deduplication rules — mandatory
+
+Build a deduplicated issue set BEFORE writing the message:
+- One numbered line per distinct failure class — never per persona
+- If 2 personas hit the same root cause: `"leo, iris"` on that one line
+- If all 3 hit it: `"all personas"` — never list the same bug three times
+- Same issue on every page → `"all pages"` not a per-route list
+- Already-tracked issues (Step 2 `already_tracked:#N`) are omitted from the 🐛 section entirely
+- Order: regressions first, then new failures
+
+### Story rules — mandatory
+
+- Exactly 2 sentences. Never 3. Cut to the 2 most significant events.
+- Past tense, third person ("Robin opened…").
+- Name specific routes, actions, or failures — no vague summaries.
+- No dashes of any kind (em-dash, en-dash, hyphen used as pause).
 
 Send via Python (curl cannot reliably handle special characters):
 ```python
@@ -157,27 +176,26 @@ Send one photo per persona, then sleep 0.4s between each to avoid rate limits.
 
 ## Step 5b — Send fixup prompt (always, after photos)
 
-After the three persona photos, send one final message: a token-optimised
-Claude Code prompt the developer can copy-paste directly to fix every issue
-found this run.
+Always send this message — even on clean runs.
 
-Format — just the prompt in a code block, nothing else:
+If there are no failures, send exactly:
+```html
+<pre><code>No fixes needed from {date}. All assertions passed.</code></pre>
+```
+
+If there are failures, send a token-optimised Claude Code prompt the developer can copy-paste directly. Format — just the prompt in a code block, nothing else:
 ```html
 <pre><code>{prompt}</code></pre>
 ```
 
-The prompt body must be:
+Prompt body rules:
 - Plain text only (no HTML inside the `<pre>` block)
-- One numbered item per distinct issue class (not per persona — deduplicate)
-- Each item: one-line description, then `file/path:line` reference, then the
-  exact fix in ≤2 sentences
 - First line: `Fix these sim findings from {date}. Work on the redesign branch.`
-- No other preamble, no sign-off, no labels like "Bug:" or "Suggestion:"
-- Token-efficient: assume the reader knows the codebase
-
-Build the prompt from `observations.fail` and `recommendations` across all
-three persona reports, plus any regression findings. Group identical failures
-(e.g. the same assertion failing on all three personas) into one item.
+- One numbered item per distinct issue class — deduplicate across personas
+- Each item: one-line description → `file/path:line` reference → fix in ≤2 sentences
+- No preamble, no sign-off, no labels like "Bug:" or "Suggestion:"
+- Build from `observations.fail` and `recommendations` across all three persona reports plus any regression findings
+- Omit issues already tracked in GitHub (already_tracked:#N) unless they are regressions
 
 Example item format:
 ```
