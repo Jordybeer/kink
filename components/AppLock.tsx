@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SPRING_MODAL, TAP_SPRING, useMotionSafe } from "@/lib/motion";
+import { TAP_SPRING, SHAKE_ANIM, useMotionSafe } from "@/lib/motion";
 import { hashPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
 
@@ -151,7 +151,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
               <motion.div
                 key={shake ? "shake" : "normal"}
                 animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={SHAKE_ANIM}
                 style={{ display: "flex", justifyContent: "center", gap: "0.875rem", marginBottom: "1.25rem" }}
               >
                 {Array.from({ length: PIN_LENGTH }, (_, i) => (

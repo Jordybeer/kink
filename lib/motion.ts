@@ -18,6 +18,9 @@ export const EXIT_SPRING = TWEEN_SHEET_EXIT;
 // whileTap value — use on motion.button / motion.div interactive elements
 export const TAP_SPRING = { scale: 0.96 } as const;
 
+// Shake keyframe duration (PIN wrong-entry animation)
+export const SHAKE_ANIM = { duration: 0.4 } as const;
+
 // ─── Stagger variant ──────────────────────────────────────────────────────────
 
 export const STAGGER_CHILDREN = {
