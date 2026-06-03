@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
 import type { Profile, SceneItem } from "@/types";
-import AftercareSheet from "@/components/AftercareSheet";
 import Sheet from "@/components/Sheet";
 
 function uid() {
@@ -252,7 +251,7 @@ function KinkChip({
 function ScenePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { profiles, scenes, saveScene, completeScene } = useStore();
+  const { profiles, scenes, saveScene } = useStore();
   const _hasHydrated = useHasHydrated();
 
   const sceneIdParam = searchParams.get("id");
@@ -264,8 +263,8 @@ function ScenePage() {
   const [sceneDate, setSceneDate] = useState("");
   const [sceneTitle, setSceneTitle] = useState("");
   const [newItemName, setNewItemName] = useState("");
-  const [showAftercareSheet, setShowAftercareSheet] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedStatus, setSavedStatus] = useState<"draft" | "planned" | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -290,12 +289,12 @@ function ScenePage() {
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-    setSaved(false);
+    setSaved(false); setSavedStatus(null);
   }, []);
 
   const handleDelete = useCallback((id: string) => {
     setItems((prev) => prev.filter((it) => it.id !== id));
-    setSaved(false);
+    setSaved(false); setSavedStatus(null);
   }, []);
 
   const handleMoveUp = useCallback((i: number) => {
@@ -305,7 +304,7 @@ function ScenePage() {
       [next[i - 1], next[i]] = [next[i], next[i - 1]];
       return next;
     });
-    setSaved(false);
+    setSaved(false); setSavedStatus(null);
   }, []);
 
   const handleMoveDown = useCallback((i: number) => {
@@ -315,7 +314,7 @@ function ScenePage() {
       [next[i], next[i + 1]] = [next[i + 1], next[i]];
       return next;
     });
-    setSaved(false);
+    setSaved(false); setSavedStatus(null);
   }, []);
 
   const longPressHandlers = useCallback((index: number) => ({
@@ -335,7 +334,7 @@ function ScenePage() {
 
   function addFromKink(kinkName: string, kinkId: string) {
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true }]);
-    setSaved(false);
+    setSaved(false); setSavedStatus(null);
   }
 
   function addManualItem() {
@@ -343,7 +342,7 @@ function ScenePage() {
     if (!name) return;
     setItems((prev) => [...prev, { id: uid(), name, intensity: "midden", duration: "", note: "", fromKink: false }]);
     setNewItemName("");
-    setSaved(false);
+    setSaved(false); setSavedStatus(null);
   }
 
   function handleSave(status: "draft" | "planned") {
@@ -362,6 +361,7 @@ function ScenePage() {
     });
     setSceneId(id);
     setSaved(true);
+    setSavedStatus(status);
     router.replace(`/scene?id=${id}`);
   }
 
@@ -433,7 +433,7 @@ function ScenePage() {
 
   const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) : null;
   const isCompleted = currentScene?.status === "completed";
-  const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : sceneId ? "/scenes" : "/compare";
+  const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
   const topKinks = profileA
@@ -495,6 +495,14 @@ function ScenePage() {
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
           />
         </div>
+
+        {/* Profile hint for empty state */}
+        {!profileA && !profileB && !sceneIdParam && (
+          <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+            <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties — of voeg items handmatig toe.</p>
+            <Link href="/compare" style={{ color: "var(--accent)" }}>→ Profielen kiezen via Vergelijk</Link>
+          </div>
+        )}
 
         {/* Arc bar */}
         <div className="mb-4">
@@ -608,42 +616,21 @@ function ScenePage() {
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
                 className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: saved ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                {saved ? "Opgeslagen ✓" : "Opslaan"}
+                {savedStatus === "draft" ? "Concept ✓" : "Opslaan"}
               </button>
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
                 className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", height: 44, padding: "0 12px" }}
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                Plannen
+                {savedStatus === "planned" ? "Gepland ✓" : "Plannen"}
               </button>
             </>
           )}
 
-          {/* Afronden — always visible when scene is saved and not yet completed */}
-          {sceneId && !isCompleted && (
-            <button
-              onClick={() => setShowAftercareSheet(true)}
-              className="flex-1 focus-ring rounded-xl text-sm font-bold"
-              style={{ background: "var(--accent)", color: "#000", height: 44 }}
-            >
-              ✓ Afronden
-            </button>
-          )}
-
-          {isCompleted && sceneId && (
-            <Link
-              href={`/scenes/${sceneId}`}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl text-sm font-bold focus-ring"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", height: 44 }}
-            >
-              {currentScene?.aftercare?.trafficLight === "green" ? "🟢" : currentScene?.aftercare?.trafficLight === "amber" ? "🟡" : "🔴"}
-              {" "}Aftercare bekijken
-            </Link>
-          )}
         </div>
       </div>
 
@@ -700,16 +687,6 @@ function ScenePage() {
         </div>
       </Sheet>
 
-      {/* ── Aftercare sheet ── */}
-      {showAftercareSheet && sceneId && (
-        <AftercareSheet
-          onSave={(entry) => {
-            completeScene(sceneId, entry);
-            setShowAftercareSheet(false);
-          }}
-          onClose={() => setShowAftercareSheet(false)}
-        />
-      )}
     </>
   );
 }
