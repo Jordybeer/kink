@@ -265,6 +265,22 @@ select {
   100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
 }
 
+/* Scene arc bar segments */
+.scene-arc-segment {
+  transition: flex 300ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-arc-segment { transition: none; }
+}
+
+/* Scene item reorder mode */
+.scene-item-reorder {
+  transition: transform 200ms ease-out, opacity 150ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-item-reorder { transition: none; }
+}
+
 @media print {
   :root {
     --bg: #ffffff;
