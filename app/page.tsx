@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { STAGGER_CHILDREN, TAP_SPRING, fadeUp, useMotionSafe } from "@/lib/motion";
+import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -541,7 +541,6 @@ function HomeContent() {
                   <motion.div
                     key={groupName.toLowerCase().trim()}
                     variants={fadeUp(10)}
-                    whileTap={TAP_SPRING}
                   >
                     {isMulti && (
                       <div className="flex items-center gap-2 mb-2 px-1">

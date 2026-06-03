@@ -1,7 +1,7 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import type { ReactNode } from "react";
-import { TWEEN_FAST, TWEEN_SHEET, TWEEN_SHEET_EXIT, useMotionSafe } from "@/lib/motion";
+import { useMotionSafe } from "@/lib/motion";
 
 /** Standardized sheet content wrapper: surface bg, border, rounded top, drag handle. */
 export function SheetContent({ children, className = "px-6 pb-6 pt-4" }: { children: ReactNode; className?: string }) {

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SPRING_TOOLTIP, TAP_SPRING, useMotionSafe } from "@/lib/motion";
+import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface TourRect { top: number; left: number; width: number; height: number }
 
@@ -131,7 +131,7 @@ export default function ProfileTour({ onComplete }: Props) {
           initial={{ opacity: 0, y: below ? 8 : -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: below ? -4 : 4 }}
-          transition={SPRING_TOOLTIP}
+          transition={t.tooltip}
         >
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
             <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
