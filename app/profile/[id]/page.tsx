@@ -13,6 +13,7 @@ import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
 import { ChevronDown, ChevronRight, Zap, Clapperboard } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function ProfilePage({ params }: Props) {
+  const t = useMotionSafe();
   const { id } = use(params);
   const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour } = useStore();
   const _hasHydrated = useHasHydrated();
@@ -422,7 +424,7 @@ export default function ProfilePage({ params }: Props) {
           initial={{ opacity: 0, x: 8 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
-          transition={{ duration: 0.18 }}
+          transition={t.fast}
         >
           <div className="px-4 pb-2 flex gap-2">
             <input
@@ -642,7 +644,7 @@ export default function ProfilePage({ params }: Props) {
           initial={{ opacity: 0, x: 8 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
-          transition={{ duration: 0.18 }}
+          transition={t.fast}
         >
         <div className="px-4 pt-2 pb-3">
           {totalRated === 0 ? (
