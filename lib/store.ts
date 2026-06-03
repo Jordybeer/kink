@@ -36,6 +36,7 @@ interface State {
   saveScene: (record: Omit<SceneRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) => string;
   deleteScene: (id: string) => void;
   completeScene: (id: string, aftercare: AftercareEntry) => void;
+  updateAftercare: (id: string, aftercare: AftercareEntry) => void;
   completeOnboarding: () => void;
   completeProfileTour: () => void;
   resetProfileTour: () => void;
@@ -226,6 +227,14 @@ export const useStore = create<State>()(
 
       deleteScene(id) {
         set((s) => ({ scenes: s.scenes.filter((sc) => sc.id !== id) }));
+      },
+
+      updateAftercare(id, aftercare) {
+        set((s) => ({
+          scenes: s.scenes.map((sc) =>
+            sc.id === id ? { ...sc, status: "completed" as const, aftercare, updatedAt: Date.now() } : sc
+          ),
+        }));
       },
 
       completeScene(id, aftercare) {
