@@ -131,11 +131,20 @@ function ComparePage() {
   }, [aId, bId, score]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!_hasHydrated || aId || bId || profiles.length < 2) return;
-    const own = profiles.find((p) => !p.isImported) ?? profiles[0];
-    const other = profiles.find((p) => p.id !== own.id && p.isImported) ?? profiles.find((p) => p.id !== own.id) ?? profiles[1];
-    setAId(own.id);
-    setBId(other.id);
+    if (!_hasHydrated || profiles.length < 2) return;
+    const profileA = profiles.find((p) => p.id === aId);
+    const profileB = profiles.find((p) => p.id === bId);
+    if (!profileA && !profileB) {
+      const own = profiles.find((p) => !p.isImported) ?? profiles[0];
+      const other = profiles.find((p) => p.id !== own.id && p.isImported) ?? profiles.find((p) => p.id !== own.id) ?? profiles[1];
+      setAId(own.id);
+      setBId(other.id);
+    } else if (!profileA || !profileB) {
+      const own = profiles.find((p) => !p.isImported) ?? profiles[0];
+      const other = profiles.find((p) => p.id !== own.id && p.isImported) ?? profiles.find((p) => p.id !== own.id) ?? profiles[1];
+      if (!profileA) setAId(own.id);
+      if (!profileB) setBId(other.id);
+    }
   }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!_hasHydrated) return (

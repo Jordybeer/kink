@@ -9,17 +9,6 @@ interface OnboardingProps {
   onComplete: () => void;
 }
 
-const BTN_BASE: React.CSSProperties = {
-  color: '#fff',
-  border: '1px solid rgba(255,255,255,0.3)',
-  background: 'transparent',
-  padding: '0.75rem 2rem',
-  borderRadius: '9999px',
-  fontSize: '1rem',
-  cursor: 'pointer',
-  transition: 'border-color 150ms ease',
-};
-
 const ICON_CIRCLE: React.CSSProperties = {
   width: '5rem', height: '5rem', borderRadius: '9999px',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -27,48 +16,101 @@ const ICON_CIRCLE: React.CSSProperties = {
   marginBottom: '2rem',
   animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both',
 };
-
 const TITLE: React.CSSProperties = {
   fontSize: '1.5rem', fontWeight: 600, color: '#fff', marginBottom: '1rem',
   animation: 'ks-slide-up 0.4s ease 0.1s both', opacity: 0,
 };
-
 const BODY: React.CSSProperties = {
-  fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: '2.5rem',
+  fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: '2rem',
   animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0,
 };
 
-const NEXT_BTN: React.CSSProperties = {
-  ...BTN_BASE,
-  animation: 'ks-slide-up 0.4s ease 0.3s both', opacity: 0,
-  position: 'fixed', bottom: '5.5rem', left: '50%', transform: 'translateX(-50%)',
+// Shared action-button styles
+const BTN_GHOST: React.CSSProperties = {
+  color: '#fff', border: '1px solid rgba(255,255,255,0.3)', background: 'transparent',
+  padding: '0.875rem 2rem', borderRadius: '9999px', fontSize: '1rem', cursor: 'pointer',
+  width: '100%', maxWidth: '22rem', transition: 'border-color 150ms ease',
+};
+const BTN_PRIMARY: React.CSSProperties = {
+  background: 'linear-gradient(135deg, #c084fc, #818cf8)', color: '#000', fontWeight: 600,
+  padding: '0.875rem 2rem', borderRadius: '9999px', border: 'none', fontSize: '1rem',
+  cursor: 'pointer', width: '100%', maxWidth: '22rem',
+};
+const BTN_SECONDARY: React.CSSProperties = {
+  background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
+  color: 'rgba(255,255,255,0.4)', padding: '0.75rem 2rem', borderRadius: '9999px',
+  fontSize: '0.875rem', cursor: 'pointer', width: '100%', maxWidth: '22rem',
 };
 
-function NextButton({ onClick, label = 'Volgende →' }: { onClick: () => void; label?: string }) {
-  return (
-    <button onClick={onClick} style={NEXT_BTN}
-      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}>
-      {label}
-    </button>
-  );
-}
+// The fixed slot where all continue/action buttons live — outside the animated div
+const ACTION_BAR: React.CSSProperties = {
+  position: 'fixed', bottom: '5rem', left: 0, right: 0,
+  display: 'flex', flexDirection: 'column', alignItems: 'center',
+  gap: '0.75rem', padding: '0 2rem',
+};
 
-// Total content steps: 1–7 (step 0 is splash, step 5 is theme, step 6 is PIN/Face ID, step 7 is the age gate)
+const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
+const PIN_LENGTH = 4;
 const TOTAL_STEPS = 7;
+
+type S6Sub = "intro" | "pin1" | "pin2" | "biometric";
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const [lockout, setLockout] = useState(false);
 
+  // Step6 state lives here so action buttons can render outside the animated div
+  const [s6sub, setS6sub] = useState<S6Sub>("intro");
+  const [pin1, setPin1] = useState<string[]>([]);
+  const [pin2, setPin2] = useState<string[]>([]);
+  const [shake, setShake] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioLoading, setBioLoading] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
+
+  const setAppLockPin = useStore((s) => s.setAppLockPin);
+  const enableBiometric = useStore((s) => s.enableBiometric);
+
+  useEffect(() => { isPlatformAuthenticatorAvailable().then(setBioAvailable); }, []);
+
   const advance = useCallback(() => {
     setLeaving(true);
-    setTimeout(() => {
-      setStep(s => s + 1);
-      setLeaving(false);
-    }, 220);
+    setTimeout(() => { setStep(s => s + 1); setLeaving(false); }, 220);
   }, []);
+
+  async function handlePinKey(k: string) {
+    const active = s6sub === "pin1" ? pin1 : pin2;
+    const setActive = s6sub === "pin1" ? setPin1 : setPin2;
+    if (k === "⌫") { setActive(d => d.slice(0, -1)); return; }
+    if (active.length >= PIN_LENGTH) return;
+    const next = [...active, k];
+    setActive(next);
+    if (next.length < PIN_LENGTH) return;
+    if (s6sub === "pin1") { setS6sub("pin2"); return; }
+    if (next.join("") !== pin1.join("")) {
+      setShake(true);
+      setTimeout(() => { setShake(false); setPin1([]); setPin2([]); setS6sub("pin1"); }, 500);
+      return;
+    }
+    const hash = await hashPin(next.join(""));
+    setAppLockPin(hash);
+    if (bioAvailable) setS6sub("biometric"); else advance();
+  }
+
+  async function handleEnableBio() {
+    setBioLoading(true); setBioError(null);
+    try {
+      const credId = await registerBiometric();
+      enableBiometric(credId);
+      advance();
+    } catch {
+      setBioError("Registratie mislukt — je kunt Face ID later inschakelen via instellingen.");
+      setBioLoading(false);
+    }
+  }
+
+  const currentDigits = s6sub === "pin1" ? pin1 : pin2;
 
   return (
     <>
@@ -79,6 +121,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         @keyframes ks-slide-in  { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes ks-icon-pop  { 0% { opacity:0; transform:scale(0.6) translateY(12px); } 100% { opacity:1; transform:scale(1) translateY(0); } }
         @keyframes ks-pulse     { 0%,100% { box-shadow:0 0 0 0 rgba(255,255,255,0.2); } 50% { box-shadow:0 0 0 8px rgba(255,255,255,0); } }
+        @keyframes ks-shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
         .ks-slide-out { animation: ks-slide-out 220ms ease forwards; }
         .ks-slide-in  { animation: ks-slide-in  220ms ease forwards; }
         @media (prefers-reduced-motion: reduce) {
@@ -86,9 +129,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         }
       `}</style>
 
-      <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', transition: 'background 200ms ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-        role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync">
-
+      <div
+        style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', transition: 'background 200ms ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+        role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync"
+      >
         {lockout ? (
           <div style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#000', textAlign: 'center', padding: '0 2rem' }}>
             <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem' }} aria-hidden="true">🖤</div>
@@ -97,18 +141,108 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         ) : (
           <>
-            <div key={step} className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 8rem' }}>
-              {step === 0 && <Step0 onNext={advance} onSkip={onComplete} />}
-              {step === 1 && <Step1 onNext={advance} />}
-              {step === 2 && <Step2 onNext={advance} />}
-              {step === 3 && <Step3 onNext={advance} />}
-              {step === 4 && <Step4 onNext={advance} />}
-              {step === 5 && <Step5 onNext={advance} />}
-              {step === 6 && <Step6 onNext={advance} />}
-              {step === 7 && <Step7 onComplete={onComplete} onLockout={() => setLockout(true)} />}
+            {/* ── Animated content — NO buttons here (transform breaks fixed positioning) ── */}
+            <div
+              key={step}
+              className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 14rem', overflowY: 'auto', maxHeight: '100vh' }}
+            >
+              {step === 0 && <Step0Content />}
+              {step === 1 && <Step1Content />}
+              {step === 2 && <Step2Content />}
+              {step === 3 && <Step3Content />}
+              {step === 4 && <Step4Content />}
+              {step === 5 && <Step5Content />}
+              {step === 6 && s6sub === "intro"   && <Step6IntroContent bioAvailable={bioAvailable} />}
+              {step === 6 && s6sub === "biometric" && <Step6BioContent bioError={bioError} />}
+              {step === 6 && (s6sub === "pin1" || s6sub === "pin2") && (
+                <Step6PinContent sub={s6sub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
+              )}
+              {step === 7 && <Step7Content />}
             </div>
 
+            {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
+            <div style={ACTION_BAR}>
+              {step === 0 && (
+                <button
+                  onClick={advance}
+                  style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both, ks-pulse 2s ease 2s infinite', opacity: 0 }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                >
+                  Begin
+                </button>
+              )}
+
+              {step >= 1 && step <= 5 && (
+                <button
+                  onClick={advance}
+                  style={BTN_GHOST}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                >
+                  {step === 5 ? 'Ga door →' : 'Volgende →'}
+                </button>
+              )}
+
+              {step === 6 && s6sub === "intro" && (
+                <>
+                  <button onClick={() => setS6sub("pin1")} style={BTN_PRIMARY}>PIN instellen</button>
+                  <button onClick={advance} style={BTN_SECONDARY}>Sla over</button>
+                </>
+              )}
+
+              {step === 6 && (s6sub === "pin1" || s6sub === "pin2") && (
+                <button
+                  onClick={() => { setPin1([]); setPin2([]); setS6sub("intro"); }}
+                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
+                >
+                  ← Terug
+                </button>
+              )}
+
+              {step === 6 && s6sub === "biometric" && (
+                <>
+                  <button
+                    onClick={handleEnableBio}
+                    disabled={bioLoading}
+                    style={{ ...BTN_PRIMARY, background: bioLoading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #c084fc, #818cf8)', color: bioLoading ? 'rgba(255,255,255,0.4)' : '#000', cursor: bioLoading ? 'default' : 'pointer' }}
+                  >
+                    {bioLoading ? 'Even wachten…' : 'Face ID / vingerafdruk inschakelen'}
+                  </button>
+                  <button onClick={advance} style={BTN_SECONDARY}>Nee, alleen PIN</button>
+                </>
+              )}
+
+              {step === 7 && (
+                <>
+                  <button
+                    onClick={onComplete}
+                    style={BTN_PRIMARY}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
+                  >
+                    Ja, ik ben 18+
+                  </button>
+                  <button onClick={() => setLockout(true)} style={BTN_SECONDARY}>Ik ben jonger</button>
+                </>
+              )}
+            </div>
+
+            {/* Skip (step 0 only) */}
+            {step === 0 && (
+              <button
+                onClick={onComplete}
+                style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '0.875rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.6)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; }}
+                aria-label="Sla de introductie over"
+              >
+                Sla over
+              </button>
+            )}
+
+            {/* Progress dots */}
             <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
               {Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => i).map(i => (
                 <div key={i} style={{
@@ -127,9 +261,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   );
 }
 
-/* ── Step 0 — Welkom ──────────────────────────────────────────────────────── */
+/* ── Step content components (pure content, no buttons) ─────────────────── */
 
-function Step0({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
+function Step0Content() {
   return (
     <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h1 style={{ color: '#fff', fontSize: '2.25rem', fontWeight: 700, letterSpacing: '0.08em', margin: 0, animation: 'ks-fade-in 1s ease forwards', opacity: 0 }}>
@@ -138,33 +272,14 @@ function Step0({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
       <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', animation: 'ks-fade-in 1s ease 0.5s forwards', opacity: 0 }}>
         Verken grenzen. Samen.
       </p>
-      <div style={{ height: '3rem' }} />
-      <button onClick={onNext}
-        style={{ ...BTN_BASE, animation: 'ks-fade-in 0.8s ease 1.2s forwards, ks-pulse 2s ease 2s infinite', opacity: 0 }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
-        aria-label="Begin de introductie">
-        Begin
-      </button>
-      <button onClick={onSkip}
-        style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '0.875rem', cursor: 'pointer', padding: '0.75rem 1rem' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.6)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; }}
-        aria-label="Sla de introductie over">
-        Sla over
-      </button>
     </div>
   );
 }
 
-/* ── Step 1 — Privacy (uitgebreid) ───────────────────────────────────────── */
-
-function Step1({ onNext }: { onNext: () => void }) {
+function Step1Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true">
-        <span style={{ fontSize: '2.25rem' }}>🔒</span>
-      </div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔒</span></div>
       <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{ background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
@@ -173,33 +288,25 @@ function Step1({ onNext }: { onNext: () => void }) {
         </div>
         <div style={{ background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '0.25rem' }}>Live sessie</div>
-          End-to-end versleuteld — ook wij kunnen niet meelezen. De verbinding loopt eerst via onze server, daarna gaat alles direct tussen jullie twee. Je kinks en naam verlaten je toestel nooit.
+          End-to-end versleuteld — ook wij kunnen niet meelezen. Je kinks en naam verlaten je toestel nooit.
         </div>
       </div>
-      <NextButton onClick={onNext} />
     </div>
   );
 }
 
-/* ── Step 2 — Back-up (nieuw) ─────────────────────────────────────────────── */
-
-function Step2({ onNext }: { onNext: () => void }) {
+function Step2Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true">
-        <span style={{ fontSize: '2.25rem' }}>💾</span>
-      </div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>💾</span></div>
       <h2 style={TITLE}>Jij bent je eigen cloud</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Geen automatische sync — jij bewaart je data.<br />
         Exporteer je profiel via <strong style={{ color: 'rgba(255,255,255,0.7)' }}>⚙ Instellingen</strong> en bewaar het bestand veilig.
       </p>
-      <NextButton onClick={onNext} />
     </div>
   );
 }
-
-/* ── Step 3 — Profiel & kinks (nieuw) ────────────────────────────────────── */
 
 const FEATURE_ROWS: { icon: string; title: string; sub: string }[] = [
   { icon: '👤', title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
@@ -210,22 +317,21 @@ const FEATURE_ROWS: { icon: string; title: string; sub: string }[] = [
   { icon: '✍',  title: 'Contract',       sub: 'Safeword, aftercare, handtekening → PDF' },
 ];
 
-function Step3({ onNext }: { onNext: () => void }) {
+function Step3Content() {
   return (
     <div style={{ maxWidth: '26rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#fff', marginBottom: '1.5rem', animation: 'ks-slide-up 0.4s ease 0.05s both', opacity: 0 }}>
         Wat kun je doen?
       </h2>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '2.5rem' }}>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
         {FEATURE_ROWS.map((f, i) => (
-          <div key={f.title}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.875rem',
-              background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)',
-              borderRadius: '0.75rem', padding: '0.625rem 0.875rem',
-              animation: `ks-slide-up 0.35s ease ${0.08 + i * 0.06}s both`, opacity: 0,
-              textAlign: 'left',
-            }}>
+          <div key={f.title} style={{
+            display: 'flex', alignItems: 'center', gap: '0.875rem',
+            background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)',
+            borderRadius: '0.75rem', padding: '0.625rem 0.875rem',
+            animation: `ks-slide-up 0.35s ease ${0.08 + i * 0.06}s both`, opacity: 0,
+            textAlign: 'left',
+          }}>
             <span style={{ fontSize: '1.25rem', flexShrink: 0 }} aria-hidden="true">{f.icon}</span>
             <div>
               <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#fff' }}>{f.title}</div>
@@ -234,39 +340,31 @@ function Step3({ onNext }: { onNext: () => void }) {
           </div>
         ))}
       </div>
-      <NextButton onClick={onNext} />
     </div>
   );
 }
 
-/* ── Step 4 — Consent (ongewijzigd inhoud, nieuwe positie) ───────────────── */
-
-function Step4({ onNext }: { onNext: () => void }) {
+function Step4Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true">
-        <span style={{ fontSize: '2.25rem' }}>🖤</span>
-      </div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🖤</span></div>
       <h2 style={TITLE}>Consent, altijd</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
         Safewords zijn heilig. Grenzen zijn wet.
       </p>
-      <NextButton onClick={onNext} />
     </div>
   );
 }
 
-/* ── Step 5 — Kies je thema ──────────────────────────────────────────────── */
-
 const THEMES = [
-  { value: 'midnight' as const, label: 'Midnight',  color: '#c084fc' },
-  { value: 'red'      as const, label: 'Deep Red',  color: '#ef4444' },
-  { value: 'forest'   as const, label: 'Forest',    color: '#4ade80' },
-  { value: 'mono'     as const, label: 'Mono',      color: '#e5e5e5' },
+  { value: 'midnight' as const, label: 'Midnight', color: '#c084fc' },
+  { value: 'red'      as const, label: 'Deep Red', color: '#ef4444' },
+  { value: 'forest'   as const, label: 'Forest',   color: '#4ade80' },
+  { value: 'mono'     as const, label: 'Mono',     color: '#e5e5e5' },
 ];
 
-function Step5({ onNext }: { onNext: () => void }) {
+function Step5Content() {
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
@@ -280,23 +378,16 @@ function Step5({ onNext }: { onNext: () => void }) {
       <div style={{
         width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
         borderRadius: '0.875rem', padding: '0.875rem 1rem',
-        display: 'flex', alignItems: 'center', gap: '0.75rem',
-        marginBottom: '1rem',
+        display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem',
         animation: 'ks-slide-up 0.4s ease 0.15s both', opacity: 0,
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.125rem' }}>Voorbeeld</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>Zo ziet de app eruit</div>
         </div>
-        <div style={{
-          background: 'var(--accent)', color: '#000',
-          borderRadius: '9999px', padding: '0.3125rem 0.75rem',
-          fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
-        }}>
-          Ja
-        </div>
+        <div style={{ background: 'var(--accent)', color: '#000', borderRadius: '9999px', padding: '0.3125rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>Ja</div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%', marginBottom: '2.5rem', animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%', animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0 }}>
         {THEMES.map((t) => {
           const selected = theme === t.value;
           return (
@@ -318,175 +409,48 @@ function Step5({ onNext }: { onNext: () => void }) {
           );
         })}
       </div>
-      <NextButton onClick={onNext} label="Ga door →" />
     </div>
   );
 }
 
-/* ── Step 6 — PIN + Face ID (optioneel) ──────────────────────────────────── */
+function Step6IntroContent({ bioAvailable }: { bioAvailable: boolean }) {
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔐</span></div>
+      <h2 style={TITLE}>Vergrendel de app</h2>
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.<br />
+        Optioneel — je kunt dit ook later instellen via de instellingen.
+      </p>
+    </div>
+  );
+}
 
-const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
-const ONBOARDING_PIN_LENGTH = 4;
-
-function Step6({ onNext }: { onNext: () => void }) {
-  const setAppLockPin = useStore((s) => s.setAppLockPin);
-  const enableBiometric = useStore((s) => s.enableBiometric);
-
-  type SubStep = "intro" | "pin1" | "pin2" | "biometric";
-  const [sub, setSub] = useState<SubStep>("intro");
-  const [pin1, setPin1] = useState<string[]>([]);
-  const [pin2, setPin2] = useState<string[]>([]);
-  const [shake, setShake] = useState(false);
-  const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioLoading, setBioLoading] = useState(false);
-  const [bioError, setBioError] = useState<string | null>(null);
-
-  useEffect(() => {
-    isPlatformAuthenticatorAvailable().then(setBioAvailable);
-  }, []);
-
-  const activeDigits = sub === "pin1" ? pin1 : pin2;
-  const setActiveDigits = sub === "pin1" ? setPin1 : setPin2;
-
-  async function handleKey(k: string) {
-    if (k === "⌫") { setActiveDigits(d => d.slice(0, -1)); return; }
-    if (activeDigits.length >= ONBOARDING_PIN_LENGTH) return;
-    const next = [...activeDigits, k];
-    setActiveDigits(next);
-    if (next.length < ONBOARDING_PIN_LENGTH) return;
-
-    if (sub === "pin1") {
-      setSub("pin2");
-      return;
-    }
-
-    // pin2 complete — verify match
-    if (next.join("") !== pin1.join("")) {
-      setShake(true);
-      setTimeout(() => {
-        setShake(false);
-        setPin1([]);
-        setPin2([]);
-        setSub("pin1");
-      }, 500);
-      return;
-    }
-
-    const hash = await hashPin(next.join(""));
-    setAppLockPin(hash);
-    if (bioAvailable) {
-      setSub("biometric");
-    } else {
-      onNext();
-    }
-  }
-
-  async function handleEnableBio() {
-    setBioLoading(true);
-    setBioError(null);
-    try {
-      const credId = await registerBiometric();
-      enableBiometric(credId);
-      onNext();
-    } catch {
-      setBioError("Registratie mislukt — je kunt Face ID later inschakelen via instellingen.");
-      setBioLoading(false);
-    }
-  }
-
-  if (sub === "intro") {
-    return (
-      <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={ICON_CIRCLE} aria-hidden="true">
-          <span style={{ fontSize: '2.25rem' }}>🔐</span>
-        </div>
-        <h2 style={TITLE}>Vergrendel de app</h2>
-        <p style={{ ...BODY, textAlign: 'center' }}>
-          Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.<br />
-          Optioneel — je kunt dit ook later instellen via de instellingen.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: '100%', maxWidth: '16rem' }}>
-          <button
-            onClick={() => setSub("pin1")}
-            style={{ background: 'linear-gradient(135deg, #c084fc, #818cf8)', color: '#000', fontWeight: 600, padding: '0.75rem 2rem', borderRadius: '9999px', border: 'none', fontSize: '1rem', cursor: 'pointer', width: '100%' }}>
-            PIN instellen
-          </button>
-          <button
-            onClick={onNext}
-            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.35)', padding: '0.625rem 2rem', borderRadius: '9999px', fontSize: '0.875rem', cursor: 'pointer', width: '100%' }}>
-            Sla over
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (sub === "biometric") {
-    return (
-      <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={ICON_CIRCLE} aria-hidden="true">
-          <span style={{ fontSize: '2.25rem' }}>🔓</span>
-        </div>
-        <h2 style={TITLE}>PIN ingesteld!</h2>
-        <p style={{ ...BODY, textAlign: 'center' }}>
-          Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
-        </p>
-        {bioError && (
-          <p style={{ fontSize: '0.8125rem', color: 'rgba(255,100,100,0.9)', marginBottom: '1rem' }}>{bioError}</p>
-        )}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: '100%', maxWidth: '16rem' }}>
-          <button
-            onClick={handleEnableBio}
-            disabled={bioLoading}
-            style={{ background: bioLoading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #c084fc, #818cf8)', color: bioLoading ? 'rgba(255,255,255,0.4)' : '#000', fontWeight: 600, padding: '0.75rem 2rem', borderRadius: '9999px', border: 'none', fontSize: '1rem', cursor: bioLoading ? 'default' : 'pointer', width: '100%' }}>
-            {bioLoading ? 'Even wachten…' : 'Face ID / vingerafdruk inschakelen'}
-          </button>
-          <button
-            onClick={onNext}
-            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.35)', padding: '0.625rem 2rem', borderRadius: '9999px', fontSize: '0.875rem', cursor: 'pointer', width: '100%' }}>
-            Nee, alleen PIN
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // pin1 or pin2
-  const currentDigits = sub === "pin1" ? pin1 : pin2;
+function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: string[]; shake: boolean; onKey: (k: string) => void }) {
   return (
     <div style={{ maxWidth: '18rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h2 style={TITLE}>{sub === "pin1" ? "Kies een PIN" : "Bevestig je PIN"}</h2>
       <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1.5rem' }}>
         {sub === "pin1" ? "Kies een code van 4 cijfers" : "Voer je PIN nog een keer in"}
       </p>
-
-      {/* dots */}
-      <div
-        style={{
-          display: 'flex', justifyContent: 'center', gap: '0.875rem', marginBottom: '1.5rem',
-          animation: shake ? 'ks-shake 0.4s ease' : 'none',
-        }}
-      >
-        <style>{`@keyframes ks-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }`}</style>
-        {Array.from({ length: ONBOARDING_PIN_LENGTH }, (_, i) => (
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', marginBottom: '1.5rem', animation: shake ? 'ks-shake 0.4s ease' : 'none' }}>
+        {Array.from({ length: PIN_LENGTH }, (_, i) => (
           <div key={i} style={{
             width: 12, height: 12, borderRadius: '9999px',
-            background: i < currentDigits.length ? '#c084fc' : 'rgba(255,255,255,0.2)',
+            background: i < digits.length ? '#c084fc' : 'rgba(255,255,255,0.2)',
             transition: 'background 150ms ease',
           }} />
         ))}
       </div>
-
-      {/* keypad */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', width: '100%' }}>
         {PIN_KEYS.map((k, i) => (
           <button
             key={i}
-            onClick={() => k && handleKey(k)}
+            onClick={() => k && onKey(k)}
             disabled={!k}
             style={{
-              height: '3.25rem', borderRadius: '0.75rem',
-              fontWeight: 600, cursor: k ? 'pointer' : 'default',
+              height: '3.25rem', borderRadius: '0.75rem', fontWeight: 600,
+              cursor: k ? 'pointer' : 'default',
               background: k ? 'rgba(255,255,255,0.07)' : 'transparent',
               border: k ? '1px solid rgba(255,255,255,0.12)' : 'none',
               color: k === '⌫' ? 'rgba(255,255,255,0.5)' : '#fff',
@@ -494,48 +458,41 @@ function Step6({ onNext }: { onNext: () => void }) {
               opacity: !k ? 0 : 1,
               transition: 'opacity 150ms ease, background 150ms ease',
             }}
-            onMouseDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.14)'; }}
-            onMouseUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)'; }}
+            onPointerDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.14)'; }}
+            onPointerUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)'; }}
           >
             {k}
           </button>
         ))}
       </div>
-
-      <button
-        onClick={() => { setPin1([]); setPin2([]); setSub("intro"); }}
-        style={{ marginTop: '1.25rem', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.5rem' }}>
-        ← Terug
-      </button>
     </div>
   );
 }
 
-/* ── Step 7 — Leeftijdscheck ─────────────────────────────────────────────── */
+function Step6BioContent({ bioError }: { bioError: string | null }) {
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔓</span></div>
+      <h2 style={TITLE}>PIN ingesteld!</h2>
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
+      </p>
+      {bioError && (
+        <p style={{ fontSize: '0.8125rem', color: 'rgba(255,100,100,0.9)', marginBottom: '1rem' }}>{bioError}</p>
+      )}
+    </div>
+  );
+}
 
-function Step7({ onComplete, onLockout }: { onComplete: () => void; onLockout: () => void }) {
+function Step7Content() {
   return (
     <div style={{ maxWidth: '20rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem', animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both', opacity: 0 }} aria-hidden="true">
-        🔞
-      </div>
+      <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem', animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both', opacity: 0 }} aria-hidden="true">🔞</div>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#fff', marginBottom: '1rem' }}>Voor volwassenen</h2>
       <p style={{ ...BODY, animation: 'ks-slide-up 0.4s ease 0.15s both' }}>
         Hier praten we open over kinks, grenzen en alles daartussen.
         Ga alleen verder als je 18 jaar of ouder bent.
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        <button onClick={onComplete}
-          style={{ background: 'linear-gradient(135deg, #c084fc, #818cf8)', color: '#000', fontWeight: 600, padding: '0.75rem 2rem', borderRadius: '9999px', border: 'none', fontSize: '1rem', cursor: 'pointer', width: '100%', maxWidth: '16rem', transition: 'opacity 150ms ease', animation: 'ks-slide-up 0.4s ease 0.25s both', opacity: 0 }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}>
-          Ja, ik ben 18+
-        </button>
-        <button onClick={onLockout}
-          style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.3)', padding: '0.625rem 2rem', borderRadius: '9999px', fontSize: '0.875rem', cursor: 'pointer', marginTop: '0.75rem', width: '100%', maxWidth: '16rem', animation: 'ks-slide-up 0.4s ease 0.35s both', opacity: 0 }}>
-          Ik ben jonger
-        </button>
-      </div>
     </div>
   );
 }
