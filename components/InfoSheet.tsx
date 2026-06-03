@@ -1,17 +1,17 @@
 "use client";
 import type { Kink } from "@/types";
-import Sheet from "./Sheet";
+import Sheet, { SheetContent } from "./Sheet";
 
 interface Props {
   kink: Kink | null;
   onClose: () => void;
 }
 
-const LEVEL_BADGE: Record<1 | 2 | 3 | 4, { label: string; bg: string; color: string }> = {
-  1: { label: "Niveau 1", bg: "rgba(74,222,128,0.15)",  color: "#4ade80" },
-  2: { label: "Niveau 2", bg: "rgba(96,165,250,0.15)",  color: "#60a5fa" },
-  3: { label: "Niveau 3", bg: "rgba(251,191,36,0.15)",  color: "#fbbf24" },
-  4: { label: "Niveau 4", bg: "rgba(192,132,252,0.15)", color: "#c084fc" },
+const LEVEL_BADGE: Record<1 | 2 | 3 | 4, { label: string; colorVar: string }> = {
+  1: { label: "Niveau 1", colorVar: "var(--yes)" },
+  2: { label: "Niveau 2", colorVar: "var(--willing)" },
+  3: { label: "Niveau 3", colorVar: "var(--maybe)" },
+  4: { label: "Niveau 4", colorVar: "var(--accent)" },
 };
 
 export default function InfoSheet({ kink, onClose }: Props) {
@@ -19,13 +19,15 @@ export default function InfoSheet({ kink, onClose }: Props) {
 
   return (
     <Sheet open={kink !== null} onClose={onClose} aria-label={kink?.name ?? "Kink informatie"}>
-      <div className="rounded-t-2xl p-6" style={{ background: "var(--surface)" }}>
-        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-
+      <SheetContent>
         {badge && (
           <span
             className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-3 border"
-            style={{ background: badge.bg, color: badge.color, borderColor: badge.color }}
+            style={{
+              background: `color-mix(in srgb, ${badge.colorVar} 15%, transparent)`,
+              color: badge.colorVar,
+              borderColor: `color-mix(in srgb, ${badge.colorVar} 40%, transparent)`,
+            }}
           >
             {badge.label}
           </span>
@@ -50,7 +52,7 @@ export default function InfoSheet({ kink, onClose }: Props) {
         >
           Sluit
         </button>
-      </div>
+      </SheetContent>
     </Sheet>
   );
 }

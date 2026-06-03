@@ -15,7 +15,7 @@ export default function CheckIn({ profileName: _profileName, onDone }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "linear-gradient(135deg, #0d1117 0%, #1a0a2e 50%, #0d1117 100%)" }}
+      style={{ background: "linear-gradient(135deg, var(--bg) 0%, var(--surface2) 50%, var(--bg) 100%)" }}
     >
       <div className="max-w-xs mx-auto text-center px-6">
         {/* Pulse ring */}

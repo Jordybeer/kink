@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SPRING_MODAL, SPRING_TOOLTIP } from "@/lib/motion";
 
 interface TourRect { top: number; left: number; width: number; height: number }
 
@@ -103,7 +104,7 @@ export default function ProfileTour({ onComplete }: Props) {
         initial={{ opacity: 0, top: spotTop, left: spotLeft, width: spotW, height: spotH }}
         animate={{ opacity: 1, top: spotTop, left: spotLeft, width: spotW, height: spotH }}
         exit={{ opacity: 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 260 }}
+        transition={SPRING_MODAL}
       />
 
       {/* Tooltip card — re-enters per step */}
@@ -123,7 +124,7 @@ export default function ProfileTour({ onComplete }: Props) {
           initial={{ opacity: 0, y: below ? 8 : -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: below ? -4 : 4 }}
-          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          transition={SPRING_TOOLTIP}
         >
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
             <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>

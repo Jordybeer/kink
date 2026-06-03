@@ -32,7 +32,7 @@ const BTN_GHOST: React.CSSProperties = {
   width: '100%', maxWidth: '22rem', transition: 'border-color 150ms ease',
 };
 const BTN_PRIMARY: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #c084fc, #818cf8)', color: '#000', fontWeight: 600,
+  background: 'linear-gradient(135deg, var(--accent), var(--accent2))', color: 'var(--on-accent)', fontWeight: 600,
   padding: '0.875rem 2rem', borderRadius: '9999px', border: 'none', fontSize: '1rem',
   cursor: 'pointer', width: '100%', maxWidth: '22rem',
 };
@@ -145,7 +145,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             <div
               key={step}
               className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 14rem', overflowY: 'auto', maxHeight: '100vh' }}
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 14rem', overflowY: 'auto', maxHeight: '100dvh' }}
             >
               {step === 0 && <Step0Content />}
               {step === 1 && <Step1Content />}
@@ -206,7 +206,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   <button
                     onClick={handleEnableBio}
                     disabled={bioLoading}
-                    style={{ ...BTN_PRIMARY, background: bioLoading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #c084fc, #818cf8)', color: bioLoading ? 'rgba(255,255,255,0.4)' : '#000', cursor: bioLoading ? 'default' : 'pointer' }}
+                    style={{ ...BTN_PRIMARY, background: bioLoading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, var(--accent), var(--accent2))', color: bioLoading ? 'rgba(255,255,255,0.4)' : 'var(--on-accent)', cursor: bioLoading ? 'default' : 'pointer' }}
                   >
                     {bioLoading ? 'Even wachten…' : 'Face ID / vingerafdruk inschakelen'}
                   </button>
@@ -249,7 +249,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   height: 4,
                   width: i === step ? 24 : 8,
                   borderRadius: 999,
-                  background: i === step ? '#c084fc' : 'rgba(255,255,255,0.2)',
+                  background: i === step ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
                   transition: 'width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease',
                 }} />
               ))}
@@ -437,7 +437,7 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
           <div key={i} style={{
             width: 12, height: 12, borderRadius: '9999px',
-            background: i < digits.length ? '#c084fc' : 'rgba(255,255,255,0.2)',
+            background: i < digits.length ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
             transition: 'background 150ms ease',
           }} />
         ))}

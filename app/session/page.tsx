@@ -486,7 +486,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   );
 
   return (
-    <main style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100vh" }} className="max-w-lg mx-auto px-4 py-6">
+    <main style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100dvh" }} className="max-w-lg mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => {

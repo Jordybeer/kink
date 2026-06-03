@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { AftercareEntry } from "@/types";
-import Sheet from "@/components/Sheet";
+import Sheet, { SheetContent } from "@/components/Sheet";
 
 interface AftercareSheetProps {
   onSave: (entry: AftercareEntry) => void;
@@ -27,9 +27,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
 
   return (
     <Sheet open onClose={onClose} aria-label={existing ? "Aftercare bewerken" : "Aftercare check-in"}>
-      <div className="rounded-t-2xl px-4 pt-2 pb-10 flex flex-col gap-5" style={{ background: "var(--surface)" }}>
-        {/* Drag handle */}
-        <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-1" style={{ background: "var(--border)" }} aria-hidden="true" />
+      <SheetContent className="px-4 pb-10 pt-2 flex flex-col gap-5">
 
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold">{existing ? "Aftercare bewerken" : "Aftercare check-in"}</h2>
@@ -100,7 +98,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
         >
           {existing ? "Bijwerken" : "Opslaan"}
         </button>
-      </div>
+      </SheetContent>
     </Sheet>
   );
 }

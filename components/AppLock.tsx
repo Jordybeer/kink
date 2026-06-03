@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SPRING_MODAL } from "@/lib/motion";
 import { hashPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
 
@@ -85,7 +86,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 28, stiffness: 260 }}
+        transition={SPRING_MODAL}
         style={{
           width: "min(18rem, calc(100vw - 2rem))",
           background: "var(--surface2)",
