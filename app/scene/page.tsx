@@ -607,37 +607,42 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="flex-1 focus-ring rounded-xl text-xs font-bold disabled:opacity-40"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: saved ? "var(--accent)" : "var(--text)", height: 44 }}
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: saved ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                {saved ? "Opgeslagen" : "Opslaan"}
+                {saved ? "Opgeslagen ✓" : "Opslaan"}
               </button>
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="flex-1 focus-ring rounded-xl text-xs font-bold disabled:opacity-40"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", height: 44 }}
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", height: 44, padding: "0 12px" }}
               >
                 Plannen
               </button>
-              {sceneId && (
-                <button
-                  onClick={() => setShowAftercareSheet(true)}
-                  className="flex-1 focus-ring rounded-xl text-xs font-bold"
-                  style={{ background: "var(--accent)", color: "#000", height: 44 }}
-                >
-                  Afronden
-                </button>
-              )}
             </>
           )}
 
-          {isCompleted && (
-            <div className="flex-1 flex items-center justify-center gap-2 text-xs rounded-xl" style={{ height: 44, color: "var(--text2)" }}>
-              <span aria-hidden="true">{currentScene?.aftercare?.trafficLight === "green" ? "🟢" : currentScene?.aftercare?.trafficLight === "amber" ? "🟡" : "🔴"}</span>
-              <span>Afgerond</span>
-              <Link href="/scenes" className="underline focus-ring rounded" style={{ color: "var(--accent)" }}>Historiek</Link>
-            </div>
+          {/* Afronden — always visible when scene is saved and not yet completed */}
+          {sceneId && !isCompleted && (
+            <button
+              onClick={() => setShowAftercareSheet(true)}
+              className="flex-1 focus-ring rounded-xl text-sm font-bold"
+              style={{ background: "var(--accent)", color: "#000", height: 44 }}
+            >
+              ✓ Afronden
+            </button>
+          )}
+
+          {isCompleted && sceneId && (
+            <Link
+              href={`/scenes/${sceneId}`}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl text-sm font-bold focus-ring"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", height: 44 }}
+            >
+              {currentScene?.aftercare?.trafficLight === "green" ? "🟢" : currentScene?.aftercare?.trafficLight === "amber" ? "🟡" : "🔴"}
+              {" "}Aftercare bekijken
+            </Link>
           )}
         </div>
       </div>
