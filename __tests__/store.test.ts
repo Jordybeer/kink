@@ -26,3 +26,191 @@ describe("createProfile", () => {
     expect(profile!.role).toBe("Sub");
   });
 });
+
+describe("saveScene", () => {
+  it("creates a new scene with generated id and timestamps", () => {
+    const before = Date.now();
+    const id = useStore.getState().saveScene({
+      title: "Test Scene",
+      profileAId: "a",
+      profileBId: "b",
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [],
+      status: "draft",
+    });
+    const scene = useStore.getState().scenes.find((s) => s.id === id);
+    expect(scene).toBeDefined();
+    expect(scene!.id).toBe(id);
+    expect(scene!.createdAt).toBeGreaterThanOrEqual(before);
+    expect(scene!.updatedAt).toBeGreaterThanOrEqual(before);
+    expect(scene!.createdAt).toBe(scene!.updatedAt);
+  });
+
+  it("updates existing scene and only updates updatedAt", () => {
+    const id = useStore.getState().saveScene({
+      title: "Original",
+      profileAId: "a",
+      profileBId: "b",
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [],
+      status: "draft",
+    });
+    const originalScene = useStore.getState().scenes.find((s) => s.id === id)!;
+    const originalCreatedAt = originalScene.createdAt;
+    const originalUpdatedAt = originalScene.updatedAt;
+
+    // Wait a tick to ensure timestamp difference
+    const before = Date.now();
+    useStore.getState().saveScene({
+      id,
+      title: "Updated",
+      profileAId: "a",
+      profileBId: "b",
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [{ id: "item1", name: "Test", intensity: "midden", duration: "", note: "", fromKink: false }],
+      status: "planned",
+    });
+
+    const updated = useStore.getState().scenes.find((s) => s.id === id)!;
+    expect(updated.title).toBe("Updated");
+    expect(updated.items).toHaveLength(1);
+    expect(updated.createdAt).toBe(originalCreatedAt);
+    expect(updated.updatedAt).toBeGreaterThanOrEqual(before);
+  });
+
+  it("enforces 50-scene cap", () => {
+    // Add 51 scenes
+    for (let i = 0; i < 51; i++) {
+      useStore.getState().saveScene({
+        title: `Scene ${i}`,
+        profileAId: "a",
+        profileBId: "b",
+        profileAName: "Alice",
+        profileBName: "Bob",
+        items: [],
+        status: "draft",
+      });
+    }
+    expect(useStore.getState().scenes).toHaveLength(50);
+  });
+});
+
+describe("deleteScene", () => {
+  it("removes scene by id", () => {
+    const id = useStore.getState().saveScene({
+      title: "To Delete",
+      profileAId: "a",
+      profileBId: "b",
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [],
+      status: "draft",
+    });
+    expect(useStore.getState().scenes.find((s) => s.id === id)).toBeDefined();
+    useStore.getState().deleteScene(id);
+    expect(useStore.getState().scenes.find((s) => s.id === id)).toBeUndefined();
+  });
+});
+
+describe("completeScene", () => {
+  it("marks scene as completed and sets aftercare", () => {
+    const profileAId = useStore.getState().createProfile("Alice", "Dom");
+    const profileBId = useStore.getState().createProfile("Bob", "Sub");
+    const sceneId = useStore.getState().saveScene({
+      title: "Test Scene",
+      profileAId,
+      profileBId,
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [
+        { id: "i1", name: "Bondage", kinkId: "kink_001", intensity: "midden", duration: "", note: "", fromKink: true },
+      ],
+      status: "planned",
+    });
+
+    const aftercare = {
+      completedAt: Date.now(),
+      trafficLight: "green" as const,
+      wentWell: "Great session",
+      toDiscuss: "",
+    };
+
+    useStore.getState().completeScene(sceneId, aftercare);
+    const scene = useStore.getState().scenes.find((s) => s.id === sceneId)!;
+    expect(scene.status).toBe("completed");
+    expect(scene.aftercare).toEqual(aftercare);
+  });
+
+  it("increments usedInScene for involved profiles only", () => {
+    const profileAId = useStore.getState().createProfile("Alice", "Dom");
+    const profileBId = useStore.getState().createProfile("Bob", "Sub");
+    const profileCId = useStore.getState().createProfile("Charlie", "Switch");
+
+    const kinkId = "kink_001";
+    const sceneId = useStore.getState().saveScene({
+      title: "Test Scene",
+      profileAId,
+      profileBId,
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [
+        { id: "i1", name: "Bondage", kinkId, intensity: "midden", duration: "", note: "", fromKink: true },
+      ],
+      status: "planned",
+    });
+
+    useStore.getState().completeScene(sceneId, {
+      completedAt: Date.now(),
+      trafficLight: "green",
+      wentWell: "",
+      toDiscuss: "",
+    });
+
+    const profileA = useStore.getState().profiles.find((p) => p.id === profileAId)!;
+    const profileB = useStore.getState().profiles.find((p) => p.id === profileBId)!;
+    const profileC = useStore.getState().profiles.find((p) => p.id === profileCId)!;
+
+    expect(profileA.entries[kinkId]?.usedInScene).toBe(1);
+    expect(profileB.entries[kinkId]?.usedInScene).toBe(1);
+    expect(profileC.entries[kinkId]?.usedInScene).toBeUndefined();
+  });
+
+  it("updates updatedAt timestamp", () => {
+    const profileAId = useStore.getState().createProfile("Alice", "Dom");
+    const profileBId = useStore.getState().createProfile("Bob", "Sub");
+    const sceneId = useStore.getState().saveScene({
+      title: "Test Scene",
+      profileAId,
+      profileBId,
+      profileAName: "Alice",
+      profileBName: "Bob",
+      items: [],
+      status: "planned",
+    });
+
+    const originalScene = useStore.getState().scenes.find((s) => s.id === sceneId)!;
+    const before = Date.now();
+
+    useStore.getState().completeScene(sceneId, {
+      completedAt: Date.now(),
+      trafficLight: "green",
+      wentWell: "",
+      toDiscuss: "",
+    });
+
+    const updated = useStore.getState().scenes.find((s) => s.id === sceneId)!;
+    expect(updated.updatedAt).toBeGreaterThanOrEqual(before);
+  });
+});
+
+describe("v10 migration", () => {
+  it("store has scenes field initialized", () => {
+    // When state is loaded (even on a fresh store), scenes should be an empty array
+    const state = useStore.getInitialState();
+    expect(state).toHaveProperty("scenes");
+    expect(Array.isArray(state.scenes)).toBe(true);
+  });
+});

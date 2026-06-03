@@ -18,7 +18,10 @@ function SceneCard({ scene, onDelete }: { scene: SceneRecord; onDelete: () => vo
   const date = scene.aftercare
     ? new Date(scene.aftercare.completedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })
     : scene.plannedDate
-    ? new Date(scene.plannedDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })
+    ? (() => {
+        const [year, month, day] = scene.plannedDate.split("-");
+        return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
+      })()
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
@@ -45,7 +48,7 @@ function SceneCard({ scene, onDelete }: { scene: SceneRecord; onDelete: () => vo
 
       {/* Aftercare snippet */}
       {scene.aftercare?.wentWell && (
-        <p className="text-xs italic line-clamp-1" style={{ color: "var(--text2)" }}>"{scene.aftercare.wentWell}"</p>
+        <p className="text-xs italic line-clamp-1" style={{ color: "var(--text2)" }}>&quot;{scene.aftercare.wentWell}&quot;</p>
       )}
 
       {/* Actions */}
