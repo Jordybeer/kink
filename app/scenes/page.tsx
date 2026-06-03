@@ -157,7 +157,7 @@ export default function ScenesPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link href="/" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center" style={{ color: "var(--text2)" }}>← Terug</Link>
         <h1 className="text-xl font-bold flex-1">Scènes</h1>
-        <Link href="/compare" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
+        <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
       </div>
 
       <div className="flex flex-col gap-8">
