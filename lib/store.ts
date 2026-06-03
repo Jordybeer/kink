@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useState, useEffect } from "react";
-import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot } from "@/types";
+import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, SceneRecord, AftercareEntry } from "@/types";
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -12,6 +12,7 @@ type Theme = "midnight" | "red" | "forest" | "mono";
 interface State {
   profiles: Profile[];
   contracts: ContractSnapshot[];
+  scenes: SceneRecord[];
   onboardingComplete: boolean;
   profileTourComplete: boolean;
   installPromptDismissed: boolean;
@@ -32,6 +33,9 @@ interface State {
   saveContract: (snapshot: Omit<ContractSnapshot, "id">) => void;
   restoreContracts: (snapshots: ContractSnapshot[]) => void;
   deleteContract: (id: string) => void;
+  saveScene: (record: Omit<SceneRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) => string;
+  deleteScene: (id: string) => void;
+  completeScene: (id: string, aftercare: AftercareEntry) => void;
   completeOnboarding: () => void;
   completeProfileTour: () => void;
   resetProfileTour: () => void;
@@ -55,6 +59,7 @@ export const useStore = create<State>()(
     (set, get) => ({
       profiles: [],
       contracts: [],
+      scenes: [],
       onboardingComplete: false,
       profileTourComplete: false,
       installPromptDismissed: false,
@@ -206,6 +211,44 @@ export const useStore = create<State>()(
         set((s) => ({ contracts: s.contracts.filter((c) => c.id !== id) }));
       },
 
+      saveScene(record: Omit<SceneRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
+        const id = record.id ?? uid();
+        const now = Date.now();
+        set((s) => {
+          const existing = s.scenes.find((sc) => sc.id === id);
+          if (existing) {
+            return { scenes: s.scenes.map((sc) => sc.id === id ? { ...sc, ...record, id, updatedAt: now } : sc) };
+          }
+          return { scenes: [{ ...record, id, createdAt: now, updatedAt: now }, ...s.scenes].slice(0, 50) };
+        });
+        return id;
+      },
+
+      deleteScene(id) {
+        set((s) => ({ scenes: s.scenes.filter((sc) => sc.id !== id) }));
+      },
+
+      completeScene(id, aftercare) {
+        set((s) => {
+          const scene = s.scenes.find((sc) => sc.id === id);
+          if (!scene) return s;
+          let profiles = s.profiles;
+          for (const item of scene.items) {
+            if (!item.kinkId) continue;
+            const kinkId = item.kinkId;
+            profiles = profiles.map((p) => {
+              if (p.id !== scene.profileAId && p.id !== scene.profileBId) return p;
+              const prev = p.entries[kinkId] ?? { status: null, score: null, comment: "" };
+              return { ...p, entries: { ...p.entries, [kinkId]: { ...prev, usedInScene: (prev.usedInScene ?? 0) + 1 } } };
+            });
+          }
+          return {
+            profiles,
+            scenes: s.scenes.map((sc) => sc.id === id ? { ...sc, status: "completed" as const, aftercare, updatedAt: Date.now() } : sc),
+          };
+        });
+      },
+
       completeOnboarding() {
         set({ onboardingComplete: true });
       },
@@ -255,6 +298,7 @@ export const useStore = create<State>()(
       partialize: (state) => ({
         profiles: state.profiles,
         contracts: state.contracts,
+        scenes: state.scenes,
         onboardingComplete: state.onboardingComplete,
         profileTourComplete: state.profileTourComplete,
         installPromptDismissed: state.installPromptDismissed,
@@ -265,11 +309,12 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 9,
+      version: 10,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
           contracts?: ContractSnapshot[];
+          scenes?: SceneRecord[];
           onboardingComplete?: boolean;
           profileTourComplete?: boolean;
           installPromptDismissed?: boolean;
@@ -308,6 +353,9 @@ export const useStore = create<State>()(
           state.appLockPin = null;
           state.biometricEnabled = false;
           state.biometricCredentialId = null;
+        }
+        if (version < 10) {
+          state.scenes = [];
         }
         return state;
       },

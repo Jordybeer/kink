@@ -831,18 +831,24 @@ function HomeContent() {
                 </div>
               )}
 
-              <Link
-                href="/scene"
-                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
-                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-              >
-                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                  🎬 Scène planner
-                </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Plan activiteiten, intensiteit en timing vooraf.
-                </div>
-              </Link>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/scene"
+                  className="focus-ring block rounded-xl p-4 text-center transition-opacity hover:opacity-90"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>🎬 Nieuwe scène</div>
+                  <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>Plan activiteiten vooraf.</div>
+                </Link>
+                <Link
+                  href="/scenes"
+                  className="focus-ring block rounded-xl p-4 text-center transition-opacity hover:opacity-90"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>📋 Scènes</div>
+                  <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>Historiek &amp; drafts.</div>
+                </Link>
+              </div>
 
               <Link
                 href="/session"
