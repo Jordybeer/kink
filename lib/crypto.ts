@@ -40,3 +40,8 @@ export async function decryptBackup(backup: EncryptedBackup, password: string): 
   const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(backup.iv) }, key, unb64(backup.ciphertext));
   return new TextDecoder().decode(plain);
 }
+
+export async function hashPin(pin: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
