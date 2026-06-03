@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:turbo": "TURBOPACK=1 next build",
+    "build:turbo": "next build --turbopack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",

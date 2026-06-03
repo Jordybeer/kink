@@ -127,20 +127,24 @@ function ScenePage() {
     const dragged = updated.splice(dragItem.current, 1)[0];
     updated.splice(dragOver.current, 0, dragged);
     setItems(updated);
+    setSaved(false);
     dragItem.current = null;
     dragOver.current = null;
   }, [items]);
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+    setSaved(false);
   }, []);
 
   const handleDelete = useCallback((id: string) => {
     setItems((prev) => prev.filter((it) => it.id !== id));
+    setSaved(false);
   }, []);
 
   function addFromKink(kinkName: string, kinkId: string) {
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true }]);
+    setSaved(false);
   }
 
   function addManualItem() {
@@ -148,6 +152,7 @@ function ScenePage() {
     if (!name) return;
     setItems((prev) => [...prev, { id: uid(), name, intensity: "midden", duration: "", note: "", fromKink: false }]);
     setNewItemName("");
+    setSaved(false);
   }
 
   function handleSave(status: "draft" | "planned") {
@@ -276,7 +281,7 @@ function ScenePage() {
             <input
               type="text"
               value={sceneTitle}
-              onChange={(e) => setSceneTitle(e.target.value)}
+              onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène titel…"}
               className="text-xl font-bold w-full bg-transparent focus:outline-none focus-ring rounded"
               style={{ color: "var(--text)" }}
@@ -289,7 +294,7 @@ function ScenePage() {
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs flex-none" style={{ color: "var(--text2)" }}>Datum:</label>
-            <input type="date" value={sceneDate} onChange={(e) => setSceneDate(e.target.value)} className="text-xs rounded px-2 py-1 focus:outline-none focus-ring" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", colorScheme: "dark" }} />
+            <input type="date" value={sceneDate} onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }} className="text-xs rounded px-2 py-1 focus:outline-none focus-ring" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", colorScheme: "dark" }} />
           </div>
         </div>
 

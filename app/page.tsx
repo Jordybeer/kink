@@ -227,11 +227,15 @@ function HomeContent() {
     if (pinInput !== pinConfirm) { setPinError("PINs komen niet overeen."); return; }
     const hash = await hashPin(pinInput);
     setAppLockPin(hash);
+    sessionStorage.removeItem("app_unlocked");
+    sessionUnlocked.current = false;
     closePinFlow();
   }
 
   function handleRemovePin() {
     clearAppLockPin();
+    sessionStorage.removeItem("app_unlocked");
+    sessionUnlocked.current = false;
     closePinFlow();
   }
 
