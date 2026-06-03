@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
 import { encodeProfileCompact } from "@/lib/shareProfile";
-import Sheet from "./Sheet";
+import Sheet, { SheetContent } from "./Sheet";
 
 interface Props {
   profile: Profile | null;
@@ -46,16 +46,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
   return (
     <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
-      <div
-        className="rounded-t-2xl p-6"
-        style={{
-          background: "var(--surface)",
-          borderTop: "1px solid var(--border)",
-          borderLeft: "1px solid var(--border)",
-          borderRight: "1px solid var(--border)",
-        }}
-      >
-        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
+      <SheetContent>
 
         <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
         {profile && (
@@ -131,7 +122,7 @@ export default function QRModal({ profile, onClose }: Props) {
         >
           Sluit
         </button>
-      </div>
+      </SheetContent>
     </Sheet>
   );
 }

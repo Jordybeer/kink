@@ -2,6 +2,19 @@
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import type { ReactNode } from "react";
 
+/** Standardized sheet content wrapper: surface bg, border, rounded top, drag handle. */
+export function SheetContent({ children, className = "px-6 pb-6 pt-4" }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={`rounded-t-2xl ${className}`}
+      style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none" }}
+    >
+      <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: "var(--border)" }} aria-hidden="true" />
+      {children}
+    </div>
+  );
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;

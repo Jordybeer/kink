@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SPRING_MODAL } from "@/lib/motion";
 
 interface Props {
   isIos: boolean;
@@ -72,7 +73,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 32 }}
-        transition={{ type: "spring", damping: 28, stiffness: 260 }}
+        transition={SPRING_MODAL}
       >
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
