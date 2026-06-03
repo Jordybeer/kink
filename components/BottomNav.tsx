@@ -6,11 +6,12 @@ import { useStore } from "@/lib/store";
 const STATIC_ITEMS = [
   { href: "/",        label: "Home",     icon: "🖤" },
   { href: "/compare", label: "Vergelijk", icon: "⚡" },
-  { href: "/session", label: "Sessie",   icon: "📡" },
+  { href: "/scenes",  label: "Scènes",   icon: "🎬" },
 ];
 
 export default function BottomNav() {
   const path = usePathname();
+  if (path.startsWith("/scene") || path.startsWith("/session")) return null;
   const firstProfileId = useStore((s) => s.profiles[0]?.id);
 
   const currentProfileMatch = path.match(/^\/profile\/([^/]+)/);
