@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SPRING_MODAL } from "@/lib/motion";
+import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface Props {
   isIos: boolean;
@@ -25,6 +25,7 @@ const IOS_STEPS = [
 ];
 
 export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) {
+  const t = useMotionSafe();
   const [step, setStep] = useState(0);
   const steps = isIos ? IOS_STEPS : null;
   const isLast = steps ? step === steps.length - 1 : true;
@@ -48,7 +49,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={t.fast}
         onClick={onDismiss}
       />
 
@@ -73,7 +74,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 32 }}
-        transition={SPRING_MODAL}
+        transition={t.modal}
       >
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
@@ -94,7 +95,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.16 }}
+            transition={t.fast}
           >
             {isIos && current ? (
               <p style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
@@ -112,8 +113,9 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           {isIos ? (
             <>
-              <button
+              <motion.button
                 onClick={advance}
+                whileTap={TAP_SPRING}
                 style={{
                   flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
                   padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
@@ -121,9 +123,10 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                 }}
               >
                 {isLast ? "Klaar 🖤" : "Volgende →"}
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={onDismiss}
+                whileTap={TAP_SPRING}
                 style={{
                   background: "transparent", border: "1px solid var(--border)",
                   color: "var(--text2)", padding: "0.5rem 0.875rem",
@@ -131,12 +134,13 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                 }}
               >
                 Sla over
-              </button>
+              </motion.button>
             </>
           ) : (
             <>
-              <button
+              <motion.button
                 onClick={() => { onInstall?.(); onDismiss(); }}
+                whileTap={TAP_SPRING}
                 style={{
                   flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
                   padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
@@ -144,9 +148,10 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                 }}
               >
                 Installeer als app
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={onDismiss}
+                whileTap={TAP_SPRING}
                 style={{
                   background: "transparent", border: "1px solid var(--border)",
                   color: "var(--text2)", padding: "0.5rem 0.875rem",
@@ -154,7 +159,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                 }}
               >
                 Sla over
-              </button>
+              </motion.button>
             </>
           )}
         </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SPRING_MODAL } from "@/lib/motion";
+import { SPRING_MODAL, TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { hashPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
 
@@ -18,6 +18,7 @@ interface Props {
 }
 
 export default function AppLock({ storedHash, biometricCredentialId, onUnlock }: Props) {
+  const t = useMotionSafe();
   const [digits, setDigits] = useState<string[]>([]);
   const [shake, setShake] = useState(false);
   const [attempts, setAttempts] = useState(0);
@@ -33,8 +34,8 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
 
   useEffect(() => {
     if (cooldownLeft <= 0) return;
-    const t = setTimeout(() => setCooldownLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCooldownLeft(s => s - 1), 1000);
+    return () => clearTimeout(timer);
   }, [cooldownLeft]);
 
   async function tryBiometric() {
@@ -81,12 +82,13 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      transition={t.fast}
       style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
     >
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={SPRING_MODAL}
+        transition={t.modal}
         style={{
           width: "min(18rem, calc(100vw - 2rem))",
           background: "var(--surface2)",
@@ -103,9 +105,10 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
         {/* Biometric button */}
         {biometricCredentialId && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.25rem", marginTop: "0.5rem" }}>
-            <button
+            <motion.button
               onClick={tryBiometric}
               disabled={bioLoading}
+              whileTap={bioLoading ? {} : TAP_SPRING}
               style={{
                 background: bioLoading ? "var(--surface3)" : "color-mix(in srgb, var(--accent) 12%, transparent)",
                 border: `1px solid color-mix(in srgb, var(--accent) 30%, transparent)`,
@@ -126,7 +129,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                 {bioLoading ? "⏳" : "🔓"}
               </span>
               {bioLoading ? "Controleren…" : "Face ID / vingerafdruk"}
-            </button>
+            </motion.button>
             {bioError && (
               <p style={{ fontSize: "0.75rem", color: "var(--text2)", marginTop: "0.375rem" }}>
                 Niet herkend — gebruik je PIN
@@ -169,10 +172,11 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
               {KEYS.map((k, i) => (
-                <button
+                <motion.button
                   key={i}
                   onClick={() => k && handleKey(k)}
                   disabled={!k || cooldownLeft > 0}
+                  whileTap={k && cooldownLeft === 0 ? TAP_SPRING : {}}
                   style={{
                     height: "3.25rem", borderRadius: "0.75rem",
                     fontWeight: 600, cursor: k && cooldownLeft === 0 ? "pointer" : "default",
@@ -183,11 +187,9 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                     opacity: (!k || cooldownLeft > 0) ? (k ? 0.4 : 0) : 1,
                     transition: "opacity 150ms ease, background 150ms ease",
                   }}
-                  onMouseDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = "var(--border)"; }}
-                  onMouseUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = "var(--surface3)"; }}
                 >
                   {k}
-                </button>
+                </motion.button>
               ))}
             </div>
           </>
