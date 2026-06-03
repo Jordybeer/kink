@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { AftercareEntry } from "@/types";
+import Sheet from "@/components/Sheet";
 
 interface AftercareSheetProps {
   onSave: (entry: AftercareEntry) => void;
@@ -25,19 +26,23 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: "rgba(0,0,0,0.6)" }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg rounded-t-2xl p-6 pb-10 flex flex-col gap-5"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Sheet open onClose={onClose} aria-label={existing ? "Aftercare bewerken" : "Aftercare check-in"}>
+      <div className="rounded-t-2xl px-4 pt-2 pb-10 flex flex-col gap-5" style={{ background: "var(--surface)" }}>
+        {/* Drag handle */}
+        <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-1" style={{ background: "var(--border)" }} aria-hidden="true" />
+
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold">{existing ? "Aftercare bewerken" : "Aftercare check-in"}</h2>
-          <button onClick={onClose} className="focus-ring rounded-lg" style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }} aria-label="Sluiten">✕</button>
+          <button
+            onClick={onClose}
+            className="focus-ring rounded-lg"
+            style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
+            aria-label="Sluiten"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
 
         {/* Traffic light */}
@@ -96,6 +101,6 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
           {existing ? "Bijwerken" : "Opslaan"}
         </button>
       </div>
-    </div>
+    </Sheet>
   );
 }

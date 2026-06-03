@@ -75,13 +75,13 @@ function SceneCard({
 
         {/* Aftercare journal snippet (completed) */}
         {aftercare?.wentWell && (
-          <p className="text-xs" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
+          <p className="text-xs line-clamp-2" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
             <span className="font-medium" style={{ color: "var(--text)" }}>Wat werkte goed: </span>
             {aftercare.wentWell}
           </p>
         )}
         {aftercare?.remember && (
-          <p className="text-xs" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
+          <p className="text-xs line-clamp-2" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
             <span className="font-medium" style={{ color: "var(--text)" }}>Onthouden: </span>
             {aftercare.remember}
           </p>
@@ -95,7 +95,7 @@ function SceneCard({
               className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
-              📋 Bekijken
+              Bekijken
             </button>
           ) : (
             <>
@@ -111,7 +111,7 @@ function SceneCard({
                 className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               >
-                ✓ Afronden
+                Afronden
               </button>
             </>
           )}

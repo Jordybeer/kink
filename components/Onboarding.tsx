@@ -143,7 +143,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <>
             {/* ── Animated content — NO buttons here (transform breaks fixed positioning) ── */}
             <div
-              key={`${step}-${s6sub}`}
+              key={step}
               className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
               style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 14rem', overflowY: 'auto', maxHeight: '100vh' }}
             >
@@ -458,8 +458,8 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
               opacity: !k ? 0 : 1,
               transition: 'opacity 150ms ease, background 150ms ease',
             }}
-            onMouseDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.14)'; }}
-            onMouseUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)'; }}
+            onPointerDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.14)'; }}
+            onPointerUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)'; }}
           >
             {k}
           </button>

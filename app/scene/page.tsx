@@ -286,7 +286,7 @@ function ScenePage() {
     setSceneDate(scene.plannedDate ?? "");
     setSceneTitle(scene.title);
     setSaved(true);
-  }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [_hasHydrated, sceneIdParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));

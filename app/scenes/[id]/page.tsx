@@ -21,6 +21,7 @@ export default function SceneDetailPage() {
   const hasHydrated = useHasHydrated();
   const { scenes, completeScene, updateAftercare, deleteScene } = useStore();
   const [showAftercare, setShowAftercare] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!hasHydrated) return null;
 
@@ -189,18 +190,37 @@ export default function SceneDetailPage() {
             ▶ Spelen
           </Link>
         )}
-        <button
-          onClick={() => {
-            if (confirm("Scène verwijderen?")) {
-              deleteScene(scene.id);
-              router.push("/scenes");
-            }
-          }}
-          className="w-full py-3 rounded-xl text-sm focus-ring"
-          style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
-        >
-          Verwijderen
-        </button>
+        {!confirmDelete ? (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="w-full py-3 rounded-xl text-sm focus-ring"
+            style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
+          >
+            Verwijderen
+          </button>
+        ) : (
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--hard-no)" }}>
+            <p className="text-xs text-center py-2 px-4" style={{ color: "var(--text2)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}>
+              Scène definitief verwijderen?
+            </p>
+            <div className="flex">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="flex-1 py-3 text-sm focus-ring"
+                style={{ color: "var(--text2)", borderRight: "1px solid var(--border)" }}
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={() => { deleteScene(scene.id); router.push("/scenes"); }}
+                className="flex-1 py-3 text-sm font-bold focus-ring"
+                style={{ color: "var(--hard-no)" }}
+              >
+                Verwijderen
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Aftercare sheet */}
