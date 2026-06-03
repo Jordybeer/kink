@@ -40,8 +40,12 @@ interface State {
   setTheme: (t: Theme) => void;
   appLockEnabled: boolean;
   appLockPin: string | null;
+  biometricEnabled: boolean;
+  biometricCredentialId: string | null;
   setAppLockPin: (hash: string) => void;
   clearAppLockPin: () => void;
+  enableBiometric: (credentialId: string) => void;
+  disableBiometric: () => void;
 }
 
 const EMPTY_ENTRY: KinkEntry = { status: null, score: null, comment: "" };
@@ -58,6 +62,8 @@ export const useStore = create<State>()(
       pinnedProfileId: null,
       appLockEnabled: false,
       appLockPin: null,
+      biometricEnabled: false,
+      biometricCredentialId: null,
 
       pinProfile(id) {
         set({ pinnedProfileId: id });
@@ -235,6 +241,14 @@ export const useStore = create<State>()(
       clearAppLockPin() {
         set({ appLockEnabled: false, appLockPin: null });
       },
+
+      enableBiometric(credentialId) {
+        set({ biometricEnabled: true, biometricCredentialId: credentialId });
+      },
+
+      disableBiometric() {
+        set({ biometricEnabled: false, biometricCredentialId: null });
+      },
     }),
     {
       name: "kink-profiles",
@@ -248,6 +262,8 @@ export const useStore = create<State>()(
         pinnedProfileId: state.pinnedProfileId,
         appLockEnabled: state.appLockEnabled,
         appLockPin: state.appLockPin,
+        biometricEnabled: state.biometricEnabled,
+        biometricCredentialId: state.biometricCredentialId,
       }),
       version: 9,
       migrate(persisted: unknown, version: number) {
@@ -261,6 +277,8 @@ export const useStore = create<State>()(
           pinnedProfileId?: string | null;
           appLockEnabled?: boolean;
           appLockPin?: string | null;
+          biometricEnabled?: boolean;
+          biometricCredentialId?: string | null;
         };
         if (version < 2 && state.profiles) {
           state.profiles = state.profiles.map((p) => ({
@@ -288,6 +306,8 @@ export const useStore = create<State>()(
         if (version < 9) {
           state.appLockEnabled = false;
           state.appLockPin = null;
+          state.biometricEnabled = false;
+          state.biometricCredentialId = null;
         }
         return state;
       },

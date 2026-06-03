@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { hashPin } from "@/lib/crypto";
+import { verifyBiometric } from "@/lib/webauthn";
 
 const COOLDOWN_S = 30;
 const MAX_ATTEMPTS = 5;
@@ -10,21 +11,45 @@ const PIN_LENGTH = 4;
 const KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
 
 interface Props {
-  storedHash: string;
+  storedHash: string | null;
+  biometricCredentialId?: string | null;
   onUnlock: () => void;
 }
 
-export default function AppLock({ storedHash, onUnlock }: Props) {
+export default function AppLock({ storedHash, biometricCredentialId, onUnlock }: Props) {
   const [digits, setDigits] = useState<string[]>([]);
   const [shake, setShake] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [cooldownLeft, setCooldownLeft] = useState(0);
+  const [bioLoading, setBioLoading] = useState(false);
+  const [bioError, setBioError] = useState(false);
+
+  // Auto-trigger biometric on mount if available
+  useEffect(() => {
+    if (biometricCredentialId) tryBiometric();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (cooldownLeft <= 0) return;
     const t = setTimeout(() => setCooldownLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [cooldownLeft]);
+
+  async function tryBiometric() {
+    if (!biometricCredentialId || bioLoading) return;
+    setBioLoading(true);
+    setBioError(false);
+    try {
+      const ok = await verifyBiometric(biometricCredentialId);
+      if (ok) onUnlock();
+      else setBioError(true);
+    } catch {
+      setBioError(true);
+    } finally {
+      setBioLoading(false);
+    }
+  }
 
   async function handleKey(k: string) {
     if (cooldownLeft > 0) return;
@@ -34,6 +59,7 @@ export default function AppLock({ storedHash, onUnlock }: Props) {
     setDigits(next);
     if (next.length < PIN_LENGTH) return;
 
+    if (!storedHash) return;
     const hash = await hashPin(next.join(""));
     if (hash === storedHash) {
       onUnlock();
@@ -56,7 +82,6 @@ export default function AppLock({ storedHash, onUnlock }: Props) {
       animate={{ opacity: 1 }}
       style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
     >
-      {/* Card */}
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -70,58 +95,102 @@ export default function AppLock({ storedHash, onUnlock }: Props) {
           boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
         }}
       >
-        <h2 style={{ margin: "0 0 1.25rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
-          Voer je PIN in
+        <h2 style={{ margin: "0 0 0.25rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
+          KinkSync ontgrendelen
         </h2>
 
-        {/* Dot indicators */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={shake ? "shake" : "normal"}
-            animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{ display: "flex", justifyContent: "center", gap: "0.875rem", marginBottom: "1.5rem" }}
-          >
-            {Array.from({ length: PIN_LENGTH }, (_, i) => (
-              <div key={i} style={{
-                width: 12, height: 12, borderRadius: "9999px",
-                background: i < digits.length ? "var(--accent)" : "var(--border)",
-                transition: "background 150ms ease",
-              }} />
-            ))}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Cooldown message */}
-        {cooldownLeft > 0 && (
-          <p style={{ textAlign: "center", fontSize: "0.8125rem", color: "var(--hard-no)", marginBottom: "1rem" }}>
-            Wacht {cooldownLeft}s
-          </p>
+        {/* Biometric button */}
+        {biometricCredentialId && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.25rem", marginTop: "0.5rem" }}>
+            <button
+              onClick={tryBiometric}
+              disabled={bioLoading}
+              style={{
+                background: bioLoading ? "var(--surface3)" : "color-mix(in srgb, var(--accent) 12%, transparent)",
+                border: `1px solid color-mix(in srgb, var(--accent) 30%, transparent)`,
+                borderRadius: "0.875rem",
+                padding: "0.75rem 1.5rem",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                color: "var(--accent)",
+                cursor: bioLoading ? "default" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                transition: "opacity 150ms ease",
+                opacity: bioLoading ? 0.6 : 1,
+              }}
+            >
+              <span style={{ fontSize: "1.25rem" }}>
+                {bioLoading ? "⏳" : "🔓"}
+              </span>
+              {bioLoading ? "Controleren…" : "Face ID / vingerafdruk"}
+            </button>
+            {bioError && (
+              <p style={{ fontSize: "0.75rem", color: "var(--text2)", marginTop: "0.375rem" }}>
+                Niet herkend — gebruik je PIN
+              </p>
+            )}
+            {storedHash && (
+              <p style={{ fontSize: "0.6875rem", color: "var(--text2)", marginTop: "0.375rem", opacity: 0.6 }}>
+                of voer PIN in
+              </p>
+            )}
+          </div>
         )}
 
-        {/* PIN pad */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
-          {KEYS.map((k, i) => (
-            <button
-              key={i}
-              onClick={() => k && handleKey(k)}
-              disabled={!k || cooldownLeft > 0}
-              style={{
-                height: "3.25rem", borderRadius: "0.75rem", fontSize: k === "⌫" ? "1.25rem" : "1.25rem",
-                fontWeight: 600, cursor: k && cooldownLeft === 0 ? "pointer" : "default",
-                background: k ? "var(--surface3)" : "transparent",
-                border: k ? "1px solid var(--border)" : "none",
-                color: k === "⌫" ? "var(--text2)" : "var(--text)",
-                opacity: (!k || cooldownLeft > 0) ? (k ? 0.4 : 0) : 1,
-                transition: "opacity 150ms ease, background 150ms ease",
-              }}
-              onMouseDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = "var(--border)"; }}
-              onMouseUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = "var(--surface3)"; }}
-            >
-              {k}
-            </button>
-          ))}
-        </div>
+        {/* PIN pad — only shown when PIN is set */}
+        {storedHash && (
+          <>
+            {/* Dot indicators */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={shake ? "shake" : "normal"}
+                animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
+                transition={{ duration: 0.4 }}
+                style={{ display: "flex", justifyContent: "center", gap: "0.875rem", marginBottom: "1.25rem" }}
+              >
+                {Array.from({ length: PIN_LENGTH }, (_, i) => (
+                  <div key={i} style={{
+                    width: 12, height: 12, borderRadius: "9999px",
+                    background: i < digits.length ? "var(--accent)" : "var(--border)",
+                    transition: "background 150ms ease",
+                  }} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+
+            {cooldownLeft > 0 && (
+              <p style={{ textAlign: "center", fontSize: "0.8125rem", color: "var(--hard-no)", marginBottom: "1rem" }}>
+                Wacht {cooldownLeft}s
+              </p>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
+              {KEYS.map((k, i) => (
+                <button
+                  key={i}
+                  onClick={() => k && handleKey(k)}
+                  disabled={!k || cooldownLeft > 0}
+                  style={{
+                    height: "3.25rem", borderRadius: "0.75rem",
+                    fontWeight: 600, cursor: k && cooldownLeft === 0 ? "pointer" : "default",
+                    background: k ? "var(--surface3)" : "transparent",
+                    border: k ? "1px solid var(--border)" : "none",
+                    color: k === "⌫" ? "var(--text2)" : "var(--text)",
+                    fontSize: k === "⌫" ? "1.125rem" : "1.375rem",
+                    opacity: (!k || cooldownLeft > 0) ? (k ? 0.4 : 0) : 1,
+                    transition: "opacity 150ms ease, background 150ms ease",
+                  }}
+                  onMouseDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = "var(--border)"; }}
+                  onMouseUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = "var(--surface3)"; }}
+                >
+                  {k}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </motion.div>
     </motion.div>
   );
