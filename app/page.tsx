@@ -62,6 +62,9 @@ function HomeContent() {
   const [isIos, setIsIos] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
+  const sessionUnlocked = useRef(
+    typeof sessionStorage !== "undefined" && sessionStorage.getItem("app_unlocked") === "1"
+  );
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("Switch");
@@ -111,7 +114,7 @@ function HomeContent() {
   useFocusTrap(settingsSheetRef, settingsOpen);
 
   useEffect(() => {
-    if (_hasHydrated && appLockEnabled) setLockState("locked");
+    if (_hasHydrated && appLockEnabled && !sessionUnlocked.current) setLockState("locked");
   }, [_hasHydrated, appLockEnabled]);
 
   useEffect(() => {
@@ -347,7 +350,11 @@ function HomeContent() {
       <AppLock
         storedHash={appLockPin}
         biometricCredentialId={biometricEnabled ? biometricCredentialId : null}
-        onUnlock={() => setLockState("unlocked")}
+        onUnlock={() => {
+          sessionStorage.setItem("app_unlocked", "1");
+          sessionUnlocked.current = true;
+          setLockState("unlocked");
+        }}
       />
     );
   }
@@ -824,18 +831,24 @@ function HomeContent() {
                 </div>
               )}
 
-              <Link
-                href="/scene"
-                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
-                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-              >
-                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                  🎬 Scène planner
-                </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Plan activiteiten, intensiteit en timing vooraf.
-                </div>
-              </Link>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/scene"
+                  className="focus-ring block rounded-xl p-4 text-center transition-opacity hover:opacity-90"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>🎬 Nieuwe scène</div>
+                  <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>Plan activiteiten vooraf.</div>
+                </Link>
+                <Link
+                  href="/scenes"
+                  className="focus-ring block rounded-xl p-4 text-center transition-opacity hover:opacity-90"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                >
+                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>📋 Scènes</div>
+                  <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>Historiek &amp; drafts.</div>
+                </Link>
+              </div>
 
               <Link
                 href="/session"

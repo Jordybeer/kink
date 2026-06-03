@@ -22,11 +22,46 @@ export interface KinkEntry {
   statusGive?: KinkStatus;
   statusReceive?: KinkStatus;
   direction?: KinkDirection;
-  desire?: number | null;       // 1–5 verlangen (vervangt pills visueel)
-  experienced?: boolean | null; // ja/nee ervaring checkbox
+  desire?: number | null;
+  experienced?: boolean | null;
   score: number | null;         // deprecated — bewaard voor achterwaartse compat
   comment: string;
   tags?: string[];
+  usedInScene?: number;
+}
+
+export interface SceneItem {
+  id: string;
+  name: string;
+  intensity: "zacht" | "midden" | "intens";
+  duration: string;
+  note: string;
+  fromKink: boolean;
+  kinkId?: string;
+}
+
+export type SceneStatus = "draft" | "planned" | "completed";
+
+export interface AftercareEntry {
+  trafficLight: "green" | "amber" | "red";
+  wentWell: string;
+  remember: string;
+  completedAt: number;
+}
+
+export interface SceneRecord {
+  id: string;
+  title: string;
+  profileAId: string;
+  profileBId: string;
+  profileAName: string;
+  profileBName: string;
+  items: SceneItem[];
+  plannedDate?: string;
+  status: SceneStatus;
+  createdAt: number;
+  updatedAt: number;
+  aftercare?: AftercareEntry;
 }
 
 export interface ContractSnapshot {

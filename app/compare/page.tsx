@@ -130,6 +130,14 @@ function ComparePage() {
     }
   }, [aId, bId, score]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!_hasHydrated || aId || bId || profiles.length < 2) return;
+    const own = profiles.find((p) => !p.isImported) ?? profiles[0];
+    const other = profiles.find((p) => p.id !== own.id && p.isImported) ?? profiles.find((p) => p.id !== own.id) ?? profiles[1];
+    setAId(own.id);
+    setBId(other.id);
+  }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!_hasHydrated) return (
     <main className="max-w-5xl mx-auto px-4 py-6 pb-10 w-full flex items-start justify-center pt-24">
       <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>

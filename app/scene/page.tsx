@@ -1,19 +1,11 @@
 "use client";
-import { useState, useRef, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
-import type { Profile } from "@/types";
-
-interface SceneItem {
-  id: string;
-  name: string;
-  intensity: "zacht" | "midden" | "intens";
-  duration: string;
-  note: string;
-  fromKink: boolean;
-}
+import type { Profile, SceneItem } from "@/types";
+import AftercareSheet from "@/components/AftercareSheet";
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -28,25 +20,14 @@ interface IntensityPillProps {
 function IntensityPill({ value, active, onSelect }: IntensityPillProps) {
   const label = value === "zacht" ? "Zacht" : value === "midden" ? "Midden" : "Intens";
   const cssVar = value === "zacht" ? "var(--willing)" : value === "midden" ? "var(--maybe)" : "var(--hard-no)";
-
   return (
     <button
       onClick={onSelect}
       aria-pressed={active}
       className="text-[10px] px-2 py-1 rounded-full border transition-colors focus-ring"
-      style={
-        active
-          ? {
-              background: `color-mix(in srgb, ${cssVar} 20%, transparent)`,
-              borderColor: cssVar,
-              color: cssVar,
-            }
-          : {
-              background: "transparent",
-              borderColor: "var(--border)",
-              color: "var(--text2)",
-            }
-      }
+      style={active
+        ? { background: `color-mix(in srgb, ${cssVar} 20%, transparent)`, borderColor: cssVar, color: cssVar }
+        : { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" }}
     >
       {label}
     </button>
@@ -63,17 +44,8 @@ interface SceneItemCardProps {
   onDragEnd: () => void;
 }
 
-function SceneItemCard({
-  item,
-  index,
-  onUpdate,
-  onDelete,
-  onDragStart,
-  onDragEnter,
-  onDragEnd,
-}: SceneItemCardProps) {
+function SceneItemCard({ item, index, onUpdate, onDelete, onDragStart, onDragEnter, onDragEnd }: SceneItemCardProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
-
   return (
     <div
       draggable
@@ -84,83 +56,25 @@ function SceneItemCard({
       className="rounded-xl p-3 mb-2 flex items-start gap-3"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
-      {/* Drag handle */}
-      <span
-        className="text-lg leading-none pt-1 cursor-grab select-none flex-none"
-        style={{ color: "var(--text2)" }}
-        aria-hidden="true"
-      >
-        ⠿
-      </span>
-
-      {/* Content */}
+      <span className="text-lg leading-none pt-1 cursor-grab select-none flex-none" style={{ color: "var(--text2)" }} aria-hidden="true">⠿</span>
       <div className="flex-1 min-w-0">
-        {/* Row 1: name + delete */}
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-sm font-medium flex-1 truncate">{item.name}</span>
-          <button
-            onClick={() => onDelete(item.id)}
-            aria-label={`${item.name} verwijderen`}
-            className="text-xs px-1.5 py-0.5 rounded transition-colors focus-ring flex-none"
-            style={{ color: "var(--text2)" }}
-          >
-            ✕
-          </button>
+          <button onClick={() => onDelete(item.id)} aria-label={`${item.name} verwijderen`} className="text-xs px-1.5 py-0.5 rounded transition-colors focus-ring flex-none" style={{ color: "var(--text2)" }}>✕</button>
         </div>
-
-        {/* Row 2: intensity pills + details toggle */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {(["zacht", "midden", "intens"] as const).map((v) => (
-            <IntensityPill
-              key={v}
-              value={v}
-              active={item.intensity === v}
-              onSelect={() => onUpdate(item.id, { intensity: v })}
-            />
+            <IntensityPill key={v} value={v} active={item.intensity === v} onSelect={() => onUpdate(item.id, { intensity: v })} />
           ))}
-          <button
-            onClick={() => setDetailsOpen((o) => !o)}
-            aria-label={detailsOpen ? "Details verbergen" : "Details tonen"}
-            aria-expanded={detailsOpen}
-            className="text-xs ml-1 transition-opacity hover:opacity-70 focus-ring"
-            style={{ color: "var(--text2)" }}
-          >
-            📝
-          </button>
+          <button onClick={() => setDetailsOpen((o) => !o)} aria-label={detailsOpen ? "Details verbergen" : "Details tonen"} aria-expanded={detailsOpen} className="text-xs ml-1 transition-opacity hover:opacity-70 focus-ring" style={{ color: "var(--text2)" }}>📝</button>
         </div>
-
-        {/* Row 3: collapsible details */}
         <div className={`accordion-content mt-2 ${detailsOpen ? "open" : ""}`}>
           <div className="accordion-inner space-y-2 pt-1">
             <div className="flex items-center gap-2">
-              <label className="text-xs flex-none" style={{ color: "var(--text2)" }}>
-                Duur:
-              </label>
-              <input
-                type="text"
-                value={item.duration}
-                onChange={(e) => onUpdate(item.id, { duration: e.target.value })}
-                placeholder="~20 min"
-                className="flex-1 text-xs rounded px-2 py-1 focus:outline-none focus-ring"
-                style={{
-                  background: "var(--surface2)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-              />
+              <label className="text-xs flex-none" style={{ color: "var(--text2)" }}>Duur:</label>
+              <input type="text" value={item.duration} onChange={(e) => onUpdate(item.id, { duration: e.target.value })} placeholder="~20 min" className="flex-1 text-xs rounded px-2 py-1 focus:outline-none focus-ring" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
             </div>
-            <textarea
-              rows={2}
-              value={item.note}
-              onChange={(e) => onUpdate(item.id, { note: e.target.value })}
-              placeholder="Notitie…"
-              className="w-full text-xs rounded px-2 py-1.5 focus:outline-none resize-none focus-ring"
-              style={{
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
+            <textarea rows={2} value={item.note} onChange={(e) => onUpdate(item.id, { note: e.target.value })} placeholder="Notitie…" className="w-full text-xs rounded px-2 py-1.5 focus:outline-none resize-none focus-ring" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
           </div>
         </div>
       </div>
@@ -170,36 +84,43 @@ function SceneItemCard({
 
 function ScenePage() {
   const searchParams = useSearchParams();
-  const { profiles } = useStore();
+  const router = useRouter();
+  const { profiles, scenes, saveScene, deleteScene, completeScene } = useStore();
   const _hasHydrated = useHasHydrated();
 
+  const sceneIdParam = searchParams.get("id");
   const aId = searchParams.get("a") ?? "";
   const bId = searchParams.get("b") ?? "";
 
-  const profileA: Profile | undefined = profiles.find((p) => p.id === aId);
-  const profileB: Profile | undefined = profiles.find((p) => p.id === bId);
-
+  const [sceneId, setSceneId] = useState<string | null>(sceneIdParam);
   const [items, setItems] = useState<SceneItem[]>([]);
   const [sceneDate, setSceneDate] = useState("");
+  const [sceneTitle, setSceneTitle] = useState("");
   const [newItemName, setNewItemName] = useState("");
+  const [showAftercareSheet, setShowAftercareSheet] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const dragItem = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
 
-  const matchedKinks = KINKS.filter((k) => {
-    const a = profileA?.entries[k.id]?.status ?? null;
-    const b = profileB?.entries[k.id]?.status ?? null;
-    return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
-  });
+  const resolvedAId = sceneId ? (scenes.find(s => s.id === sceneId)?.profileAId ?? aId) : aId;
+  const resolvedBId = sceneId ? (scenes.find(s => s.id === sceneId)?.profileBId ?? bId) : bId;
+  const profileA: Profile | undefined = profiles.find((p) => p.id === resolvedAId);
+  const profileB: Profile | undefined = profiles.find((p) => p.id === resolvedBId);
 
-  const handleDragStart = useCallback((i: number) => {
-    dragItem.current = i;
-  }, []);
+  // Load existing scene
+  useEffect(() => {
+    if (!_hasHydrated || !sceneIdParam) return;
+    const scene = scenes.find((s) => s.id === sceneIdParam);
+    if (!scene) return;
+    setItems(scene.items);
+    setSceneDate(scene.plannedDate ?? "");
+    setSceneTitle(scene.title);
+    setSaved(true);
+  }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleDragEnter = useCallback((i: number) => {
-    dragOver.current = i;
-  }, []);
-
+  const handleDragStart = useCallback((i: number) => { dragItem.current = i; }, []);
+  const handleDragEnter = useCallback((i: number) => { dragOver.current = i; }, []);
   const handleDragEnd = useCallback(() => {
     if (dragItem.current === null || dragOver.current === null) return;
     const updated = [...items];
@@ -218,28 +139,34 @@ function ScenePage() {
     setItems((prev) => prev.filter((it) => it.id !== id));
   }, []);
 
-  function addFromKink(kinkName: string) {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        name: kinkName,
-        intensity: "midden",
-        duration: "",
-        note: "",
-        fromKink: true,
-      },
-    ]);
+  function addFromKink(kinkName: string, kinkId: string) {
+    setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true }]);
   }
 
   function addManualItem() {
     const name = newItemName.trim();
     if (!name) return;
-    setItems((prev) => [
-      ...prev,
-      { id: uid(), name, intensity: "midden", duration: "", note: "", fromKink: false },
-    ]);
+    setItems((prev) => [...prev, { id: uid(), name, intensity: "midden", duration: "", note: "", fromKink: false }]);
     setNewItemName("");
+  }
+
+  function handleSave(status: "draft" | "planned") {
+    if (!profileA || !profileB) return;
+    const title = sceneTitle.trim() || `${profileA.name} & ${profileB.name}`;
+    const id = saveScene({
+      id: sceneId ?? undefined,
+      title,
+      profileAId: profileA.id,
+      profileBId: profileB.id,
+      profileAName: profileA.name,
+      profileBName: profileB.name,
+      items,
+      plannedDate: sceneDate || undefined,
+      status,
+    });
+    setSceneId(id);
+    setSaved(true);
+    router.replace(`/scene?id=${id}`);
   }
 
   async function handleExport() {
@@ -257,261 +184,228 @@ function ScenePage() {
     doc.setFillColor(...dark);
     doc.rect(0, 0, W, 210, "F");
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
     doc.setTextColor(...accent);
-    doc.text("Scène Menu", W / 2, y, { align: "center" });
-    y += 6;
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    const title = sceneTitle.trim() || (profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène Menu");
+    doc.text(title, margin, y);
+    y += 8;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(...muted);
-    const subtitle =
-      profileA && profileB ? `${profileA.name} & ${profileB.name}` : "KinkSync";
-    doc.text(subtitle, W / 2, y, { align: "center" });
-    y += 4;
     if (sceneDate) {
-      doc.text(sceneDate, W / 2, y, { align: "center" });
-      y += 4;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...muted);
+      doc.text(sceneDate, margin, y);
+      y += 7;
     }
-    doc.text("kinksync.be", W / 2, y, { align: "center" });
-    y += 5;
 
     doc.setDrawColor(...accent);
     doc.setLineWidth(0.3);
     doc.line(margin, y, W - margin, y);
     y += 6;
 
-    const intensityColors: Record<string, [number, number, number]> = {
-      zacht: [96, 165, 250],
-      midden: [251, 191, 36],
-      intens: [239, 68, 68],
-    };
-
-    items.forEach((item, i) => {
-      if (y > 185) {
-        doc.addPage();
-        doc.setFillColor(...dark);
-        doc.rect(0, 0, W, 210, "F");
-        y = 15;
-      }
-      const color = intensityColors[item.intensity];
-      doc.setFont("helvetica", "bold");
+    for (const item of items) {
+      if (y > 185) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 210, "F"); y = 15; }
+      const intensityColour: [number, number, number] =
+        item.intensity === "zacht" ? [96, 165, 250] : item.intensity === "midden" ? [251, 146, 60] : [248, 113, 113];
+      doc.setFillColor(...intensityColour);
+      doc.roundedRect(margin, y - 3.5, 3, 3, 0.5, 0.5, "F");
       doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
       doc.setTextColor(...light);
-      doc.text(`${i + 1}. ${item.name}`, margin, y);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(...color);
-      const meta = [item.intensity, item.duration].filter(Boolean).join(" · ");
-      if (meta) {
-        doc.text(meta, margin, y + 4);
-      }
-
-      if (item.note) {
-        doc.setTextColor(...muted);
+      doc.text(item.name, margin + 5, y);
+      if (item.duration) {
         doc.setFontSize(8);
-        const noteLines = doc.splitTextToSize(item.note, W - margin * 2 - 5);
-        doc.text(noteLines, margin + 2, y + (meta ? 8 : 4));
-        y += noteLines.length * 4;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...muted);
+        doc.text(item.duration, W - margin, y, { align: "right" });
       }
-      y += meta ? 10 : 6;
-    });
-
-    if (y < 175) {
-      y = 180;
-      doc.setDrawColor(...muted);
-      doc.setLineWidth(0.2);
-      const sigW = (W - margin * 2 - 10) / 2;
-      doc.line(margin, y, margin + sigW, y);
-      doc.line(margin + sigW + 10, y, W - margin, y);
-      y += 4;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.setTextColor(...muted);
-      const nameA = profileA?.name ?? "Persoon A";
-      const nameB = profileB?.name ?? "Persoon B";
-      doc.text(nameA, margin + sigW / 2, y, { align: "center" });
-      doc.text(nameB, margin + sigW + 10 + sigW / 2, y, { align: "center" });
+      y += 5;
+      if (item.note) {
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(...muted);
+        const lines = doc.splitTextToSize(item.note, W - margin * 2 - 5) as string[];
+        doc.text(lines, margin + 5, y);
+        y += lines.length * 4 + 1;
+      }
+      y += 3;
     }
 
-    doc.save(`scene-${profileA?.name ?? "scene"}-${profileB?.name ?? ""}.pdf`);
+    const filename = `scene-${(sceneTitle || "menu").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    try { doc.save(filename); } catch { /* niet fataal */ }
   }
 
   if (!_hasHydrated) return null;
 
-  const backHref =
-    aId && bId ? `/compare?a=${aId}&b=${bId}` : "/compare";
+  const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) : null;
+  const isCompleted = currentScene?.status === "completed";
+  const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : sceneId ? "/scenes" : "/compare";
+  const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
-  const addedKinkNames = new Set(items.filter((it) => it.fromKink).map((it) => it.name));
+  // Top 5 most used kinks from profileA
+  const topKinks = profileA
+    ? KINKS
+        .filter((k) => (profileA.entries[k.id]?.usedInScene ?? 0) > 0)
+        .sort((a, b) => (profileB?.entries[b.id]?.usedInScene ?? 0) + (profileA.entries[b.id]?.usedInScene ?? 0) - ((profileB?.entries[a.id]?.usedInScene ?? 0) + (profileA.entries[a.id]?.usedInScene ?? 0)))
+        .slice(0, 5)
+    : [];
+
+  const mutualKinks = KINKS.filter((k) => {
+    const a = profileA?.entries[k.id]?.status ?? null;
+    const b = profileB?.entries[k.id]?.status ?? null;
+    return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
+  });
+
+  const spanningKinks = KINKS.filter((k) => {
+    const a = profileA?.entries[k.id]?.status ?? null;
+    const b = profileB?.entries[k.id]?.status ?? null;
+    if (!a || !b) return false;
+    if (a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
+    const isMutual = (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
+    return !isMutual && (a === "maybe" || b === "maybe");
+  });
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-6 pb-32 w-full flex flex-col min-h-dvh">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <Link href={backHref} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center" style={{ color: "var(--text2)" }}>
-          ← Terug
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">Scène Menu</h1>
-          {profileA && profileB ? (
-            <p
-              className="text-sm mt-0.5"
-              style={{
-                background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              {profileA.name} &amp; {profileB.name}
-            </p>
+    <>
+      <main className="max-w-2xl mx-auto px-4 py-6 pb-40 w-full flex flex-col min-h-dvh">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <Link href={backHref} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center" style={{ color: "var(--text2)" }}>← Terug</Link>
+          <div className="flex-1">
+            <input
+              type="text"
+              value={sceneTitle}
+              onChange={(e) => setSceneTitle(e.target.value)}
+              placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène titel…"}
+              className="text-xl font-bold w-full bg-transparent focus:outline-none focus-ring rounded"
+              style={{ color: "var(--text)" }}
+            />
+            {profileA && profileB && (
+              <p className="text-sm mt-0.5" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                {profileA.name} &amp; {profileB.name}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs flex-none" style={{ color: "var(--text2)" }}>Datum:</label>
+            <input type="date" value={sceneDate} onChange={(e) => setSceneDate(e.target.value)} className="text-xs rounded px-2 py-1 focus:outline-none focus-ring" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", colorScheme: "dark" }} />
+          </div>
+        </div>
+
+        {/* Scene items */}
+        <div className="flex-1 flex flex-col">
+          {items.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center select-none">
+              <div className="text-3xl mb-3">🎯</div>
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Nog geen activiteiten gepland</p>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>Tik op een chip hieronder om<br />toe te voegen aan de scène</p>
+            </div>
           ) : (
-            <p className="text-sm mt-0.5" style={{ color: "var(--text2)" }}>
-              Scène
-            </p>
+            <div>
+              {items.map((item, i) => (
+                <SceneItemCard key={item.id} item={item} index={i} onUpdate={handleUpdate} onDelete={handleDelete} onDragStart={handleDragStart} onDragEnter={handleDragEnter} onDragEnd={handleDragEnd} />
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Date input */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs flex-none" style={{ color: "var(--text2)" }}>
-            Datum:
-          </label>
-          <input
-            type="date"
-            value={sceneDate}
-            onChange={(e) => setSceneDate(e.target.value)}
-            className="text-xs rounded px-2 py-1 focus:outline-none focus-ring"
-            style={{
-              background: "var(--surface2)",
-              border: "1px solid var(--border)",
-              color: "var(--text2)",
-              colorScheme: "dark",
-            }}
-          />
+        {/* Manual add */}
+        <div className="flex gap-2 mt-3 mb-6">
+          <input type="text" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addManualItem(); }} placeholder="Eigen item toevoegen…" className="flex-1 text-sm rounded-lg px-3 py-2 focus:outline-none focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }} />
+          <button onClick={addManualItem} aria-label="Item toevoegen" className="px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 focus-ring" style={{ background: "var(--accent)", color: "#000" }}>+</button>
         </div>
-      </div>
 
-      {/* Scene items list */}
-      <div className="flex-1 flex flex-col">
-        {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center select-none">
-            <div className="text-3xl mb-3">🎯</div>
-            <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Nog geen activiteiten gepland</p>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-              Tik op een chip hieronder om<br />toe te voegen aan de scène
-            </p>
+        {/* Top 5 meest gebruikt */}
+        {topKinks.length > 0 && (
+          <div className="rounded-xl p-4 mb-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent2)" }}>Meest gebruikt</p>
+            <div className="flex flex-wrap gap-1.5">
+              {topKinks.map((k) => (
+                <button key={k.id} onClick={() => addFromKink(k.name, k.id)} disabled={addedKinkIds.has(k.id)} className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring disabled:opacity-40" style={{ background: `color-mix(in srgb, var(--accent2) 12%, transparent)`, borderColor: `color-mix(in srgb, var(--accent2) 40%, transparent)`, color: "var(--accent2)" }}>
+                  {k.name}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div>
-            {items.map((item, i) => (
-              <SceneItemCard
-                key={item.id}
-                item={item}
-                index={i}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-                onDragStart={handleDragStart}
-                onDragEnter={handleDragEnter}
-                onDragEnd={handleDragEnd}
-              />
-            ))}
+        )}
+
+        {/* Kink chips */}
+        {(mutualKinks.length > 0 || spanningKinks.length > 0) && (
+          <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}>
+            {mutualKinks.length > 0 && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2.5" style={{ color: "var(--accent)" }}>Mutual</p>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {mutualKinks.map((k) => {
+                    const added = addedKinkIds.has(k.id);
+                    return (
+                      <button key={k.id} onClick={() => !added && addFromKink(k.name, k.id)} disabled={added} className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring disabled:opacity-40 flex items-center gap-1" style={added ? { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" } : { background: "color-mix(in srgb, #4ade80 12%, transparent)", borderColor: "color-mix(in srgb, #4ade80 45%, transparent)", color: "#4ade80" }}>
+                        {!added && <span aria-hidden="true">+</span>}{k.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {spanningKinks.length > 0 && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2.5" style={{ color: "#fb923c" }}>Spanning</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {spanningKinks.map((k) => {
+                    const added = addedKinkIds.has(k.id);
+                    return (
+                      <button key={k.id} onClick={() => !added && addFromKink(k.name, k.id)} disabled={added} className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring disabled:opacity-40 flex items-center gap-1" style={added ? { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" } : { background: "color-mix(in srgb, #fb923c 12%, transparent)", borderColor: "color-mix(in srgb, #fb923c 45%, transparent)", color: "#fb923c" }}>
+                        {!added && <span aria-hidden="true">+</span>}{k.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Action bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex gap-2 px-4 py-3 max-w-2xl mx-auto" style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}>
+        <button onClick={handleExport} disabled={items.length === 0} className="px-4 py-2.5 rounded-xl text-xs font-bold transition-opacity hover:opacity-90 focus-ring disabled:opacity-40" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>↓ PDF</button>
+        {!isCompleted && (
+          <>
+            <button onClick={() => handleSave("draft")} disabled={items.length === 0} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-opacity hover:opacity-90 focus-ring disabled:opacity-40" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
+              {saved ? "✓ Opgeslagen" : "💾 Opslaan"}
+            </button>
+            <button onClick={() => handleSave("planned")} disabled={items.length === 0} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-opacity hover:opacity-90 focus-ring disabled:opacity-40" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>📅 Plannen</button>
+            {sceneId && (
+              <button onClick={() => setShowAftercareSheet(true)} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-opacity hover:opacity-90 focus-ring" style={{ background: "var(--accent)", color: "#000" }}>✅ Afronden</button>
+            )}
+          </>
+        )}
+        {isCompleted && (
+          <div className="flex-1 flex items-center justify-center gap-2 text-xs" style={{ color: "var(--text2)" }}>
+            <span>{currentScene?.aftercare?.trafficLight === "green" ? "🟢" : currentScene?.aftercare?.trafficLight === "amber" ? "🟡" : "🔴"}</span>
+            <span>Afgerond</span>
+            <Link href="/scenes" className="underline focus-ring" style={{ color: "var(--accent)" }}>Bekijk historiek</Link>
           </div>
         )}
       </div>
 
-      {/* Add manual item */}
-      <div className="flex gap-2 mt-3 mb-8">
-        <input
-          type="text"
-          value={newItemName}
-          onChange={(e) => setNewItemName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") addManualItem();
+      {showAftercareSheet && sceneId && (
+        <AftercareSheet
+          onSave={(entry) => {
+            completeScene(sceneId, entry);
+            setShowAftercareSheet(false);
           }}
-          placeholder="Eigen item toevoegen…"
-          className="flex-1 text-sm rounded-lg px-3 py-2 focus:outline-none focus-ring"
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            color: "var(--text)",
-          }}
+          onClose={() => setShowAftercareSheet(false)}
         />
-        <button
-          onClick={addManualItem}
-          aria-label="Item toevoegen"
-          className="px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 focus-ring"
-          style={{ background: "var(--accent)", color: "#000" }}
-        >
-          +
-        </button>
-      </div>
-
-      {/* Matched kinks quick-add */}
-      {matchedKinks.length > 0 && (
-        <div
-          className="rounded-xl p-4"
-          style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-        >
-          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
-            Voeg toe vanuit jullie matches
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {matchedKinks.map((k) => {
-              const alreadyAdded = addedKinkNames.has(k.name);
-              return (
-                <button
-                  key={k.id}
-                  onClick={() => addFromKink(k.name)}
-                  className="text-[11px] px-2.5 py-1 rounded-full border transition-all focus-ring"
-                  style={
-                    alreadyAdded
-                      ? {
-                          background: "transparent",
-                          borderColor: "var(--border)",
-                          color: "var(--text2)",
-                          opacity: 0.5,
-                        }
-                      : {
-                          background: `color-mix(in srgb, var(--accent) 12%, transparent)`,
-                          borderColor: `color-mix(in srgb, var(--accent) 40%, transparent)`,
-                          color: "var(--accent)",
-                        }
-                  }
-                >
-                  {k.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
       )}
-
-      {/* FAB */}
-      <button
-        onClick={handleExport}
-        disabled={items.length === 0}
-        aria-label="Exporteer als PDF"
-        className="fixed bottom-6 right-4 px-5 py-3 rounded-2xl text-sm font-bold shadow-lg transition-opacity hover:opacity-90 focus-ring disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{ background: "var(--accent)", color: "#000", zIndex: 40 }}
-      >
-        ↓ Exporteer PDF
-      </button>
-    </main>
+    </>
   );
 }
 
 export default function SceneSuspense() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-10 text-center text-sm" style={{ color: "var(--text2)" }}>
-          Laden…
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="p-10 text-center text-sm" style={{ color: "var(--text2)" }}>Laden…</div>}>
       <ScenePage />
     </Suspense>
   );
