@@ -14,8 +14,10 @@ import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import AppLock from "@/components/AppLock";
-import QRScanner from "@/components/QRScanner";
+import dynamic from "next/dynamic";
 import { decodeAny } from "@/lib/shareProfile";
+
+const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 import { encryptBackup, decryptBackup, hashPin, type EncryptedBackup } from "@/lib/crypto";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
 
@@ -1129,14 +1131,16 @@ function HomeContent() {
         </div>
       </div>
 
-      <QRScanner
-        open={scanOpen}
-        onResult={(p) => {
-          try { setImportPreview(decodeAny(p)); } catch { /* ongeldige QR */ }
-          setScanOpen(false);
-        }}
-        onClose={() => setScanOpen(false)}
-      />
+      {scanOpen && (
+        <QRScanner
+          open={scanOpen}
+          onResult={(p) => {
+            try { setImportPreview(decodeAny(p)); } catch { /* ongeldige QR */ }
+            setScanOpen(false);
+          }}
+          onClose={() => setScanOpen(false)}
+        />
+      )}
 
       {/* Import profile sheet */}
       <div
