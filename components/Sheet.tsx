@@ -1,7 +1,8 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useMotionSafe } from "@/lib/motion";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 /** Standardized sheet content wrapper: surface bg, border, rounded top, drag handle. */
 export function SheetContent({ children, className = "px-6 pb-6 pt-4" }: { children: ReactNode; className?: string }) {
@@ -27,6 +28,15 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
   const t = useMotionSafe();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(sheetRef, open);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
@@ -47,6 +57,7 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
           />
 
           <motion.div
+            ref={sheetRef}
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}

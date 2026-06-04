@@ -35,6 +35,19 @@ const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
   { s: "hard_no", label: "Harde grens" },
 ];
 
+const VALID_STATUSES = new Set<string>(["yes", "willing", "maybe", "no", "hard_no"]);
+
+function sanitizeEntries(raw: unknown): Record<string, KinkStatus> {
+  const out: Record<string, KinkStatus> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof k !== "string") continue;
+    if (v === null) out[k] = null;
+    else if (typeof v === "string" && VALID_STATUSES.has(v)) out[k] = v as KinkStatus;
+  }
+  return out;
+}
+
 type Msg =
   | { t: "a"; id?: string }
   | { t: "p"; n: string; r: string }
@@ -121,7 +134,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           if (typeof msg.n !== "string" || typeof msg.r !== "string") return;
           setRemoteProfile({ name: msg.n, role: msg.r });
         } else if (msg.t === "d") {
-          setRemote(msg.entries);
+          setRemote(sanitizeEntries(msg.entries));
           setPartnerDone(true);
         } else if (msg.t === "a") {
           clearTimeout(partnerActiveTimerRef.current);
