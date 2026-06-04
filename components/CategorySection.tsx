@@ -20,7 +20,6 @@ interface Props {
   onBulkSkip: () => void;
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
-  hideComments?: boolean;
   roleDirection?: RoleDirection;
 }
 
@@ -35,7 +34,7 @@ export default function CategorySection({
   onStatusChange,
   onCommentChange, onTagsChange,
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  onBulkSkip, onBulkRestore, compact, hideComments, roleDirection,
+  onBulkSkip, onBulkRestore, compact, roleDirection,
 }: Props) {
   const t = useMotionSafe();
   const [open, setOpen] = useState(true);
@@ -87,7 +86,7 @@ export default function CategorySection({
         <button
           onClick={() => {
             const snapshot: Record<string, KinkEntry> = {};
-            for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, score: null, comment: "" };
+            for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, comment: "" };
             undoSnapshot.current = snapshot;
             onBulkSkip();
             setUndoPending(true);
@@ -144,7 +143,7 @@ export default function CategorySection({
               <KinkRow
                 key={kink.id}
                 kink={kink}
-                entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
+                entry={entries[kink.id] ?? { status: null, comment: "" }}
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
@@ -152,7 +151,6 @@ export default function CategorySection({
                 onStatusGiveChange={onStatusGiveChange ? (s) => onStatusGiveChange(kink.id, s) : undefined}
                 onStatusReceiveChange={onStatusReceiveChange ? (s) => onStatusReceiveChange(kink.id, s) : undefined}
                 compact={compact}
-                hideComments={hideComments}
                 roleDirection={roleDirection}
               />
             ))}

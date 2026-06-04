@@ -8,7 +8,7 @@ import type { Profile, SceneItem } from "@/types";
 import Sheet from "@/components/Sheet";
 
 function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  return crypto.randomUUID();
 }
 
 // ─── Arc bar ────────────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ function SceneItemRow({
                   aria-pressed={active}
                   className="text-xs px-3 rounded-full border focus-ring"
                   style={{
-                    minHeight: 28,
+                    minHeight: 44,
                     transition: "background 120ms ease, border-color 120ms ease, color 120ms ease",
                     background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
                     borderColor: active ? c : "var(--border)",
@@ -182,7 +182,7 @@ function SceneItemRow({
               aria-label={detailsOpen ? "Details verbergen" : "Duur & notitie"}
               aria-expanded={detailsOpen}
               className="text-xs ml-auto focus-ring rounded px-2"
-              style={{ minHeight: 28, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
+              style={{ minHeight: 44, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
             >
               {detailsOpen ? "Minder" : "Details"}
             </button>
@@ -233,7 +233,7 @@ function KinkChip({
         background: added ? "transparent" : `color-mix(in srgb, ${color} 12%, transparent)`,
         borderColor: added ? "var(--border)" : `color-mix(in srgb, ${color} 45%, transparent)`,
         color: added ? "var(--text2)" : color,
-        minHeight: 36,
+        minHeight: 44,
       }}
     >
       {!added && (
@@ -265,6 +265,7 @@ function ScenePage() {
   const [newItemName, setNewItemName] = useState("");
   const [saved, setSaved] = useState(false);
   const [savedStatus, setSavedStatus] = useState<"draft" | "planned" | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -346,7 +347,11 @@ function ScenePage() {
   }
 
   function handleSave(status: "draft" | "planned") {
-    if (!profileA || !profileB) return;
+    if (!profileA || !profileB) {
+      setSaveError("Kies twee profielen voordat je deze scène vastlegt.");
+      return;
+    }
+    setSaveError(null);
     const title = sceneTitle.trim() || `${profileA.name} & ${profileB.name}`;
     const id = saveScene({
       id: sceneId ?? undefined,
@@ -478,8 +483,8 @@ function ScenePage() {
               value={sceneTitle}
               onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
-              className="w-full bg-transparent focus:outline-none focus-ring rounded font-bold"
-              style={{ color: "var(--text)", fontSize: 18 }}
+              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded font-bold"
+              style={{ color: "var(--text)" }}
             />
             {profileA && profileB && (
               <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
@@ -586,6 +591,13 @@ function ScenePage() {
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
       >
+        {saveError && (
+          <div className="max-w-2xl mx-auto mb-2">
+            <p role="alert" className="text-xs ks-fade-in" style={{ color: "var(--hard-no)" }}>
+              {saveError}
+            </p>
+          </div>
+        )}
         <div className="max-w-2xl mx-auto flex gap-2">
           {/* PDF */}
           <button

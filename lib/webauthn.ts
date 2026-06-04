@@ -57,8 +57,9 @@ export async function verifyBiometric(credentialIdB64: string): Promise<boolean>
         userVerification: "required",
         timeout: 60000,
       },
-    });
-    return assertion !== null;
+    }) as PublicKeyCredential | null;
+    if (!assertion) return false;
+    return b64url(assertion.rawId) === credentialIdB64;
   } catch {
     return false;
   }

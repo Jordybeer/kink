@@ -43,7 +43,6 @@ export default function ProfilePage({ params }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
-  const hideComments = true;
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [tourVisible, setTourVisible] = useState(false);
@@ -171,7 +170,7 @@ export default function ProfilePage({ params }: Props) {
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
 
   const DNA_COLORS_PAGE: Record<string, string> = {
-    yes: "#4ade80", willing: "#60a5fa", maybe: "#fbbf24", no: "#fb923c", hard_no: "#ef4444",
+    yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
   };
   const dnaSegments = (["yes", "willing", "maybe", "no", "hard_no"] as const)
     .map((s) => ({
@@ -357,7 +356,7 @@ export default function ProfilePage({ params }: Props) {
 
       {errorMessage && (
         <div
-          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-[300] px-4 py-3 rounded-xl text-sm shadow-lg animate-fade-in"
+          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-[300] px-4 py-3 rounded-xl text-sm shadow-lg ks-fade-in"
           style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
           role="alert"
         >
@@ -523,7 +522,7 @@ export default function ProfilePage({ params }: Props) {
                       <KinkRow
                         key={kink.id}
                         kink={kink}
-                        entry={profile.entries[kink.id] ?? { status: null, score: null, comment: "" }}
+                        entry={profile.entries[kink.id] ?? { status: null, comment: "" }}
                         onStatusChange={(s) => handleStatus(kink.id, s)}
                         onCommentChange={(c) => { setEntry(profile.id, kink.id, { comment: c }); markSaved(); }}
                         onTagsChange={(tags) => { setEntry(profile.id, kink.id, { tags }); markSaved(); }}
@@ -531,7 +530,6 @@ export default function ProfilePage({ params }: Props) {
                         onStatusGiveChange={(s) => { setEntry(profile.id, kink.id, { statusGive: s }); markSaved(); }}
                         onStatusReceiveChange={(s) => { setEntry(profile.id, kink.id, { statusReceive: s }); markSaved(); }}
                         compact={compact}
-                        hideComments={hideComments}
                         roleDirection={roleDirection}
                       />
                     ))}
@@ -563,12 +561,11 @@ export default function ProfilePage({ params }: Props) {
                         }}
                         onBulkRestore={(snapshot) => {
                           for (const [kinkId, entry] of Object.entries(snapshot)) {
-                            setEntry(profile.id, kinkId, { status: entry.status ?? null });
+                            setEntry(profile.id, kinkId, entry);
                           }
                           markSaved();
                         }}
                         compact={compact}
-                        hideComments={hideComments}
                         roleDirection={roleDirection}
                       />
                     </div>

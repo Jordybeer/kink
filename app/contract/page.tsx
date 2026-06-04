@@ -7,6 +7,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit } from "@/lib/matching";
+import { categorizeRole } from "@/lib/roles";
 
 const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "Heel graag",
@@ -90,7 +91,19 @@ function buildPreamble(
 ): string {
   const intro = `Dit verbond wordt gesloten tussen ${nameA} (${roleA}) en ${nameB} (${roleB}).`;
 
-  const body = `Door dit verbond biedt ${nameA} zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en ${nameB} aanvaardt die gave met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren. Beiden begrijpen dat deze uitwisseling niet enkel rust op bezit, maar op toewijding, communicatie, verantwoordelijkheid en het stille geloof dat ieder zal eren wat is aangeboden. De één geeft, de ander ontvangt; de één geeft zich over, de ander leidt en beiden zijn verbonden door de zorg, het vertrouwen en de gekozen intimiteit die dit verbond betekenis geven. Hierin wordt macht niet slechts uitgewisseld, maar gedragen als een daad van toewijding, verantwoordelijkheid en verbondenheid tussen hen.`;
+  const dirA = categorizeRole(roleA);
+  const dirB = categorizeRole(roleB);
+  const isDomSub = (dirA === "give" && dirB === "receive") || (dirA === "receive" && dirB === "give");
+
+  let body: string;
+  if (isDomSub) {
+    const [domName, subName] = dirA === "give" ? [nameA, nameB] : [nameB, nameA];
+    body = `Door dit verbond biedt ${subName} zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en ${domName} aanvaardt die gave met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren.`;
+  } else {
+    body = `Door dit verbond bevestigen ${nameA} en ${nameB} hun grenzen, verlangens en wederzijdse afspraken, vrijelijk en bewust uitgesproken. Wat hier staat, rust op vertrouwen, communicatie en gedeelde verantwoordelijkheid. Beiden begrijpen dat iedere afspraak voortkomt uit respect voor de ander en eerlijkheid over het zelf.`;
+  }
+
+  const shared = ` Beiden begrijpen dat deze uitwisseling rust op toewijding, communicatie, verantwoordelijkheid en het stille geloof dat ieder zal eren wat is aangeboden. Hierin wordt verbondenheid niet slechts uitgewisseld, maar gedragen als een daad van zorg en vertrouwen tussen hen.`;
 
   const beginnerLevels = ["beginner"];
   const deepLevels = ["diepgaand", "ervaren"];
@@ -102,7 +115,7 @@ function buildPreamble(
     ? ` ${levelA === "beginner" ? nameA : nameB} brengt nieuwsgierigheid; ${levelA === "beginner" ? nameB : nameA} brengt geduld en begeleiding. Zij verplichten zich aan een tempo dat altijd in dienst staat van veiligheid en wederzijds begrip.`
     : "";
 
-  return `${intro} ${body}${guidanceClause}`;
+  return `${intro} ${body}${shared}${guidanceClause}`;
 }
 
 function ContractPage() {
@@ -156,7 +169,7 @@ function ContractPage() {
   const softLimits: KinkDetail[] = [];
   const discuss: KinkDetail[] = [];
 
-  const EMPTY: KinkEntry = { status: null, score: null, comment: "" };
+  const EMPTY: KinkEntry = { status: null, comment: "" };
 
   for (const kink of KINKS) {
     const entryA = profileA.entries[kink.id] ?? EMPTY;

@@ -62,7 +62,6 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
           position: "fixed",
           bottom: "1rem",
           left: "50%",
-          translateX: "-50%",
           zIndex: 401,
           width: "min(18rem, calc(100vw - 2rem))",
           background: "var(--surface2)",
@@ -71,9 +70,9 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
           padding: "1.125rem 1.125rem 0.875rem",
           boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
         }}
-        initial={{ opacity: 0, y: 32 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 32 }}
+        initial={{ opacity: 0, x: "-50%", y: 32 }}
+        animate={{ opacity: 1, x: "-50%", y: 0 }}
+        exit={{ opacity: 0, x: "-50%", y: 32 }}
         transition={t.modal}
       >
         {/* Header */}

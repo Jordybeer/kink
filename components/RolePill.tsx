@@ -34,9 +34,9 @@ export default function RolePill({ role }: { role?: string }) {
         <span
           className={BASE}
           style={{
-            background: "color-mix(in srgb, var(--accent2) 15%, transparent)",
-            color: "var(--accent2)",
-            borderColor: "var(--accent2)",
+            background: "color-mix(in srgb, var(--accent2, var(--accent)) 15%, transparent)",
+            color: "var(--accent2, var(--accent))",
+            borderColor: "var(--accent2, var(--accent))",
           }}
         >
           ontvangen

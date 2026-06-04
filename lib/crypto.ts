@@ -42,6 +42,35 @@ export async function decryptBackup(backup: EncryptedBackup, password: string): 
 }
 
 export async function hashPin(pin: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const raw = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
+    raw,
+    256
+  );
+  return `pbkdf2:${b64(salt)}:${b64(bits)}`;
+}
+
+export async function verifyPin(pin: string, stored: string): Promise<boolean> {
+  // Legacy: 64-char hex SHA-256 (no salt)
+  if (/^[0-9a-f]{64}$/.test(stored)) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
+    const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    return hex === stored;
+  }
+  const parts = stored.split(":");
+  if (parts.length !== 3 || parts[0] !== "pbkdf2") return false;
+  const salt = unb64(parts[1]);
+  const expected = new Uint8Array(unb64(parts[2]));
+  const raw = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
+    raw,
+    256
+  ));
+  if (bits.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < bits.length; i++) diff |= bits[i] ^ expected[i];
+  return diff === 0;
 }

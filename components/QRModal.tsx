@@ -29,11 +29,14 @@ export default function QRModal({ profile, onClose }: Props) {
     setQrDataUrl(null);
     const qrUrl = window.location.origin + "/?p=" + encodeProfileCompact(profile, { includeFetLife });
     setUrl(qrUrl);
+    const css = getComputedStyle(document.documentElement);
+    const dark = css.getPropertyValue("--accent").trim() || "#c084fc";
+    const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
     QRCode.toDataURL(qrUrl, {
       width: 280,
       margin: 2,
       errorCorrectionLevel: "L",
-      color: { dark: "#c084fc", light: "#0a0a0f" },
+      color: { dark, light },
     }).then(setQrDataUrl);
   }, [profile, includeFetLife]);
 

@@ -24,7 +24,7 @@ export interface KinkEntry {
   direction?: KinkDirection;
   desire?: number | null;
   experienced?: boolean | null;
-  score: number | null;         // deprecated — bewaard voor achterwaartse compat
+  score?: number | null;        // deprecated — bewaard voor achterwaartse compat
   comment: string;
   tags?: string[];
   usedInScene?: number;

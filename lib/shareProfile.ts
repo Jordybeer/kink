@@ -103,7 +103,7 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
         ? (statusGive && statusReceive ? "both" : statusGive ? "give" : "receive")
         : null);
     if (status !== null || statusGive !== null || statusReceive !== null || desire !== null || experienced !== null || direction !== null) {
-      const entry: import("@/types").KinkEntry = { status, desire, experienced, score: null, comment: "" };
+      const entry: import("@/types").KinkEntry = { status, desire, experienced, comment: "" };
       if (statusGive !== null) entry.statusGive = statusGive;
       if (statusReceive !== null) entry.statusReceive = statusReceive;
       if (direction !== null) entry.direction = direction;
@@ -118,7 +118,7 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     const desire = desireNum || null;
     const experienced = exp === true ? true : exp === false ? false : null;
     if (status !== null || desire !== null || experienced !== null) {
-      entries[id] = { status, desire, experienced, score: null, comment: "" };
+      entries[id] = { status, desire, experienced, comment: "" };
     }
   }
 
@@ -145,7 +145,14 @@ export function decodeProfileCompact(encoded: string): Profile {
 export function decodeAny(encoded: string): Profile {
   const parsed = JSON.parse(fromBase64Url(encoded));
   if (parsed.v === 2) return decodeProfileCompactFromParsed(parsed);
-  return parsed as Profile;
+  if (
+    typeof parsed.id !== "string" ||
+    typeof parsed.name !== "string" ||
+    parsed.entries === null || typeof parsed.entries !== "object"
+  ) {
+    throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+  }
+  return { ...(parsed as Profile), isImported: true };
 }
 
 // ── shared UTF-8-safe base64 helpers ─────────────────────────────────────────

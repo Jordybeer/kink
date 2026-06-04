@@ -37,7 +37,6 @@ interface Props {
   onStatusGiveChange?: (s: KinkStatus) => void;
   onStatusReceiveChange?: (s: KinkStatus) => void;
   compact?: boolean;
-  hideComments?: boolean;
   roleDirection?: RoleDirection;
 }
 
@@ -50,7 +49,7 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
 export default function KinkRow({
   kink, entry, onStatusChange,
   onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  compact, hideComments, roleDirection,
+  compact, roleDirection,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
 
@@ -77,7 +76,7 @@ export default function KinkRow({
     onTagsChange(next);
   }
 
-  const showComment = !compact && !hideComments && (entry.comment || tags.length > 0 || isRated);
+  const showComment = !compact && (entry.comment || tags.length > 0 || isRated);
   const effectiveStatus: KinkStatus =
     entry.direction === "give"    ? (entry.statusGive    ?? status) :
     entry.direction === "receive" ? (entry.statusReceive ?? status) :
@@ -105,7 +104,7 @@ export default function KinkRow({
             className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs flex-none"
             style={{ background: "rgba(59,130,246,0.45)", color: "rgba(255,255,255,0.85)", border: "none" }}
           >
-            ⓘ
+            <span aria-hidden="true">ⓘ</span>
           </button>
 
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
@@ -233,7 +232,7 @@ export default function KinkRow({
           const isReceive = entry.direction === "receive";
           const isBoth    = entry.direction === "both";
           const active =
-            isBoth    ? entry.statusGive === "hard_no" && entry.statusReceive === "hard_no" :
+            isBoth    ? entry.statusGive === "hard_no" || entry.statusReceive === "hard_no" :
             isGive    ? entry.statusGive    === "hard_no" :
             isReceive ? entry.statusReceive === "hard_no" :
             status === "hard_no";
@@ -300,10 +299,11 @@ export default function KinkRow({
                     key={tag}
                     onClick={() => toggleTag(tag)}
                     aria-pressed={active}
-                    className="focus-ring rounded-full border transition-colors"
+                    className="focus-ring rounded-full border transition-colors flex items-center"
                     style={{
                       fontSize: "12px",
-                      padding: "3px 10px",
+                      minHeight: 44,
+                      padding: "0 12px",
                       background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "transparent",
                       borderColor: active ? "var(--accent)" : "var(--border)",
                       color: active ? "var(--accent)" : "var(--text2)",

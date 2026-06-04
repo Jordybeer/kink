@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, SceneRecord, AftercareEntry } from "@/types";
 
 function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  return crypto.randomUUID();
 }
 
 type Theme = "midnight" | "red" | "forest" | "mono";
@@ -53,7 +53,7 @@ interface State {
   disableBiometric: () => void;
 }
 
-const EMPTY_ENTRY: KinkEntry = { status: null, score: null, comment: "" };
+const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 
 export const useStore = create<State>()(
   persist(
@@ -232,7 +232,7 @@ export const useStore = create<State>()(
       updateAftercare(id, aftercare) {
         set((s) => ({
           scenes: s.scenes.map((sc) =>
-            sc.id === id ? { ...sc, status: "completed" as const, aftercare, updatedAt: Date.now() } : sc
+            sc.id === id ? { ...sc, aftercare, updatedAt: Date.now() } : sc
           ),
         }));
       },
@@ -247,7 +247,7 @@ export const useStore = create<State>()(
             const kinkId = item.kinkId;
             profiles = profiles.map((p) => {
               if (p.id !== scene.profileAId && p.id !== scene.profileBId) return p;
-              const prev = p.entries[kinkId] ?? { status: null, score: null, comment: "" };
+              const prev = p.entries[kinkId] ?? { status: null, comment: "" };
               return { ...p, entries: { ...p.entries, [kinkId]: { ...prev, usedInScene: (prev.usedInScene ?? 0) + 1 } } };
             });
           }
@@ -318,7 +318,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 10,
+      version: 12,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -365,6 +365,24 @@ export const useStore = create<State>()(
         }
         if (version < 10) {
           state.scenes = [];
+        }
+        if (version < 11) {
+          state.scenes = (state.scenes ?? []).map((sc) => {
+            if (!sc.aftercare) return sc;
+            const a = sc.aftercare as Partial<typeof sc.aftercare>;
+            if (!a.trafficLight || !("completedAt" in a)) return { ...sc, aftercare: undefined };
+            return sc;
+          });
+        }
+        if (version < 12 && state.contracts && state.profiles) {
+          // Backfill IDs on legacy contracts so a later rename can't orphan them
+          const byName = new Map(state.profiles.map((p) => [p.name.toLowerCase(), p.id]));
+          state.contracts = state.contracts.map((c) => {
+            if (c.profileAId && c.profileBId) return c;
+            const aId = byName.get(c.profileAName?.toLowerCase());
+            const bId = byName.get(c.profileBName?.toLowerCase());
+            return aId && bId ? { ...c, profileAId: aId, profileBId: bId } : c;
+          });
         }
         return state;
       },

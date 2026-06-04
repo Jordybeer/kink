@@ -4,7 +4,9 @@ const ok = (s: KinkStatus | undefined | null): boolean =>
   s === "yes" || s === "willing";
 
 export function isKinkMatch(a: KinkEntry, b: KinkEntry): boolean {
-  if (!a.direction && !b.direction) return ok(a.status) && ok(b.status);
+  const aDirectional = !!(a.direction || a.statusGive || a.statusReceive);
+  const bDirectional = !!(b.direction || b.statusGive || b.statusReceive);
+  if (!aDirectional && !bDirectional) return ok(a.status) && ok(b.status);
   if (ok(a.statusGive ?? a.status) && ok(b.statusReceive ?? b.status)) return true;
   if (ok(b.statusGive ?? b.status) && ok(a.statusReceive ?? a.status)) return true;
   return false;
