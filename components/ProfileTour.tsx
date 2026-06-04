@@ -56,7 +56,7 @@ export default function ProfileTour({ onComplete }: Props) {
     }
     requestAnimationFrame(measure);
 
-    function remeasure() { setRects(STEPS.map(() => null)); requestAnimationFrame(measure); }
+    function remeasure() { attempts = 0; setRects(STEPS.map(() => null)); requestAnimationFrame(measure); }
     window.addEventListener("scroll", remeasure, { passive: true });
     window.addEventListener("resize", remeasure, { passive: true });
     return () => {
