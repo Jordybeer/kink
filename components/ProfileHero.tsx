@@ -1,9 +1,10 @@
 "use client";
 import { useRef } from "react";
-import { Pencil, QrCode } from "lucide-react";
+import { Camera, Pencil, QrCode } from "lucide-react";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
+import RolePill from "@/components/RolePill";
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -114,8 +115,9 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
         <div className="relative flex-none">
           <button
             type="button"
+            data-tour="avatar"
             onClick={() => fileInputRef.current?.click()}
-            className="ks-icon-pop w-16 h-16 rounded-full overflow-hidden focus-ring relative group"
+            className="ks-icon-pop w-16 h-16 rounded-full overflow-hidden focus-ring relative"
             aria-label="Profielfoto wijzigen"
           >
             {profile.avatarDataUrl ? (
@@ -128,13 +130,15 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 {initial}
               </div>
             )}
-            <div
-              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
-              style={{ background: "rgba(0,0,0,0.45)" }}
-            >
-              <span aria-hidden="true" className="text-white text-lg">📷</span>
-            </div>
           </button>
+          {/* Always-visible camera badge */}
+          <div
+            className="absolute bottom-0 right-0 w-6 h-6 rounded-full flex items-center justify-center pointer-events-none"
+            style={{ background: "var(--surface2)", border: "1.5px solid var(--border)" }}
+            aria-hidden="true"
+          >
+            <Camera size={11} style={{ color: "var(--text2)" }} />
+          </div>
           {profile.avatarDataUrl && (
             <button
               type="button"
@@ -184,12 +188,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
             )}
           </div>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-            >
-              {profile.role}
-            </span>
+            <RolePill role={profile.role} />
             <span
               className="text-xs px-2 py-0.5 rounded-full"
               style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}
