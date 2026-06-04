@@ -33,12 +33,19 @@ export function CompatibilityTimeline({ contracts }: Props) {
     ...sorted.map((c) => c.matchCount + c.discussCount + c.softLimitCount + c.hardLimitCount)
   );
 
+  const first = sorted[0];
+  const last = sorted[n - 1];
+  const summary =
+    n === 1
+      ? `Eén contract met ${first.matchCount} matches en ${first.hardLimitCount} harde grenzen.`
+      : `Compatibiliteit over ${n} contracten: matches van ${first.matchCount} naar ${last.matchCount}, harde grenzen van ${first.hardLimitCount} naar ${last.hardLimitCount}.`;
+
   return (
     <div>
       <svg
         width="100%"
         viewBox={`0 0 ${W} ${H}`}
-        aria-label="Compatibiliteit over tijd"
+        aria-label={summary}
         role="img"
       >
         {sorted.map((c, i) => {

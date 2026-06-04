@@ -232,7 +232,7 @@ export default function KinkRow({
           const isReceive = entry.direction === "receive";
           const isBoth    = entry.direction === "both";
           const active =
-            isBoth    ? entry.statusGive === "hard_no" && entry.statusReceive === "hard_no" :
+            isBoth    ? entry.statusGive === "hard_no" || entry.statusReceive === "hard_no" :
             isGive    ? entry.statusGive    === "hard_no" :
             isReceive ? entry.statusReceive === "hard_no" :
             status === "hard_no";
