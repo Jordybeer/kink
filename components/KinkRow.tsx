@@ -299,10 +299,11 @@ export default function KinkRow({
                     key={tag}
                     onClick={() => toggleTag(tag)}
                     aria-pressed={active}
-                    className="focus-ring rounded-full border transition-colors"
+                    className="focus-ring rounded-full border transition-colors flex items-center"
                     style={{
                       fontSize: "12px",
-                      padding: "3px 10px",
+                      minHeight: 44,
+                      padding: "0 12px",
                       background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "transparent",
                       borderColor: active ? "var(--accent)" : "var(--border)",
                       color: active ? "var(--accent)" : "var(--text2)",

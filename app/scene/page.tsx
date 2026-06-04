@@ -165,7 +165,7 @@ function SceneItemRow({
                   aria-pressed={active}
                   className="text-xs px-3 rounded-full border focus-ring"
                   style={{
-                    minHeight: 28,
+                    minHeight: 44,
                     transition: "background 120ms ease, border-color 120ms ease, color 120ms ease",
                     background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
                     borderColor: active ? c : "var(--border)",
@@ -182,7 +182,7 @@ function SceneItemRow({
               aria-label={detailsOpen ? "Details verbergen" : "Duur & notitie"}
               aria-expanded={detailsOpen}
               className="text-xs ml-auto focus-ring rounded px-2"
-              style={{ minHeight: 28, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
+              style={{ minHeight: 44, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
             >
               {detailsOpen ? "Minder" : "Details"}
             </button>
@@ -233,7 +233,7 @@ function KinkChip({
         background: added ? "transparent" : `color-mix(in srgb, ${color} 12%, transparent)`,
         borderColor: added ? "var(--border)" : `color-mix(in srgb, ${color} 45%, transparent)`,
         color: added ? "var(--text2)" : color,
-        minHeight: 36,
+        minHeight: 44,
       }}
     >
       {!added && (
