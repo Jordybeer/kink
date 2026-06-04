@@ -91,6 +91,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const [partnerTappedId,  setPartnerTappedId]  = useState<string | null>(null);
   const partnerTapTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const revealedRef = useRef<Set<string>>(new Set());
   const revealCancelRef = useRef(false);
   const [showZeroState, setShowZeroState] = useState(false);
 
@@ -378,6 +379,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   useEffect(() => {
     if (phase !== "revealed" || Object.keys(remote).length === 0) return;
     revealCancelRef.current = false;
+    revealedRef.current = new Set();
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const allIds = Object.keys(remote);
@@ -386,6 +388,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     ));
 
     if (reducedMotion) {
+      revealedRef.current = new Set(allIds);
       setRevealedIds(new Set(allIds));
       if (matchIds.size === 0) setShowZeroState(true);
       return;
@@ -423,7 +426,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       await wait(350);
       for (const id of ids) {
         if (revealCancelRef.current) return;
-        setRevealedIds(prev => new Set([...prev, id]));
+        // Direct DOM toggle instead of per-kink setState — avoids 240+ re-renders
+        revealedRef.current.add(id);
+        document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => {
+          el.classList.remove("partner-hidden");
+          el.classList.add("partner-reveal");
+        });
         if (matchIds.has(id)) {
           const t = setTimeout(() => {
             document.querySelectorAll(`[data-kink-id="${id}"]`).forEach(el => el.classList.add("match-pulse"));
@@ -448,6 +456,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         await revealGroup(cat, ids);
       }
 
+      // Settle React state once so a later re-render keeps everything revealed
+      setRevealedIds(new Set(revealedRef.current));
       if (matchIds.size === 0 && !revealCancelRef.current) setShowZeroState(true);
     })().catch(console.error);
 
@@ -757,7 +767,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                   {cat}
                 </div>
                 {kinks.map((kink, index) => {
-                  const revealed = revealedIds.has(kink.id);
+                  const revealed = revealedIds.has(kink.id) || revealedRef.current.has(kink.id);
                   const isMatchKink = matched.includes(kink.id);
                   return (
                     <div
