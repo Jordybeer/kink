@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,6 +29,7 @@ const DESTROY_PHRASE = "wis alles";
 
 
 function HomeContent() {
+  const t = useMotionSafe();
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -549,7 +551,7 @@ function HomeContent() {
               className="flex flex-col gap-3 mb-6"
               initial="hidden"
               animate="show"
-              variants={{ show: { transition: { staggerChildren: 0.07 } } }}
+              variants={STAGGER_CHILDREN}
             >
               {profileGroups.map((group) => {
                 const groupName = group[0].name;
@@ -557,7 +559,7 @@ function HomeContent() {
                 return (
                   <motion.div
                     key={groupName.toLowerCase().trim()}
-                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.22 } } }}
+                    variants={fadeUp(10)}
                   >
                     {isMulti && (
                       <div className="flex items-center gap-2 mb-2 px-1">
@@ -1259,7 +1261,7 @@ function HomeContent() {
                   initial={{ x: -40, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -40, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  transition={t.slide}
                   className="p-6 flex flex-col gap-4"
                 >
                   <h2 className="text-base font-bold">Backup versleutelen</h2>
@@ -1289,7 +1291,7 @@ function HomeContent() {
                   initial={{ x: 40, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 40, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  transition={t.slide}
                   className="p-6 flex flex-col gap-4"
                 >
                   <h2 className="text-base font-bold">Kies een wachtwoord</h2>
@@ -1364,7 +1366,7 @@ function HomeContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={t.fast}
             className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.6)" }}
           >
@@ -1373,7 +1375,7 @@ function HomeContent() {
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 24, opacity: 0 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
+              transition={t.fast}
               className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4"
               style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
@@ -1438,7 +1440,7 @@ function HomeContent() {
               {pinFlowStep === 0 && (
                 <motion.div key="pin-intro"
                   initial={{ x: -40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  transition={t.slide}
                   className="p-6 flex flex-col gap-4"
                 >
                   <h2 className="text-base font-bold">PIN-vergrendeling</h2>
@@ -1458,7 +1460,7 @@ function HomeContent() {
               {pinFlowStep === 1 && (
                 <motion.div key="pin-enter"
                   initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  transition={t.slide}
                   className="p-6 flex flex-col gap-4"
                 >
                   <h2 className="text-base font-bold">Kies een PIN</h2>
@@ -1492,7 +1494,7 @@ function HomeContent() {
               {pinFlowStep === 2 && (
                 <motion.div key="pin-remove"
                   initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  transition={t.slide}
                   className="p-6 flex flex-col gap-4"
                 >
                   <h2 className="text-base font-bold">PIN verwijderen</h2>
