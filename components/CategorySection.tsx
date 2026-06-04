@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
+import type { RoleDirection } from "@/lib/roles";
 import KinkRow from "./KinkRow";
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
   hideComments?: boolean;
+  roleDirection?: RoleDirection;
 }
 
 const MAX_PIPS = 12;
@@ -33,7 +35,7 @@ export default function CategorySection({
   onStatusChange,
   onCommentChange, onTagsChange,
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  onBulkSkip, onBulkRestore, compact, hideComments,
+  onBulkSkip, onBulkRestore, compact, hideComments, roleDirection,
 }: Props) {
   const t = useMotionSafe();
   const [open, setOpen] = useState(true);
@@ -151,6 +153,7 @@ export default function CategorySection({
                 onStatusReceiveChange={onStatusReceiveChange ? (s) => onStatusReceiveChange(kink.id, s) : undefined}
                 compact={compact}
                 hideComments={hideComments}
+                roleDirection={roleDirection}
               />
             ))}
           </div>

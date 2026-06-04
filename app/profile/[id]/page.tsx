@@ -3,7 +3,7 @@ import { use, useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
-import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
+import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES, categorizeRole } from "@/lib/roles";
 import CategorySection from "@/components/CategorySection";
 import KinkRow from "@/components/KinkRow";
 import Sheet from "@/components/Sheet";
@@ -36,6 +36,7 @@ export default function ProfilePage({ params }: Props) {
   const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
+  const roleDirection = categorizeRole(profile?.role ?? "");
 
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [activeTab, setActiveTab] = useState<"overzicht" | "bewerken" | null>(null);
@@ -531,6 +532,7 @@ export default function ProfilePage({ params }: Props) {
                         onStatusReceiveChange={(s) => { setEntry(profile.id, kink.id, { statusReceive: s }); markSaved(); }}
                         compact={compact}
                         hideComments={hideComments}
+                        roleDirection={roleDirection}
                       />
                     ))}
                   </div>
@@ -567,6 +569,7 @@ export default function ProfilePage({ params }: Props) {
                         }}
                         compact={compact}
                         hideComments={hideComments}
+                        roleDirection={roleDirection}
                       />
                     </div>
                   );
