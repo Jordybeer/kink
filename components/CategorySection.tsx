@@ -20,7 +20,6 @@ interface Props {
   onBulkSkip: () => void;
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
-  hideComments?: boolean;
   roleDirection?: RoleDirection;
 }
 
@@ -35,7 +34,7 @@ export default function CategorySection({
   onStatusChange,
   onCommentChange, onTagsChange,
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  onBulkSkip, onBulkRestore, compact, hideComments, roleDirection,
+  onBulkSkip, onBulkRestore, compact, roleDirection,
 }: Props) {
   const t = useMotionSafe();
   const [open, setOpen] = useState(true);
@@ -152,7 +151,6 @@ export default function CategorySection({
                 onStatusGiveChange={onStatusGiveChange ? (s) => onStatusGiveChange(kink.id, s) : undefined}
                 onStatusReceiveChange={onStatusReceiveChange ? (s) => onStatusReceiveChange(kink.id, s) : undefined}
                 compact={compact}
-                hideComments={hideComments}
                 roleDirection={roleDirection}
               />
             ))}

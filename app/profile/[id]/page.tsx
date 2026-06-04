@@ -43,7 +43,6 @@ export default function ProfilePage({ params }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [search, setSearch] = useState("");
   const [compact, setCompact] = useState(false);
-  const hideComments = true;
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [tourVisible, setTourVisible] = useState(false);
@@ -531,7 +530,6 @@ export default function ProfilePage({ params }: Props) {
                         onStatusGiveChange={(s) => { setEntry(profile.id, kink.id, { statusGive: s }); markSaved(); }}
                         onStatusReceiveChange={(s) => { setEntry(profile.id, kink.id, { statusReceive: s }); markSaved(); }}
                         compact={compact}
-                        hideComments={hideComments}
                         roleDirection={roleDirection}
                       />
                     ))}
@@ -568,7 +566,6 @@ export default function ProfilePage({ params }: Props) {
                           markSaved();
                         }}
                         compact={compact}
-                        hideComments={hideComments}
                         roleDirection={roleDirection}
                       />
                     </div>

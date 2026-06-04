@@ -383,9 +383,11 @@ function HomeContent() {
   }
 
   const pinnedProfile = profiles.find((p) => p.id === pinnedProfileId);
-  const compareProfiles = pinnedProfile
-    ? [pinnedProfile.id, profiles.find((p) => p.id !== pinnedProfileId)?.id ?? profiles[1]?.id].filter(Boolean)
-    : profiles.slice(0, 2).map((p) => p.id);
+  const compareProfiles = (pinnedProfile
+    ? [pinnedProfile.id, profiles.find((p) => p.id !== pinnedProfileId)?.id]
+    : profiles.slice(0, 2).map((p) => p.id)
+  ).filter((id): id is string => Boolean(id));
+  const canCompare = compareProfiles.length >= 2;
   const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
 
   // Group profiles by name for multi-role display
@@ -793,7 +795,7 @@ function HomeContent() {
 
             {/* Compare CTA */}
             <div className="flex flex-col gap-3">
-              {profiles.length >= 2 ? (
+              {canCompare ? (
                 <Link
                   href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
                   className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"

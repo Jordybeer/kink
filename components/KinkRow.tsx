@@ -37,7 +37,6 @@ interface Props {
   onStatusGiveChange?: (s: KinkStatus) => void;
   onStatusReceiveChange?: (s: KinkStatus) => void;
   compact?: boolean;
-  hideComments?: boolean;
   roleDirection?: RoleDirection;
 }
 
@@ -50,7 +49,7 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
 export default function KinkRow({
   kink, entry, onStatusChange,
   onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  compact, hideComments, roleDirection,
+  compact, roleDirection,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
 
@@ -77,7 +76,7 @@ export default function KinkRow({
     onTagsChange(next);
   }
 
-  const showComment = !compact && !hideComments && (entry.comment || tags.length > 0 || isRated);
+  const showComment = !compact && (entry.comment || tags.length > 0 || isRated);
   const effectiveStatus: KinkStatus =
     entry.direction === "give"    ? (entry.statusGive    ?? status) :
     entry.direction === "receive" ? (entry.statusReceive ?? status) :

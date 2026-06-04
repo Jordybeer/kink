@@ -69,8 +69,9 @@ function ComparePage() {
   const { profiles, setEntry } = useStore();
   const _hasHydrated = useHasHydrated();
 
-  const [aId, setAId] = useState(searchParams.get("a") ?? "");
-  const [bId, setBId] = useState(searchParams.get("b") ?? "");
+  const cleanParam = (v: string | null) => (v && v !== "undefined" && v !== "null" ? v : "");
+  const [aId, setAId] = useState(cleanParam(searchParams.get("a")));
+  const [bId, setBId] = useState(cleanParam(searchParams.get("b")));
   const [filterMode, setFilterMode] = useState<"all" | "match" | "conflict" | "hardno">("all");
   const [showEmpty, setShowEmpty] = useState(false);
   const [pulsed, setPulsed] = useState(false);

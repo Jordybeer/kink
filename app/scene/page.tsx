@@ -478,8 +478,8 @@ function ScenePage() {
               value={sceneTitle}
               onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
-              className="w-full bg-transparent focus:outline-none focus-ring rounded font-bold"
-              style={{ color: "var(--text)", fontSize: 18 }}
+              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded font-bold"
+              style={{ color: "var(--text)" }}
             />
             {profileA && profileB && (
               <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>

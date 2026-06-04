@@ -175,6 +175,9 @@ select {
   font-size: 16px !important;
 }
 
+/* Larger inputs that still clear the 16px iOS-zoom threshold opt out via this class */
+.ks-input-lg { font-size: 18px !important; }
+
 
 /* Per-status sustained glow — one pulse per 1.8s, color-matched */
 @keyframes ks-glow-yes     { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0);  } 50% { box-shadow: 0 0 8px 2px rgba(74,222,128,0.25);  } }
