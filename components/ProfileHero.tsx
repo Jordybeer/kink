@@ -39,7 +39,7 @@ const VIBE_MAP: Record<Status, string> = {
   yes:     "Open-minded ✨",
   maybe:   "Bedachtzaam 🌙",
   no:      "Selectief 🔒",
-  hard_no: "Selectief 🔒",
+  hard_no: "Grensbewust 🛑",
 };
 
 export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvatarChange, onError }: ProfileHeroProps) {

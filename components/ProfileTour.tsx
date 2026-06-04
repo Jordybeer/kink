@@ -55,7 +55,21 @@ export default function ProfileTour({ onComplete }: Props) {
       }
     }
     requestAnimationFrame(measure);
+
+    function remeasure() { setRects(STEPS.map(() => null)); requestAnimationFrame(measure); }
+    window.addEventListener("scroll", remeasure, { passive: true });
+    window.addEventListener("resize", remeasure, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", remeasure);
+      window.removeEventListener("resize", remeasure);
+    };
   }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onComplete(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onComplete]);
 
   const current = STEPS[step];
   const rect = rects[step];

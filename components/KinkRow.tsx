@@ -105,7 +105,7 @@ export default function KinkRow({
             className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs flex-none"
             style={{ background: "rgba(59,130,246,0.45)", color: "rgba(255,255,255,0.85)", border: "none" }}
           >
-            ⓘ
+            <span aria-hidden="true">ⓘ</span>
           </button>
 
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>

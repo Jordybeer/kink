@@ -105,8 +105,8 @@ function ComparePage() {
   let matchCount = 0, hardLimitCount = 0, discussCount = 0, totalRated = 0;
   if (profileA && profileB) {
     for (const kink of KINKS) {
-      const eA = profileA.entries[kink.id] ?? { status: null, score: null, comment: "" };
-      const eB = profileB.entries[kink.id] ?? { status: null, score: null, comment: "" };
+      const eA = profileA.entries[kink.id] ?? { status: null, comment: "" };
+      const eB = profileB.entries[kink.id] ?? { status: null, comment: "" };
       const hasA = eA.status || eA.statusGive || eA.statusReceive;
       const hasB = eB.status || eB.statusGive || eB.statusReceive;
       if (!hasA && !hasB) continue;
@@ -154,7 +154,7 @@ function ComparePage() {
   );
 
   function getEntry(profile: typeof profileA, kinkId: string): KinkEntry {
-    return profile?.entries[kinkId] ?? { status: null, score: null, comment: "" };
+    return profile?.entries[kinkId] ?? { status: null, comment: "" };
   }
 
   function passesFilter(eA: KinkEntry, eB: KinkEntry): boolean {
@@ -174,8 +174,8 @@ function ComparePage() {
         const kinks = getKinksByCategory(cat);
         let catMatches = 0, catRated = 0;
         for (const k of kinks) {
-          const eA = profileA.entries[k.id] ?? { status: null, score: null, comment: "" };
-          const eB = profileB.entries[k.id] ?? { status: null, score: null, comment: "" };
+          const eA = profileA.entries[k.id] ?? { status: null, comment: "" };
+          const eB = profileB.entries[k.id] ?? { status: null, comment: "" };
           const hasA = eA.status || eA.statusGive || eA.statusReceive;
           const hasB = eB.status || eB.statusGive || eB.statusReceive;
           if (hasA || hasB) {
@@ -302,270 +302,7 @@ function ComparePage() {
 
       <div>
 
-        {/* Left panel — desktop sidebar (removed; content lives in mobile sticky strip above) */}
-        <div className="hidden">
 
-          {/* Profile selectors */}
-          <div className="grid grid-cols-2 gap-4 mb-5">
-            {(
-              [
-                { id: aId, setId: setAId, label: "Profiel A", colour: COLOUR_A },
-                { id: bId, setId: setBId, label: "Profiel B", colour: COLOUR_B },
-              ] as const
-            ).map(({ id, setId, label, colour }) => (
-              <div key={label}>
-                <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>
-                  {label}
-                </label>
-                <select
-                  value={id}
-                  onChange={(e) => setId(e.target.value)}
-                  className="focus-ring w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
-                  style={{ background: "var(--surface)", border: `1px solid ${colour}`, color: "var(--text)" }}
-                >
-                  <option value="">— selecteer —</option>
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-
-          {/* Profile identity chips */}
-          {profileA && profileB && (
-            <div className="flex gap-3 flex-wrap mb-5">
-              {[
-                { p: profileA, colour: COLOUR_A },
-                { p: profileB, colour: COLOUR_B },
-              ].map(({ p, colour }) => (
-                <div
-                  key={p.id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
-                  style={{
-                    border: `1px solid ${colour}`,
-                    background: `color-mix(in srgb, ${colour} 8%, transparent)`,
-                  }}
-                >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-black flex-none"
-                    style={{ background: colour }}
-                  >
-                    {p.name[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm" style={{ color: colour }}>{p.name}</div>
-                    <div className="text-xs" style={{ color: "var(--text2)" }}>
-                      {Object.values(p.entries).filter((e) => e.status).length} beoordeeld
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Action buttons */}
-          {profileA && profileB && (
-            <div className="flex gap-2 mb-5 flex-wrap">
-              <Link
-                href={`/scene?a=${aId}&b=${bId}`}
-                className="focus-ring px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90 border flex-1 text-center"
-                style={{ borderColor: "var(--border)", color: "var(--text)" }}
-              >
-                🎭 Plan een scène
-              </Link>
-              <Link
-                href={`/contract?a=${aId}&b=${bId}`}
-                className="focus-ring px-3 py-1.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-90 flex-1 text-center"
-                style={{ background: "var(--accent)", color: "#000" }}
-              >
-                ✍ Contract
-              </Link>
-            </div>
-          )}
-
-          {/* Summary card */}
-          {profileA && profileB && (
-            <div
-              className="rounded-xl p-4 mb-5"
-              style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-            >
-              <div className="flex gap-4 flex-wrap">
-                <div className="flex-1 text-center min-w-[72px]">
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: "var(--yes)" }}>
-                    {matchCount}
-                  </div>
-                  <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>gedeelde interesses</div>
-                </div>
-                <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
-                <div className="flex-1 text-center min-w-[72px]">
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: "var(--willing)" }}>
-                    {discussCount}
-                  </div>
-                  <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>te bespreken</div>
-                </div>
-                <div className="w-px self-stretch" style={{ background: "var(--border)" }} />
-                <div className="flex-1 text-center min-w-[72px]">
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: "var(--hard-no)" }}>
-                    {hardLimitCount}
-                  </div>
-                  <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>harde grenzen</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Compatibility score card */}
-          {profileA && profileB && (
-            <div
-              className="rounded-xl p-4 mb-5 relative overflow-hidden"
-              style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-            >
-              {/* BDSM emoji burst */}
-              {showConfetti && (
-                <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                  {confettiEmoji.map((emoji, i) => (
-                    <span
-                      key={i}
-                      className="absolute"
-                      style={{
-                        fontSize: "1.1rem",
-                        left: `${7 + i * 12}%`,
-                        top: "60%",
-                        animation: `confetti-pop 0.6s ease-out ${i * 0.07}s both`,
-                      }}
-                    >
-                      {emoji}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-6 flex-wrap">
-                <div className="text-center">
-                  <div
-                    className="text-4xl font-bold tabular-nums"
-                    style={{
-                      background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    {score}%
-                  </div>
-                  <div className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>Compatibiliteit</div>
-                </div>
-                <div className="flex-1">
-                  <div className="text-xs mb-1" style={{ color: "var(--text2)" }}>
-                    {matchCount} van {totalRated} beoordeeld samen
-                  </div>
-                  <div
-                    className="h-2 rounded-full overflow-hidden"
-                    style={{ background: "var(--border)" }}
-                  >
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${score}%`,
-                        background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {score >= 70 && (
-                <div className="mt-3 text-xs font-medium" style={{ color: "var(--accent)" }}>
-                  Jullie passen goed samen 🖤
-                </div>
-              )}
-
-              {/* Category heatmap */}
-              {categoryScores.length > 0 && (
-                <div className="mt-4">
-                  <div className="text-xs mb-2 uppercase tracking-widest" style={{ color: "var(--text2)" }}>
-                    Per categorie
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {categoryScores.map(({ cat, rate }) => {
-                      const pillStyle = categoryPillStyle(rate);
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() => scrollToCategory(cat)}
-                          aria-label={`Scroll naar ${cat}`}
-                          className="text-[10px] px-2 py-1 rounded-full font-medium cursor-pointer border transition-opacity hover:opacity-80 focus-ring"
-                          style={{
-                            background: pillStyle.background,
-                            borderColor: pillStyle.borderColor,
-                            color: "var(--text)",
-                          }}
-                        >
-                          {catAbbrev(cat)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2 mb-5">
-            {(["all", "match", "conflict", "hardno"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilterMode(f)}
-                className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
-                style={
-                  filterMode === f
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
-                    : { background: "transparent", color: "var(--text2)", borderColor: "var(--border)" }
-                }
-              >
-                {f === "all" ? "Alles" : f === "match" ? "Match ✓" : f === "conflict" ? "Spanning ⚡" : "Grenzen ⛔"}
-              </button>
-            ))}
-            <label
-              className="flex items-center gap-1.5 text-xs ml-2 cursor-pointer"
-              style={{ color: "var(--text2)" }}
-            >
-              <input
-                type="checkbox"
-                checked={showEmpty}
-                onChange={(e) => setShowEmpty(e.target.checked)}
-                className="rounded"
-              />
-              Toon onbeoordeeld
-            </label>
-
-            {/* Discussion tracker controls */}
-            {discussed.size > 0 && (
-              <span className="text-xs ml-1" style={{ color: "var(--text2)" }}>
-                💬 {discussed.size} besproken (tijdelijk)
-              </span>
-            )}
-            {discussed.size > 0 && (
-              <label
-                className="flex items-center gap-1.5 text-xs cursor-pointer"
-                style={{ color: "var(--text2)" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={hideDiscussed}
-                  onChange={(e) => setHideDiscussed(e.target.checked)}
-                  className="rounded"
-                />
-                Verberg besproken
-              </label>
-            )}
-          </div>
-
-        </div>{/* end left panel */}
 
         {/* Kink list */}
         <div>
@@ -711,8 +448,8 @@ function ComparePage() {
                     </h2>
                     <div className="flex flex-col gap-2">
                       {Array.from(merged.values()).map((item) => {
-                        const eA = item.aId ? (profileA.entries[item.aId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
-                        const eB = item.bId ? (profileB.entries[item.bId] ?? { status: null, score: null, comment: "" }) : { status: null as KinkStatus, score: null, comment: "" };
+                        const eA = item.aId ? (profileA.entries[item.aId] ?? { status: null, comment: "" }) : { status: null as KinkStatus, comment: "" };
+                        const eB = item.bId ? (profileB.entries[item.bId] ?? { status: null, comment: "" }) : { status: null as KinkStatus, comment: "" };
                         const matched = isKinkMatch(eA, eB);
                         const hardLimit = isHardLimit(eA, eB);
                         const conflict = !matched && !hardLimit && isConflict(eA, eB);

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TAP_SPRING, SHAKE_ANIM, useMotionSafe } from "@/lib/motion";
-import { hashPin } from "@/lib/crypto";
+import { verifyPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
 
 const COOLDOWN_S = 30;
@@ -62,8 +62,8 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
     if (next.length < PIN_LENGTH) return;
 
     if (!storedHash) return;
-    const hash = await hashPin(next.join(""));
-    if (hash === storedHash) {
+    const ok = await verifyPin(next.join(""), storedHash);
+    if (ok) {
       onUnlock();
     } else {
       setShake(true);

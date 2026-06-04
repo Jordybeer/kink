@@ -87,7 +87,7 @@ export default function CategorySection({
         <button
           onClick={() => {
             const snapshot: Record<string, KinkEntry> = {};
-            for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, score: null, comment: "" };
+            for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, comment: "" };
             undoSnapshot.current = snapshot;
             onBulkSkip();
             setUndoPending(true);
@@ -144,7 +144,7 @@ export default function CategorySection({
               <KinkRow
                 key={kink.id}
                 kink={kink}
-                entry={entries[kink.id] ?? { status: null, score: null, comment: "" }}
+                entry={entries[kink.id] ?? { status: null, comment: "" }}
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
                 onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}

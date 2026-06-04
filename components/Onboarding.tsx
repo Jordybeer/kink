@@ -229,10 +229,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
             </div>
 
-            {/* Skip (step 0 only) */}
+            {/* Skip (step 0 only) — jumps to age gate, never bypasses it */}
             {step === 0 && (
               <button
-                onClick={onComplete}
+                onClick={() => { setLeaving(true); setTimeout(() => { setStep(7); setLeaving(false); }, 220); }}
                 style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '0.875rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.6)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; }}

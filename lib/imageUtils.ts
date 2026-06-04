@@ -1,4 +1,7 @@
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20 MB
+
 export function resizeImage(file: File): Promise<string> {
+  if (file.size > MAX_IMAGE_BYTES) return Promise.reject(new Error("Afbeelding is te groot (max 20 MB)"));
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;

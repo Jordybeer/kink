@@ -39,7 +39,8 @@ const RELAY = "/api/relay";
 
 export function genCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const rng = crypto.getRandomValues(new Uint8Array(6));
+  return Array.from(rng, (b) => chars[b % chars.length]).join("");
 }
 
 export async function postOffer(code: string, sdp: string): Promise<void> {
