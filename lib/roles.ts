@@ -20,3 +20,21 @@ export const RELATIONSHIP_STATUSES = [
   "Single", "Taken", "Getrouwd", "Gecollared",
   "Polyamoreus", "Open relatie", "Geowned", "Het is ingewikkeld",
 ];
+
+const GIVE_ROLES = new Set([
+  "Dominant", "Daddy Dom", "Mommy Dom", "Top", "Sadist",
+  "Rigger", "Brat Tamer", "Handler/Owner", "Caregiver", "Primal Hunter",
+]);
+const RECEIVE_ROLES = new Set([
+  "Submissive", "little", "Middle", "Bottom", "Masochist",
+  "Rope Bunny", "Brat", "Pet", "Primal Prey",
+]);
+
+export type RoleDirection = "give" | "receive" | "both" | "none";
+
+export function categorizeRole(role: string): RoleDirection {
+  if (role === "Switch") return "both";
+  if (GIVE_ROLES.has(role)) return "give";
+  if (RECEIVE_ROLES.has(role)) return "receive";
+  return "none";
+}

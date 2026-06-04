@@ -7,6 +7,12 @@ interface TourRect { top: number; left: number; width: number; height: number }
 
 const STEPS = [
   {
+    selector: '[data-tour="avatar"]',
+    title: "Voeg een foto toe",
+    body: "Tap de avatar om een profielfoto toe te voegen — bijgesneden en lokaal opgeslagen.",
+    pad: 8,
+  },
+  {
     selector: '[data-tour="info"]',
     title: "Info over elke kink",
     body: "Tap ⓘ voor een beschrijving en veiligheidstips.",
@@ -30,7 +36,7 @@ interface Props { onComplete: () => void }
 
 export default function ProfileTour({ onComplete }: Props) {
   const [step, setStep] = useState(0);
-  const [rects, setRects] = useState<(TourRect | null)[]>([null, null, null]);
+  const [rects, setRects] = useState<(TourRect | null)[]>(STEPS.map(() => null));
 
   useEffect(() => {
     let attempts = 0;

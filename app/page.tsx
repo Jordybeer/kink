@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
+import RolePill from "@/components/RolePill";
 import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
@@ -67,11 +68,13 @@ function HomeContent() {
   );
 
   const [name, setName] = useState("");
-  const [role, setRole] = useState("Switch");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [role, setRole] = useState("");
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("beginner");
   const [relationshipStatus, setRelationshipStatus] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editNameError, setEditNameError] = useState<string | null>(null);
   const [editRole, setEditRole] = useState("");
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
   const [editRelationshipStatus, setEditRelationshipStatus] = useState("");
@@ -157,6 +160,11 @@ function HomeContent() {
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
+    const duplicate = profiles.some(
+      (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
+    );
+    if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return; }
+    setNameError(null);
     const id = createProfile(name.trim(), role, experienceLevel, relationshipStatus || undefined);
     setName("");
     setRelationshipStatus("");
@@ -173,6 +181,11 @@ function HomeContent() {
 
   function saveEdit() {
     if (!editId || !editName.trim()) return;
+    const duplicate = profiles.some(
+      (p) => p.id !== editId && p.name.trim().toLowerCase() === editName.trim().toLowerCase()
+    );
+    if (duplicate) { setEditNameError("Er bestaat al een profiel met deze naam."); return; }
+    setEditNameError(null);
     const existing = profiles.find((p) => p.id === editId);
     renameProfile(editId, editName.trim(), editRole, editLevel, editRelationshipStatus || undefined, existing?.fetLifeUsername);
     setEditId(null);
@@ -433,13 +446,18 @@ function HomeContent() {
             Nieuw profiel
           </h2>
 
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Naam of alias…"
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-3 focus:outline-none placeholder-[color:var(--text2)]"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
+          <div className="mb-3">
+            <input
+              value={name}
+              onChange={(e) => { setName(e.target.value); setNameError(null); }}
+              placeholder="Naam of alias…"
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: `1px solid ${nameError ? "var(--hard-no)" : "var(--border)"}`, color: "var(--text)" }}
+            />
+            {nameError && (
+              <p className="text-xs mt-1" style={{ color: "var(--hard-no)" }}>{nameError}</p>
+            )}
+          </div>
 
           <label htmlFor="role-select" className="text-xs mb-1.5 font-medium block" style={{ color: "var(--text2)" }}>Rol</label>
           <select
@@ -447,8 +465,9 @@ function HomeContent() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: role ? "var(--text)" : "var(--text2)" }}
           >
+            <option value="" disabled>D/s dynamiek…</option>
             {ROLE_GROUPS.map((g) => (
               <optgroup key={g.label} label={g.label}>
                 {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -583,12 +602,17 @@ function HomeContent() {
                           >
                             {editId === p.id ? (
                               <div className="p-4">
-                                <input
-                                  value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
-                                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                                />
+                                <div className="mb-3">
+                                  <input
+                                    value={editName}
+                                    onChange={(e) => { setEditName(e.target.value); setEditNameError(null); }}
+                                    className="focus-ring w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+                                    style={{ background: "var(--surface2)", border: `1px solid ${editNameError ? "var(--hard-no)" : "var(--border)"}`, color: "var(--text)" }}
+                                  />
+                                  {editNameError && (
+                                    <p className="text-xs mt-1" style={{ color: "var(--hard-no)" }}>{editNameError}</p>
+                                  )}
+                                </div>
                                 <label htmlFor="role-select-edit" className="text-xs mb-1.5 block" style={{ color: "var(--text2)" }}>Rol</label>
                                 <select
                                   id="role-select-edit"
@@ -709,9 +733,16 @@ function HomeContent() {
                                     <p className="text-sm font-semibold truncate leading-tight">
                                       {isMulti ? p.role : p.name}
                                     </p>
-                                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
-                                      {isMulti ? null : p.role}{lvl ? (isMulti ? lvl.label : ` · ${lvl.label}`) : null}
-                                    </p>
+                                    {isMulti ? (
+                                      <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
+                                        {lvl?.label}
+                                      </p>
+                                    ) : (
+                                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                                        <RolePill role={p.role} />
+                                        {lvl && <span className="text-xs" style={{ color: "var(--text2)" }}>· {lvl.label}</span>}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="flex items-center gap-1 flex-none">
                                     <button
