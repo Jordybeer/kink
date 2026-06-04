@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
+import type { RoleDirection } from "@/lib/roles";
 import InfoSheet from "./InfoSheet";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
@@ -37,6 +38,7 @@ interface Props {
   onStatusReceiveChange?: (s: KinkStatus) => void;
   compact?: boolean;
   hideComments?: boolean;
+  roleDirection?: RoleDirection;
 }
 
 const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
@@ -48,7 +50,7 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
 export default function KinkRow({
   kink, entry, onStatusChange,
   onCommentChange, onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  compact, hideComments,
+  compact, hideComments, roleDirection,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
 
@@ -113,7 +115,10 @@ export default function KinkRow({
         {showDirection && (
           <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-1.5 overflow-x-auto">
             <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Richting:</span>
-            {DIRECTIONS.map(({ dir, label }) => {
+            {DIRECTIONS.filter(({ dir }) => {
+              if (!roleDirection || roleDirection === "none" || roleDirection === "both") return true;
+              return dir === roleDirection;
+            }).map(({ dir, label }) => {
               const active = entry.direction === dir;
               return (
                 <button
