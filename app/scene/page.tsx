@@ -265,6 +265,7 @@ function ScenePage() {
   const [newItemName, setNewItemName] = useState("");
   const [saved, setSaved] = useState(false);
   const [savedStatus, setSavedStatus] = useState<"draft" | "planned" | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -346,7 +347,11 @@ function ScenePage() {
   }
 
   function handleSave(status: "draft" | "planned") {
-    if (!profileA || !profileB) return;
+    if (!profileA || !profileB) {
+      setSaveError("Kies twee profielen voordat je deze scène vastlegt.");
+      return;
+    }
+    setSaveError(null);
     const title = sceneTitle.trim() || `${profileA.name} & ${profileB.name}`;
     const id = saveScene({
       id: sceneId ?? undefined,
@@ -586,6 +591,13 @@ function ScenePage() {
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
       >
+        {saveError && (
+          <div className="max-w-2xl mx-auto mb-2">
+            <p role="alert" className="text-xs ks-fade-in" style={{ color: "var(--hard-no)" }}>
+              {saveError}
+            </p>
+          </div>
+        )}
         <div className="max-w-2xl mx-auto flex gap-2">
           {/* PDF */}
           <button

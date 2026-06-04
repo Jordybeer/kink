@@ -138,6 +138,10 @@ export default function ProfileTour({ onComplete }: Props) {
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tour-title"
+          aria-describedby="tour-body"
           style={{
             position: "fixed", zIndex: 402,
             width: "min(18rem, calc(100vw - 1rem))",
@@ -154,7 +158,7 @@ export default function ProfileTour({ onComplete }: Props) {
           transition={t.tooltip}
         >
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-            <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
+            <h3 id="tour-title" style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
               {current.title}
             </h3>
             <span style={{ fontSize: "0.75rem", color: "var(--text2)", flexShrink: 0, marginLeft: "0.5rem", marginTop: "0.125rem" }}>
@@ -162,7 +166,7 @@ export default function ProfileTour({ onComplete }: Props) {
             </span>
           </div>
 
-          <p style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
+          <p id="tour-body" style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
             {current.body}
           </p>
 

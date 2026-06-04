@@ -318,7 +318,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 11,
+      version: 12,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -372,6 +372,16 @@ export const useStore = create<State>()(
             const a = sc.aftercare as Partial<typeof sc.aftercare>;
             if (!a.trafficLight || !("completedAt" in a)) return { ...sc, aftercare: undefined };
             return sc;
+          });
+        }
+        if (version < 12 && state.contracts && state.profiles) {
+          // Backfill IDs on legacy contracts so a later rename can't orphan them
+          const byName = new Map(state.profiles.map((p) => [p.name.toLowerCase(), p.id]));
+          state.contracts = state.contracts.map((c) => {
+            if (c.profileAId && c.profileBId) return c;
+            const aId = byName.get(c.profileAName?.toLowerCase());
+            const bId = byName.get(c.profileBName?.toLowerCase());
+            return aId && bId ? { ...c, profileAId: aId, profileBId: bId } : c;
           });
         }
         return state;
