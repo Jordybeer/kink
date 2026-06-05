@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import AftercareSheet from "@/components/AftercareSheet";
-import PageShell, { PageHeader } from "@/components/PageShell";
+import PageShell from "@/components/PageShell";
 import type { SceneRecord } from "@/types";
 
 const TRAFFIC = {
@@ -155,12 +155,9 @@ export default function ScenesPage() {
 
   return (
     <PageShell width="2xl">
-      <PageHeader
-        title="Scènes"
-        action={
-          <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
-        }
-      />
+      <div className="flex items-center justify-end mb-4">
+        <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
+      </div>
 
       <div className="flex flex-col gap-8">
         {sections.map(({ key, label, items }) => (

@@ -49,7 +49,7 @@ export default function CategorySection({
   return (
     <section className="mb-3">
       <div
-        className="sticky top-[53px] z-[5] flex items-center rounded-lg transition-colors"
+        className="sticky top-[calc(var(--nav-h)+53px)] z-[5] flex items-center rounded-lg transition-colors"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",

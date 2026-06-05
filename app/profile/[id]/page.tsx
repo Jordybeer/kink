@@ -361,18 +361,11 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-            ← Terug
-          </Link>
-          {showSaved && (
-            <span className="text-[11px] font-medium" style={{ color: "var(--accent)" }}>
-              Opgeslagen ✓
-            </span>
-          )}
-        </div>
+      {/* Action row */}
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-2">
+        <span className="text-[11px] font-medium transition-opacity" style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}>
+          Opgeslagen ✓
+        </span>
         <div className="flex items-center gap-2">
           <Link
             href={`/compare?a=${id}`}
@@ -464,7 +457,7 @@ export default function ProfilePage({ params }: Props) {
 
           <div
             ref={navRef}
-            className="no-scrollbar sticky top-0 z-10 px-4 pt-2 pb-1.5"
+            className="no-scrollbar sticky top-[var(--nav-h)] z-10 px-4 pt-2 pb-1.5"
             style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
           >
             <div className="h-1.5 rounded-full overflow-hidden flex mb-1.5" style={{ background: "var(--surface2)" }}>

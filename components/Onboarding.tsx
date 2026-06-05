@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
 import { isPlatformAuthenticatorAvailable, registerBiometric } from '@/lib/webauthn';
 
@@ -266,8 +267,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 function Step0Content() {
   return (
     <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h1 style={{ color: '#fff', fontSize: '2.25rem', fontWeight: 700, letterSpacing: '0.08em', margin: 0, animation: 'ks-fade-in 1s ease forwards', opacity: 0 }}>
-        KinkSync
+      <h1 style={{ fontSize: '2.25rem', fontWeight: 700, margin: 0, animation: 'ks-fade-in 1s ease forwards', opacity: 0 }}>
+        <Wordmark style={{ letterSpacing: '0.08em' }} />
       </h1>
       <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', animation: 'ks-fade-in 1s ease 0.5s forwards', opacity: 0 }}>
         Verken grenzen. Samen.

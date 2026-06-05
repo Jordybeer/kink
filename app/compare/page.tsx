@@ -6,7 +6,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit, isConflict } from "@/lib/matching";
-import PageShell, { PageHeader } from "@/components/PageShell";
+import PageShell from "@/components/PageShell";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "✓ Heel graag",
@@ -195,10 +195,8 @@ function ComparePage() {
 
   return (
     <PageShell width="5xl">
-      <PageHeader title="Vergelijk profielen" />
-
       {/* Mobile-only sticky selector strip */}
-      <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="md:hidden sticky top-[var(--nav-h)] z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-2 gap-2">
           {(
             [

@@ -15,6 +15,7 @@ import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import AppLock from "@/components/AppLock";
 import PageShell from "@/components/PageShell";
+import Wordmark from "@/components/Wordmark";
 import dynamic from "next/dynamic";
 import { decodeAny } from "@/lib/shareProfile";
 
@@ -412,15 +413,8 @@ function HomeContent() {
           >
             <Settings size={18} />
           </button>
-          <h1
-            className="text-3xl font-bold"
-            style={{
-              background: "linear-gradient(90deg, var(--accent), var(--accent2))",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            KinkSync
+          <h1 className="text-3xl font-bold">
+            <Wordmark />
           </h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
             Verken grenzen. Samen. — <span className="opacity-50 text-xs">kinksync.be</span>

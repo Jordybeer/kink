@@ -8,7 +8,7 @@ import { KINKS } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit } from "@/lib/matching";
 import { categorizeRole } from "@/lib/roles";
-import PageShell, { PageHeader } from "@/components/PageShell";
+import PageShell from "@/components/PageShell";
 
 const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "Heel graag",
@@ -146,7 +146,6 @@ function ContractPage() {
   if (!profileA || !profileB) {
     return (
       <PageShell width="3xl">
-        <PageHeader title="Teken het contract" back="/compare" />
         <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
           Kies twee profielen via de vergelijkingspagina om een contract op te stellen.
         </p>

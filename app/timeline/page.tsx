@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CompatibilityTimeline } from "@/components/CompatibilityTimeline";
-import PageShell, { PageHeader } from "@/components/PageShell";
+import PageShell from "@/components/PageShell";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
@@ -41,8 +41,6 @@ function TimelinePage() {
 
   return (
     <PageShell width="2xl">
-      <PageHeader title="📈 Geschiedenis" />
-
       {/* Profile selectors */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {(
