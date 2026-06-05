@@ -33,6 +33,22 @@ test("scene populated", async ({ page }) => {
   await page.screenshot({ path: "/tmp/ss-scene.png", fullPage: true });
 });
 
+test("scenes populated", async ({ page }) => {
+  await seedAndGo(page, "/scenes", PROFILES);
+  await page.screenshot({ path: "/tmp/ss-scenes.png", fullPage: true });
+});
+
+test("timeline populated", async ({ page }) => {
+  await seedAndGo(page, "/timeline?a=pw-alex-001&b=pw-sam-002", PROFILES);
+  await page.screenshot({ path: "/tmp/ss-timeline.png", fullPage: true });
+});
+
+test("home reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await seedAndGo(page, "/", PROFILES);
+  await page.screenshot({ path: "/tmp/ss-home-reduced.png", fullPage: true });
+});
+
 test("profile alex scrolled", async ({ page }) => {
   await seedAndGo(page, "/profile/pw-alex-001", PROFILES);
   await page.mouse.wheel(0, 600);

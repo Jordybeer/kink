@@ -118,6 +118,15 @@ html, body {
   color: var(--hard-no);
 }
 
+/* ── z-index ladder (keep this order sacred) ──────────────────────────────
+   201  sheet panels (.sheet-panel)        — the topmost dom/sub asks
+   200  sheet overlays (.sheet-overlay), undo toast
+    50  FABs, modals, floating actions
+    40  global TopNav header
+   10/5 per-page sticky strips (pinned below the header via --nav-h)
+   No page element may climb above the sheet layer.
+   ──────────────────────────────────────────────────────────────────────── */
+
 /* Delete bottom sheet */
 .sheet-overlay {
   position: fixed;
