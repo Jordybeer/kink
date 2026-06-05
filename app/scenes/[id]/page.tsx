@@ -31,8 +31,7 @@ export default function SceneDetailPage() {
   if (!scene) {
     return (
       <PageShell width="2xl">
-        <Link href="/scenes" className="text-sm focus-ring" style={{ color: "var(--text2)" }}>← Terug</Link>
-        <p className="mt-6 text-sm" style={{ color: "var(--text2)" }}>Scène niet gevonden.</p>
+        <p className="text-sm" style={{ color: "var(--text2)" }}>Scène niet gevonden.</p>
       </PageShell>
     );
   }
@@ -56,7 +55,6 @@ export default function SceneDetailPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
-        <Link href="/scenes" className="focus-ring rounded-lg flex-none text-sm min-h-[44px] inline-flex items-center" style={{ color: "var(--text2)" }}>← Terug</Link>
         <h1 className="text-lg font-bold flex-1 truncate">{scene.title}</h1>
         {scene.status !== "completed" && (
           <Link

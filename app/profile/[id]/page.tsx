@@ -361,18 +361,11 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/" aria-label="Terug naar profielen" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-            ← Terug
-          </Link>
-          {showSaved && (
-            <span className="text-[11px] font-medium" style={{ color: "var(--accent)" }}>
-              Opgeslagen ✓
-            </span>
-          )}
-        </div>
+      {/* Action row */}
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-2">
+        <span className="text-[11px] font-medium transition-opacity" style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}>
+          Opgeslagen ✓
+        </span>
         <div className="flex items-center gap-2">
           <Link
             href={`/compare?a=${id}`}

@@ -1,6 +1,5 @@
 "use client";
 import { ReactNode } from "react";
-import Link from "next/link";
 
 const WIDTH = {
   lg: "max-w-lg",
@@ -34,29 +33,5 @@ export default function PageShell({
     <main className={`${w} mx-auto px-4 ${flush ? "" : "pt-6 pb-16"} w-full ${className}`}>
       {children}
     </main>
-  );
-}
-
-export function PageHeader({
-  title,
-  back = "/",
-  action,
-}: {
-  title: ReactNode;
-  back?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-3 mb-6">
-      <Link
-        href={back}
-        className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2"
-        style={{ color: "var(--text2)" }}
-      >
-        ← Terug
-      </Link>
-      <h1 className="text-xl font-bold flex-1">{title}</h1>
-      {action}
-    </div>
   );
 }
