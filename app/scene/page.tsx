@@ -6,6 +6,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
 import type { Profile, SceneItem } from "@/types";
 import Sheet from "@/components/Sheet";
+import PageShell from "@/components/PageShell";
 
 function uid() {
   return crypto.randomUUID();
@@ -434,7 +435,7 @@ function ScenePage() {
     try { doc.save(`scene-${(sceneTitle || "menu").replace(/\s+/g, "-").toLowerCase()}.pdf`); } catch { /* niet fataal */ }
   }
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return <PageShell loading width="2xl" flush />;
 
   const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) : null;
   const isCompleted = currentScene?.status === "completed";

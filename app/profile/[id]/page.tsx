@@ -14,6 +14,7 @@ import ProfileTour from "@/components/ProfileTour";
 import { ChevronDown, ChevronRight, Zap, Clapperboard } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
+import PageShell from "@/components/PageShell";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -134,20 +135,16 @@ export default function ProfilePage({ params }: Props) {
     setEditing(false);
   }
 
-  if (!_hasHydrated) return (
-    <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full flex items-start justify-center pt-24">
-      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
-    </main>
-  );
+  if (!_hasHydrated) return <PageShell loading width="2xl" />;
 
   if (!profile) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-10 text-center">
+      <PageShell width="2xl" className="text-center">
         <p style={{ color: "var(--text2)" }}>Profiel niet gevonden.</p>
         <Link href="/" className="focus-ring mt-4 inline-block text-sm" style={{ color: "var(--accent)" }}>
           ← Terug
         </Link>
-      </main>
+      </PageShell>
     );
   }
 
@@ -351,7 +348,7 @@ export default function ProfilePage({ params }: Props) {
   const ratedCustomKinks = customKinks.filter((ck) => profile.entries[ck.id]?.status);
 
   return (
-    <main className="max-w-3xl mx-auto w-full pb-6">
+    <main className="max-w-3xl mx-auto w-full pb-28">
       {tourVisible && <ProfileTour onComplete={completeProfileTour} />}
 
       {errorMessage && (

@@ -8,6 +8,7 @@ import { KINKS } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit } from "@/lib/matching";
 import { categorizeRole } from "@/lib/roles";
+import PageShell, { PageHeader } from "@/components/PageShell";
 
 const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "Heel graag",
@@ -137,22 +138,19 @@ function ContractPage() {
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return <PageShell loading width="3xl" />;
 
   const profileA = profiles.find((p) => p.id === aId);
   const profileB = profiles.find((p) => p.id === bId);
 
   if (!profileA || !profileB) {
     return (
-      <main className="max-w-3xl mx-auto px-4 py-6 pb-10 w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <Link href="/compare" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>← Terug</Link>
-          <h1 className="text-xl font-bold flex-1">Teken het contract</h1>
-        </div>
+      <PageShell width="3xl">
+        <PageHeader title="Teken het contract" back="/compare" />
         <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
           Kies twee profielen via de vergelijkingspagina om een contract op te stellen.
         </p>
-      </main>
+      </PageShell>
     );
   }
 
@@ -512,7 +510,7 @@ function ContractPage() {
 
   return (
     <>
-    <main className="max-w-3xl mx-auto px-4 py-6 pb-10 w-full contract-print">
+    <PageShell width="3xl" className="contract-print">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
         <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
@@ -745,7 +743,7 @@ function ContractPage() {
           </div>
         </div>
       )}
-    </main>
+    </PageShell>
     {ceremony && (
       <>
         <style>{`

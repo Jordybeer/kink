@@ -6,6 +6,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit, isConflict } from "@/lib/matching";
+import PageShell, { PageHeader } from "@/components/PageShell";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "✓ Heel graag",
@@ -148,11 +149,7 @@ function ComparePage() {
     }
   }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!_hasHydrated) return (
-    <main className="max-w-5xl mx-auto px-4 py-6 pb-10 w-full flex items-start justify-center pt-24">
-      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
-    </main>
-  );
+  if (!_hasHydrated) return <PageShell loading width="5xl" />;
 
   function getEntry(profile: typeof profileA, kinkId: string): KinkEntry {
     return profile?.entries[kinkId] ?? { status: null, comment: "" };
@@ -197,15 +194,8 @@ function ComparePage() {
   const confettiEmoji = ["🔗", "⛓️", "👑", "🖤", "🌹", "🕯️", "💋", "🩷"];
 
   return (
-    <>
-    <main className="max-w-5xl mx-auto px-4 py-6 pb-10 w-full">
-      {/* Header — back link + title only */}
-      <div className="flex items-center gap-3 mb-4">
-        <Link href="/" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-          ← Terug
-        </Link>
-        <h1 className="text-xl font-bold flex-1">Vergelijk profielen</h1>
-      </div>
+    <PageShell width="5xl">
+      <PageHeader title="Vergelijk profielen" />
 
       {/* Mobile-only sticky selector strip */}
       <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", paddingTop: "env(safe-area-inset-top)" }}>
@@ -549,8 +539,7 @@ function ComparePage() {
         </div>{/* end right panel */}
 
       </div>
-    </main>
-    </>
+    </PageShell>
   );
 }
 

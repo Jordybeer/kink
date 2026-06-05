@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import AftercareSheet from "@/components/AftercareSheet";
+import PageShell, { PageHeader } from "@/components/PageShell";
 import type { SceneRecord } from "@/types";
 
 const TRAFFIC = {
@@ -140,7 +141,7 @@ export default function ScenesPage() {
   const _hasHydrated = useHasHydrated();
   const [aftercareTarget, setAftercareTarget] = useState<string | null>(null);
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return <PageShell loading />;
 
   const planned   = scenes.filter((s) => s.status === "planned").sort((a, b) => (a.plannedDate ?? "").localeCompare(b.plannedDate ?? ""));
   const drafts    = scenes.filter((s) => s.status === "draft").sort((a, b) => b.updatedAt - a.updatedAt);
@@ -153,12 +154,13 @@ export default function ScenesPage() {
   ];
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-6 pb-10 w-full">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center" style={{ color: "var(--text2)" }}>← Terug</Link>
-        <h1 className="text-xl font-bold flex-1">Scènes</h1>
-        <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
-      </div>
+    <PageShell width="2xl">
+      <PageHeader
+        title="Scènes"
+        action={
+          <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
+        }
+      />
 
       <div className="flex flex-col gap-8">
         {sections.map(({ key, label, items }) => (
@@ -191,6 +193,6 @@ export default function ScenesPage() {
           onClose={() => setAftercareTarget(null)}
         />
       )}
-    </main>
+    </PageShell>
   );
 }

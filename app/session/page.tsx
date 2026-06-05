@@ -7,6 +7,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, Profile } from "@/types";
 import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, fetchIceServers } from "@/lib/webrtc";
+import PageShell from "@/components/PageShell";
 
 function iceServersSummary(servers: RTCIceServer[]): string {
   const urls = servers.map(s => String(s.urls));
@@ -468,7 +469,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     };
   }, [phase, remote, local]);
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return <PageShell loading width="lg" flush />;
 
   const allIds = [...new Set([...Object.keys(local), ...Object.keys(remote)])];
   let matchCount = 0, hardCount = 0;

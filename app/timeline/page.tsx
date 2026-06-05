@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CompatibilityTimeline } from "@/components/CompatibilityTimeline";
+import PageShell, { PageHeader } from "@/components/PageShell";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
@@ -16,7 +17,7 @@ function TimelinePage() {
   const [aId, setAId] = useState(searchParams.get("a") ?? "");
   const [bId, setBId] = useState(searchParams.get("b") ?? "");
 
-  if (!_hasHydrated) return null;
+  if (!_hasHydrated) return <PageShell loading />;
 
   const profileA = profiles.find((p) => p.id === aId);
   const profileB = profiles.find((p) => p.id === bId);
@@ -39,13 +40,8 @@ function TimelinePage() {
   const bothSelected = !!profileA && !!profileB;
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-6 pb-20 w-full">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/" className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-          ← Terug
-        </Link>
-        <h1 className="text-xl font-bold flex-1">📈 Geschiedenis</h1>
-      </div>
+    <PageShell width="2xl">
+      <PageHeader title="📈 Geschiedenis" />
 
       {/* Profile selectors */}
       <div className="grid grid-cols-2 gap-3 mb-6">
@@ -110,7 +106,7 @@ function TimelinePage() {
           <CompatibilityTimeline contracts={filtered} />
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }
 

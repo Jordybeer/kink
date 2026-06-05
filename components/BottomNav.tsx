@@ -11,7 +11,7 @@ const STATIC_ITEMS = [
 
 export default function BottomNav() {
   const path = usePathname();
-  if (path.startsWith("/scene") || path.startsWith("/session")) return null;
+  if (path === "/scene" || path === "/session") return null;
   const firstProfileId = useStore((s) => s.profiles[0]?.id);
 
   const currentProfileMatch = path.match(/^\/profile\/([^/]+)/);
@@ -26,7 +26,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="pwa-only fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
+      className="fixed bottom-0 left-0 right-0 z-[100] flex items-stretch"
       style={{
         background: "var(--surface)",
         borderTop: "1px solid var(--border)",

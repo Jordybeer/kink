@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import AftercareSheet from "@/components/AftercareSheet";
+import PageShell from "@/components/PageShell";
 
 const TRAFFIC = {
   green: { emoji: "🟢", label: "Geweldig",    color: "var(--yes)"     },
@@ -23,16 +24,16 @@ export default function SceneDetailPage() {
   const [showAftercare, setShowAftercare] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (!hasHydrated) return null;
+  if (!hasHydrated) return <PageShell loading width="2xl" />;
 
   const scene = scenes.find((s) => s.id === id);
 
   if (!scene) {
     return (
-      <main className="max-w-lg mx-auto px-4 py-8">
+      <PageShell width="2xl">
         <Link href="/scenes" className="text-sm focus-ring" style={{ color: "var(--text2)" }}>← Terug</Link>
         <p className="mt-6 text-sm" style={{ color: "var(--text2)" }}>Scène niet gevonden.</p>
-      </main>
+      </PageShell>
     );
   }
 
@@ -51,7 +52,7 @@ export default function SceneDetailPage() {
   );
 
   return (
-    <main className="max-w-lg mx-auto px-4 py-6 pb-12 w-full">
+    <PageShell width="2xl">
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
@@ -238,6 +239,6 @@ export default function SceneDetailPage() {
           onClose={() => setShowAftercare(false)}
         />
       )}
-    </main>
+    </PageShell>
   );
 }

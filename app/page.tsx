@@ -14,6 +14,7 @@ import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import AppLock from "@/components/AppLock";
+import PageShell from "@/components/PageShell";
 import dynamic from "next/dynamic";
 import { decodeAny } from "@/lib/shareProfile";
 
@@ -360,11 +361,7 @@ function HomeContent() {
     }
   }
 
-  if (!_hasHydrated) return (
-    <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full flex items-start justify-center pt-24">
-      <span className="text-2xl font-bold" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>KinkSync</span>
-    </main>
-  );
+  if (!_hasHydrated) return <PageShell loading width="2xl" />;
 
   if (appLockEnabled && lockState === "locked") {
     return (
@@ -404,7 +401,7 @@ function HomeContent() {
 
   return (
     <>
-      <main className="max-w-2xl mx-auto px-4 py-10 pb-24 w-full">
+      <PageShell width="2xl">
         {/* Hero */}
         <div className="mb-8 text-center relative">
           <button
@@ -524,7 +521,7 @@ function HomeContent() {
 
           <button
             type="submit"
-            className="focus-ring w-full py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+            className="focus-ring w-full py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
             style={{ background: "var(--accent)", color: "#000" }}
           >
             Sla jezelf vast →
@@ -896,7 +893,7 @@ function HomeContent() {
             </div>
           </>
         )}
-      </main>
+      </PageShell>
 
       {/* Settings bottom sheet */}
       <div className={`sheet-overlay ${settingsOpen ? "open" : ""}`} onClick={() => setSettingsOpen(false)} aria-hidden="true" />
@@ -909,138 +906,177 @@ function HomeContent() {
             <div className="mx-auto mb-4 w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
             <h2 className="text-lg font-bold text-center">Instellingen</h2>
           </div>
-          <div className="overflow-y-auto flex-1 px-6 pb-2">
-          <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
-            Thema
-          </p>
-          <div className="grid grid-cols-2 gap-2 mb-5">
-            {(
-              [
-                { value: "midnight", label: "Midnight", color: "#c084fc" },
-                { value: "red",      label: "Deep Red",  color: "#ef4444" },
-                { value: "forest",   label: "Forest",    color: "#4ade80" },
-                { value: "mono",     label: "Mono",      color: "#e5e5e5" },
-              ] as { value: "midnight" | "red" | "forest" | "mono"; label: string; color: string }[]
-            ).map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setTheme(t.value)}
-                aria-pressed={theme === t.value}
-                className="focus-ring rounded-xl p-3 flex items-center gap-2 border transition-colors text-left"
-                style={
-                  theme === t.value
-                    ? {
-                        borderColor: "var(--accent)",
-                        background: "color-mix(in srgb, var(--accent) 8%, transparent)",
-                      }
-                    : { borderColor: "var(--border)" }
-                }
-              >
-                <span
-                  className="rounded-full flex-none"
-                  style={{ width: 20, height: 20, background: t.color }}
-                  aria-hidden="true"
-                />
-                <span className="text-sm font-medium">{t.label}</span>
-              </button>
-            ))}
-          </div>
+          <div className="overflow-y-auto flex-1 px-6 pb-4">
+          {/* Thema */}
+          <section className="settings-card">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="settings-card-icon text-lg" aria-hidden="true">🎨</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold leading-tight">Thema</h3>
+                <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
+                  {{ midnight: "Midnight", red: "Deep Red", forest: "Forest", mono: "Mono" }[theme] ?? "Midnight"}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  { value: "midnight", label: "Midnight", color: "#c084fc" },
+                  { value: "red",      label: "Deep Red",  color: "#ef4444" },
+                  { value: "forest",   label: "Forest",    color: "#4ade80" },
+                  { value: "mono",     label: "Mono",      color: "#e5e5e5" },
+                ] as { value: "midnight" | "red" | "forest" | "mono"; label: string; color: string }[]
+              ).map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setTheme(t.value)}
+                  aria-pressed={theme === t.value}
+                  className="focus-ring rounded-xl p-3 flex items-center gap-2 border transition-colors text-left"
+                  style={
+                    theme === t.value
+                      ? {
+                          borderColor: "var(--accent)",
+                          background: "color-mix(in srgb, var(--accent) 8%, transparent)",
+                        }
+                      : { borderColor: "var(--border)" }
+                  }
+                >
+                  <span
+                    className="rounded-full flex-none"
+                    style={{ width: 20, height: 20, background: t.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
 
-          <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
-            Back-up &amp; herstel
-          </p>
-          <div className="flex flex-col gap-3">
+          {/* Back-up & herstel */}
+          <section className="settings-card">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="settings-card-icon text-lg" aria-hidden="true">💾</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold leading-tight">Back-up &amp; herstel</h3>
+                <p className="text-xs truncate" style={{ color: "var(--text2)" }}>Exporteer of herstel je kinklijst</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={exportProfiles}
+                className="focus-ring py-3 rounded-xl text-sm font-medium border transition-colors"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                ⬇ Maak backup
+              </button>
+              <label className="focus-ring relative py-3 rounded-xl text-sm font-medium border transition-colors text-center cursor-pointer"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                ⬆ Herstel
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none"
+                />
+              </label>
+            </div>
+            {importError && (
+              <p className="text-xs text-center mt-2" style={{ color: "var(--hard-no)" }}>{importError}</p>
+            )}
+            {importSuccess && (
+              <p className="text-xs text-center mt-2" style={{ color: "var(--accent)" }}>{importSuccess}</p>
+            )}
+          </section>
+
+          {/* Beveiliging */}
+          <section className="settings-card">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="settings-card-icon text-lg" aria-hidden="true">🔒</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold leading-tight">Beveiliging</h3>
+                <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
+                  {appLockEnabled ? "PIN-vergrendeling actief" : "Geen vergrendeling ingesteld"}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {appLockEnabled ? (
+                <>
+                  <button onClick={() => openPinFlow(0)}
+                    className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                    style={{ borderColor: "var(--border)", color: "var(--text)" }}>
+                    🔑 PIN wijzigen
+                  </button>
+                  {/* Face ID — alleen beschikbaar als PIN al ingesteld is */}
+                  {platformBioAvailable && (
+                    biometricEnabled ? (
+                      <button onClick={() => disableBiometric()}
+                        className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                        style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
+                        🔓 Face ID / vingerafdruk uitschakelen
+                      </button>
+                    ) : (
+                      <button onClick={handleEnableBiometric} disabled={bioRegistering}
+                        className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                        style={{ borderColor: "var(--accent)", color: "var(--accent)", opacity: bioRegistering ? 0.6 : 1 }}>
+                        {bioRegistering ? "Bezig…" : "🔓 Face ID / vingerafdruk inschakelen"}
+                      </button>
+                    )
+                  )}
+                  {bioError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{bioError}</p>}
+                  <button onClick={() => openPinFlow(2)}
+                    className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                    style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}>
+                    PIN verwijderen
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => openPinFlow(0)}
+                  className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+                  🔒 PIN-vergrendeling instellen
+                </button>
+              )}
+            </div>
+          </section>
+
+          {/* Rondleiding */}
+          <section className="settings-card">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="settings-card-icon text-lg" aria-hidden="true">🧭</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold leading-tight">Rondleiding</h3>
+                <p className="text-xs truncate" style={{ color: "var(--text2)" }}>Bekijk de uitleg opnieuw</p>
+              </div>
+            </div>
             <button
-              onClick={exportProfiles}
+              onClick={() => { resetProfileTour(); setSettingsOpen(false); }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
-              ⬇ Maak backup (JSON)
+              🔍 Rondleiding opnieuw starten
             </button>
-            <label className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors text-center cursor-pointer"
-              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+          </section>
+
+          {/* Gevarenzone */}
+          <section className="settings-card settings-card-danger">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="settings-card-icon text-lg" aria-hidden="true">⚠️</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold leading-tight">Gevarenzone</h3>
+                <p className="text-xs truncate" style={{ color: "var(--text2)" }}>Wis alles, permanent en onomkeerbaar</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { setSettingsOpen(false); setDestroyPhrase(""); setDestroyOpen(true); }}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+              style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}
             >
-              ⬆ Herstel backup
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImport}
-                className="absolute w-px h-px overflow-hidden opacity-0 pointer-events-none"
-              />
-            </label>
-            {importError && (
-              <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{importError}</p>
-            )}
-            {importSuccess && (
-              <p className="text-xs text-center" style={{ color: "var(--accent)" }}>{importSuccess}</p>
-            )}
-          </div>
-
-          <p className="text-xs uppercase tracking-widest font-semibold mb-3 mt-5" style={{ color: "var(--text2)" }}>
-            Rondleiding
-          </p>
-          <button
-            onClick={() => { resetProfileTour(); setSettingsOpen(false); }}
-            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors mb-5"
-            style={{ borderColor: "var(--border)", color: "var(--text)" }}
-          >
-            🔍 Rondleiding opnieuw starten
-          </button>
-
-          <p className="text-xs uppercase tracking-widest font-semibold mb-3 mt-5" style={{ color: "var(--text2)" }}>
-            Beveiliging
-          </p>
-          <div className="flex flex-col gap-2 mb-5">
-            {appLockEnabled ? (
-              <>
-                <button onClick={() => openPinFlow(0)}
-                  className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                  style={{ borderColor: "var(--border)", color: "var(--text)" }}>
-                  🔑 PIN wijzigen
-                </button>
-                {/* Face ID — alleen beschikbaar als PIN al ingesteld is */}
-                {platformBioAvailable && (
-                  biometricEnabled ? (
-                    <button onClick={() => disableBiometric()}
-                      className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                      style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
-                      🔓 Face ID / vingerafdruk uitschakelen
-                    </button>
-                  ) : (
-                    <button onClick={handleEnableBiometric} disabled={bioRegistering}
-                      className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                      style={{ borderColor: "var(--accent)", color: "var(--accent)", opacity: bioRegistering ? 0.6 : 1 }}>
-                      {bioRegistering ? "Bezig…" : "🔓 Face ID / vingerafdruk inschakelen"}
-                    </button>
-                  )
-                )}
-                {bioError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{bioError}</p>}
-                <button onClick={() => openPinFlow(2)}
-                  className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                  style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}>
-                  PIN verwijderen
-                </button>
-              </>
-            ) : (
-              <button onClick={() => openPinFlow(0)}
-                className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-                🔒 PIN-vergrendeling instellen
-              </button>
-            )}
-          </div>
-
-          <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--text2)" }}>
-            Gegevens
-          </p>
-          <button
-            onClick={() => { setSettingsOpen(false); setDestroyPhrase(""); setDestroyOpen(true); }}
-            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors mb-4"
-            style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}
-          >
-            Vernietig alle data
-          </button>
+              Vernietig alle data
+            </button>
+          </section>
           </div>{/* end scroll */}
           <div className="px-6 py-4 flex-none" style={{ borderTop: "1px solid var(--border)" }}>
             <button

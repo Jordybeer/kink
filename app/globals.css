@@ -70,6 +70,52 @@ html, body {
   animation: matchPulse 700ms ease-out;
 }
 
+/* Shared page loading spinner */
+.ks-spinner {
+  display: inline-block;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--text2) 30%, transparent);
+  border-top-color: var(--accent);
+  animation: ks-spin 0.7s linear infinite;
+}
+@keyframes ks-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ks-spinner { animation-duration: 1.6s; }
+}
+
+/* Settings cards — each feature gets its own glanceable block */
+.settings-card {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface2);
+  padding: 1rem;
+}
+.settings-card + .settings-card {
+  margin-top: 0.75rem;
+}
+.settings-card-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.settings-card-danger {
+  border-color: color-mix(in srgb, var(--hard-no) 35%, transparent);
+}
+.settings-card-danger .settings-card-icon {
+  background: color-mix(in srgb, var(--hard-no) 12%, transparent);
+  color: var(--hard-no);
+}
+
 /* Delete bottom sheet */
 .sheet-overlay {
   position: fixed;
