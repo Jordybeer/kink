@@ -464,7 +464,7 @@ export default function ProfilePage({ params }: Props) {
 
           <div
             ref={navRef}
-            className="no-scrollbar sticky top-0 z-10 px-4 pt-2 pb-1.5"
+            className="no-scrollbar sticky top-[var(--nav-h)] z-10 px-4 pt-2 pb-1.5"
             style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
           >
             <div className="h-1.5 rounded-full overflow-hidden flex mb-1.5" style={{ background: "var(--surface2)" }}>

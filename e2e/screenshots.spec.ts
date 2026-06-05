@@ -33,6 +33,20 @@ test("scene populated", async ({ page }) => {
   await page.screenshot({ path: "/tmp/ss-scene.png", fullPage: true });
 });
 
+test("profile alex scrolled", async ({ page }) => {
+  await seedAndGo(page, "/profile/pw-alex-001", PROFILES);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: "/tmp/ss-profile-scrolled.png" });
+});
+
+test("compare scrolled", async ({ page }) => {
+  await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", PROFILES);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: "/tmp/ss-compare-scrolled.png" });
+});
+
 test("contract print preview", async ({ page }) => {
   await seedAndGo(page, "/contract?a=pw-alex-001&b=pw-sam-002", PROFILES);
   await page.emulateMedia({ media: "print" });

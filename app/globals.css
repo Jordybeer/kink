@@ -19,6 +19,8 @@
   --no: #fb923c;
   --hard-no: #ef4444;
   --conflict: #f59e0b;
+  /* Global TopNav occupied height (h-12 + notch). Inner sticky bars pin below this. */
+  --nav-h: calc(env(safe-area-inset-top) + 3rem);
 }
 
 * { box-sizing: border-box; }

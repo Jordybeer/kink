@@ -198,7 +198,7 @@ function ComparePage() {
       <PageHeader title="Vergelijk profielen" />
 
       {/* Mobile-only sticky selector strip */}
-      <div className="md:hidden sticky top-0 z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="md:hidden sticky top-[var(--nav-h)] z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
         <div className="grid grid-cols-2 gap-2">
           {(
             [
