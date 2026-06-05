@@ -2,6 +2,16 @@
 
 Items identified during UI/UX audit (May 2026). Completed items removed.
 
+## Navigation polish (TopNav)
+Follow-ups on the sticky header that replaced the bottom bar. Mobile-first — the bottom bar was easier to reach one-handed, so reachability is the open question.
+- **Bottom-anchored variant for reach**: same pills, but floating bottom-right on phones (not full-width) — keeps the clean look while landing in the thumb zone. Biggest open tradeoff from the switch.
+- **Hide-on-scroll-down / reveal-on-scroll-up**: auto-tuck the header while scrolling down a long kink list, slide it back on scroll up — maximises content on small screens.
+- **Sliding active indicator**: animate the active pill with a framer-motion `layoutId` so the highlight glides between tabs instead of snapping.
+- **Personal profile pill**: swap the 👤 glyph for the pinned profile's avatar thumbnail when one exists.
+- **Notch / standalone safe-area check**: verify `env(safe-area-inset-top)` padding on notched iPhones in installed PWA mode — only eyeballed in browser so far.
+- **Reduced-motion guard**: gate the scroll blur/fade transition behind `prefers-reduced-motion` for motion-sensitive users.
+- **Tap feedback**: subtle scale/opacity press state on pills for tactile response.
+
 ## Quick wins
 Independent, parallelisable — minimal logic, CSS/attr only:
 - **Pill scroll hint**: Right-edge fade gradient on horizontal pill rows to signal scrollability
@@ -40,15 +50,3 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 - **Kink notes in compare view**: When two profiles have the same kink matched, show a collapsed view of each person's comment
 - **Contract versioning**: Save multiple contract snapshots per pair, with timestamps — currently only one contract per pair is stored
 - **Profile import validation**: Imported profiles currently accept any JSON shape — add Zod/schema validation to prevent crashes from malformed imports
-
-## Completed (session May 28 2026)
-- ~~iPhone zoom fix~~ — inputs/textarea/select forced to 16px in globals.css
-- ~~Pill reorder (Graag before Ja)~~ — applied across KinkRow, session, profile, ProfileHero DNA
-- ~~Micro-animation on kink rating~~ — ks-pop keyframe on KinkRow container
-- ~~Categories closed by default~~ — CategorySection useState(false)
-- ~~DNA bar label~~ — "Kink DNA" label restored above bar
-- ~~Contract preamble collapsible~~ — "Lees meer ↓" toggle added
-- ~~Navbar Profile tab~~ — 👤 tab added to BottomNav, links to first profile
-- ~~Profile list cards too large~~ — smaller avatar, reduced padding and gaps on home page
-- ~~Profile page read-only overview~~ — compare-style cards grouped by category, only rated kinks shown
-- ~~Edit list collapsible~~ — hidden behind toggle, auto-opens for empty profiles
