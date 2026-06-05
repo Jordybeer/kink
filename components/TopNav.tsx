@@ -2,8 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
+import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
+
+const MotionLink = motion.create(Link);
 
 const HUB_ITEMS = [
   { href: "/compare", label: "Vergelijk",    icon: "⚡" },
@@ -60,16 +64,17 @@ export default function TopNav() {
         <nav className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-end" aria-label="Hoofdnavigatie">
           <div className="flex items-center gap-1">
             {items.map(({ href, label, icon }) => (
-              <Link
+              <MotionLink
                 key={label}
                 href={href}
+                whileTap={TAP_SPRING}
                 className="focus-ring inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs font-medium transition-colors"
                 style={{ color: "var(--text2)" }}
                 aria-label={label}
               >
                 <span aria-hidden="true" className="text-sm leading-none">{icon}</span>
                 <span className="hidden sm:inline">{label}</span>
-              </Link>
+              </MotionLink>
             ))}
           </div>
         </nav>
@@ -86,14 +91,15 @@ export default function TopNav() {
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
       <nav className="max-w-2xl mx-auto px-4 h-12 flex items-center gap-2" aria-label="Hoofdnavigatie">
-        <Link
+        <MotionLink
           href={back}
+          whileTap={TAP_SPRING}
           className="focus-ring -ml-1 flex items-center justify-center h-9 w-9 rounded-full flex-none"
           style={{ color: "var(--text2)" }}
           aria-label="Terug"
         >
           <ChevronLeft size={20} />
-        </Link>
+        </MotionLink>
         <span className="font-semibold text-sm truncate min-w-0">{title}</span>
       </nav>
     </header>
