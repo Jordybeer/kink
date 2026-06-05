@@ -348,7 +348,7 @@ export default function ProfilePage({ params }: Props) {
   const ratedCustomKinks = customKinks.filter((ck) => profile.entries[ck.id]?.status);
 
   return (
-    <main className="max-w-3xl mx-auto w-full pb-28">
+    <main className="max-w-3xl mx-auto w-full pt-6 pb-16">
       {tourVisible && <ProfileTour onComplete={completeProfileTour} />}
 
       {errorMessage && (
