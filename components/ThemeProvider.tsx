@@ -6,7 +6,6 @@ import { setInstallPrompt, type BeforeInstallPromptEvent } from "@/lib/installPr
 export default function ThemeProvider() {
   const theme = useStore((s) => s.theme);
 
-  // Apply theme class to <html>
   useEffect(() => {
     const html = document.documentElement;
     html.classList.remove("theme-red", "theme-forest", "theme-mono");
@@ -14,9 +13,13 @@ export default function ThemeProvider() {
     html.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // Capture beforeinstallprompt at root level — fires before React hydrates on fast devices,
-  // so it must be captured here (layout root) rather than inside Onboarding.
+  // Pick up any prompt that the inline <script> captured before hydration.
   useEffect(() => {
+    const win = window as Window & { __installPrompt?: BeforeInstallPromptEvent };
+    if (win.__installPrompt) {
+      setInstallPrompt(win.__installPrompt);
+    }
+    // Also catch prompts that fire after hydration (rare but possible on slow devices).
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e as BeforeInstallPromptEvent);

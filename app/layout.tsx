@@ -24,6 +24,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="nl" data-theme="midnight" className={`h-full ${dmSans.variable}`}>
+      <head>
+        {/* Synchronous capture of beforeinstallprompt — must run before any module.
+            useEffect (post-hydration) is too late on fast devices. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__installPrompt=e;});`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col antialiased">
         <ThemeProvider />
         {children}
