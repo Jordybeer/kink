@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { hashPin } from '@/lib/crypto';
 import { isPlatformAuthenticatorAvailable, registerBiometric } from '@/lib/webauthn';
+import { getInstallPrompt, clearInstallPrompt } from '@/lib/installPrompt';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -25,7 +26,6 @@ const BODY: React.CSSProperties = {
   animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0,
 };
 
-// Shared action-button styles
 const BTN_GHOST: React.CSSProperties = {
   color: '#fff', border: '1px solid rgba(255,255,255,0.3)', background: 'transparent',
   padding: '0.875rem 2rem', borderRadius: '9999px', fontSize: '1rem', cursor: 'pointer',
@@ -42,7 +42,6 @@ const BTN_SECONDARY: React.CSSProperties = {
   fontSize: '0.875rem', cursor: 'pointer', width: '100%', maxWidth: '22rem',
 };
 
-// The fixed slot where all continue/action buttons live — outside the animated div
 const ACTION_BAR: React.CSSProperties = {
   position: 'fixed', bottom: '5rem', left: 0, right: 0,
   display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -55,12 +54,18 @@ const TOTAL_STEPS = 7;
 
 type S6Sub = "intro" | "pin1" | "pin2" | "biometric";
 
+// Step 5 is the PWA install slide — only shown on Android with a pending prompt.
+const STEP_INSTALL = 5;
+
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const [lockout, setLockout] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [hasAndroidPrompt, setHasAndroidPrompt] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
-  // Step6 state lives here so action buttons can render outside the animated div
   const [s6sub, setS6sub] = useState<S6Sub>("intro");
   const [pin1, setPin1] = useState<string[]>([]);
   const [pin2, setPin2] = useState<string[]>([]);
@@ -72,12 +77,40 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const setAppLockPin = useStore((s) => s.setAppLockPin);
   const enableBiometric = useStore((s) => s.enableBiometric);
 
-  useEffect(() => { isPlatformAuthenticatorAvailable().then(setBioAvailable); }, []);
+  useEffect(() => {
+    isPlatformAuthenticatorAvailable().then(setBioAvailable);
+    const ua = navigator.userAgent;
+    setIsIos(/iPhone|iPad|iPod/.test(ua) && !/Chrome/.test(ua));
+    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
+    // Check if the module-level prompt was already captured by ThemeProvider.
+    setHasAndroidPrompt(getInstallPrompt() !== null);
+  }, []);
 
   const advance = useCallback(() => {
     setLeaving(true);
     setTimeout(() => { setStep(s => s + 1); setLeaving(false); }, 220);
   }, []);
+
+  // Whether to show the install slide at step 5.
+  const showInstallStep = !isStandalone && (isIos || hasAndroidPrompt);
+
+  async function handleAndroidInstall() {
+    const prompt = getInstallPrompt();
+    if (!prompt) { advance(); return; }
+    setInstalling(true);
+    try {
+      await prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+      clearInstallPrompt();
+      if (outcome === 'accepted') {
+        // Auto-advance — user installed, no need to linger on the slide.
+        advance();
+      }
+      // If dismissed, stay on slide so they can tap "Sla over".
+    } finally {
+      setInstalling(false);
+    }
+  }
 
   async function handlePinKey(k: string) {
     const active = s6sub === "pin1" ? pin1 : pin2;
@@ -141,7 +174,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         ) : (
           <>
-            {/* ── Animated content — NO buttons here (transform breaks fixed positioning) ── */}
             <div
               key={step}
               className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
@@ -152,16 +184,20 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               {step === 2 && <Step2Content />}
               {step === 3 && <Step3Content />}
               {step === 4 && <Step4Content />}
-              {step === 5 && <Step5Content />}
-              {step === 6 && s6sub === "intro"   && <Step6IntroContent bioAvailable={bioAvailable} />}
-              {step === 6 && s6sub === "biometric" && <Step6BioContent bioError={bioError} />}
-              {step === 6 && (s6sub === "pin1" || s6sub === "pin2") && (
+              {step === STEP_INSTALL && showInstallStep && isIos && <StepInstallIosContent />}
+              {step === STEP_INSTALL && showInstallStep && !isIos && <StepInstallAndroidContent />}
+              {step === STEP_INSTALL && !showInstallStep && <Step5Content />}
+              {step === 5 && !showInstallStep && null /* theme step shifted */}
+              {/* When install step is skipped, theme step (originally 5) maps to step 5 */}
+              {step === (showInstallStep ? 6 : 5) && <Step5ThemeContent />}
+              {step === (showInstallStep ? 7 : 6) && s6sub === "intro"    && <Step6IntroContent bioAvailable={bioAvailable} />}
+              {step === (showInstallStep ? 7 : 6) && s6sub === "biometric" && <Step6BioContent bioError={bioError} />}
+              {step === (showInstallStep ? 7 : 6) && (s6sub === "pin1" || s6sub === "pin2") && (
                 <Step6PinContent sub={s6sub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
               )}
-              {step === 7 && <Step7Content />}
+              {step === (showInstallStep ? 8 : 7) && <Step7Content />}
             </div>
 
-            {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
             <div style={ACTION_BAR}>
               {step === 0 && (
                 <button
@@ -174,25 +210,64 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </button>
               )}
 
-              {step >= 1 && step <= 5 && (
+              {step >= 1 && step <= 4 && (
                 <button
                   onClick={advance}
                   style={BTN_GHOST}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
                 >
-                  {step === 5 ? 'Ga door →' : 'Volgende →'}
+                  Volgende →
                 </button>
               )}
 
-              {step === 6 && s6sub === "intro" && (
+              {/* Install step — Android */}
+              {step === STEP_INSTALL && showInstallStep && !isIos && (
+                <>
+                  <button
+                    onClick={handleAndroidInstall}
+                    disabled={installing}
+                    style={{ ...BTN_PRIMARY, opacity: installing ? 0.6 : 1, cursor: installing ? 'default' : 'pointer' }}
+                  >
+                    {installing ? 'Even wachten…' : 'Installeer app'}
+                  </button>
+                  <button onClick={advance} style={BTN_SECONDARY}>Sla over</button>
+                </>
+              )}
+
+              {/* Install step — iOS (inline instructions, just a continue button) */}
+              {step === STEP_INSTALL && showInstallStep && isIos && (
+                <button
+                  onClick={advance}
+                  style={BTN_GHOST}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                >
+                  Ga door →
+                </button>
+              )}
+
+              {/* Theme step */}
+              {step === (showInstallStep ? 6 : 5) && (
+                <button
+                  onClick={advance}
+                  style={BTN_GHOST}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                >
+                  Ga door →
+                </button>
+              )}
+
+              {/* Security step */}
+              {step === (showInstallStep ? 7 : 6) && s6sub === "intro" && (
                 <>
                   <button onClick={() => setS6sub("pin1")} style={BTN_PRIMARY}>PIN instellen</button>
                   <button onClick={advance} style={BTN_SECONDARY}>Sla over</button>
                 </>
               )}
 
-              {step === 6 && (s6sub === "pin1" || s6sub === "pin2") && (
+              {step === (showInstallStep ? 7 : 6) && (s6sub === "pin1" || s6sub === "pin2") && (
                 <button
                   onClick={() => { setPin1([]); setPin2([]); setS6sub("intro"); }}
                   style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
@@ -201,7 +276,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </button>
               )}
 
-              {step === 6 && s6sub === "biometric" && (
+              {step === (showInstallStep ? 7 : 6) && s6sub === "biometric" && (
                 <>
                   <button
                     onClick={handleEnableBio}
@@ -214,7 +289,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </>
               )}
 
-              {step === 7 && (
+              {/* Age gate */}
+              {step === (showInstallStep ? 8 : 7) && (
                 <>
                   <button
                     onClick={onComplete}
@@ -229,7 +305,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
             </div>
 
-            {/* Skip (step 0 only) */}
             {step === 0 && (
               <button
                 onClick={onComplete}
@@ -242,9 +317,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               </button>
             )}
 
-            {/* Progress dots */}
             <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
-              {Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => i).map(i => (
+              {Array.from({ length: (showInstallStep ? TOTAL_STEPS + 2 : TOTAL_STEPS + 1) }, (_, i) => i).map(i => (
                 <div key={i} style={{
                   height: 4,
                   width: i === step ? 24 : 8,
@@ -261,7 +335,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   );
 }
 
-/* ── Step content components (pure content, no buttons) ─────────────────── */
+/* ── Step content components ─────────────────────────────────────────────── */
 
 function Step0Content() {
   return (
@@ -357,6 +431,44 @@ function Step4Content() {
   );
 }
 
+// Android install step
+function StepInstallAndroidContent() {
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>📲</span></div>
+      <h2 style={TITLE}>Installeer KinkSync</h2>
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        Voeg de app toe aan je startscherm voor de beste ervaring — volledig offline, geen browser-balk.
+      </p>
+    </div>
+  );
+}
+
+// iOS install step — inline instructions so no PwaInstallGuide z-index conflict
+function StepInstallIosContent() {
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>📲</span></div>
+      <h2 style={TITLE}>Installeer op iOS</h2>
+      <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {[
+          { n: '1', t: 'Tik op het Deel-icoon', s: 'De vierkant-met-pijl onderaan Safari' },
+          { n: '2', t: '"Zet op beginscherm"', s: 'Scroll naar beneden in het deelmenu' },
+          { n: '3', t: 'Tik op "Voeg toe"', s: 'KinkSync verschijnt op je beginscherm' },
+        ].map(({ n, t, s }) => (
+          <div key={n} style={{ display: 'flex', gap: '0.875rem', background: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.12)', borderRadius: '0.75rem', padding: '0.75rem 1rem', alignItems: 'flex-start' }}>
+            <span style={{ width: '1.5rem', height: '1.5rem', borderRadius: '9999px', background: 'rgba(192,132,252,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(192,132,252,1)', flexShrink: 0 }}>{n}</span>
+            <div>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#fff', marginBottom: '0.125rem' }}>{t}</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{s}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const THEMES = [
   { value: 'midnight' as const, label: 'Midnight', color: '#c084fc' },
   { value: 'red'      as const, label: 'Deep Red', color: '#ef4444' },
@@ -364,7 +476,7 @@ const THEMES = [
   { value: 'mono'     as const, label: 'Mono',     color: '#e5e5e5' },
 ];
 
-function Step5Content() {
+function Step5ThemeContent() {
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 

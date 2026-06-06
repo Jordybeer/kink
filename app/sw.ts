@@ -14,3 +14,21 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// Show a notification when a new SW version installs (existing clients will see UpdateBanner).
+// event.waitUntil is required — without it the SW can be killed before showNotification resolves.
+self.addEventListener("install", (event) => {
+  // Only notify if this isn't the very first install (i.e. an update).
+  if ((self as typeof globalThis & { registration: ServiceWorkerRegistration }).registration.active) {
+    (event as ExtendableEvent).waitUntil(
+      (self as typeof globalThis & { registration: ServiceWorkerRegistration }).registration.showNotification(
+        "KinkSync bijgewerkt",
+        {
+          body: "Een nieuwe versie is klaar. Herlaad de app om bij te werken.",
+          icon: "/icons/icon-192.png",
+          tag: "sw-update",
+        }
+      )
+    );
+  }
+});
