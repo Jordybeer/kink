@@ -50,12 +50,14 @@ const ACTION_BAR: React.CSSProperties = {
 
 const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
 const PIN_LENGTH = 4;
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 type S6Sub = "intro" | "pin1" | "pin2" | "biometric";
 
-// Step 5 is the PWA install slide — only shown on Android with a pending prompt.
-const STEP_INSTALL = 5;
+// Step 5 is the notification-permission slide (always shown).
+const STEP_NOTIFY = 5;
+// Step 6 is the PWA install slide — only shown on iOS or Android with a pending prompt.
+const STEP_INSTALL = 6;
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
@@ -74,8 +76,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [bioLoading, setBioLoading] = useState(false);
   const [bioError, setBioError] = useState<string | null>(null);
 
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
+
   const setAppLockPin = useStore((s) => s.setAppLockPin);
   const enableBiometric = useStore((s) => s.enableBiometric);
+  const setNotificationPermissionAsked = useStore((s) => s.setNotificationPermissionAsked);
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setBioAvailable);
@@ -84,6 +89,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
     // Check if the module-level prompt was already captured by ThemeProvider.
     setHasAndroidPrompt(getInstallPrompt() !== null);
+    setNotifPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
   }, []);
 
   const advance = useCallback(() => {
@@ -143,6 +149,24 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   }
 
+  async function handleEnableNotifications() {
+    setNotificationPermissionAsked();
+    try {
+      if (typeof Notification !== "undefined") await Notification.requestPermission();
+    } catch {
+      // User-agent refused the dance — no drama, just move on.
+    }
+    advance();
+  }
+
+  function handleSkipNotifications() {
+    setNotificationPermissionAsked();
+    advance();
+  }
+
+  // iOS in a browser tab can't be asked for permission outside Settings.
+  const iosCannotAsk = isIos && !isStandalone;
+
   const currentDigits = s6sub === "pin1" ? pin1 : pin2;
 
   return (
@@ -184,18 +208,17 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               {step === 2 && <Step2Content />}
               {step === 3 && <Step3Content />}
               {step === 4 && <Step4Content />}
+              {step === STEP_NOTIFY && <StepNotifyContent iosCannotAsk={iosCannotAsk} unsupported={notifPermission === "unsupported"} />}
               {step === STEP_INSTALL && showInstallStep && isIos && <StepInstallIosContent />}
               {step === STEP_INSTALL && showInstallStep && !isIos && <StepInstallAndroidContent />}
-              {step === STEP_INSTALL && !showInstallStep && <Step5Content />}
-              {step === 5 && !showInstallStep && null /* theme step shifted */}
-              {/* When install step is skipped, theme step (originally 5) maps to step 5 */}
-              {step === (showInstallStep ? 6 : 5) && <Step5ThemeContent />}
-              {step === (showInstallStep ? 7 : 6) && s6sub === "intro"    && <Step6IntroContent bioAvailable={bioAvailable} />}
-              {step === (showInstallStep ? 7 : 6) && s6sub === "biometric" && <Step6BioContent bioError={bioError} />}
-              {step === (showInstallStep ? 7 : 6) && (s6sub === "pin1" || s6sub === "pin2") && (
+              {/* When the install slide is skipped, the theme step takes over its slot. */}
+              {step === (showInstallStep ? 7 : 6) && <Step5ThemeContent />}
+              {step === (showInstallStep ? 8 : 7) && s6sub === "intro"    && <Step6IntroContent bioAvailable={bioAvailable} />}
+              {step === (showInstallStep ? 8 : 7) && s6sub === "biometric" && <Step6BioContent bioError={bioError} />}
+              {step === (showInstallStep ? 8 : 7) && (s6sub === "pin1" || s6sub === "pin2") && (
                 <Step6PinContent sub={s6sub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
               )}
-              {step === (showInstallStep ? 8 : 7) && <Step7Content />}
+              {step === (showInstallStep ? 9 : 8) && <Step7Content />}
             </div>
 
             <div style={ACTION_BAR}>
@@ -219,6 +242,25 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 >
                   Volgende →
                 </button>
+              )}
+
+              {/* Notification step */}
+              {step === STEP_NOTIFY && (
+                notifPermission === "default" && !iosCannotAsk ? (
+                  <>
+                    <button onClick={handleEnableNotifications} style={BTN_PRIMARY}>Meldingen inschakelen</button>
+                    <button onClick={handleSkipNotifications} style={BTN_SECONDARY}>Sla over</button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleSkipNotifications}
+                    style={BTN_GHOST}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; }}
+                  >
+                    {iosCannotAsk ? 'Begrepen →' : 'Volgende →'}
+                  </button>
+                )
               )}
 
               {/* Install step — Android */}
@@ -248,7 +290,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
 
               {/* Theme step */}
-              {step === (showInstallStep ? 6 : 5) && (
+              {step === (showInstallStep ? 7 : 6) && (
                 <button
                   onClick={advance}
                   style={BTN_GHOST}
@@ -260,14 +302,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
 
               {/* Security step */}
-              {step === (showInstallStep ? 7 : 6) && s6sub === "intro" && (
+              {step === (showInstallStep ? 8 : 7) && s6sub === "intro" && (
                 <>
                   <button onClick={() => setS6sub("pin1")} style={BTN_PRIMARY}>PIN instellen</button>
                   <button onClick={advance} style={BTN_SECONDARY}>Sla over</button>
                 </>
               )}
 
-              {step === (showInstallStep ? 7 : 6) && (s6sub === "pin1" || s6sub === "pin2") && (
+              {step === (showInstallStep ? 8 : 7) && (s6sub === "pin1" || s6sub === "pin2") && (
                 <button
                   onClick={() => { setPin1([]); setPin2([]); setS6sub("intro"); }}
                   style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
@@ -276,7 +318,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </button>
               )}
 
-              {step === (showInstallStep ? 7 : 6) && s6sub === "biometric" && (
+              {step === (showInstallStep ? 8 : 7) && s6sub === "biometric" && (
                 <>
                   <button
                     onClick={handleEnableBio}
@@ -290,7 +332,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
 
               {/* Age gate */}
-              {step === (showInstallStep ? 8 : 7) && (
+              {step === (showInstallStep ? 9 : 8) && (
                 <>
                   <button
                     onClick={onComplete}
@@ -426,6 +468,22 @@ function Step4Content() {
       <p style={{ ...BODY, textAlign: 'center' }}>
         KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
         Safewords zijn heilig. Grenzen zijn wet.
+      </p>
+    </div>
+  );
+}
+
+function StepNotifyContent({ iosCannotAsk, unsupported }: { iosCannotAsk: boolean; unsupported: boolean }) {
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔔</span></div>
+      <h2 style={TITLE}>Een tikje op de schouder?</h2>
+      <p style={{ ...BODY, textAlign: 'center' }}>
+        {unsupported
+          ? 'Dit toestel ondersteunt geen meldingen — geen zorgen, je mist niks essentieels.'
+          : iosCannotAsk
+            ? 'Op iOS werken meldingen pas als je KinkSync eerst aan je beginscherm toevoegt. Daarna kun je ze inschakelen.'
+            : 'Laat je weten wanneer een sessie-uitnodiging binnenkomt. Volledig optioneel — je kunt dit altijd later wijzigen.'}
       </p>
     </div>
   );

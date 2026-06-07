@@ -10,7 +10,7 @@ test("onboarding full scroll", async ({ page }) => {
   await page.screenshot({ path: "/tmp/ss-onboarding-1.png", fullPage: false });
 
   // Try swiping/scrolling through onboarding slides
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 8; i++) {
     await page.screenshot({ path: `/tmp/ss-onboarding-slide-${i}.png`, fullPage: false });
     // Try clicking next or swiping right
     const nextBtn = page.locator("button").filter({ hasText: /volgende|next|verder|→/i });

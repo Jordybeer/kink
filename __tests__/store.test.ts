@@ -135,7 +135,7 @@ describe("completeScene", () => {
       completedAt: Date.now(),
       trafficLight: "green" as const,
       wentWell: "Great session",
-      toDiscuss: "",
+      remember: "",
     };
 
     useStore.getState().completeScene(sceneId, aftercare);
@@ -166,7 +166,7 @@ describe("completeScene", () => {
       completedAt: Date.now(),
       trafficLight: "green",
       wentWell: "",
-      toDiscuss: "",
+      remember: "",
     });
 
     const profileA = useStore.getState().profiles.find((p) => p.id === profileAId)!;
@@ -198,7 +198,7 @@ describe("completeScene", () => {
       completedAt: Date.now(),
       trafficLight: "green",
       wentWell: "",
-      toDiscuss: "",
+      remember: "",
     });
 
     const updated = useStore.getState().scenes.find((s) => s.id === sceneId)!;

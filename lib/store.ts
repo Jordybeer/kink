@@ -16,6 +16,8 @@ interface State {
   onboardingComplete: boolean;
   profileTourComplete: boolean;
   installPromptDismissed: boolean;
+  notificationPermissionAsked: boolean;
+  setNotificationPermissionAsked: () => void;
   theme: Theme;
   pinnedProfileId: string | null;
   pinProfile: (id: string) => void;
@@ -64,6 +66,7 @@ export const useStore = create<State>()(
       onboardingComplete: false,
       profileTourComplete: false,
       installPromptDismissed: false,
+      notificationPermissionAsked: false,
       theme: "midnight" as Theme,
       pinnedProfileId: null,
       appLockEnabled: false,
@@ -282,6 +285,10 @@ export const useStore = create<State>()(
         set({ installPromptDismissed: true });
       },
 
+      setNotificationPermissionAsked() {
+        set({ notificationPermissionAsked: true });
+      },
+
       setTheme(t) {
         set({ theme: t });
       },
@@ -311,6 +318,7 @@ export const useStore = create<State>()(
         onboardingComplete: state.onboardingComplete,
         profileTourComplete: state.profileTourComplete,
         installPromptDismissed: state.installPromptDismissed,
+        notificationPermissionAsked: state.notificationPermissionAsked,
         theme: state.theme,
         pinnedProfileId: state.pinnedProfileId,
         appLockEnabled: state.appLockEnabled,
@@ -318,7 +326,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 10,
+      version: 11,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -327,6 +335,7 @@ export const useStore = create<State>()(
           onboardingComplete?: boolean;
           profileTourComplete?: boolean;
           installPromptDismissed?: boolean;
+          notificationPermissionAsked?: boolean;
           theme?: Theme;
           pinnedProfileId?: string | null;
           appLockEnabled?: boolean;
@@ -365,6 +374,9 @@ export const useStore = create<State>()(
         }
         if (version < 10) {
           state.scenes = [];
+        }
+        if (version < 11) {
+          state.notificationPermissionAsked = false;
         }
         return state;
       },

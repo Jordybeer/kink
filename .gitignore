@@ -12,6 +12,16 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
+
+# generated service worker (serwist build artifact)
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
+
+# local agent scratch
+.claude/scheduled_tasks.lock
 
 # next.js
 /.next/

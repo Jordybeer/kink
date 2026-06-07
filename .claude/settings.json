@@ -3,7 +3,8 @@
     "allow": [
       "Bash(sqlite3 ~/.claude-mem/claude-mem.db *)",
       "Bash(npm run build)",
-      "Bash(npm run build *)"
+      "Bash(npm run build *)",
+      "Bash(gh issue create *)"
     ]
   },
   "env": {
