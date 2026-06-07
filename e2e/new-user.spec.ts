@@ -1,4 +1,15 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+// The notification step's button label depends on the browser's permission state
+// ("Sla over" when it can ask, otherwise "Volgende →"/"Begrepen →"). Click whichever shows.
+async function skipNotificationStep(page: Page) {
+  const skip = page.getByRole("button", { name: /sla over/i });
+  if (await skip.isVisible()) {
+    await skip.click();
+  } else {
+    await page.getByRole("button", { name: /volgende|begrepen/i }).click();
+  }
+}
 
 test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   test.beforeEach(async ({ page }) => {
@@ -23,8 +34,8 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /volgende/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 2 — backup
-    await expect(page.getByText(/back-up/i)).toBeVisible();
+    // Step 2 — eigen cloud / data autonomy
+    await expect(page.getByText(/eigen cloud/i)).toBeVisible();
     await page.getByRole("button", { name: /volgende/i }).click();
     await page.waitForTimeout(300);
 
@@ -38,7 +49,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /volgende/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 5 — thema kiezen
+    // Step 5 — meldingen
+    await expect(page.getByText(/tikje op de schouder/i)).toBeVisible();
+    await skipNotificationStep(page);
+    await page.waitForTimeout(300);
+
+    // Step 6 — thema kiezen
     await expect(page.getByText(/kies je sfeer/i)).toBeVisible();
     // Select a non-default theme to exercise setTheme
     await page.getByRole("button", { name: /deep red/i }).click();
@@ -48,7 +64,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 6 — leeftijdscheck
+    // Step 7 — app vergrendelen (optioneel, sla over)
+    await expect(page.getByText(/vergrendel de app/i)).toBeVisible();
+    await page.getByRole("button", { name: /sla over/i }).click();
+    await page.waitForTimeout(300);
+
+    // Step 8 — leeftijdscheck
     await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
     await page.waitForTimeout(400);
@@ -67,12 +88,19 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   test("lockout bij 'ik ben jonger'", async ({ page }) => {
     await page.getByRole("button", { name: /begin/i }).click();
     await page.waitForTimeout(300);
+    // Privacy → eigen cloud → features → consent (4× Volgende lands on the notification step)
     for (let i = 0; i < 4; i++) {
       await page.getByRole("button", { name: /volgende/i }).click();
       await page.waitForTimeout(300);
     }
+    await expect(page.getByText(/tikje op de schouder/i)).toBeVisible();
+    await skipNotificationStep(page);
+    await page.waitForTimeout(300);
     await expect(page.getByText(/kies je sfeer/i)).toBeVisible();
     await page.getByRole("button", { name: /ga door/i }).click();
+    await page.waitForTimeout(300);
+    await expect(page.getByText(/vergrendel de app/i)).toBeVisible();
+    await page.getByRole("button", { name: /sla over/i }).click();
     await page.waitForTimeout(300);
     await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
     await page.getByRole("button", { name: /jonger/i }).click();

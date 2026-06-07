@@ -22,13 +22,18 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 - **Dark mode variants**: Currently only dark themes — consider auto light-mode via `@media (prefers-color-scheme: light)`
 - **Avatar upload drag-and-drop**: Allow dragging an image file onto the avatar button, not just clicking
 - **Overview card tap-to-edit**: Tapping a read-only overview card could jump directly to that kink in the edit list (scroll + open accordion)
+- **iOS 26 "liquid glass" redesign** (port the look from `~/code/auto-apply-agent`): Trade the current opaque slabs for translucent frosted surfaces. The kit:
+  - *Enabling change* — re-express `--surface` / `--surface2` / `--surface3` as rgba-with-alpha (~0.6–0.7) across **all 4 themes (midnight/red/forest/mono) + light mode**. Blur over an opaque surface shows nothing, so this is the gate.
+  - *Utilities* — add `.glass / .glass-card / .glass-nav / .glass-input / .glass-btn` with `backdrop-filter: saturate(180%) blur(24px)` (+ `-webkit-` twin), lifted from auto-apply-agent's `globals.css`.
+  - *Watch-outs* — `backdrop-filter` is GPU-hungry: reserve heavy blur for nav / modals / sheets / toast, go light or skip it on long card lists (mid-range Android jank). Light mode washes out and needs the most tuning. Plenty of components use inline `style={{ background: 'var(--surface) }}` and won't pick up blur until the class is swapped in.
+  - *Rollout* — don't big-bang. PoC on **midnight only** (nav + modals/sheets + Toast + UpdateBanner) to feel it in motion, then propagate surface translucency to the other themes. Do it on a branch off `dev` so it doesn't tangle with feat/offline-notifications.
 
 ## Performance / Technical
 <!-- all four items are independent — parallelisable -->
 - **Playwright CI integration**: Run `pw-audit.mjs` in CI to catch visual regressions automatically
 - **Bundle size audit**: Run `npm run build` output analysis (`@next/bundle-analyzer`)
 - **Custom kink persistence race**: If user adds a custom kink and immediately navigates away, Zustand's persist debounce may drop the write
-- **Offline support**: App is localStorage-only but has no service worker — PWA manifest exists but no caching strategy
+- **Offline polish**: Serwist SW + `/offline` document fallback now in place (see Completed below). Still open: precache tuning + a "you're offline" indicator in-app rather than only the fallback route.
 
 ## Accessibility
 - **Keyboard navigation in accordions**: Tab order inside closed CategorySection skips hidden content but focus can still land inside — verify with keyboard-only navigation
@@ -40,6 +45,14 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 - **Kink notes in compare view**: When two profiles have the same kink matched, show a collapsed view of each person's comment
 - **Contract versioning**: Save multiple contract snapshots per pair, with timestamps — currently only one contract per pair is stored
 - **Profile import validation**: Imported profiles currently accept any JSON shape — add Zod/schema validation to prevent crashes from malformed imports
+
+## Completed (session Jun 6 2026 — offline & notifications)
+- ~~Offline document fallback~~ — Serwist `fallbacks` route serves `/offline` ("Je bent offline") when a navigation fails with no network
+- ~~Notification permission flow~~ — new onboarding step (after Consent), plus a one-time post-onboarding `NotificationPrompt` toast for existing users; iOS-in-browser & already-decided states skipped silently
+- ~~Toast system~~ — `ToastProvider` / `useToast` with framer-motion slide-up, 6s auto-dismiss
+- ~~Store `notificationPermissionAsked`~~ — persisted + v10→v11 migration
+- ~~Latent onboarding crash caged~~ — removed dead `<Step5Content />` reference (undefined component, crashed desktop/installed-PWA path); fixed stale `AftercareEntry` shape in store.test
+- ~~Update notifier decision~~ — kept the SW-based `UpdateBanner` as the single update signal; skipped a redundant `version.json` polling toast
 
 ## Completed (session May 28 2026)
 - ~~iPhone zoom fix~~ — inputs/textarea/select forced to 16px in globals.css

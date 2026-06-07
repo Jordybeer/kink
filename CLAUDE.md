@@ -36,3 +36,6 @@ After each task, ask if suggestions are welcome before writing anything to `futu
 
 ## Diff discipline (mandatory)
 Return minimal diffs only. Do not explain unless fix is ambiguous.
+
+## GitHub issues (pre-approved)
+`gh issue create` is pre-approved — no confirmation needed. Create issues freely.
