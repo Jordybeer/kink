@@ -88,11 +88,9 @@ export default function KinkRow({
   return (
     <>
       <div
-        className={`rounded-xl mb-1 transition-[border-left-color] duration-150${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
+        className={`glass-card glass-highlight relative rounded-xl mb-1 transition-[border-left-color] duration-150${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
         style={{
           overflow: "hidden",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "transparent"}`,
         }}
       >
