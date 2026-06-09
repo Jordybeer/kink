@@ -514,7 +514,6 @@ export default function ProfilePage({ params }: Props) {
                         kink={kink}
                         entry={profile.entries[kink.id] ?? { status: null, comment: "" }}
                         onStatusChange={(s) => handleStatus(kink.id, s)}
-                        onCommentChange={(c) => { setEntry(profile.id, kink.id, { comment: c }); markSaved(); }}
                         onTagsChange={(tags) => { setEntry(profile.id, kink.id, { tags }); markSaved(); }}
                         onDirectionChange={(d) => { setEntry(profile.id, kink.id, { direction: d }); markSaved(); }}
                         onStatusGiveChange={(s) => { setEntry(profile.id, kink.id, { statusGive: s }); markSaved(); }}
@@ -538,7 +537,6 @@ export default function ProfilePage({ params }: Props) {
                         kinks={kinks}
                         entries={profile.entries}
                         onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
-                        onCommentChange={(kinkId, c) => { setEntry(profile.id, kinkId, { comment: c }); markSaved(); }}
                         onTagsChange={(kinkId, tags) => { setEntry(profile.id, kinkId, { tags }); markSaved(); }}
                         onDirectionChange={(kinkId, d) => { setEntry(profile.id, kinkId, { direction: d }); markSaved(); }}
                         onStatusGiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusGive: s }); markSaved(); }}

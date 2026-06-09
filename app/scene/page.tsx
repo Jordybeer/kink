@@ -110,9 +110,24 @@ function SceneItemRow({
             </button>
           )}
 
-          <span className="text-sm font-medium flex-1 truncate" style={{ color: "var(--text)" }}>
-            {item.name}
-          </span>
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-medium block truncate" style={{ color: "var(--text)" }}>
+              {item.name}
+            </span>
+            {item.tags && item.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {item.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[10px] px-1.5 py-0.5 rounded-full border"
+                    style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
           {reorderMode ? (
             <div className="flex gap-1">
@@ -335,7 +350,8 @@ function ScenePage() {
   }), []);
 
   function addFromKink(kinkName: string, kinkId: string) {
-    setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true }]);
+    const tags = [...new Set([...(profileA?.entries[kinkId]?.tags ?? []), ...(profileB?.entries[kinkId]?.tags ?? [])])];
+    setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true, tags }]);
     setSaved(false); setSavedStatus(null);
   }
 

@@ -23,8 +23,8 @@
   --nav-h: calc(env(safe-area-inset-top) + 3rem);
   /* Liquid glass — depth shadow, brighter hover border, accent glow (theme-aware via --accent-glow) */
   --border-bright: rgba(255, 255, 255, 0.18);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
-  --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.10) inset;
+  --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
   --glow-accent: 0 0 32px var(--accent-glow);
 }
 
@@ -169,24 +169,26 @@ html, body {
 
 /* iOS liquid glass — translucency via color-mix so the backdrop blur shows over our opaque surfaces */
 .glass {
-  background: color-mix(in srgb, var(--surface) 68%, transparent);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  border: 1px solid var(--border);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--surface3) 80%, transparent), color-mix(in srgb, var(--surface) 70%, transparent));
+  backdrop-filter: saturate(180%) brightness(1.08) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) brightness(1.08) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: var(--shadow);
 }
 
 .glass-card {
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: saturate(160%) blur(20px);
-  -webkit-backdrop-filter: saturate(160%) blur(20px);
-  border: 1px solid var(--border);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--surface3) 80%, transparent), color-mix(in srgb, var(--surface) 70%, transparent));
+  backdrop-filter: saturate(180%) brightness(1.08) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) brightness(1.08) blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: var(--shadow);
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
 }
-.glass-card:hover {
-  border-color: var(--border-bright);
-  box-shadow: var(--shadow-lg), var(--glow-accent);
+@media (hover: hover) and (pointer: fine) {
+  .glass-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: var(--shadow-lg), var(--glow-accent);
+  }
 }
 
 /* diagonal shine — host element must be position:relative, overflow:hidden, rounded */
@@ -197,8 +199,8 @@ html, body {
   border-radius: inherit;
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.03) 40%,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
     transparent 70%
   );
   pointer-events: none;
@@ -311,19 +313,13 @@ select {
 @keyframes ks-glow-no      { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0);  } 50% { box-shadow: 0 0 8px 2px rgba(251,146,60,0.2);   } }
 @keyframes ks-glow-hard-no { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);   } 50% { box-shadow: 0 0 8px 2px rgba(239,68,68,0.25);  } }
 
-/* Card variants keep the glass depth shadow as a base layer so the
-   pulse glows on top instead of wiping it out (used by .glass-card rows) */
-@keyframes ks-glow-card-yes     { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 8px 2px rgba(74,222,128,0.25);  } }
-@keyframes ks-glow-card-willing { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 8px 2px rgba(34,197,94,0.3);   } }
-@keyframes ks-glow-card-maybe   { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 8px 2px rgba(251,191,36,0.2);   } }
-@keyframes ks-glow-card-no      { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 8px 2px rgba(251,146,60,0.2);   } }
-@keyframes ks-glow-card-hard-no { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 8px 2px rgba(239,68,68,0.25);  } }
-
-.ks-glow-yes     { animation: ks-glow-card-yes     1.8s ease-in-out infinite; }
-.ks-glow-willing { animation: ks-glow-card-willing 1.8s ease-in-out infinite; }
-.ks-glow-maybe   { animation: ks-glow-card-maybe   1.8s ease-in-out infinite; }
-.ks-glow-no      { animation: ks-glow-card-no      1.8s ease-in-out infinite; }
-.ks-glow-hard-no { animation: ks-glow-card-hard-no 1.8s ease-in-out infinite; }
+/* Card variants — static status-colored glow layered over the base depth
+   shadow (no animation; no longer pulses forever) */
+.ks-glow-yes     { box-shadow: var(--shadow), 0 0 10px 1px rgba(74,222,128,0.22); }
+.ks-glow-willing { box-shadow: var(--shadow), 0 0 10px 1px rgba(34,197,94,0.22); }
+.ks-glow-maybe   { box-shadow: var(--shadow), 0 0 10px 1px rgba(251,191,36,0.22); }
+.ks-glow-no      { box-shadow: var(--shadow), 0 0 10px 1px rgba(251,146,60,0.22); }
+.ks-glow-hard-no { box-shadow: var(--shadow), 0 0 10px 1px rgba(239,68,68,0.22); }
 
 .partner-hidden {
   filter: blur(8px);

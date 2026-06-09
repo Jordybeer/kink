@@ -169,7 +169,22 @@ export default function SceneDetailPage() {
                   style={{ width: 3, alignSelf: "stretch", borderRadius: 999, background: intensityColor(item.intensity), flexShrink: 0 }}
                   aria-hidden="true"
                 />
-                <span className="text-sm flex-1">{item.name}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm block">{item.name}</span>
+                  {item.tags && item.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {item.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] px-1.5 py-0.5 rounded-full border"
+                          style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {item.duration && <span className="text-xs flex-none" style={{ color: "var(--text2)" }}>{item.duration}</span>}
                 <span className="text-xs flex-none" style={{ color: "var(--text2)" }}>{item.intensity}</span>
               </div>
