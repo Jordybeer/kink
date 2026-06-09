@@ -12,7 +12,7 @@ const MotionLink = motion.create(Link);
 const HUB_ITEMS = [
   { href: "/compare", label: "Vergelijk",    icon: "⚡" },
   { href: "/scenes",  label: "Scènes",       icon: "🎬" },
-  { href: "/timeline", label: "Geschiedenis", icon: "📈" },
+  { href: "/session", label: "Live",         icon: "⛓️" },
 ];
 
 export default function TopNav() {
@@ -74,7 +74,7 @@ export default function TopNav() {
                 aria-label={label}
               >
                 <span aria-hidden="true" className="text-sm leading-none">{icon}</span>
-                <span className="hidden sm:inline">{label}</span>
+                <span>{label}</span>
               </MotionLink>
             ))}
           </div>
