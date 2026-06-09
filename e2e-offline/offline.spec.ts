@@ -34,6 +34,14 @@ test("the playroom stays open with the network in chastity", async ({ page, cont
 
   expect(failed, `failed requests offline: ${failed.join(", ")}`).toHaveLength(0);
   expect(errors, `page errors offline: ${errors.join(" | ")}`).toHaveLength(0);
+
+  // The navbar connection light flips to Offline.
+  await page.goto("/scenes", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("status", { name: "Offline" }).first()).toBeVisible();
+
+  // …and back to Online once the leash is reattached.
+  await context.setOffline(false);
+  await expect(page.getByRole("status", { name: "Online" }).first()).toBeVisible();
 });
 
 test("an uncached route falls back to the safeword page offline", async ({ page, context }) => {
