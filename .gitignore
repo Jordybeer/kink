@@ -17,6 +17,14 @@
 /.next/
 /out/
 
+# serwist service worker (generated at build)
+/public/sw.js
+/public/sw.js.map
+
+# playwright
+/playwright-report/
+/test-results/
+
 # production
 /build
 
