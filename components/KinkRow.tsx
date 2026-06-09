@@ -72,9 +72,11 @@ export default function KinkRow({
   return (
     <>
       <div
-        className={`glass-card glass-highlight relative rounded-xl mb-1${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
+        className={`relative rounded-xl mb-1${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
         style={{
           overflow: "hidden",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
           borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "transparent"}`,
         }}
       >

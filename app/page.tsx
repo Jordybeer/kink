@@ -425,8 +425,7 @@ function HomeContent() {
         {profiles.length > 0 && (
           <button
             onClick={() => setFormOpen(v => !v)}
-            className="focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left transition-colors"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+            className="glass-card glass-highlight relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
           >
             <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
               {formOpen ? "▲ Annuleer" : "+ Nieuw profiel"}
@@ -436,8 +435,7 @@ function HomeContent() {
         {(profiles.length === 0 || formOpen) && (
         <form
           onSubmit={(e) => { handleCreate(e); setFormOpen(false); }}
-          className="rounded-xl p-5 mb-8"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          className="glass-card glass-highlight relative overflow-hidden rounded-xl p-5 mb-8"
         >
           <h2 className="font-semibold text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
             Nieuw profiel
@@ -526,8 +524,7 @@ function HomeContent() {
         {/* Scan QR button — verborgen terwijl import-sheet open is */}
         {!importPreview && <button
           onClick={() => setScanOpen(true)}
-          className="focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left transition-colors"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          className="glass-card glass-highlight relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
         >
           <span className="text-lg" aria-hidden="true">📷</span>
           <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
@@ -594,8 +591,7 @@ function HomeContent() {
                         return (
                           <div
                             key={p.id}
-                            className="rounded-xl overflow-hidden"
-                            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                            className="glass-card glass-highlight relative rounded-xl overflow-hidden"
                           >
                             {editId === p.id ? (
                               <div className="p-4">
