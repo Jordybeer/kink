@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:turbo": "next build --turbopack",
+    "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:offline": "playwright test -c playwright.offline.config.ts",
     "lint": "eslint ."
   },
   "dependencies": {

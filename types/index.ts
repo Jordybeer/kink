@@ -38,6 +38,8 @@ export interface SceneItem {
   note: string;
   fromKink: boolean;
   kinkId?: string;
+  /** Tags pulled from both profiles' entries when this kink was added to the scene. Read-only here. */
+  tags?: string[];
 }
 
 export type SceneStatus = "draft" | "planned" | "completed";

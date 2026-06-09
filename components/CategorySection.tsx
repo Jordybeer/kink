@@ -12,7 +12,6 @@ interface Props {
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
-  onCommentChange: (kinkId: string, c: string) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
   onDirectionChange?: (kinkId: string, d: KinkDirection) => void;
   onStatusGiveChange?: (kinkId: string, s: KinkStatus) => void;
@@ -32,7 +31,7 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 export default function CategorySection({
   category, kinks, entries,
   onStatusChange,
-  onCommentChange, onTagsChange,
+  onTagsChange,
   onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   onBulkSkip, onBulkRestore, compact, roleDirection,
 }: Props) {
@@ -49,10 +48,8 @@ export default function CategorySection({
   return (
     <section className="mb-3">
       <div
-        className="sticky top-[calc(var(--nav-h)+53px)] z-[5] flex items-center rounded-lg transition-colors"
+        className="glass-card sticky top-[calc(var(--nav-h)+53px)] z-[5] flex items-center rounded-2xl transition-colors"
         style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
         }}
       >
@@ -145,7 +142,6 @@ export default function CategorySection({
                 kink={kink}
                 entry={entries[kink.id] ?? { status: null, comment: "" }}
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
-                onCommentChange={(c) => onCommentChange(kink.id, c)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
                 onDirectionChange={onDirectionChange ? (d) => onDirectionChange(kink.id, d) : undefined}
                 onStatusGiveChange={onStatusGiveChange ? (s) => onStatusGiveChange(kink.id, s) : undefined}

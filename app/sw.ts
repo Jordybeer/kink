@@ -34,7 +34,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     self.registration.showNotification("KinkSync bijgewerkt", {
       body: "Een nieuwe versie is klaar. Herlaad de app om bij te werken.",
-      icon: "/icons/icon-192.png",
+      icon: "/icon-192.png",
       tag: "sw-update",
     })
   );

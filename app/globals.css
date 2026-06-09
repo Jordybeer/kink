@@ -21,6 +21,11 @@
   --conflict: #f59e0b;
   /* Global TopNav occupied height (h-12 + notch). Inner sticky bars pin below this. */
   --nav-h: calc(env(safe-area-inset-top) + 3rem);
+  /* Liquid glass — depth shadow, brighter hover border, accent glow (theme-aware via --accent-glow) */
+  --border-bright: rgba(255, 255, 255, 0.18);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.10) inset;
+  --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  --glow-accent: 0 0 32px var(--accent-glow);
 }
 
 * { box-sizing: border-box; }
@@ -162,6 +167,45 @@ html, body {
   display: none;
 }
 
+/* iOS liquid glass — translucency via color-mix so the backdrop blur shows over our opaque surfaces */
+.glass {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--surface3) 80%, transparent), color-mix(in srgb, var(--surface) 70%, transparent));
+  backdrop-filter: saturate(180%) brightness(1.08) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) brightness(1.08) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: var(--shadow);
+}
+
+.glass-card {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--surface3) 80%, transparent), color-mix(in srgb, var(--surface) 70%, transparent));
+  backdrop-filter: saturate(180%) brightness(1.08) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) brightness(1.08) blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .glass-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: var(--shadow-lg), var(--glow-accent);
+  }
+}
+
+/* diagonal shine — host element must be position:relative, overflow:hidden, rounded */
+.glass-highlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
 /* Theme: Deep Red */
 .theme-red {
   --bg: #0f0505;
@@ -269,11 +313,13 @@ select {
 @keyframes ks-glow-no      { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0);  } 50% { box-shadow: 0 0 8px 2px rgba(251,146,60,0.2);   } }
 @keyframes ks-glow-hard-no { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);   } 50% { box-shadow: 0 0 8px 2px rgba(239,68,68,0.25);  } }
 
-.ks-glow-yes     { animation: ks-glow-yes     1.8s ease-in-out infinite; }
-.ks-glow-willing { animation: ks-glow-willing 1.8s ease-in-out infinite; }
-.ks-glow-maybe   { animation: ks-glow-maybe   1.8s ease-in-out infinite; }
-.ks-glow-no      { animation: ks-glow-no      1.8s ease-in-out infinite; }
-.ks-glow-hard-no { animation: ks-glow-hard-no 1.8s ease-in-out infinite; }
+/* Card variants — static status-colored glow layered over the base depth
+   shadow (no animation; no longer pulses forever) */
+.ks-glow-yes     { box-shadow: var(--shadow), 0 0 10px 1px rgba(74,222,128,0.22); }
+.ks-glow-willing { box-shadow: var(--shadow), 0 0 10px 1px rgba(34,197,94,0.22); }
+.ks-glow-maybe   { box-shadow: var(--shadow), 0 0 10px 1px rgba(251,191,36,0.22); }
+.ks-glow-no      { box-shadow: var(--shadow), 0 0 10px 1px rgba(251,146,60,0.22); }
+.ks-glow-hard-no { box-shadow: var(--shadow), 0 0 10px 1px rgba(239,68,68,0.22); }
 
 .partner-hidden {
   filter: blur(8px);
@@ -377,6 +423,9 @@ select {
     --text2: #444444;
     --border: #cccccc;
     --border-accent: #aaaaaa;
+    --border-bright: rgba(0, 0, 0, 0.18);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.10), 0 1px 0 rgba(255, 255, 255, 0.80) inset;
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(255, 255, 255, 0.90) inset;
   }
 
   body { background: white !important; }

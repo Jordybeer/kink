@@ -12,7 +12,7 @@ const MotionLink = motion.create(Link);
 const HUB_ITEMS = [
   { href: "/compare", label: "Vergelijk",    icon: "⚡" },
   { href: "/scenes",  label: "Scènes",       icon: "🎬" },
-  { href: "/timeline", label: "Geschiedenis", icon: "📈" },
+  { href: "/session", label: "Live",         icon: "⛓️" },
 ];
 
 export default function TopNav() {
@@ -61,7 +61,8 @@ export default function TopNav() {
     const items = [...HUB_ITEMS, { href: profileHref, label: "Profiel", icon: "👤" }];
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-end" aria-label="Hoofdnavigatie">
+        <nav className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between" aria-label="Hoofdnavigatie">
+          <StatusDot />
           <div className="flex items-center gap-1">
             {items.map(({ href, label, icon }) => (
               <MotionLink
@@ -73,7 +74,7 @@ export default function TopNav() {
                 aria-label={label}
               >
                 <span aria-hidden="true" className="text-sm leading-none">{icon}</span>
-                <span className="hidden sm:inline">{label}</span>
+                <span>{label}</span>
               </MotionLink>
             ))}
           </div>
@@ -101,8 +102,54 @@ export default function TopNav() {
           <ChevronLeft size={20} />
         </MotionLink>
         <span className="font-semibold text-sm truncate min-w-0">{title}</span>
+        <span className="ml-auto pl-2 flex-none">
+          <StatusDot />
+        </span>
       </nav>
     </header>
+  );
+}
+
+// Live connection light: a quiet green dot online, a pulsing red dot + label
+// the moment the leash to the network gets cut.
+function StatusDot() {
+  const [online, setOnline] = useState(true);
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
+  const color = online ? "#22c55e" : "#ef4444";
+
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      aria-label={online ? "Online" : "Offline"}
+      className="inline-flex items-center gap-1.5"
+    >
+      <span className="relative flex h-2 w-2">
+        {!online && (
+          <span
+            className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
+            style={{ background: color }}
+          />
+        )}
+        <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
+      </span>
+      {!online && (
+        <span className="text-xs font-medium" style={{ color }}>
+          Offline
+        </span>
+      )}
+    </span>
   );
 }
 
