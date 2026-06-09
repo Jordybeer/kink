@@ -21,6 +21,10 @@
 /public/sw.js
 /public/sw.js.map
 
+# playwright
+/playwright-report/
+/test-results/
+
 # production
 /build
 
