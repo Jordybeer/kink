@@ -1,16 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Zap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 
 const MotionLink = motion.create(Link);
 
-const HUB_ITEMS = [
-  { href: "/compare", label: "Vergelijk",    icon: "⚡" },
+const HUB_ITEMS: { href: string; label: string; icon: LucideIcon | string }[] = [
+  { href: "/compare", label: "Vergelijk",    icon: Zap },
   { href: "/scenes",  label: "Scènes",       icon: "🎬" },
   { href: "/session", label: "Live",         icon: "⛓️" },
 ];
@@ -51,10 +52,8 @@ export default function TopNav() {
 
   const shell = {
     paddingTop: "env(safe-area-inset-top)",
-    background: scrolled ? "color-mix(in srgb, var(--surface) 82%, transparent)" : "transparent",
+    background: scrolled ? "var(--surface)" : "transparent",
     borderBottom: `1px solid ${scrolled ? "var(--border)" : "transparent"}`,
-    backdropFilter: scrolled ? "blur(12px)" : "none",
-    WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
   } as const;
 
   if (isHub) {
@@ -73,7 +72,9 @@ export default function TopNav() {
                 style={{ color: "var(--text2)" }}
                 aria-label={label}
               >
-                <span aria-hidden="true" className="text-sm leading-none">{icon}</span>
+                <span aria-hidden="true" className="text-sm leading-none">
+                  {typeof icon === "string" ? icon : (() => { const I = icon as React.FC<{ size: number }>; return <I size={18} />; })()}
+                </span>
                 <span>{label}</span>
               </MotionLink>
             ))}
@@ -126,7 +127,7 @@ function StatusDot() {
     };
   }, []);
 
-  const color = online ? "#22c55e" : "#ef4444";
+  const color = online ? "var(--willing)" : "var(--hard-no)";
 
   return (
     <span

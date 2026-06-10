@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
 import { useMotionSafe } from "@/lib/motion";
 
 type ToastAction = { label: string; onClick: () => void };
@@ -83,7 +84,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               style={{ color: "var(--text2)" }}
               aria-label="Sluiten"
             >
-              ✕
+              <X size={16} aria-hidden="true" />
             </button>
           </motion.div>
         )}

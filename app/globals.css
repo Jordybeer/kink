@@ -3,9 +3,13 @@
 :root {
   --bg: #0a0a0f;
   --surface: #13131c;
-  --surface2: #1c1c28;
-  --surface3: #242435;
+  --surface2: #181824;
+  --surface3: #2c2c40;
   --border: #2a2a3d;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --scrim-strong: rgba(0, 0, 0, 0.92);
+  --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
+  --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
   --border-accent: rgba(192, 132, 252, 0.25);
   --text: #ede8f5;
   --text2: #9d9ab8;
@@ -167,51 +171,12 @@ html, body {
   display: none;
 }
 
-/* iOS liquid glass — translucency via color-mix so the backdrop blur shows over our opaque surfaces */
-.glass {
-  background: linear-gradient(160deg, color-mix(in srgb, var(--surface3) 80%, transparent), color-mix(in srgb, var(--surface) 70%, transparent));
-  backdrop-filter: saturate(180%) brightness(1.08) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) brightness(1.08) blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: var(--shadow);
-}
-
-.glass-card {
-  background: linear-gradient(160deg, color-mix(in srgb, var(--surface3) 80%, transparent), color-mix(in srgb, var(--surface) 70%, transparent));
-  backdrop-filter: saturate(180%) brightness(1.08) blur(18px);
-  -webkit-backdrop-filter: saturate(180%) brightness(1.08) blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: var(--shadow);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .glass-card:hover {
-    border-color: var(--border-bright);
-    box-shadow: var(--shadow-lg), var(--glow-accent);
-  }
-}
-
-/* diagonal shine — host element must be position:relative, overflow:hidden, rounded */
-.glass-highlight::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0.05) 40%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
 /* Theme: Deep Red */
 .theme-red {
   --bg: #0f0505;
   --surface: #1a0808;
-  --surface2: #240d0d;
-  --surface3: #2e1212;
+  --surface2: #1e0a0a;
+  --surface3: #36161a;
   --border: #4a1a1a;
   --border-accent: rgba(239, 68, 68, 0.3);
   --text: #f5ede8;
@@ -225,8 +190,8 @@ html, body {
 .theme-forest {
   --bg: #050f08;
   --surface: #0c1e10;
-  --surface2: #102816;
-  --surface3: #14321c;
+  --surface2: #0d2213;
+  --surface3: #163a22;
   --border: #1e4a28;
   --border-accent: rgba(74, 222, 128, 0.3);
   --text: #e8f5ed;
@@ -240,8 +205,8 @@ html, body {
 .theme-mono {
   --bg: #080808;
   --surface: #141414;
-  --surface2: #1e1e1e;
-  --surface3: #282828;
+  --surface2: #181818;
+  --surface3: #2e2e2e;
   --border: #363636;
   --border-accent: rgba(255, 255, 255, 0.2);
   --text: #f0f0f0;

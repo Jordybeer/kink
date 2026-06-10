@@ -1,4 +1,5 @@
 "use client";
+import { Ban } from "lucide-react";
 import type { KinkStatus } from "@/types";
 
 const OPTIONS: { value: NonNullable<KinkStatus>; icon: string; label: string; title: string }[] = [
@@ -36,7 +37,7 @@ export default function StatusPicker({ value, onChange, kinkName }: Props) {
                 : "text-[var(--text2)] hover:text-[var(--text)] hover:bg-[var(--surface3)]"
             }`}
           >
-            <span className="text-[13px] leading-none">{o.icon}</span>
+            {o.value === "hard_no" ? <Ban size={13} aria-hidden="true" /> : <span className="text-[13px] leading-none">{o.icon}</span>}
             <span>{o.label}</span>
           </button>
         );

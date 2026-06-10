@@ -803,7 +803,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           })}
 
           {showZeroState && (
-            <div className="ks-fade-in text-center my-6 p-8 rounded-xl" style={{ background: "var(--surface)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+            <div className="ks-fade-in text-center my-6 p-8 rounded-xl" style={{ background: "var(--surface)", boxShadow: "0 4px 12px var(--scrim)" }}>
               <div className="ks-icon-pop text-4xl mb-3">🖤</div>
               <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Geen matches — en dat is oké.</h3>
               <p className="text-sm mx-auto" style={{ color: "var(--text2)", maxWidth: "36ch" }}>

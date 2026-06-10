@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Ban, Info } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
 import type { RoleDirection } from "@/lib/roles";
 import InfoSheet from "./InfoSheet";
@@ -76,20 +77,22 @@ export default function KinkRow({
         style={{
           overflow: "hidden",
           background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "transparent"}`,
+          borderTop: "1px solid var(--border)",
+          borderRight: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "var(--border)"}`,
         }}
       >
-        {/* Row 1: info + name + ervaring pill + comment toggle */}
-        <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
+        {/* Row 1: info + name */}
+        <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
           <button
             data-tour="info"
             onClick={() => setInfoOpen(true)}
             aria-label={`Informatie over ${kink.name}`}
-            className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg text-xs flex-none"
-            style={{ background: "rgba(59,130,246,0.45)", color: "rgba(255,255,255,0.85)", border: "none" }}
+            className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg flex-none"
+            style={{ background: "var(--info-ghost)", color: "var(--text2)", border: "none" }}
           >
-            <span aria-hidden="true">ⓘ</span>
+            <Info size={14} aria-hidden="true" />
           </button>
 
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
@@ -97,7 +100,7 @@ export default function KinkRow({
 
         {/* Direction selector */}
         {showDirection && (
-          <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-1.5 overflow-x-auto">
+          <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-1 overflow-x-auto">
             <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Richting:</span>
             {DIRECTIONS.filter(({ dir }) => {
               if (!roleDirection || roleDirection === "none" || roleDirection === "both") return true;
@@ -139,9 +142,7 @@ export default function KinkRow({
                     ? onStatusGiveChange?.(active ? null : s)
                     : onStatusChange(active ? null : s)}
                   aria-pressed={active}
-                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] ${
-                    compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
-                  }${active ? ` status-${s}` : ""}`}
+                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
                   style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                 >
                   {label}
@@ -160,9 +161,7 @@ export default function KinkRow({
                   key={s}
                   onClick={() => onStatusReceiveChange?.(active ? null : s)}
                   aria-pressed={active}
-                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] ${
-                    compact ? "text-[12px] px-2.5 py-2" : "text-[13px] px-3 py-2.5"
-                  }${active ? ` status-${s}` : ""}`}
+                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
                   style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                 >
                   {label}
@@ -182,7 +181,7 @@ export default function KinkRow({
                     key={s}
                     onClick={() => onStatusGiveChange?.(active ? null : s)}
                     aria-pressed={active}
-                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
+                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
                     style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                   >
                     {label}
@@ -199,7 +198,7 @@ export default function KinkRow({
                     key={s}
                     onClick={() => onStatusReceiveChange?.(active ? null : s)}
                     aria-pressed={active}
-                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2.5${active ? ` status-${s}` : ""}`}
+                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
                     style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                   >
                     {label}
@@ -234,26 +233,27 @@ export default function KinkRow({
             }
           };
           return (
-            <div data-tour="hard-no" className="px-3 pb-3 pt-2 border-t border-[var(--border)]">
+            <div data-tour="hard-no" className="px-3 pb-1">
               <button
                 onClick={handleClick}
                 aria-pressed={active}
-                className={`focus-ring w-full rounded-lg border text-[12px] font-semibold py-3 min-h-[44px] transition-colors${active ? " status-hard_no" : ""}`}
+                className={`focus-ring w-full rounded-lg border text-[11px] font-semibold py-2 min-h-[44px] transition-colors inline-flex items-center justify-center gap-1.5${active ? " status-hard_no" : ""}`}
                 style={!active ? {
                   color: "var(--hard-no)",
                   borderColor: "color-mix(in srgb, var(--hard-no) 30%, transparent)",
                   background: "color-mix(in srgb, var(--hard-no) 6%, transparent)",
                 } : {}}
               >
-                ✕✕ Harde grens
+                <Ban size={14} aria-hidden="true" />
+                Harde grens
               </button>
             </div>
           );
         })()}
 
         {showTags && (
-          <div className="px-3 pb-3 pt-2">
-            <div className="flex flex-wrap gap-1.5">
+          <div className="px-3 pb-2 pt-1">
+            <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
               {TAGS.map((tag) => {
                 const active = tags.includes(tag);
                 return (
@@ -261,12 +261,9 @@ export default function KinkRow({
                     key={tag}
                     onClick={() => toggleTag(tag)}
                     aria-pressed={active}
-                    className="focus-ring rounded-full border transition-colors flex items-center"
+                    className="focus-ring rounded-full border transition-colors flex items-center whitespace-nowrap flex-none text-[11px] px-2.5 py-1 min-h-[44px]"
                     style={{
-                      fontSize: "12px",
-                      minHeight: 44,
-                      padding: "0 12px",
-                      background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "transparent",
+                      background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
                       borderColor: active ? "var(--accent)" : "var(--border)",
                       color: active ? "var(--accent)" : "var(--text2)",
                     }}

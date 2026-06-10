@@ -45,7 +45,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
       <motion.div
         key="pwa-backdrop"
         aria-hidden="true"
-        style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.55)" }}
+        style={{ position: "fixed", inset: 0, zIndex: 400, background: "var(--scrim)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -68,7 +68,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
           border: "1px solid var(--border)",
           borderRadius: "1rem",
           padding: "1.125rem 1.125rem 0.875rem",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          boxShadow: "0 8px 32px var(--scrim)",
         }}
         initial={{ opacity: 0, x: "-50%", y: 32 }}
         animate={{ opacity: 1, x: "-50%", y: 0 }}
@@ -116,7 +116,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                 onClick={advance}
                 whileTap={TAP_SPRING}
                 style={{
-                  flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
+                  flex: 1, background: "var(--accent)", color: "var(--on-accent)", fontWeight: 600,
                   padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
                   fontSize: "0.8125rem", cursor: "pointer",
                 }}
@@ -141,7 +141,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                 onClick={() => { onInstall?.(); onDismiss(); }}
                 whileTap={TAP_SPRING}
                 style={{
-                  flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
+                  flex: 1, background: "var(--accent)", color: "var(--on-accent)", fontWeight: 600,
                   padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
                   fontSize: "0.8125rem", cursor: "pointer",
                 }}

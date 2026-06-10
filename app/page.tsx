@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
+import { Camera, Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -425,7 +425,8 @@ function HomeContent() {
         {profiles.length > 0 && (
           <button
             onClick={() => setFormOpen(v => !v)}
-            className="glass-card glass-highlight relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
+            className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
             <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
               {formOpen ? "▲ Annuleer" : "+ Nieuw profiel"}
@@ -435,7 +436,8 @@ function HomeContent() {
         {(profiles.length === 0 || formOpen) && (
         <form
           onSubmit={(e) => { handleCreate(e); setFormOpen(false); }}
-          className="glass-card glass-highlight relative overflow-hidden rounded-xl p-5 mb-8"
+          className="relative overflow-hidden rounded-xl p-5 mb-8"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
         >
           <h2 className="font-semibold text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
             Nieuw profiel
@@ -524,9 +526,10 @@ function HomeContent() {
         {/* Scan QR button — verborgen terwijl import-sheet open is */}
         {!importPreview && <button
           onClick={() => setScanOpen(true)}
-          className="glass-card glass-highlight relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
+          className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
         >
-          <span className="text-lg" aria-hidden="true">📷</span>
+          <Camera size={18} aria-hidden="true" />
           <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
             Scan QR — importeer profiel van partner
           </span>
@@ -591,7 +594,8 @@ function HomeContent() {
                         return (
                           <div
                             key={p.id}
-                            className="glass-card glass-highlight relative rounded-xl overflow-hidden"
+                            className="relative rounded-xl overflow-hidden"
+                            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
                           >
                             {editId === p.id ? (
                               <div className="p-4">
@@ -1108,7 +1112,7 @@ function HomeContent() {
               onClick={handleDestroyAll}
               disabled={destroyPhrase.trim().toLowerCase() !== DESTROY_PHRASE}
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-30"
-              style={{ background: "#7f1d1d", border: "1px solid var(--hard-no)", color: "#fca5a5" }}
+              style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
             >
               Vernietig voor altijd
             </button>
@@ -1142,7 +1146,7 @@ function HomeContent() {
             <button
               onClick={confirmDelete}
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: "#7f1d1d", border: "1px solid var(--hard-no)", color: "#fca5a5" }}
+              style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
             >
               Verwijder voor altijd
             </button>
@@ -1284,7 +1288,7 @@ function HomeContent() {
 
       {/* Export password modal */}
       {exportPwOpen && (
-        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4" style={{ background: "var(--scrim)" }}>
           <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <AnimatePresence mode="wait" initial={false}>
               {exportPwStep === 0 ? (
@@ -1400,7 +1404,7 @@ function HomeContent() {
             exit={{ opacity: 0 }}
             transition={t.fast}
             className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.6)" }}
+            style={{ background: "var(--scrim)" }}
           >
             <motion.div
               key="import-card"
@@ -1466,7 +1470,7 @@ function HomeContent() {
 
       {/* PIN flow modal */}
       {pinFlowOpen && (
-        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center p-4" style={{ background: "var(--scrim)" }}>
           <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <AnimatePresence mode="wait" initial={false}>
               {pinFlowStep === 0 && (

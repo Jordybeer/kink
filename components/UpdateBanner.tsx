@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 export default function UpdateBanner() {
@@ -61,7 +62,7 @@ export default function UpdateBanner() {
             style={{ color: "var(--text2)" }}
             aria-label="Sluiten"
           >
-            ✕
+            <X size={16} aria-hidden="true" />
           </button>
         </motion.div>
       )}

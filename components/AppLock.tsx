@@ -83,7 +83,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={t.fast}
-      style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+      style={{ position: "fixed", inset: 0, zIndex: 600, background: "var(--scrim-strong)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
     >
       <motion.div
         initial={{ y: 24, opacity: 0 }}
@@ -95,7 +95,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
           border: "1px solid var(--border)",
           borderRadius: "1rem",
           padding: "1.5rem 1.125rem 1.125rem",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          boxShadow: "0 8px 32px var(--scrim)",
         }}
       >
         <h2 style={{ margin: "0 0 0.25rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
