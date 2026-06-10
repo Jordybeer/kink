@@ -25,6 +25,9 @@
 /playwright-report/
 /test-results/
 
+# local agent scratch (sim routine working files, screenshots, creds)
+/.simtmp/
+
 # production
 /build
 
