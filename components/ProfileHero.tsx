@@ -103,9 +103,20 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
 
   return (
     <section
-      className="ks-fade-in relative overflow-hidden rounded-2xl px-4 pb-5"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      className="ks-card ks-fade-in relative overflow-hidden rounded-2xl px-4 pb-5"
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          top: "-40px",
+          left: "-40px",
+          width: "260px",
+          height: "260px",
+          background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%)",
+          filter: "blur(18px)",
+        }}
+      />
       {/* Gradient accent strip */}
       <div
         className="h-px -mx-4 mb-5"

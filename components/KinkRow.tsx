@@ -76,7 +76,9 @@ export default function KinkRow({
         className={`relative rounded-xl mb-1${effectiveStatus ? ` ks-glow-${effectiveStatus.replace("_", "-")}` : ""}`}
         style={{
           overflow: "hidden",
-          background: "var(--surface)",
+          background: effectiveStatus
+            ? `color-mix(in srgb, ${STATUS_BORDER[effectiveStatus]} 5%, var(--surface))`
+            : "var(--surface)",
           borderTop: "1px solid var(--border)",
           borderRight: "1px solid var(--border)",
           borderBottom: "1px solid var(--border)",

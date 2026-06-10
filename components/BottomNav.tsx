@@ -1,0 +1,60 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Zap, Clapperboard, Anchor, User } from "lucide-react";
+import { useStore, useHasHydrated } from "@/lib/store";
+
+export default function BottomNav() {
+  const path = usePathname();
+  const { profiles } = useStore();
+  const _hasHydrated = useHasHydrated();
+
+  // Hide on focused routes
+  if (path.startsWith("/profile/") && path.split("/").length > 2) return null;
+  if (path === "/scene" || path.startsWith("/scenes/")) return null;
+
+  const firstProfileId = _hasHydrated ? profiles[0]?.id : undefined;
+  const profileHref = firstProfileId ? `/profile/${firstProfileId}` : "/";
+
+  const items = [
+    { href: "/compare", label: "Vergelijk",  icon: Zap         },
+    { href: "/scenes",  label: "Scènes",     icon: Clapperboard },
+    { href: "/session", label: "Live",       icon: Anchor       },
+    { href: profileHref, label: "Profiel",   icon: User         },
+  ] as const;
+
+  return (
+    <nav
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-40 justify-around px-2"
+      style={{
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
+        height: "var(--bottom-nav-h)",
+        alignItems: "center",
+      }}
+      aria-label="Tabbladen"
+    >
+      {items.map(({ href, label, icon: Icon }) => {
+        const active = path === href || path.startsWith(href + "/");
+        return (
+          <Link
+            key={href}
+            href={href}
+            className="flex flex-col items-center gap-0.5 focus-ring rounded-lg px-3 py-1"
+            style={{
+              color: active ? "var(--text)" : "var(--text2)",
+              fontWeight: active ? 700 : 500,
+              minWidth: 44,
+              minHeight: 44,
+              justifyContent: "center",
+            }}
+            aria-current={active ? "page" : undefined}
+          >
+            <Icon size={20} strokeWidth={active ? 2 : 1.5} />
+            <span style={{ fontSize: 10 }}>{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}

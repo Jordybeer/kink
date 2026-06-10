@@ -67,9 +67,16 @@ export default function SceneDetailPage() {
         )}
       </div>
 
-      <p className="text-sm mb-6" style={{ color: "var(--text2)" }}>
+      <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>
         {scene.profileAName} &amp; {scene.profileBName} · {date}
       </p>
+
+      {scene.safeword && (
+        <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-lg" style={{ background: "color-mix(in srgb, var(--hard-no) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 30%, transparent)" }}>
+          <span className="text-xs font-bold uppercase tracking-widest flex-none" style={{ color: "var(--hard-no)" }}>Safeword</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>{scene.safeword}</span>
+        </div>
+      )}
 
       {/* Aftercare block */}
       {aftercare && traffic ? (

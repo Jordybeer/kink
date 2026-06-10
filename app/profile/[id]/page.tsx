@@ -11,7 +11,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, Zap, Clapperboard } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -348,7 +348,7 @@ export default function ProfilePage({ params }: Props) {
   const ratedCustomKinks = customKinks.filter((ck) => profile.entries[ck.id]?.status);
 
   return (
-    <main className="max-w-3xl mx-auto w-full pt-6 pb-16">
+    <main className="max-w-3xl mx-auto w-full pt-6">
       {tourVisible && <ProfileTour onComplete={completeProfileTour} />}
 
       {errorMessage && (
@@ -361,31 +361,13 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {/* Action row */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-2">
-        <span className="text-[11px] font-medium transition-opacity" style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}>
+      <div className="px-4 pt-3 pb-1">
+        <span
+          className="text-[11px] font-medium transition-opacity"
+          style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}
+        >
           Opgeslagen ✓
         </span>
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/compare?a=${id}`}
-            aria-label="Vergelijk dit profiel"
-            className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
-            style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
-          >
-            <Zap size={13} />
-            Vergelijk
-          </Link>
-          <Link
-            href="/scene"
-            aria-label="Scène planner"
-            className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
-            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-          >
-            <Clapperboard size={13} />
-            Scène
-          </Link>
-        </div>
       </div>
 
       <h1 className="sr-only">{profile.name}</h1>
@@ -412,7 +394,7 @@ export default function ProfilePage({ params }: Props) {
               className="focus-ring flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors border"
               style={
                 activeTab === tab
-                  ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                  ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                   : { background: "var(--surface)", color: "var(--text2)", borderColor: "var(--border)" }
               }
             >
@@ -486,7 +468,7 @@ export default function ProfilePage({ params }: Props) {
                   className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
                   style={
                     activeCategory === cat
-                      ? { background: "var(--accent)", color: "#000", border: "1px solid var(--accent)" }
+                      ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
                       : { color: "var(--text2)", border: "1px solid var(--border)" }
                   }
                 >
@@ -628,7 +610,7 @@ export default function ProfilePage({ params }: Props) {
                       <button
                         type="submit"
                         className="focus-ring px-3 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
-                        style={{ background: "var(--accent)", color: "#000" }}
+                        style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                       >
                         + Voeg toe
                       </button>
@@ -660,7 +642,7 @@ export default function ProfilePage({ params }: Props) {
                 <button
                   onClick={() => setActiveTab("bewerken")}
                   className="focus-ring text-sm px-4 py-2 rounded-lg font-medium transition-colors"
-                  style={{ background: "var(--accent)", color: "#000" }}
+                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                 >
                   Bewerken om te beginnen →
                 </button>
@@ -828,7 +810,7 @@ export default function ProfilePage({ params }: Props) {
             onClick={handlePDFExport}
             aria-label="Exporteer als PDF"
             className="focus-ring w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-lg border"
-            style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "#000" }}
+            style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "var(--on-accent)" }}
           >
             PDF
           </button>
@@ -881,7 +863,7 @@ export default function ProfilePage({ params }: Props) {
                 className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
                 style={
                   editLevel === l.value
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }
                 }
               >
@@ -903,7 +885,7 @@ export default function ProfilePage({ params }: Props) {
                 className="focus-ring flex-none px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                 style={
                   editRelStatus === s
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }
                 }
               >
@@ -939,7 +921,7 @@ export default function ProfilePage({ params }: Props) {
               onClick={handleSaveEdit}
               disabled={!editName.trim()}
               className="focus-ring flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-40"
-              style={{ background: "var(--accent)", color: "#000" }}
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               Opslaan
             </button>
