@@ -60,6 +60,7 @@ export interface SceneRecord {
   profileBName: string;
   items: SceneItem[];
   plannedDate?: string;
+  safeword?: string;
   status: SceneStatus;
   createdAt: number;
   updatedAt: number;
@@ -77,6 +78,7 @@ export interface ContractSnapshot {
   hardLimitCount: number;
   softLimitCount: number;
   discussCount: number;
+  safeword?: string;
 }
 
 export interface Profile {

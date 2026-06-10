@@ -486,6 +486,7 @@ function ContractPage() {
         hardLimitCount: hardLimits.length,
         softLimitCount: softLimits.length,
         discussCount: discuss.length,
+        safeword: signalsA.black || signalsB.black || undefined,
       });
     } finally {
       setGenerating(false);
