@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import { Camera, Pencil, QrCode } from "lucide-react";
+import { Camera, Pencil, QrCode, X } from "lucide-react";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
@@ -147,10 +147,10 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
               type="button"
               onClick={() => onAvatarChange?.(undefined)}
               className="absolute -top-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-[10px] focus-ring border-2 border-[var(--bg)]"
-              style={{ background: "var(--hard-no)", color: "white" }}
+              style={{ background: "var(--hard-no)", color: "var(--text)" }}
               aria-label="Profielfoto verwijderen"
             >
-              ✕
+              <X size={12} aria-hidden="true" />
             </button>
           )}
           <input

@@ -29,7 +29,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
         <h2 className="text-xl font-semibold text-white mb-2">
           {profileName ? `Hoe voel je je nu, ${profileName}?` : "Hoe voel je je nu?"}
         </h2>
-        <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <p className="text-sm mb-8" style={{ color: "var(--text2)" }}>
           Neem je tijd — er is geen haast.
         </p>
 
@@ -40,16 +40,16 @@ export default function CheckIn({ profileName, onDone }: Props) {
               onClick={() => onDone(label)}
               aria-label={label}
               className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-2xl transition-colors"
-              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+              style={{ border: "1px solid var(--border)" }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--text2)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
               }}
             >
               <span>{emoji}</span>
-              <span className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <span className="text-xs" style={{ color: "var(--text2)" }}>
                 {label}
               </span>
             </button>
@@ -59,7 +59,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
         <button
           onClick={() => onDone()}
           className="mt-6 text-xs underline underline-offset-2"
-          style={{ color: "rgba(255,255,255,0.3)" }}
+          style={{ color: "var(--text2)" }}
         >
           Doorgaan →
         </button>

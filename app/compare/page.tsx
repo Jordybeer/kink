@@ -2,6 +2,7 @@
 import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Clapperboard } from "lucide-react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
@@ -240,7 +241,7 @@ function ComparePage() {
             <Link href={`/scene?a=${aId}&b=${bId}`}
               className="focus-ring px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-90 border flex-1 text-center"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}>
-              🎭 Plan een scène
+              <Clapperboard size={14} aria-hidden="true" className="inline mr-1" /> Plan een scène
             </Link>
             <Link href={`/contract?a=${aId}&b=${bId}`}
               className="focus-ring px-3 py-1.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-90 flex-1 text-center"

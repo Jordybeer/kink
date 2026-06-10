@@ -47,7 +47,7 @@ export default function TopNav() {
   const profileMatch = path.match(/^\/profile\/([^/]+)/);
   const sceneMatch = path.match(/^\/scenes\/([^/]+)/);
   const firstProfileId = profiles[0]?.id;
-  const profileHref = firstProfileId ? `/profile/${firstProfileId}` : "/";
+  const profileHref = firstProfileId ? `/profile/${firstProfileId}` : undefined;
 
   const shell = {
     paddingTop: "env(safe-area-inset-top)",
@@ -58,7 +58,10 @@ export default function TopNav() {
   } as const;
 
   if (isHub) {
-    const items = [...HUB_ITEMS, { href: profileHref, label: "Profiel", icon: "👤" }];
+    const items = [
+      ...HUB_ITEMS,
+      ...(profileHref ? [{ href: profileHref, label: "Profiel", icon: "👤" }] : []),
+    ];
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
         <nav className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between" aria-label="Hoofdnavigatie">

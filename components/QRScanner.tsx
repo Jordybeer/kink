@@ -115,7 +115,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           </div>
         ) : (
           <>
-            <div className="relative rounded-xl overflow-hidden mb-4" style={{ aspectRatio: "1", background: "#000" }}>
+            <div className="relative rounded-xl overflow-hidden mb-4" style={{ aspectRatio: "1", background: "var(--bg)" }}>
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
