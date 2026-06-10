@@ -169,11 +169,6 @@ function StatusDot() {
         )}
         <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
       </span>
-      {!online && (
-        <span className="text-xs font-medium" style={{ color }}>
-          Offline
-        </span>
-      )}
     </span>
   );
 }
