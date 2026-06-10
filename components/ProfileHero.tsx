@@ -103,8 +103,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
 
   return (
     <section
-      className="ks-fade-in relative overflow-hidden rounded-2xl px-4 pb-5"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      className="ks-card ks-fade-in relative overflow-hidden rounded-2xl px-4 pb-5"
     >
       {/* Gradient accent strip */}
       <div

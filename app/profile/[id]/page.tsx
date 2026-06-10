@@ -11,7 +11,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, Zap, Clapperboard } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -361,31 +361,13 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {/* Action row */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-2">
-        <span className="text-[11px] font-medium transition-opacity" style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}>
+      <div className="px-4 pt-3 pb-1">
+        <span
+          className="text-[11px] font-medium transition-opacity"
+          style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}
+        >
           Opgeslagen ✓
         </span>
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/compare?a=${id}`}
-            aria-label="Vergelijk dit profiel"
-            className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
-            style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
-          >
-            <Zap size={13} />
-            Vergelijk
-          </Link>
-          <Link
-            href="/scene"
-            aria-label="Scène planner"
-            className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg transition-opacity hover:opacity-70"
-            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-          >
-            <Clapperboard size={13} />
-            Scène
-          </Link>
-        </div>
       </div>
 
       <h1 className="sr-only">{profile.name}</h1>

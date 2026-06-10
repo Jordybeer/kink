@@ -271,7 +271,7 @@ function ContractGate({
           className="w-full py-3 rounded-xl text-sm font-bold focus-ring disabled:opacity-40 mb-3"
           style={{ background: "var(--accent)", color: "#000" }}
         >
-          Maak verbond aan
+          Contract opstellen
         </button>
 
         <button

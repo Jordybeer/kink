@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import TopNav from "@/components/TopNav";
+import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
 import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col antialiased">
         <ThemeProvider />
         <TopNav />
+        <BottomNav />
         <ToastProvider>
           {children}
           <UpdateBanner />

@@ -407,3 +407,16 @@ select {
   .pwa-hidden { display: none !important; }
   .pwa-only { display: flex !important; }
 }
+
+.ks-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+:root { --bottom-nav-h: calc(env(safe-area-inset-bottom) + 3.5rem); }
+
+.bottom-nav { display: none; }
+@media (display-mode: standalone) {
+  .bottom-nav { display: flex; }
+  main { padding-bottom: var(--bottom-nav-h); }
+}
