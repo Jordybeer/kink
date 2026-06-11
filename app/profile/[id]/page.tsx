@@ -797,7 +797,7 @@ export default function ProfilePage({ params }: Props) {
 
       {/* Export FAB — own profiles, overzicht tab only */}
       {effectiveTab === "overzicht" && !isShared && (
-        <div className="fixed bottom-20 right-4 z-50 flex gap-2">
+        <div className="fixed right-4 z-50 flex gap-2" style={{ bottom: "calc(var(--bottom-nav-h) + 0.5rem)" }}>
           <button
             onClick={handleExport}
             aria-label="Exporteer als tekstbestand"

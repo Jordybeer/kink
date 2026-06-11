@@ -103,7 +103,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
 
   return (
     <section
-      className="ks-card ks-fade-in relative overflow-hidden rounded-2xl px-4 pb-5"
+      className="ks-card ks-fade-in relative overflow-hidden rounded-2xl mx-3 px-4 pt-4 pb-5"
     >
       <div
         aria-hidden="true"
@@ -117,14 +117,9 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
           filter: "blur(18px)",
         }}
       />
-      {/* Gradient accent strip */}
-      <div
-        className="h-px -mx-4 mb-5"
-        style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))" }}
-      />
 
       {/* Identity row */}
-      <div className="flex items-start gap-4 mb-5">
+      <div className="flex items-end gap-4 mb-5">
         {/* Avatar with upload */}
         <div className="relative flex-none">
           <button
@@ -175,29 +170,18 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
           />
         </div>
 
-        <div className="flex-1 min-w-0 pt-0.5">
-          <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold truncate flex-1">{profile.name}</h2>
-            {onShare && (
-              <button
-                onClick={onShare}
-                aria-label="Deel profiel via QR"
-                title="Deel via QR"
-                className="focus-ring flex-none mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
-                style={{ color: "var(--accent)", border: "1px solid var(--border)" }}
-              >
-                <QrCode size={15} />
-              </button>
-            )}
             {onEdit && (
               <button
                 onClick={onEdit}
                 aria-label="Profiel bewerken"
                 title="Bewerken"
-                className="focus-ring flex-none mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
+                className="focus-ring flex-none w-8 h-8 flex items-center justify-center rounded-md transition-colors"
                 style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
               >
-                <Pencil size={15} />
+                <Pencil size={13} />
               </button>
             )}
           </div>
@@ -232,8 +216,23 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
           <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
             {memberSince && <>Lid sinds {memberSince} · </>}{progressPct}% ingevuld
           </p>
-          {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
+          {(onShare || profile.fetLifeUsername || profile.bdsmtestUrl) && (
             <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {onShare && (
+                <button
+                  onClick={onShare}
+                  aria-label="Deel profiel via QR"
+                  className="focus-ring text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+                  style={{
+                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                    color: "var(--accent)",
+                    border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+                  }}
+                >
+                  <QrCode size={12} />
+                  Deel profiel
+                </button>
+              )}
               {profile.fetLifeUsername && (
                 <a
                   href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
@@ -311,6 +310,14 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
         {dnaSegments.length > 0 && (
           <>
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+              {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => (
+                <span key={s} className="text-[10px] flex items-center gap-1" style={{ color: "var(--text2)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full flex-none inline-block" style={{ background: DNA_COLORS[s] }} />
+                  {s === "yes" ? "Heel graag" : s === "willing" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Voor hen" : "Harde grens"}
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
               {dnaSegments.map((seg) => (
                 <span
                   key={seg.status}
@@ -318,14 +325,6 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                   style={{ color: DNA_COLORS[seg.status] }}
                 >
                   {DNA_ICONS[seg.status]} {seg.count}
-                </span>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-              {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => (
-                <span key={s} className="text-[10px] flex items-center gap-1" style={{ color: "var(--text2)" }}>
-                  <span className="w-1.5 h-1.5 rounded-full flex-none inline-block" style={{ background: DNA_COLORS[s] }} />
-                  {s === "yes" ? "Heel graag" : s === "willing" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Voor hen" : "Harde grens"}
                 </span>
               ))}
             </div>
