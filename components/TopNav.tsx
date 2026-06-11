@@ -45,8 +45,10 @@ export default function TopNav() {
 
   const shell = {
     paddingTop: "env(safe-area-inset-top)",
-    background: "var(--surface)",
+    background: "color-mix(in srgb, var(--surface) 78%, transparent)",
     borderBottom: "1px solid var(--border)",
+    backdropFilter: "blur(12px) saturate(140%)",
+    WebkitBackdropFilter: "blur(12px) saturate(140%)",
   } as const;
 
   if (isHub) {

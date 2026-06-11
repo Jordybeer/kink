@@ -103,7 +103,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
 
   return (
     <section
-      className="ks-card ks-fade-in relative overflow-hidden rounded-2xl mx-3 px-4 pt-4 pb-5"
+      className="ks-card ks-fade-in relative overflow-hidden rounded-2xl mx-4 px-4 pt-5 pb-5"
     >
       <div
         aria-hidden="true"
