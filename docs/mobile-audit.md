@@ -116,13 +116,16 @@ B2 (N-pin on onboarding) was a Vercel preview indicator, not an app bug — drop
 ## How to re-run the audit
 
 ```bash
-npm run dev                        # one terminal
-node /tmp/kink-audit.mjs           # in another (script lives at /tmp/kink-audit.mjs)
-ls /tmp/kink-audit-*.png           # 16 screenshots
+npm run dev                            # one terminal
+node scripts/audit-screenshots.mjs     # in another
+ls /tmp/kink-audit-*.png               # 16 screenshots
 ```
 
 Seed in script populates two profiles (Alex switch, Sam dominant) and a scene
 (`scene-01`); update the seed when you add new pages or store fields.
+
+The small 4-shot script at `scripts/screenshots.mjs` is for quick spot-checks;
+this one is the full sweep used for the punch list above.
 
 ---
 
