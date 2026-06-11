@@ -6,7 +6,7 @@
  *        node scripts/audit-screenshots.mjs
  * Output: /tmp/kink-audit-*.png
  */
-import { chromium } from "./node_modules/playwright/index.mjs";
+import { chromium } from "playwright";
 
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
 const BASE = "http://localhost:3000";
@@ -63,13 +63,20 @@ const PROFILE_B = {
 const SCENE = {
   id: "scene-01",
   title: "Avondsessie",
-  createdAt: Date.now() - 1000 * 60 * 60 * 6,
-  participants: ["alex-01", "sam-02"],
+  profileAId: "alex-01",
+  profileAName: "Alex",
+  profileBId: "sam-02",
+  profileBName: "Sam",
   items: [
-    { kinkId: "spanking_hand",  notes: "Start zacht",  tags: [] },
-    { kinkId: "rope_bondage",   notes: "",             tags: [] },
-    { kinkId: "blindfold",      notes: "Na de touwen", tags: [] },
+    { id: "si-1", name: "Spanking (hand)", intensity: "zacht",  duration: "10m", note: "Start zacht",  fromKink: true, kinkId: "spanking_hand" },
+    { id: "si-2", name: "Touw bondage",    intensity: "midden", duration: "20m", note: "",             fromKink: true, kinkId: "rope_bondage" },
+    { id: "si-3", name: "Blinddoek",       intensity: "zacht",  duration: "—",   note: "Na de touwen", fromKink: true, kinkId: "blindfold" },
   ],
+  plannedDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString().slice(0, 10),
+  safeword: "rood",
+  status: "planned",
+  createdAt: Date.now() - 1000 * 60 * 60 * 6,
+  updatedAt: Date.now() - 1000 * 60 * 60 * 2,
 };
 
 const SEED = {
@@ -77,11 +84,12 @@ const SEED = {
     profiles: [PROFILE_A, PROFILE_B],
     scenes: [SCENE],
     onboardingComplete: true,
+    profileTourComplete: true,
     appLockEnabled: false,
     maxLevel: 4,
     theme: "default",
   },
-  version: 5,
+  version: 13,
 };
 
 async function shot(browser, name, fn, { fullPage = false } = {}) {

@@ -10,7 +10,7 @@ B2 (N-pin on onboarding) was a Vercel preview indicator, not an app bug — drop
 
 ## 🔴 Blockers
 
-- [ ] **B1 — `/scenes/[id]` empty/error state is a single line of text on black**
+- [x] **B1 — `/scenes/[id]` empty/error state is a single line of text on black**
   - Screen: `09-scene-detail.png`
   - "Scène niet gevonden." has no back CTA, no illustration, no recovery path.
   - **Fix:** add `<Link href="/scenes">Terug naar scènes</Link>` button + a friendly empty illustration. Also investigate why the seeded scene didn't render (probably store shape mismatch in `scripts/screenshots.mjs` seed — confirm `state.scenes` is the right key).
