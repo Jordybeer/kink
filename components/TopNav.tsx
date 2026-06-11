@@ -56,7 +56,7 @@ export default function TopNav() {
     ];
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="relative max-w-2xl mx-auto px-4 h-12 flex items-center" aria-label="Hoofdnavigatie">
+        <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
           <div className="pwa-hidden absolute inset-x-0 flex items-center justify-center gap-1">
             {items.map(({ href, label, icon: Icon, forceActive }) => {
               const active = forceActive !== undefined ? forceActive : (path === href || path.startsWith(href + "/"));
@@ -94,7 +94,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className="relative max-w-2xl mx-auto px-4 h-12 flex items-center" aria-label="Hoofdnavigatie">
+      <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
         <MotionLink
           href={back}
           whileTap={TAP_SPRING}
@@ -104,10 +104,10 @@ export default function TopNav() {
         >
           <ChevronLeft size={20} />
         </MotionLink>
-        <span className="absolute inset-x-0 text-center font-bold text-base truncate px-14 pointer-events-none">
+        <span className="flex-1 ml-2 font-bold text-base truncate min-w-0">
           {title}
         </span>
-        <div className="ml-auto flex items-center gap-1 flex-none">
+        <div className="flex items-center gap-1 flex-none">
           {profileIdFromPath && (
             <Link
               href={`/compare?a=${profileIdFromPath}`}

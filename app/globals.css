@@ -23,8 +23,8 @@
   --no: #fb923c;
   --hard-no: #ef4444;
   --conflict: #f59e0b;
-  /* Global TopNav occupied height (h-12 + notch). Inner sticky bars pin below this. */
-  --nav-h: calc(env(safe-area-inset-top) + 3rem);
+  /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */
+  --nav-h: calc(env(safe-area-inset-top) + 3.5rem);
   /* Liquid glass — depth shadow, brighter hover border, accent glow (theme-aware via --accent-glow) */
   --border-bright: rgba(255, 255, 255, 0.18);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.10) inset;
