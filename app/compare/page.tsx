@@ -3,7 +3,8 @@ import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
+import { KINKS, CATEGORIES, getKinksByCategory, LEVEL_MAX } from "@/lib/kinks";
+import DnaBar from "@/components/DnaBar";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit, isConflict } from "@/lib/matching";
 
@@ -283,6 +284,20 @@ function ComparePage() {
           <div className="flex-1 text-center">
             <div className="text-xl font-bold tabular-nums" style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{score}%</div>
             <div className="text-[10px] mt-0.5" style={{ color: "var(--text2)" }}>match</div>
+          </div>
+        </div>
+      )}
+
+      {/* Kink DNA bars — side by side for both profiles */}
+      {profileA && profileB && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <div className="text-xs font-semibold mb-1.5" style={{ color: COLOUR_A }}>{profileA.name}</div>
+            <DnaBar profile={profileA} maxLevel={LEVEL_MAX[profileA.experienceLevel ?? "beginner"]} />
+          </div>
+          <div>
+            <div className="text-xs font-semibold mb-1.5" style={{ color: COLOUR_B }}>{profileB.name}</div>
+            <DnaBar profile={profileB} maxLevel={LEVEL_MAX[profileB.experienceLevel ?? "beginner"]} />
           </div>
         </div>
       )}

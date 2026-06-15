@@ -949,6 +949,17 @@ export default function ProfilePage({ params }: Props) {
           {editUrlError && (
             <p className="text-xs mb-3 px-1" style={{ color: "var(--hard-no)" }}>{editUrlError}</p>
           )}
+          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
+            Persoonlijke notitie <span className="font-normal opacity-60">(optioneel, alleen voor jou)</span>
+          </p>
+          <textarea
+            value={profile.privateNote ?? ""}
+            onChange={(e) => updatePrivateNote(profile.id, e.target.value)}
+            placeholder="Eigen aantekeningen…"
+            rows={3}
+            className="focus-ring w-full text-sm rounded-lg border px-3 py-2 mb-4 placeholder-[color:var(--text2)] focus:outline-none"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
+          />
           <div className="flex gap-2">
             <button
               onClick={handleSaveEdit}

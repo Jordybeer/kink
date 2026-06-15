@@ -388,7 +388,17 @@ export function useHasHydrated() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     setHydrated(useStore.persist.hasHydrated());
-    return useStore.persist.onFinishHydration(() => setHydrated(true));
+    const unsub = useStore.persist.onFinishHydration(() => setHydrated(true));
+    // Pages restored from the back/forward cache (e.g. browser back) can be
+    // frozen mid-hydration-check, so re-check once they're shown again.
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setHydrated(useStore.persist.hasHydrated());
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      unsub();
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, []);
   return hydrated;
 }
