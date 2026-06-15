@@ -18,6 +18,7 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 - **Vibe badge animation**: The vibe badge ("Avontuurlijk 🔥" etc.) could fade in when first calculated
 - **Status pill active glow**: Active status pill could have a subtle outer glow matching its color (like the ⓘ button)
 - **Screen reader live region**: When a kink status changes, announce the new status via `aria-live="polite"`
+- **Profile edit (pencil) button still 40px**: `app/profile/[id]/page.tsx` — `w-10 h-10`, just under the `w-11 h-11` (44px) used by the export FABs next to it. Bump for touch-target parity.
 
 ## UX / Interaction
 - **Profile skeleton / loading state**: Profile page shows no skeleton while Zustand hydrates — add a shimmer skeleton for the overview cards
@@ -26,6 +27,8 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 - **Swipe-to-rate gesture**: Swipe right on a KinkRow to cycle status, swipe left to clear — reduces tap targets needed for quick rating
 - **Overview filter / sort**: In the profile read-only overview, let user filter by status (e.g. show only "Graag" and "Ja") or sort alphabetically
 - **Edit list auto-close after rating session**: After a period of inactivity in the edit list, offer to collapse it back to overview mode
+- **Home compare CTA always picks first two profiles**: `app/page.tsx` — the "Vergelijk" shortcut always compares `profiles[0]`/`profiles[1]` regardless of which pair the user actually cares about. Default to the last-viewed pair, or let the user pick.
+- **"Besproken" toggle is session-only**: `app/compare/page.tsx` — the discussed/hide-discussed state resets on refresh with no indication it's temporary. Persist it (sessionStorage or store) or add a "(tijdelijk)" note.
 
 ## Visual / Design
 - **DNA bar tooltip**: Tapping/hovering a DNA bar segment could show a tooltip with the count and label
@@ -43,6 +46,7 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 ## Accessibility
 - **Keyboard navigation in accordions**: Tab order inside closed CategorySection skips hidden content but focus can still land inside — verify with keyboard-only navigation
 - **Color-only distinction**: Status colors (yes/willing/maybe/no/hard_no) are distinguished only by color — add icon/pattern for users with color vision deficiency
+- **Experience-level / relatiestatus groups use `<p>` + `role="group"`, not `<fieldset>/<legend>`**: `app/page.tsx` (~L478, L630) and `app/profile/[id]/page.tsx` (~L858) — the `aria-label` on the group helps, but `<fieldset>/<legend>` is the more standard pairing for screen readers.
 
 ## Features
 - **Export to PDF on mobile**: jsPDF export works on desktop but PDF rendering on iOS Safari has quirks — test and fix
