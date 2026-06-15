@@ -2,7 +2,7 @@
 import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Clapperboard } from "lucide-react";
+import { ArrowLeftRight, Clapperboard } from "lucide-react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
@@ -113,9 +113,9 @@ function ComparePage() {
       const hasA = eA.status || eA.statusGive || eA.statusReceive;
       const hasB = eB.status || eB.statusGive || eB.statusReceive;
       if (!hasA && !hasB) continue;
+      if (isHardLimit(eA, eB)) { hardLimitCount++; continue; }
       if (hasA && hasB) totalRated++;
-      if (isHardLimit(eA, eB)) hardLimitCount++;
-      else if (isKinkMatch(eA, eB)) matchCount++;
+      if (isKinkMatch(eA, eB)) matchCount++;
       else if (hasA && hasB) discussCount++;
     }
   }
@@ -198,44 +198,91 @@ function ComparePage() {
     <PageShell width="5xl">
       {/* Mobile-only sticky selector strip */}
       <div className="md:hidden sticky top-[var(--nav-h)] z-10 pb-3 mb-2" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
-        <div className="grid grid-cols-2 gap-2">
-          {(
-            [
-              { id: aId, setId: setAId, colour: COLOUR_A },
-              { id: bId, setId: setBId, colour: COLOUR_B },
-            ] as const
-          ).map(({ id, setId, colour }) => (
-            <div key={colour} className="flex flex-col gap-1.5">
-              <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-0.5">
-                {profiles.map((p) => {
-                  const active = id === p.id;
-                  const init = p.name[0].toUpperCase();
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => setId(p.id)}
-                      aria-pressed={active}
-                      className="focus-ring flex-none flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-colors"
-                      style={active
-                        ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 12%, transparent)` }
-                        : { borderColor: "var(--border)", background: "var(--surface)" }}
-                    >
-                      <div className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold text-black flex-shrink-0" style={{ background: active ? colour : "var(--surface2)" }}>
-                        {p.avatarDataUrl
-                          ? <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
-                          : <span style={{ color: active ? "#000" : "var(--text2)" }}>{init}</span>}
-                      </div>
-                      <div className="text-left min-w-0">
-                        <p className="text-xs font-semibold truncate leading-tight" style={{ color: active ? "var(--text)" : "var(--text2)" }}>{p.name}</p>
-                        <p className="text-[10px] truncate" style={{ color: active ? colour : "var(--text2)", opacity: 0.8 }}>{p.role}</p>
-                      </div>
-                    </button>
-                  );
-                })}
+        {profiles.length <= 2 ? (
+          /* 2-profile case: display pills + swap button */
+          <div className="flex items-center gap-2">
+            {profileA && (
+              <div className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border"
+                style={{ borderColor: COLOUR_A, background: `color-mix(in srgb, ${COLOUR_A} 10%, transparent)` }}>
+                <div className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: COLOUR_A }}>
+                  {profileA.avatarDataUrl
+                    ? <img src={profileA.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                    : <span style={{ color: "#000" }}>{profileA.name[0].toUpperCase()}</span>}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate leading-tight">{profileA.name}</p>
+                  <p className="text-[10px]" style={{ color: COLOUR_A }}>Profiel A</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+            <button
+              onClick={() => { const tmp = aId; setAId(bId); setBId(tmp); }}
+              className="focus-ring flex-none w-9 h-9 rounded-xl border flex items-center justify-center"
+              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+              aria-label="Wissel profielen"
+            >
+              <ArrowLeftRight size={15} />
+            </button>
+            {profileB && (
+              <div className="flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border"
+                style={{ borderColor: COLOUR_B, background: `color-mix(in srgb, ${COLOUR_B} 10%, transparent)` }}>
+                <div className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: COLOUR_B }}>
+                  {profileB.avatarDataUrl
+                    ? <img src={profileB.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                    : <span style={{ color: "#000" }}>{profileB.name[0].toUpperCase()}</span>}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate leading-tight">{profileB.name}</p>
+                  <p className="text-[10px]" style={{ color: COLOUR_B }}>Profiel B</p>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* 3+ profiles: compact chip selectors */
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                { id: aId, setId: setAId, colour: COLOUR_A, label: "A" },
+                { id: bId, setId: setBId, colour: COLOUR_B, label: "B" },
+              ] as const
+            ).map(({ id, setId, colour, label }) => (
+              <div key={colour} className="flex flex-col gap-1">
+                <span className="text-[10px] font-semibold uppercase tracking-widest px-0.5" style={{ color: colour }}>
+                  Profiel {label}
+                </span>
+                <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-0.5">
+                  {profiles.map((p) => {
+                    const active = id === p.id;
+                    const init = p.name[0].toUpperCase();
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setId(p.id)}
+                        aria-pressed={active}
+                        className="focus-ring flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg border transition-colors"
+                        style={active
+                          ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 12%, transparent)` }
+                          : { borderColor: "var(--border)", background: "var(--surface)" }}
+                      >
+                        <div className="w-5 h-5 rounded-full flex-none overflow-hidden flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                          style={{ background: active ? colour : "var(--surface2)" }}>
+                          {p.avatarDataUrl
+                            ? <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                            : <span style={{ color: active ? "#000" : "var(--text2)" }}>{init}</span>}
+                        </div>
+                        <span className="text-xs font-medium truncate max-w-[60px]"
+                          style={{ color: active ? "var(--text)" : "var(--text2)" }}>{p.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {profileA && profileB && (
           <div className="flex gap-2 mt-2">
             <Link href={`/scene?a=${aId}&b=${bId}`}

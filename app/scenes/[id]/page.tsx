@@ -2,8 +2,11 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
+import { SearchX } from "lucide-react";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
+import EmptyState from "@/components/EmptyState";
 import PageShell from "@/components/PageShell";
 
 const TRAFFIC = {
@@ -31,7 +34,13 @@ export default function SceneDetailPage() {
   if (!scene) {
     return (
       <PageShell width="2xl">
-        <p className="text-sm" style={{ color: "var(--text2)" }}>Scène niet gevonden.</p>
+        <EmptyState
+          icon={SearchX}
+          title="Scène niet gevonden"
+          message="Hij is misschien gewist of de link is verlopen."
+          ctaHref="/scenes"
+          ctaLabel="Terug naar scènes"
+        />
       </PageShell>
     );
   }
@@ -42,7 +51,7 @@ export default function SceneDetailPage() {
   const date = aftercare
     ? new Date(aftercare.completedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
     : scene.plannedDate
-    ? new Date(scene.plannedDate).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+    ? parseLocalDate(scene.plannedDate).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
   const counts = scene.items.reduce(
@@ -145,8 +154,8 @@ export default function SceneDetailPage() {
             </p>
             <button
               onClick={() => setShowAftercare(true)}
-              className="px-5 py-3 rounded-xl text-sm font-bold focus-ring"
-              style={{ background: "var(--accent)", color: "#000", minWidth: 180 }}
+              className="btn-accent focus-ring"
+              style={{ minWidth: 180 }}
             >
               Aftercare invullen
             </button>
@@ -205,8 +214,7 @@ export default function SceneDetailPage() {
         {scene.status !== "completed" && (
           <Link
             href={`/scene?id=${scene.id}`}
-            className="w-full py-3 rounded-xl text-sm font-bold text-center focus-ring"
-            style={{ background: "var(--accent)", color: "#000" }}
+            className="btn-accent focus-ring w-full text-center"
           >
             ▶ Spelen
           </Link>

@@ -20,7 +20,7 @@ import dynamic from "next/dynamic";
 import { decodeAny } from "@/lib/shareProfile";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
-import { encryptBackup, decryptBackup, hashPin, type EncryptedBackup } from "@/lib/crypto";
+import type { EncryptedBackup } from "@/lib/crypto";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -244,6 +244,7 @@ function HomeContent() {
   async function handleSavePin() {
     if (pinInput.length < 4) { setPinError("PIN moet minimaal 4 cijfers zijn."); return; }
     if (pinInput !== pinConfirm) { setPinError("PINs komen niet overeen."); return; }
+    const { hashPin } = await import("@/lib/crypto");
     const hash = await hashPin(pinInput);
     setAppLockPin(hash);
     sessionStorage.removeItem("app_unlocked");
@@ -278,6 +279,7 @@ function HomeContent() {
     setExportPwLoading(true);
     try {
       const plain = JSON.stringify({ version: 1, source: "backup", profiles, contracts });
+      const { encryptBackup } = await import("@/lib/crypto");
       const encrypted = await encryptBackup(plain, exportPw);
       const blob = new Blob([JSON.stringify(encrypted)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -350,6 +352,7 @@ function HomeContent() {
     setImportPwLoading(true);
     setImportPwError(null);
     try {
+      const { decryptBackup } = await import("@/lib/crypto");
       const plain = await decryptBackup(pendingEncrypted, importPw);
       const parsed = JSON.parse(plain) as Record<string, unknown>;
       setImportPwOpen(false);

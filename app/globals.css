@@ -56,6 +56,15 @@ html, body {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
 }
 
+.btn-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
 /* CSS accordion — grid-template-rows trick, no JS height measurement */
 .accordion-content {
   display: grid;

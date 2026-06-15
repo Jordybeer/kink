@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
 import PageShell from "@/components/PageShell";
 import type { SceneRecord } from "@/types";
@@ -36,7 +37,7 @@ function SceneCard({
   const date = aftercare
     ? new Date(aftercare.completedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })
     : scene.plannedDate
-    ? new Date(scene.plannedDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })
+    ? parseLocalDate(scene.plannedDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
