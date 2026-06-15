@@ -1,6 +1,5 @@
 "use client";
 import { use, useEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES, categorizeRole } from "@/lib/roles";
@@ -11,10 +10,11 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, UserX } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
+import EmptyState from "@/components/EmptyState";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -139,11 +139,14 @@ export default function ProfilePage({ params }: Props) {
 
   if (!profile) {
     return (
-      <PageShell width="2xl" className="text-center">
-        <p style={{ color: "var(--text2)" }}>Profiel niet gevonden.</p>
-        <Link href="/" className="focus-ring mt-4 inline-block text-sm" style={{ color: "var(--accent)" }}>
-          ← Terug
-        </Link>
+      <PageShell width="2xl">
+        <EmptyState
+          icon={UserX}
+          title="Profiel niet gevonden"
+          message="Het is misschien verwijderd of de link is niet (meer) geldig."
+          ctaHref="/"
+          ctaLabel="Terug naar start"
+        />
       </PageShell>
     );
   }
