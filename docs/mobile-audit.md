@@ -15,7 +15,7 @@ B2 (N-pin on onboarding) was a Vercel preview indicator, not an app bug — drop
   - "Scène niet gevonden." has no back CTA, no illustration, no recovery path.
   - **Fix:** add `<Link href="/scenes">Terug naar scènes</Link>` button + a friendly empty illustration. Also investigate why the seeded scene didn't render (probably store shape mismatch in `scripts/screenshots.mjs` seed — confirm `state.scenes` is the right key).
 
-- [ ] **B3 — Compare page shows two identical rows of profile chips**
+- [x] **B3 — Compare page shows two identical rows of profile chips**
   - Screen: `06-compare.png`
   - Top of `/compare` renders A-Alex / S-Sam / A-Alex / S-Sam → reads as duplicate state.
   - **Fix:** single picker row with two labelled slots: `Profiel A: [Alex ▾] · ⇄ · Profiel B: [Sam ▾]`, or label the two columns explicitly ("Kolom links" / "Kolom rechts") with a divider between them.
@@ -132,3 +132,8 @@ this one is the full sweep used for the punch list above.
 ## Backlog discoveries
 
 _Add new findings here with date + screenshot ref so they don't get lost between audits._
+
+- **2026-06-15 — Compare picker's second chip gets clipped at the 390px edge**
+  - Screen: `kink-b3-after.png` (B3 fix verification)
+  - Now that "Profiel A"/"Profiel B" rows are labelled, the second chip ("Sam") still hangs half off the right edge with no fade/scroll affordance — easy to miss it's a horizontal-scroll row.
+  - **Fix:** add a trailing fade mask, or size chips so both fit at 390px without scrolling.
