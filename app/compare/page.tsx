@@ -51,50 +51,106 @@ function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
   return <StatusBadge status={entry.status} colour={colour} />;
 }
 
+function ScoreMasthead({ match, discuss, limit }: { match: number; discuss: number; limit: number }) {
+  const total = match + discuss + limit;
+  const score = total > 0 ? Math.round((match / total) * 100) : null;
+  const verdictColor =
+    score === null ? "var(--text2)" : score >= 70 ? "var(--yes)" : "var(--text)";
+
+  return (
+    <div className="text-center mb-4 mt-1">
+      <div
+        aria-label={
+          score === null
+            ? "Nog niets vergeleken"
+            : `${score} procent overlap`
+        }
+        style={{
+          fontFamily: 'var(--font-display, Georgia, "Times New Roman", serif)',
+          fontStyle: "italic",
+          fontWeight: 400,
+          fontSize: "clamp(56px, 16vw, 80px)",
+          lineHeight: 1,
+          letterSpacing: "-0.025em",
+          color: verdictColor,
+          transition: "color 600ms ease-out",
+        }}
+      >
+        {score === null ? (
+          <span style={{ opacity: 0.55 }}>—</span>
+        ) : (
+          <>
+            {score}
+            <span
+              style={{
+                fontSize: "0.42em",
+                verticalAlign: "0.62em",
+                marginLeft: "0.06em",
+                fontStyle: "normal",
+                fontWeight: 300,
+                color: "var(--text2)",
+              }}
+            >
+              %
+            </span>
+          </>
+        )}
+      </div>
+      <p
+        className="text-[10px] uppercase tracking-[0.22em] mt-1"
+        style={{ color: "var(--text2)" }}
+      >
+        {score === null ? "nog niets gewaardeerd" : "overlap"}
+      </p>
+      {total > 0 && (
+        <div
+          className="flex justify-center flex-wrap gap-x-3 gap-y-1 text-xs mt-2"
+          style={{ color: "var(--text2)" }}
+        >
+          <span>
+            <span className="font-semibold tabular-nums" style={{ color: "var(--yes)" }}>{match}</span>{" "}
+            match
+          </span>
+          {discuss > 0 && (
+            <span>
+              <span className="font-semibold tabular-nums" style={{ color: "var(--conflict)" }}>{discuss}</span>{" "}
+              te bespreken
+            </span>
+          )}
+          {limit > 0 && (
+            <span>
+              <span className="font-semibold tabular-nums" style={{ color: "var(--hard-no)" }}>{limit}</span>{" "}
+              {limit === 1 ? "grens" : "grenzen"}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AlignmentBar({ match, discuss, limit }: { match: number; discuss: number; limit: number }) {
   const total = match + discuss + limit;
   if (total === 0) return null;
   const mPct = (match / total) * 100;
   const dPct = (discuss / total) * 100;
   const lPct = (limit / total) * 100;
-  const score = Math.round((match / total) * 100);
   return (
-    <div className="mb-3">
-      <div className="flex rounded overflow-hidden mb-2" style={{ height: 6, background: "var(--surface3)" }}>
-        {match > 0 && (
-          <div style={{ width: `${mPct}%`, background: "var(--yes)", transition: "width 500ms ease-out" }} />
-        )}
-        {discuss > 0 && (
-          <div style={{ width: `${dPct}%`, background: "var(--conflict)", transition: "width 500ms ease-out" }} />
-        )}
-        {limit > 0 && (
-          <div style={{ width: `${lPct}%`, background: "var(--hard-no)", transition: "width 500ms ease-out" }} />
-        )}
-      </div>
-      <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text2)" }}>
-        <span>
-          <span className="font-semibold tabular-nums" style={{ color: "var(--yes)" }}>{match}</span>{" "}
-          match
-        </span>
-        {discuss > 0 && (
-          <span>
-            <span className="font-semibold tabular-nums" style={{ color: "var(--conflict)" }}>{discuss}</span>{" "}
-            te bespreken
-          </span>
-        )}
-        {limit > 0 && (
-          <span>
-            <span className="font-semibold tabular-nums" style={{ color: "var(--hard-no)" }}>{limit}</span>{" "}
-            {limit === 1 ? "grens" : "grenzen"}
-          </span>
-        )}
-        <span
-          className="ml-auto font-mono font-semibold text-xs tabular-nums"
-          style={{ color: score >= 70 ? "var(--yes)" : "var(--text)" }}
-        >
-          {score}%
-        </span>
-      </div>
+    <div
+      className="flex rounded overflow-hidden mb-4"
+      style={{ height: 6, background: "var(--surface3)" }}
+      role="img"
+      aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${limit} grenzen`}
+    >
+      {match > 0 && (
+        <div style={{ width: `${mPct}%`, background: "var(--yes)", transition: "width 500ms ease-out" }} />
+      )}
+      {discuss > 0 && (
+        <div style={{ width: `${dPct}%`, background: "var(--conflict)", transition: "width 500ms ease-out" }} />
+      )}
+      {limit > 0 && (
+        <div style={{ width: `${lPct}%`, background: "var(--hard-no)", transition: "width 500ms ease-out" }} />
+      )}
     </div>
   );
 }
@@ -444,9 +500,10 @@ function ComparePage() {
         )}
       </div>
 
-      {/* ── Alignment bar + category nav + filter tabs ──────────────── */}
+      {/* ── Score masthead + alignment ribbon + category nav + filter tabs ── */}
       {hasPair && (
         <>
+          <ScoreMasthead match={matchCount} discuss={discussCount} limit={hardLimitCount} />
           <AlignmentBar match={matchCount} discuss={discussCount} limit={hardLimitCount} />
 
           {/* Category heatmap strip */}
