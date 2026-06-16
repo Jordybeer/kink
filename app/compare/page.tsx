@@ -786,6 +786,7 @@ function ComparePage() {
                             </span>
                             <button
                               onClick={() => toggleDiscussed(rowKey)}
+                              aria-label={isDiscussed ? `${item.name} als niet besproken markeren` : `${item.name} als besproken markeren`}
                               className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
                               style={
                                 isDiscussed
