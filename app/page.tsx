@@ -949,7 +949,7 @@ function HomeContent() {
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-tight">Thema</h3>
                 <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
-                  {{ midnight: "Midnight", red: "Deep Red", forest: "Forest", mono: "Mono" }[theme] ?? "Midnight"}
+                  {{ midnight: "Midnight", red: "Deep Red", forest: "Forest", mono: "Mono", ledger: "Ledger" }[theme] ?? "Midnight"}
                 </p>
               </div>
             </div>
@@ -960,7 +960,8 @@ function HomeContent() {
                   { value: "red",      label: "Deep Red",  color: "#ef4444" },
                   { value: "forest",   label: "Forest",    color: "#4ade80" },
                   { value: "mono",     label: "Mono",      color: "#e5e5e5" },
-                ] as { value: "midnight" | "red" | "forest" | "mono"; label: string; color: string }[]
+                  { value: "ledger",   label: "Ledger",    color: "#C73E2E" },
+                ] as { value: "midnight" | "red" | "forest" | "mono" | "ledger"; label: string; color: string }[]
               ).map((t) => (
                 <button
                   key={t.value}
