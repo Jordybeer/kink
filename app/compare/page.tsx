@@ -358,7 +358,7 @@ function ComparePage() {
     });
   }, []);
 
-  let matchCount = 0, hardLimitCount = 0, discussCount = 0, totalRated = 0;
+  let matchCount = 0, hardLimitCount = 0, discussCount = 0;
   if (profileA && profileB) {
     for (const kink of KINKS) {
       const eA = profileA.entries[kink.id] ?? { status: null, comment: "" };
@@ -367,13 +367,16 @@ function ComparePage() {
       const hasB = eB.status || eB.statusGive || eB.statusReceive;
       if (!hasA && !hasB) continue;
       if (isHardLimit(eA, eB)) { hardLimitCount++; continue; }
-      if (hasA && hasB) totalRated++;
       if (isKinkMatch(eA, eB)) matchCount++;
       else if (hasA && hasB) discussCount++;
     }
   }
 
-  const score = Math.round((matchCount / Math.max(totalRated, 1)) * 100);
+  // Single canonical score — same denominator as the masthead so confetti
+  // fires from the number the user actually sees. Hard limits count as
+  // comparisons that disagree, not as "didn't compare."
+  const scoreDenom = matchCount + discussCount + hardLimitCount;
+  const score = scoreDenom > 0 ? Math.round((matchCount / scoreDenom) * 100) : 0;
 
   useEffect(() => {
     if (profileA && profileB && score >= 70) {

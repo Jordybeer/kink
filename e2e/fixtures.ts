@@ -59,6 +59,7 @@ export function buildStore(profiles: Profile[], extras: Partial<{
   onboardingComplete: boolean;
   profileTourComplete: boolean;
   pinnedProfileId: string | null;
+  theme: "midnight" | "red" | "forest" | "mono" | "ledger";
 }> = {}) {
   return {
     state: {
@@ -67,7 +68,7 @@ export function buildStore(profiles: Profile[], extras: Partial<{
       onboardingComplete: extras.onboardingComplete ?? true,
       profileTourComplete: extras.profileTourComplete ?? true,
       installPromptDismissed: true,
-      theme: "midnight",
+      theme: extras.theme ?? "midnight",
       pinnedProfileId: extras.pinnedProfileId ?? null,
     },
     version: 8,
