@@ -407,20 +407,21 @@ function HomeContent() {
     <>
       <PageShell width="2xl">
         {/* Hero */}
-        <div className="mb-8 text-center relative">
+        <div className="mb-10 pt-3 text-center relative">
           <button
             onClick={() => setSettingsOpen(true)}
             aria-label="Instellingen openen"
-            className="focus-ring absolute top-0 right-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="focus-ring absolute top-3 right-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             style={{ color: "var(--text2)" }}
           >
             <Settings size={18} />
           </button>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-6xl">
             <Wordmark />
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
-            Verken grenzen. Samen. — <span className="opacity-50 text-xs">kinksync.be</span>
+          <div className="ks-gradient-rule mx-auto my-4" />
+          <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
+            Verken grenzen. Samen.
           </p>
         </div>
 
@@ -795,7 +796,10 @@ function HomeContent() {
                 <Link
                   href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
                   className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
-                  style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                  style={{
+                    background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
+                    border: "1px solid var(--border-accent)",
+                  }}
                 >
                   <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
                     ⚡ Vergelijk profielen
