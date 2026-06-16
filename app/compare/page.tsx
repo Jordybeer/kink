@@ -11,11 +11,11 @@ import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "✓ Heel graag",
-  willing: "↗ Ja",
-  maybe:   "♡ Misschien",
-  no:      "↘ Voor hen",
-  hard_no: "✕✕ Harde grens",
+  yes:     "Heel graag",
+  willing: "Ja",
+  maybe:   "Misschien",
+  no:      "Voor hen",
+  hard_no: "Harde grens",
 };
 
 const COLOUR_A = "var(--accent)";
@@ -316,12 +316,12 @@ function catAbbrev(cat: string): string {
   return first.length > 8 ? first.slice(0, 8) : first;
 }
 
-function categoryPillStyle(rate: number | null): { background: string; borderColor: string; color: string } {
-  if (rate === null) return { background: "var(--surface2)", borderColor: "var(--border)", color: "var(--text2)" };
-  if (rate === 0) return { background: "color-mix(in srgb, var(--hard-no) 20%, transparent)", borderColor: "color-mix(in srgb, var(--hard-no) 50%, transparent)", color: "var(--hard-no)" };
-  if (rate < 0.4) return { background: "color-mix(in srgb, var(--conflict) 20%, transparent)", borderColor: "color-mix(in srgb, var(--conflict) 50%, transparent)", color: "var(--conflict)" };
-  if (rate < 0.7) return { background: "color-mix(in srgb, #3b82f6 20%, transparent)", borderColor: "color-mix(in srgb, #3b82f6 50%, transparent)", color: "#93c5fd" };
-  return { background: "color-mix(in srgb, var(--yes) 20%, transparent)", borderColor: "color-mix(in srgb, var(--yes) 50%, transparent)", color: "var(--yes)" };
+function categoryPillStyle(rate: number | null): { color: string } {
+  if (rate === null) return { color: "var(--text2)" };
+  if (rate === 0)    return { color: "var(--hard-no)" };
+  if (rate < 0.4)   return { color: "var(--conflict)" };
+  if (rate < 0.7)   return { color: "var(--maybe)" };
+  return { color: "var(--yes)" };
 }
 
 function ComparePage() {
@@ -333,21 +333,12 @@ function ComparePage() {
   const [aId, setAId] = useState(cleanParam(searchParams.get("a")));
   const [bId, setBId] = useState(cleanParam(searchParams.get("b")));
   const [filterMode, setFilterMode] = useState<"all" | "match" | "conflict" | "hardno">("all");
-  const [pulsed, setPulsed] = useState(false);
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
 
   const profileA = profiles.find((p) => p.id === aId);
   const profileB = profiles.find((p) => p.id === bId);
-
-  useEffect(() => {
-    if (!profileA || !profileB) return;
-    setPulsed(false);
-    const t = setTimeout(() => setPulsed(true), 60);
-    return () => clearTimeout(t);
-  }, [aId, bId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleDiscussed = useCallback((id: string) => {
     setDiscussed((prev) => {
@@ -372,21 +363,8 @@ function ComparePage() {
     }
   }
 
-  // Single canonical score — same denominator as the masthead so confetti
-  // fires from the number the user actually sees. Hard limits count as
-  // comparisons that disagree, not as "didn't compare."
   const scoreDenom = matchCount + discussCount + hardLimitCount;
   const score = scoreDenom > 0 ? Math.round((matchCount / scoreDenom) * 100) : 0;
-
-  useEffect(() => {
-    if (profileA && profileB && score >= 70) {
-      setShowConfetti(false);
-      const t = setTimeout(() => setShowConfetti(true), 200);
-      return () => clearTimeout(t);
-    } else {
-      setShowConfetti(false);
-    }
-  }, [aId, bId, score]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!_hasHydrated || profiles.length < 2) return;
@@ -453,7 +431,6 @@ function ComparePage() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const confettiEmoji = ["🔗", "⛓️", "👑", "🖤", "🌹", "🕯️", "💋", "🩷"];
   const samePairError = aId && bId && aId === bId;
   const isPartnerA = profileA?.isImported || profileA?.origin === "shared";
   const isPartnerB = profileB?.isImported || profileB?.origin === "shared";
@@ -517,10 +494,10 @@ function ComparePage() {
                 <button
                   key={cat}
                   onClick={() => scrollToCategory(cat)}
-                  className="focus-ring flex-none px-2.5 py-1 rounded-full text-[10px] font-medium border whitespace-nowrap transition-opacity hover:opacity-80"
+                  className="focus-ring flex-none px-1.5 py-0.5 text-[10px] uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
                   style={categoryPillStyle(rate)}
                 >
-                  {catAbbrev(cat)}
+                  — {catAbbrev(cat)}
                 </button>
               ))}
           </div>
@@ -588,7 +565,6 @@ function ComparePage() {
         ) : (
           <>
             {(() => {
-              let matchIdx = 0;
               return CATEGORIES.map((cat) => {
                 const kinks = getKinksByCategory(cat).filter((k) => {
                   if (hideDiscussed && discussed.has(k.id)) return false;
@@ -608,11 +584,10 @@ function ComparePage() {
                         const hardLimit = isHardLimit(eA, eB);
                         const conflict = !matched && !hardLimit && isConflict(eA, eB);
                         const isDiscussed = discussed.has(kink.id);
-                        const matchDelay = matched ? `${Math.min(matchIdx++ * 60, 1500)}ms` : "0ms";
                         return (
                           <div
                             key={kink.id}
-                            className={`rounded-xl px-3 py-2.5 transition-opacity ${pulsed && matched ? "match-pulse" : ""}`}
+                            className="rounded-sm px-3 py-2.5 transition-opacity"
                             style={{
                               background: "var(--surface)",
                               border: "1px solid var(--border)",
@@ -623,7 +598,6 @@ function ComparePage() {
                                 : conflict
                                 ? "4px solid var(--conflict)"
                                 : "4px solid transparent",
-                              animationDelay: pulsed && matched ? matchDelay : "0ms",
                               opacity: isDiscussed ? 0.45 : 1,
                             }}
                           >
@@ -651,8 +625,8 @@ function ComparePage() {
                               <div
                                 className="flex-1 h-px"
                                 style={{
-                                  background: `linear-gradient(90deg, ${COLOUR_A}, ${COLOUR_B})`,
-                                  opacity: matched ? 1 : 0.18,
+                                  background: "var(--border)",
+                                  opacity: matched ? 0.6 : 0.25,
                                 }}
                               />
                               <EntryBadge entry={eB} colour={COLOUR_B} />
@@ -726,7 +700,6 @@ function ComparePage() {
 
             {/* Custom kinks */}
             {(() => {
-              let matchIdx = 0;
               const allCustom = [
                 ...(profileA.customKinks ?? []).map((k) => ({ ...k, side: "a" as const })),
                 ...(profileB.customKinks ?? []).map((k) => ({ ...k, side: "b" as const })),
@@ -758,11 +731,10 @@ function ComparePage() {
                       if (!passesFilter(eA, eB)) return null;
                       if (hideDiscussed && discussed.has(rowKey)) return null;
                       const isDiscussed = discussed.has(rowKey);
-                      const matchDelay = matched ? `${Math.min(matchIdx++ * 60, 1500)}ms` : "0ms";
                       return (
                         <div
                           key={rowKey}
-                          className={`rounded-xl px-3 py-2.5 transition-opacity ${pulsed && matched ? "match-pulse" : ""}`}
+                          className="rounded-sm px-3 py-2.5 transition-opacity"
                           style={{
                             background: "var(--surface)",
                             border: "1px solid var(--border)",
@@ -773,7 +745,6 @@ function ComparePage() {
                               : conflict
                               ? "4px solid var(--conflict)"
                               : "4px solid transparent",
-                            animationDelay: pulsed && matched ? matchDelay : "0ms",
                             opacity: isDiscussed ? 0.45 : 1,
                           }}
                         >
@@ -802,8 +773,8 @@ function ComparePage() {
                             <div
                               className="flex-1 h-px"
                               style={{
-                                background: `linear-gradient(90deg, ${COLOUR_A}, ${COLOUR_B})`,
-                                opacity: matched ? 1 : 0.18,
+                                background: "var(--border)",
+                                opacity: matched ? 0.6 : 0.25,
                               }}
                             />
                             <EntryBadge entry={eB} colour={COLOUR_B} />
@@ -906,25 +877,6 @@ function ComparePage() {
         onSelect={setBId}
       />
 
-      {/* ── Confetti ────────────────────────────────────────────────── */}
-      {showConfetti && (
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-          {confettiEmoji.map((e, i) => (
-            <span
-              key={i}
-              className="absolute text-2xl"
-              style={{
-                left: `${8 + i * 11}%`,
-                top: "-2rem",
-                animation: `confettiFall ${1.4 + i * 0.18}s ease-in forwards`,
-                animationDelay: `${i * 70}ms`,
-              }}
-            >
-              {e}
-            </span>
-          ))}
-        </div>
-      )}
     </PageShell>
   );
 }

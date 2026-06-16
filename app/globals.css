@@ -80,26 +80,6 @@ html, body {
   overflow: hidden;
 }
 
-/* Confetti fall — fires once on compare ≥70% score */
-@keyframes confettiFall {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-  80%  { opacity: 1; }
-  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  @keyframes confettiFall { to { opacity: 0; } }
-}
-
-/* Match pulse — fires once when compare rows first render */
-@keyframes matchPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.35); }
-  60%  { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-}
-.match-pulse {
-  animation: matchPulse 700ms ease-out;
-}
-
 /* Shared page loading spinner */
 .ks-spinner {
   display: inline-block;
