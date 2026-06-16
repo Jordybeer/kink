@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
 
-function StatusBadge({ status, colour, prefix }: { status: KinkStatus; colour: string; prefix?: string }) {
+function StatusBadge({ status, colour }: { status: KinkStatus; colour: string }) {
   if (!status) return <span className="text-xs" style={{ color: "var(--text2)" }}>—</span>;
   return (
     <span
@@ -32,7 +32,7 @@ function StatusBadge({ status, colour, prefix }: { status: KinkStatus; colour: s
         background: `color-mix(in srgb, ${colour} 15%, transparent)`,
       }}
     >
-      {prefix}{STATUS_LABEL[status]}
+      {STATUS_LABEL[status]}
     </span>
   );
 }
@@ -40,14 +40,17 @@ function StatusBadge({ status, colour, prefix }: { status: KinkStatus; colour: s
 function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
   if (entry.statusGive && entry.statusReceive) {
     return (
-      <div className="flex flex-col gap-0.5">
-        <StatusBadge status={entry.statusGive} colour={colour} prefix="↑ " />
-        <StatusBadge status={entry.statusReceive} colour={colour} prefix="↓ " />
+      <div
+        className="flex flex-col gap-0.5"
+        aria-label={`Geven: ${STATUS_LABEL[entry.statusGive]}, Ontvangen: ${STATUS_LABEL[entry.statusReceive]}`}
+      >
+        <StatusBadge status={entry.statusGive} colour={colour} />
+        <StatusBadge status={entry.statusReceive} colour={colour} />
       </div>
     );
   }
-  if (entry.statusGive) return <StatusBadge status={entry.statusGive} colour={colour} prefix="↑ " />;
-  if (entry.statusReceive) return <StatusBadge status={entry.statusReceive} colour={colour} prefix="↓ " />;
+  if (entry.statusGive) return <StatusBadge status={entry.statusGive} colour={colour} />;
+  if (entry.statusReceive) return <StatusBadge status={entry.statusReceive} colour={colour} />;
   return <StatusBadge status={entry.status} colour={colour} />;
 }
 

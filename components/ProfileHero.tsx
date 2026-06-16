@@ -4,7 +4,6 @@ import { Camera, Lock, Pencil, QrCode, X } from "lucide-react";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
-import RolePill from "@/components/RolePill";
 import type { ProfileType } from "@/lib/profileType";
 
 interface ProfileHeroProps {
@@ -174,7 +173,17 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold truncate flex-1">{profile.name}</h2>
+            <h2 className="text-2xl font-bold truncate flex-1">
+              <span style={{ color: "var(--text)" }}>{profile.name}</span>
+              {profile.role && (
+                <>
+                  <span style={{ color: "var(--text2)", margin: "0 0.3em", fontWeight: 400 }}>—</span>
+                  <span style={{ color: "var(--text2)", fontWeight: 500, fontStyle: "italic" }}>
+                    {profile.role}
+                  </span>
+                </>
+              )}
+            </h2>
             {onEdit && (
               <button
                 onClick={onEdit}
@@ -188,7 +197,6 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
             )}
           </div>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
-            <RolePill role={profile.role} />
             <span
               className="text-xs px-2 py-0.5 rounded-full"
               style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}
