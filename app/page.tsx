@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, Settings, Pin, PinOff, Pencil, Eye, EyeOff } from "lucide-react";
+import { Camera, Settings, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -795,35 +795,37 @@ function HomeContent() {
               {canCompare ? (
                 <Link
                   href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-                  className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                  className="focus-ring block rounded-xl p-6 transition-opacity hover:opacity-90"
                   style={{
                     background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
                     border: "1px solid var(--border-accent)",
                   }}
                 >
-                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                    ⚡ Vergelijk profielen
+                  <div className="flex items-center gap-2 text-lg font-semibold mb-1.5" style={{ color: "var(--accent)" }}>
+                    <Zap size={18} aria-hidden="true" />
+                    Vergelijk profielen
                   </div>
-                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                    Ontdek waar jullie grenzen — en verlangens — overlappen.
+                  <div className="text-sm" style={{ color: "var(--text2)" }}>
+                    Zie waar jullie grenzen raken — en waar ze uitdagen.
                   </div>
                   {profiles.length > 2 && (
-                    <div className="text-xs mt-1 opacity-50">{pinnedProfile ? `${pinnedProfile.name} + eerste andere` : "eerste twee profielen"}</div>
+                    <div className="text-xs mt-1.5 opacity-50">{pinnedProfile ? `${pinnedProfile.name} + eerste andere` : "eerste twee profielen"}</div>
                   )}
                 </Link>
               ) : (
                 <div
-                  className="rounded-xl p-5 text-center opacity-40"
+                  className="rounded-xl p-6 opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                   role="button"
                   tabIndex={0}
                   aria-disabled="true"
                   aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
                 >
-                  <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
-                    ⚡ Vergelijk profielen
+                  <div className="flex items-center gap-2 text-lg font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
+                    <Zap size={18} aria-hidden="true" />
+                    Vergelijk profielen
                   </div>
-                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  <div className="text-sm" style={{ color: "var(--text2)" }}>
                     Voeg een tweede profiel toe om te vergelijken.
                   </div>
                 </div>
@@ -832,29 +834,31 @@ function HomeContent() {
               {profiles.length >= 2 ? (
                 <Link
                   href={`/contract?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-                  className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                  className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90"
                   style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
                 >
-                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                    ✍ Maak een contract
+                  <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
+                    <FileText size={16} aria-hidden="true" />
+                    Maak een contract
                   </div>
-                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                    Leg afspraken vast, safewords en aftercare — en exporteer als PDF.
+                  <div className="text-sm" style={{ color: "var(--text2)" }}>
+                    Safewords, aftercare en grenzen — op papier en exporteerbaar.
                   </div>
                 </Link>
               ) : (
                 <div
-                  className="rounded-xl p-5 text-center opacity-40"
+                  className="rounded-xl p-5 opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                   role="button"
                   tabIndex={0}
                   aria-disabled="true"
                   aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
                 >
-                  <div className="text-base font-semibold" style={{ color: "var(--text2)" }}>
-                    ✍ Maak een contract
+                  <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--text2)" }}>
+                    <FileText size={16} aria-hidden="true" />
+                    Maak een contract
                   </div>
-                  <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+                  <div className="text-sm" style={{ color: "var(--text2)" }}>
                     Voeg twee profielen toe om een contract te maken.
                   </div>
                 </div>
@@ -863,32 +867,39 @@ function HomeContent() {
               <div className="grid grid-cols-2 gap-3">
                 <Link
                   href="/scene"
-                  className="focus-ring block rounded-xl p-4 text-center transition-opacity hover:opacity-90"
+                  className="focus-ring block rounded-xl p-4 transition-opacity hover:opacity-90"
                   style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
                 >
-                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>🎬 Nieuwe scène</div>
-                  <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>Plan activiteiten vooraf.</div>
+                  <div className="flex items-center gap-1.5 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
+                    <Clapperboard size={15} aria-hidden="true" />
+                    Nieuwe scène
+                  </div>
+                  <div className="text-xs" style={{ color: "var(--text2)" }}>Schrijf de regels voordat het spel begint.</div>
                 </Link>
                 <Link
                   href="/scenes"
-                  className="focus-ring block rounded-xl p-4 text-center transition-opacity hover:opacity-90"
+                  className="focus-ring block rounded-xl p-4 transition-opacity hover:opacity-90"
                   style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
                 >
-                  <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>📋 Scènes</div>
-                  <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>Historiek &amp; drafts.</div>
+                  <div className="flex items-center gap-1.5 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
+                    <Clapperboard size={15} aria-hidden="true" />
+                    Scènes
+                  </div>
+                  <div className="text-xs" style={{ color: "var(--text2)" }}>Alle scènes — gepland en voltooid.</div>
                 </Link>
               </div>
 
               <Link
                 href="/session"
-                className="focus-ring block rounded-xl p-5 text-center transition-opacity hover:opacity-90"
+                className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90"
                 style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
               >
-                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
-                  📡 Live sessie
+                <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
+                  <Anchor size={16} aria-hidden="true" />
+                  Live sessie
                 </div>
-                <div className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-                  Vergelijk kinks live met je partner — elk op eigen toestel.
+                <div className="text-sm" style={{ color: "var(--text2)" }}>
+                  Vergelijk kinks live — elk op eigen toestel.
                 </div>
               </Link>
             </div>
