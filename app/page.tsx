@@ -460,21 +460,32 @@ function HomeContent() {
             )}
           </div>
 
-          <label htmlFor="role-select" className="text-xs mb-1.5 font-medium block" style={{ color: "var(--text2)" }}>Rol</label>
-          <select
-            id="role-select"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: role ? "var(--text)" : "var(--text2)" }}
-          >
-            <option value="" disabled>D/s dynamiek…</option>
+          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
+          <div className="flex flex-col gap-2 mb-4" role="group" aria-label="Rol">
             {ROLE_GROUPS.map((g) => (
-              <optgroup key={g.label} label={g.label}>
-                {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
+              <div key={g.label}>
+                <p className="text-[10px] uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {g.roles.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      aria-pressed={role === r}
+                      className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                      style={
+                        role === r
+                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                          : { color: "var(--text2)", borderColor: "var(--border)" }
+                      }
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
-          </select>
+          </div>
 
           <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
           <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
@@ -614,20 +625,32 @@ function HomeContent() {
                                     <p className="text-xs mt-1" style={{ color: "var(--hard-no)" }}>{editNameError}</p>
                                   )}
                                 </div>
-                                <label htmlFor="role-select-edit" className="text-xs mb-1.5 block" style={{ color: "var(--text2)" }}>Rol</label>
-                                <select
-                                  id="role-select-edit"
-                                  value={editRole}
-                                  onChange={(e) => setEditRole(e.target.value)}
-                                  className="focus-ring w-full rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none"
-                                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                                >
+                                <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Rol</p>
+                                <div className="flex flex-col gap-2 mb-3" role="group" aria-label="Rol">
                                   {ROLE_GROUPS.map((g) => (
-                                    <optgroup key={g.label} label={g.label}>
-                                      {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
-                                    </optgroup>
+                                    <div key={g.label}>
+                                      <p className="text-[10px] uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {g.roles.map((r) => (
+                                          <button
+                                            key={r}
+                                            type="button"
+                                            onClick={() => setEditRole(r)}
+                                            aria-pressed={editRole === r}
+                                            className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                                            style={
+                                              editRole === r
+                                                ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                                : { color: "var(--text2)", borderColor: "var(--border)" }
+                                            }
+                                          >
+                                            {r}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
                                   ))}
-                                </select>
+                                </div>
                                 <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
                                 <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
                                   {EXPERIENCE_LEVELS.map((l) => (
@@ -801,9 +824,9 @@ function HomeContent() {
                     border: "1px solid var(--border-accent)",
                   }}
                 >
-                  <div className="flex items-center gap-2 text-lg font-semibold mb-1.5" style={{ color: "var(--accent)" }}>
-                    <Zap size={18} aria-hidden="true" />
-                    Vergelijk profielen
+                  <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--accent)" }}>
+                    <Zap size={18} aria-hidden="true" className="flex-none" />
+                    <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 400, fontSize: "1.2rem", lineHeight: 1.2 }}>Vergelijk profielen</span>
                   </div>
                   <div className="text-sm" style={{ color: "var(--text2)" }}>
                     Zie waar jullie grenzen raken — en waar ze uitdagen.
@@ -821,9 +844,9 @@ function HomeContent() {
                   aria-disabled="true"
                   aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
                 >
-                  <div className="flex items-center gap-2 text-lg font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
-                    <Zap size={18} aria-hidden="true" />
-                    Vergelijk profielen
+                  <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--text2)" }}>
+                    <Zap size={18} aria-hidden="true" className="flex-none" />
+                    <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 400, fontSize: "1.2rem", lineHeight: 1.2 }}>Vergelijk profielen</span>
                   </div>
                   <div className="text-sm" style={{ color: "var(--text2)" }}>
                     Voeg een tweede profiel toe om te vergelijken.
