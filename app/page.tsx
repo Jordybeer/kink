@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, Settings, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor } from "lucide-react";
+import { Camera, Settings, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor, Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -18,6 +18,7 @@ import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
 import dynamic from "next/dynamic";
 import { decodeAny } from "@/lib/shareProfile";
+import { getProfileType } from "@/lib/profileType";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 import type { EncryptedBackup } from "@/lib/crypto";
@@ -311,7 +312,7 @@ function HomeContent() {
             : { ...p, origin: "own" as const, isImported: false })
       : incoming
           .map((p: Profile) => existing.has(p.id) ? { ...p, id: crypto.randomUUID() } : p)
-          .map((p: Profile) => ({ ...p, isImported: true as const, origin: "shared" as const }));
+          .map((p: Profile) => ({ ...p, isImported: true as const, origin: "shared" as const, lockedAt: p.lockedAt ?? Date.now() }));
     const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
     if (!incoming.length && !restoredContracts.length) {
       setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
@@ -765,6 +766,18 @@ function HomeContent() {
                                       <div className="flex flex-wrap items-center gap-1 mt-1">
                                         <RolePill role={p.role} />
                                         {lvl && <span className="text-xs" style={{ color: "var(--text2)" }}>· {lvl.label}</span>}
+                                        {(() => {
+                                          const pt = getProfileType(p, pinnedProfileId);
+                                          return (
+                                            <span
+                                              className="text-[10px] uppercase tracking-widest flex items-center gap-0.5"
+                                              style={{ color: pt === "primair" ? "var(--accent)" : "var(--text2)" }}
+                                            >
+                                              {pt === "partner" && <Lock size={8} aria-hidden="true" />}
+                                              {pt}
+                                            </span>
+                                          );
+                                        })()}
                                       </div>
                                     )}
                                   </div>
@@ -1303,7 +1316,7 @@ function HomeContent() {
               <button
                 onClick={() => {
                   if (!importPreview) return;
-                  importProfiles([{ ...importPreview, isImported: true, origin: "shared" }]);
+                  importProfiles([{ ...importPreview, isImported: true, origin: "shared", lockedAt: Date.now() }]);
                   setImportDone(true);
                   router.replace("/");
                   setTimeout(() => {

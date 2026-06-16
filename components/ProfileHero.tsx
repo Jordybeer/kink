@@ -1,10 +1,11 @@
 "use client";
 import { useRef } from "react";
-import { Camera, Pencil, QrCode, X } from "lucide-react";
+import { Camera, Lock, Pencil, QrCode, X } from "lucide-react";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
 import RolePill from "@/components/RolePill";
+import type { ProfileType } from "@/lib/profileType";
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -13,6 +14,7 @@ interface ProfileHeroProps {
   onEdit?: () => void;
   onAvatarChange?: (dataUrl: string | undefined) => void;
   onError?: (message: string) => void;
+  profileType?: ProfileType;
 }
 
 const STATUSES = ["willing", "yes", "maybe", "no", "hard_no"] as const;
@@ -42,7 +44,7 @@ const VIBE_MAP: Record<Status, string> = {
   hard_no: "Grensbewust 🛑",
 };
 
-export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvatarChange, onError }: ProfileHeroProps) {
+export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvatarChange, onError, profileType }: ProfileHeroProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
 
@@ -212,9 +214,24 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onAvat
                 {vibe}
               </span>
             )}
+            {profileType && (
+              <span
+                className="text-[10px] uppercase tracking-widest flex items-center gap-1 self-center"
+                style={{ color: profileType === "primair" ? "var(--accent)" : "var(--text2)" }}
+              >
+                {profileType === "partner" && <Lock size={9} aria-hidden="true" />}
+                {profileType}
+              </span>
+            )}
           </div>
           <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-            {memberSince && <>Lid sinds {memberSince} · </>}{progressPct}% ingevuld
+            {profileType === "partner" && profile.lockedAt
+              ? `Geïmporteerd op ${new Date(profile.lockedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })} · `
+              : memberSince
+              ? `Lid sinds ${memberSince} · `
+              : ""
+            }
+            {progressPct}% ingevuld
           </p>
           {(onShare || profile.fetLifeUsername || profile.bdsmtestUrl) && (
             <div className="flex flex-wrap gap-1.5 mt-1.5">

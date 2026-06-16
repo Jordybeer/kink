@@ -92,6 +92,7 @@ export interface Profile {
   avatarDataUrl?: string;
   isImported?: boolean;
   origin?: "own" | "shared";
+  lockedAt?: number;
   experienceLevel: ExperienceLevel;
   customKinks: CustomKink[];
   createdAt: number;
