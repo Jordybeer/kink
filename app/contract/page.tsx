@@ -265,7 +265,7 @@ function ContractPage() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(20);
       doc.setTextColor(...accent);
-      doc.text("KinkSync Contract", W / 2, y, { align: "center" });
+      doc.text("KinkSync Overeenkomst", W / 2, y, { align: "center" });
       y += 7;
 
       // Subtitle
@@ -741,14 +741,24 @@ function ContractPage() {
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-3 print:hidden">
+      <div className="flex gap-4 print:hidden">
         <button
           onClick={handleGeneratePDF}
           disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent)", color: "#000" }}
         >
-          {generating ? "Genereren…" : "↓ Contract als PDF downloaden"}
+          {generating ? "Genereren…" : "Opslaan als PDF"}
+        </button>
+        <button
+          onClick={() => {
+            showToast({ message: "Contract bevestigd — dit verbond is aangegaan!", variant: "success" });
+          }}
+          disabled={generating || ceremony}
+          className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ background: "#10b981", color: "#fff" }}
+        >
+          Contract bevestigen
         </button>
       </div>
 
@@ -1113,34 +1123,36 @@ function SignaturePad({
       <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
         {label}
       </div>
-      {/* Read-only preview — actual drawing happens in modal */}
-      <canvas
-        ref={canvasRef}
-        className="w-full rounded-xl"
+      {/* Clickable canvas — tap to open modal */}
+      <button
+        onClick={() => setModalOpen(true)}
+        className="focus-ring w-full rounded-xl transition-opacity hover:opacity-80 active:opacity-90 p-0 m-0 border-none"
         style={{
           border: `1px solid ${colour}`,
           background: "var(--surface2)",
           display: "block",
           height: "80px",
-          pointerEvents: "none",
         }}
-        aria-hidden="true"
-      />
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setModalOpen(true)}
-          className="focus-ring text-xs px-3 py-1 rounded-full border transition-colors"
-          style={{ color: colour, borderColor: colour }}
-          aria-label={`Handtekeningveld openen voor ${label}`}
-        >
-          Teken
-        </button>
+        aria-label={`Handtekeningveld openen voor ${label}`}
+      >
+        <canvas
+          ref={canvasRef}
+          className="w-full rounded-xl"
+          style={{
+            display: "block",
+            height: "80px",
+            pointerEvents: "none",
+          }}
+          aria-hidden="true"
+        />
+      </button>
+      <div className="flex items-center gap-2 w-full">
         <button
           onClick={clear}
-          className="focus-ring text-xs px-3 py-1 rounded-full border transition-colors"
+          className="focus-ring flex-1 text-xs px-3 py-1 rounded-full border transition-colors"
           style={{ color: "var(--text2)", borderColor: "var(--border)" }}
         >
-          Wis
+          Veld wissen
         </button>
       </div>
       <div className="text-xs text-center" style={{ color: "var(--text2)" }}>
