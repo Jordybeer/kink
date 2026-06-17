@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
-import { isKinkMatch, isHardLimit } from "@/lib/matching";
+import { isKinkMatch, isHardLimit, kinkMatchScore } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -177,7 +177,7 @@ function ContractPage() {
       hardLimits.push({ name: kink.name, who });
     } else if (isKinkMatch(entryA, entryB)) {
       shared.push(detail);
-    } else if (entryA.status === "no" || entryB.status === "no") {
+    } else if (kinkMatchScore(entryA, entryB).kind === "soft") {
       softLimits.push(detail);
     } else if (hasA && hasB) {
       discuss.push(detail);
