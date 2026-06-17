@@ -13,7 +13,7 @@ const base = {
 describe("buildIntimatePreamble", () => {
   it("uses nickname-and-role intro for Dom/Sub", () => {
     const text = buildIntimatePreamble(base);
-    expect(text).toContain("Dit contract wordt gesloten tussen Lily (Dominant) en Sam (Submissive).");
+    expect(text).toContain("Dit verbond wordt gesloten tussen Lily (Dominant) en Sam (Submissive).");
   });
 
   it("names the submissive as the one offering and the dominant as the one accepting", () => {
@@ -42,7 +42,7 @@ describe("buildFormalPreamble", () => {
   it("uses the 'hierna genoemd de' intro with real names + nickname brackets", () => {
     const text = buildFormalPreamble(formal);
     expect(text).toContain(
-      "Dit contract wordt gesloten tussen Lily Vermeer (Lily), hierna genoemd de Dominant, en Sam Janssen (Sam), hierna genoemd de Submissive."
+      "Dit verbond wordt gesloten tussen Lily Vermeer, hierna genoemd de Dominant, en Sam Janssen, hierna genoemd de Submissive."
     );
   });
 
