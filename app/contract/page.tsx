@@ -7,8 +7,11 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit } from "@/lib/matching";
-import { categorizeRole } from "@/lib/roles";
 import PageShell from "@/components/PageShell";
+import { useToast } from "@/components/Toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { buildPreamble } from "@/lib/contractPreamble";
+import { canvasHasInk } from "@/lib/canvasUtils";
 
 const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "Heel graag",
@@ -82,43 +85,6 @@ const SIGNAL_LEVELS: { key: SignalKey; color: string; meaning: string }[] = [
 ];
 const DEFAULT_SIGNALS: Signals = { green: "Meer", yellow: "Geel", red: "Rood", black: "Safeword" };
 
-function buildPreamble(
-  nameA: string,
-  roleA: string,
-  nameB: string,
-  roleB: string,
-  levelA: string,
-  levelB: string
-): string {
-  const intro = `Dit verbond wordt gesloten tussen ${nameA} (${roleA}) en ${nameB} (${roleB}).`;
-
-  const dirA = categorizeRole(roleA);
-  const dirB = categorizeRole(roleB);
-  const isDomSub = (dirA === "give" && dirB === "receive") || (dirA === "receive" && dirB === "give");
-
-  let body: string;
-  if (isDomSub) {
-    const [domName, subName] = dirA === "give" ? [nameA, nameB] : [nameB, nameA];
-    body = `Door dit verbond biedt ${subName} zichzelf aan in vertrouwen, toewijding en gewillige overgave, binnen de grenzen die vrijuit zijn uitgesproken en wederzijds zijn begrepen, en ${domName} aanvaardt die gave met eerbied, verantwoordelijkheid, beheersing en zorg. Wat hier wordt gegeven, wordt niet lichtvaardig genomen, want onderwerping is niet het verlies van het zelf, maar de bewuste daad om iemands kwetsbaarheid, vertrouwen en gehoorzaamheid in de handen te leggen van iemand die heeft gezworen zulke gaven met eer te bewaren. Autoriteit is op haar beurt geen louter voorrecht, maar een heilige plicht — om met standvastigheid te leiden, met kracht te beschermen, met intentie te bevelen, en het vertrouwen dat in hun hoede is gelegd te koesteren.`;
-  } else {
-    body = `Door dit verbond bevestigen ${nameA} en ${nameB} hun grenzen, verlangens en wederzijdse afspraken, vrijelijk en bewust uitgesproken. Wat hier staat, rust op vertrouwen, communicatie en gedeelde verantwoordelijkheid. Beiden begrijpen dat iedere afspraak voortkomt uit respect voor de ander en eerlijkheid over het zelf.`;
-  }
-
-  const shared = ` Beiden begrijpen dat deze uitwisseling rust op toewijding, communicatie, verantwoordelijkheid en het stille geloof dat ieder zal eren wat is aangeboden. Hierin wordt verbondenheid niet slechts uitgewisseld, maar gedragen als een daad van zorg en vertrouwen tussen hen.`;
-
-  const beginnerLevels = ["beginner"];
-  const deepLevels = ["diepgaand", "ervaren"];
-  const needsGuidanceClause =
-    (beginnerLevels.includes(levelA) && deepLevels.includes(levelB)) ||
-    (beginnerLevels.includes(levelB) && deepLevels.includes(levelA));
-
-  const guidanceClause = needsGuidanceClause
-    ? ` ${levelA === "beginner" ? nameA : nameB} brengt nieuwsgierigheid; ${levelA === "beginner" ? nameB : nameA} brengt geduld en begeleiding. Zij verplichten zich aan een tempo dat altijd in dienst staat van veiligheid en wederzijds begrip.`
-    : "";
-
-  return `${intro} ${body}${shared}${guidanceClause}`;
-}
-
 function ContractPage() {
   const searchParams = useSearchParams();
   const { profiles, saveContract, contracts, deleteContract } = useStore();
@@ -128,6 +94,7 @@ function ContractPage() {
   const [generating, setGenerating] = useState(false);
   const [ceremony, setCeremony] = useState(false);
   const [preambleOpen, setPreambleOpen] = useState(false);
+  const { showToast } = useToast();
 
   // Safeword & aftercare state
   const [signalsA, setSignalsA] = useState<Signals>({ ...DEFAULT_SIGNALS });
@@ -135,8 +102,24 @@ function ContractPage() {
   const [aftercareA, setAftercareA] = useState<string[]>([]);
   const [aftercareB, setAftercareB] = useState<string[]>([]);
 
+  // Identity & signature tracking
+  const [realNameA, setRealNameA] = useState("");
+  const [realNameB, setRealNameB] = useState("");
+  const [whyOpen, setWhyOpen] = useState(false);
+  const [signedA, setSignedA] = useState(false);
+  const [signedB, setSignedB] = useState(false);
+
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!whyOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setWhyOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [whyOpen]);
 
   if (!_hasHydrated) return <PageShell loading width="3xl" />;
 
@@ -233,14 +216,31 @@ function ContractPage() {
 
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
-  const preamble = buildPreamble(
-    profileA.name, profileA.role,
-    profileB.name, profileB.role,
-    profileA.experienceLevel, profileB.experienceLevel
-  );
+  const trimmedRealNameA = realNameA.trim();
+  const trimmedRealNameB = realNameB.trim();
+  const useRealNames = trimmedRealNameA.length > 0 && trimmedRealNameB.length > 0;
+
+  const preamble = buildPreamble({
+    nameA: profileA.name,
+    roleA: profileA.role,
+    nameB: profileB.name,
+    roleB: profileB.role,
+    levelA: profileA.experienceLevel,
+    levelB: profileB.experienceLevel,
+    realNameA: useRealNames ? trimmedRealNameA : undefined,
+    realNameB: useRealNames ? trimmedRealNameB : undefined,
+  });
 
   async function handleGeneratePDF() {
     if (!profileA || !profileB) return;
+    if (!signedA || !signedB) {
+      showToast({ message: "Beide partijen moeten tekenen voordat dit verbond gebonden is." });
+      return;
+    }
+    if ((trimmedRealNameA.length > 0) !== (trimmedRealNameB.length > 0)) {
+      showToast({ message: "Vul de echte naam van beide partijen in, of laat ze beide leeg." });
+      return;
+    }
     setCeremony(true);
     await new Promise((resolve) => setTimeout(resolve, 2200));
     setCeremony(false);
@@ -467,8 +467,10 @@ function ContractPage() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
-      doc.text(profileA.name, margin + sigW / 2, y, { align: "center" });
-      doc.text(profileB.name, margin + sigW + 10 + sigW / 2, y, { align: "center" });
+      const sigLabelA = useRealNames ? `${trimmedRealNameA} (${profileA.name})` : profileA.name;
+      const sigLabelB = useRealNames ? `${trimmedRealNameB} (${profileB.name})` : profileB.name;
+      doc.text(sigLabelA, margin + sigW / 2, y, { align: "center" });
+      doc.text(sigLabelB, margin + sigW + 10 + sigW / 2, y, { align: "center" });
       y += 4;
       doc.text(today, margin + sigW / 2, y, { align: "center" });
       doc.text(today, margin + sigW + 10 + sigW / 2, y, { align: "center" });
@@ -675,6 +677,55 @@ function ContractPage() {
         </div>
       </div>
 
+      {/* Echte namen (optioneel) */}
+      <div
+        className="rounded-2xl p-6 mb-6 print:hidden"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <h2 className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: "var(--accent)" }}>
+          Echte namen <span className="font-normal opacity-60 normal-case tracking-normal">(optioneel)</span>
+        </h2>
+        <p className="text-xs mb-4" style={{ color: "var(--text2)" }}>
+          Beide velden samen invullen of beide leeg laten. Bij invullen wordt het verbond formeler geformuleerd en verschijnen de echte namen naast de nicknames onder de handtekening.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium" style={{ color: COLOUR_A }}>
+              Echte naam van {profileA.name}
+            </span>
+            <input
+              value={realNameA}
+              onChange={(e) => setRealNameA(e.target.value)}
+              placeholder="Voor- en achternaam…"
+              autoComplete="off"
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium" style={{ color: COLOUR_B }}>
+              Echte naam van {profileB.name}
+            </span>
+            <input
+              value={realNameB}
+              onChange={(e) => setRealNameB(e.target.value)}
+              placeholder="Voor- en achternaam…"
+              autoComplete="off"
+              className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+          </label>
+        </div>
+        <button
+          type="button"
+          onClick={() => setWhyOpen(true)}
+          className="focus-ring text-xs mt-3 inline-flex items-center gap-1 transition-colors min-h-[36px]"
+          style={{ color: "var(--accent)" }}
+        >
+          Waarom een echte naam toevoegen? →
+        </button>
+      </div>
+
       {/* Signature section */}
       <div
         className="rounded-2xl p-6 mb-6"
@@ -684,8 +735,8 @@ function ContractPage() {
           Handtekeningen
         </h2>
         <div className="flex gap-4 flex-wrap">
-          <SignaturePad label={profileA.name} colour={COLOUR_A} canvasRef={canvasARef} />
-          <SignaturePad label={profileB.name} colour={COLOUR_B} canvasRef={canvasBRef} />
+          <SignaturePad label={profileA.name} colour={COLOUR_A} canvasRef={canvasARef} onSignedChange={setSignedA} />
+          <SignaturePad label={profileB.name} colour={COLOUR_B} canvasRef={canvasBRef} onSignedChange={setSignedB} />
         </div>
       </div>
 
@@ -744,6 +795,68 @@ function ContractPage() {
         </div>
       )}
     </PageShell>
+    <AnimatePresence>
+      {whyOpen && (
+        <motion.div
+          key="why-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          onClick={() => setWhyOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 220,
+            background: "rgba(0,0,0,0.65)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "1rem",
+            paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
+          }}
+        >
+          <motion.div
+            key="why-panel"
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Waarom echte namen toevoegen"
+            style={{
+              background: "var(--surface)",
+              borderRadius: "1rem",
+              padding: "1.5rem",
+              width: "100%",
+              maxWidth: "480px",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                Waarom echte namen?
+              </span>
+              <button
+                onClick={() => setWhyOpen(false)}
+                className="focus-ring p-1 rounded-full"
+                style={{ color: "var(--text2)" }}
+                aria-label="Sluiten"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text)" }}>
+              Een nickname kan prima zijn voor een persoonlijk verbond. Een echte naam maakt
+              alleen duidelijker wie dit document heeft ondertekend.
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+              Dat kan belangrijk zijn als je later discussie wilt vermijden over identiteit,
+              instemming of afspraken. Het maakt het document dus helderder en meestal ook
+              sterker.
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     {ceremony && (
       <>
         <style>{`
@@ -965,10 +1078,12 @@ function SignaturePad({
   label,
   colour,
   canvasRef,
+  onSignedChange,
 }: {
   label: string;
   colour: string;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  onSignedChange?: (signed: boolean) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -980,6 +1095,7 @@ function SignaturePad({
       dst.width = src.width;
       dst.height = src.height;
       dst.getContext("2d")!.drawImage(src, 0, 0);
+      onSignedChange?.(canvasHasInk(src));
     }
     setModalOpen(false);
   }
@@ -989,6 +1105,7 @@ function SignaturePad({
     if (m) m.getContext("2d")!.clearRect(0, 0, m.width, m.height);
     const c = canvasRef.current;
     if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+    onSignedChange?.(false);
   }
 
   return (
