@@ -67,7 +67,9 @@ export function buildFormalPreamble(i: PreambleInput & { realNameA: string; real
   let intro: string;
 
   if (dir.kind === "domsub") {
-    intro = `Dit verbond wordt gesloten tussen ${i.realNameA}, hierna genoemd de Dominant, en ${i.realNameB}, hierna genoemd de Submissive.`;
+    const domRealName = dir.domName === i.nameA ? i.realNameA : i.realNameB;
+    const subRealName = dir.subName === i.nameA ? i.realNameA : i.realNameB;
+    intro = `Dit verbond wordt gesloten tussen ${domRealName}, hierna genoemd de Dominant, en ${subRealName}, hierna genoemd de Submissive.`;
   } else {
     const introA = `${i.realNameA} (${i.nameA})`;
     const introB = `${i.realNameB} (${i.nameB})`;
