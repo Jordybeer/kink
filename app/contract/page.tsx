@@ -406,6 +406,9 @@ function ContractPage() {
             i += right !== null ? 2 : 1;
           }
         }
+        doc.setDrawColor(...muted);
+        doc.setLineWidth(0.2);
+        doc.line(margin, y, W - margin, y);
         y += 10;
       };
 
@@ -420,7 +423,11 @@ function ContractPage() {
       doc.setFontSize(10);
       doc.setTextColor(...accent);
       doc.text("Algemene afspraken", margin, y);
-      y += 5;
+      y += 2.5;
+      doc.setDrawColor(...accent);
+      doc.setLineWidth(0.25);
+      doc.line(margin, y, margin + lineW, y);
+      y += 6;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(30, 27, 75);
