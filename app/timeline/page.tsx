@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CompatibilityTimeline } from "@/components/CompatibilityTimeline";
+import { ContractTrendsChart } from "@/components/ContractTrendsChart";
 import PageShell from "@/components/PageShell";
 
 const COLOUR_A = "var(--accent)";
@@ -92,17 +93,20 @@ function TimelinePage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
-              {profileA.name} &amp; {profileB.name}
-            </h2>
-            <span className="text-xs" style={{ color: "var(--text2)" }}>
-              {filtered.length} {filtered.length === 1 ? "contract" : "contracten"}
-            </span>
+        <>
+          <ContractTrendsChart contracts={filtered} />
+          <div className="rounded p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                {profileA.name} &amp; {profileB.name}
+              </h2>
+              <span className="text-xs" style={{ color: "var(--text2)" }}>
+                {filtered.length} {filtered.length === 1 ? "contract" : "contracten"}
+              </span>
+            </div>
+            <CompatibilityTimeline contracts={filtered} />
           </div>
-          <CompatibilityTimeline contracts={filtered} />
-        </div>
+        </>
       )}
     </PageShell>
   );
