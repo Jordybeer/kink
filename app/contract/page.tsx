@@ -108,6 +108,7 @@ function ContractPage() {
   const [whyOpen, setWhyOpen] = useState(false);
   const [signedA, setSignedA] = useState(false);
   const [signedB, setSignedB] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
@@ -463,7 +464,10 @@ function ContractPage() {
       if (sigDataA) doc.addImage(sigDataA, "PNG", margin + 1, y + 1, sigW - 2, sigH - 2);
       if (sigDataB) doc.addImage(sigDataB, "PNG", margin + sigW + 11, y + 1, sigW - 2, sigH - 2);
 
-      y += sigH + 3;
+      y += sigH + 8;
+      doc.setDrawColor(...muted);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y - 4, W - margin, y - 4);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
@@ -791,14 +795,45 @@ function ContractPage() {
                     {" · "}{c.matchCount} matches · {c.hardLimitCount} grenzen
                   </div>
                 </div>
-                <button
-                  onClick={() => deleteContract(c.id)}
-                  aria-label="Contract verwijderen"
-                  className="focus-ring p-2 rounded-lg text-sm"
-                  style={{ color: "var(--text2)" }}
-                >
-                  🗑
-                </button>
+                {pendingDeleteId === c.id ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: "var(--text2)" }}>Zeker?</span>
+                    <button
+                      onClick={() => { deleteContract(c.id); setPendingDeleteId(null); }}
+                      className="focus-ring text-xs px-2 py-1 rounded-lg font-semibold"
+                      style={{ background: "#ef4444", color: "#fff" }}
+                    >
+                      Ja
+                    </button>
+                    <button
+                      onClick={() => setPendingDeleteId(null)}
+                      className="focus-ring text-xs px-2 py-1 rounded-lg"
+                      style={{ background: "var(--surface2)", color: "var(--text2)" }}
+                    >
+                      Nee
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {c.profileAId && c.profileBId && (
+                      <Link
+                        href={`/contract?a=${c.profileAId}&b=${c.profileBId}`}
+                        className="focus-ring text-xs px-3 py-1.5 rounded-lg transition-colors"
+                        style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                      >
+                        Bekijk
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => setPendingDeleteId(c.id)}
+                      aria-label="Contract verwijderen"
+                      className="focus-ring p-2 rounded-lg text-sm"
+                      style={{ color: "var(--text2)" }}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
