@@ -6,7 +6,8 @@ import { ArrowLeftRight, Clapperboard, FileText, ChevronDown, Lock } from "lucid
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry, Profile } from "@/types";
-import { isKinkMatch, isHardLimit, isConflict } from "@/lib/matching";
+import { isKinkMatch, isHardLimit, isConflict, profileMatchScore } from "@/lib/matching";
+import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 
@@ -352,22 +353,13 @@ function ComparePage() {
     });
   }, []);
 
-  let matchCount = 0, hardLimitCount = 0, discussCount = 0;
-  if (profileA && profileB) {
-    for (const kink of KINKS) {
-      const eA = profileA.entries[kink.id] ?? { status: null, comment: "" };
-      const eB = profileB.entries[kink.id] ?? { status: null, comment: "" };
-      const hasA = eA.status || eA.statusGive || eA.statusReceive;
-      const hasB = eB.status || eB.statusGive || eB.statusReceive;
-      if (!hasA && !hasB) continue;
-      if (isHardLimit(eA, eB)) { hardLimitCount++; continue; }
-      if (isKinkMatch(eA, eB)) matchCount++;
-      else if (hasA && hasB) discussCount++;
-    }
-  }
-
-  const scoreDenom = matchCount + discussCount + hardLimitCount;
-  const score = scoreDenom > 0 ? Math.round((matchCount / scoreDenom) * 100) : 0;
+  const { counts } = profileA && profileB
+    ? profileMatchScore(profileA, profileB)
+    : { counts: {} as Record<MatchKind, number> };
+  const matchCount     = (counts.perfect ?? 0) + (counts.strong ?? 0);
+  const softLimitCount = counts.soft ?? 0;
+  const hardLimitCount = counts.limit ?? 0;
+  const discussCount   = (counts.discuss ?? 0) + (counts.conflict ?? 0);
 
   useEffect(() => {
     if (!_hasHydrated || profiles.length < 2) return;
