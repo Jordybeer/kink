@@ -101,5 +101,6 @@ export { hasRating };
 
 export function isConflict(a: KinkEntry, b: KinkEntry): boolean {
   if (isHardLimit(a, b)) return false;
-  return !isKinkMatch(a, b) && hasRating(a) && hasRating(b);
+  const kind = kinkMatchScore(a, b).kind;
+  return kind === "discuss" || kind === "conflict";
 }
