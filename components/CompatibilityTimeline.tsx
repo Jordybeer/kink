@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import type { ContractSnapshot } from "@/types";
 
 interface Props {
@@ -35,12 +36,23 @@ export function CompatibilityTimeline({ contracts }: Props) {
                 : undefined
             }
           >
-            <p
-              className="text-xs uppercase tracking-widest mb-2.5"
-              style={{ color: "var(--text2)" }}
-            >
-              {date}
-            </p>
+            <div className="flex items-center justify-between mb-2.5">
+              <p
+                className="text-xs uppercase tracking-widest"
+                style={{ color: "var(--text2)" }}
+              >
+                {date}
+              </p>
+              {c.profileAId && c.profileBId && (
+                <Link
+                  href={`/contract?a=${c.profileAId}&b=${c.profileBId}`}
+                  className="focus-ring text-xs transition-colors"
+                  style={{ color: "var(--accent)" }}
+                >
+                  Bekijk →
+                </Link>
+              )}
+            </div>
             <div className="flex flex-col gap-1">
               {ROWS.map(({ key, label, color }) => {
                 const count = c[key];
