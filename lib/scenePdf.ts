@@ -5,12 +5,12 @@ const LEDGER_PALETTE = {
   paper:   "#ffffff",
   title:   "#3f1f7a",
   body:    "#241a32",
-  muted:   "#7c7390",
+  muted:   "#4b5563",
   safeBg:  "#fee2e2",
   safeFg:  "#991b1b",
-  zacht:   "#7da3d8",
-  midden:  "#d99c5a",
-  intens:  "#b85450",
+  zacht:   "#2563eb",
+  midden:  "#ea580c",
+  intens:  "#991b1b",
 };
 
 function hexToRgb(hex: string): [number, number, number] {
