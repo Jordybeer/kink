@@ -19,6 +19,7 @@ import Wordmark from "@/components/Wordmark";
 import dynamic from "next/dynamic";
 import { decodeAny } from "@/lib/shareProfile";
 import { getProfileType } from "@/lib/profileType";
+import { eligibleParentProfiles } from "@/lib/subprofile";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 import type { EncryptedBackup } from "@/lib/crypto";
@@ -86,6 +87,7 @@ function HomeContent() {
   const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
   const [editRelationshipStatus, setEditRelationshipStatus] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [parentName, setParentName] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -167,14 +169,17 @@ function HomeContent() {
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    const duplicate = profiles.some(
-      (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
-    );
-    if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return; }
+    if (parentName === null) {
+      const duplicate = profiles.some(
+        (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
+      );
+      if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return; }
+    }
     setNameError(null);
     const id = createProfile(name.trim(), role, experienceLevel, relationshipStatus || undefined);
     setName("");
     setRelationshipStatus("");
+    setParentName(null);
     router.push(`/profile/${id}`);
   }
 
@@ -387,6 +392,7 @@ function HomeContent() {
   }
 
   const pinnedProfile = profiles.find((p) => p.id === pinnedProfileId);
+  const parentCandidates = eligibleParentProfiles(profiles, pinnedProfileId);
   const compareProfiles = (pinnedProfile
     ? [pinnedProfile.id, profiles.find((p) => p.id !== pinnedProfileId)?.id]
     : profiles.slice(0, 2).map((p) => p.id)
@@ -448,6 +454,44 @@ function HomeContent() {
             Nieuw profiel
           </h2>
 
+          {parentCandidates.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs uppercase tracking-widest mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
+              <p className="text-[11px] mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => { setParentName(null); setName(""); }}
+                  aria-pressed={parentName === null}
+                  className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                  style={
+                    parentName === null
+                      ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                      : { color: "var(--text2)", borderColor: "var(--border)" }
+                  }
+                >
+                  Nieuw persoon
+                </button>
+                {parentCandidates.map((candidate) => (
+                  <button
+                    key={candidate}
+                    type="button"
+                    onClick={() => { setParentName(candidate); setName(candidate); }}
+                    aria-pressed={parentName === candidate}
+                    className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                    style={
+                      parentName === candidate
+                        ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                        : { color: "var(--text2)", borderColor: "var(--border)" }
+                    }
+                  >
+                    {candidate}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mb-3">
             <input
               value={name}
@@ -458,6 +502,9 @@ function HomeContent() {
             />
             {nameError && (
               <p className="text-xs mt-1" style={{ color: "var(--hard-no)" }}>{nameError}</p>
+            )}
+            {parentName && (
+              <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>Wordt gegroepeerd onder &ldquo;{parentName}&rdquo;</p>
             )}
           </div>
 
