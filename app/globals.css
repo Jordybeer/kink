@@ -45,11 +45,11 @@ html, body {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-.status-yes     { background: color-mix(in srgb, var(--yes) 15%, transparent);     color: var(--yes);     border-color: color-mix(in srgb, var(--yes) 35%, transparent); }
-.status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: color-mix(in srgb, var(--willing) 35%, transparent); animation: ks-glow-willing 1.4s ease-in-out infinite; }
-.status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: color-mix(in srgb, var(--maybe) 35%, transparent); }
-.status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: color-mix(in srgb, var(--no) 35%, transparent); }
-.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: color-mix(in srgb, var(--hard-no) 35%, transparent); animation: ks-glow-hard-no 1.4s ease-in-out infinite; }
+.status-yes     { background: color-mix(in srgb, var(--yes) 15%, transparent);     color: var(--yes);     border-color: var(--yes);     border-width: 2px; }
+.status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: var(--willing); border-width: 2px; animation: ks-glow-willing 1.4s ease-in-out infinite; }
+.status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: var(--maybe);   border-width: 2px; }
+.status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: var(--no);      border-width: 2px; }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 1.4s ease-in-out infinite; }
 
 .focus-ring:focus-visible {
   outline: none;

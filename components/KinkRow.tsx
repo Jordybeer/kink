@@ -68,7 +68,7 @@ export default function KinkRow({
     entry.direction === "receive" ? (entry.statusReceive ?? status) :
     entry.direction === "both"    ? (worstOf(entry.statusGive, entry.statusReceive) ?? status) :
     status;
-  const showDirection = !compact && !!onDirectionChange;
+  const showDirection = !compact && !!onDirectionChange && roleDirection === "both";
 
   return (
     <>
@@ -104,10 +104,7 @@ export default function KinkRow({
         {showDirection && (
           <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-1 overflow-x-auto">
             <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Richting:</span>
-            {DIRECTIONS.filter(({ dir }) => {
-              if (!roleDirection || roleDirection === "none" || roleDirection === "both") return true;
-              return dir === roleDirection;
-            }).map(({ dir, label }) => {
+            {DIRECTIONS.map(({ dir, label }) => {
               const active = entry.direction === dir;
               return (
                 <button
@@ -235,18 +232,18 @@ export default function KinkRow({
             }
           };
           return (
-            <div data-tour="hard-no" className="px-3 pb-1">
+            <div data-tour="hard-no" className="px-3 pb-1 flex justify-end">
               <button
                 onClick={handleClick}
                 aria-pressed={active}
-                className={`focus-ring w-full rounded-lg border text-[11px] font-semibold py-2 min-h-[44px] transition-colors inline-flex items-center justify-center gap-1.5${active ? " status-hard_no" : ""}`}
+                className={`focus-ring rounded-full border text-[10px] font-semibold px-2.5 py-1 min-h-[36px] transition-colors inline-flex items-center gap-1${active ? " status-hard_no" : ""}`}
                 style={!active ? {
                   color: "var(--hard-no)",
                   borderColor: "color-mix(in srgb, var(--hard-no) 30%, transparent)",
-                  background: "color-mix(in srgb, var(--hard-no) 6%, transparent)",
+                  background: "transparent",
                 } : {}}
               >
-                <Ban size={14} aria-hidden="true" />
+                <Ban size={11} aria-hidden="true" />
                 Harde grens
               </button>
             </div>

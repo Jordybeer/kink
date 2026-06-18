@@ -138,7 +138,10 @@ export default function CategorySection({
       <div className={`accordion-content ${open ? "open" : ""}`}>
         <div className="accordion-inner">
           <div className="mt-1 flex flex-col pl-1">
-            {kinks.map((kink) => (
+            {[...kinks]
+              .map((k, i) => ({ k, i, rated: entries[k.id]?.status != null }))
+              .sort((a, b) => (a.rated === b.rated ? a.i - b.i : a.rated ? -1 : 1))
+              .map(({ k: kink }) => (
               <KinkRow
                 key={kink.id}
                 kink={kink}
