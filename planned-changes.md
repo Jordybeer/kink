@@ -1,21 +1,32 @@
-# Continue `timeline-chart-plan.md` — v4 roadmap, corrected
+# v4 Roadmap — Shipped to Production
 
-## Context
+## Status (as of 2026-06-18)
 
-The trends chart on `/timeline` shipped at `abb7423`. `timeline-chart-plan.md` documents
-what landed and points to `4.md` for what's next. The roadmap's first remaining step is
-**Item 2 — graded match calculation** in `lib/matching.ts`. It's queued before Items 3–5
-because it changes the `verbond %` denominator the chart and the `/compare` masthead
-both rely on — landing it first keeps every later commit shippable without cross-surface drift.
+✅ **Items 2–5 complete** — All core v4 features implemented and shipped to main.
+✅ **Polish pass complete** — a11y refinements (44px+ touch targets, dialog roles, ARIA labels), mobile viewport fixes, Dutch microcopy consistency.
+✅ **Merged to main** — PR #192 shipped 2026-06-18 11:42 UTC. v4 now live in production.
 
-Exploration of the live code surfaced **one real conflict** between Item 2 as written
-in `4.md` and the chart that just shipped, plus a few small drift corrections. This plan
-captures those corrections and the recommended execution order. No code changes have
-been made; this is a planning artifact.
+The roadmap planning in this file (Items 2–5 sequencing) proved accurate. All items landed shippable; the chart denominator conflict was resolved as planned (four disjoint buckets preserved). No regressions detected post-merge.
 
 ---
 
-## Verified state (worth keeping in working memory)
+## Next Phase — Deferred Structural Work (from `4.md` sections B–D)
+
+Per the original roadmap, Items B–D were deferred after v4 polish to avoid scope creep:
+
+| Phase | Item | Scope | Status |
+|-------|------|-------|--------|
+| **B** | **Agreement Archive Data Model** | Migrate `ContractSnapshot` → `ProfileSnapshot`. Design storage budget + drift strategy. | Queued — requires upfront design cost. Foundational for evolution tracking. |
+| **C** | **Evolution View** | `/history` page aggregating snapshot diffs over time. Depends on B. | Blocked on B. |
+| **D** | **History Consolidation** | Merge `/history` into `/timeline`, retire redundant endpoint. | Blocked on C. |
+
+**Why deferred:** Each phase adds complexity without immediate user value; B requires significant schema design work upfront. v4 polish took priority to establish a clean baseline before tackling structural changes.
+
+**Recommendation:** Start with B design phase next — surface requirements, schema draft, storage constraints. This unblocks C and D downstream.
+
+---
+
+## Historical: Verified State from Planning Phase (kept for reference)
 
 - `lib/matching.ts` exports `isKinkMatch`, `isHardLimit`, `isConflict`, `hasRating` — signatures match the plan.
 - `KinkEntry` has `status`, `statusGive`, `statusReceive`, `direction` — directional logic is supportable.
