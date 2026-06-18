@@ -1,4 +1,116 @@
-# v4 Roadmap — Shipped to Production
+# v5 Backlog — Field Notes from User (2026-06-18)
+
+Mobile-first. No regressions. No Playwright unless a feature genuinely needs it. Group commits per phase; each phase ships independently.
+
+## Redundancy Check (already done — skip)
+
+- **Score overhaul** — Done in v4 Item 2 (six-tier rubric). `te bespreken` classifying as mismatch is **correct** (it's neither match nor limit; the chart's four disjoint buckets depend on it). No further work needed; the question is settled.
+- **ProfileHero redesign** — Shipped in v4 Item 5. User confirms it's "still messy" → Phase 2 below is a follow-up pass, not a redo.
+- **TimePicker / DurationStepper a11y** — Polish pass already raised touch targets and added dialog roles. Don't re-touch.
+
+---
+
+## Phase 1 — Critical Bugs (ship first)
+
+Small, isolated fixes. Each = one commit.
+
+1. **Live session zoom on connect** — Viewport jumps/zooms when peer connects. Inspect `viewport` meta and any `transform` applied on connect.
+2. **Contract `Bevestigen` doesn't save** — Currently only `Opslaan als PDF` persists. `Bevestigen` also skips signature/name validation that `Opslaan` enforces. Both bugs in one commit: gate `Bevestigen` on validation, then call `saveContract`.
+3. **Scene page contract-gate doesn't re-check** — When both profile dropdowns get filled, the no-contract banner stays. Add effect listening on `[profileAId, profileBId]` to re-query.
+4. **ProfileHero scroll-jump on kink rating** — DNA bar updates mutate hero height → page scroll drifts. Fix: reserve hero height OR scroll-anchor the active kink row.
+5. **Import URL stuck after import** — After import succeeds, `router.replace('/')` to clear the encoded payload from address bar.
+
+## Phase 2 — ProfileHero Polish v2 (mobile portrait)
+
+User says hero is "still messy" in portrait. Tight, surgical pass — no full redesign.
+
+- Role label cut off by edit button in portrait → either move pencil into the `Bewerken` tab header, or absorb edit affordance into the `Bewerken` tab itself (delete pencil from hero entirely).
+- `Overzicht` / `Bewerken` tabs eat vertical space → consider segmented control, single-row inline switcher, or fold "Overzicht" into the default state with edit toggling in-place.
+- Pill cluster (experience / relationship) → redesign as compact metadata row or move to expandable details (less visual noise).
+- Space above/beside kink title is unused → land role pill or dominant-status caption there.
+- Reduce card-background opacity when in edit mode → makes editing feel like a distinct surface.
+
+## Phase 3 — Status Color System Refinement
+
+DNA + KinkRow color palette is too compressed at the green and amber ends.
+
+- `Heel graag` vs `Ja`: both green. Make `Heel graag` warmer/saturated (e.g. lime→emerald distinction) or add an outline ring on `Heel graag` only.
+- `Misschien` vs `Voor hen`: too similar amber. Push `Voor hen` toward muted blue/grey (it's a directional preference, not enthusiasm).
+- Pulse animation: currently only `Ja` pulses. Either add to `Heel graag` or remove from `Ja` so pulse signals something specific (suggest: pulse = "fresh / unrated → rated this session").
+- New `Nieuwsgierig` (curious) status between `Misschien` and `Ja` — add to rubric in `lib/matching.ts`, wire color, update DOMINANT_LABEL.
+- Ledger PDF palette: bump contrast on body text / counter swatches; current swatches read as vague greys on print.
+
+## Phase 4 — KinkRow Edit UI
+
+Cleaner editing surface.
+
+- Non-switch roles: hide `Geven` / `Ontvangen` toggle entirely (only switches need directional UI).
+- `Harde grens` button: shrink — it's the rarest pick, doesn't need parity sizing.
+- Thicker border on desirability tap to confirm interaction (currently subtle).
+- Sort: group by category but inside each category sort by rated-first → unrated-last so progress is visible.
+
+## Phase 5 — Navigation Layout
+
+- Move settings gear out of inline page chrome into `TopNav` top-right.
+- Status indicator (online/offline/sync) lives to the left of the gear.
+- Ensure home page uses the same `TopNav` component (currently inconsistent).
+- Home cards: replace `Geven` / `Ontvangen` row with the profile's `role` pill — it's the meaningful signal, the others are too granular for a card.
+
+## Phase 6 — Profile Sharing Flow
+
+Single biggest UX gap: after a live session reveal, the peer's profile vanishes. Needs persistence path.
+
+- **Share-profile button on live-session reveal** — Drop a CTA on the reveal screen: `Importeer dit profiel`. Pulls the live-session payload into local storage as a partner profile.
+- **QR audit** — Document in commit message: what fields the QR encodes today, what's missing (avatar? customKinks? snapshots?), and the byte budget before QR becomes unscannable on a phone screen (≤ ~2.9 kB for L-level Version 40).
+- **Live-session handshake capacity** — Since it's WebRTC datachannel, it can carry **multiples** of the QR payload. Spec a richer payload (avatar + full entries + custom kinks) for live mode while keeping QR lean.
+- **Camera modal: paste-from-URL fallback** for PWA users whose camera permission is awkward.
+- Post-import always `router.replace('/')` (also covered in Phase 1 #5 — share the fix).
+
+## Phase 7 — Profile Trends / Snapshots
+
+User wants per-profile evolution view (mirrors the contract trends chart already shipped).
+
+- Add `Profiel opslaan` CTA at bottom of profile page → snapshots `entries` + `customKinks` + timestamp into a new `ProfileSnapshot[]` store key.
+- New chart component on profile detail: Chart.js line/bar mirroring `ContractTrendsChart`, showing counts per status over time.
+- **Overlap with deferred Phase B (`4.md`):** This is a leaner version of the Agreement Archive — same idea, scoped to a single profile rather than pair snapshots. Doing Phase 7 first de-risks Phase B by surfacing storage + drift questions on a smaller surface.
+
+## Phase 8 — External Imports (research-heavy — split into sub-tasks)
+
+These are bigger than a single commit. Each needs its own design pass before code.
+
+- **BDSMtest meaningful use** — Currently we only link out. Brainstorm: scrape result percentages on paste? Map test archetypes (Master, Brat, etc.) → suggested kink defaults? Display alongside DNA bar? **Action: write a one-page exploration doc before coding.**
+- **FetLife kinks import** — No API. Options: (a) user pastes their fetish list text → tokenize → fuzzy-match against `lib/kinks.ts`; (b) screenshot OCR (heavy, defer). Start with (a).
+- **Dupe matching** — Build a `lib/kinkAliases.ts` of common alternative spellings/wordings so paste-import doesn't double-count.
+- **Identity-vs-dynamic split** — Some kinks describe the person ("voyeur identity"), not the scene ("voyeur play"). Add a `category: "identity"` flag in `lib/kinks.ts` and surface in a separate ProfileHero strip.
+
+## Phase 9 — PWA Install UX
+
+- Current toast is broken + visually basic. Rebuild as a bottom-sheet card matching app identity: soft entrance, clear "Installeer als app" header, single big-button CTA, dismissible. Non-invasive (no overlay), but readable by tech-illiterate users. Reuse `Toast.tsx` patterns.
+
+## Phase 10 — Brand Micro-polish
+
+- Logo underscore: subtle ambient animation (slow pulse / shimmer). The name itself stays static so the underscore reads as a status cursor, not motion clutter. Easy win; ship after the visual phases settle.
+
+---
+
+## Recommended Execution Order
+
+| Order | Phase | Why |
+|-------|-------|-----|
+| 1 | **Phase 1 — Critical Bugs** | Each fix is small, isolated, ships in hours. Clears the floor. |
+| 2 | **Phase 5 — Navigation Layout** | Touches `TopNav`, foundational for any chrome-related polish that follows. |
+| 3 | **Phase 2 — ProfileHero Polish v2** | Independent surface, mobile-portrait win. |
+| 4 | **Phase 4 — KinkRow Edit UI** | Same surface area as Phase 2, group the visual passes. |
+| 5 | **Phase 3 — Color System** | Cross-cuts DNA, KinkRow, Ledger — do once everything that consumes color is settled. |
+| 6 | **Phase 9 — PWA Install** | Independent. Slot in when other work blocks. |
+| 7 | **Phase 6 — Sharing Flow** | Largest UX win. Do after navigation is stable so import → home flow doesn't fight chrome. |
+| 8 | **Phase 7 — Profile Snapshots** | Foundational for Phase B (Agreement Archive). De-risks the deferred structural work. |
+| 9 | **Phase 8 — External Imports** | Research first, code second. No commits until exploration docs land. |
+| 10 | **Phase 10 — Logo polish** | Last. Pure delight, no dependencies. |
+
+---
+
+# v4 — Shipped to Production (Historical)
 
 ## Status (as of 2026-06-18)
 
@@ -10,7 +122,7 @@ The roadmap planning in this file (Items 2–5 sequencing) proved accurate. All 
 
 ---
 
-## Next Phase — Deferred Structural Work (from `4.md` sections B–D)
+## Deferred Structural Work (from `4.md` sections B–D)
 
 Per the original roadmap, Items B–D were deferred after v4 polish to avoid scope creep:
 
