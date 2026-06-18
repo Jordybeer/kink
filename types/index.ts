@@ -60,6 +60,7 @@ export interface SceneRecord {
   profileBName: string;
   items: SceneItem[];
   plannedDate?: string;
+  plannedTime?: string;
   safeword?: string;
   status: SceneStatus;
   createdAt: number;

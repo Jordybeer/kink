@@ -77,7 +77,7 @@ export default function SceneDetailPage() {
       </div>
 
       <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>
-        {scene.profileAName} &amp; {scene.profileBName} · {date}
+        {scene.profileAName} &amp; {scene.profileBName} · {date}{scene.plannedTime ? ` · ${scene.plannedTime}` : ""}
       </p>
 
       {scene.safeword && (

@@ -7,6 +7,8 @@ import { KINKS } from "@/lib/kinks";
 import type { Profile, SceneItem, ContractSnapshot } from "@/types";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
+import TimePicker from "@/components/TimePicker";
+import DurationStepper from "@/components/DurationStepper";
 
 function uid() {
   return crypto.randomUUID();
@@ -480,16 +482,9 @@ function SceneItemRow({
 
         <div className={`accordion-content ${detailsOpen && !reorderMode ? "open" : ""}`}>
           <div className="accordion-inner space-y-2 pt-2">
-            <div className="flex items-center gap-2">
-              <label className="text-xs flex-none" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
-              <input
-                type="text"
-                value={item.duration}
-                onChange={(e) => onUpdate(item.id, { duration: e.target.value })}
-                placeholder="~20 min"
-                className="flex-1 rounded-lg px-3 py-1.5 focus:outline-none focus-ring"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}
-              />
+            <div className="flex items-start gap-2">
+              <label className="text-xs flex-none pt-1" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
+              <DurationStepper value={item.duration} onChange={(v) => onUpdate(item.id, { duration: v })} />
             </div>
             <textarea
               rows={2}
@@ -549,6 +544,7 @@ function ScenePage() {
   const [sceneId, setSceneId] = useState<string | null>(sceneIdParam);
   const [items, setItems] = useState<SceneItem[]>([]);
   const [sceneDate, setSceneDate] = useState("");
+  const [sceneTime, setSceneTime] = useState("");
   const [sceneTitle, setSceneTitle] = useState("");
   const [newItemName, setNewItemName] = useState("");
   const [saved, setSaved] = useState(false);
@@ -572,6 +568,7 @@ function ScenePage() {
     if (!scene) return;
     setItems(scene.items);
     setSceneDate(scene.plannedDate ?? "");
+    setSceneTime(scene.plannedTime ?? "");
     setSceneTitle(scene.title);
     setSafeword(scene.safeword ?? "");
     setSaved(true);
@@ -661,6 +658,7 @@ function ScenePage() {
       profileBName: profileB.name,
       items,
       plannedDate: sceneDate || undefined,
+      plannedTime: sceneTime || undefined,
       safeword: safeword.trim() || undefined,
       status,
     });
@@ -797,13 +795,16 @@ function ScenePage() {
               </p>
             )}
           </div>
-          <input
-            type="date"
-            value={sceneDate}
-            onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
-            className="focus:outline-none focus-ring rounded-lg px-2"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
-          />
+          <div className="flex items-center gap-1.5 flex-none">
+            <input
+              type="date"
+              value={sceneDate}
+              onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
+              className="focus:outline-none focus-ring rounded-lg px-2"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
+            />
+            <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
+          </div>
         </div>
 
         {/* Profile hint */}

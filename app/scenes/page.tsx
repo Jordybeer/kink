@@ -61,7 +61,7 @@ function SceneCard({
           <p className="text-sm font-semibold">{scene.title}</p>
           <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
             {scene.profileAName} &amp; {scene.profileBName}
-            {!traffic && ` · ${date}`}
+            {!traffic && ` · ${date}${scene.plannedTime ? ` · ${scene.plannedTime}` : ""}`}
           </p>
         </div>
 
