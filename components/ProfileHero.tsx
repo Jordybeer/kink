@@ -178,7 +178,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
           </div>
 
           {/* DNA bar — promoted above pills */}
-          <div className="mt-5 mb-4">
+          <div className="mt-5 mb-4" style={{ minHeight: 52 }}>
             {dnaSegments.length === 0 ? (
               <>
                 <div

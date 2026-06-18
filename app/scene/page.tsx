@@ -156,10 +156,12 @@ function ContractGate({
   profiles,
   initialA,
   initialB,
+  contracts,
 }: {
   profiles: Profile[];
   initialA: string;
   initialB: string;
+  contracts: ContractSnapshot[];
 }) {
   const router = useRouter();
   const [entered, setEntered] = useState(false);
@@ -172,6 +174,7 @@ function ContractGate({
   }, []);
 
   const canProceed = selectedA && selectedB && selectedA !== selectedB;
+  const existingContract = canProceed ? contractForPair(contracts, selectedA, selectedB) : undefined;
   const contractHref = canProceed
     ? `/contract?a=${selectedA}&b=${selectedB}`
     : "/contract";
@@ -269,14 +272,24 @@ function ContractGate({
           />
         </div>
 
-        <button
-          onClick={() => router.push(contractHref)}
-          disabled={!canProceed}
-          className="w-full py-3 rounded-xl text-sm font-bold focus-ring disabled:opacity-40 mb-3"
-          style={{ background: "var(--accent)", color: "#000" }}
-        >
-          Contract opstellen
-        </button>
+        {existingContract ? (
+          <button
+            onClick={() => router.push(`/scene?a=${selectedA}&b=${selectedB}`)}
+            className="w-full py-3 rounded-xl text-sm font-bold focus-ring mb-3"
+            style={{ background: "var(--accent)", color: "#000" }}
+          >
+            Ga naar scène →
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push(contractHref)}
+            disabled={!canProceed}
+            className="w-full py-3 rounded-xl text-sm font-bold focus-ring disabled:opacity-40 mb-3"
+            style={{ background: "var(--accent)", color: "#000" }}
+          >
+            Contract opstellen
+          </button>
+        )}
 
         <button
           onClick={() => router.back()}
@@ -865,6 +878,7 @@ function ScenePage() {
           profiles={profiles}
           initialA={aId}
           initialB={bId}
+          contracts={contracts}
         />
       )}
 
