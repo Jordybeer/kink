@@ -612,67 +612,23 @@ function ScenePage() {
   }
 
   async function handleExport() {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a5" });
-    const W = 148;
-    const margin = 15;
-    let y = 18;
-
-    const dark: [number, number, number] = [20, 18, 28];
-    const accent: [number, number, number] = [192, 132, 252];
-    const muted: [number, number, number] = [120, 110, 160];
-    const light: [number, number, number] = [220, 215, 240];
-
-    doc.setFillColor(...dark);
-    doc.rect(0, 0, W, 210, "F");
-    doc.setTextColor(...accent);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    const title = sceneTitle.trim() || (profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène");
-    doc.text(title, margin, y);
-    y += 8;
-
-    if (sceneDate) {
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...muted);
-      doc.text(sceneDate, margin, y);
-      y += 7;
-    }
-
-    doc.setDrawColor(...accent);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y, W - margin, y);
-    y += 6;
-
-    for (const item of items) {
-      if (y > 185) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 210, "F"); y = 15; }
-      const ic: [number, number, number] = item.intensity === "zacht" ? [96, 165, 250] : item.intensity === "midden" ? [251, 146, 60] : [248, 113, 113];
-      doc.setFillColor(...ic);
-      doc.roundedRect(margin, y - 3.5, 3, 3, 0.5, 0.5, "F");
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...light);
-      doc.text(item.name, margin + 5, y);
-      if (item.duration) {
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...muted);
-        doc.text(item.duration, W - margin, y, { align: "right" });
-      }
-      y += 5;
-      if (item.note) {
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "italic");
-        doc.setTextColor(...muted);
-        const lines = doc.splitTextToSize(item.note, W - margin * 2 - 5) as string[];
-        doc.text(lines, margin + 5, y);
-        y += lines.length * 4 + 1;
-      }
-      y += 3;
-    }
-
-    try { doc.save(`scene-${(sceneTitle || "menu").replace(/\s+/g, "-").toLowerCase()}.pdf`); } catch { /* niet fataal */ }
+    const { exportScenePdf } = await import("@/lib/scenePdf");
+    const scene = {
+      id: sceneId ?? "draft",
+      title: sceneTitle.trim(),
+      profileAId: profileA?.id ?? "",
+      profileBId: profileB?.id ?? "",
+      profileAName: profileA?.name ?? "",
+      profileBName: profileB?.name ?? "",
+      items,
+      plannedDate: sceneDate || undefined,
+      plannedTime: sceneTime || undefined,
+      safeword: safeword.trim() || undefined,
+      status: "draft" as const,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    await exportScenePdf(scene, { profileA, profileB });
   }
 
   if (!_hasHydrated) return <PageShell loading width="2xl" flush />;

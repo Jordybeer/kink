@@ -48,6 +48,11 @@ export default function SceneDetailPage() {
   const aftercare = scene.aftercare;
   const traffic = aftercare ? TRAFFIC[aftercare.trafficLight] : null;
 
+  async function handleExportPdf() {
+    const { exportScenePdf } = await import("@/lib/scenePdf");
+    await exportScenePdf(scene!);
+  }
+
   const date = aftercare
     ? new Date(aftercare.completedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
     : scene.plannedDate
@@ -218,6 +223,15 @@ export default function SceneDetailPage() {
           >
             ▶ Spelen
           </Link>
+        )}
+        {scene.status === "completed" && (
+          <button
+            onClick={handleExportPdf}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-semibold"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            Export PDF
+          </button>
         )}
         {!confirmDelete ? (
           <button
