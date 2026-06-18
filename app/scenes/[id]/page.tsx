@@ -220,29 +220,29 @@ export default function SceneDetailPage() {
 
         <div className="flex items-center gap-4 text-sm" style={{ color: "var(--accent)" }}>
           {scene.status === "completed" && (
-            <button onClick={handleExportPdf} className="focus-ring rounded">
+            <button onClick={handleExportPdf} className="focus-ring rounded px-2 py-1">
               Exporteer PDF
             </button>
           )}
-          <Link href={`/scene?id=${scene.id}`} className="focus-ring rounded" style={{ color: "var(--accent)" }}>
+          <Link href={`/scene?id=${scene.id}`} className="focus-ring rounded px-2 py-1" style={{ color: "var(--accent)" }}>
             Bewerken
           </Link>
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="focus-ring rounded ml-auto"
+              className="focus-ring rounded ml-auto px-2 py-1"
               style={{ color: "var(--text2)" }}
             >
               Verwijderen
             </button>
           ) : (
             <div className="ml-auto flex items-center gap-3">
-              <button onClick={() => setConfirmDelete(false)} className="focus-ring rounded text-xs" style={{ color: "var(--text2)" }}>
+              <button onClick={() => setConfirmDelete(false)} className="focus-ring rounded text-xs px-2 py-1" style={{ color: "var(--text2)" }}>
                 Annuleren
               </button>
               <button
                 onClick={() => { deleteScene(scene.id); router.push("/scenes"); }}
-                className="focus-ring rounded text-xs font-bold"
+                className="focus-ring rounded text-xs font-bold px-2 py-1"
                 style={{ color: "var(--hard-no)" }}
               >
                 Definitief verwijderen
