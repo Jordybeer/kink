@@ -9,6 +9,8 @@ import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { moveUp, moveDown } from "@/lib/sceneOrder";
 
 function uid() {
   return crypto.randomUUID();
@@ -334,26 +336,18 @@ function intensityColor(v: SceneItem["intensity"]) {
 interface SceneItemRowProps {
   item: SceneItem;
   index: number;
-  reorderMode: boolean;
   totalItems: number;
   onUpdate: (id: string, patch: Partial<SceneItem>) => void;
   onDelete: (id: string) => void;
   onMoveUp: (i: number) => void;
   onMoveDown: (i: number) => void;
-  longPressHandlers: (index: number) => {
-    onPointerDown: (e: React.PointerEvent) => void;
-    onPointerUp: () => void;
-    onPointerLeave: () => void;
-  };
 }
 
 function SceneItemRow({
-  item, index, reorderMode, totalItems,
+  item, index, totalItems,
   onUpdate, onDelete, onMoveUp, onMoveDown,
-  longPressHandlers,
 }: SceneItemRowProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const lph = longPressHandlers(index);
   const color = intensityColor(item.intensity);
 
   return (
@@ -372,21 +366,6 @@ function SceneItemRow({
 
       <div className="flex-1 min-w-0 p-3">
         <div className="flex items-center gap-2 mb-2">
-          {!reorderMode && (
-            <button
-              {...lph}
-              aria-label="Ingedrukt houden om te herordenen"
-              className="flex-none focus-ring rounded p-1 touch-manipulation"
-              style={{ color: "var(--text2)", minWidth: 28, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              <svg width="12" height="16" viewBox="0 0 12 16" fill="none" aria-hidden="true">
-                <rect y="1"  width="12" height="2" rx="1" fill="currentColor"/>
-                <rect y="7"  width="12" height="2" rx="1" fill="currentColor"/>
-                <rect y="13" width="12" height="2" rx="1" fill="currentColor"/>
-              </svg>
-            </button>
-          )}
-
           <div className="flex-1 min-w-0">
             <span className="text-sm font-medium block truncate" style={{ color: "var(--text)" }}>
               {item.name}
@@ -406,32 +385,25 @@ function SceneItemRow({
             )}
           </div>
 
-          {reorderMode ? (
-            <div className="flex gap-1">
-              <button
-                onClick={() => onMoveUp(index)}
-                disabled={index === 0}
-                aria-label="Omhoog"
-                className="focus-ring rounded-lg disabled:opacity-30"
-                style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", color: "var(--text2)" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M7 11V3M3 7l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button
-                onClick={() => onMoveDown(index)}
-                disabled={index === totalItems - 1}
-                aria-label="Omlaag"
-                className="focus-ring rounded-lg disabled:opacity-30"
-                style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", color: "var(--text2)" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M7 3v8M3 7l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          ) : (
+          <div className="flex gap-0.5">
+            <button
+              onClick={() => onMoveUp(index)}
+              disabled={index === 0}
+              aria-label="Naar boven verplaatsen"
+              className="focus-ring rounded-lg disabled:opacity-30"
+              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
+            >
+              <ChevronUp size={16} aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => onMoveDown(index)}
+              disabled={index === totalItems - 1}
+              aria-label="Naar beneden verplaatsen"
+              className="focus-ring rounded-lg disabled:opacity-30"
+              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
+            >
+              <ChevronDown size={16} aria-hidden="true" />
+            </button>
             <button
               onClick={() => onDelete(item.id)}
               aria-label={`${item.name} verwijderen`}
@@ -442,11 +414,10 @@ function SceneItemRow({
                 <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </button>
-          )}
+          </div>
         </div>
 
-        {!reorderMode && (
-          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+        <div className="flex items-center gap-1.5 flex-wrap mb-1">
             {(["zacht", "midden", "intens"] as const).map((v) => {
               const active = item.intensity === v;
               const c = intensityColor(v);
@@ -478,9 +449,8 @@ function SceneItemRow({
               {detailsOpen ? "Minder" : "Details"}
             </button>
           </div>
-        )}
 
-        <div className={`accordion-content ${detailsOpen && !reorderMode ? "open" : ""}`}>
+        <div className={`accordion-content ${detailsOpen ? "open" : ""}`}>
           <div className="accordion-inner space-y-2 pt-2">
             <div className="flex items-start gap-2">
               <label className="text-xs flex-none pt-1" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
@@ -551,10 +521,7 @@ function ScenePage() {
   const [savedStatus, setSavedStatus] = useState<"draft" | "planned" | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [safeword, setSafeword] = useState("");
-  const [reorderMode, setReorderMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resolvedAId = sceneId ? (scenes.find((s) => s.id === sceneId)?.profileAId ?? aId) : aId;
   const resolvedBId = sceneId ? (scenes.find((s) => s.id === sceneId)?.profileBId ?? bId) : bId;
@@ -594,39 +561,15 @@ function ScenePage() {
   }, []);
 
   const handleMoveUp = useCallback((i: number) => {
-    if (i === 0) return;
-    setItems((prev) => {
-      const next = [...prev];
-      [next[i - 1], next[i]] = [next[i], next[i - 1]];
-      return next;
-    });
+    setItems((prev) => moveUp(prev, i));
     setSaved(false); setSavedStatus(null);
   }, []);
 
   const handleMoveDown = useCallback((i: number) => {
-    setItems((prev) => {
-      if (i >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[i], next[i + 1]] = [next[i + 1], next[i]];
-      return next;
-    });
+    setItems((prev) => moveDown(prev, i));
     setSaved(false); setSavedStatus(null);
   }, []);
 
-  const longPressHandlers = useCallback((index: number) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      longPressTimer.current = setTimeout(() => {
-        setReorderMode(true);
-      }, 300);
-    },
-    onPointerUp: () => {
-      if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    },
-    onPointerLeave: () => {
-      if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    },
-  }), []);
 
   function addFromKink(kinkName: string, kinkId: string) {
     const tags = [...new Set([...(profileA?.entries[kinkId]?.tags ?? []), ...(profileB?.entries[kinkId]?.tags ?? [])])];
@@ -829,7 +772,7 @@ function ScenePage() {
         </div>
 
         {/* + Kinks trigger (replaces manual input in scroll area) */}
-        {hasKinks && !reorderMode && !isCompleted && (
+        {hasKinks && !isCompleted && (
           <button
             onClick={() => setDrawerOpen(true)}
             className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl mb-4 focus-ring"
@@ -852,19 +795,6 @@ function ScenePage() {
           <SceneArcBar items={items} />
         </div>
 
-        {/* Reorder mode banner */}
-        {reorderMode && (
-          <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-xl ks-slide-up" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", border: "1px solid var(--border-accent)" }}>
-            <span className="text-xs font-medium" style={{ color: "var(--accent)" }}>Herordenen</span>
-            <button
-              onClick={() => setReorderMode(false)}
-              className="text-xs font-bold focus-ring rounded-lg px-3 py-1"
-              style={{ background: "var(--accent)", color: "#000", minHeight: 32 }}
-            >
-              Klaar
-            </button>
-          </div>
-        )}
 
         {/* Items list */}
         <div className="flex-1">
@@ -889,13 +819,11 @@ function ScenePage() {
                   key={item.id}
                   item={item}
                   index={i}
-                  reorderMode={reorderMode}
                   totalItems={items.length}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
                   onMoveUp={handleMoveUp}
                   onMoveDown={handleMoveDown}
-                  longPressHandlers={longPressHandlers}
                 />
               ))}
             </div>
@@ -917,8 +845,8 @@ function ScenePage() {
         )}
         <div className="max-w-2xl mx-auto flex gap-2">
 
-          {/* Manual add — flex-1, hidden in reorder/completed */}
-          {!isCompleted && !reorderMode && (
+          {/* Manual add — hidden when completed */}
+          {!isCompleted && (
             <>
               <input
                 type="text"
