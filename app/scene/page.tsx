@@ -7,6 +7,10 @@ import { KINKS } from "@/lib/kinks";
 import type { Profile, SceneItem, ContractSnapshot } from "@/types";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
+import TimePicker from "@/components/TimePicker";
+import DurationStepper from "@/components/DurationStepper";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { moveUp, moveDown } from "@/lib/sceneOrder";
 
 function uid() {
   return crypto.randomUUID();
@@ -332,26 +336,18 @@ function intensityColor(v: SceneItem["intensity"]) {
 interface SceneItemRowProps {
   item: SceneItem;
   index: number;
-  reorderMode: boolean;
   totalItems: number;
   onUpdate: (id: string, patch: Partial<SceneItem>) => void;
   onDelete: (id: string) => void;
   onMoveUp: (i: number) => void;
   onMoveDown: (i: number) => void;
-  longPressHandlers: (index: number) => {
-    onPointerDown: (e: React.PointerEvent) => void;
-    onPointerUp: () => void;
-    onPointerLeave: () => void;
-  };
 }
 
 function SceneItemRow({
-  item, index, reorderMode, totalItems,
+  item, index, totalItems,
   onUpdate, onDelete, onMoveUp, onMoveDown,
-  longPressHandlers,
 }: SceneItemRowProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const lph = longPressHandlers(index);
   const color = intensityColor(item.intensity);
 
   return (
@@ -370,21 +366,6 @@ function SceneItemRow({
 
       <div className="flex-1 min-w-0 p-3">
         <div className="flex items-center gap-2 mb-2">
-          {!reorderMode && (
-            <button
-              {...lph}
-              aria-label="Ingedrukt houden om te herordenen"
-              className="flex-none focus-ring rounded p-1 touch-manipulation"
-              style={{ color: "var(--text2)", minWidth: 28, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              <svg width="12" height="16" viewBox="0 0 12 16" fill="none" aria-hidden="true">
-                <rect y="1"  width="12" height="2" rx="1" fill="currentColor"/>
-                <rect y="7"  width="12" height="2" rx="1" fill="currentColor"/>
-                <rect y="13" width="12" height="2" rx="1" fill="currentColor"/>
-              </svg>
-            </button>
-          )}
-
           <div className="flex-1 min-w-0">
             <span className="text-sm font-medium block truncate" style={{ color: "var(--text)" }}>
               {item.name}
@@ -404,32 +385,25 @@ function SceneItemRow({
             )}
           </div>
 
-          {reorderMode ? (
-            <div className="flex gap-1">
-              <button
-                onClick={() => onMoveUp(index)}
-                disabled={index === 0}
-                aria-label="Omhoog"
-                className="focus-ring rounded-lg disabled:opacity-30"
-                style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", color: "var(--text2)" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M7 11V3M3 7l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button
-                onClick={() => onMoveDown(index)}
-                disabled={index === totalItems - 1}
-                aria-label="Omlaag"
-                className="focus-ring rounded-lg disabled:opacity-30"
-                style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", color: "var(--text2)" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M7 3v8M3 7l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          ) : (
+          <div className="flex gap-0.5">
+            <button
+              onClick={() => onMoveUp(index)}
+              disabled={index === 0}
+              aria-label="Naar boven verplaatsen"
+              className="focus-ring rounded-lg disabled:opacity-30"
+              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
+            >
+              <ChevronUp size={16} aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => onMoveDown(index)}
+              disabled={index === totalItems - 1}
+              aria-label="Naar beneden verplaatsen"
+              className="focus-ring rounded-lg disabled:opacity-30"
+              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
+            >
+              <ChevronDown size={16} aria-hidden="true" />
+            </button>
             <button
               onClick={() => onDelete(item.id)}
               aria-label={`${item.name} verwijderen`}
@@ -440,11 +414,10 @@ function SceneItemRow({
                 <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </button>
-          )}
+          </div>
         </div>
 
-        {!reorderMode && (
-          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+        <div className="flex items-center gap-1.5 flex-wrap mb-1">
             {(["zacht", "midden", "intens"] as const).map((v) => {
               const active = item.intensity === v;
               const c = intensityColor(v);
@@ -476,20 +449,12 @@ function SceneItemRow({
               {detailsOpen ? "Minder" : "Details"}
             </button>
           </div>
-        )}
 
-        <div className={`accordion-content ${detailsOpen && !reorderMode ? "open" : ""}`}>
+        <div className={`accordion-content ${detailsOpen ? "open" : ""}`}>
           <div className="accordion-inner space-y-2 pt-2">
-            <div className="flex items-center gap-2">
-              <label className="text-xs flex-none" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
-              <input
-                type="text"
-                value={item.duration}
-                onChange={(e) => onUpdate(item.id, { duration: e.target.value })}
-                placeholder="~20 min"
-                className="flex-1 rounded-lg px-3 py-1.5 focus:outline-none focus-ring"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}
-              />
+            <div className="flex items-start gap-2">
+              <label className="text-xs flex-none pt-1" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
+              <DurationStepper value={item.duration} onChange={(v) => onUpdate(item.id, { duration: v })} />
             </div>
             <textarea
               rows={2}
@@ -549,16 +514,14 @@ function ScenePage() {
   const [sceneId, setSceneId] = useState<string | null>(sceneIdParam);
   const [items, setItems] = useState<SceneItem[]>([]);
   const [sceneDate, setSceneDate] = useState("");
+  const [sceneTime, setSceneTime] = useState("");
   const [sceneTitle, setSceneTitle] = useState("");
   const [newItemName, setNewItemName] = useState("");
   const [saved, setSaved] = useState(false);
   const [savedStatus, setSavedStatus] = useState<"draft" | "planned" | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [safeword, setSafeword] = useState("");
-  const [reorderMode, setReorderMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resolvedAId = sceneId ? (scenes.find((s) => s.id === sceneId)?.profileAId ?? aId) : aId;
   const resolvedBId = sceneId ? (scenes.find((s) => s.id === sceneId)?.profileBId ?? bId) : bId;
@@ -572,6 +535,7 @@ function ScenePage() {
     if (!scene) return;
     setItems(scene.items);
     setSceneDate(scene.plannedDate ?? "");
+    setSceneTime(scene.plannedTime ?? "");
     setSceneTitle(scene.title);
     setSafeword(scene.safeword ?? "");
     setSaved(true);
@@ -597,39 +561,15 @@ function ScenePage() {
   }, []);
 
   const handleMoveUp = useCallback((i: number) => {
-    if (i === 0) return;
-    setItems((prev) => {
-      const next = [...prev];
-      [next[i - 1], next[i]] = [next[i], next[i - 1]];
-      return next;
-    });
+    setItems((prev) => moveUp(prev, i));
     setSaved(false); setSavedStatus(null);
   }, []);
 
   const handleMoveDown = useCallback((i: number) => {
-    setItems((prev) => {
-      if (i >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[i], next[i + 1]] = [next[i + 1], next[i]];
-      return next;
-    });
+    setItems((prev) => moveDown(prev, i));
     setSaved(false); setSavedStatus(null);
   }, []);
 
-  const longPressHandlers = useCallback((index: number) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      longPressTimer.current = setTimeout(() => {
-        setReorderMode(true);
-      }, 300);
-    },
-    onPointerUp: () => {
-      if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    },
-    onPointerLeave: () => {
-      if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    },
-  }), []);
 
   function addFromKink(kinkName: string, kinkId: string) {
     const tags = [...new Set([...(profileA?.entries[kinkId]?.tags ?? []), ...(profileB?.entries[kinkId]?.tags ?? [])])];
@@ -661,6 +601,7 @@ function ScenePage() {
       profileBName: profileB.name,
       items,
       plannedDate: sceneDate || undefined,
+      plannedTime: sceneTime || undefined,
       safeword: safeword.trim() || undefined,
       status,
     });
@@ -671,67 +612,23 @@ function ScenePage() {
   }
 
   async function handleExport() {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a5" });
-    const W = 148;
-    const margin = 15;
-    let y = 18;
-
-    const dark: [number, number, number] = [20, 18, 28];
-    const accent: [number, number, number] = [192, 132, 252];
-    const muted: [number, number, number] = [120, 110, 160];
-    const light: [number, number, number] = [220, 215, 240];
-
-    doc.setFillColor(...dark);
-    doc.rect(0, 0, W, 210, "F");
-    doc.setTextColor(...accent);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    const title = sceneTitle.trim() || (profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène");
-    doc.text(title, margin, y);
-    y += 8;
-
-    if (sceneDate) {
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...muted);
-      doc.text(sceneDate, margin, y);
-      y += 7;
-    }
-
-    doc.setDrawColor(...accent);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y, W - margin, y);
-    y += 6;
-
-    for (const item of items) {
-      if (y > 185) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 210, "F"); y = 15; }
-      const ic: [number, number, number] = item.intensity === "zacht" ? [96, 165, 250] : item.intensity === "midden" ? [251, 146, 60] : [248, 113, 113];
-      doc.setFillColor(...ic);
-      doc.roundedRect(margin, y - 3.5, 3, 3, 0.5, 0.5, "F");
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...light);
-      doc.text(item.name, margin + 5, y);
-      if (item.duration) {
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...muted);
-        doc.text(item.duration, W - margin, y, { align: "right" });
-      }
-      y += 5;
-      if (item.note) {
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "italic");
-        doc.setTextColor(...muted);
-        const lines = doc.splitTextToSize(item.note, W - margin * 2 - 5) as string[];
-        doc.text(lines, margin + 5, y);
-        y += lines.length * 4 + 1;
-      }
-      y += 3;
-    }
-
-    try { doc.save(`scene-${(sceneTitle || "menu").replace(/\s+/g, "-").toLowerCase()}.pdf`); } catch { /* niet fataal */ }
+    const { exportScenePdf } = await import("@/lib/scenePdf");
+    const scene = {
+      id: sceneId ?? "draft",
+      title: sceneTitle.trim(),
+      profileAId: profileA?.id ?? "",
+      profileBId: profileB?.id ?? "",
+      profileAName: profileA?.name ?? "",
+      profileBName: profileB?.name ?? "",
+      items,
+      plannedDate: sceneDate || undefined,
+      plannedTime: sceneTime || undefined,
+      safeword: safeword.trim() || undefined,
+      status: "draft" as const,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    await exportScenePdf(scene, { profileA, profileB });
   }
 
   if (!_hasHydrated) return <PageShell loading width="2xl" flush />;
@@ -797,13 +694,16 @@ function ScenePage() {
               </p>
             )}
           </div>
-          <input
-            type="date"
-            value={sceneDate}
-            onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
-            className="focus:outline-none focus-ring rounded-lg px-2"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
-          />
+          <div className="flex items-center gap-1.5 flex-none">
+            <input
+              type="date"
+              value={sceneDate}
+              onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
+              className="focus:outline-none focus-ring rounded-lg px-2"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
+            />
+            <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
+          </div>
         </div>
 
         {/* Profile hint */}
@@ -828,7 +728,7 @@ function ScenePage() {
         </div>
 
         {/* + Kinks trigger (replaces manual input in scroll area) */}
-        {hasKinks && !reorderMode && !isCompleted && (
+        {hasKinks && !isCompleted && (
           <button
             onClick={() => setDrawerOpen(true)}
             className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl mb-4 focus-ring"
@@ -851,19 +751,6 @@ function ScenePage() {
           <SceneArcBar items={items} />
         </div>
 
-        {/* Reorder mode banner */}
-        {reorderMode && (
-          <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-xl ks-slide-up" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", border: "1px solid var(--border-accent)" }}>
-            <span className="text-xs font-medium" style={{ color: "var(--accent)" }}>Herordenen</span>
-            <button
-              onClick={() => setReorderMode(false)}
-              className="text-xs font-bold focus-ring rounded-lg px-3 py-1"
-              style={{ background: "var(--accent)", color: "#000", minHeight: 32 }}
-            >
-              Klaar
-            </button>
-          </div>
-        )}
 
         {/* Items list */}
         <div className="flex-1">
@@ -888,13 +775,11 @@ function ScenePage() {
                   key={item.id}
                   item={item}
                   index={i}
-                  reorderMode={reorderMode}
                   totalItems={items.length}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
                   onMoveUp={handleMoveUp}
                   onMoveDown={handleMoveDown}
-                  longPressHandlers={longPressHandlers}
                 />
               ))}
             </div>
@@ -916,8 +801,8 @@ function ScenePage() {
         )}
         <div className="max-w-2xl mx-auto flex gap-2">
 
-          {/* Manual add — flex-1, hidden in reorder/completed */}
-          {!isCompleted && !reorderMode && (
+          {/* Manual add — hidden when completed */}
+          {!isCompleted && (
             <>
               <input
                 type="text"

@@ -55,4 +55,11 @@ describe("CompatibilityTimeline filtering", () => {
     expect(result[0].id).toBe("1");
     expect(result[result.length - 1].id).toBe("5");
   });
+
+  it("log view sorts newest first (descending)", () => {
+    const result = filterByPair(snapshots, "a1", "b1", "Alice", "Bob")
+      .sort((a, b) => b.date - a.date);
+    expect(result[0].id).toBe("5");
+    expect(result[result.length - 1].id).toBe("1");
+  });
 });

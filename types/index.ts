@@ -60,6 +60,7 @@ export interface SceneRecord {
   profileBName: string;
   items: SceneItem[];
   plannedDate?: string;
+  plannedTime?: string;
   safeword?: string;
   status: SceneStatus;
   createdAt: number;
@@ -92,6 +93,7 @@ export interface Profile {
   avatarDataUrl?: string;
   isImported?: boolean;
   origin?: "own" | "shared";
+  lockedAt?: number;
   experienceLevel: ExperienceLevel;
   customKinks: CustomKink[];
   createdAt: number;

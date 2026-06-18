@@ -52,10 +52,12 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
                 key={value}
                 onClick={() => setLight(value)}
                 aria-pressed={light === value}
-                className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all focus-ring"
-                style={light === value
-                  ? { borderColor: color, background: `color-mix(in srgb, ${color} 12%, transparent)` }
-                  : { borderColor: "var(--border)", background: "transparent" }}
+                className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all focus-ring"
+                style={{
+                  minHeight: 80,
+                  borderColor: light === value ? color : "var(--border)",
+                  background: light === value ? `color-mix(in srgb, ${color} 12%, transparent)` : "transparent"
+                }}
               >
                 <span className="text-2xl">{emoji}</span>
                 <span className="text-xs" style={{ color: light === value ? "var(--text)" : "var(--text2)" }}>{label}</span>

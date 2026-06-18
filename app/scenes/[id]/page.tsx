@@ -8,11 +8,12 @@ import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
 import EmptyState from "@/components/EmptyState";
 import PageShell from "@/components/PageShell";
+import SafewordRibbon from "@/components/SafewordRibbon";
 
 const TRAFFIC = {
-  green: { emoji: "🟢", label: "Geweldig",    color: "var(--yes)"     },
-  amber: { emoji: "🟡", label: "Goed, maar…", color: "var(--maybe)"   },
-  red:   { emoji: "🔴", label: "Zwaar",        color: "var(--hard-no)" },
+  green: { label: "Geweldig",    color: "var(--yes)"     },
+  amber: { label: "Goed, maar…", color: "var(--maybe)"   },
+  red:   { label: "Zwaar",       color: "var(--hard-no)" },
 };
 
 function intensityColor(v: "zacht" | "midden" | "intens") {
@@ -48,6 +49,11 @@ export default function SceneDetailPage() {
   const aftercare = scene.aftercare;
   const traffic = aftercare ? TRAFFIC[aftercare.trafficLight] : null;
 
+  async function handleExportPdf() {
+    const { exportScenePdf } = await import("@/lib/scenePdf");
+    await exportScenePdf(scene!);
+  }
+
   const date = aftercare
     ? new Date(aftercare.completedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
     : scene.plannedDate
@@ -63,29 +69,20 @@ export default function SceneDetailPage() {
     <PageShell width="2xl">
 
       {/* Header */}
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-lg font-bold flex-1 truncate">{scene.title}</h1>
-        {scene.status !== "completed" && (
-          <Link
-            href={`/scene?id=${scene.id}`}
-            className="text-xs px-3 py-2 rounded-lg focus-ring flex-none"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", minHeight: 44, display: "flex", alignItems: "center" }}
-          >
-            ✎ Bewerken
-          </Link>
-        )}
-      </div>
-
-      <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>
-        {scene.profileAName} &amp; {scene.profileBName} · {date}
+      <h1
+        className="text-3xl mb-1"
+        style={{ fontFamily: "var(--font-display)", fontStyle: "italic" }}
+      >
+        {scene.title}
+      </h1>
+      <p className="text-[11px] uppercase tracking-[0.15em] mb-0.5" style={{ color: "var(--text2)" }}>
+        {scene.profileAName} — {scene.profileBName}
+      </p>
+      <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>
+        {date}{scene.plannedTime ? ` · ${scene.plannedTime}` : ""}
       </p>
 
-      {scene.safeword && (
-        <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-lg" style={{ background: "color-mix(in srgb, var(--hard-no) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 30%, transparent)" }}>
-          <span className="text-xs font-bold uppercase tracking-widest flex-none" style={{ color: "var(--hard-no)" }}>Safeword</span>
-          <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>{scene.safeword}</span>
-        </div>
-      )}
+      <SafewordRibbon safeword={scene.safeword} />
 
       {/* Aftercare block */}
       {aftercare && traffic ? (
@@ -101,13 +98,12 @@ export default function SceneDetailPage() {
             </button>
           </div>
 
-          <div className="rounded-xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="rounded overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             {/* Traffic light header */}
             <div
               className="flex items-center gap-3 px-4 py-3"
               style={{ background: `color-mix(in srgb, ${traffic.color} 8%, transparent)`, borderBottom: "1px solid var(--border)" }}
             >
-              <span className="text-2xl" aria-hidden="true">{traffic.emoji}</span>
               <div>
                 <p className="text-sm font-semibold" style={{ color: traffic.color }}>{traffic.label}</p>
                 <p className="text-xs" style={{ color: "var(--text2)" }}>
@@ -166,14 +162,19 @@ export default function SceneDetailPage() {
       {/* Activiteiten */}
       {scene.items.length > 0 && (
         <section className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text2)" }}>Activiteiten</h2>
-            <div className="flex gap-1.5">
-              {counts.zacht > 0  && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--willing) 15%, transparent)", color: "var(--willing)" }}>{counts.zacht}× zacht</span>}
-              {counts.midden > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--maybe) 15%, transparent)", color: "var(--maybe)" }}>{counts.midden}× midden</span>}
-              {counts.intens > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--hard-no) 15%, transparent)", color: "var(--hard-no)" }}>{counts.intens}× intens</span>}
-            </div>
-          </div>
+          <h2 className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>Setlist</h2>
+          {(() => {
+            const total = scene.items.length;
+            const parts: string[] = [];
+            if (counts.zacht  > 0) parts.push(`${counts.zacht} zacht`);
+            if (counts.midden > 0) parts.push(`${counts.midden} midden`);
+            if (counts.intens > 0) parts.push(`${counts.intens} intens`);
+            return (
+              <p className="text-xs italic mb-3" style={{ color: "var(--text2)" }}>
+                {parts.join(" · ")} — {total} in totaal
+              </p>
+            );
+          })()}
           <div className="flex flex-col gap-1.5">
             {scene.items.map((item) => (
               <div
@@ -210,46 +211,45 @@ export default function SceneDetailPage() {
       )}
 
       {/* Actions */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4 mt-2">
         {scene.status !== "completed" && (
-          <Link
-            href={`/scene?id=${scene.id}`}
-            className="btn-accent focus-ring w-full text-center"
-          >
+          <Link href={`/scene?id=${scene.id}`} className="btn-accent focus-ring w-full text-center">
             ▶ Spelen
           </Link>
         )}
-        {!confirmDelete ? (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="w-full py-3 rounded-xl text-sm focus-ring"
-            style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
-          >
-            Verwijderen
-          </button>
-        ) : (
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--hard-no)" }}>
-            <p className="text-xs text-center py-2 px-4" style={{ color: "var(--text2)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}>
-              Scène definitief verwijderen?
-            </p>
-            <div className="flex">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-3 text-sm focus-ring"
-                style={{ color: "var(--text2)", borderRight: "1px solid var(--border)" }}
-              >
+
+        <div className="flex items-center gap-4 text-sm" style={{ color: "var(--accent)" }}>
+          {scene.status === "completed" && (
+            <button onClick={handleExportPdf} className="focus-ring rounded px-2 py-1">
+              Exporteer PDF
+            </button>
+          )}
+          <Link href={`/scene?id=${scene.id}`} className="focus-ring rounded px-2 py-1" style={{ color: "var(--accent)" }}>
+            Bewerken
+          </Link>
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="focus-ring rounded ml-auto px-2 py-1"
+              style={{ color: "var(--text2)" }}
+            >
+              Verwijderen
+            </button>
+          ) : (
+            <div className="ml-auto flex items-center gap-3">
+              <button onClick={() => setConfirmDelete(false)} className="focus-ring rounded text-xs px-2 py-1" style={{ color: "var(--text2)" }}>
                 Annuleren
               </button>
               <button
                 onClick={() => { deleteScene(scene.id); router.push("/scenes"); }}
-                className="flex-1 py-3 text-sm font-bold focus-ring"
+                className="focus-ring rounded text-xs font-bold px-2 py-1"
                 style={{ color: "var(--hard-no)" }}
               >
-                Verwijderen
+                Definitief verwijderen
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Aftercare sheet */}

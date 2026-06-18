@@ -78,4 +78,9 @@ describe("isConflict", () => {
   it("unrated entry is not a conflict", () => {
     expect(isConflict(e({ status: "yes" }), e())).toBe(false);
   });
+
+  it("willing + willing is a soft limit, not a conflict", () => {
+    // willing+willing → kind "soft", must not show as conflict in the compare page row display
+    expect(isConflict(e({ status: "willing" }), e({ status: "willing" }))).toBe(false);
+  });
 });

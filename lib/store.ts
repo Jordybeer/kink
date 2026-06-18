@@ -7,7 +7,7 @@ function uid() {
   return crypto.randomUUID();
 }
 
-type Theme = "midnight" | "red" | "forest" | "mono";
+type Theme = "midnight" | "red" | "forest" | "mono" | "ledger";
 
 interface State {
   profiles: Profile[];

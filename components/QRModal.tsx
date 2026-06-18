@@ -10,6 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
+// encodes one Profile per QR; subprofiles are exported individually
 export default function QRModal({ profile, onClose }: Props) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

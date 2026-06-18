@@ -15,6 +15,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
+import { getProfileType } from "@/lib/profileType";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -34,7 +35,7 @@ interface Props {
 export default function ProfilePage({ params }: Props) {
   const t = useMotionSafe();
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour, pinnedProfileId } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
   const roleDirection = categorizeRole(profile?.role ?? "");
@@ -379,11 +380,13 @@ export default function ProfilePage({ params }: Props) {
         maxLevel={maxLevel}
         onShare={isShared ? undefined : () => setShareOpen(true)}
         onEdit={isShared ? undefined : handleStartEdit}
+        onViewKinks={isShared ? undefined : () => setActiveTab("bewerken")}
         onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
         onError={(msg) => {
           setErrorMessage(msg);
           setTimeout(() => setErrorMessage(null), 5000);
         }}
+        profileType={getProfileType(profile, pinnedProfileId)}
       />
 
       {/* Tab bar — own profiles only */}

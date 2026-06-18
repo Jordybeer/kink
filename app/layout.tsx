@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import TopNav from "@/components/TopNav";
@@ -9,6 +9,12 @@ import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["300", "400"],
+  style: ["normal", "italic"],
+});
 
 export const metadata: Metadata = {
   title: "KinkSync — BDSM contract builder",
@@ -26,7 +32,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl" data-theme="midnight" className={`h-full ${dmSans.variable}`}>
+    <html lang="nl" data-theme="midnight" className={`h-full ${dmSans.variable} ${cormorant.variable}`}>
       <head>
         {/* Synchronous capture of beforeinstallprompt — must run before any module.
             useEffect (post-hydration) is too late on fast devices. */}
