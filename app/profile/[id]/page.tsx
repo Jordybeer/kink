@@ -375,33 +375,38 @@ export default function ProfilePage({ params }: Props) {
       </div>
 
       <h1 className="sr-only">{profile.name}</h1>
-      <ProfileHero
-        profile={profile}
-        maxLevel={maxLevel}
-        onShare={isShared ? undefined : () => setShareOpen(true)}
-        onEdit={isShared ? undefined : handleStartEdit}
-        onViewKinks={isShared ? undefined : () => setActiveTab("bewerken")}
-        onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
-        onError={(msg) => {
-          setErrorMessage(msg);
-          setTimeout(() => setErrorMessage(null), 5000);
-        }}
-        profileType={getProfileType(profile, pinnedProfileId)}
-      />
+      <div style={{ opacity: effectiveTab === "bewerken" ? 0.7 : 1, transition: "opacity 220ms ease" }}>
+        <ProfileHero
+          profile={profile}
+          maxLevel={maxLevel}
+          onShare={isShared ? undefined : () => setShareOpen(true)}
+          onEdit={isShared ? undefined : handleStartEdit}
+          onViewKinks={isShared ? undefined : () => setActiveTab("bewerken")}
+          onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
+          onError={(msg) => {
+            setErrorMessage(msg);
+            setTimeout(() => setErrorMessage(null), 5000);
+          }}
+          profileType={getProfileType(profile, pinnedProfileId)}
+        />
+      </div>
 
       {/* Tab bar — own profiles only */}
       {!isShared && activeTab && (
-        <div className="flex gap-1.5 px-4 pb-4">
+        <div
+          className="flex mx-4 mb-3 rounded-lg overflow-hidden"
+          style={{ border: "1px solid var(--border)", background: "var(--surface2)" }}
+        >
           {(["overzicht", "bewerken"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               aria-pressed={activeTab === tab}
-              className="focus-ring flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors border"
+              className="focus-ring flex-1 py-1.5 text-xs font-semibold transition-colors"
               style={
                 activeTab === tab
-                  ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                  : { background: "var(--surface)", color: "var(--text2)", borderColor: "var(--border)" }
+                  ? { background: "var(--accent)", color: "#000" }
+                  : { background: "transparent", color: "var(--text2)" }
               }
             >
               {tab === "overzicht" ? "Overzicht" : "Bewerken"}

@@ -151,18 +151,10 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-2xl font-bold truncate flex-1">
-              <span style={{ color: "var(--text)" }}>{profile.name}</span>
-              {profileType === "partner" && <Lock size={16} aria-hidden="true" style={{ display: "inline-block", marginLeft: "0.5em", color: "var(--text2)" }} />}
-              {profile.role && (
-                <>
-                  <span style={{ color: "var(--text2)", margin: "0 0.3em", fontWeight: 400 }}>—</span>
-                  <span style={{ color: "var(--text2)", fontWeight: 500, fontStyle: "italic" }}>
-                    {profile.role}
-                  </span>
-                </>
-              )}
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold truncate flex-1" style={{ color: "var(--text)" }}>
+              {profile.name}
+              {profileType === "partner" && <Lock size={14} aria-hidden="true" style={{ display: "inline-block", marginLeft: "0.4em", color: "var(--text2)" }} />}
             </h2>
             {onEdit && (
               <button
@@ -176,6 +168,11 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
               </button>
             )}
           </div>
+          {profile.role && (
+            <p className="text-sm italic truncate mt-0.5 mb-2" style={{ color: "var(--text2)" }}>
+              {profile.role}
+            </p>
+          )}
 
           {/* DNA bar — promoted above pills */}
           <div className="mt-5 mb-4" style={{ minHeight: 52 }}>
@@ -256,31 +253,17 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
             )}
           </div>
 
-          {/* Pills — only experience + relationship */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "var(--surface2)", color: "var(--accent)", border: "1px solid var(--border)" }}
-            >
-              {profile.experienceLevel ?? "beginner"}
-            </span>
-            {profile.relationshipStatus && (
-              <span
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-              >
-                {profile.relationshipStatus}
-              </span>
-            )}
-          </div>
-          <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
+          {/* Compact metadata line — experience · relationship · since · progress */}
+          <p className="text-xs mt-2 leading-relaxed" style={{ color: "var(--text2)" }}>
+            <span style={{ color: "var(--accent)" }}>{profile.experienceLevel ?? "beginner"}</span>
+            {profile.relationshipStatus && <> · {profile.relationshipStatus}</>}
+            {" · "}
             {profileType === "partner" && profile.lockedAt
-              ? `Geïmporteerd op ${new Date(profile.lockedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })} · `
+              ? `Geïmporteerd op ${new Date(profile.lockedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
               : memberSince
-              ? `Lid sinds ${memberSince} · `
-              : ""
-            }
-            {progressPct}% ingevuld
+              ? `Lid sinds ${memberSince}`
+              : "Lid sinds vandaag"}
+            {" · "}{progressPct}% ingevuld
           </p>
           {(onShare || profile.fetLifeUsername || profile.bdsmtestUrl) && (
             <div className="text-sm mt-2" style={{ color: "var(--accent)" }}>
