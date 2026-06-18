@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Anchor, ChevronLeft, Clapperboard, User, Zap } from "lucide-react";
+import { Anchor, ChevronLeft, Clapperboard, Settings, User, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -78,9 +78,18 @@ export default function TopNav() {
               );
             })}
           </div>
-          <span className="ml-auto flex-none">
+          <div className="ml-auto flex items-center gap-1 flex-none">
             <StatusDot />
-          </span>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+              aria-label="Instellingen openen"
+              className="focus-ring flex items-center justify-center rounded-lg"
+              style={{ minWidth: 44, minHeight: 44, color: "var(--text2)" }}
+            >
+              <Settings size={18} aria-hidden="true" />
+            </button>
+          </div>
         </nav>
       </header>
     );

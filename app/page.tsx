@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, Settings, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor, Lock } from "lucide-react";
+import { Camera, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor, Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -156,6 +156,12 @@ function HomeContent() {
       // ongeldige parameter, negeren
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const handler = () => setSettingsOpen(true);
+    window.addEventListener("ks:open-settings", handler);
+    return () => window.removeEventListener("ks:open-settings", handler);
+  }, []);
 
   async function handleInstall() {
     if (deferredPrompt.current) {
@@ -414,15 +420,7 @@ function HomeContent() {
     <>
       <PageShell width="2xl">
         {/* Hero */}
-        <div className="mb-10 pt-3 text-center relative">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Instellingen openen"
-            className="focus-ring absolute top-3 right-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            style={{ color: "var(--text2)" }}
-          >
-            <Settings size={18} />
-          </button>
+        <div className="mb-10 pt-3 text-center">
           <h1 className="text-6xl">
             <Wordmark />
           </h1>
