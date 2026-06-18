@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { formatTime, parseTime } from "@/lib/timeUtils";
 
 interface TimePickerProps {
@@ -12,6 +12,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
   const [open, setOpen] = useState(false);
   const [hour, setHour] = useState(parsed?.hour ?? 20);
   const [minute, setMinute] = useState(parsed?.minute ?? 0);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const p = parseTime(value);
@@ -28,11 +29,13 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
   function confirm() {
     onChange(formatTime(hour, minute));
     setOpen(false);
+    buttonRef.current?.focus();
   }
 
   return (
     <div className="relative flex-none">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Tijd kiezen"
@@ -42,7 +45,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
           border: "1px solid var(--border)",
           color: value ? "var(--text)" : "var(--text2)",
           fontSize: 12,
-          height: 36,
+          height: 44,
           minWidth: 60,
         }}
       >
@@ -57,17 +60,20 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
             aria-hidden="true"
           />
           <div
-            className="fixed z-50 rounded-xl p-4 shadow-xl"
+            className="fixed z-50 rounded-xl p-4 shadow-xl max-w-xs"
+            role="dialog"
+            aria-labelledby="time-picker-label"
             style={{
               background: "var(--surface)",
               border: "1px solid var(--border)",
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              width: 288,
+              width: "calc(100vw - 2rem)",
+              maxWidth: 288,
             }}
           >
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>
+            <p id="time-picker-label" className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>
               Starttijd
             </p>
             <div className="flex gap-3">
@@ -79,7 +85,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
                     type="button"
                     onClick={() => setHour(h)}
                     aria-pressed={hour === h}
-                    className="focus-ring rounded py-1.5 text-xs tabular-nums font-medium"
+                    className="focus-ring rounded py-2 text-xs tabular-nums font-medium"
                     style={
                       hour === h
                         ? { background: "var(--accent)", color: "#000" }
@@ -98,7 +104,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
                     type="button"
                     onClick={() => setMinute(m)}
                     aria-pressed={minute === m}
-                    className="focus-ring rounded py-1.5 px-2 text-xs tabular-nums font-medium"
+                    className="focus-ring rounded py-2 px-2 text-xs tabular-nums font-medium"
                     style={
                       minute === m
                         ? { background: "var(--accent)", color: "#000" }
@@ -117,8 +123,8 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
               <button
                 type="button"
                 onClick={confirm}
-                className="focus-ring px-4 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ background: "var(--accent)", color: "#000" }}
+                className="focus-ring px-4 py-2 rounded-lg text-xs font-semibold"
+                style={{ background: "var(--accent)", color: "#000", minHeight: 36 }}
               >
                 Bevestigen
               </button>

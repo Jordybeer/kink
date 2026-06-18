@@ -7,6 +7,8 @@ export default function SafewordRibbon({ safeword }: Props) {
   return (
     <div
       className="-mx-4 px-4 flex items-center mb-5"
+      role="region"
+      aria-label={`Safeword: ${safeword}`}
       style={{
         background: "color-mix(in srgb, var(--hard-no) 10%, transparent)",
         height: 32,

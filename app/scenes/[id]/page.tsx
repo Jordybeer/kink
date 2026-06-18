@@ -221,7 +221,7 @@ export default function SceneDetailPage() {
         <div className="flex items-center gap-4 text-sm" style={{ color: "var(--accent)" }}>
           {scene.status === "completed" && (
             <button onClick={handleExportPdf} className="focus-ring rounded">
-              Export PDF
+              Exporteer PDF
             </button>
           )}
           <Link href={`/scene?id=${scene.id}`} className="focus-ring rounded" style={{ color: "var(--accent)" }}>

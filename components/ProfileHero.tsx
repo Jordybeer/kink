@@ -132,11 +132,11 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
             <button
               type="button"
               onClick={() => onAvatarChange?.(undefined)}
-              className="absolute -top-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-[10px] focus-ring border-2 border-[var(--bg)]"
+              className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-[10px] focus-ring border-2 border-[var(--bg)]"
               style={{ background: "var(--hard-no)", color: "var(--text)" }}
               aria-label="Profielfoto verwijderen"
             >
-              <X size={12} aria-hidden="true" />
+              <X size={14} aria-hidden="true" />
             </button>
           )}
           <input
@@ -169,10 +169,10 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
                 onClick={onEdit}
                 aria-label="Profiel bewerken"
                 title="Bewerken"
-                className="focus-ring flex-none w-8 h-8 flex items-center justify-center rounded-md transition-colors"
+                className="focus-ring flex-none w-10 h-10 flex items-center justify-center rounded-md transition-colors"
                 style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
               >
-                <Pencil size={13} />
+                <Pencil size={16} />
               </button>
             )}
           </div>
@@ -189,8 +189,8 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
                 />
                 <button
                   onClick={onViewKinks}
-                  className="text-xs italic mt-2 block focus-ring rounded text-left"
-                  style={{ color: "var(--text2)", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+                  className="text-xs italic mt-2 block focus-ring rounded text-left px-2 py-1"
+                  style={{ color: "var(--text2)", background: "transparent", border: "none", cursor: "pointer" }}
                 >
                   Nog niets beoordeeld — start met de eerste categorie
                 </button>
@@ -229,7 +229,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
                   </p>
                 )}
                 <details className="mt-1">
-                  <summary className="text-[10px] uppercase tracking-widest cursor-pointer focus-ring rounded" style={{ color: "var(--text2)" }}>
+                  <summary className="text-[10px] uppercase tracking-widest cursor-pointer focus-ring rounded px-2 py-1" style={{ color: "var(--text2)" }}>
                     Verdeling
                   </summary>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2">
