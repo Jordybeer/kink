@@ -380,6 +380,7 @@ export default function ProfilePage({ params }: Props) {
         maxLevel={maxLevel}
         onShare={isShared ? undefined : () => setShareOpen(true)}
         onEdit={isShared ? undefined : handleStartEdit}
+        onViewKinks={isShared ? undefined : () => setActiveTab("bewerken")}
         onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
         onError={(msg) => {
           setErrorMessage(msg);
