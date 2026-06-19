@@ -60,6 +60,11 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - Never add a fetch() to an external API without explicit discussion
 - Never install packages without asking first
 
+## Component layer rules
+- `components/ui/` — interaction primitives only (motion, touch, layout). Must never import from `lib/store`, `lib/kinks`, or any domain type beyond what's passed via props. No kink knowledge lives here.
+- `components/` — domain components. May use store and types freely. Compose from `components/ui/` primitives.
+- Pages (`app/`) — wire store state to domain components. Never build interaction primitives inline in a page.
+
 ## corrections.md (mandatory)
 Read `corrections.md` at session start before doing anything.
 These are documented mistakes — do not repeat them.
