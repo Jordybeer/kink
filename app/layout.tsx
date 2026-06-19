@@ -7,6 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
 import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
+import AmbientGlow from "@/components/ui/AmbientGlow";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const cormorant = Cormorant_Garamond({
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col antialiased">
+        <AmbientGlow />
         <ThemeProvider />
         <TopNav />
         <BottomNav />
