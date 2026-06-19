@@ -18,25 +18,23 @@ interface ProfileHeroProps {
   profileType?: ProfileType;
 }
 
-const STATUSES = ["willing", "yes", "nieuwsgierig", "maybe", "no", "hard_no"] as const;
+const STATUSES = ["willing", "yes", "maybe", "no", "hard_no"] as const;
 type Status = typeof STATUSES[number];
 
 const DNA_COLORS: Record<Status, string> = {
-  willing:      "var(--willing)",
-  yes:          "var(--yes)",
-  nieuwsgierig: "var(--nieuwsgierig)",
-  maybe:        "var(--maybe)",
-  no:           "var(--no)",
-  hard_no:      "var(--hard-no)",
+  willing: "var(--willing)",
+  yes:     "var(--yes)",
+  maybe:   "var(--maybe)",
+  no:      "var(--no)",
+  hard_no: "var(--hard-no)",
 };
 
 const DOMINANT_LABEL: Record<Status, string> = {
-  yes:          "wil heel graag",
-  willing:      "is bereid",
-  nieuwsgierig: "is nieuwsgierig",
-  maybe:        "twijfelt",
-  no:           "liever niet",
-  hard_no:      "sluit uit",
+  yes:     "wil heel graag",
+  willing: "is bereid",
+  maybe:   "twijfelt",
+  no:      "liever niet",
+  hard_no: "sluit uit",
 };
 
 export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onViewKinks, onAvatarChange, onError, profileType }: ProfileHeroProps) {

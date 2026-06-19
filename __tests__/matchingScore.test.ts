@@ -82,60 +82,6 @@ describe("kinkMatchScore — rubric rows", () => {
   });
 });
 
-describe("kinkMatchScore — nieuwsgierig", () => {
-  it("nieuwsgierig + yes → strong (70)", () => {
-    expect(kinkMatchScore(e({ status: "nieuwsgierig" }), e({ status: "yes" }))).toEqual({ score: 70, kind: "strong" });
-  });
-  it("yes + nieuwsgierig → strong (70)", () => {
-    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "nieuwsgierig" }))).toEqual({ score: 70, kind: "strong" });
-  });
-  it("nieuwsgierig + willing → soft (55)", () => {
-    expect(kinkMatchScore(e({ status: "nieuwsgierig" }), e({ status: "willing" }))).toEqual({ score: 55, kind: "soft" });
-  });
-  it("nieuwsgierig + nieuwsgierig → discuss (50)", () => {
-    expect(kinkMatchScore(e({ status: "nieuwsgierig" }), e({ status: "nieuwsgierig" }))).toEqual({ score: 50, kind: "discuss" });
-  });
-  it("nieuwsgierig + maybe → discuss (40)", () => {
-    expect(kinkMatchScore(e({ status: "nieuwsgierig" }), e({ status: "maybe" }))).toEqual({ score: 40, kind: "discuss" });
-  });
-  it("nieuwsgierig + no → discuss (10)", () => {
-    expect(kinkMatchScore(e({ status: "nieuwsgierig" }), e({ status: "no" }))).toEqual({ score: 10, kind: "discuss" });
-  });
-  it("nieuwsgierig + hard_no → limit (0)", () => {
-    expect(kinkMatchScore(e({ status: "nieuwsgierig" }), e({ status: "hard_no" }))).toEqual({ score: 0, kind: "limit" });
-  });
-
-  it("directional: nieuwsgierig give / yes receive → strong (75)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "nieuwsgierig", direction: "give" }),
-      e({ statusReceive: "yes", direction: "receive" })
-    )).toEqual({ score: 75, kind: "strong" });
-  });
-  it("directional: nieuwsgierig give / willing receive → soft (55)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "nieuwsgierig", direction: "give" }),
-      e({ statusReceive: "willing", direction: "receive" })
-    )).toEqual({ score: 55, kind: "soft" });
-  });
-  it("directional: nieuwsgierig give / nieuwsgierig receive → discuss (50)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "nieuwsgierig", direction: "give" }),
-      e({ statusReceive: "nieuwsgierig", direction: "receive" })
-    )).toEqual({ score: 50, kind: "discuss" });
-  });
-  it("directional: nieuwsgierig give / maybe receive → discuss (40)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "nieuwsgierig", direction: "give" }),
-      e({ statusReceive: "maybe", direction: "receive" })
-    )).toEqual({ score: 40, kind: "discuss" });
-  });
-  it("directional: nieuwsgierig give / no receive → discuss (10)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "nieuwsgierig", direction: "give" }),
-      e({ statusReceive: "no", direction: "receive" })
-    )).toEqual({ score: 10, kind: "discuss" });
-  });
-});
 
 describe("kinkMatchScore — directional", () => {
   it("yes give / yes receive → perfect (100)", () => {

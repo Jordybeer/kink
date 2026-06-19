@@ -16,6 +16,7 @@ interface Props {
   onDirectionChange?: (kinkId: string, d: KinkDirection) => void;
   onStatusGiveChange?: (kinkId: string, s: KinkStatus) => void;
   onStatusReceiveChange?: (kinkId: string, s: KinkStatus) => void;
+  onCuriousChange?: (kinkId: string, v: boolean) => void;
   onBulkSkip: () => void;
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
@@ -32,7 +33,7 @@ export default function CategorySection({
   category, kinks, entries,
   onStatusChange,
   onTagsChange,
-  onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
+  onDirectionChange, onStatusGiveChange, onStatusReceiveChange, onCuriousChange,
   onBulkSkip, onBulkRestore, compact, roleDirection,
 }: Props) {
   const t = useMotionSafe();
@@ -151,6 +152,7 @@ export default function CategorySection({
                 onDirectionChange={onDirectionChange ? (d) => onDirectionChange(kink.id, d) : undefined}
                 onStatusGiveChange={onStatusGiveChange ? (s) => onStatusGiveChange(kink.id, s) : undefined}
                 onStatusReceiveChange={onStatusReceiveChange ? (s) => onStatusReceiveChange(kink.id, s) : undefined}
+                onCuriousChange={onCuriousChange ? (v) => onCuriousChange(kink.id, v) : undefined}
                 compact={compact}
                 roleDirection={roleDirection}
               />

@@ -42,7 +42,7 @@ const KINK_CATEGORIES = [
     kinks: [
       { id: "1", name: "Spanking",     status: "yes",          statusColor: "var(--yes)" },
       { id: "2", name: "Flogger",      status: "willing",      statusColor: "var(--willing)" },
-      { id: "3", name: "Paddel",       status: "nieuwsgierig", statusColor: "var(--nieuwsgierig)" },
+      { id: "3", name: "Paddel",       status: "maybe",        statusColor: "var(--maybe)" },
     ],
   },
   {
@@ -56,12 +56,11 @@ const KINK_CATEGORIES = [
 ] as const;
 
 const STATUS_LABELS: Record<string, string> = {
-  yes:          "Heel graag",
-  willing:      "Ja",
-  nieuwsgierig: "Nieuwsgierig",
-  maybe:        "Misschien",
-  no:           "Voor hen",
-  hard_no:      "Harde grens",
+  yes:     "Heel graag",
+  willing: "Ja",
+  maybe:   "Misschien",
+  no:      "Voor hen",
+  hard_no: "Harde grens",
 };
 
 const SWIPE_ACTIONS = [

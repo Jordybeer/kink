@@ -2,12 +2,11 @@
 import type { KinkStatus } from "@/types";
 
 const OPTIONS: { value: NonNullable<KinkStatus>; icon: string; label: string; title: string }[] = [
-  { value: "yes",          icon: "✓",  label: "Heel graag",   title: "Heel graag — ik wil dit erg graag" },
-  { value: "willing",      icon: "↗",  label: "Ja",           title: "Ja — ik sta er open voor" },
-  { value: "nieuwsgierig", icon: "?",  label: "Nieuwsgierig", title: "Nieuwsgierig — niet geprobeerd, wil het overwegen" },
-  { value: "maybe",        icon: "♡",  label: "Misschien",    title: "Misschien — hangt af van stemming en context" },
-  { value: "no",           icon: "↘",  label: "Voor hen",     title: "Voor hen — ik doe het voor jou, niet voor mezelf" },
-  { value: "hard_no",      icon: "✕✕", label: "Harde grens",  title: "Harde grens — absolute limiet" },
+  { value: "yes",     icon: "✓",  label: "Heel graag",  title: "Heel graag — ik wil dit erg graag" },
+  { value: "willing", icon: "↗",  label: "Ja",          title: "Ja — ik sta er open voor" },
+  { value: "maybe",   icon: "♡",  label: "Misschien",   title: "Misschien — hangt af van stemming en context" },
+  { value: "no",      icon: "↘",  label: "Voor hen",    title: "Voor hen — ik doe het voor jou, niet voor mezelf" },
+  { value: "hard_no", icon: "✕✕", label: "Harde grens", title: "Harde grens — absolute limiet" },
 ];
 
 interface Props {
@@ -21,7 +20,7 @@ export default function StatusPicker({ value, onChange, kinkName }: Props) {
     <div
       role="group"
       aria-label={kinkName ? `Status voor ${kinkName}` : "Status"}
-      className="grid grid-cols-6 border-t border-[var(--border)]"
+      className="grid grid-cols-5 border-t border-[var(--border)]"
     >
       {OPTIONS.map((o) => {
         const active = value === o.value;

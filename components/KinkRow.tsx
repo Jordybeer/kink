@@ -9,27 +9,33 @@ const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"]
 
 type PrefPill = { status: NonNullable<KinkStatus>; label: string; danger?: boolean };
 const PREF_PILLS: PrefPill[] = [
-  { status: "yes",          label: "Heel graag" },
-  { status: "willing",      label: "Ja" },
-  { status: "nieuwsgierig", label: "Nieuwsgierig" },
-  { status: "maybe",        label: "Misschien" },
-  { status: "no",           label: "Voor hen" },
-  { status: "hard_no",      label: "Harde grens", danger: true },
+  { status: "yes",     label: "Heel graag" },
+  { status: "willing", label: "Ja" },
+  { status: "maybe",   label: "Misschien" },
+  { status: "no",      label: "Voor hen" },
+  { status: "hard_no", label: "Harde grens", danger: true },
 ];
 
-const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "nieuwsgierig", "willing", "yes"];
+const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "willing", "yes"];
 const worstOf = (a: KinkStatus | undefined, b: KinkStatus | undefined): KinkStatus => {
   for (const s of STATUS_ORDER) { if (a === s || b === s) return s; }
   return null;
 };
 
 const STATUS_BORDER: Record<NonNullable<KinkStatus>, string> = {
-  yes:          "var(--yes)",
-  willing:      "var(--willing)",
-  nieuwsgierig: "var(--nieuwsgierig)",
-  maybe:        "var(--maybe)",
-  no:           "var(--no)",
-  hard_no:      "var(--hard-no)",
+  yes:     "var(--yes)",
+  willing: "var(--willing)",
+  maybe:   "var(--maybe)",
+  no:      "var(--no)",
+  hard_no: "var(--hard-no)",
+};
+
+const INACTIVE_STYLE: Record<NonNullable<KinkStatus>, React.CSSProperties> = {
+  yes:     { color: "var(--yes)",     borderColor: "color-mix(in srgb, var(--yes) 40%, transparent)",     background: "transparent" },
+  willing: { color: "var(--willing)", borderColor: "color-mix(in srgb, var(--willing) 40%, transparent)", background: "transparent" },
+  maybe:   { color: "var(--maybe)",   borderColor: "color-mix(in srgb, var(--maybe) 40%, transparent)",   background: "transparent" },
+  no:      { color: "var(--no)",      borderColor: "color-mix(in srgb, var(--no) 40%, transparent)",      background: "transparent" },
+  hard_no: { color: "var(--hard-no)", borderColor: "var(--hard-no)", borderStyle: "dashed",               background: "transparent" },
 };
 
 interface Props {
@@ -37,6 +43,7 @@ interface Props {
   entry: KinkEntry;
   onStatusChange: (s: KinkStatus) => void;
   onTagsChange: (tags: string[]) => void;
+  onCuriousChange?: (v: boolean) => void;
   onDirectionChange?: (d: KinkDirection) => void;
   onStatusGiveChange?: (s: KinkStatus) => void;
   onStatusReceiveChange?: (s: KinkStatus) => void;
@@ -59,37 +66,23 @@ interface PillRowProps {
 
 function PillRow({ label, current, onSelect, tour }: PillRowProps) {
   return (
-    <div data-tour={tour} className="flex flex-wrap items-center gap-1.5 px-3 pb-1.5">
+    <div data-tour={tour} className="flex flex-wrap justify-center items-center gap-2 px-4 py-3">
       {label && (
-        <span className="text-[11px] flex-none mr-1 w-full sm:w-auto" style={{ color: "var(--text2)" }}>{label}</span>
+        <span className="text-[11px] flex-none w-full text-center" style={{ color: "var(--text2)" }}>{label}</span>
       )}
       {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
         const active = current === s;
         const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[13px] px-3 py-2 inline-flex items-center gap-1";
         if (active) {
           return (
-            <button
-              key={s}
-              onClick={() => onSelect(null)}
-              aria-pressed
-              className={`${baseClasses} status-${s}`}
-            >
+            <button key={s} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
               {danger && <Ban size={12} aria-hidden="true" />}
               {pillLabel}
             </button>
           );
         }
-        const inactiveStyle = danger
-          ? { color: "var(--hard-no)", borderColor: "var(--hard-no)", borderStyle: "dashed" as const, background: "transparent" }
-          : { color: "var(--text2)", borderColor: "var(--border)" };
         return (
-          <button
-            key={s}
-            onClick={() => onSelect(s)}
-            aria-pressed={false}
-            className={baseClasses}
-            style={inactiveStyle}
-          >
+          <button key={s} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
             {danger && <Ban size={12} aria-hidden="true" />}
             {pillLabel}
           </button>
@@ -101,7 +94,7 @@ function PillRow({ label, current, onSelect, tour }: PillRowProps) {
 
 export default function KinkRow({
   kink, entry, onStatusChange,
-  onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
+  onTagsChange, onCuriousChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   compact, roleDirection,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
@@ -137,7 +130,7 @@ export default function KinkRow({
           borderLeft: `4px solid ${effectiveStatus ? STATUS_BORDER[effectiveStatus] : "var(--border)"}`,
         }}
       >
-        {/* Row 1: info + name */}
+        {/* Row 1: info + name + curious flag */}
         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
           <button
             data-tour="info"
@@ -149,6 +142,20 @@ export default function KinkRow({
             <Info size={14} aria-hidden="true" />
           </button>
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
+          {onCuriousChange && (
+            <button
+              onClick={() => onCuriousChange(!entry.curious)}
+              aria-pressed={!!entry.curious}
+              aria-label="Markeer als nieuwsgierig"
+              className="focus-ring rounded-full text-[11px] font-semibold px-2 py-0.5 flex-none transition-colors"
+              style={entry.curious
+                ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", color: "var(--curious)", border: "1px solid var(--curious)" }
+                : { background: "transparent", color: "var(--text2)", border: "1px dashed var(--border)" }
+              }
+            >
+              ★ Nieuwsgierig
+            </button>
+          )}
         </div>
 
         {/* Direction selector */}
@@ -176,42 +183,22 @@ export default function KinkRow({
 
         {/* Pill rows — direction-aware */}
         {(!entry.direction) && (
-          <PillRow
-            tour="pills"
-            current={entry.status}
-            onSelect={(s) => onStatusChange(s)}
-          />
+          <PillRow tour="pills" current={entry.status} onSelect={(s) => onStatusChange(s)} />
         )}
         {entry.direction === "give" && (
-          <PillRow
-            label="Geven:"
-            current={entry.statusGive ?? null}
-            onSelect={(s) => onStatusGiveChange?.(s)}
-          />
+          <PillRow label="Geven:" current={entry.statusGive ?? null} onSelect={(s) => onStatusGiveChange?.(s)} />
         )}
         {entry.direction === "receive" && (
-          <PillRow
-            label="Ontvangen:"
-            current={entry.statusReceive ?? null}
-            onSelect={(s) => onStatusReceiveChange?.(s)}
-          />
+          <PillRow label="Ontvangen:" current={entry.statusReceive ?? null} onSelect={(s) => onStatusReceiveChange?.(s)} />
         )}
         {entry.direction === "both" && (
           <>
-            <PillRow
-              label="Geven:"
-              current={entry.statusGive ?? null}
-              onSelect={(s) => onStatusGiveChange?.(s)}
-            />
-            <PillRow
-              label="Ontvangen:"
-              current={entry.statusReceive ?? null}
-              onSelect={(s) => onStatusReceiveChange?.(s)}
-            />
+            <PillRow label="Geven:" current={entry.statusGive ?? null} onSelect={(s) => onStatusGiveChange?.(s)} />
+            <PillRow label="Ontvangen:" current={entry.statusReceive ?? null} onSelect={(s) => onStatusReceiveChange?.(s)} />
           </>
         )}
 
-        {/* Tags — collapsed by default with summary */}
+        {/* Tags */}
         {showTags && (
           <>
             <button
@@ -223,9 +210,7 @@ export default function KinkRow({
               {tagsOpen ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
               <span className="flex-none">Vlaggen{tagCount > 0 ? ` · ${tagCount}` : ""}</span>
               {!tagsOpen && tagCount > 0 && (
-                <span className="truncate flex-1" style={{ opacity: 0.7 }}>
-                  — {tags.join(" · ")}
-                </span>
+                <span className="truncate flex-1" style={{ opacity: 0.7 }}>— {tags.join(" · ")}</span>
               )}
             </button>
             {tagsOpen && (

@@ -20,11 +20,11 @@ import { getProfileType } from "@/lib/profileType";
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
 const STATUS_COLORS: Record<NonNullable<KinkStatus>, string> = {
-  willing: "var(--willing)", yes: "var(--yes)", nieuwsgierig: "var(--nieuwsgierig)",
+  willing: "var(--willing)", yes: "var(--yes)",
   maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
 };
 const STATUS_LABELS: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag", willing: "Ja", nieuwsgierig: "Nieuwsgierig",
+  yes: "Heel graag", willing: "Ja",
   maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
 };
 
@@ -522,6 +522,7 @@ export default function ProfilePage({ params }: Props) {
                         onDirectionChange={(d) => { setEntry(profile.id, kink.id, { direction: d }); markSaved(); }}
                         onStatusGiveChange={(s) => { setEntry(profile.id, kink.id, { statusGive: s }); markSaved(); }}
                         onStatusReceiveChange={(s) => { setEntry(profile.id, kink.id, { statusReceive: s }); markSaved(); }}
+                        onCuriousChange={(v) => { setEntry(profile.id, kink.id, { curious: v }); markSaved(); }}
                         compact={compact}
                         roleDirection={roleDirection}
                       />
@@ -545,6 +546,7 @@ export default function ProfilePage({ params }: Props) {
                         onDirectionChange={(kinkId, d) => { setEntry(profile.id, kinkId, { direction: d }); markSaved(); }}
                         onStatusGiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusGive: s }); markSaved(); }}
                         onStatusReceiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusReceive: s }); markSaved(); }}
+                        onCuriousChange={(kinkId, v) => { setEntry(profile.id, kinkId, { curious: v }); markSaved(); }}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
                             setEntry(profile.id, k.id, { status: "no" });
@@ -854,12 +856,11 @@ export default function ProfilePage({ params }: Props) {
           <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
           <ul className="flex flex-col gap-3">
             {[
-              { token: "--yes",          label: "Heel graag",   desc: "Ik wil dit graag. Dit zoek ik actief op." },
-              { token: "--willing",      label: "Ja",           desc: "Ik ben hier voor. Geen probleem mee." },
-              { token: "--nieuwsgierig", label: "Nieuwsgierig", desc: "Heb ik niet geprobeerd, maar ik ben benieuwd en wil het overwegen." },
-              { token: "--maybe",        label: "Misschien",    desc: "Onzeker. Hangt af van stemming, context, of met wie." },
-              { token: "--no",           label: "Voor hen",     desc: "Niet voor mij, maar ik wil dit mijn partner geven of ontvangen." },
-              { token: "--hard-no",      label: "Harde grens",  desc: "Absolute limiet. Niet bespreekbaar." },
+              { token: "--yes",     label: "Heel graag",  desc: "Ik wil dit graag. Dit zoek ik actief op." },
+              { token: "--willing", label: "Ja",          desc: "Ik ben hier voor. Geen probleem mee." },
+              { token: "--maybe",   label: "Misschien",   desc: "Onzeker. Hangt af van stemming, context, of met wie." },
+              { token: "--no",      label: "Voor hen",    desc: "Niet voor mij, maar ik wil dit mijn partner geven of ontvangen." },
+              { token: "--hard-no", label: "Harde grens", desc: "Absolute limiet. Niet bespreekbaar." },
             ].map(({ token, label, desc }) => (
               <li key={label} className="flex gap-3">
                 <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: `var(${token})` }} aria-hidden="true" />
