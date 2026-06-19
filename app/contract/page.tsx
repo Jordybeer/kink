@@ -14,12 +14,11 @@ import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
 
 const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
-  yes:          "Heel graag",
-  willing:      "Ja",
-  nieuwsgierig: "Nieuwsgierig",
-  maybe:        "Misschien",
-  no:           "Voor hen",
-  hard_no:      "Harde grens",
+  yes:     "Heel graag",
+  willing: "Ja",
+  maybe:   "Misschien",
+  no:      "Voor hen",
+  hard_no: "Harde grens",
 };
 
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {

@@ -43,10 +43,10 @@ export function decodeProfile(encoded: string): Profile {
 // ── v2 encoding (compact fixed-position, used for QR codes) ──────────────────
 
 const S_ENC: Partial<Record<NonNullable<KinkStatus>, string>> = {
-  yes: "y", willing: "g", nieuwsgierig: "c", maybe: "m", no: "n", hard_no: "H",
+  yes: "y", willing: "g", maybe: "m", no: "n", hard_no: "H",
 };
 const S_DEC: Record<string, KinkStatus> = {
-  y: "yes", g: "willing", c: "nieuwsgierig", m: "maybe", n: "no", H: "hard_no",
+  y: "yes", g: "willing", c: "maybe", m: "maybe", n: "no", H: "hard_no",
 };
 
 export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?: boolean }): string {

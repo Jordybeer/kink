@@ -24,21 +24,20 @@ function iceCandSummary(types: string[]): string {
 }
 
 const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
-  yes: "var(--yes)", willing: "var(--willing)", nieuwsgierig: "var(--nieuwsgierig)",
+  yes: "var(--yes)", willing: "var(--willing)",
   maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
 };
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag", willing: "Ja", nieuwsgierig: "Nieuwsgierig",
+  yes: "Heel graag", willing: "Ja",
   maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
 };
 const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
   { s: "yes", label: "Heel graag" }, { s: "willing", label: "Ja" },
-  { s: "nieuwsgierig", label: "Nieuwsgierig" },
   { s: "maybe", label: "Misschien" }, { s: "no", label: "Voor hen" },
   { s: "hard_no", label: "Harde grens" },
 ];
 
-const VALID_STATUSES = new Set<string>(["yes", "willing", "nieuwsgierig", "maybe", "no", "hard_no"]);
+const VALID_STATUSES = new Set<string>(["yes", "willing", "maybe", "no", "hard_no"]);
 
 function sanitizeEntries(raw: unknown): Record<string, KinkStatus> {
   const out: Record<string, KinkStatus> = {};

@@ -19,7 +19,7 @@
   --on-accent: #000;
   --yes: #84cc16;
   --willing: #10b981;
-  --nieuwsgierig: #06b6d4;
+  --curious: #eab308;
   --maybe: #fbbf24;
   --no: #64748b;
   --hard-no: #ef4444;
@@ -48,7 +48,6 @@ html, body {
 
 .status-yes     { background: color-mix(in srgb, var(--yes) 15%, transparent);     color: var(--yes);     border-color: var(--yes);     border-width: 2px; }
 .status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: var(--willing); border-width: 2px; }
-.status-nieuwsgierig { background: color-mix(in srgb, var(--nieuwsgierig) 15%, transparent); color: var(--nieuwsgierig); border-color: var(--nieuwsgierig); border-width: 2px; }
 .status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: var(--maybe);   border-width: 2px; }
 .status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: var(--no);      border-width: 2px; }
 .status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 1.4s ease-in-out infinite; }
@@ -326,7 +325,6 @@ select {
    shadow (no animation; no longer pulses forever) */
 .ks-glow-yes     { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--yes) 22%, transparent); }
 .ks-glow-willing { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--willing) 22%, transparent); }
-.ks-glow-nieuwsgierig { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--nieuwsgierig) 22%, transparent); }
 .ks-glow-maybe   { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--maybe) 22%, transparent); }
 .ks-glow-no      { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--no) 22%, transparent); }
 .ks-glow-hard-no { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--hard-no) 22%, transparent); }
@@ -388,7 +386,6 @@ select {
   .ks-slide-up,
   .ks-glow-yes,
   .ks-glow-willing,
-  .ks-glow-nieuwsgierig,
   .ks-glow-maybe,
   .ks-glow-no,
   .ks-glow-hard-no,
