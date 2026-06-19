@@ -7,14 +7,14 @@
 - Pre-commit hooks are non-negotiable. Never skip with `--no-verify` unless explicitly discussing the exception with the user first.
 
 ## Branching
-- For small features or fixes: commit directly to `dev`.
-- For large features that might conflict: create `feature/name` branch off `dev`, merge back when complete.
-- For hotfixes to production: branch off `main`, PR to `main`, then merge back to `dev`.
+- Small features / fixes: commit directly to `dev`.
+- Large features that might conflict: `feature/name` off `dev`, merge back when complete.
+- Hotfixes to production: branch off `main`, PR to `main`, then merge back to `dev`.
 
 ## Commits
 - One commit = one logical unit (complete feature, fix, or polish pass).
 - Group related changes (component + tests + imports) into a single commit.
-- Never commit incomplete implementations or work-in-progress code.
+- Never commit incomplete implementations or WIP code.
 - Each commit must pass `npm test` green before pushing.
 
 ## Tone (mandatory, entire repo)
@@ -25,17 +25,49 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 ## Tests (mandatory before every commit)
 - `npm test` before committing — all tests must pass.
 - Cover pure logic in `lib/` — store actions, kink helpers, shareProfile encoding.
-- Don't test React rendering. Do add a test per new feature.
-- Build check: `npm run build` must complete without TypeScript errors or lint violations.
+- Don't test React rendering. Add one test per new feature.
+- `npm run build` must complete without TypeScript errors or lint violations.
+- Scale coverage to task size: tiny fix → run affected test file only. Feature → full `npm test`. Structural change → `npm test` + `npm run build`. Never run e2e for unit-level changes.
+- Playwright tests are mobile-first (375px viewport). Only add desktop if behaviour genuinely differs.
 
 ## Stack
 - Next.js 16 App Router · TypeScript · Tailwind CSS v4 · Zustand persist
-- `npm run build` — type-check + lint · `npm test` — Vitest
+- `npm run build` — type-check + lint · `npm test` — Vitest · `npm run e2e` — Playwright
 
 ## Architecture
 - All data in `localStorage` via Zustand `persist` — no backend, no auth
-- `_hasHydrated` guards all pages against SSR flash
-- Kink data: `lib/kinks.ts` · Types: `types/index.ts`
+- `_hasHydrated` guards all pages against SSR flash — never skip this gate
+- Kink data: `lib/kinks.ts` · Types: `types/index.ts` · Store: `lib/store.ts`
+
+## File map
+- `app/` — Next.js App Router pages
+- `components/` — shared UI components
+- `lib/kinks.ts` — kink data, source of truth
+- `lib/store.ts` — Zustand persist store
+- `types/index.ts` — all shared TypeScript types
+- `__tests__/` — Vitest unit tests (lib/ only)
+- `e2e/` — Playwright tests
+- `e2e-offline/` — Playwright offline tests
+- `docs/` — internal documentation
+- `future.md` — Claude suggestions backlog (ask before writing)
+- `corrections.md` — mistake log (read at session start)
+- `planned-changes.md` — active sprint tasks (read + update when completing work)
+- `ideas.md` — raw ideas, read only
+
+## Hard constraints
+- No backend, no auth — all state in localStorage via Zustand persist
+- `_hasHydrated` must gate every page that reads store state
+- Never add a fetch() to an external API without explicit discussion
+- Never install packages without asking first
+
+## corrections.md (mandatory)
+Read `corrections.md` at session start before doing anything.
+These are documented mistakes — do not repeat them.
+
+## Planning files
+- `future.md` — Claude suggestions only, ask before writing anything here
+- `ideas.md` — your raw ideas, Claude reads only, never modifies
+- `planned-changes.md` — active sprint, Claude reads and updates when completing tasks
 
 ## Suggestions (ask first)
 After each task, ask if suggestions are welcome before writing anything to `future.md`.

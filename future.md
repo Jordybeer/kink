@@ -48,6 +48,12 @@ Independent, parallelisable — minimal logic, CSS/attr only:
 - **Color-only distinction**: Status colors (yes/willing/maybe/no/hard_no) are distinguished only by color — add icon/pattern for users with color vision deficiency
 - **Experience-level / relatiestatus groups use `<p>` + `role="group"`, not `<fieldset>/<legend>`**: `app/page.tsx` (~L478, L630) and `app/profile/[id]/page.tsx` (~L858) — the `aria-label` on the group helps, but `<fieldset>/<legend>` is the more standard pairing for screen readers.
 
+## Phase 3b follow-ups (nieuwsgierig + KinkRow, 2026-06-19)
+- **Nieuwsgierig pair distinction on compare page**: `nieuwsgierig+nieuwsgierig` (discuss/50) and `maybe+yes` (discuss/45) land in the same bucket with identical row styling. A subtle cyan dot or label variant on `compare/page.tsx` row renderer could surface the difference without bloating the layout.
+- **Safety tags visible by default on partner profiles**: Tags like "vraag eerst" are safety-relevant. In read-only profile view, rows with active tags should default to `tagsOpen: true` so the viewer doesn't miss a boundary behind a tap. Only applies to the read-only `Overzicht` rendering path, not the edit list.
+- **Nieuwsgierig swatch in contract PDF**: `app/contract/page.tsx` PDF row renderer uses CSS vars for colour swatches — those don't resolve in jsPDF. Hardcode `#06b6d4` for `nieuwsgierig` alongside the existing hardcoded hex fallbacks for the other statuses.
+- **Status explainer i18n extraction**: The explainer sheet in `app/profile/[id]/page.tsx` is hardcoded Dutch. If multilingual support ever lands, extract the `STATUS_EXPLAINER` array to a locale file — it's a natural extraction point with no logic attached.
+
 ## Features
 - **Export to PDF on mobile**: jsPDF export works on desktop but PDF rendering on iOS Safari has quirks — test and fix
 - **Compare filter: "Only my yes + their yes"**: Add a quick filter for mutual enthusiastic matches only
