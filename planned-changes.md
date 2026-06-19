@@ -20,34 +20,27 @@ Small, isolated fixes. Each = one commit.
 4. **ProfileHero scroll-jump on kink rating** — DNA bar updates mutate hero height → page scroll drifts. Fix: reserve hero height OR scroll-anchor the active kink row.
 5. **Import URL stuck after import** — After import succeeds, `router.replace('/')` to clear the encoded payload from address bar.
 
-## Phase 2 — ProfileHero Polish v2 (mobile portrait)
+## Phase 2 — ProfileHero Polish v2 (mobile portrait) ✅ SHIPPED (2026-06-19, commits b685327 + e043dfa)
 
-User says hero is "still messy" in portrait. Tight, surgical pass — no full redesign.
+- Segmented control tab bar, portrait hierarchy, metadata consolidated to compact single line.
+- DNA bar promoted. Pencil absorbed into Bewerken tab. Opacity feedback on tab switch.
 
-- Role label cut off by edit button in portrait → either move pencil into the `Bewerken` tab header, or absorb edit affordance into the `Bewerken` tab itself (delete pencil from hero entirely).
-- `Overzicht` / `Bewerken` tabs eat vertical space → consider segmented control, single-row inline switcher, or fold "Overzicht" into the default state with edit toggling in-place.
-- Pill cluster (experience / relationship) → redesign as compact metadata row or move to expandable details (less visual noise).
-- Space above/beside kink title is unused → land role pill or dominant-status caption there.
-- Reduce card-background opacity when in edit mode → makes editing feel like a distinct surface.
+## Phase 3 — Status Color System Refinement ✅ SHIPPED (2026-06-19)
 
-## Phase 3 — Status Color System Refinement
+### Phase 3a (commits 444e0ae + b685327)
+- Hue-separated greens (`--yes` / `--willing`). `Voor hen` pushed to muted slate. Pulse scoped to `yes` only. Static glow on all statuses.
 
-DNA + KinkRow color palette is too compressed at the green and amber ends.
+### Phase 3b (commit 64417e9)
+- `Nieuwsgierig` status end-to-end: types, CSS token (`#06b6d4`), matching rubric + scoring, share encoding (`"c"`), ProfileHero DNA, StatusPicker, session/compare/contract labels.
+- KinkRow layout rewrite: wrap pills (no horizontal scroll), harde grens as dashed-red last chip, tags collapsed by default with count summary.
+- Status explainer Sheet on Bewerken tab (one Info button, six entries with colour swatches).
 
-- `Heel graag` vs `Ja`: both green. Make `Heel graag` warmer/saturated (e.g. lime→emerald distinction) or add an outline ring on `Heel graag` only.
-- `Misschien` vs `Voor hen`: too similar amber. Push `Voor hen` toward muted blue/grey (it's a directional preference, not enthusiasm).
-- Pulse animation: currently only `Ja` pulses. Either add to `Heel graag` or remove from `Ja` so pulse signals something specific (suggest: pulse = "fresh / unrated → rated this session").
-- New `Nieuwsgierig` (curious) status between `Misschien` and `Ja` — add to rubric in `lib/matching.ts`, wire color, update DOMINANT_LABEL.
+### Remaining (Phase 3 open item)
 - Ledger PDF palette: bump contrast on body text / counter swatches; current swatches read as vague greys on print.
 
-## Phase 4 — KinkRow Edit UI
+## Phase 4 — KinkRow Edit UI ✅ SHIPPED (2026-06-19, commit 31cacc1)
 
-Cleaner editing surface.
-
-- Non-switch roles: hide `Geven` / `Ontvangen` toggle entirely (only switches need directional UI).
-- `Harde grens` button: shrink — it's the rarest pick, doesn't need parity sizing.
-- Thicker border on desirability tap to confirm interaction (currently subtle).
-- Sort: group by category but inside each category sort by rated-first → unrated-last so progress is visible.
+- Direction toggle hidden for non-switch roles. Harde grens joined pill row (dashed-red ghost, no separate row). Thicker left-border on active status. Rated-first sort within categories.
 
 ## Phase 5 — Navigation Layout
 
