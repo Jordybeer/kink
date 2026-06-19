@@ -1,31 +1,35 @@
 "use client";
 import { useState } from "react";
-import { Ban, Info } from "lucide-react";
+import { Ban, ChevronDown, ChevronRight, Info } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
 import type { RoleDirection } from "@/lib/roles";
 import InfoSheet from "./InfoSheet";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
 
-const PREF_PILLS: { status: NonNullable<KinkStatus>; label: string }[] = [
-  { status: "yes",     label: "Heel graag" },
-  { status: "willing", label: "Ja" },
-  { status: "maybe",   label: "Misschien" },
-  { status: "no",      label: "Voor hen" },
+type PrefPill = { status: NonNullable<KinkStatus>; label: string; danger?: boolean };
+const PREF_PILLS: PrefPill[] = [
+  { status: "yes",          label: "Heel graag" },
+  { status: "willing",      label: "Ja" },
+  { status: "nieuwsgierig", label: "Nieuwsgierig" },
+  { status: "maybe",        label: "Misschien" },
+  { status: "no",           label: "Voor hen" },
+  { status: "hard_no",      label: "Harde grens", danger: true },
 ];
 
-const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "yes", "willing"];
+const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "nieuwsgierig", "willing", "yes"];
 const worstOf = (a: KinkStatus | undefined, b: KinkStatus | undefined): KinkStatus => {
   for (const s of STATUS_ORDER) { if (a === s || b === s) return s; }
   return null;
 };
 
 const STATUS_BORDER: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "var(--yes)",
-  willing: "var(--willing)",
-  maybe:   "var(--maybe)",
-  no:      "var(--no)",
-  hard_no: "var(--hard-no)",
+  yes:          "var(--yes)",
+  willing:      "var(--willing)",
+  nieuwsgierig: "var(--nieuwsgierig)",
+  maybe:        "var(--maybe)",
+  no:           "var(--no)",
+  hard_no:      "var(--hard-no)",
 };
 
 interface Props {
@@ -46,16 +50,64 @@ const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
   { dir: "both",    label: "Beide" },
 ];
 
+interface PillRowProps {
+  label?: string;
+  current: KinkStatus;
+  onSelect: (s: KinkStatus) => void;
+  tour?: string;
+}
+
+function PillRow({ label, current, onSelect, tour }: PillRowProps) {
+  return (
+    <div data-tour={tour} className="flex flex-wrap items-center gap-1.5 px-3 pb-1.5">
+      {label && (
+        <span className="text-[11px] flex-none mr-1 w-full sm:w-auto" style={{ color: "var(--text2)" }}>{label}</span>
+      )}
+      {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
+        const active = current === s;
+        const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[13px] px-3 py-2 inline-flex items-center gap-1";
+        if (active) {
+          return (
+            <button
+              key={s}
+              onClick={() => onSelect(null)}
+              aria-pressed
+              className={`${baseClasses} status-${s}`}
+            >
+              {danger && <Ban size={12} aria-hidden="true" />}
+              {pillLabel}
+            </button>
+          );
+        }
+        const inactiveStyle = danger
+          ? { color: "var(--hard-no)", borderColor: "var(--hard-no)", borderStyle: "dashed" as const, background: "transparent" }
+          : { color: "var(--text2)", borderColor: "var(--border)" };
+        return (
+          <button
+            key={s}
+            onClick={() => onSelect(s)}
+            aria-pressed={false}
+            className={baseClasses}
+            style={inactiveStyle}
+          >
+            {danger && <Ban size={12} aria-hidden="true" />}
+            {pillLabel}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function KinkRow({
   kink, entry, onStatusChange,
   onTagsChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
   compact, roleDirection,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
-
-  const status = entry.status;
-
   const tags = entry.tags ?? [];
+  const tagCount = tags.length;
+  const [tagsOpen, setTagsOpen] = useState(tagCount > 0);
 
   function toggleTag(tag: string) {
     const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
@@ -64,10 +116,10 @@ export default function KinkRow({
 
   const showTags = !compact;
   const effectiveStatus: KinkStatus =
-    entry.direction === "give"    ? (entry.statusGive    ?? status) :
-    entry.direction === "receive" ? (entry.statusReceive ?? status) :
-    entry.direction === "both"    ? (worstOf(entry.statusGive, entry.statusReceive) ?? status) :
-    status;
+    entry.direction === "give"    ? (entry.statusGive    ?? entry.status) :
+    entry.direction === "receive" ? (entry.statusReceive ?? entry.status) :
+    entry.direction === "both"    ? (worstOf(entry.statusGive, entry.statusReceive) ?? entry.status) :
+    entry.status;
   const showDirection = !compact && !!onDirectionChange && roleDirection === "both";
 
   return (
@@ -96,13 +148,12 @@ export default function KinkRow({
           >
             <Info size={14} aria-hidden="true" />
           </button>
-
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
         </div>
 
         {/* Direction selector */}
         {showDirection && (
-          <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-1 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-1.5 px-3 pb-1">
             <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Richting:</span>
             {DIRECTIONS.map(({ dir, label }) => {
               const active = entry.direction === dir;
@@ -111,7 +162,7 @@ export default function KinkRow({
                   key={dir}
                   onClick={() => onDirectionChange!(active ? null : dir)}
                   aria-pressed={active}
-                  className="focus-ring rounded-full border text-[11px] px-2.5 py-1 font-medium transition-colors whitespace-nowrap flex-none"
+                  className="focus-ring rounded-full border text-[11px] px-2.5 py-1 font-medium transition-colors flex-none"
                   style={active
                     ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
                     : { borderColor: "var(--border)", color: "var(--text2)" }}
@@ -124,155 +175,82 @@ export default function KinkRow({
         )}
 
         {/* Pill rows — direction-aware */}
-        {(!entry.direction || entry.direction === "give") && (
-          <div
-            data-tour="pills"
-            className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto"
-          >
-            {entry.direction === "give" && (
-              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Geven:</span>
-            )}
-            {PREF_PILLS.map(({ status: s, label }) => {
-              const active = entry.direction === "give" ? entry.statusGive === s : status === s;
-              return (
-                <button
-                  key={s}
-                  onClick={() => entry.direction === "give"
-                    ? onStatusGiveChange?.(active ? null : s)
-                    : onStatusChange(active ? null : s)}
-                  aria-pressed={active}
-                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
-                  style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+        {(!entry.direction) && (
+          <PillRow
+            tour="pills"
+            current={entry.status}
+            onSelect={(s) => onStatusChange(s)}
+          />
+        )}
+        {entry.direction === "give" && (
+          <PillRow
+            label="Geven:"
+            current={entry.statusGive ?? null}
+            onSelect={(s) => onStatusGiveChange?.(s)}
+          />
         )}
         {entry.direction === "receive" && (
-          <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
-            <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Ontvangen:</span>
-            {PREF_PILLS.map(({ status: s, label }) => {
-              const active = entry.statusReceive === s;
-              return (
-                <button
-                  key={s}
-                  onClick={() => onStatusReceiveChange?.(active ? null : s)}
-                  aria-pressed={active}
-                  className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
-                  style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <PillRow
+            label="Ontvangen:"
+            current={entry.statusReceive ?? null}
+            onSelect={(s) => onStatusReceiveChange?.(s)}
+          />
         )}
         {entry.direction === "both" && (
           <>
-            <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
-              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Geven:</span>
-              {PREF_PILLS.map(({ status: s, label }) => {
-                const active = entry.statusGive === s;
-                return (
-                  <button
-                    key={s}
-                    onClick={() => onStatusGiveChange?.(active ? null : s)}
-                    aria-pressed={active}
-                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
-                    style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="no-scrollbar flex items-center gap-1 px-3 pb-1 overflow-x-auto">
-              <span className="text-[11px] flex-none mr-1" style={{ color: "var(--text2)" }}>Ontvangen:</span>
-              {PREF_PILLS.map(({ status: s, label }) => {
-                const active = entry.statusReceive === s;
-                return (
-                  <button
-                    key={s}
-                    onClick={() => onStatusReceiveChange?.(active ? null : s)}
-                    aria-pressed={active}
-                    className={`focus-ring rounded-full border font-medium transition-colors whitespace-nowrap flex-none min-h-[44px] text-[13px] px-3 py-2${active ? ` status-${s}` : ""}`}
-                    style={!active ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            <PillRow
+              label="Geven:"
+              current={entry.statusGive ?? null}
+              onSelect={(s) => onStatusGiveChange?.(s)}
+            />
+            <PillRow
+              label="Ontvangen:"
+              current={entry.statusReceive ?? null}
+              onSelect={(s) => onStatusReceiveChange?.(s)}
+            />
           </>
         )}
 
-
-        {/* Hard limit — separate row, visually distinct */}
-        {!compact && (() => {
-          const isGive    = entry.direction === "give";
-          const isReceive = entry.direction === "receive";
-          const isBoth    = entry.direction === "both";
-          const active =
-            isBoth    ? entry.statusGive === "hard_no" || entry.statusReceive === "hard_no" :
-            isGive    ? entry.statusGive    === "hard_no" :
-            isReceive ? entry.statusReceive === "hard_no" :
-            status === "hard_no";
-          const handleClick = () => {
-            if (isBoth) {
-              onStatusGiveChange?.(active ? null : "hard_no");
-              onStatusReceiveChange?.(active ? null : "hard_no");
-            } else if (isGive) {
-              onStatusGiveChange?.(active ? null : "hard_no");
-            } else if (isReceive) {
-              onStatusReceiveChange?.(active ? null : "hard_no");
-            } else {
-              onStatusChange(active ? null : "hard_no");
-            }
-          };
-          return (
-            <div data-tour="hard-no" className="px-3 pb-1 flex justify-end">
-              <button
-                onClick={handleClick}
-                aria-pressed={active}
-                className={`focus-ring rounded-full border text-[10px] font-semibold px-2.5 py-1 min-h-[36px] transition-colors inline-flex items-center gap-1${active ? " status-hard_no" : ""}`}
-                style={!active ? {
-                  color: "var(--hard-no)",
-                  borderColor: "color-mix(in srgb, var(--hard-no) 30%, transparent)",
-                  background: "transparent",
-                } : {}}
-              >
-                <Ban size={11} aria-hidden="true" />
-                Harde grens
-              </button>
-            </div>
-          );
-        })()}
-
+        {/* Tags — collapsed by default with summary */}
         {showTags && (
-          <div className="px-3 pb-2 pt-1">
-            <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
-              {TAGS.map((tag) => {
-                const active = tags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    aria-pressed={active}
-                    className="focus-ring rounded-full border transition-colors flex items-center whitespace-nowrap flex-none text-[11px] px-2.5 py-1 min-h-[44px]"
-                    style={{
-                      background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
-                      borderColor: active ? "var(--accent)" : "var(--border)",
-                      color: active ? "var(--accent)" : "var(--text2)",
-                    }}
-                  >
-                    {tag}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <>
+            <button
+              onClick={() => setTagsOpen((o) => !o)}
+              aria-expanded={tagsOpen}
+              className="focus-ring px-3 pt-1 pb-2 text-[11px] flex items-center gap-2 w-full text-left transition-colors"
+              style={{ color: "var(--text2)" }}
+            >
+              {tagsOpen ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}
+              <span className="flex-none">Vlaggen{tagCount > 0 ? ` · ${tagCount}` : ""}</span>
+              {!tagsOpen && tagCount > 0 && (
+                <span className="truncate flex-1" style={{ opacity: 0.7 }}>
+                  — {tags.join(" · ")}
+                </span>
+              )}
+            </button>
+            {tagsOpen && (
+              <div className="flex flex-wrap gap-1.5 px-3 pb-2">
+                {TAGS.map((tag) => {
+                  const active = tags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      aria-pressed={active}
+                      className="focus-ring rounded-full border transition-colors text-[11px] px-2.5 py-1 min-h-[36px]"
+                      style={{
+                        background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
+                        borderColor: active ? "var(--accent)" : "var(--border)",
+                        color: active ? "var(--accent)" : "var(--text2)",
+                      }}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-export type KinkStatus = "yes" | "willing" | "maybe" | "no" | "hard_no" | null;
+export type KinkStatus = "yes" | "willing" | "nieuwsgierig" | "maybe" | "no" | "hard_no" | null;
 
 export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand";
 

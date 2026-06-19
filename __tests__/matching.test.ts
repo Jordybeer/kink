@@ -84,3 +84,27 @@ describe("isConflict", () => {
     expect(isConflict(e({ status: "willing" }), e({ status: "willing" }))).toBe(false);
   });
 });
+
+describe("nieuwsgierig", () => {
+  it("nieuwsgierig + yes is a match (strong)", () => {
+    expect(isKinkMatch(e({ status: "nieuwsgierig" }), e({ status: "yes" }))).toBe(true);
+  });
+
+  it("nieuwsgierig + maybe is not a strong/perfect match", () => {
+    expect(isKinkMatch(e({ status: "nieuwsgierig" }), e({ status: "maybe" }))).toBe(false);
+  });
+
+  it("nieuwsgierig pair is not a hard limit", () => {
+    expect(isHardLimit(e({ status: "nieuwsgierig" }), e({ status: "nieuwsgierig" }))).toBe(false);
+  });
+
+  it("nieuwsgierig + nieuwsgierig surfaces as conversation worth having", () => {
+    // both curious, neither tried — lands in discuss bucket → isConflict true
+    expect(isConflict(e({ status: "nieuwsgierig" }), e({ status: "nieuwsgierig" }))).toBe(true);
+  });
+
+  it("nieuwsgierig vs hard_no = hard limit, not conflict", () => {
+    expect(isHardLimit(e({ status: "nieuwsgierig" }), e({ status: "hard_no" }))).toBe(true);
+    expect(isConflict(e({ status: "nieuwsgierig" }), e({ status: "hard_no" }))).toBe(false);
+  });
+});

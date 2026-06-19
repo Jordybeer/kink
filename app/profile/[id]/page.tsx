@@ -10,7 +10,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, FileDown, FileText, MessageSquare, UserX } from "lucide-react";
+import { ChevronDown, ChevronRight, FileDown, FileText, Info, MessageSquare, UserX } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -20,11 +20,12 @@ import { getProfileType } from "@/lib/profileType";
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
 const STATUS_COLORS: Record<NonNullable<KinkStatus>, string> = {
-  willing: "var(--willing)", yes: "var(--yes)", maybe: "var(--maybe)",
-  no: "var(--no)", hard_no: "var(--hard-no)",
+  willing: "var(--willing)", yes: "var(--yes)", nieuwsgierig: "var(--nieuwsgierig)",
+  maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
 };
 const STATUS_LABELS: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
+  yes: "Heel graag", willing: "Ja", nieuwsgierig: "Nieuwsgierig",
+  maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
 };
 
 
@@ -57,6 +58,7 @@ export default function ProfilePage({ params }: Props) {
   const [editUrlError, setEditUrlError] = useState<string | null>(null);
   const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
   const [meerOpen, setMeerOpen] = useState(true);
   const [showSaved, setShowSaved] = useState(false);
   const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -425,6 +427,15 @@ export default function ProfilePage({ params }: Props) {
           exit={{ opacity: 0, x: -8 }}
           transition={t.fast}
         >
+          <button
+            type="button"
+            onClick={() => setStatusExplainerOpen(true)}
+            className="focus-ring flex items-center gap-2 px-3 py-2 mx-4 mb-3 text-xs rounded-lg border transition-colors"
+            style={{ color: "var(--text2)", borderColor: "var(--border)", background: "var(--surface2)" }}
+          >
+            <Info size={14} aria-hidden="true" />
+            Wat betekenen deze keuzes?
+          </button>
           <div className="px-4 pb-2 flex gap-2">
             <input
               value={search}
@@ -833,6 +844,37 @@ export default function ProfilePage({ params }: Props) {
         </motion.div>
       )}
       </AnimatePresence>
+
+      {/* Status meaning explainer */}
+      <Sheet open={statusExplainerOpen} onClose={() => setStatusExplainerOpen(false)} aria-label="Uitleg keuzes">
+        <div
+          className="rounded-t-2xl p-6 max-h-[80dvh] overflow-y-auto"
+          style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
+        >
+          <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
+          <ul className="flex flex-col gap-3">
+            {[
+              { token: "--yes",          label: "Heel graag",   desc: "Ik wil dit graag. Dit zoek ik actief op." },
+              { token: "--willing",      label: "Ja",           desc: "Ik ben hier voor. Geen probleem mee." },
+              { token: "--nieuwsgierig", label: "Nieuwsgierig", desc: "Heb ik niet geprobeerd, maar ik ben benieuwd en wil het overwegen." },
+              { token: "--maybe",        label: "Misschien",    desc: "Onzeker. Hangt af van stemming, context, of met wie." },
+              { token: "--no",           label: "Voor hen",     desc: "Niet voor mij, maar ik wil dit mijn partner geven of ontvangen." },
+              { token: "--hard-no",      label: "Harde grens",  desc: "Absolute limiet. Niet bespreekbaar." },
+            ].map(({ token, label, desc }) => (
+              <li key={label} className="flex gap-3">
+                <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: `var(${token})` }} aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{label}</p>
+                  <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>{desc}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] italic mt-4" style={{ color: "var(--text2)" }}>
+            Tip: tik nogmaals op een actieve knop om hem uit te zetten.
+          </p>
+        </div>
+      </Sheet>
 
       {/* Edit form — bottom sheet */}
       <Sheet open={editing && !isShared} onClose={() => setEditing(false)} aria-label="Profiel bewerken">

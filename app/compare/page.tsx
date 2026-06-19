@@ -12,11 +12,12 @@ import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "Heel graag",
-  willing: "Ja",
-  maybe:   "Misschien",
-  no:      "Voor hen",
-  hard_no: "Harde grens",
+  yes:          "Heel graag",
+  willing:      "Ja",
+  nieuwsgierig: "Nieuwsgierig",
+  maybe:        "Misschien",
+  no:           "Voor hen",
+  hard_no:      "Harde grens",
 };
 
 const COLOUR_A = "var(--accent)";
