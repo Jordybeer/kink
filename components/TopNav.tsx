@@ -78,14 +78,14 @@ export default function TopNav() {
               );
             })}
           </div>
-          <div className="ml-auto flex items-center gap-2 flex-none flex-shrink-0">
+          <div className="ml-auto flex items-center gap-2" style={{ flexWrap: 'nowrap' }}>
             <StatusDot />
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              className="focus-ring flex items-center justify-center rounded-lg flex-shrink-0"
-              style={{ width: 44, height: 44, color: "var(--text2)" }}
+              className="focus-ring flex items-center justify-center rounded-lg"
+              style={{ width: 44, height: 44, color: "var(--text2)", flexShrink: 0 }}
             >
               <Settings size={18} aria-hidden="true" />
             </button>
@@ -118,12 +118,12 @@ export default function TopNav() {
         <span className="flex-1 ml-2 font-bold text-base truncate min-w-0">
           {title}
         </span>
-        <div className="flex items-center gap-2 flex-none flex-shrink-0">
+        <div className="flex items-center gap-2" style={{ flexWrap: 'nowrap' }}>
           {profileIdFromPath && (
             <Link
               href={`/compare?a=${profileIdFromPath}`}
-              className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg flex-shrink-0"
-              style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
+              className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg"
+              style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)", flexShrink: 0 }}
             >
               <Zap size={13} />
               Vergelijk
@@ -132,8 +132,8 @@ export default function TopNav() {
           {profileIdFromPath && (
             <Link
               href="/scene"
-              className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg flex-shrink-0"
-              style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+              className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg"
+              style={{ color: "var(--text2)", border: "1px solid var(--border)", flexShrink: 0 }}
             >
               <Clapperboard size={13} />
               Scène
