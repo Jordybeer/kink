@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>KinkSync — Mega Idea Wall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    :root {
+      --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
+      --border: rgba(255,255,255,0.08); --text: #e8e8e8; --muted: #666; --faint: #2a2a2a;
+      --indigo: #6366f1; --purple: #a855f7; --red: #ef4444; --green: #22c55e;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 140px; max-width: 440px; margin: 0 auto; position: relative; }
+
+    /* Typography */
+    .label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .header { margin: 24px 0 40px; }
+    .badge { display: inline-flex; padding: 4px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .header h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+    .header p { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+    .section { margin-bottom: 56px; }
+    svg { display: block; }
+
+    /* 1. BOTTOM SHEET */
+    .trigger-btn { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: transform 0.15s; }
+    .trigger-btn:active { transform: scale(0.98); }
+    .trigger-label { font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 4px; }
+    .trigger-value { font-size: 15px; font-weight: 600; color: var(--text); }
+    .chevron-wrap { background: var(--surface2); padding: 8px; border-radius: 999px; color: var(--muted); }
+
+    /* 2. CONTEXT MENU */
+    .list-item { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 20px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .more-btn { padding: 8px; background: rgba(255,255,255,0.06); border: none; border-radius: 999px; color: var(--muted); cursor: pointer; display: flex; }
+    .ctx-anchor { position: relative; }
+    .context-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 196px; background: rgba(20,20,20,0.97); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 200; transform-origin: top right; transform: scale(0.92) translateY(-6px); opacity: 0; pointer-events: none; transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease; }
+    .context-menu.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+    .ctx-item { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; font-size: 14px; font-weight: 500; color: var(--text); background: none; border: none; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .ctx-item.danger { color: var(--red); }
+
+    /* 3. ACCORDION */
+    .accordion { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+    .acc-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: none; border: none; color: var(--text); cursor: pointer; }
+    .acc-icon { background: rgba(168,85,247,0.15); color: var(--purple); padding: 8px; border-radius: 12px; display: flex; }
+    .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+    .acc-body.open { max-height: 200px; }
+    .acc-inner { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .ios-toggle { position: relative; width: 44px; height: 26px; display: inline-block; }
+    .ios-toggle input { opacity: 0; position: absolute; }
+    .ios-track { position: absolute; inset: 0; border-radius: 999px; background: var(--faint); transition: background 0.25s; cursor: pointer; }
+    .ios-track::after { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 999px; background: white; top: 2px; left: 2px; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .ios-toggle input:checked + .ios-track { background: var(--purple); }
+    .ios-toggle input:checked + .ios-track::after { transform: translateX(18px); }
+
+    /* 4. SEGMENTED */
+    .seg-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px; display: flex; position: relative; }
+    .seg-indicator { position: absolute; top: 4px; bottom: 4px; border-radius: 999px; background: linear-gradient(135deg, var(--indigo), var(--purple)); transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; z-index: 0; }
+    .seg-btn { flex: 1; padding: 10px 8px; border: none; background: none; color: var(--muted); font-size: 13px; font-weight: 600; border-radius: 999px; cursor: pointer; position: relative; z-index: 1; transition: color 0.2s; white-space: nowrap; }
+    .seg-btn.active { color: white; }
+
+    /* 5. FLOATING SPEED DIAL (FAB) */
+    .fab-container { position: relative; height: 240px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; display: flex; align-items: flex-end; justify-content: flex-end; padding: 20px; }
+    .fab-bg-mock { position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); pointer-events: none; }
+    .fab-menu { position: absolute; bottom: 80px; right: 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; pointer-events: none; }
+    .fab-item { display: flex; align-items: center; gap: 12px; opacity: 0; transform: translateY(10px) scale(0.9); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    .fab-item-label { background: var(--surface2); padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    .fab-item-btn { width: 44px; height: 44px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    .fab.open .fab-menu { pointer-events: all; }
+    .fab.open .fab-item { opacity: 1; transform: translateY(0) scale(1); }
+    .fab.open .fab-item:nth-child(1) { transition-delay: 0.1s; }
+    .fab.open .fab-item:nth-child(2) { transition-delay: 0.05s; }
+    .fab.open .fab-item:nth-child(3) { transition-delay: 0s; }
+    .fab-main { width: 56px; height: 56px; border-radius: 999px; background: linear-gradient(135deg, var(--indigo), var(--purple)); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 24px rgba(99,102,241,0.4); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; position: relative; }
+    .fab.open .fab-main { transform: rotate(45deg); background: var(--surface2); color: var(--muted); border: 1px solid var(--border); box-shadow: none; }
+
+    /* 6. SWIPE TO REVEAL */
+    .swipe-container { border-radius: 20px; overflow: hidden; position: relative; background: var(--surface); border: 1px solid var(--border); }
+    .swipe-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; }
+    .swipe-btn { width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; color: white; font-size: 11px; font-weight: 500; cursor: pointer; }
+    .swipe-btn.edit { background: var(--surface2); color: var(--text); }
+    .swipe-btn.del { background: var(--red); }
+    .swipe-content { position: relative; z-index: 2; background: var(--surface); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-radius: 20px; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); touch-action: pan-y; }
+    /* We'll simulate the swipe with JS for the demo */
+    .swipe-container.swiped .swipe-content { transform: translateX(-140px); }
+
+    /* 7. GLASS BOTTOM TAB BAR */
+    .tab-bar { background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 28px; padding: 8px 12px; display: flex; justify-content: space-between; position: relative; }
+    .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; color: var(--muted); background: none; border: none; cursor: pointer; transition: color 0.2s; position: relative; z-index: 1; }
+    .tab-item.active { color: white; }
+    .tab-icon { position: relative; }
+    .tab-label { font-size: 10px; font-weight: 600; }
+    .tab-indicator { position: absolute; width: 4px; height: 4px; border-radius: 999px; background: var(--purple); bottom: -8px; left: 50%; transform: translateX(-50%) scale(0); transition: transform 0.2s; }
+    .tab-item.active .tab-indicator { transform: translateX(-50%) scale(1); box-shadow: 0 0 8px var(--purple); }
+
+    /* OVERLAYS */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%); width: 100%; max-width: 440px; background: #0f0f0f; border-top: 1px solid var(--border); border-radius: 28px 28px 0 0; z-index: 101; padding: 12px 16px 40px; transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+    .sheet.open { transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .sheet-handle { width: 48px; height: 5px; background: var(--faint); border-radius: 999px; margin: 0 auto 20px; }
+    .sheet-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; padding: 0 4px; }
+    .sheet-option { width: 100%; display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 18px; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--text); transition: background 0.15s, border-color 0.15s; margin-bottom: 8px; }
+    .sheet-option.active { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.2); }
+    .sheet-option .icon-wrap { width: 40px; height: 40px; border-radius: 999px; background: var(--surface2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; color: var(--muted); }
+    .sheet-option.active .icon-wrap { background: rgba(99,102,241,0.15); color: var(--indigo); }
+    .opt-name { font-size: 14px; font-weight: 600; text-align: left; }
+    .opt-desc { font-size: 12px; color: var(--muted); text-align: left; margin-top: 2px; }
+    .sheet-option.active .opt-name { color: var(--indigo); }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--indigo); margin-left: auto; flex-shrink: 0; box-shadow: 0 0 10px rgba(99,102,241,0.6); }
+
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Top Glow -->
+  <div style="position:fixed;top:0;left:0;right:0;height:300px;background:radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 70%);pointer-events:none;z-index:0;"></div>
+  <!-- Ambient Bottom Glow -->
+  <div style="position:fixed;bottom:0;left:0;right:0;height:400px;background:radial-gradient(ellipse at 50% 100%, rgba(168,85,247,0.08) 0%, transparent 70%);pointer-events:none;z-index:0;"></div>
+
+  <div style="position:relative;z-index:1;">
+
+    <header class="header">
+      <div class="badge">KinkSync Mega Wall</div>
+      <h1>Mobile Menus.</h1>
+      <p>The glowing ambient light acts as a virtual 3D backlight. Here are 7 completely touch-optimized navigation patterns for React apps.</p>
+    </header>
+
+    <!-- 1. Bottom Sheet -->
+    <div class="section">
+      <div class="label">1. Action Drawer</div>
+      <div class="desc">Best for main entity selections. Thumb-friendly and replaces ugly native HTML selects.</div>
+      <button class="trigger-btn" id="sheetTrigger">
+        <div>
+          <div class="trigger-label">Privacy Level</div>
+          <div class="trigger-value" id="sheetValue">Local Only</div>
+        </div>
+        <div class="chevron-wrap">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </button>
+    </div>
+
+    <!-- 2. Context Menu -->
+    <div class="section">
+      <div class="label">2. Glass Context Menu</div>
+      <div class="desc">Anchors to a list item for quick 3-tap actions without leaving the screen.</div>
+      <div class="list-item">
+        <div>
+          <div class="item-title" style="font-weight:600">Late Night Thoughts</div>
+          <div class="item-sub">Added 2 hours ago</div>
+        </div>
+        <div class="ctx-anchor">
+          <button class="more-btn" id="ctxTrigger">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
+          </button>
+          <div class="context-menu" id="ctxMenu">
+            <button class="ctx-item">Edit Entry <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="ctx-item">Hide from Sync <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
+            <button class="ctx-item danger">Delete Forever <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Accordion -->
+    <div class="section">
+      <div class="label">3. Inline Accordion</div>
+      <div class="desc">Expands preferences in place. No overlay — great for toggles and nested settings.</div>
+      <div class="accordion">
+        <button class="acc-trigger" id="accTrigger">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="acc-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <span style="font-size:14px;font-weight:500">Security Preferences</span>
+          </div>
+          <div id="accChevron" style="color:var(--muted);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </button>
+        <div class="acc-body" id="accBody">
+          <div class="acc-inner">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(0,0,0,0.3);border-radius:14px">
+              <span style="font-size:13px;color:#ccc">Require FaceID</span>
+              <label class="ios-toggle"><input type="checkbox" checked><span class="ios-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Segmented -->
+    <div class="section">
+      <div class="label">4. Segmented Pill Selector</div>
+      <div class="desc">Sliding gradient indicator. Replaces tab-style dropdowns for 2–4 options.</div>
+      <div class="seg-wrap" id="segWrap">
+        <div class="seg-indicator" id="segIndicator"></div>
+        <button class="seg-btn active" data-index="0">Public</button>
+        <button class="seg-btn" data-index="1">Friends</button>
+        <button class="seg-btn" data-index="2">Private</button>
+      </div>
+    </div>
+
+    <!-- 5. Speed Dial FAB -->
+    <div class="section">
+      <div class="label">5. Speed Dial (FAB)</div>
+      <div class="desc">Floating Action Button that expands into a vertical quick-menu. Great for creation apps.</div>
+      <div class="fab-container">
+        <div class="fab-bg-mock"></div>
+
+        <div class="fab" id="fabToggle">
+          <div class="fab-menu">
+            <div class="fab-item">
+              <div class="fab-item-label">New Entry</div>
+              <div class="fab-item-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            </div>
+            <div class="fab-item">
+              <div class="fab-item-label">Scan QR</div>
+              <div class="fab-item-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg></div>
+            </div>
+            <div class="fab-item">
+              <div class="fab-item-label">Add Image</div>
+              <div class="fab-item-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            </div>
+          </div>
+          <button class="fab-main">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Swipe Reveal -->
+    <div class="section">
+      <div class="label">6. Swipe-to-Reveal Actions</div>
+      <div class="desc">A standard iOS pattern. Try "swiping" the row below (click to simulate swipe for this demo).</div>
+
+      <div class="swipe-container" id="swipeBox">
+        <div class="swipe-actions">
+          <button class="swipe-btn edit">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Edit
+          </button>
+          <button class="swipe-btn del">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Trash
+          </button>
+        </div>
+        <div class="swipe-content" style="cursor:grab">
+          <div>
+            <div style="font-size:14px;font-weight:600">Encrypted Notes</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">4 files synced</div>
+          </div>
+          <svg width="18" height="18" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Bottom Tab Bar -->
+    <div class="section">
+      <div class="label">7. Glass Tab Bar</div>
+      <div class="desc">The main navigation anchor. Floating glass with animated dot indicators.</div>
+
+      <div class="tab-bar" id="tabBar">
+        <button class="tab-item active" style="flex:1">
+          <div class="tab-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <div class="tab-indicator"></div>
+          </div>
+          <div class="tab-label">Home</div>
+        </button>
+        <button class="tab-item" style="flex:1">
+          <div class="tab-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <div class="tab-indicator"></div>
+          </div>
+          <div class="tab-label">Search</div>
+        </button>
+        <button class="tab-item" style="flex:1">
+          <div class="tab-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <div class="tab-indicator"></div>
+          </div>
+          <div class="tab-label">Activity</div>
+        </button>
+        <button class="tab-item" style="flex:1">
+          <div class="tab-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="tab-indicator"></div>
+          </div>
+          <div class="tab-label">Profile</div>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Overlay + Sheet (Same as v4) -->
+  <div class="overlay" id="sheetOverlay"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Select Privacy Level</div>
+    <button class="sheet-option active" data-value="Local Only" id="opt0">
+      <div class="icon-wrap"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div><div class="opt-name">Local Only</div><div class="opt-desc">Data never leaves this device</div></div>
+      <div class="dot" id="dot0"></div>
+    </button>
+    <button class="sheet-option" data-value="Encrypted Sync" id="opt1">
+      <div class="icon-wrap"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div><div class="opt-name">Encrypted Sync</div><div class="opt-desc">E2E synced across your devices</div></div>
+      <div class="dot" id="dot1" style="display:none"></div>
+    </button>
+  </div>
+
+  <script>
+    // 1. Bottom Sheet
+    document.getElementById('sheetTrigger').addEventListener('click', () => { document.getElementById('sheetOverlay').classList.add('open'); document.getElementById('sheet').classList.add('open'); });
+    document.getElementById('sheetOverlay').addEventListener('click', () => { document.getElementById('sheetOverlay').classList.remove('open'); document.getElementById('sheet').classList.remove('open'); });
+    document.querySelectorAll('.sheet-option').forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sheet-option').forEach((b, j) => { b.classList.remove('active'); document.getElementById('dot' + j).style.display = 'none'; });
+        btn.classList.add('active'); document.getElementById('dot' + i).style.display = 'block';
+        document.getElementById('sheetValue').textContent = btn.getAttribute('data-value');
+        setTimeout(() => { document.getElementById('sheetOverlay').classList.remove('open'); document.getElementById('sheet').classList.remove('open'); }, 180);
+      });
+    });
+
+    // 2. Context Menu
+    document.getElementById('ctxTrigger').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('ctxMenu').classList.toggle('open'); });
+    document.addEventListener('click', () => document.getElementById('ctxMenu').classList.remove('open'));
+
+    // 3. Accordion
+    document.getElementById('accTrigger').addEventListener('click', () => { document.getElementById('accBody').classList.toggle('open'); document.getElementById('accChevron').style.transform = document.getElementById('accBody').classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)'; });
+
+    // 4. Segmented
+    const segWrap = document.getElementById('segWrap'), segIndicator = document.getElementById('segIndicator'), segBtns = document.querySelectorAll('.seg-btn');
+    const updateIndicator = (btn) => { const wr = segWrap.getBoundingClientRect(), br = btn.getBoundingClientRect(); segIndicator.style.left = (br.left - wr.left) + 'px'; segIndicator.style.width = br.width + 'px'; };
+    window.addEventListener('load', () => updateIndicator(segBtns[0]));
+    segBtns.forEach(btn => btn.addEventListener('click', () => { segBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); updateIndicator(btn); }));
+
+    // 5. FAB Speed Dial
+    document.getElementById('fabToggle').addEventListener('click', function() { this.classList.toggle('open'); });
+
+    // 6. Swipe Reveal
+    document.getElementById('swipeBox').addEventListener('click', function() { this.classList.toggle('swiped'); });
+
+    // 7. Tab Bar
+    const tabs = document.querySelectorAll('.tab-item');
+    tabs.forEach(tab => tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); }));
+  </script>
+</body>
+</html>
