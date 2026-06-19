@@ -27,10 +27,6 @@ export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
     if (sa === "yes" && sb === "yes") return { score: 95, kind: "perfect" };
     if ((sa === "yes" && sb === "willing") || (sa === "willing" && sb === "yes")) return { score: 75, kind: "strong" };
     if (sa === "willing" && sb === "willing") return { score: 60, kind: "soft" };
-    if ((sa === "nieuwsgierig" && sb === "yes") || (sa === "yes" && sb === "nieuwsgierig")) return { score: 70, kind: "strong" };
-    if ((sa === "nieuwsgierig" && sb === "willing") || (sa === "willing" && sb === "nieuwsgierig")) return { score: 55, kind: "soft" };
-    if (sa === "nieuwsgierig" && sb === "nieuwsgierig") return { score: 50, kind: "discuss" };
-    if ((sa === "nieuwsgierig" && sb === "maybe") || (sa === "maybe" && sb === "nieuwsgierig")) return { score: 40, kind: "discuss" };
     if ((sa === "maybe" && (sb === "yes" || sb === "willing")) ||
         ((sa === "yes" || sa === "willing") && sb === "maybe")) return { score: 45, kind: "discuss" };
     if (sa === "maybe" && sb === "maybe") return { score: 30, kind: "discuss" };
@@ -47,11 +43,7 @@ export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
     if ((give === "yes" && recv === "willing") || (give === "willing" && recv === "yes")) return { score: 85, kind: "strong" };
     if (give === "yes" && recv === "willing") return { score: 85, kind: "strong" };
     if (give === "willing" && recv === "willing") return { score: 60, kind: "soft" };
-    if ((give === "nieuwsgierig" && recv === "yes") || (give === "yes" && recv === "nieuwsgierig")) return { score: 75, kind: "strong" };
-    if ((give === "nieuwsgierig" && recv === "willing") || (give === "willing" && recv === "nieuwsgierig")) return { score: 55, kind: "soft" };
-    if (give === "nieuwsgierig" && recv === "nieuwsgierig") return { score: 50, kind: "discuss" };
     if (give === "no" || recv === "no") return { score: 10, kind: "discuss" };
-    if (give === "nieuwsgierig" || recv === "nieuwsgierig") return { score: 40, kind: "discuss" };
     if (give === "maybe" || recv === "maybe") return { score: 45, kind: "discuss" };
     return null;
   };
