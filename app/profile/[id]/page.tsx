@@ -10,7 +10,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, UserX } from "lucide-react";
+import { ChevronDown, ChevronRight, FileDown, FileText, MessageSquare, UserX } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -677,7 +677,7 @@ export default function ProfilePage({ params }: Props) {
                       background: showOverviewComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                     }}
                   >
-                    💬
+                    <MessageSquare size={14} aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -792,6 +792,34 @@ export default function ProfilePage({ params }: Props) {
             </div>
           )}
 
+          {!isShared && totalRated > 0 && (
+            <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: "var(--text2)" }}>
+                Download dit profiel
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExport}
+                  aria-label="Exporteer als tekstbestand"
+                  className="focus-ring flex-1 flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors"
+                  style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)", minHeight: 44 }}
+                >
+                  <FileText size={16} aria-hidden="true" />
+                  Tekst (.txt)
+                </button>
+                <button
+                  onClick={handlePDFExport}
+                  aria-label="Exporteer als PDF"
+                  className="focus-ring flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors"
+                  style={{ background: "var(--accent)", color: "var(--on-accent)", minHeight: 44 }}
+                >
+                  <FileDown size={16} aria-hidden="true" />
+                  PDF
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="pt-4 pb-2 flex justify-center">
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -805,28 +833,6 @@ export default function ProfilePage({ params }: Props) {
         </motion.div>
       )}
       </AnimatePresence>
-
-      {/* Export FAB — own profiles, overzicht tab only */}
-      {effectiveTab === "overzicht" && !isShared && (
-        <div className="fixed right-4 z-50 flex gap-2" style={{ bottom: "calc(var(--bottom-nav-h) + 0.5rem)" }}>
-          <button
-            onClick={handleExport}
-            aria-label="Exporteer als tekstbestand"
-            className="focus-ring w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-lg border"
-            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
-          >
-            TXT
-          </button>
-          <button
-            onClick={handlePDFExport}
-            aria-label="Exporteer als PDF"
-            className="focus-ring w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-lg border"
-            style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "var(--on-accent)" }}
-          >
-            PDF
-          </button>
-        </div>
-      )}
 
       {/* Edit form — bottom sheet */}
       <Sheet open={editing && !isShared} onClose={() => setEditing(false)} aria-label="Profiel bewerken">
