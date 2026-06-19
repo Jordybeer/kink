@@ -66,28 +66,29 @@ interface PillRowProps {
 
 function PillRow({ label, current, onSelect, tour }: PillRowProps) {
   return (
-    <div data-tour={tour} className="flex flex-wrap justify-center items-center gap-2 px-4 py-3">
+    <div data-tour={tour} className="px-3 py-3">
       {label && (
-        <span className="text-[11px] flex-none w-full text-center" style={{ color: "var(--text2)" }}>{label}</span>
+        <span className="text-[11px] block text-center mb-2" style={{ color: "var(--text2)" }}>{label}</span>
       )}
-      {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
-        const active = current === s;
-        const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[12px] px-2.5 py-2 inline-flex items-center gap-1";
-        if (active) {
+      <div className="grid grid-cols-5 gap-1">
+        {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
+          const active = current === s;
+          const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[11px] py-2 flex items-center justify-center text-center leading-tight";
+          if (active) {
+            return (
+              <button key={s} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
+                {danger && <Ban size={10} aria-hidden="true" className="mr-0.5 flex-none" />}
+                {pillLabel}
+              </button>
+            );
+          }
           return (
-            <button key={s} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
-              {danger && <Ban size={12} aria-hidden="true" />}
+            <button key={s} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
               {pillLabel}
             </button>
           );
-        }
-        return (
-          <button key={s} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
-            {danger && <Ban size={12} aria-hidden="true" />}
-            {pillLabel}
-          </button>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }
