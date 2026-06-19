@@ -43,21 +43,7 @@ export default function TabBar<T extends string>({ tabs, value, onChange }: Prop
               color: active ? "white" : "var(--text2)",
             }}
           >
-            <span className="relative flex items-center justify-center">
-              {tab.icon}
-
-              {/* Dot indicator */}
-              <motion.span
-                animate={{ scale: active ? 1 : 0 }}
-                transition={SPRING}
-                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                style={{
-                  background: "var(--accent)",
-                  boxShadow: active ? "0 0 8px var(--accent)" : "none",
-                }}
-                aria-hidden="true"
-              />
-            </span>
+            {tab.icon}
 
             <span className="text-[10px] font-semibold leading-none">{tab.label}</span>
           </button>
