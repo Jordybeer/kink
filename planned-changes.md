@@ -25,29 +25,81 @@ Small, isolated fixes. Each = one commit.
 - Segmented control tab bar, portrait hierarchy, metadata consolidated to compact single line.
 - DNA bar promoted. Pencil absorbed into Bewerken tab. Opacity feedback on tab switch.
 
-## Phase 3 — Status Color System Refinement ✅ SHIPPED (2026-06-19)
+## Phase 3 — Status Color System Refinement ✅ SHIPPED (2026-06-19/20)
 
 ### Phase 3a (commits 444e0ae + b685327)
 - Hue-separated greens (`--yes` / `--willing`). `Voor hen` pushed to muted slate. Pulse scoped to `yes` only. Static glow on all statuses.
 
 ### Phase 3b (commit 64417e9)
-- `Nieuwsgierig` status end-to-end: types, CSS token (`#06b6d4`), matching rubric + scoring, share encoding (`"c"`), ProfileHero DNA, StatusPicker, session/compare/contract labels.
-- KinkRow layout rewrite: wrap pills (no horizontal scroll), harde grens as dashed-red last chip, tags collapsed by default with count summary.
-- Status explainer Sheet on Bewerken tab (one Info button, six entries with colour swatches).
+- `Nieuwsgierig` status added (now reversed — see 3c below).
+- KinkRow layout rewrite: wrap pills, harde grens dashed-red last chip, tags collapsed.
+- Status explainer Sheet on Bewerken tab.
 
-### Remaining (Phase 3 open item)
-- Ledger PDF palette: bump contrast on body text / counter swatches; current swatches read as vague greys on print.
+### Phase 3c — Nieuwsgierig → Curious flag ✅ SHIPPED (2026-06-20, commit 209f458 + 0e04ddd)
+- `"nieuwsgierig"` removed from `KinkStatus` union → 5 values remain.
+- Replaced with `curious?: boolean` on `KinkEntry` — gold ★ pill next to kink name, not a status, not scored.
+- Removed from: matching.ts, shareProfile.ts (c→maybe fallback kept for old QR codes), StatusPicker, ProfileHero DNA, all status label maps (compare, contract, profile, session), globals.css (`.status-nieuwsgierig`, `.ks-glow-nieuwsgierig` removed, `--curious: #eab308` added).
+- Tests: 167 passing, all nieuwsgierig test blocks removed.
 
-## Phase 4 — KinkRow Edit UI ✅ SHIPPED (2026-06-19, commit 31cacc1)
+### Phase 3d — Color re-expression ✅ SHIPPED (2026-06-20, commit b51b59b)
+- `--yes`: lime `#84cc16` → orange `#f97316` (desire/heat).
+- `--no`: slate `#64748b` → indigo `#818cf8` ("voor hen" = gift, not rejection).
+- Match scoring recalibrated: yes+no 10→55, willing+no 10→40, yes+willing 75→80, willing+willing 60→65, yes/maybe 45→50. Duplicate `scoreDir` line removed.
+- `"Harde grens"` pill label → `"Grens"` (fits 5-col grid cleanly with Ban icon).
 
-- Direction toggle hidden for non-switch roles. Harde grens joined pill row (dashed-red ghost, no separate row). Thicker left-border on active status. Rated-first sort within categories.
+### Phase 3e — Ledger theme contrast fix ✅ SHIPPED (2026-06-20, commit 35b4244)
+- Ledger `--accent` `#C73E2E` (cochineal) failed AA on all surfaces (~3.7:1). Brightened to `#E85445` (vermilion); passes 4.5:1+ on bg, surface, surface2.
+- `--on-accent` flipped from bone `#F4ECDF` → near-black `#160806` (lighter accent needs dark text).
+- `--border-accent` and `--accent-glow` updated to match new hue.
 
-## Phase 5 — Navigation Layout
+### Remaining Phase 3 open items
+- Ledger PDF palette: PDF export uses hardcoded RGB arrays in `handlePDFExport`; those still use old muted colors for "no" status. Update when touching PDF export next.
+- Forest/Mono/Red themes: contrast passes AA on all checked pairs. No action needed.
 
-- Move settings gear out of inline page chrome into `TopNav` top-right.
-- Status indicator (online/offline/sync) lives to the left of the gear.
-- Ensure home page uses the same `TopNav` component (currently inconsistent).
-- Home cards: replace `Geven` / `Ontvangen` row with the profile's `role` pill — it's the meaningful signal, the others are too granular for a card.
+## Phase 4 — KinkRow Edit UI ✅ SHIPPED (2026-06-19/20)
+
+### Phase 4a (commit 31cacc1)
+- Direction toggle hidden for non-switch roles. Harde grens joined pill row (dashed-red ghost). Thicker left-border on active status. Rated-first sort within categories.
+
+### Phase 4b — KinkRow UX polish ✅ SHIPPED (2026-06-20, commits 6a07b0d + 2b5e38d + 64268ae)
+- Pills: switched from `flex-wrap` to `grid grid-cols-5 gap-1` — all 5 options guaranteed on one line.
+- INACTIVE_STYLE: per-status faint colour hints on inactive pills (was all grey).
+- Ban icon: active hard_no only (not on inactive pill to avoid label cramping).
+- Curious flag: `☆` icon (quiet) when unset, gold `★ Nieuwsgierig` pill when active. Toggle by click.
+- Direction selector: gated on `effectiveStatus !== null` — hidden until user rates the kink.
+- SegmentedPill padding: `p-1.5`, `py-3`, `px-4` — fatter capsule shape, visible rounding.
+
+### Phase 4c — Profile tab toggle → SegmentedPill ✅ SHIPPED (2026-06-20, commit e4ebc74)
+- Replaced hand-rolled `flex` button pair in profile page with `<SegmentedPill>` from `ui/`.
+
+## Phase 5 — Navigation Layout ✅ PARTIAL (2026-06-20)
+
+### Shipped (commit e4ebc74 + earlier)
+- TopNav: 3-column `grid-cols-[1fr_auto_1fr]` layout in both hub and focused modes. Center nav truly centered; right group has reserved slot. Gear + StatusDot never crowd the title.
+- 1312 sandbox: fixed horizontal overflow (`overflow-x-hidden`) and TabBar positioning conflict (`left-1/2 -translate-x-1/2`).
+
+### Remaining
+- Home cards: replace `Geven` / `Ontvangen` row with the profile's `role` pill.
+- Ensure home page uses the same `TopNav` (check pwa-hidden behavior on standalone mode).
+
+## Phase 5b — UI Component Library ✅ SHIPPED (2026-06-19, commit 359cd05)
+
+7 interaction primitives in `components/ui/`, all obeying the no-domain-knowledge layer rule:
+- `SegmentedPill` — animated gradient indicator, generic `T extends string`
+- `Accordion` — CSS `grid-template-rows` trick, no JS height measurement
+- `SwipeRow` — touch gesture + snap-back, configurable action buttons
+- `ContextMenu` — positioned menu with click-outside dismiss
+- `Sheet` (ui) — drag-to-dismiss, backdrop via `var(--scrim)`, `SheetOptionItem` sub-component
+- `TabBar` — icon + label tabs
+- `FAB` — speed-dial with staggered animation
+- `AmbientGlow` — Server Component, opt-in radial gradient backdrop at `z-0`
+
+1312 lab page (`/1312`) demos all 8 sections including kink-row action sheet (section 8: tap row → Sheet + dimmed backdrop).
+
+CLAUDE.md updated with component layer rules (ui/ = primitives only, no store/kink imports).
+Sheet backdrop: domain `components/Sheet.tsx` updated to `var(--scrim)` from hardcoded rgba.
+
+**Branch:** `eager-desert` — PR #197 targeting `dev`. All session work is on this branch.
 
 ## Phase 6 — Profile Sharing Flow
 
