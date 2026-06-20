@@ -2,7 +2,7 @@
 
 ## Git (mandatory)
 - `dev` is the playroom — all work here. `main` only via PR.
-- Never add `Co-Authored-By` trailers. No AI credits — commits are yours alone.
+- Never add `Co-Authored-By` trailers. No AI credits, no Happy attribution — commits are yours alone.
 - Always `git checkout dev && git pull` before starting.
 - Pre-commit hooks are non-negotiable. Never skip with `--no-verify` unless explicitly discussing the exception with the user first.
 

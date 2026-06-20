@@ -209,13 +209,13 @@ html, body {
   --surface2: #221E1B;       /* one rung up */
   --surface3: #2C2622;       /* hover / nested */
   --border: #2A2522;         /* hairline */
-  --border-accent: rgba(199, 62, 46, 0.28);
+  --border-accent: rgba(232, 84, 69, 0.28);
   --text: #EEE6D8;           /* bone */
   --text2: #8A8378;          /* ash */
-  --accent: #C73E2E;         /* cochineal / seal-wax — Profile A */
+  --accent: #E85445;         /* vermilion — brightened from cochineal for AA contrast */
   --accent2: #B89968;        /* patinated brass — Profile B */
-  --accent-glow: rgba(199, 62, 46, 0.14);
-  --on-accent: #F4ECDF;      /* bone-on-wax — keeps contrast on the cochineal */
+  --accent-glow: rgba(232, 84, 69, 0.14);
+  --on-accent: #160806;      /* near-black warm — AA on the lighter vermilion */
 }
 
 /* Theme: Monochrome */

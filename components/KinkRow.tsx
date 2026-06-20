@@ -13,7 +13,7 @@ const PREF_PILLS: PrefPill[] = [
   { status: "willing", label: "Ja" },
   { status: "maybe",   label: "Misschien" },
   { status: "no",      label: "Voor hen" },
-  { status: "hard_no", label: "Harde grens", danger: true },
+  { status: "hard_no", label: "Grens", danger: true },
 ];
 
 const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "willing", "yes"];
