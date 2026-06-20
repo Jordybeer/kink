@@ -142,7 +142,7 @@ export default function SceneDetailPage() {
         <section className="mb-6">
           <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>Aftercare</h2>
           <div
-            className="rounded-xl p-5 flex flex-col items-center gap-4"
+            className="rounded p-5 flex flex-col items-center gap-4"
             style={{ background: "var(--surface)", border: "1px dashed var(--border)" }}
           >
             <p className="text-sm text-center" style={{ color: "var(--text2)" }}>
