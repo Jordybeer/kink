@@ -55,6 +55,14 @@ const KINK_CATEGORIES = [
   },
 ] as const;
 
+const ALL_KINKS = [
+  { id: "1", name: "Spanking",    status: "yes",     statusColor: "var(--yes)" },
+  { id: "2", name: "Flogger",     status: "willing", statusColor: "var(--willing)" },
+  { id: "3", name: "Paddel",      status: "maybe",   statusColor: "var(--maybe)" },
+  { id: "4", name: "Touwbinding", status: "yes",     statusColor: "var(--yes)" },
+  { id: "5", name: "Handboeien",  status: "maybe",   statusColor: "var(--maybe)" },
+];
+
 const STATUS_LABELS: Record<string, string> = {
   yes:     "Heel graag",
   willing: "Ja",
@@ -82,12 +90,21 @@ const FAB_ITEMS = [
 ];
 
 /* ── Page ── */
+const INFO_ICON   = () => <Icon d={["M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z","M12 8h.01","M12 12v4"]} />;
+
 export default function UILabPage() {
   const [tab, setTab]       = useState("kinks");
   const [navTab, setNavTab] = useState("scenes");
   const [ctxOpen, setCtxOpen] = useState(false);
   const privacy = useSheet();
   const [privacyValue, setPrivacyValue] = useState("local");
+  const kinkSheet = useSheet();
+  const [activeKink, setActiveKink] = useState<{ name: string; statusColor: string; status: string } | null>(null);
+
+  function openKinkSheet(kink: { name: string; statusColor: string; status: string }) {
+    setActiveKink(kink);
+    kinkSheet.onOpen();
+  }
 
   return (
     <div className="relative z-[1] min-h-screen pb-44" style={{ background: "var(--bg)" }}>
@@ -209,6 +226,34 @@ export default function UILabPage() {
           <p className="text-[13px]" style={{ color: "var(--text2)" }}>Zie rechtsonder → paarse knop.</p>
         </section>
 
+        {/* 8 — Kink row → Action Sheet */}
+        <section className="flex flex-col gap-2">
+          <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "var(--text2)" }}>8 · Kink Row Action Sheet</span>
+          <p className="text-[12px] mb-1" style={{ color: "var(--text2)" }}>Tik op een kink → sheet opent, achtergrond dimt.</p>
+          <div className="flex flex-col gap-2">
+            {ALL_KINKS.map((kink) => (
+              <button
+                key={kink.id}
+                onClick={() => openKinkSheet(kink)}
+                className="w-full text-left rounded-xl flex items-center justify-between px-4 py-3 active:scale-[0.98] transition-transform"
+                style={{
+                  background: "var(--surface)",
+                  borderTop: "1px solid var(--border)",
+                  borderRight: "1px solid var(--border)",
+                  borderBottom: "1px solid var(--border)",
+                  borderLeft: `4px solid ${kink.statusColor}`,
+                }}
+              >
+                <div>
+                  <p className="text-[14px] font-semibold">{kink.name}</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: kink.statusColor }}>{STATUS_LABELS[kink.status]}</p>
+                </div>
+                <span style={{ color: "var(--text2)" }}><ChevronIcon /></span>
+              </button>
+            ))}
+          </div>
+        </section>
+
       </div>
 
       {/* FAB — fixed */}
@@ -224,6 +269,34 @@ export default function UILabPage() {
           onChange={setNavTab}
         />
       </div>
+
+      {/* Sheet — kink actions */}
+      <Sheet open={kinkSheet.open} onClose={kinkSheet.onClose} title={activeKink?.name ?? ""} aria-label="Kink acties">
+        <SheetOptionItem
+          value="info"
+          label="Meer info"
+          description="Beschrijving en uitleg over deze kink"
+          icon={<INFO_ICON />}
+          active={false}
+          onClick={kinkSheet.onClose}
+        />
+        <SheetOptionItem
+          value="edit"
+          label="Bewerken"
+          description="Status of richting aanpassen"
+          icon={<PencilIcon />}
+          active={false}
+          onClick={kinkSheet.onClose}
+        />
+        <SheetOptionItem
+          value="delete"
+          label="Verwijder kink"
+          description="Verwijder uit jouw lijst"
+          icon={<TrashIcon />}
+          active={false}
+          onClick={kinkSheet.onClose}
+        />
+      </Sheet>
 
       {/* Sheet — privacy */}
       <Sheet open={privacy.open} onClose={privacy.onClose} title="Privacy niveau" aria-label="Privacy niveau kiezen">
