@@ -24,27 +24,35 @@ export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
 
   if (!aDir && !bDir) {
     const sa = a.status, sb = b.status;
-    if (sa === "yes" && sb === "yes") return { score: 95, kind: "perfect" };
-    if ((sa === "yes" && sb === "willing") || (sa === "willing" && sb === "yes")) return { score: 75, kind: "strong" };
-    if (sa === "willing" && sb === "willing") return { score: 60, kind: "soft" };
-    if ((sa === "maybe" && (sb === "yes" || sb === "willing")) ||
-        ((sa === "yes" || sa === "willing") && sb === "maybe")) return { score: 45, kind: "discuss" };
-    if (sa === "maybe" && sb === "maybe") return { score: 30, kind: "discuss" };
-    if (sa === "no" || sb === "no") return { score: 10, kind: "discuss" };
-    return { score: 25, kind: "conflict" };
+    // "no" = "voor hen" (willing to do for partner) — not a hard limit, scored accordingly
+    if (sa === "yes"     && sb === "yes")                                                  return { score: 95, kind: "perfect" };
+    if ((sa === "yes"    && sb === "willing") || (sa === "willing" && sb === "yes"))       return { score: 80, kind: "strong" };
+    if (sa === "willing" && sb === "willing")                                              return { score: 65, kind: "soft" };
+    if ((sa === "yes"    && sb === "no")      || (sa === "no"      && sb === "yes"))       return { score: 55, kind: "discuss" };
+    if ((sa === "yes"    && sb === "maybe")   || (sa === "maybe"   && sb === "yes"))       return { score: 50, kind: "discuss" };
+    if ((sa === "willing"&& sb === "maybe")   || (sa === "maybe"   && sb === "willing"))   return { score: 45, kind: "discuss" };
+    if ((sa === "willing"&& sb === "no")      || (sa === "no"      && sb === "willing"))   return { score: 40, kind: "discuss" };
+    if (sa === "maybe"   && sb === "maybe")                                                return { score: 30, kind: "discuss" };
+    if ((sa === "maybe"  && sb === "no")      || (sa === "no"      && sb === "maybe"))     return { score: 20, kind: "discuss" };
+    if (sa === "no"      && sb === "no")                                                   return { score: 15, kind: "conflict" };
+    return { score: 0, kind: "none" };
   }
 
-  // Directional: try A-gives B-receives
+  // Directional: try A-gives B-receives and B-gives A-receives
   const aGive = eff(a, "give"), bReceive = eff(b, "receive");
   const bGive = eff(b, "give"), aReceive = eff(a, "receive");
 
   const scoreDir = (give: KinkStatus | null, recv: KinkStatus | null): KinkMatch | null => {
-    if (give === "yes" && recv === "yes") return { score: 100, kind: "perfect" };
-    if ((give === "yes" && recv === "willing") || (give === "willing" && recv === "yes")) return { score: 85, kind: "strong" };
-    if (give === "yes" && recv === "willing") return { score: 85, kind: "strong" };
-    if (give === "willing" && recv === "willing") return { score: 60, kind: "soft" };
-    if (give === "no" || recv === "no") return { score: 10, kind: "discuss" };
-    if (give === "maybe" || recv === "maybe") return { score: 45, kind: "discuss" };
+    if (give === "yes"     && recv === "yes")                                                    return { score: 100, kind: "perfect" };
+    if ((give === "yes"    && recv === "willing") || (give === "willing" && recv === "yes"))     return { score: 85,  kind: "strong" };
+    if (give === "willing" && recv === "willing")                                                return { score: 65,  kind: "soft" };
+    if ((give === "yes"    && recv === "no")      || (give === "no"      && recv === "yes"))     return { score: 55,  kind: "discuss" };
+    if ((give === "yes"    && recv === "maybe")   || (give === "maybe"   && recv === "yes"))     return { score: 50,  kind: "discuss" };
+    if ((give === "willing"&& recv === "maybe")   || (give === "maybe"   && recv === "willing")) return { score: 45,  kind: "discuss" };
+    if ((give === "willing"&& recv === "no")      || (give === "no"      && recv === "willing")) return { score: 40,  kind: "discuss" };
+    if (give === "maybe"   && recv === "maybe")                                                  return { score: 30,  kind: "discuss" };
+    if ((give === "maybe"  && recv === "no")      || (give === "no"      && recv === "maybe"))   return { score: 20,  kind: "discuss" };
+    if (give === "no"      && recv === "no")                                                     return { score: 15,  kind: "conflict" };
     return null;
   };
 
@@ -54,9 +62,7 @@ export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
   const fwd = scoreDir(aGive, bReceive);
   const rev = scoreDir(bGive, aReceive);
 
-  if (fwd && rev) {
-    return fwd.score >= rev.score ? fwd : rev;
-  }
+  if (fwd && rev) return fwd.score >= rev.score ? fwd : rev;
   if (fwd) return fwd;
   if (rev) return rev;
 

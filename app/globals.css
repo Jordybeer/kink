@@ -17,11 +17,11 @@
   --accent2: #f472b6;
   --accent-glow: rgba(192, 132, 252, 0.15);
   --on-accent: #000;
-  --yes: #84cc16;
+  --yes: #f97316;
   --willing: #10b981;
   --curious: #eab308;
   --maybe: #fbbf24;
-  --no: #64748b;
+  --no: #818cf8;
   --hard-no: #ef4444;
   --conflict: #f59e0b;
   /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */
