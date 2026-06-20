@@ -107,7 +107,7 @@ export default function UILabPage() {
   }
 
   return (
-    <div className="relative z-[1] min-h-screen pb-44" style={{ background: "var(--bg)" }}>
+    <div className="relative z-[1] min-h-screen pb-44 overflow-x-hidden" style={{ background: "var(--bg)" }}>
 
       {/* 0 — Safeword ribbon */}
       <SafewordRibbon safeword="Rood" />
@@ -262,7 +262,7 @@ export default function UILabPage() {
       </div>
 
       {/* TabBar — fixed */}
-      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-lg mx-auto" style={{ left: "50%", transform: "translateX(-50%)", width: "calc(100% - 2rem)", maxWidth: "32rem" }}>
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg">
         <TabBar
           tabs={TAB_ITEMS}
           value={navTab}

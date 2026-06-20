@@ -44,11 +44,8 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
         <>
           <motion.div
             aria-hidden="true"
-            style={{
-              position: "fixed", inset: 0, zIndex: 150,
-              background: "rgba(0,0,0,0.6)",
-              opacity: backdropOpacity,
-            }}
+            className="fixed inset-0 z-[150]"
+            style={{ background: "var(--scrim)", opacity: backdropOpacity }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
