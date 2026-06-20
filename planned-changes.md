@@ -10,15 +10,13 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ---
 
-## Phase 1 — Critical Bugs (ship first)
+## Phase 1 — Critical Bugs ✅ SHIPPED (2026-06-18, commit 13aed1d)
 
-Small, isolated fixes. Each = one commit.
-
-1. **Live session zoom on connect** — Viewport jumps/zooms when peer connects. Inspect `viewport` meta and any `transform` applied on connect.
-2. **Contract `Bevestigen` doesn't save** — Currently only `Opslaan als PDF` persists. `Bevestigen` also skips signature/name validation that `Opslaan` enforces. Both bugs in one commit: gate `Bevestigen` on validation, then call `saveContract`.
-3. **Scene page contract-gate doesn't re-check** — When both profile dropdowns get filled, the no-contract banner stays. Add effect listening on `[profileAId, profileBId]` to re-query.
-4. **ProfileHero scroll-jump on kink rating** — DNA bar updates mutate hero height → page scroll drifts. Fix: reserve hero height OR scroll-anchor the active kink row.
-5. **Import URL stuck after import** — After import succeeds, `router.replace('/')` to clear the encoded payload from address bar.
+- Live session zoom on connect — `viewport` meta now sets `width=device-width` + `initialScale=1`.
+- Contract `Bevestigen` doesn't save — extracted `handleConfirm` with signature/name validation + `saveContract` call.
+- Scene page contract-gate doesn't re-check — `ContractGate` now receives `contracts`, button swaps to "Ga naar scène →" when pair already has one.
+- ProfileHero scroll-jump on kink rating — DNA bar container reserves 52px `minHeight`.
+- Import URL stuck after import — confirmed already fixed at `app/page.tsx:1368`.
 
 ## Phase 2 — ProfileHero Polish v2 (mobile portrait) ✅ SHIPPED (2026-06-19, commits b685327 + e043dfa)
 
