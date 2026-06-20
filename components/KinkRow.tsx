@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Ban, ChevronDown, ChevronRight, Info } from "lucide-react";
+import { Ban, ChevronDown, ChevronRight, Info, Star } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
 import type { RoleDirection } from "@/lib/roles";
 import InfoSheet from "./InfoSheet";
@@ -13,7 +13,7 @@ const PREF_PILLS: PrefPill[] = [
   { status: "willing", label: "Ja" },
   { status: "maybe",   label: "Misschien" },
   { status: "no",      label: "Voor hen" },
-  { status: "hard_no", label: "Harde grens", danger: true },
+  { status: "hard_no", label: "Grens", danger: true },
 ];
 
 const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "willing", "yes"];
@@ -66,28 +66,29 @@ interface PillRowProps {
 
 function PillRow({ label, current, onSelect, tour }: PillRowProps) {
   return (
-    <div data-tour={tour} className="flex flex-wrap justify-center items-center gap-2 px-4 py-3">
+    <div data-tour={tour} className="px-3 py-3">
       {label && (
-        <span className="text-[11px] flex-none w-full text-center" style={{ color: "var(--text2)" }}>{label}</span>
+        <span className="text-[11px] block text-center mb-2" style={{ color: "var(--text2)" }}>{label}</span>
       )}
-      {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
-        const active = current === s;
-        const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[13px] px-3 py-2 inline-flex items-center gap-1";
-        if (active) {
+      <div className="grid grid-cols-5 gap-1">
+        {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
+          const active = current === s;
+          const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[11px] py-2 flex items-center justify-center text-center leading-tight";
+          if (active) {
+            return (
+              <button key={s} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
+                {danger && <Ban size={10} aria-hidden="true" className="mr-0.5 flex-none" />}
+                {pillLabel}
+              </button>
+            );
+          }
           return (
-            <button key={s} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
-              {danger && <Ban size={12} aria-hidden="true" />}
+            <button key={s} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
               {pillLabel}
             </button>
           );
-        }
-        return (
-          <button key={s} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
-            {danger && <Ban size={12} aria-hidden="true" />}
-            {pillLabel}
-          </button>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }
@@ -113,7 +114,7 @@ export default function KinkRow({
     entry.direction === "receive" ? (entry.statusReceive ?? entry.status) :
     entry.direction === "both"    ? (worstOf(entry.statusGive, entry.statusReceive) ?? entry.status) :
     entry.status;
-  const showDirection = !compact && !!onDirectionChange && roleDirection === "both";
+  const showDirection = !compact && !!onDirectionChange && roleDirection === "both" && effectiveStatus !== null;
 
   return (
     <>
@@ -143,18 +144,28 @@ export default function KinkRow({
           </button>
           <span className="flex-1 text-base font-medium leading-snug">{kink.name}</span>
           {onCuriousChange && (
-            <button
-              onClick={() => onCuriousChange(!entry.curious)}
-              aria-pressed={!!entry.curious}
-              aria-label="Markeer als nieuwsgierig"
-              className="focus-ring rounded-full text-[11px] font-semibold px-2 py-0.5 flex-none transition-colors"
-              style={entry.curious
-                ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", color: "var(--curious)", border: "1px solid var(--curious)" }
-                : { background: "transparent", color: "var(--text2)", border: "1px dashed var(--border)" }
-              }
-            >
-              ★ Nieuwsgierig
-            </button>
+            entry.curious ? (
+              <button
+                onClick={() => onCuriousChange(false)}
+                aria-pressed
+                aria-label="Verwijder nieuwsgierig markering"
+                className="focus-ring rounded-full text-[11px] font-semibold px-2 py-0.5 flex-none transition-colors inline-flex items-center gap-1"
+                style={{ background: "color-mix(in srgb, var(--curious) 20%, transparent)", color: "var(--curious)", border: "1px solid var(--curious)" }}
+              >
+                <Star size={10} fill="currentColor" aria-hidden="true" />
+                Nieuwsgierig
+              </button>
+            ) : (
+              <button
+                onClick={() => onCuriousChange(true)}
+                aria-pressed={false}
+                aria-label="Markeer als nieuwsgierig"
+                className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg flex-none transition-colors"
+                style={{ color: "var(--text2)", background: "transparent", border: "none" }}
+              >
+                <Star size={13} aria-hidden="true" />
+              </button>
+            )
           )}
         </div>
 

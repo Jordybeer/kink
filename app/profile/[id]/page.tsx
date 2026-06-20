@@ -4,6 +4,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES, categorizeRole } from "@/lib/roles";
 import CategorySection from "@/components/CategorySection";
+import SegmentedPill from "@/components/ui/SegmentedPill";
 import KinkRow from "@/components/KinkRow";
 import Sheet from "@/components/Sheet";
 import type { ExperienceLevel, KinkStatus } from "@/types";
@@ -395,25 +396,15 @@ export default function ProfilePage({ params }: Props) {
 
       {/* Tab bar — own profiles only */}
       {!isShared && activeTab && (
-        <div
-          className="flex mx-4 mb-3 rounded-lg overflow-hidden"
-          style={{ border: "1px solid var(--border)", background: "var(--surface2)" }}
-        >
-          {(["overzicht", "bewerken"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              aria-pressed={activeTab === tab}
-              className="focus-ring flex-1 py-1.5 text-xs font-semibold transition-colors"
-              style={
-                activeTab === tab
-                  ? { background: "var(--accent)", color: "#000" }
-                  : { background: "transparent", color: "var(--text2)" }
-              }
-            >
-              {tab === "overzicht" ? "Overzicht" : "Bewerken"}
-            </button>
-          ))}
+        <div className="mx-4 mb-3">
+          <SegmentedPill
+            segments={[
+              { value: "overzicht", label: "Overzicht" },
+              { value: "bewerken", label: "Bewerken" },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
         </div>
       )}
 

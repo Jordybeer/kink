@@ -2,7 +2,7 @@
 
 ## Git (mandatory)
 - `dev` is the playroom — all work here. `main` only via PR.
-- Never add `Co-Authored-By` trailers. No AI credits — commits are yours alone.
+- Never add `Co-Authored-By` trailers. No AI credits, no Happy attribution — commits are yours alone.
 - Always `git checkout dev && git pull` before starting.
 - Pre-commit hooks are non-negotiable. Never skip with `--no-verify` unless explicitly discussing the exception with the user first.
 
@@ -59,6 +59,11 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - `_hasHydrated` must gate every page that reads store state
 - Never add a fetch() to an external API without explicit discussion
 - Never install packages without asking first
+
+## Component layer rules
+- `components/ui/` — interaction primitives only (motion, touch, layout). Must never import from `lib/store`, `lib/kinks`, or any domain type beyond what's passed via props. No kink knowledge lives here.
+- `components/` — domain components. May use store and types freely. Compose from `components/ui/` primitives.
+- Pages (`app/`) — wire store state to domain components. Never build interaction primitives inline in a page.
 
 ## corrections.md (mandatory)
 Read `corrections.md` at session start before doing anything.
