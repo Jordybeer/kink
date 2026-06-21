@@ -125,11 +125,36 @@ These are bigger than a single commit. Each needs its own design pass before cod
 
 ## Phase 9 — PWA Install UX
 
-- Current toast is broken + visually basic. Rebuild as a bottom-sheet card matching app identity: soft entrance, clear "Installeer als app" header, single big-button CTA, dismissible. Non-invasive (no overlay), but readable by tech-illiterate users. Reuse `Toast.tsx` patterns.
+- `PwaInstallGuide.tsx` exists and is functional for both iOS (step-by-step) and Android (native prompt) but needs a `/frontend-design` pass: the card is small and understated for a moment that needs to convert first-timers. Review against the rest of the app's visual identity — height, hierarchy, icon, copy.
+- `Onboarding.tsx` and profile page ("profile spotlight") may also need a review pass: app state has advanced significantly since their initial implementation. Run `/frontend-design` on each surface before touching code.
 
 ## Phase 10 — Brand Micro-polish
 
 - Logo underscore: subtle ambient animation (slow pulse / shimmer). The name itself stays static so the underscore reads as a status cursor, not motion clutter. Easy win; ship after the visual phases settle.
+
+## Phase 11 — UI Audit: Compare, Scene, Contract pages
+
+Run `/frontend-design` across the three remaining major surfaces before calling the app public-ready:
+
+- `/compare` — compatibility score display, kink overlap list, contract save flow
+- `/scene` — scene planner, item list, safeword ribbon, PDF export trigger
+- `/contract` — signature flow, aftercare section, Bevestigen → PDF
+
+Each surface was built at different times and may have spacing, color, or copy inconsistencies now that the design language has settled (new status colors, curious badge, SegmentedPill, etc.).
+
+## Phase 12 — Delete `/1312` dev sandbox
+
+`app/1312/page.tsx` is a component demo lab. It is publicly accessible, not indexed-blocked, and has no relevance to end users. Delete before any public URL is shared.
+
+- Remove `app/1312/` directory entirely.
+- Verify no other files import from or link to `/1312`.
+
+## Phase 13 — Live Session Bugs
+
+Two confirmed issues with the live session flow:
+
+- **Zoomed-out on connect** — viewport appears scaled down when a session starts. Phase 1 fixed the `<meta viewport>` tag but the issue may persist inside the session page itself. Investigate `app/session/page.tsx` for any container that overrides viewport or sets `transform: scale`.
+- **Connection drops fast** — WebRTC peer connection loses signal quickly. Likely a STUN/TURN timeout, ICE candidate exhaustion, or missing keepalive. Needs investigation in the signalling layer before a fix can be scoped.
 
 ---
 
@@ -147,6 +172,9 @@ These are bigger than a single commit. Each needs its own design pass before cod
 | 8 | **Phase 7 — Profile Snapshots** | Foundational for Phase B (Agreement Archive). De-risks the deferred structural work. |
 | 9 | **Phase 8 — External Imports** | Research first, code second. No commits until exploration docs land. |
 | 10 | **Phase 10 — Logo polish** | Last. Pure delight, no dependencies. |
+| 11 | **Phase 11 — UI Audit** | `/frontend-design` pass on compare, scene, contract. |
+| 12 | **Phase 12 — Delete /1312** | Pre-public hygiene. Fast. |
+| 13 | **Phase 13 — Live Session Bugs** | Viewport zoom + connection drops. Investigate before scoping. |
 
 ---
 
