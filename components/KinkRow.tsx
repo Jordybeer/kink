@@ -160,10 +160,10 @@ export default function KinkRow({
                 onClick={() => onCuriousChange(true)}
                 aria-pressed={false}
                 aria-label="Markeer als nieuwsgierig"
-                className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg flex-none transition-colors"
-                style={{ color: "var(--text2)", background: "transparent", border: "none" }}
+                className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg flex-none transition-colors hover:text-(--curious)"
+                style={{ color: "var(--text2)", background: "var(--info-ghost)", border: "none" }}
               >
-                <Star size={13} aria-hidden="true" />
+                <Star size={14} aria-hidden="true" />
               </button>
             )
           )}
@@ -225,7 +225,7 @@ export default function KinkRow({
               )}
             </button>
             {tagsOpen && (
-              <div className="flex flex-wrap gap-1.5 px-3 pb-2">
+              <div className="no-scrollbar flex items-center gap-1.5 px-3 pb-2 overflow-x-auto">
                 {TAGS.map((tag) => {
                   const active = tags.includes(tag);
                   return (
@@ -233,7 +233,7 @@ export default function KinkRow({
                       key={tag}
                       onClick={() => toggleTag(tag)}
                       aria-pressed={active}
-                      className="focus-ring rounded-full border transition-colors text-[11px] px-2.5 py-1 min-h-[36px]"
+                      className="focus-ring flex-none whitespace-nowrap rounded-full border transition-colors text-[11px] px-2.5 py-1 min-h-[36px]"
                       style={{
                         background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
                         borderColor: active ? "var(--accent)" : "var(--border)",
