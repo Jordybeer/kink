@@ -232,6 +232,31 @@ function ContractPage() {
     realNameB: useRealNames ? trimmedRealNameB : undefined,
   });
 
+  function handleConfirm() {
+    if (!profileA || !profileB) return;
+    if (!signedA || !signedB) {
+      showToast({ message: "Beide partijen moeten tekenen voordat dit verbond gebonden is." });
+      return;
+    }
+    if ((trimmedRealNameA.length > 0) !== (trimmedRealNameB.length > 0)) {
+      showToast({ message: "Vul de echte naam van beide partijen in, of laat ze beide leeg." });
+      return;
+    }
+    saveContract({
+      date: Date.now(),
+      profileAId: aId,
+      profileBId: bId,
+      profileAName: profileA.name,
+      profileBName: profileB.name,
+      matchCount: shared.length + customShared.length,
+      hardLimitCount: hardLimits.length,
+      softLimitCount: softLimits.length,
+      discussCount: discuss.length,
+      safeword: signalsA.black || signalsB.black || undefined,
+    });
+    showToast({ message: "Contract bevestigd — dit verbond is aangegaan!", variant: "success" });
+  }
+
   async function handleGeneratePDF() {
     if (!profileA || !profileB) return;
     if (!signedA || !signedB) {
@@ -762,9 +787,7 @@ function ContractPage() {
           {generating ? "Genereren…" : "Opslaan als PDF"}
         </button>
         <button
-          onClick={() => {
-            showToast({ message: "Contract bevestigd — dit verbond is aangegaan!", variant: "success" });
-          }}
+          onClick={handleConfirm}
           disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "#10b981", color: "#fff" }}

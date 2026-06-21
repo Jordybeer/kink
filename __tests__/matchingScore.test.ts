@@ -28,41 +28,40 @@ describe("kinkMatchScore — rubric rows", () => {
     expect(kinkMatchScore(e({ status: "yes" }), e({ status: "yes" }))).toEqual({ score: 95, kind: "perfect" });
   });
 
-  it("yes + willing → strong (75)", () => {
-    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "willing" }))).toEqual({ score: 75, kind: "strong" });
+  it("yes + willing → strong (80)", () => {
+    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "willing" }))).toEqual({ score: 80, kind: "strong" });
   });
 
-  it("willing + yes → strong (75)", () => {
-    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "yes" }))).toEqual({ score: 75, kind: "strong" });
+  it("willing + yes → strong (80)", () => {
+    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "yes" }))).toEqual({ score: 80, kind: "strong" });
   });
 
-  it("willing + willing → soft (60)", () => {
-    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "willing" }))).toEqual({ score: 60, kind: "soft" });
+  it("willing + willing → soft (65)", () => {
+    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "willing" }))).toEqual({ score: 65, kind: "soft" });
   });
 
-  it("maybe + yes → discuss (45)", () => {
-    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "yes" }))).toEqual({ score: 45, kind: "discuss" });
+  it("maybe + yes → discuss (50)", () => {
+    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "yes" }))).toEqual({ score: 50, kind: "discuss" });
   });
 
   it("maybe + willing → discuss (45)", () => {
-    // willing+maybe no longer leaks into match — intentional v4 change
     expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "willing" }))).toEqual({ score: 45, kind: "discuss" });
   });
 
-  it("yes + maybe → discuss (45)", () => {
-    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "maybe" }))).toEqual({ score: 45, kind: "discuss" });
+  it("yes + maybe → discuss (50)", () => {
+    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "maybe" }))).toEqual({ score: 50, kind: "discuss" });
   });
 
   it("maybe + maybe → discuss (30)", () => {
     expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "maybe" }))).toEqual({ score: 30, kind: "discuss" });
   });
 
-  it("yes + no → discuss (10)", () => {
-    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "no" }))).toEqual({ score: 10, kind: "discuss" });
+  it("yes + no → discuss (55) — voor hen scores positively", () => {
+    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "no" }))).toEqual({ score: 55, kind: "discuss" });
   });
 
-  it("willing + no → discuss (10)", () => {
-    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "no" }))).toEqual({ score: 10, kind: "discuss" });
+  it("willing + no → discuss (40)", () => {
+    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "no" }))).toEqual({ score: 40, kind: "discuss" });
   });
 
   it("hard_no on status → limit (0)", () => {
@@ -81,6 +80,7 @@ describe("kinkMatchScore — rubric rows", () => {
     expect(kinkMatchScore(e(), e())).toEqual({ score: 0, kind: "none" });
   });
 });
+
 
 describe("kinkMatchScore — directional", () => {
   it("yes give / yes receive → perfect (100)", () => {

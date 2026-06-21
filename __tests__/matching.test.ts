@@ -84,3 +84,4 @@ describe("isConflict", () => {
     expect(isConflict(e({ status: "willing" }), e({ status: "willing" }))).toBe(false);
   });
 });
+

@@ -19,6 +19,6 @@ const withSerwist = withSerwistInit({
   additionalPrecacheEntries: [{ url: "/offline", revision: offlineRevision }],
 });
 
-const nextConfig: NextConfig = { turbopack: {} };
+const nextConfig: NextConfig = { turbopack: {}, devIndicators: false };
 
 export default withSerwist(nextConfig);

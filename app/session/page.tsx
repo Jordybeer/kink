@@ -24,11 +24,12 @@ function iceCandSummary(types: string[]): string {
 }
 
 const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
-  yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)",
-  no: "var(--no)", hard_no: "var(--hard-no)",
+  yes: "var(--yes)", willing: "var(--willing)",
+  maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
 };
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
+  yes: "Heel graag", willing: "Ja",
+  maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
 };
 const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
   { s: "yes", label: "Heel graag" }, { s: "willing", label: "Ja" },

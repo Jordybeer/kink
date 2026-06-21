@@ -28,6 +28,7 @@ export interface KinkEntry {
   comment: string;
   tags?: string[];
   usedInScene?: number;
+  curious?: boolean;
 }
 
 export interface SceneItem {
