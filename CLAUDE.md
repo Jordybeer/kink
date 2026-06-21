@@ -11,11 +11,17 @@
 - Large features that might conflict: `feature/name` off `dev`, merge back when complete.
 - Hotfixes to production: branch off `main`, PR to `main`, then merge back to `dev`.
 
+## Worktree & branch naming (mandatory)
+Always use the `worktree` skill — both when spawning a new worktree and when shipping (test → push → PR to dev).
+
 ## Commits
 - One commit = one logical unit (complete feature, fix, or polish pass).
 - Group related changes (component + tests + imports) into a single commit.
 - Never commit incomplete implementations or WIP code.
 - Each commit must pass `npm test` green before pushing.
+
+## Frontend design
+Always use the `frontend-design` skill when building new UI, restyling components, or making visual/layout decisions.
 
 ## Tone (mandatory, entire repo)
 Playful, kinky, BDSM-themed throughout — commits, docs, comments, PRs.

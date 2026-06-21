@@ -40,20 +40,20 @@ describe("kinkMatchScore — rubric rows", () => {
     expect(kinkMatchScore(e({ status: "willing" }), e({ status: "willing" }))).toEqual({ score: 65, kind: "soft" });
   });
 
-  it("maybe + yes → discuss (50)", () => {
-    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "yes" }))).toEqual({ score: 50, kind: "discuss" });
+  it("maybe + yes → soft (50)", () => {
+    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "yes" }))).toEqual({ score: 50, kind: "soft" });
   });
 
-  it("maybe + willing → discuss (45)", () => {
-    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "willing" }))).toEqual({ score: 45, kind: "discuss" });
+  it("maybe + willing → soft (45)", () => {
+    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "willing" }))).toEqual({ score: 45, kind: "soft" });
   });
 
-  it("yes + maybe → discuss (50)", () => {
-    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "maybe" }))).toEqual({ score: 50, kind: "discuss" });
+  it("yes + maybe → soft (50)", () => {
+    expect(kinkMatchScore(e({ status: "yes" }), e({ status: "maybe" }))).toEqual({ score: 50, kind: "soft" });
   });
 
-  it("maybe + maybe → discuss (30)", () => {
-    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "maybe" }))).toEqual({ score: 30, kind: "discuss" });
+  it("maybe + maybe → soft (30)", () => {
+    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "maybe" }))).toEqual({ score: 30, kind: "soft" });
   });
 
   it("yes + no → discuss (55) — voor hen scores positively", () => {
@@ -116,7 +116,7 @@ describe("profileMatchScore", () => {
     expect(counts.limit).toBeGreaterThanOrEqual(1);
   });
 
-  it("soft is distinct from discuss — willing+willing lands in soft bucket, not discuss", () => {
+  it("soft is distinct from discuss — willing+willing is soft, maybe+no is discuss", () => {
     const a = makeProfile({
       [k0.id]: { status: "yes" },
       [k1.id]: { status: "willing" },
@@ -125,12 +125,11 @@ describe("profileMatchScore", () => {
     const b = makeProfile({
       [k0.id]: { status: "yes" },
       [k1.id]: { status: "willing" },
-      [k2.id]: { status: "yes" },
+      [k2.id]: { status: "no" },
     });
     const { counts } = profileMatchScore(a, b);
     expect(counts.soft).toBeGreaterThanOrEqual(1);
     expect(counts.discuss).toBeGreaterThanOrEqual(1);
-    // soft and discuss are separate — soft not folded into discuss
     expect(counts.soft).toBe(1);
   });
 
