@@ -70,15 +70,12 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 ### Phase 4c — Profile tab toggle → SegmentedPill ✅ SHIPPED (2026-06-20, commit e4ebc74)
 - Replaced hand-rolled `flex` button pair in profile page with `<SegmentedPill>` from `ui/`.
 
-## Phase 5 — Navigation Layout ✅ PARTIAL (2026-06-20)
+## Phase 5 — Navigation Layout ✅ SHIPPED (2026-06-20, commit e4ebc74 + earlier)
 
-### Shipped (commit e4ebc74 + earlier)
 - TopNav: 3-column `grid-cols-[1fr_auto_1fr]` layout in both hub and focused modes. Center nav truly centered; right group has reserved slot. Gear + StatusDot never crowd the title.
 - 1312 sandbox: fixed horizontal overflow (`overflow-x-hidden`) and TabBar positioning conflict (`left-1/2 -translate-x-1/2`).
-
-### Remaining
-- Home cards: replace `Geven` / `Ontvangen` row with the profile's `role` pill.
-- Ensure home page uses the same `TopNav` (check pwa-hidden behavior on standalone mode).
+- Home cards already use `RolePill` (`app/page.tsx:812`), no `Geven`/`Ontvangen` row present.
+- Home page renders the shared `TopNav` + `BottomNav` from `app/layout.tsx`. `pwa-hidden`/`pwa-only`/`.bottom-nav` CSS correctly swaps TopNav's center links for the standalone `BottomNav` in `display-mode: standalone` — no duplication.
 
 ## Phase 5b — UI Component Library ✅ SHIPPED (2026-06-19, commit 359cd05)
 
