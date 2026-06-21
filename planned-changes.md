@@ -142,12 +142,11 @@ Run `/frontend-design` across the three remaining major surfaces before calling 
 
 Each surface was built at different times and may have spacing, color, or copy inconsistencies now that the design language has settled (new status colors, curious badge, SegmentedPill, etc.).
 
-## Phase 12 — Delete `/1312` dev sandbox
+## Phase 12 — Delete `/1312` dev sandbox ✅ SHIPPED (2026-06-22, worktree-edging)
 
-`app/1312/page.tsx` is a component demo lab. It is publicly accessible, not indexed-blocked, and has no relevance to end users. Delete before any public URL is shared.
-
-- Remove `app/1312/` directory entirely.
-- Verify no other files import from or link to `/1312`.
+- Removed `app/1312/` directory entirely.
+- No other source files imported from or linked to `/1312`; build output confirms no `/1312` route remains.
+- `npm test` (167/167) and `npm run build` clean.
 
 ## Phase 13 — Live Session Bugs
 
