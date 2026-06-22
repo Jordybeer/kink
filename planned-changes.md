@@ -135,9 +135,11 @@ These are bigger than a single commit. Each needs its own design pass before cod
 - `PwaInstallGuide.tsx` exists and is functional for both iOS (step-by-step) and Android (native prompt) but needs a `/frontend-design` pass: the card is small and understated for a moment that needs to convert first-timers. Review against the rest of the app's visual identity — height, hierarchy, icon, copy.
 - `Onboarding.tsx` and profile page ("profile spotlight") may also need a review pass: app state has advanced significantly since their initial implementation. Run `/frontend-design` on each surface before touching code.
 
-## Phase 10 — Brand Micro-polish
+## Phase 10 — Brand Micro-polish ✅ SHIPPED (2026-06-22, worktree-gag)
 
-- Logo underscore: subtle ambient animation (slow pulse / shimmer). The name itself stays static so the underscore reads as a status cursor, not motion clutter. Easy win; ship after the visual phases settle.
+- `Wordmark` renders `KinkSync_` — the name sits in `.ks-wordmark__text` with the gradient frozen at `50% 0` (shimmer animation removed). The trailing `_` lives in `.ks-cursor` and is the only moving element, pulsing on a 1.8s ease cycle from full opacity down to 0.22.
+- Status-cursor reading: the underscore behaves like a terminal caret next to the brand, so the wordmark feels alive without the letters drifting around.
+- Reduced-motion safe: `.ks-cursor` animation is suppressed under `prefers-reduced-motion: reduce`, falling back to a static 0.85-opacity glyph.
 
 ## Phase 11 — UI Audit: Compare, Scene, Contract pages ✅ SHIPPED (2026-06-22, worktree-fingering, PR #216)
 

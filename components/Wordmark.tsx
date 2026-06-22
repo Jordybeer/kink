@@ -11,7 +11,8 @@ export default function Wordmark({
 }) {
   return (
     <span className={`ks-wordmark ${className}`} style={style}>
-      {text}
+      <span className="ks-wordmark__text">{text}</span>
+      <span className="ks-cursor" aria-hidden="true">_</span>
     </span>
   );
 }
