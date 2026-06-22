@@ -5,6 +5,51 @@ beforeEach(() => {
   useStore.setState(useStore.getInitialState());
 });
 
+describe("saveProfileSnapshot", () => {
+  it("returns null when the profile is unknown", () => {
+    expect(useStore.getState().saveProfileSnapshot("ghost")).toBeNull();
+    expect(useStore.getState().profileSnapshots).toEqual([]);
+  });
+
+  it("snapshots entries + customKinks + derived counts", () => {
+    const id = useStore.getState().createProfile("Mira", "Sub");
+    useStore.getState().setEntry(id, "spanking_hand", { status: "yes" });
+    useStore.getState().setEntry(id, "flogging", { status: "willing" });
+    useStore.getState().addCustomKink(id, "Eigen ding");
+    const saved = useStore.getState().saveProfileSnapshot(id)!;
+    expect(saved.profileId).toBe(id);
+    expect(saved.counts.yes).toBe(1);
+    expect(saved.counts.willing).toBe(1);
+    expect(saved.customKinks.map((c) => c.name)).toContain("Eigen ding");
+    expect(useStore.getState().profileSnapshots).toHaveLength(1);
+  });
+
+  it("caps snapshots at 30 per profile (FIFO)", () => {
+    const id = useStore.getState().createProfile("Mira", "Sub");
+    for (let i = 0; i < 35; i++) useStore.getState().saveProfileSnapshot(id);
+    const mine = useStore.getState().profileSnapshots.filter((s) => s.profileId === id);
+    expect(mine).toHaveLength(30);
+  });
+
+  it("does not evict other profiles' snapshots when capping", () => {
+    const a = useStore.getState().createProfile("Mira", "Sub");
+    const b = useStore.getState().createProfile("Sander", "Dom");
+    for (let i = 0; i < 31; i++) useStore.getState().saveProfileSnapshot(a);
+    useStore.getState().saveProfileSnapshot(b);
+    const ofA = useStore.getState().profileSnapshots.filter((s) => s.profileId === a);
+    const ofB = useStore.getState().profileSnapshots.filter((s) => s.profileId === b);
+    expect(ofA).toHaveLength(30);
+    expect(ofB).toHaveLength(1);
+  });
+
+  it("deleteProfileSnapshot removes the matching id", () => {
+    const id = useStore.getState().createProfile("Mira", "Sub");
+    const saved = useStore.getState().saveProfileSnapshot(id)!;
+    useStore.getState().deleteProfileSnapshot(saved.id);
+    expect(useStore.getState().profileSnapshots).toEqual([]);
+  });
+});
+
 describe("createProfile", () => {
   it("sets origin to 'own' by default", () => {
     const id = useStore.getState().createProfile("Test", "Switch");
