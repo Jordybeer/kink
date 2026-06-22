@@ -139,15 +139,18 @@ These are bigger than a single commit. Each needs its own design pass before cod
 
 - Logo underscore: subtle ambient animation (slow pulse / shimmer). The name itself stays static so the underscore reads as a status cursor, not motion clutter. Easy win; ship after the visual phases settle.
 
-## Phase 11 — UI Audit: Compare, Scene, Contract pages
+## Phase 11 — UI Audit: Compare, Scene, Contract pages ✅ SHIPPED (2026-06-22, worktree-fingering, PR #216)
 
-Run `/frontend-design` across the three remaining major surfaces before calling the app public-ready:
-
-- `/compare` — compatibility score display, kink overlap list, contract save flow
-- `/scene` — scene planner, item list, safeword ribbon, PDF export trigger
-- `/contract` — signature flow, aftercare section, Bevestigen → PDF
-
-Each surface was built at different times and may have spacing, color, or copy inconsistencies now that the design language has settled (new status colors, curious badge, SegmentedPill, etc.).
+- **Compare** — soft limits (`zachte grenzen`) now included in the overlap % denominator, alignment bar (4th segment, `var(--maybe)`), and stats row. Were silently excluded, inflating every overlap score.
+- **Compare** — kink rows corrected from `rounded-sm` → `rounded-xl` (v4 standard).
+- **Compare** — category nav pills: removed vestigial `—` prefix.
+- **Compare** — category sections get `scroll-mt-32` so the sticky profile strip no longer covers the heading on scroll-to (categories were appearing "out of bounds" behind the sticky header).
+- **Contract** — `var(--text1)` (undefined CSS var) → `var(--text)` in `ContractSection` (kink names were invisible in some themes).
+- **Contract** — "Contract bevestigen" button: hardcoded `#10b981` → `var(--accent2)` (theme-safe).
+- **Contract** — `📈` emoji link → `TrendingUp` lucide icon; `🗑` emoji → `Trash2` lucide icon.
+- **Scene** — "Mutual" section label in kink drawer → "Wederzijds" (Dutch consistency).
+- **ProfileHero** — role/metadata line de-truncated (`text-sm truncate` → `text-sm leading-snug`). Was cutting "submissief · beginner" to "subm…" on 375px portrait when both Share + Edit buttons were visible (~131px available for text).
+- **Compare** — "Verberg besproken" / "Toon alles" toggle pulled out of the filter tab row (was causing horizontal viewport overflow on 375px). Now a pill button below the tabs, only rendered when ≥1 kink is marked discussed, with count shown.
 
 ## Phase 12 — Delete `/1312` dev sandbox ✅ SHIPPED (2026-06-22, worktree-edging)
 
