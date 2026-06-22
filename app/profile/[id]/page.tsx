@@ -11,7 +11,7 @@ import type { ExperienceLevel, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, FileDown, FileText, Info, MessageSquare, UserX } from "lucide-react";
+import { ChevronDown, ChevronRight, FileDown, FileText, Info, MessageSquare, Star, UserX } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -712,6 +712,19 @@ export default function ProfilePage({ params }: Props) {
                           >
                             <div className="flex items-center gap-2">
                               <span className="text-sm flex-1 leading-snug">{kink.name}</span>
+                              {entry.curious && (
+                                <span
+                                  className="text-[11px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
+                                  style={{
+                                    color: "var(--curious)",
+                                    borderColor: "var(--curious)",
+                                    background: "color-mix(in srgb, var(--curious) 15%, transparent)",
+                                  }}
+                                >
+                                  <Star size={9} fill="currentColor" aria-hidden="true" />
+                                  Nieuwsgierig
+                                </span>
+                              )}
                               <span
                                 className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
                                 style={{
@@ -756,6 +769,19 @@ export default function ProfilePage({ params }: Props) {
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm flex-1">{ck.name}</span>
+                            {profile.entries[ck.id].curious && (
+                              <span
+                                className="text-[11px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
+                                style={{
+                                  color: "var(--curious)",
+                                  borderColor: "var(--curious)",
+                                  background: "color-mix(in srgb, var(--curious) 15%, transparent)",
+                                }}
+                              >
+                                <Star size={9} fill="currentColor" aria-hidden="true" />
+                                Nieuwsgierig
+                              </span>
+                            )}
                             <span
                               className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
                               style={{

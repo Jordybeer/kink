@@ -147,7 +147,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             <div
               key={step}
               className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 14rem', overflowY: 'auto', maxHeight: '100dvh' }}
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
             >
               {step === 0 && <Step0Content />}
               {step === 1 && <Step1Content />}
@@ -323,9 +323,7 @@ const FEATURE_ROWS: { icon: FeatureIcon; title: string; sub: string }[] = [
 function Step3Content() {
   return (
     <div style={{ maxWidth: '26rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text)', marginBottom: '1.5rem', animation: 'ks-slide-up 0.4s ease 0.05s both', opacity: 0 }}>
-        Wat kun je doen?
-      </h2>
+      <h2 style={TITLE}>Wat kun je doen?</h2>
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
         {FEATURE_ROWS.map((f, i) => (
           <div key={f.title} style={{
@@ -374,7 +372,7 @@ function Step5Content() {
 
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, background: 'var(--surface2)', border: '1px solid var(--border)' }} aria-hidden="true">
+      <div style={ICON_CIRCLE} aria-hidden="true">
         <span style={{ fontSize: '2.25rem' }}>🎨</span>
       </div>
       <h2 style={TITLE}>Kies je sfeer</h2>
@@ -490,10 +488,10 @@ function Step6BioContent({ bioError }: { bioError: string | null }) {
 
 function Step7Content() {
   return (
-    <div style={{ maxWidth: '20rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem', animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both', opacity: 0 }} aria-hidden="true">🔞</div>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text)', marginBottom: '1rem' }}>Voor volwassenen</h2>
-      <p style={{ ...BODY, animation: 'ks-slide-up 0.4s ease 0.15s both' }}>
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔞</span></div>
+      <h2 style={TITLE}>Voor volwassenen</h2>
+      <p style={BODY}>
         Hier praten we open over kinks, grenzen en alles daartussen.
         Ga alleen verder als je 18 jaar of ouder bent.
       </p>
