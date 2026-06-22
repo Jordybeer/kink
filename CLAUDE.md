@@ -22,6 +22,7 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 - Before pushing: rebase onto latest `origin/dev`, re-run `npm test` + `npm run build` to catch silent regressions from the other branch landing first.
 - Call out surface-area overlap explicitly in PR descriptions.
 
+
 ## Commits
 - One commit = one logical unit (complete feature, fix, or polish pass).
 - Group related changes (component + tests + imports) into a single commit.

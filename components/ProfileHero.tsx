@@ -146,7 +146,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
               <Lock size={14} aria-hidden="true" style={{ display: "inline-block", marginLeft: "0.4em", color: "var(--text2)" }} />
             )}
           </h2>
-          <p className="text-sm truncate mt-0.5" style={{ color: "var(--text2)" }}>
+          <p className="text-sm mt-0.5 leading-snug" style={{ color: "var(--text2)" }}>
             {profile.role && <>{profile.role}{" · "}</>}
             <span style={{ color: "var(--accent)" }}>{expLevel}</span>
             {profile.relationshipStatus && <>{" · "}{profile.relationshipStatus}</>}

@@ -98,21 +98,28 @@ Sheet backdrop: domain `components/Sheet.tsx` updated to `var(--scrim)` from har
 
 ## Phase 6 — Profile Sharing Flow
 
-Single biggest UX gap: after a live session reveal, the peer's profile vanishes. Needs persistence path.
+### Phase 6a — Import-on-reveal CTA ✅ SHIPPED (2026-06-22, worktree-edging)
 
-- **Share-profile button on live-session reveal** — Drop a CTA on the reveal screen: `Importeer dit profiel`. Pulls the live-session payload into local storage as a partner profile.
-- **QR audit** — Document in commit message: what fields the QR encodes today, what's missing (avatar? customKinks? snapshots?), and the byte budget before QR becomes unscannable on a phone screen (≤ ~2.9 kB for L-level Version 40).
-- **Live-session handshake capacity** — Since it's WebRTC datachannel, it can carry **multiples** of the QR payload. Spec a richer payload (avatar + full entries + custom kinks) for live mode while keeping QR lean.
+- New datachannel `Msg` variant `"P"` carrying `id`, `name`, `role`, `experienceLevel`, `customKinks`. Sent on channel open alongside the existing `"p"` (lite) and `"d"` (entries) messages. Backwards-compat preserved — old clients still produce a thinner import via synthesized id.
+- `Importeer dit profiel` CTA on the revealed phase (`app/session/page.tsx`), promoted to primary; `Vergelijk uitgebreid` demoted to outline. On click: build a Profile via `lib/sessionImport.ts`, dedupe-on-existence in `state.profiles`, show `✓ Profiel geïmporteerd` / `✓ Al opgeslagen` for 1.4s, `router.replace("/")`.
+- `lib/sessionImport.ts` — pure-logic helper: `sanitizeRemoteProfileFull`, `synthesizePartnerId` (deterministic 16-hex FNV-1a fingerprint of `name|role|sorted-entries`), `buildPartnerProfile`. 11 new tests in `__tests__/sessionImport.test.ts`.
+
+### Phase 6b–d (still open)
+
 - **Camera modal: paste-from-URL fallback** for PWA users whose camera permission is awkward.
-- Post-import always `router.replace('/')` (also covered in Phase 1 #5 — share the fix).
+- **Avatar sync** over datachannel — deferred until snapshots settle storage budget (Phase 7 territory).
+- **QR audit (no-code item)**: QR v2 currently encodes `id`, `name`, `role`, `experienceLevel`, `entries`, `customKinks`, `relationshipStatus`, `fetLifeUsername`. Missing: `avatarDataUrl`, `desire`, `experienced`, `comments`, `tags`. Typical encoded ~900 B → ~915 B URL; QR L-level v40 budget ~2.9 kB → ~68% headroom.
 
-## Phase 7 — Profile Trends / Snapshots
+## Phase 7 — Profile Trends / Snapshots ✅ SHIPPED (2026-06-22, worktree-edging)
 
-User wants per-profile evolution view (mirrors the contract trends chart already shipped).
+- New `ProfileSnapshot` type (`types/index.ts`): `{ id, profileId, date, entries, customKinks, counts }`. Counts are denormalised so the chart never has to walk 600 entries on render.
+- Store gains `profileSnapshots: ProfileSnapshot[]` + `saveProfileSnapshot(profileId)` + `deleteProfileSnapshot(id)`. Per-profile FIFO cap at 30; other profiles' snapshots are untouched when one profile overflows. Persist bumped 13 → 14 with empty-array backfill migration.
+- `lib/profileSnapshot.ts` — pure helpers: `deriveCounts` (honours `direction` give/receive/both with the same strict-first scan as the live-session reveal), `prepareProfileTrendData`, `PROFILE_TREND_SERIES` (5 entries, one per `KinkStatus`).
+- `components/ProfileTrendsChart.tsx` — Chart.js line chart mirroring `ContractTrendsChart` structure, 5 series (yes/willing/maybe/no/hard_no), CSS-variable token resolution, toggle chips per series, Dutch placeholder copy ("Eerst meer momenten").
+- Profile detail page (`app/profile/[id]/page.tsx`) gains a `Sla dit moment op` CTA + the trends chart, gated on `!isShared && totalRated > 0`, slotted above the existing download block. Shows `✓ Moment opgeslagen` confirmation for 1.6s.
+- Tests: 25 new (10 pure-logic in `profileSnapshot.test.ts`, 5 store-action tests, 10 in existing files). All 192 green.
 
-- Add `Profiel opslaan` CTA at bottom of profile page → snapshots `entries` + `customKinks` + timestamp into a new `ProfileSnapshot[]` store key.
-- New chart component on profile detail: Chart.js line/bar mirroring `ContractTrendsChart`, showing counts per status over time.
-- **Overlap with deferred Phase B (`4.md`):** This is a leaner version of the Agreement Archive — same idea, scoped to a single profile rather than pair snapshots. Doing Phase 7 first de-risks Phase B by surfacing storage + drift questions on a smaller surface.
+**Phase B unblocked:** `ProfileSnapshot` is the leaner cousin of the Agreement Archive (`4.md` section B). Storage budget settled at ~15–25 KB per active profile (30 caps × ~500 B–1 KB), well inside localStorage limits for a 5–10 profile user.
 
 ## Phase 8 — External Imports (research-heavy — split into sub-tasks)
 
@@ -132,15 +139,18 @@ These are bigger than a single commit. Each needs its own design pass before cod
 
 - Logo underscore: subtle ambient animation (slow pulse / shimmer). The name itself stays static so the underscore reads as a status cursor, not motion clutter. Easy win; ship after the visual phases settle.
 
-## Phase 11 — UI Audit: Compare, Scene, Contract pages
+## Phase 11 — UI Audit: Compare, Scene, Contract pages ✅ SHIPPED (2026-06-22, worktree-fingering, PR #216)
 
-Run `/frontend-design` across the three remaining major surfaces before calling the app public-ready:
-
-- `/compare` — compatibility score display, kink overlap list, contract save flow
-- `/scene` — scene planner, item list, safeword ribbon, PDF export trigger
-- `/contract` — signature flow, aftercare section, Bevestigen → PDF
-
-Each surface was built at different times and may have spacing, color, or copy inconsistencies now that the design language has settled (new status colors, curious badge, SegmentedPill, etc.).
+- **Compare** — soft limits (`zachte grenzen`) now included in the overlap % denominator, alignment bar (4th segment, `var(--maybe)`), and stats row. Were silently excluded, inflating every overlap score.
+- **Compare** — kink rows corrected from `rounded-sm` → `rounded-xl` (v4 standard).
+- **Compare** — category nav pills: removed vestigial `—` prefix.
+- **Compare** — category sections get `scroll-mt-32` so the sticky profile strip no longer covers the heading on scroll-to (categories were appearing "out of bounds" behind the sticky header).
+- **Contract** — `var(--text1)` (undefined CSS var) → `var(--text)` in `ContractSection` (kink names were invisible in some themes).
+- **Contract** — "Contract bevestigen" button: hardcoded `#10b981` → `var(--accent2)` (theme-safe).
+- **Contract** — `📈` emoji link → `TrendingUp` lucide icon; `🗑` emoji → `Trash2` lucide icon.
+- **Scene** — "Mutual" section label in kink drawer → "Wederzijds" (Dutch consistency).
+- **ProfileHero** — role/metadata line de-truncated (`text-sm truncate` → `text-sm leading-snug`). Was cutting "submissief · beginner" to "subm…" on 375px portrait when both Share + Edit buttons were visible (~131px available for text).
+- **Compare** — "Verberg besproken" / "Toon alles" toggle pulled out of the filter tab row (was causing horizontal viewport overflow on 375px). Now a pill button below the tabs, only rendered when ≥1 kink is marked discussed, with count shown.
 
 ## Phase 12 — Delete `/1312` dev sandbox ✅ SHIPPED (2026-06-22, worktree-edging)
 

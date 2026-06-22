@@ -1,13 +1,14 @@
 "use client";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
-import type { KinkStatus, Profile } from "@/types";
+import type { CustomKink, ExperienceLevel, KinkStatus, Profile } from "@/types";
 import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, fetchIceServers } from "@/lib/webrtc";
 import PageShell from "@/components/PageShell";
+import { buildPartnerProfile, sanitizeRemoteProfileFull, type RemoteProfileFull } from "@/lib/sessionImport";
 
 function iceServersSummary(servers: RTCIceServer[]): string {
   const urls = servers.map(s => String(s.urls));
@@ -53,6 +54,7 @@ function sanitizeEntries(raw: unknown): Record<string, KinkStatus> {
 type Msg =
   | { t: "a"; id?: string }
   | { t: "p"; n: string; r: string }
+  | { t: "P"; id: string; n: string; r: string; e?: ExperienceLevel; ck?: CustomKink[] }
   | { t: "d"; entries: Record<string, KinkStatus> };
 
 type Phase =
@@ -62,8 +64,9 @@ type Phase =
   | "connected" | "done_local" | "revealed";
 
 function HostGuestSession({ joinParam }: { joinParam: string | null }) {
-  const { profiles } = useStore();
+  const { profiles, importProfiles } = useStore();
   const _hasHydrated = useHasHydrated();
+  const router = useRouter();
 
   const isGuest = !!joinParam;
 
@@ -75,7 +78,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const [local, setLocal] = useState<Record<string, KinkStatus>>({});
   const [remote, setRemote] = useState<Record<string, KinkStatus>>({});
   const [remoteProfile, setRemoteProfile] = useState<{ name: string; role: string } | null>(null);
+  const [remoteProfileFull, setRemoteProfileFull] = useState<RemoteProfileFull | null>(null);
   const [partnerDone, setPartnerDone] = useState(false);
+  const [importDone, setImportDone] = useState<null | "saved" | "exists">(null);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [debugLog, setDebugLog] = useState<string[]>([]);
@@ -136,6 +141,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         if (msg.t === "p") {
           if (typeof msg.n !== "string" || typeof msg.r !== "string") return;
           setRemoteProfile({ name: msg.n, role: msg.r });
+        } else if (msg.t === "P") {
+          const full = sanitizeRemoteProfileFull(msg);
+          if (full) {
+            setRemoteProfileFull(full);
+            setRemoteProfile({ name: full.name, role: full.role });
+          }
         } else if (msg.t === "d") {
           setRemote(sanitizeEntries(msg.entries));
           setPartnerDone(true);
@@ -161,7 +172,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     };
     const onOpen = () => {
       setPhase("connected");
-      channelRef.current!.send(JSON.stringify({ t: "p", n: p.name, r: p.role } as Msg));
+      const ch2 = channelRef.current!;
+      ch2.send(JSON.stringify({ t: "p", n: p.name, r: p.role } as Msg));
+      ch2.send(JSON.stringify({
+        t: "P", id: p.id, n: p.name, r: p.role,
+        e: p.experienceLevel, ck: p.customKinks,
+      } as Msg));
     };
     if (ch.readyState === "open") onOpen();
     else ch.onopen = onOpen;
@@ -347,6 +363,16 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   function handleDone() {
     send({ t: "d", entries: local });
     setPhase("done_local");
+  }
+
+  function handleImportPartner() {
+    if (!remoteProfile || importDone) return;
+    if (Object.keys(remote).length === 0) return;
+    const partner = buildPartnerProfile(remoteProfileFull, remoteProfile, remote);
+    const exists = profiles.some(p => p.id === partner.id);
+    if (!exists) importProfiles([partner]);
+    setImportDone(exists ? "exists" : "saved");
+    setTimeout(() => router.replace("/"), 1400);
   }
 
   function toggleCat(cat: string) {
@@ -814,9 +840,20 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           )}
 
           <div className="flex flex-col gap-2 mb-3">
+            {importDone ? (
+              <p className="text-sm text-center py-3 font-semibold" style={{ color: "var(--accent)" }}>
+                {importDone === "saved" ? "✓ Profiel geïmporteerd" : "✓ Al opgeslagen"}
+              </p>
+            ) : (
+              <button onClick={handleImportPartner}
+                className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent)", color: "#000" }}>
+                Importeer dit profiel
+              </button>
+            )}
             <Link href={`/compare?a=${profileId}`}
               className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "#000" }}>
+              style={{ background: "var(--surface)", border: "1px solid var(--accent)", color: "var(--accent)" }}>
               Vergelijk uitgebreid →
             </Link>
             <Link href={`/contract?a=${profileId}`}
