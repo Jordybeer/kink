@@ -69,6 +69,21 @@ export interface SceneRecord {
   aftercare?: AftercareEntry;
 }
 
+export interface ProfileSnapshot {
+  id: string;
+  profileId: string;
+  date: number;
+  entries: Record<string, KinkEntry>;
+  customKinks: CustomKink[];
+  counts: {
+    yes: number;
+    willing: number;
+    maybe: number;
+    no: number;
+    hard_no: number;
+  };
+}
+
 export interface ContractSnapshot {
   id: string;
   date: number;

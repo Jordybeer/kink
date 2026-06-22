@@ -110,13 +110,16 @@ Sheet backdrop: domain `components/Sheet.tsx` updated to `var(--scrim)` from har
 - **Avatar sync** over datachannel — deferred until snapshots settle storage budget (Phase 7 territory).
 - **QR audit (no-code item)**: QR v2 currently encodes `id`, `name`, `role`, `experienceLevel`, `entries`, `customKinks`, `relationshipStatus`, `fetLifeUsername`. Missing: `avatarDataUrl`, `desire`, `experienced`, `comments`, `tags`. Typical encoded ~900 B → ~915 B URL; QR L-level v40 budget ~2.9 kB → ~68% headroom.
 
-## Phase 7 — Profile Trends / Snapshots
+## Phase 7 — Profile Trends / Snapshots ✅ SHIPPED (2026-06-22, worktree-edging)
 
-User wants per-profile evolution view (mirrors the contract trends chart already shipped).
+- New `ProfileSnapshot` type (`types/index.ts`): `{ id, profileId, date, entries, customKinks, counts }`. Counts are denormalised so the chart never has to walk 600 entries on render.
+- Store gains `profileSnapshots: ProfileSnapshot[]` + `saveProfileSnapshot(profileId)` + `deleteProfileSnapshot(id)`. Per-profile FIFO cap at 30; other profiles' snapshots are untouched when one profile overflows. Persist bumped 13 → 14 with empty-array backfill migration.
+- `lib/profileSnapshot.ts` — pure helpers: `deriveCounts` (honours `direction` give/receive/both with the same strict-first scan as the live-session reveal), `prepareProfileTrendData`, `PROFILE_TREND_SERIES` (5 entries, one per `KinkStatus`).
+- `components/ProfileTrendsChart.tsx` — Chart.js line chart mirroring `ContractTrendsChart` structure, 5 series (yes/willing/maybe/no/hard_no), CSS-variable token resolution, toggle chips per series, Dutch placeholder copy ("Eerst meer momenten").
+- Profile detail page (`app/profile/[id]/page.tsx`) gains a `Sla dit moment op` CTA + the trends chart, gated on `!isShared && totalRated > 0`, slotted above the existing download block. Shows `✓ Moment opgeslagen` confirmation for 1.6s.
+- Tests: 25 new (10 pure-logic in `profileSnapshot.test.ts`, 5 store-action tests, 10 in existing files). All 192 green.
 
-- Add `Profiel opslaan` CTA at bottom of profile page → snapshots `entries` + `customKinks` + timestamp into a new `ProfileSnapshot[]` store key.
-- New chart component on profile detail: Chart.js line/bar mirroring `ContractTrendsChart`, showing counts per status over time.
-- **Overlap with deferred Phase B (`4.md`):** This is a leaner version of the Agreement Archive — same idea, scoped to a single profile rather than pair snapshots. Doing Phase 7 first de-risks Phase B by surfacing storage + drift questions on a smaller surface.
+**Phase B unblocked:** `ProfileSnapshot` is the leaner cousin of the Agreement Archive (`4.md` section B). Storage budget settled at ~15–25 KB per active profile (30 caps × ~500 B–1 KB), well inside localStorage limits for a 5–10 profile user.
 
 ## Phase 8 — External Imports (research-heavy — split into sub-tasks)
 
