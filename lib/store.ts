@@ -1,7 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useState, useEffect } from "react";
-import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, SceneRecord, AftercareEntry } from "@/types";
+import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry } from "@/types";
+import { deriveCounts } from "@/lib/profileSnapshot";
+
+const SNAPSHOT_CAP_PER_PROFILE = 30;
 
 function uid() {
   return crypto.randomUUID();
@@ -12,6 +15,7 @@ type Theme = "midnight" | "red" | "forest" | "mono" | "ledger";
 interface State {
   profiles: Profile[];
   contracts: ContractSnapshot[];
+  profileSnapshots: ProfileSnapshot[];
   scenes: SceneRecord[];
   onboardingComplete: boolean;
   profileTourComplete: boolean;
@@ -35,6 +39,8 @@ interface State {
   saveContract: (snapshot: Omit<ContractSnapshot, "id">) => void;
   restoreContracts: (snapshots: ContractSnapshot[]) => void;
   deleteContract: (id: string) => void;
+  saveProfileSnapshot: (profileId: string) => ProfileSnapshot | null;
+  deleteProfileSnapshot: (id: string) => void;
   saveScene: (record: Omit<SceneRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) => string;
   deleteScene: (id: string) => void;
   completeScene: (id: string, aftercare: AftercareEntry) => void;
@@ -62,6 +68,7 @@ export const useStore = create<State>()(
     (set, get) => ({
       profiles: [],
       contracts: [],
+      profileSnapshots: [],
       scenes: [],
       onboardingComplete: false,
       profileTourComplete: false,
@@ -215,6 +222,30 @@ export const useStore = create<State>()(
         set((s) => ({ contracts: s.contracts.filter((c) => c.id !== id) }));
       },
 
+      saveProfileSnapshot(profileId) {
+        const profile = get().profiles.find((p) => p.id === profileId);
+        if (!profile) return null;
+        const snapshot: ProfileSnapshot = {
+          id: uid(),
+          profileId,
+          date: Date.now(),
+          entries: profile.entries,
+          customKinks: profile.customKinks,
+          counts: deriveCounts(profile.entries),
+        };
+        set((s) => {
+          const others = s.profileSnapshots.filter((snap) => snap.profileId !== profileId);
+          const mine = s.profileSnapshots.filter((snap) => snap.profileId === profileId);
+          const trimmed = [snapshot, ...mine].slice(0, SNAPSHOT_CAP_PER_PROFILE);
+          return { profileSnapshots: [...trimmed, ...others] };
+        });
+        return snapshot;
+      },
+
+      deleteProfileSnapshot(id) {
+        set((s) => ({ profileSnapshots: s.profileSnapshots.filter((snap) => snap.id !== id) }));
+      },
+
       saveScene(record: Omit<SceneRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
         const id = record.id ?? uid();
         const now = Date.now();
@@ -314,6 +345,7 @@ export const useStore = create<State>()(
       partialize: (state) => ({
         profiles: state.profiles,
         contracts: state.contracts,
+        profileSnapshots: state.profileSnapshots,
         scenes: state.scenes,
         onboardingComplete: state.onboardingComplete,
         profileTourComplete: state.profileTourComplete,
@@ -326,11 +358,12 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 13,
+      version: 14,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
           contracts?: ContractSnapshot[];
+          profileSnapshots?: ProfileSnapshot[];
           scenes?: SceneRecord[];
           onboardingComplete?: boolean;
           profileTourComplete?: boolean;
@@ -395,6 +428,9 @@ export const useStore = create<State>()(
         }
         if (version < 13) {
           state.notificationPermissionAsked = false;
+        }
+        if (version < 14) {
+          state.profileSnapshots = state.profileSnapshots ?? [];
         }
         return state;
       },
