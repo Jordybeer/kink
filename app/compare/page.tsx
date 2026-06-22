@@ -55,8 +55,8 @@ function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
   return <StatusBadge status={entry.status} colour={colour} />;
 }
 
-function ScoreMasthead({ match, discuss, limit }: { match: number; discuss: number; limit: number }) {
-  const total = match + discuss + limit;
+function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
+  const total = match + discuss + soft + limit;
   const score = total > 0 ? Math.round((match / total) * 100) : null;
   const verdictColor =
     score === null ? "var(--text2)" : score >= 70 ? "var(--yes)" : "var(--text)";
@@ -121,6 +121,12 @@ function ScoreMasthead({ match, discuss, limit }: { match: number; discuss: numb
               te bespreken
             </span>
           )}
+          {soft > 0 && (
+            <span>
+              <span className="font-semibold tabular-nums" style={{ color: "var(--maybe)" }}>{soft}</span>{" "}
+              zacht
+            </span>
+          )}
           {limit > 0 && (
             <span>
               <span className="font-semibold tabular-nums" style={{ color: "var(--hard-no)" }}>{limit}</span>{" "}
@@ -133,24 +139,28 @@ function ScoreMasthead({ match, discuss, limit }: { match: number; discuss: numb
   );
 }
 
-function AlignmentBar({ match, discuss, limit }: { match: number; discuss: number; limit: number }) {
-  const total = match + discuss + limit;
+function AlignmentBar({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
+  const total = match + discuss + soft + limit;
   if (total === 0) return null;
   const mPct = (match / total) * 100;
   const dPct = (discuss / total) * 100;
+  const sPct = (soft / total) * 100;
   const lPct = (limit / total) * 100;
   return (
     <div
       className="flex rounded overflow-hidden mb-4"
       style={{ height: 6, background: "var(--surface3)" }}
       role="img"
-      aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${limit} grenzen`}
+      aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${soft} zacht, ${limit} grenzen`}
     >
       {match > 0 && (
         <div style={{ width: `${mPct}%`, background: "var(--yes)", transition: "width 500ms ease-out" }} />
       )}
       {discuss > 0 && (
         <div style={{ width: `${dPct}%`, background: "var(--conflict)", transition: "width 500ms ease-out" }} />
+      )}
+      {soft > 0 && (
+        <div style={{ width: `${sPct}%`, background: "var(--maybe)", transition: "width 500ms ease-out" }} />
       )}
       {limit > 0 && (
         <div style={{ width: `${lPct}%`, background: "var(--hard-no)", transition: "width 500ms ease-out" }} />
@@ -478,8 +488,8 @@ function ComparePage() {
       {/* ── Score masthead + alignment ribbon + category nav + filter tabs ── */}
       {hasPair && (
         <>
-          <ScoreMasthead match={matchCount} discuss={discussCount} limit={hardLimitCount} />
-          <AlignmentBar match={matchCount} discuss={discussCount} limit={hardLimitCount} />
+          <ScoreMasthead match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
+          <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
 
           {/* Category heatmap strip */}
           <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 mb-4">
@@ -492,7 +502,7 @@ function ComparePage() {
                   className="focus-ring flex-none px-1.5 py-0.5 text-[10px] uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
                   style={categoryPillStyle(rate)}
                 >
-                  — {catAbbrev(cat)}
+                  {catAbbrev(cat)}
                 </button>
               ))}
           </div>
@@ -567,7 +577,7 @@ function ComparePage() {
                 });
                 if (!kinks.length) return null;
                 return (
-                  <section key={cat} id={`cat-${cat}`} className="mb-6">
+                  <section key={cat} id={`cat-${cat}`} className="mb-6 scroll-mt-32">
                     <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
                       {cat}
                     </h2>
@@ -582,7 +592,7 @@ function ComparePage() {
                         return (
                           <div
                             key={kink.id}
-                            className="rounded-sm px-3 py-2.5 transition-opacity"
+                            className="rounded-xl px-3 py-2.5 transition-opacity"
                             style={{
                               background: "var(--surface)",
                               border: "1px solid var(--border)",
@@ -729,7 +739,7 @@ function ComparePage() {
                       return (
                         <div
                           key={rowKey}
-                          className="rounded-sm px-3 py-2.5 transition-opacity"
+                          className="rounded-xl px-3 py-2.5 transition-opacity"
                           style={{
                             background: "var(--surface)",
                             border: "1px solid var(--border)",
