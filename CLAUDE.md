@@ -14,6 +14,15 @@
 ## Worktree & branch naming (mandatory)
 Always use the `worktree` skill — both when spawning a new worktree and when shipping (test → push → PR to dev).
 
+## Parallel Claude sessions (mandatory)
+Two Claude accounts — **claude1** and **claude2** — work this repo simultaneously under separate logins. Both:
+- Operate inside an isolated worktree off `dev`. Never the main checkout.
+- Open PRs back to `dev`.
+- Before starting a phase: `git fetch origin && gh pr list --base dev` to see the other Claude's in-flight work; pick orthogonal files/phases.
+- Before pushing: rebase onto latest `origin/dev`, re-run `npm test` + `npm run build` to catch silent regressions from the other branch landing first.
+- Call out surface-area overlap explicitly in PR descriptions.
+
+
 ## Commits
 - One commit = one logical unit (complete feature, fix, or polish pass).
 - Group related changes (component + tests + imports) into a single commit.
@@ -74,6 +83,9 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 ## corrections.md (mandatory)
 Read `corrections.md` at session start before doing anything.
 These are documented mistakes — do not repeat them.
+
+## memory.md (mandatory)
+Read `memory.md` at session start. Cross-session operational notes the user wants every Claude (claude1 + claude2) to carry. Append new notes here when the user says "remember this" or similar.
 
 ## Planning files
 - `future.md` — Claude suggestions only, ask before writing anything here
