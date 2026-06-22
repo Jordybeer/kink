@@ -98,13 +98,17 @@ Sheet backdrop: domain `components/Sheet.tsx` updated to `var(--scrim)` from har
 
 ## Phase 6 — Profile Sharing Flow
 
-Single biggest UX gap: after a live session reveal, the peer's profile vanishes. Needs persistence path.
+### Phase 6a — Import-on-reveal CTA ✅ SHIPPED (2026-06-22, worktree-edging)
 
-- **Share-profile button on live-session reveal** — Drop a CTA on the reveal screen: `Importeer dit profiel`. Pulls the live-session payload into local storage as a partner profile.
-- **QR audit** — Document in commit message: what fields the QR encodes today, what's missing (avatar? customKinks? snapshots?), and the byte budget before QR becomes unscannable on a phone screen (≤ ~2.9 kB for L-level Version 40).
-- **Live-session handshake capacity** — Since it's WebRTC datachannel, it can carry **multiples** of the QR payload. Spec a richer payload (avatar + full entries + custom kinks) for live mode while keeping QR lean.
+- New datachannel `Msg` variant `"P"` carrying `id`, `name`, `role`, `experienceLevel`, `customKinks`. Sent on channel open alongside the existing `"p"` (lite) and `"d"` (entries) messages. Backwards-compat preserved — old clients still produce a thinner import via synthesized id.
+- `Importeer dit profiel` CTA on the revealed phase (`app/session/page.tsx`), promoted to primary; `Vergelijk uitgebreid` demoted to outline. On click: build a Profile via `lib/sessionImport.ts`, dedupe-on-existence in `state.profiles`, show `✓ Profiel geïmporteerd` / `✓ Al opgeslagen` for 1.4s, `router.replace("/")`.
+- `lib/sessionImport.ts` — pure-logic helper: `sanitizeRemoteProfileFull`, `synthesizePartnerId` (deterministic 16-hex FNV-1a fingerprint of `name|role|sorted-entries`), `buildPartnerProfile`. 11 new tests in `__tests__/sessionImport.test.ts`.
+
+### Phase 6b–d (still open)
+
 - **Camera modal: paste-from-URL fallback** for PWA users whose camera permission is awkward.
-- Post-import always `router.replace('/')` (also covered in Phase 1 #5 — share the fix).
+- **Avatar sync** over datachannel — deferred until snapshots settle storage budget (Phase 7 territory).
+- **QR audit (no-code item)**: QR v2 currently encodes `id`, `name`, `role`, `experienceLevel`, `entries`, `customKinks`, `relationshipStatus`, `fetLifeUsername`. Missing: `avatarDataUrl`, `desire`, `experienced`, `comments`, `tags`. Typical encoded ~900 B → ~915 B URL; QR L-level v40 budget ~2.9 kB → ~68% headroom.
 
 ## Phase 7 — Profile Trends / Snapshots
 
