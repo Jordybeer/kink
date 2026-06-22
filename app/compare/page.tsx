@@ -548,14 +548,21 @@ function ComparePage() {
                 </button>
               );
             })}
-            <button
-              onClick={() => setHideDiscussed((v) => !v)}
-              className="focus-ring ml-auto px-3 py-2 text-xs transition-colors whitespace-nowrap"
-              style={{ color: hideDiscussed ? "var(--accent)" : "var(--text2)" }}
-            >
-              {hideDiscussed ? "Toon alles" : "Verberg besproken"}
-            </button>
           </div>
+          {discussed.size > 0 && (
+            <div className="flex justify-end mb-3">
+              <button
+                onClick={() => setHideDiscussed((v) => !v)}
+                className="focus-ring text-xs px-3 py-1.5 rounded-full border transition-colors"
+                style={{
+                  borderColor: hideDiscussed ? "var(--accent)" : "var(--border)",
+                  color: hideDiscussed ? "var(--accent)" : "var(--text2)",
+                }}
+              >
+                {hideDiscussed ? `Toon alles (${discussed.size})` : `Verberg besproken (${discussed.size})`}
+              </button>
+            </div>
+          )}
         </>
       )}
 
