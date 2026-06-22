@@ -35,3 +35,14 @@ ls .claude/skills/worktree/SKILL.md
 ```
 
 If `skill-creator` or `frontend-design` is missing from the active account's `installed_plugins.json`, install before doing any work that touches UI (`frontend-design`) or new skills (`skill-creator`).
+
+## Ambient animation design rule (Phase 10 postmortem, 2026-06-22)
+
+When adding "subtle ambient" motion to brand elements (wordmark, logo, status indicators, idle pulses):
+
+- **Cycle length ≥ 3 seconds.** Anything faster reads as activity, notification, or impatience — not ambient. The original wordmark shimmer runs 5.5s and feels luxurious; the failed Phase 10 cursor ran 1.8s and felt like a blink.
+- **Opacity or position swing ≤ 30% of the available range.** Deep swings demand attention. The failed cursor went opacity 1 → 0.22 (a 78% drop) and read as a notification dot, not a held breath.
+- **Coexist, don't replace.** Established brand motion (the shimmer) is part of identity. Adding a new ambient element should sit alongside, not displace it. Replacing elegance to add novelty is a regression.
+- **Match the vocabulary of the surface.** A blinking terminal cursor next to an editorial Cormorant Garamond serif is a design-language clash. CLI/status motifs belong on technical or system surfaces — not pinned to the brand mark.
+
+Apply this rule before shipping any motion touch on the wordmark, logo, hero, or onboarding chrome.

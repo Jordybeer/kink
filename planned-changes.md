@@ -135,9 +135,19 @@ These are bigger than a single commit. Each needs its own design pass before cod
 - `PwaInstallGuide.tsx` exists and is functional for both iOS (step-by-step) and Android (native prompt) but needs a `/frontend-design` pass: the card is small and understated for a moment that needs to convert first-timers. Review against the rest of the app's visual identity — height, hierarchy, icon, copy.
 - `Onboarding.tsx` and profile page ("profile spotlight") may also need a review pass: app state has advanced significantly since their initial implementation. Run `/frontend-design` on each surface before touching code.
 
-## Phase 10 — Brand Micro-polish
+## Phase 10 — Brand Micro-polish ⛔ ATTEMPTED + REVERTED (2026-06-22, worktree-gag → PR #219 closed)
 
-- Logo underscore: subtle ambient animation (slow pulse / shimmer). The name itself stays static so the underscore reads as a status cursor, not motion clutter. Easy win; ship after the visual phases settle.
+First attempt: split `Wordmark` into `.ks-wordmark__text` (frozen gradient) + a trailing `.ks-cursor` `_` pulsing 1.8s opacity 1 → 0.22 → 1. Killed the original `ks-shimmer` keyframe in the process. Walked back same evening — the parameters and the motif both missed:
+
+- **Cycle 3× too fast.** Old shimmer was 5.5s ease-in-out; new pulse ran 1.8s. The brief said "subtle ambient", I shipped "notification dot".
+- **Opacity swing 78% deep** read as a caret blink, not a held breath.
+- **Terminal-cursor motif clashed** with the Cormorant Garamond editorial wordmark — wrong design vocabulary.
+- **The shimmer was actually good.** Replacing it threw out a refined animation for a louder one.
+
+Lesson for any future Phase 10 attempt:
+- "Subtle" here means **≥ 3s cycle** and **≤ 30% opacity swing**.
+- Don't replace the shimmer — coexist with it if anything.
+- Open question: is a Cormorant wordmark even the right surface for a status-cursor motif? Maybe the underscore belongs elsewhere (status dot in nav, footer marker), not pinned to the brand.
 
 ## Phase 11 — UI Audit: Compare, Scene, Contract pages ✅ SHIPPED (2026-06-22, worktree-fingering, PR #216)
 
