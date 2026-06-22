@@ -29,10 +29,10 @@ export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
     if ((sa === "yes"    && sb === "willing") || (sa === "willing" && sb === "yes"))       return { score: 80, kind: "strong" };
     if (sa === "willing" && sb === "willing")                                              return { score: 65, kind: "soft" };
     if ((sa === "yes"    && sb === "no")      || (sa === "no"      && sb === "yes"))       return { score: 55, kind: "discuss" };
-    if ((sa === "yes"    && sb === "maybe")   || (sa === "maybe"   && sb === "yes"))       return { score: 50, kind: "discuss" };
-    if ((sa === "willing"&& sb === "maybe")   || (sa === "maybe"   && sb === "willing"))   return { score: 45, kind: "discuss" };
+    if ((sa === "yes"    && sb === "maybe")   || (sa === "maybe"   && sb === "yes"))       return { score: 50, kind: "soft" };
+    if ((sa === "willing"&& sb === "maybe")   || (sa === "maybe"   && sb === "willing"))   return { score: 45, kind: "soft" };
     if ((sa === "willing"&& sb === "no")      || (sa === "no"      && sb === "willing"))   return { score: 40, kind: "discuss" };
-    if (sa === "maybe"   && sb === "maybe")                                                return { score: 30, kind: "discuss" };
+    if (sa === "maybe"   && sb === "maybe")                                                return { score: 30, kind: "soft" };
     if ((sa === "maybe"  && sb === "no")      || (sa === "no"      && sb === "maybe"))     return { score: 20, kind: "discuss" };
     if (sa === "no"      && sb === "no")                                                   return { score: 15, kind: "conflict" };
     return { score: 0, kind: "none" };
@@ -47,10 +47,10 @@ export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
     if ((give === "yes"    && recv === "willing") || (give === "willing" && recv === "yes"))     return { score: 85,  kind: "strong" };
     if (give === "willing" && recv === "willing")                                                return { score: 65,  kind: "soft" };
     if ((give === "yes"    && recv === "no")      || (give === "no"      && recv === "yes"))     return { score: 55,  kind: "discuss" };
-    if ((give === "yes"    && recv === "maybe")   || (give === "maybe"   && recv === "yes"))     return { score: 50,  kind: "discuss" };
-    if ((give === "willing"&& recv === "maybe")   || (give === "maybe"   && recv === "willing")) return { score: 45,  kind: "discuss" };
+    if ((give === "yes"    && recv === "maybe")   || (give === "maybe"   && recv === "yes"))     return { score: 50,  kind: "soft" };
+    if ((give === "willing"&& recv === "maybe")   || (give === "maybe"   && recv === "willing")) return { score: 45,  kind: "soft" };
     if ((give === "willing"&& recv === "no")      || (give === "no"      && recv === "willing")) return { score: 40,  kind: "discuss" };
-    if (give === "maybe"   && recv === "maybe")                                                  return { score: 30,  kind: "discuss" };
+    if (give === "maybe"   && recv === "maybe")                                                  return { score: 30,  kind: "soft" };
     if ((give === "maybe"  && recv === "no")      || (give === "no"      && recv === "maybe"))   return { score: 20,  kind: "discuss" };
     if (give === "no"      && recv === "no")                                                     return { score: 15,  kind: "conflict" };
     return null;
