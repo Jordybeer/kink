@@ -78,7 +78,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         {/* App icon + heading */}
         <div style={{ padding: "1.5rem 1.5rem 0", textAlign: "center" }}>
           <motion.img
-            src="/icon-192.png"
+            src={isIos ? "/apple-touch-icon.png" : "/icon-192.png"}
             alt=""
             aria-hidden="true"
             width={64}
