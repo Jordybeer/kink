@@ -77,6 +77,28 @@ describe("sanitizeRemoteProfileFull", () => {
     expect(sanitizeRemoteProfileFull({ id: "abc", n: "Mira" })).toBeNull();
     expect(sanitizeRemoteProfileFull({ id: 1, n: "Mira", r: "ontvangen" })).toBeNull();
   });
+
+  it("clamps oversized peer-controlled strings to defensive caps", () => {
+    const huge = "x".repeat(10_000);
+    const out = sanitizeRemoteProfileFull({ id: huge, n: huge, r: huge });
+    expect(out).not.toBeNull();
+    expect(out!.id.length).toBeLessThanOrEqual(64);
+    expect(out!.name.length).toBeLessThanOrEqual(80);
+    expect(out!.role.length).toBeLessThanOrEqual(32);
+  });
+
+  it("returns null when trimmed required fields collapse to empty", () => {
+    expect(sanitizeRemoteProfileFull({ id: "   ", n: "Mira", r: "ontvangen" })).toBeNull();
+    expect(sanitizeRemoteProfileFull({ id: "abc", n: "   ", r: "ontvangen" })).toBeNull();
+  });
+
+  it("caps customKinks to 100 entries and clamps long names", () => {
+    const longName = "k".repeat(500);
+    const overflow = Array.from({ length: 200 }, (_, i) => ({ id: `ck_${i}`, name: longName }));
+    const out = sanitizeRemoteProfileFull({ id: "abc", n: "Mira", r: "ontvangen", ck: overflow });
+    expect(out?.customKinks).toHaveLength(100);
+    expect(out?.customKinks?.every((c) => c.name.length <= 80)).toBe(true);
+  });
 });
 
 describe("buildPartnerProfile", () => {

@@ -10,7 +10,7 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 - Branch off `dev`, PR back to `dev`.
 - Before starting a phase:
   - `git fetch origin`
-  - `git log origin/dev..HEAD` to see what landed since this worktree was cut.
+  - `git log HEAD..origin/dev` to see what landed on dev since this worktree was cut.
   - `gh pr list --base dev` to see the other Claude's in-flight work.
   - Pick orthogonal files/phases — avoid the surface area of any open parallel PR.
 - Before pushing: rebase onto latest `origin/dev`, re-run `npm test` + `npm run build` to catch silent regressions from the other branch landing first.

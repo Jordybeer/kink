@@ -199,8 +199,17 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   useEffect(() => { applyAnswerRef.current = applyAnswerSdp; });
 
+  function resetPeerState() {
+    setRemote({});
+    setRemoteProfile(null);
+    setRemoteProfileFull(null);
+    setPartnerDone(false);
+    setImportDone(null);
+  }
+
   async function handleStartHost() {
     if (!profile) return;
+    resetPeerState();
     setRevealedIds(new Set());
     setShowZeroState(false);
     initLocal(profile);
@@ -281,6 +290,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   async function handleStartGuest() {
     if (!profile || codeInput.length !== 6) return;
+    resetPeerState();
     setRevealedIds(new Set());
     setShowZeroState(false);
     initLocal(profile);

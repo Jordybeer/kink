@@ -2,6 +2,17 @@ import type { CustomKink, ExperienceLevel, KinkEntry, KinkStatus, Profile } from
 
 const VALID_LEVELS: readonly ExperienceLevel[] = ["beginner", "gevorderd", "ervaren", "diepgaand"];
 
+const MAX_ID_LEN = 64;
+const MAX_NAME_LEN = 80;
+const MAX_ROLE_LEN = 32;
+const MAX_CUSTOM_KINKS = 100;
+const MAX_KINK_ID_LEN = 64;
+const MAX_KINK_NAME_LEN = 80;
+
+function clamp(s: string, max: number): string {
+  return s.trim().slice(0, max);
+}
+
 export interface RemoteProfileLite {
   name: string;
   role: string;
@@ -47,6 +58,10 @@ export function sanitizeRemoteProfileFull(raw: unknown): RemoteProfileFull | nul
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (typeof r.id !== "string" || typeof r.n !== "string" || typeof r.r !== "string") return null;
+  const id = clamp(r.id, MAX_ID_LEN);
+  const name = clamp(r.n, MAX_NAME_LEN);
+  const role = clamp(r.r, MAX_ROLE_LEN);
+  if (!id || !name || !role) return null;
   const level = typeof r.e === "string" && (VALID_LEVELS as readonly string[]).includes(r.e)
     ? (r.e as ExperienceLevel)
     : undefined;
@@ -56,12 +71,14 @@ export function sanitizeRemoteProfileFull(raw: unknown): RemoteProfileFull | nul
       .filter((c): c is { id: string; name: string } =>
         !!c && typeof c === "object" && typeof (c as { id?: unknown }).id === "string"
         && typeof (c as { name?: unknown }).name === "string")
-      .map((c) => ({ id: c.id, name: c.name }));
+      .map((c) => ({ id: clamp(c.id, MAX_KINK_ID_LEN), name: clamp(c.name, MAX_KINK_NAME_LEN) }))
+      .filter((c) => c.id && c.name)
+      .slice(0, MAX_CUSTOM_KINKS);
   }
   return {
-    id: r.id,
-    name: r.n,
-    role: r.r,
+    id,
+    name,
+    role,
     experienceLevel: level,
     customKinks,
   };
@@ -73,8 +90,8 @@ export function buildPartnerProfile(
   remoteEntries: Record<string, KinkStatus>,
   now: number = Date.now(),
 ): Profile {
-  const name = full?.name ?? lite.name;
-  const role = full?.role ?? lite.role;
+  const name = full?.name ?? clamp(lite.name, MAX_NAME_LEN);
+  const role = full?.role ?? clamp(lite.role, MAX_ROLE_LEN);
   const id = full?.id ?? synthesizePartnerId(name, role, remoteEntries);
   const entries: Record<string, KinkEntry> = {};
   for (const [kinkId, status] of Object.entries(remoteEntries)) {
