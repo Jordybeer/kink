@@ -82,6 +82,32 @@ describe("kinkMatchScore — rubric rows", () => {
 });
 
 
+describe("kinkMatchScore — symmetric voor-hen cases (PR v5 rubric)", () => {
+  it("no + yes → discuss (55) — symmetric of yes+no", () => {
+    expect(kinkMatchScore(e({ status: "no" }), e({ status: "yes" }))).toEqual({ score: 55, kind: "discuss" });
+  });
+
+  it("no + willing → discuss (40) — symmetric of willing+no", () => {
+    expect(kinkMatchScore(e({ status: "no" }), e({ status: "willing" }))).toEqual({ score: 40, kind: "discuss" });
+  });
+
+  it("maybe + no → discuss (20)", () => {
+    expect(kinkMatchScore(e({ status: "maybe" }), e({ status: "no" }))).toEqual({ score: 20, kind: "discuss" });
+  });
+
+  it("no + maybe → discuss (20) — symmetric", () => {
+    expect(kinkMatchScore(e({ status: "no" }), e({ status: "maybe" }))).toEqual({ score: 20, kind: "discuss" });
+  });
+
+  it("no + no → conflict (15)", () => {
+    expect(kinkMatchScore(e({ status: "no" }), e({ status: "no" }))).toEqual({ score: 15, kind: "conflict" });
+  });
+
+  it("willing + maybe → soft (45) — symmetric of maybe+willing", () => {
+    expect(kinkMatchScore(e({ status: "willing" }), e({ status: "maybe" }))).toEqual({ score: 45, kind: "soft" });
+  });
+});
+
 describe("kinkMatchScore — directional", () => {
   it("yes give / yes receive → perfect (100)", () => {
     expect(kinkMatchScore(
