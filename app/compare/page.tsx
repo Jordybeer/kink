@@ -10,6 +10,7 @@ import { isKinkMatch, isHardLimit, isConflict, profileMatchScore } from "@/lib/m
 import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
+import DiscussedToggle from "@/components/DiscussedToggle";
 
 const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
   yes:     "Heel graag",
@@ -549,20 +550,11 @@ function ComparePage() {
               );
             })}
           </div>
-          {discussed.size > 0 && (
-            <div className="flex justify-end mb-3">
-              <button
-                onClick={() => setHideDiscussed((v) => !v)}
-                className="focus-ring text-xs px-3 py-1.5 rounded-full border transition-colors"
-                style={{
-                  borderColor: hideDiscussed ? "var(--accent)" : "var(--border)",
-                  color: hideDiscussed ? "var(--accent)" : "var(--text2)",
-                }}
-              >
-                {hideDiscussed ? `Toon alles (${discussed.size})` : `Verberg besproken (${discussed.size})`}
-              </button>
-            </div>
-          )}
+          <DiscussedToggle
+            count={discussed.size}
+            hidden={hideDiscussed}
+            onToggle={() => setHideDiscussed((v) => !v)}
+          />
         </>
       )}
 

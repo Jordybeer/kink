@@ -9,6 +9,7 @@ import type { CustomKink, ExperienceLevel, KinkStatus, Profile } from "@/types";
 import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGathering, fetchIceServers } from "@/lib/webrtc";
 import PageShell from "@/components/PageShell";
 import { buildPartnerProfile, sanitizeRemoteProfileFull, type RemoteProfileFull } from "@/lib/sessionImport";
+import SessionImportAction from "@/components/SessionImportAction";
 
 function iceServersSummary(servers: RTCIceServer[]): string {
   const urls = servers.map(s => String(s.urls));
@@ -850,17 +851,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           )}
 
           <div className="flex flex-col gap-2 mb-3">
-            {importDone ? (
-              <p className="text-sm text-center py-3 font-semibold" style={{ color: "var(--accent)" }}>
-                {importDone === "saved" ? "✓ Profiel geïmporteerd" : "✓ Al opgeslagen"}
-              </p>
-            ) : (
-              <button onClick={handleImportPartner}
-                className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent)", color: "#000" }}>
-                Importeer dit profiel
-              </button>
-            )}
+            <SessionImportAction status={importDone} onImport={handleImportPartner} />
             <Link href={`/compare?a=${profileId}`}
               className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
               style={{ background: "var(--surface)", border: "1px solid var(--accent)", color: "var(--accent)" }}>
