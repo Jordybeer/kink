@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Share2, PlusSquare, Check, WifiOff, Smartphone, Zap } from "lucide-react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface Props {
@@ -11,37 +11,34 @@ interface Props {
 
 const IOS_STEPS = [
   {
+    icon: Share2,
     title: "Tap het deel-icoon",
-    body: "Tap op het icoon □↑ onderin de Safari-navigatiebalk.",
+    body: "□↑ in de Safari-navigatiebalk onderin.",
   },
   {
-    title: "Kies 'Zet op beginscherm'",
-    body: "Scroll omlaag in het deelmenu en kies \"Zet op beginscherm\".",
+    icon: PlusSquare,
+    title: "Zet op beginscherm",
+    body: "Scroll omlaag en tik 'Zet op beginscherm'.",
   },
   {
+    icon: Check,
     title: "Tap 'Voeg toe'",
-    body: "Bevestig rechtsboven met 'Voeg toe'. KinkSync verschijnt dan als app op je beginscherm.",
+    body: "Bevestig rechtsboven — klaar.",
   },
+];
+
+const FEATURES = [
+  { icon: WifiOff,    label: "Werkt offline" },
+  { icon: Smartphone, label: "Geen adresbalk" },
+  { icon: Zap,        label: "Razendsnel" },
 ];
 
 export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) {
   const t = useMotionSafe();
-  const [step, setStep] = useState(0);
-  const steps = isIos ? IOS_STEPS : null;
-  const isLast = steps ? step === steps.length - 1 : true;
-
-  function advance() {
-    if (!steps || isLast) {
-      onDismiss();
-    } else {
-      setStep(s => s + 1);
-    }
-  }
-
-  const current = steps?.[step];
 
   return (
     <AnimatePresence>
+      {/* Scrim */}
       <motion.div
         key="pwa-backdrop"
         aria-hidden="true"
@@ -53,128 +50,164 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         onClick={onDismiss}
       />
 
+      {/* Sheet */}
       <motion.div
-        key="pwa-card"
+        key="pwa-sheet"
         role="dialog"
         aria-modal="true"
         aria-label="KinkSync installeren"
         style={{
           position: "fixed",
-          bottom: "1rem",
-          left: "50%",
+          bottom: 0, left: 0, right: 0,
           zIndex: 401,
-          width: "min(18rem, calc(100vw - 2rem))",
           background: "var(--surface2)",
-          border: "1px solid var(--border)",
-          borderRadius: "1rem",
-          padding: "1.125rem 1.125rem 0.875rem",
-          boxShadow: "0 8px 32px var(--scrim)",
+          borderRadius: "1.25rem 1.25rem 0 0",
+          boxShadow: "0 -8px 48px rgba(0,0,0,0.55), 0 0 0 1px var(--border)",
+          paddingBottom: "max(2.5rem, env(safe-area-inset-bottom))",
+          maxHeight: "80dvh",
+          overflowY: "auto",
         }}
-        initial={{ opacity: 0, x: "-50%", y: 32 }}
-        animate={{ opacity: 1, x: "-50%", y: 0 }}
-        exit={{ opacity: 0, x: "-50%", y: 32 }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
         transition={t.modal}
       >
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-          <h3 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
-            KinkSync installeren
-          </h3>
-          {steps && (
-            <span style={{ fontSize: "0.75rem", color: "var(--text2)", flexShrink: 0, marginLeft: "0.5rem", marginTop: "0.125rem" }}>
-              {step + 1}/{steps.length}
-            </span>
-          )}
+        {/* Drag handle */}
+        <div style={{ margin: "0.75rem auto 0", width: "2.5rem", height: "0.25rem", borderRadius: 999, background: "var(--border)" }} />
+
+        {/* App icon + heading */}
+        <div style={{ padding: "1.5rem 1.5rem 0", textAlign: "center" }}>
+          <motion.img
+            src={isIos ? "/apple-touch-icon.png" : "/icon-192.png"}
+            alt=""
+            aria-hidden="true"
+            width={64}
+            height={64}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 22, delay: 0.08 }}
+            style={{ borderRadius: "1rem", marginBottom: "0.875rem", boxShadow: "0 4px 20px rgba(0,0,0,0.35)" }}
+          />
+          <h2 style={{ margin: 0, fontSize: "1.1875rem", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em" }}>
+            {isIos ? "Installeer KinkSync" : "Altijd bij de hand"}
+          </h2>
+          <p style={{ margin: "0.3rem 0 0", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.5 }}>
+            {isIos
+              ? "Drie tikken in Safari — dan staat de app op je beginscherm."
+              : "Voeg KinkSync toe aan je beginscherm voor de volledige app-ervaring."}
+          </p>
         </div>
 
-        {/* Body */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={t.fast}
-          >
-            {isIos && current ? (
-              <p style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
-                {current.body}
+        {/* Content */}
+        <div style={{ padding: "1.25rem 1.5rem 0" }}>
+          {isIos ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {IOS_STEPS.map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.07, duration: 0.28, ease: "easeOut" }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.875rem",
+                      background: "color-mix(in srgb, var(--accent) 6%, var(--surface))",
+                      border: "1px solid color-mix(in srgb, var(--accent) 18%, transparent)",
+                      borderRadius: "0.875rem",
+                      padding: "0.75rem 1rem",
+                    }}
+                  >
+                    <div style={{
+                      flexShrink: 0,
+                      width: "2rem", height: "2rem",
+                      borderRadius: "9999px",
+                      background: "var(--accent)",
+                      color: "var(--on-accent)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <Icon size={14} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--text)" }}>{s.title}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text2)", lineHeight: 1.4 }}>{s.body}</div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0, marginLeft: "auto",
+                      fontSize: "0.6875rem", fontWeight: 700,
+                      color: "var(--text2)", opacity: 0.5,
+                    }}>
+                      {i + 1}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div>
+              <div style={{
+                display: "flex", justifyContent: "center", gap: "0.75rem",
+                marginBottom: "1rem",
+              }}>
+                {FEATURES.map(({ icon: Icon, label }) => (
+                  <div key={label} style={{
+                    flex: 1,
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem",
+                    background: "color-mix(in srgb, var(--accent) 6%, var(--surface))",
+                    border: "1px solid color-mix(in srgb, var(--accent) 18%, transparent)",
+                    borderRadius: "0.875rem",
+                    padding: "0.875rem 0.5rem",
+                  }}>
+                    <Icon size={18} style={{ color: "var(--accent)" }} />
+                    <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--text2)", textAlign: "center", lineHeight: 1.3 }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{
+                margin: 0, fontSize: "0.8125rem", color: "var(--text2)",
+                lineHeight: 1.6, textAlign: "center",
+              }}>
+                Geen browser, geen afleiding — gewoon de app.
               </p>
-            ) : (
-              <p style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
-                Installeer KinkSync als app — werkt offline en zonder browserbalk.
-              </p>
-            )}
-          </motion.div>
-        </AnimatePresence>
+            </div>
+          )}
+        </div>
 
         {/* Actions */}
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          {isIos ? (
-            <>
-              <motion.button
-                onClick={advance}
-                whileTap={TAP_SPRING}
-                style={{
-                  flex: 1, background: "var(--accent)", color: "var(--on-accent)", fontWeight: 600,
-                  padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
-                  fontSize: "0.8125rem", cursor: "pointer",
-                }}
-              >
-                {isLast ? "Klaar 🖤" : "Volgende →"}
-              </motion.button>
-              <motion.button
-                onClick={onDismiss}
-                whileTap={TAP_SPRING}
-                style={{
-                  background: "transparent", border: "1px solid var(--border)",
-                  color: "var(--text2)", padding: "0.5rem 0.875rem",
-                  borderRadius: "9999px", fontSize: "0.75rem", cursor: "pointer",
-                }}
-              >
-                Sla over
-              </motion.button>
-            </>
-          ) : (
-            <>
-              <motion.button
-                onClick={() => { onInstall?.(); onDismiss(); }}
-                whileTap={TAP_SPRING}
-                style={{
-                  flex: 1, background: "var(--accent)", color: "var(--on-accent)", fontWeight: 600,
-                  padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
-                  fontSize: "0.8125rem", cursor: "pointer",
-                }}
-              >
-                Installeer als app
-              </motion.button>
-              <motion.button
-                onClick={onDismiss}
-                whileTap={TAP_SPRING}
-                style={{
-                  background: "transparent", border: "1px solid var(--border)",
-                  color: "var(--text2)", padding: "0.5rem 0.875rem",
-                  borderRadius: "9999px", fontSize: "0.75rem", cursor: "pointer",
-                }}
-              >
-                Sla over
-              </motion.button>
-            </>
-          )}
-        </div>
+        <div style={{ padding: "1.25rem 1.5rem 0", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <motion.button
+            whileTap={TAP_SPRING}
+            onClick={isIos ? onDismiss : () => { onInstall?.(); onDismiss(); }}
+            style={{
+              width: "100%",
+              background: "linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)))",
+              color: "var(--on-accent)",
+              fontWeight: 700,
+              padding: "0.9375rem 1.5rem",
+              borderRadius: "9999px",
+              border: "none",
+              fontSize: "0.9375rem",
+              cursor: "pointer",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {isIos ? "Klaar 🖤" : "Zet op startscherm"}
+          </motion.button>
 
-        {/* Step dots — iOS only */}
-        {steps && (
-          <div style={{ display: "flex", justifyContent: "center", gap: "0.375rem", marginTop: "0.75rem" }}>
-            {steps.map((_, i) => (
-              <div key={i} style={{
-                height: 3, width: i === step ? 18 : 5, borderRadius: 999,
-                background: i === step ? "var(--accent)" : "var(--border)",
-                transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
-              }} />
-            ))}
-          </div>
-        )}
+          <button
+            onClick={onDismiss}
+            style={{
+              background: "none", border: "none",
+              color: "var(--text2)", fontSize: "0.8125rem",
+              cursor: "pointer", padding: "0.5rem 1rem",
+              minHeight: "44px",
+            }}
+          >
+            Misschien later
+          </button>
+        </div>
       </motion.div>
     </AnimatePresence>
   );

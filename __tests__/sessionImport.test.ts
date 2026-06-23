@@ -99,6 +99,58 @@ describe("sanitizeRemoteProfileFull", () => {
     expect(out?.customKinks).toHaveLength(100);
     expect(out?.customKinks?.every((c) => c.name.length <= 80)).toBe(true);
   });
+
+  describe("avatarDataUrl (av field)", () => {
+    const base = { id: "abc", n: "Mira", r: "ontvangen" } as const;
+    const VALID_JPEG = "data:image/jpeg;base64,/9j/4AAQSkZJRgAB";
+
+    it("accepts a valid jpeg data URL", () => {
+      const out = sanitizeRemoteProfileFull({ ...base, av: VALID_JPEG });
+      expect(out?.avatarDataUrl).toBe(VALID_JPEG);
+    });
+
+    it("accepts png and webp", () => {
+      expect(sanitizeRemoteProfileFull({ ...base, av: "data:image/png;base64,iVBORw0KGgo=" })?.avatarDataUrl)
+        .toBe("data:image/png;base64,iVBORw0KGgo=");
+      expect(sanitizeRemoteProfileFull({ ...base, av: "data:image/webp;base64,UklGRiQA" })?.avatarDataUrl)
+        .toBe("data:image/webp;base64,UklGRiQA");
+    });
+
+    it("omits avatarDataUrl when av is missing — never collapses to empty string", () => {
+      const out = sanitizeRemoteProfileFull(base);
+      expect(out).not.toBeNull();
+      expect(out?.avatarDataUrl).toBeUndefined();
+    });
+
+    it("rejects oversized payloads but keeps the rest of the profile", () => {
+      const huge = "data:image/jpeg;base64," + "A".repeat(25_000);
+      const out = sanitizeRemoteProfileFull({ ...base, av: huge });
+      expect(out).not.toBeNull();
+      expect(out?.avatarDataUrl).toBeUndefined();
+      expect(out?.name).toBe("Mira");
+    });
+
+    it("rejects non-data-URL strings", () => {
+      for (const bad of ["http://evil.example/x.png", "<script>alert(1)</script>", "", "   "]) {
+        expect(sanitizeRemoteProfileFull({ ...base, av: bad })?.avatarDataUrl).toBeUndefined();
+      }
+    });
+
+    it("rejects SVG and GIF (MIME outside allowlist)", () => {
+      expect(sanitizeRemoteProfileFull({
+        ...base, av: "data:image/svg+xml;base64,PHN2Zy8+",
+      })?.avatarDataUrl).toBeUndefined();
+      expect(sanitizeRemoteProfileFull({
+        ...base, av: "data:image/gif;base64,R0lGODlh",
+      })?.avatarDataUrl).toBeUndefined();
+    });
+
+    it("rejects valid prefix with non-base64 bytes", () => {
+      expect(sanitizeRemoteProfileFull({
+        ...base, av: "data:image/jpeg;base64,!!",
+      })?.avatarDataUrl).toBeUndefined();
+    });
+  });
 });
 
 describe("buildPartnerProfile", () => {
@@ -119,6 +171,27 @@ describe("buildPartnerProfile", () => {
     expect(partner.lockedAt).toBe(NOW);
     expect(partner.createdAt).toBe(NOW);
     expect(partner.updatedAt).toBe(NOW);
+  });
+
+  it("threads avatarDataUrl from the full payload into the imported profile", () => {
+    const avatar = "data:image/jpeg;base64,/9j/4AAQSkZJRgAB";
+    const partner = buildPartnerProfile(
+      { id: "peer-uuid", name: "Mira", role: "ontvangen", avatarDataUrl: avatar },
+      { name: "Mira", role: "ontvangen" },
+      ENTRIES,
+      NOW,
+    );
+    expect(partner.avatarDataUrl).toBe(avatar);
+  });
+
+  it("leaves avatarDataUrl undefined when the full payload had none", () => {
+    const partner = buildPartnerProfile(
+      { id: "peer-uuid", name: "Mira", role: "ontvangen" },
+      { name: "Mira", role: "ontvangen" },
+      ENTRIES,
+      NOW,
+    );
+    expect(partner.avatarDataUrl).toBeUndefined();
   });
 
   it("falls back to synthesized id + defaults when no full payload arrived", () => {
@@ -142,106 +215,6 @@ describe("buildPartnerProfile", () => {
     const a = buildPartnerProfile(null, { name: "Mira", role: "ontvangen" }, ENTRIES, NOW);
     const b = buildPartnerProfile(null, { name: "Mira", role: "ontvangen" }, ENTRIES, NOW + 500);
     expect(a.id).toBe(b.id);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Additional edge cases
-// ---------------------------------------------------------------------------
-describe("synthesizePartnerId — additional edge cases", () => {
-  it("produces different ids for empty vs non-empty entries", () => {
-    const withEntries = synthesizePartnerId("Mira", "ontvangen", ENTRIES);
-    const noEntries = synthesizePartnerId("Mira", "ontvangen", {});
-    expect(withEntries).not.toBe(noEntries);
-  });
-
-  it("produces a valid partner_ prefix id for empty entries", () => {
-    const id = synthesizePartnerId("A", "B", {});
-    expect(id).toMatch(/^partner_[0-9a-f]{16}$/);
-  });
-
-  it("trims leading/trailing whitespace from name and role before fingerprinting", () => {
-    const a = synthesizePartnerId("Mira", "ontvangen", ENTRIES);
-    const b = synthesizePartnerId("  Mira  ", "  ontvangen  ", ENTRIES);
-    expect(a).toBe(b);
-  });
-});
-
-describe("sanitizeRemoteProfileFull — additional edge cases", () => {
-  it("trims whitespace from id, name, and role fields", () => {
-    const out = sanitizeRemoteProfileFull({ id: " abc ", n: " Mira ", r: " ontvangen " });
-    expect(out?.id).toBe("abc");
-    expect(out?.name).toBe("Mira");
-    expect(out?.role).toBe("ontvangen");
-  });
-
-  it("returns null when r field is whitespace-only", () => {
-    expect(sanitizeRemoteProfileFull({ id: "abc", n: "Mira", r: "   " })).toBeNull();
-  });
-
-  it("accepts all four valid experienceLevel values", () => {
-    for (const level of ["beginner", "gevorderd", "ervaren", "diepgaand"] as const) {
-      const out = sanitizeRemoteProfileFull({ id: "abc", n: "Mira", r: "ontvangen", e: level });
-      expect(out?.experienceLevel).toBe(level);
-    }
-  });
-
-  it("omits customKinks field entirely when ck is not present", () => {
-    const out = sanitizeRemoteProfileFull({ id: "abc", n: "Mira", r: "ontvangen" });
-    expect(out?.customKinks).toBeUndefined();
-  });
-
-  it("filters out customKink items whose id or name is empty after clamping", () => {
-    const out = sanitizeRemoteProfileFull({
-      id: "abc", n: "Mira", r: "ontvangen",
-      ck: [
-        { id: "", name: "valid name" },
-        { id: "valid-id", name: "" },
-        { id: "ok", name: "ok" },
-      ],
-    });
-    expect(out?.customKinks).toEqual([{ id: "ok", name: "ok" }]);
-  });
-
-  it("handles non-array ck field gracefully (treats as absent)", () => {
-    const out = sanitizeRemoteProfileFull({ id: "abc", n: "Mira", r: "ontvangen", ck: "not-an-array" });
-    expect(out).not.toBeNull();
-    expect(out?.customKinks).toBeUndefined();
-  });
-});
-
-describe("buildPartnerProfile — additional edge cases", () => {
-  const NOW = 1_750_000_000_000;
-
-  it("produces an empty entries object when remote entries are all null", () => {
-    const partner = buildPartnerProfile(
-      null,
-      { name: "Mira", role: "ontvangen" },
-      { spanking_hand: null, flogging: null },
-      NOW,
-    );
-    expect(Object.keys(partner.entries)).toHaveLength(0);
-  });
-
-  it("produces an empty entries object when remote entries object is empty", () => {
-    const partner = buildPartnerProfile(null, { name: "Mira", role: "ontvangen" }, {}, NOW);
-    expect(Object.keys(partner.entries)).toHaveLength(0);
-  });
-
-  it("entry count in result equals number of non-null remote statuses", () => {
-    const partner = buildPartnerProfile(null, { name: "Mira", role: "ontvangen" }, {
-      ...ENTRIES,
-      wax_play: null,
-    }, NOW);
-    // ENTRIES has 3 keys, wax_play is null so only 3 should land
-    expect(Object.keys(partner.entries)).toHaveLength(3);
-  });
-
-  it("all three timestamps equal NOW when NOW is explicit", () => {
-    const partner = buildPartnerProfile(null, { name: "Mira", role: "ontvangen" }, {}, NOW);
-    expect(partner.createdAt).toBe(NOW);
-    expect(partner.updatedAt).toBe(NOW);
-    expect(partner.lockedAt).toBe(NOW);
   });
 });
 

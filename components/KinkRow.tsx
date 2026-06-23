@@ -76,14 +76,14 @@ function PillRow({ label, current, onSelect, tour }: PillRowProps) {
           const baseClasses = "focus-ring rounded-full border font-medium transition-colors min-h-[44px] text-[11px] py-2 flex items-center justify-center text-center leading-tight";
           if (active) {
             return (
-              <button key={s} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
+              <button key={s} data-tour={s === "hard_no" ? "hard-no" : undefined} onClick={() => onSelect(null)} aria-pressed className={`${baseClasses} status-${s}`}>
                 {danger && <Ban size={10} aria-hidden="true" className="mr-0.5 flex-none" />}
                 {pillLabel}
               </button>
             );
           }
           return (
-            <button key={s} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
+            <button key={s} data-tour={s === "hard_no" ? "hard-no" : undefined} onClick={() => onSelect(s)} aria-pressed={false} className={baseClasses} style={INACTIVE_STYLE[s]}>
               {pillLabel}
             </button>
           );

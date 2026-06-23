@@ -12,7 +12,7 @@ interface OnboardingProps {
 }
 
 const ICON_CIRCLE: React.CSSProperties = {
-  width: '5rem', height: '5rem', borderRadius: '9999px',
+  width: '6rem', height: '6rem', borderRadius: '9999px',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
   marginBottom: '2rem',
@@ -267,11 +267,20 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
 function Step0Content() {
   return (
-    <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h1 style={{ fontSize: '2.25rem', fontWeight: 700, margin: 0, animation: 'ks-fade-in 1s ease forwards', opacity: 0 }}>
+    <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+      {/* Ambient glow behind the wordmark */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -60%)',
+        width: '18rem', height: '10rem',
+        background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        animation: 'ks-fade-in 1.5s ease 0.3s both', opacity: 0,
+      }} />
+      <h1 style={{ fontSize: '2.25rem', fontWeight: 700, margin: 0, animation: 'ks-fade-in 1s ease forwards', opacity: 0, position: 'relative' }}>
         <Wordmark style={{ letterSpacing: '0.08em' }} />
       </h1>
-      <p style={{ fontSize: '0.875rem', color: 'var(--text2)', marginTop: '0.5rem', animation: 'ks-fade-in 1s ease 0.5s forwards', opacity: 0 }}>
+      <p style={{ fontSize: '0.875rem', color: 'var(--text2)', marginTop: '0.5rem', animation: 'ks-fade-in 1s ease 0.5s forwards', opacity: 0, position: 'relative' }}>
         Verken grenzen. Samen.
       </p>
     </div>
@@ -281,7 +290,7 @@ function Step0Content() {
 function Step1Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔒</span></div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔒</span></div>
       <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
@@ -300,7 +309,7 @@ function Step1Content() {
 function Step2Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>💾</span></div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>💾</span></div>
       <h2 style={TITLE}>Jij bent je eigen cloud</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Geen automatische sync — jij bewaart je data.<br />
@@ -348,7 +357,7 @@ function Step3Content() {
 function Step4Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🖤</span></div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🖤</span></div>
       <h2 style={TITLE}>Consent, altijd</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
@@ -363,7 +372,7 @@ const THEMES = [
   { value: 'red'      as const, label: 'Deep Red', color: '#ef4444' },
   { value: 'forest'   as const, label: 'Forest',   color: '#4ade80' },
   { value: 'mono'     as const, label: 'Mono',     color: '#e5e5e5' },
-  { value: 'ledger'   as const, label: 'Ledger',   color: '#C73E2E' },
+  { value: 'ledger'   as const, label: 'Ledger',   color: '#E85445' },
 ];
 
 function Step5Content() {
@@ -418,7 +427,7 @@ function Step5Content() {
 function Step6IntroContent({ bioAvailable }: { bioAvailable: boolean }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔐</span></div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔐</span></div>
       <h2 style={TITLE}>Vergrendel de app</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.<br />
@@ -474,7 +483,7 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
 function Step6BioContent({ bioError }: { bioError: string | null }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔓</span></div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔓</span></div>
       <h2 style={TITLE}>PIN ingesteld!</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
@@ -489,7 +498,7 @@ function Step6BioContent({ bioError }: { bioError: string | null }) {
 function Step7Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.25rem' }}>🔞</span></div>
+      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔞</span></div>
       <h2 style={TITLE}>Voor volwassenen</h2>
       <p style={BODY}>
         Hier praten we open over kinks, grenzen en alles daartussen.

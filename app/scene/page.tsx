@@ -914,7 +914,7 @@ function ScenePage() {
 
           {mutualKinks.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--yes)" }}>Mutual</p>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--yes)" }}>Wederzijds</p>
               <div className="flex flex-wrap gap-2">
                 {mutualKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(k.name, k.id)} />

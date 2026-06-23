@@ -17,6 +17,7 @@ import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import { getProfileType } from "@/lib/profileType";
+import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -37,7 +38,7 @@ interface Props {
 export default function ProfilePage({ params }: Props) {
   const t = useMotionSafe();
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour, pinnedProfileId } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour, pinnedProfileId, profileSnapshots, saveProfileSnapshot } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
   const roleDirection = categorizeRole(profile?.role ?? "");
@@ -266,8 +267,8 @@ export default function ProfilePage({ params }: Props) {
     y += 6;
 
     const STATUS_COLORS_PDF: Record<string, [number, number, number]> = {
-      yes: [74, 222, 128], willing: [96, 165, 250], maybe: [192, 132, 252],
-      no: [120, 110, 160], hard_no: [239, 68, 68],
+      yes: [249, 115, 22], willing: [16, 185, 129], maybe: [56, 189, 248],
+      no: [129, 140, 248], hard_no: [239, 68, 68],
     };
     const STATUS_NL: Record<string, string> = {
       yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
@@ -820,6 +821,14 @@ export default function ProfilePage({ params }: Props) {
                 🔒 Geïmporteerd profiel — delen is uitgeschakeld
               </p>
             </div>
+          )}
+
+          {!isShared && totalRated > 0 && (
+            <ProfileSnapshotPanel
+              profileId={profile.id}
+              snapshots={profileSnapshots}
+              onSave={saveProfileSnapshot}
+            />
           )}
 
           {!isShared && totalRated > 0 && (

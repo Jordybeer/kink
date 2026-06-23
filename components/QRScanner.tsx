@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import Sheet from "./Sheet";
 import { useRouter } from "next/navigation";
+import { parseSharePaste } from "@/lib/parseSharePaste";
 
 interface Props {
   open: boolean;
@@ -16,11 +17,17 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pasteMode, setPasteMode] = useState(false);
+  const [pasteInput, setPasteInput] = useState("");
+  const [pasteError, setPasteError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setPasteMode(false);
+    setPasteInput("");
+    setPasteError(null);
 
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" } })
@@ -43,6 +50,22 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     streamRef.current = null;
   }
 
+  function dispatchPayload(raw: string): boolean {
+    const parsed = parseSharePaste(raw);
+    if (parsed.kind === "session") {
+      stopCamera();
+      onClose();
+      router.push(`/session?join=${parsed.code}`);
+      return true;
+    }
+    if (parsed.kind === "profile") {
+      stopCamera();
+      onResult(parsed.encoded);
+      return true;
+    }
+    return false;
+  }
+
   function scan() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -59,34 +82,25 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     ctx.drawImage(video, 0, 0);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const result = jsQR(imageData.data, imageData.width, imageData.height);
-    if (result?.data) {
-      // Handle KINKSYNC session QR — navigate to session page with code, no URL exposure
-      const sessionMatch = result.data.match(/^KINKSYNC:([A-Z2-9]{6})$/);
-      if (sessionMatch) {
-        stopCamera();
-        onClose();
-        router.push(`/session?join=${sessionMatch[1]}`);
-        return;
-      }
-      // Handle profile share QR (existing flow)
-      try {
-        const p = new URL(result.data).searchParams.get("p");
-        if (p) {
-          stopCamera();
-          onResult(p);
-          return;
-        }
-      } catch {
-        // not a URL, keep scanning
-      }
-    }
+    if (result?.data && dispatchPayload(result.data)) return;
     rafRef.current = requestAnimationFrame(scan);
+  }
+
+  function handlePasteSubmit() {
+    setPasteError(null);
+    if (!dispatchPayload(pasteInput)) {
+      setPasteError("Geen geldige link of code gevonden. Plak de volledige link of de 6-letterige code.");
+    }
   }
 
   function handleClose() {
     stopCamera();
+    setPasteInput("");
+    setPasteError(null);
     onClose();
   }
+
+  const showPaste = pasteMode || !!error;
 
   return (
     <Sheet open={open} onClose={handleClose} aria-label="QR-code scannen">
@@ -100,17 +114,44 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
         }}
       >
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-        <h2 className="text-lg font-bold text-center mb-4">Scan QR-code</h2>
+        <h2 className="text-lg font-bold text-center mb-4">
+          {showPaste ? "Plak link of code" : "Scan QR-code"}
+        </h2>
 
-        {error ? (
-          <div className="text-center py-8">
-            <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>{error}</p>
+        {showPaste ? (
+          <div>
+            {error && (
+              <p className="text-sm mb-3 text-center" style={{ color: "var(--text2)" }}>{error}</p>
+            )}
+            <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
+              Plak hier de link of code van je partner.
+            </p>
+            <textarea
+              value={pasteInput}
+              onChange={(e) => setPasteInput(e.target.value)}
+              rows={3}
+              placeholder="https://… of KINKSYNC:ABC234"
+              className="focus-ring w-full text-sm rounded-lg border px-3 py-2 mb-2 placeholder-[color:var(--text2)] focus:outline-none"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
+              autoFocus
+            />
+            {pasteError && (
+              <p className="text-xs mb-3" style={{ color: "var(--hard-no)" }}>{pasteError}</p>
+            )}
+            <button
+              onClick={handlePasteSubmit}
+              disabled={!pasteInput.trim()}
+              className="focus-ring w-full py-2.5 rounded-xl text-sm font-bold mb-2 disabled:opacity-40 transition-opacity"
+              style={{ background: "var(--accent)", color: "#000" }}
+            >
+              Importeer
+            </button>
             <button
               onClick={handleClose}
-              className="focus-ring px-4 py-2 rounded-xl border text-sm"
+              className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
-              Sluit
+              Annuleer
             </button>
           </div>
         ) : (
@@ -131,9 +172,16 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
-            <p className="text-xs text-center mb-4" style={{ color: "var(--text2)" }}>
+            <p className="text-xs text-center mb-2" style={{ color: "var(--text2)" }}>
               Richt de camera op de QR-code van je partner.
             </p>
+            <button
+              onClick={() => { stopCamera(); setPasteMode(true); }}
+              className="focus-ring block mx-auto mb-3 text-xs underline-offset-2 hover:underline"
+              style={{ color: "var(--text2)" }}
+            >
+              Geen camera? Plak een link
+            </button>
             <button
               onClick={handleClose}
               className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"

@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { X } from "lucide-react";
+import { X, TrendingUp, Trash2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -437,10 +437,10 @@ function ContractPage() {
         y += 10;
       };
 
-      section("Gedeelde verlangens", [...shared, ...customShared], [74, 222, 128]);
+      section("Gedeelde verlangens", [...shared, ...customShared], [249, 115, 22]);
       section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), [239, 68, 68]);
-      section("Zachte grenzen", softLimits, [249, 115, 22]);
-      section("Bespreking nodig", discuss, [96, 165, 250]);
+      section("Zachte grenzen", softLimits, [16, 185, 129]);
+      section("Bespreking nodig", discuss, [56, 189, 248]);
 
       // Safeword clause
       if (y > 240) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
@@ -790,7 +790,7 @@ function ContractPage() {
           onClick={handleConfirm}
           disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ background: "#10b981", color: "#fff" }}
+          style={{ background: "var(--accent2)", color: "#000" }}
         >
           Contract bevestigen
         </button>
@@ -805,10 +805,11 @@ function ContractPage() {
             </h2>
             <Link
               href={`/timeline?a=${aId}&b=${bId}`}
-              className="focus-ring text-xs transition-colors"
+              className="focus-ring text-xs transition-colors inline-flex items-center gap-1"
               style={{ color: "var(--text2)" }}
             >
-              📈 Bekijk grafiek →
+              <TrendingUp size={12} aria-hidden="true" />
+              Bekijk grafiek
             </Link>
           </div>
           <div className="flex flex-col gap-2">
@@ -857,10 +858,10 @@ function ContractPage() {
                     <button
                       onClick={() => setPendingDeleteId(c.id)}
                       aria-label="Contract verwijderen"
-                      className="focus-ring p-2 rounded-lg text-sm"
+                      className="focus-ring p-2 rounded-lg"
                       style={{ color: "var(--text2)" }}
                     >
-                      🗑
+                      <Trash2 size={15} aria-hidden="true" />
                     </button>
                   </div>
                 )}
@@ -1057,7 +1058,7 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
               background: `color-mix(in srgb, ${colour} 8%, transparent)`,
               border: `1px solid color-mix(in srgb, ${colour} 20%, transparent)`,
             }}>
-              <div className="font-medium mb-1.5" style={{ color: "var(--text1)" }}>{item.name}</div>
+              <div className="font-medium mb-1.5" style={{ color: "var(--text)" }}>{item.name}</div>
               <div className="flex items-center gap-2">
                 <div className="flex flex-col gap-0.5">
                   {item.statusGiveA && <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>↑ {STATUS_NL[item.statusGiveA]}</span>}
