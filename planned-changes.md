@@ -104,11 +104,29 @@ Sheet backdrop: domain `components/Sheet.tsx` updated to `var(--scrim)` from har
 - `Importeer dit profiel` CTA on the revealed phase (`app/session/page.tsx`), promoted to primary; `Vergelijk uitgebreid` demoted to outline. On click: build a Profile via `lib/sessionImport.ts`, dedupe-on-existence in `state.profiles`, show `✓ Profiel geïmporteerd` / `✓ Al opgeslagen` for 1.4s, `router.replace("/")`.
 - `lib/sessionImport.ts` — pure-logic helper: `sanitizeRemoteProfileFull`, `synthesizePartnerId` (deterministic 16-hex FNV-1a fingerprint of `name|role|sorted-entries`), `buildPartnerProfile`. 11 new tests in `__tests__/sessionImport.test.ts`.
 
-### Phase 6b–d (still open)
+### Phase 6b — Camera paste-from-URL fallback ✅ SHIPPED (2026-06-23, worktree-inversion)
 
-- **Camera modal: paste-from-URL fallback** for PWA users whose camera permission is awkward.
-- **Avatar sync** over datachannel — deferred until snapshots settle storage budget (Phase 7 territory).
-- **QR audit (no-code item)**: QR v2 currently encodes `id`, `name`, `role`, `experienceLevel`, `entries`, `customKinks`, `relationshipStatus`, `fetLifeUsername`. Missing: `avatarDataUrl`, `desire`, `experienced`, `comments`, `tags`. Typical encoded ~900 B → ~915 B URL; QR L-level v40 budget ~2.9 kB → ~68% headroom.
+- New `lib/parseSharePaste.ts` pure helper — recognises `KINKSYNC:CODE`, `/session?join=CODE`, `?p=PAYLOAD`, bare 6-char session code, and base64url-shaped payloads. 11 tests in `__tests__/parseSharePaste.test.ts`.
+- `components/QRScanner.tsx` swapped its inline regex/URL parsing for `parseSharePaste`, then added a paste mode: triggered automatically when camera permission fails, and offered as an opt-in `Geen camera? Plak een link` link below the live viewfinder. Paste textarea + Importeer CTA dispatch through the same `onResult` / router push the scanner already uses.
+
+### Phase 6c — Avatar sync over datachannel ✅ SHIPPED (2026-06-23, worktree-inversion)
+
+- `Msg` variant `"P"` gained optional `av?: string` (`app/session/page.tsx`). `setupChannel` `onOpen` now sends `av: p.avatarDataUrl` alongside id/name/role/experienceLevel/customKinks.
+- `lib/sessionImport.ts` — new `sanitizeAvatar`: requires `data:image/(jpeg|png|webp);base64,<base64>`, caps at 20 000 chars (~15 KB binary headroom). SVG, GIF, foreign schemes, oversized payloads, and non-base64 bytes are all rejected. `RemoteProfileFull` + `buildPartnerProfile` thread `avatarDataUrl` through.
+- Backwards compat: old clients send no `av`, sanitizer returns `undefined`, imported partner falls back to the gradient/initial avatar — no behaviour change for un-upgraded peers.
+- Tests: 8 new in `__tests__/sessionImport.test.ts` cover the round-trip, oversize rejection, foreign schemes, MIME allowlist, and base64 charset check.
+
+### Phase 6d — QR audit verdict ✅ SHIPPED (2026-06-23, worktree-inversion, no-code)
+
+QR v2 (`lib/shareProfile.ts:52-88`) currently encodes `id`, `n` (name), `r` (role), `e` (experienceLevel), `ca`, `ua`, `s` (status), optional `sg`/`sr`/`dr`, `rs`, `fl` (fetLife), `ck`. Typical payload ~915 B → ~68% headroom against the QR L-v40 ~2.9 kB cap.
+
+**Kept out by design:**
+- `avatarDataUrl` — 5–12 KB base64 vs ~915 B current payload; a 6× blow-up that pushes well past the QR L-v40 cap. Lives on the Phase 6c datachannel path instead.
+- `desire`, `experienced` — explicit "omitted to keep QR scannable" comment at `lib/shareProfile.ts:53`. Re-adding doubles the per-kink char budget.
+- `comment` per entry — variable-width free text destroys the fixed-position scheme.
+- `tags` per entry — same.
+
+**Net result:** v2 payload unchanged. The 68% headroom is reserved for future fixed-position status-bit expansion (e.g. directional encoding upgrades), not for media or free text. No code change.
 
 ## Phase 7 — Profile Trends / Snapshots ✅ SHIPPED (2026-06-22, worktree-edging)
 

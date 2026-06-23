@@ -8,9 +8,18 @@ const MAX_ROLE_LEN = 32;
 const MAX_CUSTOM_KINKS = 100;
 const MAX_KINK_ID_LEN = 64;
 const MAX_KINK_NAME_LEN = 80;
+const MAX_AVATAR_LEN = 20_000;
+const AVATAR_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
 function clamp(s: string, max: number): string {
   return s.trim().slice(0, max);
+}
+
+function sanitizeAvatar(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  if (raw.length > MAX_AVATAR_LEN) return undefined;
+  if (!AVATAR_PREFIX_RE.test(raw)) return undefined;
+  return raw;
 }
 
 export interface RemoteProfileLite {
@@ -22,6 +31,7 @@ export interface RemoteProfileFull extends RemoteProfileLite {
   id: string;
   experienceLevel?: ExperienceLevel;
   customKinks?: CustomKink[];
+  avatarDataUrl?: string;
 }
 
 function fnv1a32(input: string, seed = 0x811c9dc5): number {
@@ -81,6 +91,7 @@ export function sanitizeRemoteProfileFull(raw: unknown): RemoteProfileFull | nul
     role,
     experienceLevel: level,
     customKinks,
+    avatarDataUrl: sanitizeAvatar(r.av),
   };
 }
 
@@ -104,6 +115,7 @@ export function buildPartnerProfile(
     role,
     experienceLevel: full?.experienceLevel ?? "beginner",
     customKinks: full?.customKinks ?? [],
+    avatarDataUrl: full?.avatarDataUrl,
     entries,
     createdAt: now,
     updatedAt: now,
