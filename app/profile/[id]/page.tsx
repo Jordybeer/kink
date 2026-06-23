@@ -17,8 +17,7 @@ import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import { getProfileType } from "@/lib/profileType";
-import { ProfileTrendsChart } from "@/components/ProfileTrendsChart";
-import { Camera } from "lucide-react";
+import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -60,7 +59,6 @@ export default function ProfilePage({ params }: Props) {
   const [editBdsmtestUrl, setEditBdsmtestUrl] = useState("");
   const [editUrlError, setEditUrlError] = useState<string | null>(null);
   const [showOverviewComments, setShowOverviewComments] = useState(true);
-  const [snapshotSaved, setSnapshotSaved] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
   const [meerOpen, setMeerOpen] = useState(true);
@@ -825,34 +823,13 @@ export default function ProfilePage({ params }: Props) {
             </div>
           )}
 
-          {!isShared && totalRated > 0 && (() => {
-            const mySnapshots = profileSnapshots.filter((snap) => snap.profileId === profile.id);
-            return (
-              <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-                <ProfileTrendsChart snapshots={mySnapshots} />
-                {snapshotSaved ? (
-                  <p className="text-sm text-center py-3 font-semibold" style={{ color: "var(--accent)" }}>
-                    ✓ Moment opgeslagen
-                  </p>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const saved = saveProfileSnapshot(profile.id);
-                      if (!saved) return;
-                      setSnapshotSaved(true);
-                      setTimeout(() => setSnapshotSaved(false), 1600);
-                    }}
-                    aria-label="Sla dit moment op"
-                    className="focus-ring w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors"
-                    style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)", minHeight: 44 }}
-                  >
-                    <Camera size={16} aria-hidden="true" />
-                    Sla dit moment op
-                  </button>
-                )}
-              </div>
-            );
-          })()}
+          {!isShared && totalRated > 0 && (
+            <ProfileSnapshotPanel
+              profileId={profile.id}
+              snapshots={profileSnapshots}
+              onSave={saveProfileSnapshot}
+            />
+          )}
 
           {!isShared && totalRated > 0 && (
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>

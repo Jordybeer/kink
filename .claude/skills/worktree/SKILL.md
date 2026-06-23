@@ -32,8 +32,10 @@ Choose one BDSM/kink word that starts with that letter. Pick something that feel
 ### 4. Create the worktree
 
 ```bash
-git worktree add .claude/worktrees/<name> -b worktree-<name>
+git worktree add .claude/worktrees/<name> -b worktree-<name> origin/dev
 ```
+
+Always pin to `origin/dev` — the local checkout may be on a stale dev or another worktree's branch when two Claude sessions run in parallel. The `git fetch origin` from step 1 makes this safe.
 
 Confirm with `git worktree list`. Report the worktree path and branch name so the user knows where to work.
 

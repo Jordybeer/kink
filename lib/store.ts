@@ -115,6 +115,7 @@ export const useStore = create<State>()(
         set((s) => ({
           profiles: s.profiles.filter((p) => p.id !== id),
           pinnedProfileId: s.pinnedProfileId === id ? null : s.pinnedProfileId,
+          profileSnapshots: s.profileSnapshots.filter((snap) => snap.profileId !== id),
         }));
       },
 

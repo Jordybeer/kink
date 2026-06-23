@@ -48,6 +48,18 @@ describe("saveProfileSnapshot", () => {
     useStore.getState().deleteProfileSnapshot(saved.id);
     expect(useStore.getState().profileSnapshots).toEqual([]);
   });
+
+  it("deleteProfile evicts that profile's snapshots but leaves others alone", () => {
+    const a = useStore.getState().createProfile("Mira", "Sub");
+    const b = useStore.getState().createProfile("Sander", "Dom");
+    useStore.getState().saveProfileSnapshot(a);
+    useStore.getState().saveProfileSnapshot(a);
+    useStore.getState().saveProfileSnapshot(b);
+    useStore.getState().deleteProfile(a);
+    const snaps = useStore.getState().profileSnapshots;
+    expect(snaps.filter((s) => s.profileId === a)).toHaveLength(0);
+    expect(snaps.filter((s) => s.profileId === b)).toHaveLength(1);
+  });
 });
 
 describe("createProfile", () => {
