@@ -1,7 +1,7 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
+import { Share2, PlusSquare, Check, WifiOff, Smartphone, Zap } from "lucide-react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
-import Wordmark from "@/components/Wordmark";
 
 interface Props {
   isIos: boolean;
@@ -11,20 +11,26 @@ interface Props {
 
 const IOS_STEPS = [
   {
-    n: "1",
+    icon: Share2,
     title: "Tap het deel-icoon",
-    body: "Tap □↑ in de Safari-navigatiebalk onderin.",
+    body: "□↑ in de Safari-navigatiebalk onderin.",
   },
   {
-    n: "2",
-    title: "Kies 'Zet op beginscherm'",
-    body: "Scroll omlaag in het menu en tik 'Zet op beginscherm'.",
+    icon: PlusSquare,
+    title: "Zet op beginscherm",
+    body: "Scroll omlaag en tik 'Zet op beginscherm'.",
   },
   {
-    n: "3",
+    icon: Check,
     title: "Tap 'Voeg toe'",
-    body: "Bevestig rechtsboven — KinkSync staat dan klaar op je startscherm.",
+    body: "Bevestig rechtsboven — klaar.",
   },
+];
+
+const FEATURES = [
+  { icon: WifiOff,    label: "Werkt offline" },
+  { icon: Smartphone, label: "Geen adresbalk" },
+  { icon: Zap,        label: "Razendsnel" },
 ];
 
 export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) {
@@ -36,10 +42,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
       <motion.div
         key="pwa-backdrop"
         aria-hidden="true"
-        style={{
-          position: "fixed", inset: 0, zIndex: 400,
-          background: "var(--scrim)",
-        }}
+        style={{ position: "fixed", inset: 0, zIndex: 400, background: "var(--scrim)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -55,9 +58,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         aria-label="KinkSync installeren"
         style={{
           position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: 0, left: 0, right: 0,
           zIndex: 401,
           background: "var(--surface2)",
           borderRadius: "1.25rem 1.25rem 0 0",
@@ -72,101 +73,124 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
         transition={t.modal}
       >
         {/* Drag handle */}
-        <div style={{
-          margin: "0.75rem auto 0",
-          width: "2.5rem", height: "0.25rem",
-          borderRadius: 999,
-          background: "var(--border)",
-        }} />
+        <div style={{ margin: "0.75rem auto 0", width: "2.5rem", height: "0.25rem", borderRadius: 999, background: "var(--border)" }} />
 
-        {/* Header */}
-        <div style={{ padding: "1.25rem 1.5rem 0", textAlign: "center" }}>
-          <div style={{ fontSize: "1.375rem", fontWeight: 700, letterSpacing: "0.06em", color: "var(--text)" }}>
-            <Wordmark />
-          </div>
-          <p style={{ margin: "0.375rem 0 0", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.5 }}>
+        {/* App icon + heading */}
+        <div style={{ padding: "1.5rem 1.5rem 0", textAlign: "center" }}>
+          <motion.img
+            src="/icon-192.png"
+            alt=""
+            aria-hidden="true"
+            width={64}
+            height={64}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 22, delay: 0.08 }}
+            style={{ borderRadius: "1rem", marginBottom: "0.875rem", boxShadow: "0 4px 20px rgba(0,0,0,0.35)" }}
+          />
+          <h2 style={{ margin: 0, fontSize: "1.1875rem", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em" }}>
+            {isIos ? "Installeer KinkSync" : "Altijd bij de hand"}
+          </h2>
+          <p style={{ margin: "0.3rem 0 0", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.5 }}>
             {isIos
-              ? "Volg drie stappen in Safari om de app te installeren."
-              : "Geen browserbalk. Werkt offline. Altijd bij de hand."}
+              ? "Drie tikken in Safari — dan staat de app op je beginscherm."
+              : "Voeg KinkSync toe aan je beginscherm voor de volledige app-ervaring."}
           </p>
         </div>
 
         {/* Content */}
         <div style={{ padding: "1.25rem 1.5rem 0" }}>
           {isIos ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-              {IOS_STEPS.map((s, i) => (
-                <motion.div
-                  key={s.n}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.08, duration: 0.28, ease: "easeOut" }}
-                  style={{
-                    display: "flex",
-                    gap: "0.875rem",
-                    alignItems: "flex-start",
-                    background: "color-mix(in srgb, var(--accent) 6%, transparent)",
-                    border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)",
-                    borderLeft: "2px solid var(--accent)",
-                    borderRadius: "0.75rem",
-                    padding: "0.75rem 1rem",
-                    boxShadow: "-3px 0 12px var(--accent-glow)",
-                  }}
-                >
-                  <span style={{
-                    flexShrink: 0,
-                    width: "1.375rem", height: "1.375rem",
-                    borderRadius: "9999px",
-                    background: "var(--accent)",
-                    color: "var(--on-accent)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "0.6875rem", fontWeight: 700,
-                    marginTop: "0.0625rem",
-                  }}>
-                    {s.n}
-                  </span>
-                  <div>
-                    <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--text)", marginBottom: "0.1875rem" }}>
-                      {s.title}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {IOS_STEPS.map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.07, duration: 0.28, ease: "easeOut" }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.875rem",
+                      background: "color-mix(in srgb, var(--accent) 6%, var(--surface))",
+                      border: "1px solid color-mix(in srgb, var(--accent) 18%, transparent)",
+                      borderRadius: "0.875rem",
+                      padding: "0.75rem 1rem",
+                    }}
+                  >
+                    <div style={{
+                      flexShrink: 0,
+                      width: "2rem", height: "2rem",
+                      borderRadius: "9999px",
+                      background: "var(--accent)",
+                      color: "var(--on-accent)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <Icon size={14} />
                     </div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text2)", lineHeight: 1.5 }}>
-                      {s.body}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--text)" }}>{s.title}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text2)", lineHeight: 1.4 }}>{s.body}</div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    <div style={{
+                      flexShrink: 0, marginLeft: "auto",
+                      fontSize: "0.6875rem", fontWeight: 700,
+                      color: "var(--text2)", opacity: 0.5,
+                    }}>
+                      {i + 1}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           ) : (
-            <div style={{
-              background: "color-mix(in srgb, var(--accent) 6%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)",
-              borderLeft: "2px solid var(--accent)",
-              borderRadius: "0.75rem",
-              padding: "1rem 1.125rem",
-              boxShadow: "-3px 0 12px var(--accent-glow)",
-              fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6,
-            }}>
-              Werkt als een echte app — geen adresbalk, geen browser, geen afleiding.
-              Altijd bereikbaar vanaf je startscherm.
+            <div>
+              <div style={{
+                display: "flex", justifyContent: "center", gap: "0.75rem",
+                marginBottom: "1rem",
+              }}>
+                {FEATURES.map(({ icon: Icon, label }) => (
+                  <div key={label} style={{
+                    flex: 1,
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem",
+                    background: "color-mix(in srgb, var(--accent) 6%, var(--surface))",
+                    border: "1px solid color-mix(in srgb, var(--accent) 18%, transparent)",
+                    borderRadius: "0.875rem",
+                    padding: "0.875rem 0.5rem",
+                  }}>
+                    <Icon size={18} style={{ color: "var(--accent)" }} />
+                    <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--text2)", textAlign: "center", lineHeight: 1.3 }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{
+                margin: 0, fontSize: "0.8125rem", color: "var(--text2)",
+                lineHeight: 1.6, textAlign: "center",
+              }}>
+                Geen browser, geen afleiding — gewoon de app.
+              </p>
             </div>
           )}
         </div>
 
         {/* Actions */}
-        <div style={{ padding: "1.25rem 1.5rem 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.625rem" }}>
+        <div style={{ padding: "1.25rem 1.5rem 0", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <motion.button
             whileTap={TAP_SPRING}
             onClick={isIos ? onDismiss : () => { onInstall?.(); onDismiss(); }}
             style={{
               width: "100%",
-              background: "linear-gradient(135deg, var(--accent), var(--accent2))",
+              background: "linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)))",
               color: "var(--on-accent)",
-              fontWeight: 600,
-              padding: "0.875rem 1.5rem",
+              fontWeight: 700,
+              padding: "0.9375rem 1.5rem",
               borderRadius: "9999px",
               border: "none",
               fontSize: "0.9375rem",
               cursor: "pointer",
+              letterSpacing: "-0.01em",
             }}
           >
             {isIos ? "Klaar 🖤" : "Zet op startscherm"}
@@ -175,12 +199,9 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
           <button
             onClick={onDismiss}
             style={{
-              background: "none",
-              border: "none",
-              color: "var(--text2)",
-              fontSize: "0.8125rem",
-              cursor: "pointer",
-              padding: "0.5rem 1rem",
+              background: "none", border: "none",
+              color: "var(--text2)", fontSize: "0.8125rem",
+              cursor: "pointer", padding: "0.5rem 1rem",
               minHeight: "44px",
             }}
           >
