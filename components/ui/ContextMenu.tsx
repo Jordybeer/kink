@@ -17,9 +17,10 @@ interface Props {
   items: ContextMenuItem[];
   /** Wrap the anchor element (the trigger button) as children */
   children: ReactNode;
+  align?: "left" | "right";
 }
 
-export default function ContextMenu({ open, onClose, items, children }: Props) {
+export default function ContextMenu({ open, onClose, items, children, align = "right" }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function ContextMenu({ open, onClose, items, children }: Props) {
           <motion.div
             role="menu"
             aria-orientation="vertical"
-            className="absolute right-0 z-[200] w-[196px] overflow-hidden rounded-[18px]"
+            className={`absolute z-[200] w-[196px] overflow-hidden rounded-[18px] ${align === "left" ? "left-0" : "right-0"}`}
             style={{
               top: "calc(100% + 8px)",
               background: "rgba(20,20,20,0.97)",
@@ -61,7 +62,7 @@ export default function ContextMenu({ open, onClose, items, children }: Props) {
               WebkitBackdropFilter: "blur(20px)",
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
-              transformOrigin: "top right",
+              transformOrigin: align === "left" ? "top left" : "top right",
             }}
             initial={{ scale: 0.92, opacity: 0, y: -6 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}

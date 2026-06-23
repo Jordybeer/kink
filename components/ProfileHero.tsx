@@ -104,6 +104,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
           <ContextMenu
             open={menuOpen && !!onAvatarChange}
             onClose={() => setMenuOpen(false)}
+            align="left"
             items={profile.avatarDataUrl ? [
               { label: "Foto bijwerken", icon: <RefreshCw size={14} />, onClick: () => fileInputRef.current?.click() },
               { label: "Foto verwijderen", icon: <Trash2 size={14} />, danger: true, onClick: () => onAvatarChange?.(undefined) },
