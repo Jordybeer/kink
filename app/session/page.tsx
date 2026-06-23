@@ -56,7 +56,8 @@ type Msg =
   | { t: "a"; id?: string }
   | { t: "p"; n: string; r: string }
   | { t: "P"; id: string; n: string; r: string; e?: ExperienceLevel; ck?: CustomKink[] }
-  | { t: "d"; entries: Record<string, KinkStatus> };
+  | { t: "d"; entries: Record<string, KinkStatus> }
+  | { t: "k" };
 
 type Phase =
   | "choose"
@@ -98,6 +99,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const [partnerShimmer,   setPartnerShimmer]   = useState(false);
   const [partnerTappedId,  setPartnerTappedId]  = useState<string | null>(null);
   const partnerTapTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const revealedRef = useRef<Set<string>>(new Set());
   const revealCancelRef = useRef(false);
@@ -167,6 +169,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             partnerShimmerTimerRef.current = setTimeout(() => setPartnerShimmer(false), 620);
           }
         }
+        // "k" keepalive — no-op, receiving it is enough to keep NAT mappings alive
       } catch (err) {
         console.error("Invalid message received:", err);
       }
@@ -179,6 +182,11 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
         t: "P", id: p.id, n: p.name, r: p.role,
         e: p.experienceLevel, ck: p.customKinks,
       } as Msg));
+      clearInterval(heartbeatRef.current);
+      heartbeatRef.current = setInterval(() => {
+        if (ch2.readyState === "open") ch2.send(JSON.stringify({ t: "k" } as Msg));
+        else clearInterval(heartbeatRef.current);
+      }, 25000);
     };
     if (ch.readyState === "open") onOpen();
     else ch.onopen = onOpen;
@@ -246,6 +254,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           pollAbortRef.current?.abort();
           pc.close();
         } else if (pc.iceConnectionState === "disconnected") {
+          try { pc.restartIce(); } catch { /* not supported on this browser */ }
           disconnectTimer = setTimeout(() => {
             if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
               setError("Verbinding verloren — probeer opnieuw.");
@@ -327,6 +336,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           pollAbortRef.current?.abort();
           pc.close();
         } else if (pc.iceConnectionState === "disconnected") {
+          try { pc.restartIce(); } catch { /* not supported on this browser */ }
           disconnectTimer = setTimeout(() => {
             if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
               setError("Verbinding verloren — probeer opnieuw.");
@@ -412,6 +422,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     clearTimeout(partnerActiveTimerRef.current);
     clearTimeout(partnerShimmerTimerRef.current);
     clearTimeout(partnerTapTimerRef.current);
+    clearInterval(heartbeatRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -542,7 +553,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     <>
       <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Jouw profiel</p>
       <select value={profileId} onChange={e => setProfileId(e.target.value)}
-        className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
+        className="focus-ring w-full rounded-lg px-3 py-2.5 text-base mb-4 focus:outline-none"
         style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
         {profiles.map(p => <option key={p.id} value={p.id}>{p.name} — {p.role}</option>)}
       </select>
