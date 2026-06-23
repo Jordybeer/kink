@@ -48,6 +48,19 @@ describe("fetchIceServers", () => {
     expect(servers).toEqual(mockServers);
     vi.unstubAllGlobals();
   });
+
+  it("expands multi-url entries into separate objects (iOS Safari compat)", async () => {
+    const multiUrl = { urls: ["stun:s1.example.com", "stun:s2.example.com"] };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [multiUrl] }),
+    }));
+    const servers = await fetchIceServers();
+    expect(servers).toHaveLength(2);
+    expect(servers[0].urls).toBe("stun:s1.example.com");
+    expect(servers[1].urls).toBe("stun:s2.example.com");
+    vi.unstubAllGlobals();
+  });
 });
 
 // ---------------------------------------------------------------------------
