@@ -437,10 +437,10 @@ function ContractPage() {
         y += 10;
       };
 
-      section("Gedeelde verlangens", [...shared, ...customShared], [74, 222, 128]);
+      section("Gedeelde verlangens", [...shared, ...customShared], [249, 115, 22]);
       section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), [239, 68, 68]);
-      section("Zachte grenzen", softLimits, [249, 115, 22]);
-      section("Bespreking nodig", discuss, [96, 165, 250]);
+      section("Zachte grenzen", softLimits, [16, 185, 129]);
+      section("Bespreking nodig", discuss, [56, 189, 248]);
 
       // Safeword clause
       if (y > 240) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }

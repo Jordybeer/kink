@@ -95,6 +95,8 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
 
   function handleClose() {
     stopCamera();
+    setPasteInput("");
+    setPasteError(null);
     onClose();
   }
 
@@ -149,7 +151,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
-              Sluit
+              Annuleer
             </button>
           </div>
         ) : (
