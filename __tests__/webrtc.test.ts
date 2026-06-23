@@ -48,6 +48,70 @@ describe("fetchIceServers", () => {
     expect(servers).toEqual(mockServers);
     vi.unstubAllGlobals();
   });
+
+  it("expands multi-url entries into separate objects (iOS Safari compat)", async () => {
+    const multiUrl = { urls: ["stun:s1.example.com", "stun:s2.example.com"] };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [multiUrl] }),
+    }));
+    const servers = await fetchIceServers();
+    expect(servers).toHaveLength(2);
+    expect(servers[0].urls).toBe("stun:s1.example.com");
+    expect(servers[1].urls).toBe("stun:s2.example.com");
+    vi.unstubAllGlobals();
+  });
+
+  it("falls back to STUN-only when response is ok but iceServers field is absent", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ someOtherField: "value" }),
+    }));
+    const servers = await fetchIceServers();
+    expect(servers).toHaveLength(1);
+    const urls = Array.isArray(servers[0].urls) ? servers[0].urls : [servers[0].urls];
+    expect(urls[0]).toMatch(/^stun:/);
+    vi.unstubAllGlobals();
+  });
+
+  it("normalizes a Cloudflare-style single-object iceServers (non-array) response", async () => {
+    const single = { urls: "turn:cf.example.com:3478", username: "user1", credential: "pass1" };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: single }),
+    }));
+    const servers = await fetchIceServers();
+    expect(servers).toHaveLength(1);
+    expect(servers[0].urls).toBe("turn:cf.example.com:3478");
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves username and credential when expanding multi-url entries", async () => {
+    const multiUrl = {
+      urls: ["turn:t1.example.com:3478", "turn:t2.example.com:3478"],
+      username: "u",
+      credential: "p",
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [multiUrl] }),
+    }));
+    const servers = await fetchIceServers();
+    expect(servers).toHaveLength(2);
+    expect(servers[0].username).toBe("u");
+    expect(servers[0].credential).toBe("p");
+    expect(servers[1].username).toBe("u");
+    expect(servers[1].credential).toBe("p");
+    vi.unstubAllGlobals();
+  });
+
+  it("calls the log callback when falling back to STUN on HTTP error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    const log = vi.fn();
+    await fetchIceServers(log);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("503"));
+    vi.unstubAllGlobals();
+  });
 });
 
 // ---------------------------------------------------------------------------
