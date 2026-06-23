@@ -217,3 +217,32 @@ describe("buildPartnerProfile", () => {
     expect(a.id).toBe(b.id);
   });
 });
+
+// ---------------------------------------------------------------------------
+// QRScanner paste-URL extraction contract
+// ---------------------------------------------------------------------------
+describe("paste-from-URL extraction", () => {
+  function extractP(url: string): string | null {
+    try {
+      return new URL(url).searchParams.get("p");
+    } catch {
+      return null;
+    }
+  }
+
+  it("extracts ?p= from a valid share URL", () => {
+    expect(extractP("https://kinksync.be/share?p=abc123")).toBe("abc123");
+  });
+
+  it("returns null for a URL without ?p=", () => {
+    expect(extractP("https://kinksync.be/share")).toBeNull();
+  });
+
+  it("returns null for an invalid URL", () => {
+    expect(extractP("not-a-url")).toBeNull();
+  });
+
+  it("extracts ?p= even with other params present", () => {
+    expect(extractP("https://kinksync.be/share?foo=bar&p=xyz&baz=1")).toBe("xyz");
+  });
+});
