@@ -83,6 +83,7 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 ## corrections.md (mandatory)
 Read `corrections.md` at session start before doing anything.
 These are documented mistakes — do not repeat them.
+When something goes wrong mid-session (reverted PR, wrong approach, design regression, bad assumption), append a new entry immediately. Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to follow instead.
 
 ## memory.md (mandatory)
 Read `memory.md` at session start. Cross-session operational notes the user wants every Claude (claude1 + claude2) to carry. Append new notes here when the user says "remember this" or similar.
