@@ -99,6 +99,58 @@ describe("sanitizeRemoteProfileFull", () => {
     expect(out?.customKinks).toHaveLength(100);
     expect(out?.customKinks?.every((c) => c.name.length <= 80)).toBe(true);
   });
+
+  describe("avatarDataUrl (av field)", () => {
+    const base = { id: "abc", n: "Mira", r: "ontvangen" } as const;
+    const VALID_JPEG = "data:image/jpeg;base64,/9j/4AAQSkZJRgAB";
+
+    it("accepts a valid jpeg data URL", () => {
+      const out = sanitizeRemoteProfileFull({ ...base, av: VALID_JPEG });
+      expect(out?.avatarDataUrl).toBe(VALID_JPEG);
+    });
+
+    it("accepts png and webp", () => {
+      expect(sanitizeRemoteProfileFull({ ...base, av: "data:image/png;base64,iVBORw0KGgo=" })?.avatarDataUrl)
+        .toBe("data:image/png;base64,iVBORw0KGgo=");
+      expect(sanitizeRemoteProfileFull({ ...base, av: "data:image/webp;base64,UklGRiQA" })?.avatarDataUrl)
+        .toBe("data:image/webp;base64,UklGRiQA");
+    });
+
+    it("omits avatarDataUrl when av is missing — never collapses to empty string", () => {
+      const out = sanitizeRemoteProfileFull(base);
+      expect(out).not.toBeNull();
+      expect(out?.avatarDataUrl).toBeUndefined();
+    });
+
+    it("rejects oversized payloads but keeps the rest of the profile", () => {
+      const huge = "data:image/jpeg;base64," + "A".repeat(25_000);
+      const out = sanitizeRemoteProfileFull({ ...base, av: huge });
+      expect(out).not.toBeNull();
+      expect(out?.avatarDataUrl).toBeUndefined();
+      expect(out?.name).toBe("Mira");
+    });
+
+    it("rejects non-data-URL strings", () => {
+      for (const bad of ["http://evil.example/x.png", "<script>alert(1)</script>", "", "   "]) {
+        expect(sanitizeRemoteProfileFull({ ...base, av: bad })?.avatarDataUrl).toBeUndefined();
+      }
+    });
+
+    it("rejects SVG and GIF (MIME outside allowlist)", () => {
+      expect(sanitizeRemoteProfileFull({
+        ...base, av: "data:image/svg+xml;base64,PHN2Zy8+",
+      })?.avatarDataUrl).toBeUndefined();
+      expect(sanitizeRemoteProfileFull({
+        ...base, av: "data:image/gif;base64,R0lGODlh",
+      })?.avatarDataUrl).toBeUndefined();
+    });
+
+    it("rejects valid prefix with non-base64 bytes", () => {
+      expect(sanitizeRemoteProfileFull({
+        ...base, av: "data:image/jpeg;base64,!!",
+      })?.avatarDataUrl).toBeUndefined();
+    });
+  });
 });
 
 describe("buildPartnerProfile", () => {
@@ -119,6 +171,27 @@ describe("buildPartnerProfile", () => {
     expect(partner.lockedAt).toBe(NOW);
     expect(partner.createdAt).toBe(NOW);
     expect(partner.updatedAt).toBe(NOW);
+  });
+
+  it("threads avatarDataUrl from the full payload into the imported profile", () => {
+    const avatar = "data:image/jpeg;base64,/9j/4AAQSkZJRgAB";
+    const partner = buildPartnerProfile(
+      { id: "peer-uuid", name: "Mira", role: "ontvangen", avatarDataUrl: avatar },
+      { name: "Mira", role: "ontvangen" },
+      ENTRIES,
+      NOW,
+    );
+    expect(partner.avatarDataUrl).toBe(avatar);
+  });
+
+  it("leaves avatarDataUrl undefined when the full payload had none", () => {
+    const partner = buildPartnerProfile(
+      { id: "peer-uuid", name: "Mira", role: "ontvangen" },
+      { name: "Mira", role: "ontvangen" },
+      ENTRIES,
+      NOW,
+    );
+    expect(partner.avatarDataUrl).toBeUndefined();
   });
 
   it("falls back to synthesized id + defaults when no full payload arrived", () => {

@@ -55,7 +55,7 @@ function sanitizeEntries(raw: unknown): Record<string, KinkStatus> {
 type Msg =
   | { t: "a"; id?: string }
   | { t: "p"; n: string; r: string }
-  | { t: "P"; id: string; n: string; r: string; e?: ExperienceLevel; ck?: CustomKink[] }
+  | { t: "P"; id: string; n: string; r: string; e?: ExperienceLevel; ck?: CustomKink[]; av?: string }
   | { t: "d"; entries: Record<string, KinkStatus> };
 
 type Phase =
@@ -178,6 +178,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       ch2.send(JSON.stringify({
         t: "P", id: p.id, n: p.name, r: p.role,
         e: p.experienceLevel, ck: p.customKinks,
+        av: p.avatarDataUrl,
       } as Msg));
     };
     if (ch.readyState === "open") onOpen();
