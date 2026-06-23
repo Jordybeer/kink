@@ -20,6 +20,10 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "KinkSync — BDSM contract builder",
   description: "Verken grenzen samen. Kink negotiation en contracten voor volwassenen. kinksync.be",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

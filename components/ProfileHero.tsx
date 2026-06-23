@@ -1,6 +1,7 @@
 "use client";
-import { useRef } from "react";
-import { Lock, Pencil, Share2, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, Lock, Pencil, RefreshCw, Share2, Trash2 } from "lucide-react";
+import ContextMenu from "@/components/ui/ContextMenu";
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
 import { resizeImage } from "@/lib/imageUtils";
@@ -39,6 +40,7 @@ const DOMINANT_LABEL: Record<Status, string> = {
 
 export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onViewKinks, onAvatarChange, onError, profileType }: ProfileHeroProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
 
   const statusCounts = Object.values(profile.entries).reduce((acc, e) => {
@@ -99,35 +101,35 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
       {/* Header: avatar + identity + actions */}
       <div className="flex items-start gap-3 mb-4">
         <div className="relative flex-none">
-          <button
-            type="button"
-            data-tour="avatar"
-            onClick={() => fileInputRef.current?.click()}
-            className="ks-icon-pop w-16 h-16 rounded-full overflow-hidden focus-ring relative"
-            aria-label="Profielfoto wijzigen"
+          <ContextMenu
+            open={menuOpen && !!onAvatarChange}
+            onClose={() => setMenuOpen(false)}
+            items={profile.avatarDataUrl ? [
+              { label: "Foto bijwerken", icon: <RefreshCw size={14} />, onClick: () => fileInputRef.current?.click() },
+              { label: "Foto verwijderen", icon: <Trash2 size={14} />, danger: true, onClick: () => onAvatarChange?.(undefined) },
+            ] : [
+              { label: "Upload foto", icon: <ImagePlus size={14} />, onClick: () => fileInputRef.current?.click() },
+            ]}
           >
-            {profile.avatarDataUrl ? (
-              <img src={profile.avatarDataUrl} alt={profile.name} className="w-full h-full object-cover" />
-            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center text-2xl font-bold text-black"
-                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
-              >
-                {initial}
-              </div>
-            )}
-          </button>
-          {profile.avatarDataUrl && (
             <button
               type="button"
-              onClick={() => onAvatarChange?.(undefined)}
-              className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-[10px] focus-ring border-2 border-[var(--bg)]"
-              style={{ background: "var(--hard-no)", color: "var(--text)" }}
-              aria-label="Profielfoto verwijderen"
+              data-tour="avatar"
+              onClick={() => onAvatarChange && (profile.avatarDataUrl ? setMenuOpen(true) : fileInputRef.current?.click())}
+              className="ks-icon-pop w-16 h-16 rounded-full overflow-hidden focus-ring relative"
+              aria-label="Profielfoto wijzigen"
             >
-              <X size={14} aria-hidden="true" />
+              {profile.avatarDataUrl ? (
+                <img src={profile.avatarDataUrl} alt={profile.name} className="w-full h-full object-cover" />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center text-2xl font-bold text-black"
+                  style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
+                >
+                  {initial}
+                </div>
+              )}
             </button>
-          )}
+          </ContextMenu>
           <input
             ref={fileInputRef}
             type="file"
