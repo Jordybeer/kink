@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import Sheet from "./Sheet";
 import { useRouter } from "next/navigation";
+import { Link2 } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -16,6 +17,8 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pasteUrl, setPasteUrl] = useState("");
+  const [pasteError, setPasteError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -85,7 +88,22 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
 
   function handleClose() {
     stopCamera();
+    setPasteUrl("");
+    setPasteError(null);
     onClose();
+  }
+
+  function handlePasteImport() {
+    setPasteError(null);
+    const trimmed = pasteUrl.trim();
+    try {
+      const p = new URL(trimmed).searchParams.get("p");
+      if (!p) { setPasteError("Geen geldig profiel gevonden in deze URL."); return; }
+      onResult(p);
+      handleClose();
+    } catch {
+      setPasteError("Ongeldige URL — plak de volledige link van je partner.");
+    }
   }
 
   return (
@@ -103,14 +121,41 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
         <h2 className="text-lg font-bold text-center mb-4">Scan QR-code</h2>
 
         {error ? (
-          <div className="text-center py-8">
-            <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>{error}</p>
+          <div className="py-4">
+            <p className="text-sm mb-5 text-center" style={{ color: "var(--text2)" }}>{error}</p>
+            <div className="mb-4">
+              <label className="flex items-center gap-1.5 text-xs font-medium mb-1.5" style={{ color: "var(--text2)" }}>
+                <Link2 size={12} aria-hidden="true" />
+                Of plak de profiel-URL
+              </label>
+              <input
+                type="url"
+                value={pasteUrl}
+                onChange={e => { setPasteUrl(e.target.value); setPasteError(null); }}
+                onKeyDown={e => e.key === "Enter" && handlePasteImport()}
+                placeholder="https://kinksync.be/share?p=…"
+                className="focus-ring w-full rounded-lg px-3 py-2.5 text-base mb-2 focus:outline-none"
+                style={{ background: "var(--surface2)", border: `1px solid ${pasteError ? "var(--hard-no)" : "var(--border)"}`, color: "var(--text)" }}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {pasteError && <p className="text-xs mb-2" style={{ color: "var(--hard-no)" }}>{pasteError}</p>}
+              <button
+                onClick={handlePasteImport}
+                disabled={!pasteUrl.trim()}
+                className="focus-ring w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              >
+                Importeer profiel
+              </button>
+            </div>
             <button
               onClick={handleClose}
-              className="focus-ring px-4 py-2 rounded-xl border text-sm"
+              className="focus-ring w-full py-2.5 rounded-xl text-sm border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
-              Sluit
+              Annuleer
             </button>
           </div>
         ) : (
