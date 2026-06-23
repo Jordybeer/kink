@@ -267,8 +267,8 @@ export default function ProfilePage({ params }: Props) {
     y += 6;
 
     const STATUS_COLORS_PDF: Record<string, [number, number, number]> = {
-      yes: [74, 222, 128], willing: [96, 165, 250], maybe: [192, 132, 252],
-      no: [120, 110, 160], hard_no: [239, 68, 68],
+      yes: [249, 115, 22], willing: [16, 185, 129], maybe: [56, 189, 248],
+      no: [129, 140, 248], hard_no: [239, 68, 68],
     };
     const STATUS_NL: Record<string, string> = {
       yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
