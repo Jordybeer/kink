@@ -537,7 +537,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   const accentBtn = (label: string, onClick: () => void, disabled = false) => (
     <button onClick={onClick} disabled={disabled}
       className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
-      style={{ background: "var(--accent)", color: "#000" }}>
+      style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
       {label}
     </button>
   );

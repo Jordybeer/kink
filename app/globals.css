@@ -50,7 +50,7 @@ html, body {
 .status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: var(--willing); border-width: 2px; }
 .status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: var(--maybe);   border-width: 2px; }
 .status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: var(--no);      border-width: 2px; }
-.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 1.4s ease-in-out infinite; }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 3.2s ease-in-out infinite; }
 
 .focus-ring:focus-visible {
   outline: none;
@@ -318,7 +318,7 @@ select {
 }
 @keyframes ks-glow-hard-no {
   0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hard-no) 0%, transparent); }
-  50%     { box-shadow: 0 0 8px 2px color-mix(in srgb, var(--hard-no) 25%, transparent); }
+  50%     { box-shadow: 0 0 8px 2px color-mix(in srgb, var(--hard-no) 18%, transparent); }
 }
 
 /* Card variants — static status-colored glow layered over the base depth

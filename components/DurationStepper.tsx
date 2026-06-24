@@ -40,7 +40,7 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
           className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border"
           style={
             currentMinutes === p && !showRaw
-              ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+              ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
               : { color: "var(--text2)", borderColor: "var(--border)" }
           }
         >

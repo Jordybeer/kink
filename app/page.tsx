@@ -464,7 +464,7 @@ function HomeContent() {
                   className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                   style={
                     parentName === null
-                      ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                      ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                       : { color: "var(--text2)", borderColor: "var(--border)" }
                   }
                 >
@@ -479,7 +479,7 @@ function HomeContent() {
                     className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                     style={
                       parentName === candidate
-                        ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                        ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                         : { color: "var(--text2)", borderColor: "var(--border)" }
                     }
                   >
@@ -521,7 +521,7 @@ function HomeContent() {
                       className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                       style={
                         role === r
-                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                           : { color: "var(--text2)", borderColor: "var(--border)" }
                       }
                     >
@@ -544,7 +544,7 @@ function HomeContent() {
                 className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
                 style={
                   experienceLevel === l.value
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }
                 }
               >
@@ -565,7 +565,7 @@ function HomeContent() {
                 className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                 style={
                   relationshipStatus === s
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }
                 }
               >
@@ -577,7 +577,7 @@ function HomeContent() {
           <button
             type="submit"
             className="focus-ring w-full py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-            style={{ background: "var(--accent)", color: "#000" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Sla jezelf vast →
           </button>
@@ -686,7 +686,7 @@ function HomeContent() {
                                             className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                                             style={
                                               editRole === r
-                                                ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                                ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                                                 : { color: "var(--text2)", borderColor: "var(--border)" }
                                             }
                                           >
@@ -708,7 +708,7 @@ function HomeContent() {
                                       className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
                                       style={
                                         editLevel === l.value
-                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                                           : { color: "var(--text2)", borderColor: "var(--border)" }
                                       }
                                     >
@@ -728,7 +728,7 @@ function HomeContent() {
                                       className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                                       style={
                                         editRelationshipStatus === s
-                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                                           : { color: "var(--text2)", borderColor: "var(--border)" }
                                       }
                                     >
@@ -740,7 +740,7 @@ function HomeContent() {
                                   <button
                                     onClick={saveEdit}
                                     className="focus-ring flex-1 py-2 rounded-lg text-sm font-medium"
-                                    style={{ background: "var(--accent)", color: "#000" }}
+                                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                                   >
                                     Opslaan
                                   </button>
@@ -838,7 +838,7 @@ function HomeContent() {
                                     <Link
                                       href={`/profile/${p.id}`}
                                       className="focus-ring px-3 h-9 rounded-lg text-sm font-semibold transition-colors flex-none flex items-center"
-                                      style={{ background: "var(--accent)", color: "#000" }}
+                                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                                     >
                                       Open →
                                     </Link>
@@ -1370,7 +1370,7 @@ function HomeContent() {
                   }, 1500);
                 }}
                 className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent)", color: "#000" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Importeer profiel
               </button>
@@ -1409,7 +1409,7 @@ function HomeContent() {
                   <button
                     onClick={() => setExportPwStep(1)}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                   >
                     Doorgaan
                   </button>
@@ -1476,7 +1476,7 @@ function HomeContent() {
                     onClick={handleExportEncrypted}
                     disabled={exportPwLoading}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                   >
                     {exportPwLoading ? "Versleutelen…" : "⬇ Versleuteld exporteren"}
                   </button>
@@ -1543,7 +1543,7 @@ function HomeContent() {
                 onClick={handleImportDecrypt}
                 disabled={importPwLoading}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "#000" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
               </button>
@@ -1585,7 +1585,7 @@ function HomeContent() {
                   </p>
                   <button onClick={() => setPinFlowStep(1)}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}>
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                     PIN instellen →
                   </button>
                   <button onClick={closePinFlow} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
@@ -1619,7 +1619,7 @@ function HomeContent() {
                   {pinError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
                   <button onClick={handleSavePin}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}>
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                     PIN opslaan
                   </button>
                   <button onClick={() => setPinFlowStep(0)} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>

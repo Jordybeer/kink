@@ -175,7 +175,7 @@ export default function ProfileTour({ onComplete }: Props) {
               onClick={advance}
               whileTap={TAP_SPRING}
               style={{
-                flex: 1, background: "var(--accent)", color: "#000", fontWeight: 600,
+                flex: 1, background: "var(--accent)", color: "var(--on-accent)", fontWeight: 600,
                 padding: "0.5rem 1rem", borderRadius: "9999px", border: "none",
                 fontSize: "0.8125rem", cursor: "pointer",
               }}

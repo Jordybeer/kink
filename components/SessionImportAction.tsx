@@ -17,7 +17,7 @@ export default function SessionImportAction({ status, onImport }: Props) {
     <button
       onClick={onImport}
       className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-      style={{ background: "var(--accent)", color: "#000" }}
+      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
     >
       Importeer dit profiel
     </button>

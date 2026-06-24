@@ -826,7 +826,7 @@ function ComparePage() {
                 <Link
                   href={`/contract?a=${aId}&b=${bId}`}
                   className="focus-ring flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-80"
-                  style={{ background: "var(--accent)", color: "#000" }}
+                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                 >
                   <FileText size={14} aria-hidden="true" />
                   Contract

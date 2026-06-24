@@ -772,7 +772,7 @@ function ContractPage() {
           onClick={handleGeneratePDF}
           disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           {generating ? "Genereren…" : "Opslaan als PDF"}
         </button>
@@ -780,7 +780,7 @@ function ContractPage() {
           onClick={handleConfirm}
           disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ background: "var(--accent2)", color: "#000" }}
+          style={{ background: "var(--accent2)", color: "var(--on-accent)" }}
         >
           Contract bevestigen
         </button>
@@ -1262,7 +1262,7 @@ function SignaturePad({
               <button
                 onClick={closeModal}
                 className="focus-ring text-xs px-4 py-1.5 rounded-full font-semibold"
-                style={{ background: colour, color: "#000" }}
+                style={{ background: colour, color: "var(--on-accent)" }}
               >
                 Klaar
               </button>
