@@ -168,37 +168,22 @@ describe("decodeAny", () => {
   });
 });
 
-describe("give/receive encoding", () => {
-  const GR_PROFILE: Profile = {
-    ...BASE_PROFILE,
-    entries: {
-      spanking_hand: { status: null, statusGive: "yes", statusReceive: "no", direction: "both", score: null, comment: "" },
-      flogging:      { status: null, statusGive: "willing", statusReceive: null, direction: "give", score: null, comment: "" },
-    },
-  };
-
-  it("v1: round-trips statusGive and statusReceive", () => {
-    const decoded = decodeProfile(encodeProfile(GR_PROFILE));
-    expect(decoded.entries.spanking_hand.statusGive).toBe("yes");
-    expect(decoded.entries.spanking_hand.statusReceive).toBe("no");
-    expect(decoded.entries.spanking_hand.direction).toBe("both");
-    expect(decoded.entries.flogging.statusGive).toBe("willing");
-    expect(decoded.entries.flogging.statusReceive).toBeUndefined();
+describe("legacy give/receive backward compat", () => {
+  it("v2: collapses legacy sg/sr into status (worst-of logic)", () => {
+    // Simulate a legacy QR payload that encoded sg="yes" sr="no" with no s field
+    const legacyPayload = { v: 2, id: "x", n: "n", r: "r", e: "beginner", ca: 0, ua: 0,
+      s: " ".repeat(100), sg: "y" + " ".repeat(99), sr: "n" + " ".repeat(99) };
+    const encoded = btoa(JSON.stringify(legacyPayload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const decoded = decodeProfileCompact(encoded);
+    // worst-of "yes"+"no" → "no" (order: hard_no, no, maybe, willing, yes)
+    expect(decoded.entries[Object.keys(decoded.entries)[0]]?.status).toBe("no");
   });
 
-  it("v2: round-trips statusGive and statusReceive via compact encoding", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(GR_PROFILE));
-    expect(decoded.entries.spanking_hand.statusGive).toBe("yes");
-    expect(decoded.entries.spanking_hand.statusReceive).toBe("no");
-    expect(decoded.entries.spanking_hand.direction).toBe("both");
-    expect(decoded.entries.flogging.statusGive).toBe("willing");
-    expect(decoded.entries.flogging.statusReceive).toBeUndefined();
-  });
-
-  it("v2: omits sg/sr arrays when no give/receive ratings", () => {
+  it("v2: omits sg/sr arrays in new encodes", () => {
     const encoded = encodeProfileCompact(BASE_PROFILE);
     const raw = JSON.parse(atob(encoded));
     expect(raw.sg).toBeUndefined();
     expect(raw.sr).toBeUndefined();
+    expect(raw.dr).toBeUndefined();
   });
 });

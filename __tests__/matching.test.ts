@@ -15,46 +15,11 @@ describe("isKinkMatch", () => {
     expect(isKinkMatch(e({ status: "yes" }), e({ status: "no" }))).toBe(false);
   });
 
-  it("cross-direction: A gives (yes) + B receives (willing) = match", () => {
-    expect(isKinkMatch(
-      e({ statusGive: "yes", direction: "give" }),
-      e({ statusReceive: "willing", direction: "receive" })
-    )).toBe(true);
-  });
-
-  it("cross-direction: B gives (yes) + A receives (yes) = match", () => {
-    expect(isKinkMatch(
-      e({ statusReceive: "yes", direction: "receive" }),
-      e({ statusGive: "yes", direction: "give" })
-    )).toBe(true);
-  });
-
-  it("cross-direction: A gives (yes) + B receives (no) = no match", () => {
-    expect(isKinkMatch(
-      e({ statusGive: "yes", direction: "give" }),
-      e({ statusReceive: "no", direction: "receive" })
-    )).toBe(false);
-  });
-
-  it("cross-direction: falls back to status when direction-specific status absent", () => {
-    expect(isKinkMatch(
-      e({ status: "yes", direction: "give" }),
-      e({ status: "willing", direction: "receive" })
-    )).toBe(true);
-  });
 });
 
 describe("isHardLimit", () => {
   it("detects hard_no on status", () => {
     expect(isHardLimit(e({ status: "hard_no" }), e({ status: "yes" }))).toBe(true);
-  });
-
-  it("detects hard_no on statusGive", () => {
-    expect(isHardLimit(e({ statusGive: "hard_no" }), e({ status: "yes" }))).toBe(true);
-  });
-
-  it("detects hard_no on statusReceive", () => {
-    expect(isHardLimit(e({ status: "yes" }), e({ statusReceive: "hard_no" }))).toBe(true);
   });
 
   it("returns false when no hard_no", () => {

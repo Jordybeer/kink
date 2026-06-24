@@ -69,7 +69,7 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
           >
             <div
               className="rounded-t-[28px] px-4 pb-10 pt-3"
-              style={{ background: "#0f0f0f", borderTop: "1px solid var(--border)" }}
+              style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
             >
               {/* Handle */}
               <div

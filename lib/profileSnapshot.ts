@@ -16,20 +16,7 @@ export function deriveCounts(entries: Record<string, KinkEntry>): ProfileSnapsho
 }
 
 function effectiveStatus(entry: KinkEntry): CountKey | null {
-  if (entry.direction === "give") return statusOrFallback(entry.statusGive, entry.status);
-  if (entry.direction === "receive") return statusOrFallback(entry.statusReceive, entry.status);
-  if (entry.direction === "both") {
-    const order: CountKey[] = ["hard_no", "no", "maybe", "yes", "willing"];
-    const a = (entry.statusGive ?? null) as CountKey | null;
-    const b = (entry.statusReceive ?? null) as CountKey | null;
-    for (const s of order) if (a === s || b === s) return s;
-    return (entry.status ?? null) as CountKey | null;
-  }
   return (entry.status ?? null) as CountKey | null;
-}
-
-function statusOrFallback(primary: KinkStatus | undefined, fallback: KinkStatus): CountKey | null {
-  return (primary ?? fallback ?? null) as CountKey | null;
 }
 
 export interface ProfileTrendSeries {

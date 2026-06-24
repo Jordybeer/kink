@@ -359,7 +359,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 14,
+      version: 15,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -432,6 +432,27 @@ export const useStore = create<State>()(
         }
         if (version < 14) {
           state.profileSnapshots = state.profileSnapshots ?? [];
+        }
+        if (version < 15 && state.profiles) {
+          const STATUS_ORDER = ["hard_no", "no", "maybe", "willing", "yes"] as const;
+          state.profiles = state.profiles.map((p) => ({
+            ...p,
+            entries: Object.fromEntries(
+              Object.entries(p.entries).map(([id, e]) => {
+                const entry = e as typeof e & { direction?: string; statusGive?: string; statusReceive?: string };
+                let status = entry.status;
+                if (entry.direction && (entry.statusGive || entry.statusReceive)) {
+                  const a = entry.statusGive ?? null;
+                  const b = entry.statusReceive ?? null;
+                  const collapsed = STATUS_ORDER.find(s => s === a || s === b) ?? a ?? b ?? status;
+                  status = collapsed as typeof status;
+                }
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { direction, statusGive, statusReceive, ...rest } = entry as typeof entry & { direction?: unknown; statusGive?: unknown; statusReceive?: unknown };
+                return [id, { ...rest, status }];
+              })
+            ),
+          }));
         }
         return state;
       },

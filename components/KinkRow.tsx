@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Ban, ChevronDown, ChevronRight, Info, Star } from "lucide-react";
-import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
-import type { RoleDirection } from "@/lib/roles";
+import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import InfoSheet from "./InfoSheet";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
@@ -15,12 +14,6 @@ const PREF_PILLS: PrefPill[] = [
   { status: "no",      label: "Voor hen" },
   { status: "hard_no", label: "Grens", danger: true },
 ];
-
-const STATUS_ORDER: KinkStatus[] = ["hard_no", "no", "maybe", "willing", "yes"];
-const worstOf = (a: KinkStatus | undefined, b: KinkStatus | undefined): KinkStatus => {
-  for (const s of STATUS_ORDER) { if (a === s || b === s) return s; }
-  return null;
-};
 
 const STATUS_BORDER: Record<NonNullable<KinkStatus>, string> = {
   yes:     "var(--yes)",
@@ -44,18 +37,8 @@ interface Props {
   onStatusChange: (s: KinkStatus) => void;
   onTagsChange: (tags: string[]) => void;
   onCuriousChange?: (v: boolean) => void;
-  onDirectionChange?: (d: KinkDirection) => void;
-  onStatusGiveChange?: (s: KinkStatus) => void;
-  onStatusReceiveChange?: (s: KinkStatus) => void;
   compact?: boolean;
-  roleDirection?: RoleDirection;
 }
-
-const DIRECTIONS: { dir: NonNullable<KinkDirection>; label: string }[] = [
-  { dir: "give",    label: "Geven" },
-  { dir: "receive", label: "Ontvangen" },
-  { dir: "both",    label: "Beide" },
-];
 
 interface PillRowProps {
   label?: string;
@@ -95,8 +78,8 @@ function PillRow({ label, current, onSelect, tour }: PillRowProps) {
 
 export default function KinkRow({
   kink, entry, onStatusChange,
-  onTagsChange, onCuriousChange, onDirectionChange, onStatusGiveChange, onStatusReceiveChange,
-  compact, roleDirection,
+  onTagsChange, onCuriousChange,
+  compact,
 }: Props) {
   const [infoOpen, setInfoOpen] = useState(false);
   const tags = entry.tags ?? [];
@@ -109,12 +92,7 @@ export default function KinkRow({
   }
 
   const showTags = !compact;
-  const effectiveStatus: KinkStatus =
-    entry.direction === "give"    ? (entry.statusGive    ?? entry.status) :
-    entry.direction === "receive" ? (entry.statusReceive ?? entry.status) :
-    entry.direction === "both"    ? (worstOf(entry.statusGive, entry.statusReceive) ?? entry.status) :
-    entry.status;
-  const showDirection = !compact && !!onDirectionChange && roleDirection === "both" && effectiveStatus !== null;
+  const effectiveStatus = entry.status;
 
   return (
     <>
@@ -169,45 +147,8 @@ export default function KinkRow({
           )}
         </div>
 
-        {/* Direction selector */}
-        {showDirection && (
-          <div className="flex flex-wrap items-center gap-1.5 px-3 pb-1">
-            <span className="text-[11px] flex-none" style={{ color: "var(--text2)" }}>Richting:</span>
-            {DIRECTIONS.map(({ dir, label }) => {
-              const active = entry.direction === dir;
-              return (
-                <button
-                  key={dir}
-                  onClick={() => onDirectionChange!(active ? null : dir)}
-                  aria-pressed={active}
-                  className="focus-ring rounded-full border text-[11px] px-2.5 py-1 font-medium transition-colors flex-none"
-                  style={active
-                    ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
-                    : { borderColor: "var(--border)", color: "var(--text2)" }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Pill rows — direction-aware */}
-        {(!entry.direction) && (
-          <PillRow tour="pills" current={entry.status} onSelect={(s) => onStatusChange(s)} />
-        )}
-        {entry.direction === "give" && (
-          <PillRow label="Geven:" current={entry.statusGive ?? null} onSelect={(s) => onStatusGiveChange?.(s)} />
-        )}
-        {entry.direction === "receive" && (
-          <PillRow label="Ontvangen:" current={entry.statusReceive ?? null} onSelect={(s) => onStatusReceiveChange?.(s)} />
-        )}
-        {entry.direction === "both" && (
-          <>
-            <PillRow label="Geven:" current={entry.statusGive ?? null} onSelect={(s) => onStatusGiveChange?.(s)} />
-            <PillRow label="Ontvangen:" current={entry.statusReceive ?? null} onSelect={(s) => onStatusReceiveChange?.(s)} />
-          </>
-        )}
+        {/* Pill row */}
+        <PillRow tour="pills" current={entry.status} onSelect={(s) => onStatusChange(s)} />
 
         {/* Tags */}
         {showTags && (

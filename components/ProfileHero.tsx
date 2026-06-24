@@ -267,11 +267,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
       )}
 
       {/* Metadata + external links */}
-      {totalVisible > 0 && (
-        <p className="text-xs" style={{ color: "var(--text2)" }}>
-          {formatProfileMetadata({ totalRated, totalVisible, customKinkCount, topCategory, topCategoryHasRatings })}
-        </p>
-      )}
+      {(() => { const s = formatProfileMetadata({ customKinkCount, topCategory, topCategoryHasRatings }); return s ? <p className="text-xs" style={{ color: "var(--text2)" }}>{s}</p> : null; })()}
       {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
         <div className="text-sm mt-2" style={{ color: "var(--accent)" }}>
           {profile.fetLifeUsername && (

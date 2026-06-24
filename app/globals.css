@@ -50,7 +50,7 @@ html, body {
 .status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: var(--willing); border-width: 2px; }
 .status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: var(--maybe);   border-width: 2px; }
 .status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: var(--no);      border-width: 2px; }
-.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 1.4s ease-in-out infinite; }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 3.2s ease-in-out infinite; }
 
 .focus-ring:focus-visible {
   outline: none;
@@ -128,40 +128,13 @@ html, body {
 }
 
 /* ── z-index ladder (keep this order sacred) ──────────────────────────────
-   201  sheet panels (.sheet-panel)        — the topmost dom/sub asks
-   200  sheet overlays (.sheet-overlay), undo toast
-    50  FABs, modals, floating actions
+   151  sheet panels (components/ui/Sheet — framer-motion drag-to-dismiss)
+   150  sheet backdrops
+   400  export/import password modals (above sheets)
+    50  FABs, floating actions
     40  global TopNav header
    10/5 per-page sticky strips (pinned below the header via --nav-h)
-   No page element may climb above the sheet layer.
    ──────────────────────────────────────────────────────────────────────── */
-
-/* Delete bottom sheet */
-.sheet-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 220ms ease;
-}
-.sheet-overlay.open {
-  opacity: 1;
-  pointer-events: all;
-}
-.sheet-panel {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 201;
-  transform: translateY(100%);
-  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.sheet-panel.open {
-  transform: translateY(0);
-}
 
 /* Hide scrollbar on category nav */
 .no-scrollbar {
@@ -318,7 +291,7 @@ select {
 }
 @keyframes ks-glow-hard-no {
   0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hard-no) 0%, transparent); }
-  50%     { box-shadow: 0 0 8px 2px color-mix(in srgb, var(--hard-no) 25%, transparent); }
+  50%     { box-shadow: 0 0 8px 2px color-mix(in srgb, var(--hard-no) 18%, transparent); }
 }
 
 /* Card variants — static status-colored glow layered over the base depth
@@ -375,9 +348,7 @@ select {
 .ks-dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .accordion-content,
-  .sheet-overlay,
-  .sheet-panel {
+  .accordion-content {
     transition: none;
   }
   .match-pulse,

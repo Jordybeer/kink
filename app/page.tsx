@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { Camera, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor, Lock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
-import { useFocusTrap } from "@/lib/useFocusTrap";
+import Sheet from "@/components/ui/Sheet";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -119,11 +119,6 @@ function HomeContent() {
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [importDone, setImportDone] = useState(false);
-  const [importDragY, setImportDragY] = useState(0);
-  const [importDragging, setImportDragging] = useState(false);
-  const importDragStart = useRef(0);
-  const settingsSheetRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(settingsSheetRef, settingsOpen);
 
   useEffect(() => {
     if (_hasHydrated && appLockEnabled && !sessionUnlocked.current) setLockState("locked");
@@ -464,7 +459,7 @@ function HomeContent() {
                   className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                   style={
                     parentName === null
-                      ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                      ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                       : { color: "var(--text2)", borderColor: "var(--border)" }
                   }
                 >
@@ -479,7 +474,7 @@ function HomeContent() {
                     className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                     style={
                       parentName === candidate
-                        ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                        ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                         : { color: "var(--text2)", borderColor: "var(--border)" }
                     }
                   >
@@ -521,7 +516,7 @@ function HomeContent() {
                       className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                       style={
                         role === r
-                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                           : { color: "var(--text2)", borderColor: "var(--border)" }
                       }
                     >
@@ -544,7 +539,7 @@ function HomeContent() {
                 className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
                 style={
                   experienceLevel === l.value
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }
                 }
               >
@@ -565,7 +560,7 @@ function HomeContent() {
                 className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                 style={
                   relationshipStatus === s
-                    ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }
                 }
               >
@@ -577,7 +572,7 @@ function HomeContent() {
           <button
             type="submit"
             className="focus-ring w-full py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-            style={{ background: "var(--accent)", color: "#000" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Sla jezelf vast →
           </button>
@@ -686,7 +681,7 @@ function HomeContent() {
                                             className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                                             style={
                                               editRole === r
-                                                ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                                ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                                                 : { color: "var(--text2)", borderColor: "var(--border)" }
                                             }
                                           >
@@ -708,7 +703,7 @@ function HomeContent() {
                                       className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
                                       style={
                                         editLevel === l.value
-                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                                           : { color: "var(--text2)", borderColor: "var(--border)" }
                                       }
                                     >
@@ -728,7 +723,7 @@ function HomeContent() {
                                       className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
                                       style={
                                         editRelationshipStatus === s
-                                          ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                                           : { color: "var(--text2)", borderColor: "var(--border)" }
                                       }
                                     >
@@ -740,7 +735,7 @@ function HomeContent() {
                                   <button
                                     onClick={saveEdit}
                                     className="focus-ring flex-1 py-2 rounded-lg text-sm font-medium"
-                                    style={{ background: "var(--accent)", color: "#000" }}
+                                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                                   >
                                     Opslaan
                                   </button>
@@ -838,7 +833,7 @@ function HomeContent() {
                                     <Link
                                       href={`/profile/${p.id}`}
                                       className="focus-ring px-3 h-9 rounded-lg text-sm font-semibold transition-colors flex-none flex items-center"
-                                      style={{ background: "var(--accent)", color: "#000" }}
+                                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                                     >
                                       Open →
                                     </Link>
@@ -989,17 +984,8 @@ function HomeContent() {
       </PageShell>
 
       {/* Settings bottom sheet */}
-      <div className={`sheet-overlay ${settingsOpen ? "open" : ""}`} onClick={() => setSettingsOpen(false)} aria-hidden="true" />
-      <div ref={settingsSheetRef} className={`sheet-panel ${settingsOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Instellingen">
-        <div
-          className="rounded-t-2xl flex flex-col"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)", maxHeight: "85svh" }}
-        >
-          <div className="px-6 pt-6 pb-4 flex-none">
-            <div className="mx-auto mb-4 w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
-            <h2 className="text-lg font-bold text-center">Instellingen</h2>
-          </div>
-          <div className="overflow-y-auto flex-1 px-6 pb-4">
+      <Sheet open={settingsOpen} onClose={() => setSettingsOpen(false)} title="Instellingen" aria-label="Instellingen">
+          <div className="overflow-y-auto" style={{ maxHeight: "60svh" }}>
           {/* Thema */}
           <section className="settings-card">
             <div className="flex items-center gap-3 mb-3">
@@ -1172,7 +1158,7 @@ function HomeContent() {
             </button>
           </section>
           </div>{/* end scroll */}
-          <div className="px-6 py-4 flex-none" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="pt-4">
             <button
               onClick={() => setSettingsOpen(false)}
               className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
@@ -1181,85 +1167,68 @@ function HomeContent() {
               Sluit
             </button>
           </div>
-        </div>
-      </div>
+      </Sheet>
 
       {/* Destroy-all bottom sheet */}
-      <div className={`sheet-overlay ${destroyOpen ? "open" : ""}`} onClick={() => setDestroyOpen(false)} aria-hidden="true" />
-      <div className={`sheet-panel ${destroyOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Alle data verwijderen">
-        <div
-          className="rounded-t-2xl p-6"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
-        >
-          <div className="mb-6" />
-          <h2 className="text-lg font-bold text-center mb-2">Vernietig alle data</h2>
-          <p className="text-center text-sm mb-4" style={{ color: "var(--text2)" }}>
-            Dit verwijdert alle profielen, contracten en instellingen permanent.{" "}
-            Typ <strong style={{ color: "var(--text)" }}>wis alles</strong> om te bevestigen.
-          </p>
-          <input
-            value={destroyPhrase}
-            onChange={(e) => setDestroyPhrase(e.target.value)}
-            placeholder="wis alles"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none text-center"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleDestroyAll}
-              disabled={destroyPhrase.trim().toLowerCase() !== DESTROY_PHRASE}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-30"
-              style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
-            >
-              Vernietig voor altijd
-            </button>
-            <button
-              onClick={() => setDestroyOpen(false)}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
-          </div>
+      <Sheet open={destroyOpen} onClose={() => setDestroyOpen(false)} title="Vernietig alle data" aria-label="Alle data verwijderen">
+        <p className="text-center text-sm mb-4" style={{ color: "var(--text2)" }}>
+          Dit verwijdert alle profielen, contracten en instellingen permanent.{" "}
+          Typ <strong style={{ color: "var(--text)" }}>wis alles</strong> om te bevestigen.
+        </p>
+        <input
+          value={destroyPhrase}
+          onChange={(e) => setDestroyPhrase(e.target.value)}
+          placeholder="wis alles"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none text-center"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+        />
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={handleDestroyAll}
+            disabled={destroyPhrase.trim().toLowerCase() !== DESTROY_PHRASE}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity disabled:opacity-30"
+            style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
+          >
+            Vernietig voor altijd
+          </button>
+          <button
+            onClick={() => setDestroyOpen(false)}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+          >
+            Annuleer
+          </button>
         </div>
-      </div>
+      </Sheet>
 
       {/* Delete bottom sheet */}
-      <div className={`sheet-overlay ${sheetOpen ? "open" : ""}`} onClick={cancelDelete} aria-hidden="true" />
-      <div className={`sheet-panel ${sheetOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Profiel verwijderen">
-        <div
-          className="rounded-t-2xl p-6"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}
-        >
-          <div className="mb-6" />
-          <h2 className="text-lg font-bold text-center mb-1">Profiel verwijderen?</h2>
-          {deleteTargetProfile && (
-            <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
-              <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist.
-              Dit kan niet ongedaan worden gemaakt.
-            </p>
-          )}
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={confirmDelete}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
-            >
-              Verwijder voor altijd
-            </button>
-            <button
-              onClick={cancelDelete}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
-          </div>
+      <Sheet open={sheetOpen} onClose={cancelDelete} title="Profiel verwijderen?" aria-label="Profiel verwijderen">
+        {deleteTargetProfile && (
+          <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
+            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist.
+            Dit kan niet ongedaan worden gemaakt.
+          </p>
+        )}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={confirmDelete}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+            style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
+          >
+            Verwijder voor altijd
+          </button>
+          <button
+            onClick={cancelDelete}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+          >
+            Annuleer
+          </button>
         </div>
-      </div>
+      </Sheet>
 
       {scanOpen && (
         <QRScanner
@@ -1273,118 +1242,73 @@ function HomeContent() {
       )}
 
       {/* Import profile sheet */}
-      <div
-        className={`sheet-overlay ${importPreview ? "open" : ""}`}
-        onClick={() => setImportPreview(null)}
-        aria-hidden="true"
-      />
-      <div
-        className={`sheet-panel ${importPreview ? "open" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Profiel importeren"
-        onTouchStart={(e) => {
-          importDragStart.current = e.touches[0].clientY;
-          setImportDragging(true);
-        }}
-        onTouchMove={(e) => {
-          const dy = e.touches[0].clientY - importDragStart.current;
-          if (dy > 0) setImportDragY(dy);
-        }}
-        onTouchEnd={() => {
-          if (importDragY > 80) {
-            setImportDragY(0);
-            setImportPreview(null);
-          } else {
-            setImportDragY(0);
-          }
-          setImportDragging(false);
-        }}
-        style={importDragging || importDragY > 0 ? {
-          transform: `translateY(${importDragY}px)`,
-          transition: importDragging ? "none" : undefined,
-        } : undefined}
-      >
-        <div
-          className="rounded-t-2xl p-6"
-          style={{
-            background: "var(--surface)",
-            borderTop: "1px solid var(--border)",
-            borderLeft: "1px solid var(--border)",
-            borderRight: "1px solid var(--border)",
-          }}
-        >
-          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-          <h2 className="text-lg font-bold text-center mb-4">Profiel importeren?</h2>
-
-          {importPreview && (
+      <Sheet open={!!importPreview} onClose={() => setImportPreview(null)} title="Profiel importeren?" aria-label="Profiel importeren">
+        {importPreview && (
+          <div
+            className="rounded-xl p-4 mb-5 flex items-center gap-3"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+          >
             <div
-              className="rounded-xl p-4 mb-5 flex items-center gap-3"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-none"
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "var(--on-accent)" }}
+              aria-hidden="true"
             >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-none"
-                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}
-                aria-hidden="true"
-              >
-                {importPreview.name[0].toUpperCase()}
+              {importPreview.name[0].toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold truncate">{importPreview.name}</span>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                >
+                  {importPreview.role}
+                </span>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}
+                >
+                  {importPreview.experienceLevel}
+                </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold truncate">{importPreview.name}</span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                  >
-                    {importPreview.role}
-                  </span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}
-                  >
-                    {importPreview.experienceLevel}
-                  </span>
-                </div>
-                <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
-                  {Object.values(importPreview.entries).filter((e) => e.status).length} kinks beoordeeld
-                </div>
+              <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
+                {Object.values(importPreview.entries).filter((e) => e.status).length} kinks beoordeeld
               </div>
             </div>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {importDone ? (
-              <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
-                ✓ Profiel geïmporteerd!
-              </p>
-            ) : (
-              <button
-                onClick={() => {
-                  if (!importPreview) return;
-                  importProfiles([{ ...importPreview, isImported: true, origin: "shared", lockedAt: Date.now() }]);
-                  setImportDone(true);
-                  router.replace("/");
-                  setTimeout(() => {
-                    setImportPreview(null);
-                    setImportDone(false);
-                  }, 1500);
-                }}
-                className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent)", color: "#000" }}
-              >
-                Importeer profiel
-              </button>
-            )}
-            <button
-              onClick={() => { setImportPreview(null); router.replace("/"); }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              Niet nu
-            </button>
           </div>
+        )}
+        <div className="flex flex-col gap-3">
+          {importDone ? (
+            <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
+              ✓ Profiel geïmporteerd!
+            </p>
+          ) : (
+            <button
+              onClick={() => {
+                if (!importPreview) return;
+                importProfiles([{ ...importPreview, isImported: true, origin: "shared", lockedAt: Date.now() }]);
+                setImportDone(true);
+                router.replace("/");
+                setTimeout(() => {
+                  setImportPreview(null);
+                  setImportDone(false);
+                }, 1500);
+              }}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            >
+              Importeer profiel
+            </button>
+          )}
+          <button
+            onClick={() => { setImportPreview(null); router.replace("/"); }}
+            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+          >
+            Niet nu
+          </button>
         </div>
-      </div>
+      </Sheet>
 
       {/* Export password modal */}
       {exportPwOpen && (
@@ -1409,7 +1333,7 @@ function HomeContent() {
                   <button
                     onClick={() => setExportPwStep(1)}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                   >
                     Doorgaan
                   </button>
@@ -1476,7 +1400,7 @@ function HomeContent() {
                     onClick={handleExportEncrypted}
                     disabled={exportPwLoading}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                   >
                     {exportPwLoading ? "Versleutelen…" : "⬇ Versleuteld exporteren"}
                   </button>
@@ -1543,7 +1467,7 @@ function HomeContent() {
                 onClick={handleImportDecrypt}
                 disabled={importPwLoading}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "#000" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 {importPwLoading ? "Ontsleutelen…" : "Backup herstellen"}
               </button>
@@ -1585,7 +1509,7 @@ function HomeContent() {
                   </p>
                   <button onClick={() => setPinFlowStep(1)}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}>
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                     PIN instellen →
                   </button>
                   <button onClick={closePinFlow} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
@@ -1619,7 +1543,7 @@ function HomeContent() {
                   {pinError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
                   <button onClick={handleSavePin}
                     className="w-full py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent)", color: "#000" }}>
+                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                     PIN opslaan
                   </button>
                   <button onClick={() => setPinFlowStep(0)} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
