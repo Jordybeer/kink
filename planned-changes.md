@@ -37,9 +37,9 @@ Extract into:
 
 Target: `app/page.tsx` under 400 lines. Same instinct applies later to `app/scene/page.tsx` (37 KB), `app/session/page.tsx` (41 KB), `app/contract/page.tsx` (55 KB) but those are out of scope here.
 
-### Phase 18 — ProfileHero copy dedup [SMALL]
+### ~~Phase 18 — ProfileHero copy dedup~~ ✓ [SHIPPED]
 
-`components/ProfileHero.tsx:243–272` prints `"X van Y beoordeeld"` twice — once italicised with dominant status, once in the metadata sentence with custom + top category. Pick one denominator slot; collapse the other into the surrounding phrase.
+`formatProfileMetadata` stripped of the count prefix; metadata `<p>` now only renders if custom kinks or top category is present. Single "X van Y beoordeeld" remains in the italic DNA summary line.
 
 ### Phase 19 — /compare interaction upgrades [SMALL]
 
