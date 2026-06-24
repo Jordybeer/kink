@@ -91,13 +91,13 @@ Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Phase 7 unblocked 
 
 | Order | Phase | Why this slot |
 |------:|-------|---------------|
-| 1 | ~~14 — Ledger `#000` sweep~~ ✓ | Shipped. |
-| 2 | ~~15 — hard_no glow timing~~ ✓ | Shipped. |
-| 3 | **18 — ProfileHero copy dedup** | Smallest visible win on the most-loaded screen. |
-| 4 | **19 — Compare interactions** | Direct UX win, no extraction needed first. |
-| 5 | **16 — Sheet consolidation** | Foundational. Unblocks Phase 17 and any future sheet work. |
-| 6 | **17 — Home page extraction** | After Phase 16; faster iteration on every chrome surface that follows. |
-| 7 | **22 — Emoji chrome cleanup** | Now that the right places to edit are smaller files. |
+| 1 | ~~14 — Ledger `#000` sweep~~ ✓ | Shipped `7fcf6d2`. |
+| 2 | ~~15 — hard_no glow timing~~ ✓ | Shipped `7fcf6d2`. |
+| 3 | ~~18 — ProfileHero copy dedup~~ ✓ | Shipped `42d7083`. |
+| 4 | ~~19 — Compare interactions~~ ✓ | Shipped `d2e8f69`. |
+| 5 | ~~16 — Sheet consolidation~~ ✓ | Shipped `6266628`. |
+| 6 | **17 — Home page extraction** | Next. Phase 16 done — `app/page.tsx` now ready to split. |
+| 7 | **22 — Emoji chrome cleanup** | After 17; smaller files make sweep faster. |
 | 8 | **20 — Italic Cormorant vocabulary extension** | Identity reinforcement once chrome is consistent. |
 | 9 | **21 — Body type floor** | Final sweep after layout work has settled. |
 | 10 | **23 — Status colour user-test** | Verification, not change. Run in parallel with later phases. |
@@ -138,8 +138,10 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 12 | Delete `/1312` dev sandbox | 2026-06-22 · worktree-edging |
 | 13 | Live session bugs (iOS `<select>` zoom, 25s keepalive + ICE restart) | 2026-06-24 · PR #231 |
 | — | Direction selector killed — store v15, all give/receive fields stripped | 2026-06-24 · `629419b` |
-| 14 | Ledger `--on-accent` sweep — `color: "#000"` → `var(--on-accent)` in 14 files + Sheet `#0f0f0f` → `var(--surface)` | 2026-06-24 · this commit |
-| 15 | Ambient motion compliance — `hard_no` glow 1.4s → 3.2s, swing 25% → 18% | 2026-06-24 · this commit |
+| 14+15 | Ledger `--on-accent` sweep (14 files) + Sheet `var(--surface)` + hard_no glow 3.2s/18% | 2026-06-24 · `7fcf6d2` |
+| 18 | ProfileHero copy dedup — `formatProfileMetadata` stripped of count prefix, paragraph gated | 2026-06-24 · `42d7083` |
+| 19 | /compare interactions — AlignmentBar tap-to-filter + Match count badge | 2026-06-24 · `d2e8f69` |
+| 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>`, CSS blocks purged | 2026-06-24 · `6266628` |
 
 ### v4 (main)
 
