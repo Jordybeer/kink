@@ -41,10 +41,9 @@ Target: `app/page.tsx` under 400 lines. Same instinct applies later to `app/scen
 
 `formatProfileMetadata` stripped of the count prefix; metadata `<p>` now only renders if custom kinks or top category is present. Single "X van Y beoordeeld" remains in the italic DNA summary line.
 
-### Phase 19 — /compare interaction upgrades [SMALL]
+### ~~Phase 19 — /compare interaction upgrades~~ ✓ [SHIPPED]
 
-- **AlignmentBar tap-to-filter.** `app/compare/page.tsx:143–171` is decorative. Wire each segment to `setFilterMode(…)` so a tap on the orange band filters to "Bespreken", red to "Grenzen", etc.
-- **Match count badge.** Filter tab row (`app/compare/page.tsx:516–552`) shows counts for Bespreken and Grenzen but not for Match. Show all four counts, or none. Recommended: all four.
+AlignmentBar gained an `onFilter` prop — each colour segment now calls `setFilterMode`. Match tab gets its badge (green count) alongside Bespreken and Grenzen.
 
 ### Phase 20 — Italic Cormorant vocabulary extension [MEDIUM, identity]
 

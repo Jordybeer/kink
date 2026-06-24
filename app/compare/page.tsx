@@ -127,13 +127,28 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
   );
 }
 
-function AlignmentBar({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
+function AlignmentBar({ match, discuss, soft, limit, onFilter }: {
+  match: number; discuss: number; soft: number; limit: number;
+  onFilter?: (f: "match" | "conflict" | "hardno") => void;
+}) {
   const total = match + discuss + soft + limit;
   if (total === 0) return null;
   const mPct = (match / total) * 100;
   const dPct = (discuss / total) * 100;
   const sPct = (soft / total) * 100;
   const lPct = (limit / total) * 100;
+  const seg = (pct: number, color: string, filter: "match" | "conflict" | "hardno", label: string) =>
+    pct > 0 ? (
+      <div
+        key={filter}
+        role={onFilter ? "button" : undefined}
+        tabIndex={onFilter ? 0 : undefined}
+        aria-label={onFilter ? `Filter op ${label}` : undefined}
+        onClick={onFilter ? () => onFilter(filter) : undefined}
+        onKeyDown={onFilter ? (e) => { if (e.key === "Enter" || e.key === " ") onFilter(filter); } : undefined}
+        style={{ width: `${pct}%`, background: color, transition: "width 500ms ease-out", cursor: onFilter ? "pointer" : undefined }}
+      />
+    ) : null;
   return (
     <div
       className="flex rounded overflow-hidden mb-4"
@@ -141,18 +156,10 @@ function AlignmentBar({ match, discuss, soft, limit }: { match: number; discuss:
       role="img"
       aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${soft} zacht, ${limit} grenzen`}
     >
-      {match > 0 && (
-        <div style={{ width: `${mPct}%`, background: "var(--yes)", transition: "width 500ms ease-out" }} />
-      )}
-      {discuss > 0 && (
-        <div style={{ width: `${dPct}%`, background: "var(--conflict)", transition: "width 500ms ease-out" }} />
-      )}
-      {soft > 0 && (
-        <div style={{ width: `${sPct}%`, background: "var(--maybe)", transition: "width 500ms ease-out" }} />
-      )}
-      {limit > 0 && (
-        <div style={{ width: `${lPct}%`, background: "var(--hard-no)", transition: "width 500ms ease-out" }} />
-      )}
+      {seg(mPct, "var(--yes)", "match", "match")}
+      {seg(dPct, "var(--conflict)", "conflict", "bespreken")}
+      {seg(sPct, "var(--maybe)", "conflict", "zacht")}
+      {seg(lPct, "var(--hard-no)", "hardno", "grenzen")}
     </div>
   );
 }
@@ -477,7 +484,7 @@ function ComparePage() {
       {hasPair && (
         <>
           <ScoreMasthead match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
-          <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
+          <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} onFilter={setFilterMode} />
 
           {/* Category heatmap strip */}
           <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 mb-4">
@@ -507,8 +514,8 @@ function ComparePage() {
                 conflict: "Bespreken",
                 hardno: "Grenzen",
               };
-              const badge = f === "conflict" ? discussCount : f === "hardno" ? hardLimitCount : null;
-              const badgeColour = f === "hardno" ? "var(--hard-no)" : "var(--conflict)";
+              const badge = f === "match" ? matchCount : f === "conflict" ? discussCount : f === "hardno" ? hardLimitCount : null;
+              const badgeColour = f === "match" ? "var(--yes)" : f === "hardno" ? "var(--hard-no)" : "var(--conflict)";
               const active = filterMode === f;
               return (
                 <button
