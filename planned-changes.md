@@ -10,6 +10,24 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ---
 
+## Session Checkpoint — 2026-06-24
+
+### Shipped this session (dev, committed)
+- **Profile tour spotlight restored** — `data-tour="hard-no"` missing from both active/inactive hard-no pills in `PillRow`; `ProfileTour.measure()` requires all 4 selectors before rendering, so the tour silently never fired. Fixed in commit `a416459`.
+- **PWA install sheet redesigned** — `PwaInstallGuide.tsx` now shows app icon hero (Apple touch icon on iOS, icon-192 on Android), icon-driven step cards for iOS, feature tiles for Android, tighter hierarchy. Commits `a416459` + `f047662`.
+- **Ledger PDF palette** (Phase 3 remaining item) ✅ — hardcoded RGB arrays in `handlePDFExport` updated to Phase 3d colours. Shipped in PR #231.
+- **Phase 13 live session bugs** ✅ — iOS select zoom fix (`text-base`), WebRTC 25s keepalive + ICE restart. Shipped in PR #231.
+- **QR scanner paste fallback** ✅ — `lib/parseSharePaste.ts` + paste mode in `QRScanner.tsx`. Shipped in PR #231.
+- **Phase 8 doc** — `docs/phase8-external-imports.md` exploration notes. PR #231.
+- **Stale worktrees pruned** — all 8 empty worktrees removed; kinbaku rebased + shipped as PR #231.
+
+### Open decisions
+- **Avatar ContextMenu** — remove X button from avatar, replace with ContextMenu ("Upload foto" / "Foto bijwerken" / "Foto verwijderen"). Ready to implement.
+- **Overzicht tab padding** — layout too tight; needs padding pass + visual separation from ProfileHero. Ready once give/receive direction question settled.
+- **Give/receive direction selector** — kill or keep? Senior rec: kill (store migration v14→v15, remove from KinkRow/compare/contract/session/DNA/PDF). Awaiting user call.
+
+---
+
 ## Phase 1 — Critical Bugs ✅ SHIPPED (2026-06-18, commit 13aed1d)
 
 - Live session zoom on connect — `viewport` meta now sets `width=device-width` + `initialScale=1`.
@@ -51,7 +69,7 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 - `--border-accent` and `--accent-glow` updated to match new hue.
 
 ### Remaining Phase 3 open items
-- Ledger PDF palette: PDF export uses hardcoded RGB arrays in `handlePDFExport`; those still use old muted colors for "no" status. Update when touching PDF export next.
+- Ledger PDF palette ✅ SHIPPED (2026-06-24, PR #231) — hardcoded RGB arrays updated to Phase 3d colours.
 - Forest/Mono/Red themes: contrast passes AA on all checked pairs. No action needed.
 
 ## Phase 4 — KinkRow Edit UI ✅ SHIPPED (2026-06-19/20)
@@ -148,10 +166,10 @@ These are bigger than a single commit. Each needs its own design pass before cod
 - **Dupe matching** — Build a `lib/kinkAliases.ts` of common alternative spellings/wordings so paste-import doesn't double-count.
 - **Identity-vs-dynamic split** — Some kinks describe the person ("voyeur identity"), not the scene ("voyeur play"). Add a `category: "identity"` flag in `lib/kinks.ts` and surface in a separate ProfileHero strip.
 
-## Phase 9 — PWA Install UX
+## Phase 9 — PWA Install UX ✅ SHIPPED (2026-06-24, commits a416459 + f047662)
 
-- `PwaInstallGuide.tsx` exists and is functional for both iOS (step-by-step) and Android (native prompt) but needs a `/frontend-design` pass: the card is small and understated for a moment that needs to convert first-timers. Review against the rest of the app's visual identity — height, hierarchy, icon, copy.
-- `Onboarding.tsx` and profile page ("profile spotlight") may also need a review pass: app state has advanced significantly since their initial implementation. Run `/frontend-design` on each surface before touching code.
+- `PwaInstallGuide.tsx` redesigned: app icon hero, icon-driven step cards (iOS), feature tiles (Android/Chrome), tighter hierarchy. Apple touch icon on iOS, icon-192 on Android.
+- Profile tour spotlight restored: `data-tour="hard-no"` anchor added to PillRow — tour now fires correctly on Bewerken tab for first-time users.
 
 ## Phase 10 — Brand Micro-polish ⛔ ATTEMPTED + REVERTED (2026-06-22, worktree-gag → PR #219 closed)
 
@@ -186,12 +204,10 @@ Lesson for any future Phase 10 attempt:
 - No other source files imported from or linked to `/1312`; build output confirms no `/1312` route remains.
 - `npm test` (167/167) and `npm run build` clean.
 
-## Phase 13 — Live Session Bugs
+## Phase 13 — Live Session Bugs ✅ SHIPPED (2026-06-24, PR #231)
 
-Two confirmed issues with the live session flow:
-
-- **Zoomed-out on connect** — viewport appears scaled down when a session starts. Phase 1 fixed the `<meta viewport>` tag but the issue may persist inside the session page itself. Investigate `app/session/page.tsx` for any container that overrides viewport or sets `transform: scale`.
-- **Connection drops fast** — WebRTC peer connection loses signal quickly. Likely a STUN/TURN timeout, ICE candidate exhaustion, or missing keepalive. Needs investigation in the signalling layer before a fix can be scoped.
+- **Zoomed-out on connect** — `<select>` elements in session page promoted to `text-base` so Safari stops auto-zooming on focus.
+- **Connection drops fast** — 25s ping/pong keepalive + `restartIce()` on ICE disconnected. Silent drops no longer kill the session.
 
 ---
 
