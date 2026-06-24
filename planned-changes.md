@@ -14,16 +14,9 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-### Phase 16 — Sheet implementation consolidation [MEDIUM, structural]
+### ~~Phase 16 — Sheet implementation consolidation~~ ✓ [SHIPPED]
 
-Three sheet patterns coexist:
-- `components/Sheet.tsx` — domain wrapper.
-- `components/ui/Sheet.tsx` — framer-motion drag-to-dismiss (the keeper).
-- `.sheet-overlay` / `.sheet-panel` CSS classes — used by home settings + delete + destroy + PIN flow.
-
-Z-index ladder comment at `globals.css:130–137` declares `201` is sacred for sheet panels — but `ui/Sheet` uses `z-[150]/[151]`. The ladder is already lying.
-
-Acceptance: one Sheet primitive (the framer-motion one), one z-index convention. `.sheet-panel` + `.sheet-overlay` CSS blocks removed once nothing references them. Migration is mechanical: replace each `<div className="sheet-panel">` consumer in `app/page.tsx` with `<Sheet>` from `components/ui/`.
+All 4 `sheet-panel`/`sheet-overlay` consumers in `app/page.tsx` migrated to `<Sheet>` from `components/ui/`. Import drag state + `settingsSheetRef` + `useFocusTrap` removed (Sheet handles those internally). CSS blocks `.sheet-overlay` / `.sheet-panel` deleted; z-index ladder comment updated to reflect 150/151.
 
 ### Phase 17 — Home page extraction [MEDIUM, structural, gated on Phase 16]
 
