@@ -121,15 +121,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   function initLocal(p: Profile): Record<string, KinkStatus> {
     const entries: Record<string, KinkStatus> = {};
     for (const [id, e] of Object.entries(p.entries)) {
-      let effective: KinkStatus = e.status;
-      if (e.direction === "give")    effective = e.statusGive    ?? e.status;
-      else if (e.direction === "receive") effective = e.statusReceive ?? e.status;
-      else if (e.direction === "both") {
-        const order: KinkStatus[] = ["hard_no", "no", "maybe", "yes", "willing"];
-        const a = e.statusGive, b = e.statusReceive;
-        effective = order.find(s => s === a || s === b) ?? e.status;
-      }
-      if (effective) entries[id] = effective;
+      if (e.status) entries[id] = e.status;
     }
     setLocal(entries);
     return entries;

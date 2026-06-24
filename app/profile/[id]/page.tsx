@@ -2,7 +2,7 @@
 import { use, useEffect, useRef, useState, useCallback } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
-import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES, categorizeRole } from "@/lib/roles";
+import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import CategorySection from "@/components/CategorySection";
 import SegmentedPill from "@/components/ui/SegmentedPill";
 import KinkRow from "@/components/KinkRow";
@@ -41,7 +41,6 @@ export default function ProfilePage({ params }: Props) {
   const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour, pinnedProfileId, profileSnapshots, saveProfileSnapshot } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
-  const roleDirection = categorizeRole(profile?.role ?? "");
 
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [activeTab, setActiveTab] = useState<"overzicht" | "bewerken" | null>(null);
@@ -418,6 +417,7 @@ export default function ProfilePage({ params }: Props) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
           transition={t.fast}
+          className="pt-2"
         >
           <button
             type="button"
@@ -511,12 +511,8 @@ export default function ProfilePage({ params }: Props) {
                         entry={profile.entries[kink.id] ?? { status: null, comment: "" }}
                         onStatusChange={(s) => handleStatus(kink.id, s)}
                         onTagsChange={(tags) => { setEntry(profile.id, kink.id, { tags }); markSaved(); }}
-                        onDirectionChange={(d) => { setEntry(profile.id, kink.id, { direction: d }); markSaved(); }}
-                        onStatusGiveChange={(s) => { setEntry(profile.id, kink.id, { statusGive: s }); markSaved(); }}
-                        onStatusReceiveChange={(s) => { setEntry(profile.id, kink.id, { statusReceive: s }); markSaved(); }}
                         onCuriousChange={(v) => { setEntry(profile.id, kink.id, { curious: v }); markSaved(); }}
                         compact={compact}
-                        roleDirection={roleDirection}
                       />
                     ))}
                   </div>
@@ -535,9 +531,6 @@ export default function ProfilePage({ params }: Props) {
                         entries={profile.entries}
                         onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
                         onTagsChange={(kinkId, tags) => { setEntry(profile.id, kinkId, { tags }); markSaved(); }}
-                        onDirectionChange={(kinkId, d) => { setEntry(profile.id, kinkId, { direction: d }); markSaved(); }}
-                        onStatusGiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusGive: s }); markSaved(); }}
-                        onStatusReceiveChange={(kinkId, s) => { setEntry(profile.id, kinkId, { statusReceive: s }); markSaved(); }}
                         onCuriousChange={(kinkId, v) => { setEntry(profile.id, kinkId, { curious: v }); markSaved(); }}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
@@ -552,7 +545,6 @@ export default function ProfilePage({ params }: Props) {
                           markSaved();
                         }}
                         compact={compact}
-                        roleDirection={roleDirection}
                       />
                     </div>
                   );
@@ -650,7 +642,7 @@ export default function ProfilePage({ params }: Props) {
           exit={{ opacity: 0, x: -8 }}
           transition={t.fast}
         >
-        <div className="px-4 pt-2 pb-3">
+        <div className="px-4 pt-4 pb-3">
           {totalRated === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>

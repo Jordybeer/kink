@@ -29,22 +29,6 @@ describe("deriveCounts", () => {
     expect(deriveCounts(entries)).toEqual({ yes: 2, willing: 0, maybe: 1, no: 0, hard_no: 1 });
   });
 
-  it("respects direction give/receive overrides", () => {
-    const entries: Record<string, KinkEntry> = {
-      a: { status: "maybe", statusGive: "yes", direction: "give", comment: "" },
-      b: { status: "maybe", statusReceive: "willing", direction: "receive", comment: "" },
-    };
-    expect(deriveCounts(entries)).toEqual({ yes: 1, willing: 1, maybe: 0, no: 0, hard_no: 0 });
-  });
-
-  it("picks the strictest side for direction=both (matches session reveal scan)", () => {
-    // Scan order is hard_no → no → maybe → yes → willing; first matching side wins.
-    const entries: Record<string, KinkEntry> = {
-      a: { status: "yes", statusGive: "yes", statusReceive: "hard_no", direction: "both", comment: "" },
-      b: { status: "yes", statusGive: "willing", statusReceive: "yes", direction: "both", comment: "" },
-    };
-    expect(deriveCounts(entries)).toEqual({ yes: 1, willing: 0, maybe: 0, no: 0, hard_no: 1 });
-  });
 });
 
 describe("prepareProfileTrendData", () => {

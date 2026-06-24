@@ -68,10 +68,6 @@ describe("kinkMatchScore — rubric rows", () => {
     expect(kinkMatchScore(e({ status: "hard_no" }), e({ status: "yes" }))).toEqual({ score: 0, kind: "limit" });
   });
 
-  it("hard_no on statusReceive → limit (0)", () => {
-    expect(kinkMatchScore(e({ status: "yes" }), e({ statusReceive: "hard_no" }))).toEqual({ score: 0, kind: "limit" });
-  });
-
   it("unrated A, rated B → none (0)", () => {
     expect(kinkMatchScore(e(), e({ status: "yes" }))).toEqual({ score: 0, kind: "none" });
   });
@@ -105,29 +101,6 @@ describe("kinkMatchScore — symmetric voor-hen cases (PR v5 rubric)", () => {
 
   it("willing + maybe → soft (45) — symmetric of maybe+willing", () => {
     expect(kinkMatchScore(e({ status: "willing" }), e({ status: "maybe" }))).toEqual({ score: 45, kind: "soft" });
-  });
-});
-
-describe("kinkMatchScore — directional", () => {
-  it("yes give / yes receive → perfect (100)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "yes", direction: "give" }),
-      e({ statusReceive: "yes", direction: "receive" })
-    )).toEqual({ score: 100, kind: "perfect" });
-  });
-
-  it("yes give / willing receive → strong (85)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "yes", direction: "give" }),
-      e({ statusReceive: "willing", direction: "receive" })
-    )).toEqual({ score: 85, kind: "strong" });
-  });
-
-  it("both want to give, neither receives → conflict (25)", () => {
-    expect(kinkMatchScore(
-      e({ statusGive: "yes", statusReceive: "no", direction: "give" }),
-      e({ statusGive: "yes", statusReceive: "no", direction: "give" })
-    )).toEqual({ score: 25, kind: "conflict" });
   });
 });
 

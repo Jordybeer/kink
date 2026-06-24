@@ -40,19 +40,6 @@ function StatusBadge({ status, colour }: { status: KinkStatus; colour: string })
 }
 
 function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
-  if (entry.statusGive && entry.statusReceive) {
-    return (
-      <div
-        className="flex flex-col gap-0.5"
-        aria-label={`Geven: ${STATUS_LABEL[entry.statusGive]}, Ontvangen: ${STATUS_LABEL[entry.statusReceive]}`}
-      >
-        <StatusBadge status={entry.statusGive} colour={colour} />
-        <StatusBadge status={entry.statusReceive} colour={colour} />
-      </div>
-    );
-  }
-  if (entry.statusGive) return <StatusBadge status={entry.statusGive} colour={colour} />;
-  if (entry.statusReceive) return <StatusBadge status={entry.statusReceive} colour={colour} />;
   return <StatusBadge status={entry.status} colour={colour} />;
 }
 
@@ -404,8 +391,8 @@ function ComparePage() {
   }
 
   function passesFilter(eA: KinkEntry, eB: KinkEntry): boolean {
-    const hasA = eA.status || eA.statusGive || eA.statusReceive;
-    const hasB = eB.status || eB.statusGive || eB.statusReceive;
+    const hasA = eA.status;
+    const hasB = eB.status;
     if (!hasA && !hasB) return false;
     if (filterMode === "all") return true;
     if (filterMode === "hardno") return isHardLimit(eA, eB);
@@ -421,8 +408,8 @@ function ComparePage() {
         for (const k of kinks) {
           const eA = profileA.entries[k.id] ?? { status: null, comment: "" };
           const eB = profileB.entries[k.id] ?? { status: null, comment: "" };
-          const hasA = eA.status || eA.statusGive || eA.statusReceive;
-          const hasB = eB.status || eB.statusGive || eB.statusReceive;
+          const hasA = eA.status;
+          const hasB = eB.status;
           if (hasA || hasB) {
             catRated++;
             if (isKinkMatch(eA, eB)) catMatches++;

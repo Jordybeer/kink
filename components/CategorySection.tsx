@@ -3,8 +3,7 @@ import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { Kink, KinkEntry, KinkStatus, KinkDirection } from "@/types";
-import type { RoleDirection } from "@/lib/roles";
+import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import KinkRow from "./KinkRow";
 
 interface Props {
@@ -13,14 +12,10 @@ interface Props {
   entries: Record<string, KinkEntry>;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
-  onDirectionChange?: (kinkId: string, d: KinkDirection) => void;
-  onStatusGiveChange?: (kinkId: string, s: KinkStatus) => void;
-  onStatusReceiveChange?: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange?: (kinkId: string, v: boolean) => void;
   onBulkSkip: () => void;
   onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
   compact?: boolean;
-  roleDirection?: RoleDirection;
 }
 
 const MAX_PIPS = 12;
@@ -33,8 +28,8 @@ export default function CategorySection({
   category, kinks, entries,
   onStatusChange,
   onTagsChange,
-  onDirectionChange, onStatusGiveChange, onStatusReceiveChange, onCuriousChange,
-  onBulkSkip, onBulkRestore, compact, roleDirection,
+  onCuriousChange,
+  onBulkSkip, onBulkRestore, compact,
 }: Props) {
   const t = useMotionSafe();
   const [open, setOpen] = useState(true);
@@ -149,12 +144,8 @@ export default function CategorySection({
                 entry={entries[kink.id] ?? { status: null, comment: "" }}
                 onStatusChange={(s) => onStatusChange(kink.id, s)}
                 onTagsChange={(tags) => onTagsChange(kink.id, tags)}
-                onDirectionChange={onDirectionChange ? (d) => onDirectionChange(kink.id, d) : undefined}
-                onStatusGiveChange={onStatusGiveChange ? (s) => onStatusGiveChange(kink.id, s) : undefined}
-                onStatusReceiveChange={onStatusReceiveChange ? (s) => onStatusReceiveChange(kink.id, s) : undefined}
                 onCuriousChange={onCuriousChange ? (v) => onCuriousChange(kink.id, v) : undefined}
                 compact={compact}
-                roleDirection={roleDirection}
               />
             ))}
           </div>

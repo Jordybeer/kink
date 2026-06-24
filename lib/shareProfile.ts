@@ -6,9 +6,6 @@ import { KINKS } from "@/lib/kinks";
 function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
   if (entry.status != null)        out.status = entry.status;
-  if (entry.direction)             out.direction = entry.direction;
-  if (entry.statusGive != null)    out.statusGive = entry.statusGive;
-  if (entry.statusReceive != null) out.statusReceive = entry.statusReceive;
   if (entry.desire != null)        out.desire = entry.desire;
   if (entry.experienced != null)   out.experienced = entry.experienced;
   if (entry.comment)               out.comment = entry.comment;
@@ -62,11 +59,6 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     return [c.id, c.name, sc];
   });
 
-  const sg = KINKS.map(k => { const st = profile.entries[k.id]?.statusGive; return st ? (S_ENC[st] ?? " ") : " "; }).join("");
-  const sr = KINKS.map(k => { const st = profile.entries[k.id]?.statusReceive; return st ? (S_ENC[st] ?? " ") : " "; }).join("");
-  const DIR_ENC: Record<string, string> = { give: "g", receive: "r", both: "b" };
-  const dr = KINKS.map(k => DIR_ENC[profile.entries[k.id]?.direction ?? ""] ?? " ").join("");
-
   const payload: Record<string, unknown> = {
     v: 2,
     id: profile.id,
@@ -77,9 +69,6 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     ua: profile.updatedAt,
     s,
   };
-  if (sg.trim()) payload.sg = sg;
-  if (sr.trim()) payload.sr = sr;
-  if (dr.trim()) payload.dr = dr;
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
@@ -92,22 +81,18 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
   const entries: Record<string, KinkEntry> = {};
 
   for (let i = 0; i < KINKS.length; i++) {
-    const status = S_DEC[p.s?.[i] ?? ""] ?? null;
+    let status = S_DEC[p.s?.[i] ?? ""] ?? null;
+    // Legacy QR codes may encode sg/sr/dr — collapse into status for backward compat
     const statusGive = S_DEC[p.sg?.[i] ?? ""] ?? null;
     const statusReceive = S_DEC[p.sr?.[i] ?? ""] ?? null;
+    if (status === null && (statusGive !== null || statusReceive !== null)) {
+      const ORDER: import("@/types").KinkStatus[] = ["hard_no", "no", "maybe", "willing", "yes"];
+      status = ORDER.find(s => s === statusGive || s === statusReceive) ?? statusGive ?? statusReceive;
+    }
     const desire = p.d?.[i] !== "0" && p.d?.[i] ? parseInt(p.d[i]) : null;
     const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
-    const DIR_DEC: Record<string, import("@/types").KinkDirection> = { g: "give", r: "receive", b: "both" };
-    const direction: import("@/types").KinkDirection = DIR_DEC[p.dr?.[i] ?? ""] ??
-      ((statusGive !== null || statusReceive !== null)
-        ? (statusGive && statusReceive ? "both" : statusGive ? "give" : "receive")
-        : null);
-    if (status !== null || statusGive !== null || statusReceive !== null || desire !== null || experienced !== null || direction !== null) {
-      const entry: import("@/types").KinkEntry = { status, desire, experienced, comment: "" };
-      if (statusGive !== null) entry.statusGive = statusGive;
-      if (statusReceive !== null) entry.statusReceive = statusReceive;
-      if (direction !== null) entry.direction = direction;
-      entries[KINKS[i].id] = entry;
+    if (status !== null || desire !== null || experienced !== null) {
+      entries[KINKS[i].id] = { status, desire, experienced, comment: "" };
     }
   }
 
