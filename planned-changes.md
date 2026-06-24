@@ -7,7 +7,7 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 ## Open Decisions (resolve before scoping the queue below)
 
 - ~~**Avatar ContextMenu**~~ — ✓ shipped `84cc42b`.
-- **Overzicht tab padding** — layout too tight; needs padding pass + visual separation from ProfileHero. Ready to implement.
+- ~~**Overzicht tab padding**~~ — ✓ shipped `629419b` — Bewerken `pt-2`, Overzicht `pt-4`.
 - ~~**Give/receive direction selector**~~ — ✓ killed. `629419b` — store v15, direction fields stripped from all layers.
 
 ---
@@ -80,6 +80,14 @@ First attempt reverted (PR #219 closed). Rules now in `memory.md:39–48`:
 - Open question: is the Cormorant wordmark even the right surface for a status-cursor motif? Maybe the underscore belongs in the nav status dot or a footer marker.
 
 Only attempt once Phase 20 has landed and the editorial vocabulary is consistent enough to know what *would* "coexist".
+
+### Phase — Role-aware complementary matching (deferred, post direction-kill)
+
+Per-kink give/receive direction was killed in `629419b`. The complementary matching problem it partially addressed (Dom gives / Sub receives → high score) was never actually solved by it — the selector was Switch-only and opt-in.
+
+The right approach: use `profile.role` at the `profileMatchScore` level to infer give/receive intent for the pair and weight scores accordingly. A Dom + Sub pair scoring "yes + yes" on spanking should resolve role complementarity without either user touching per-kink toggles.
+
+Not scoped yet. Write a design doc before coding. Touches `lib/matching.ts` and possibly a new `lib/roles.ts` helper.
 
 ### Phase B — Agreement Archive Data Model (deferred structural)
 
