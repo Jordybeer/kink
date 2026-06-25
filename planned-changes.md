@@ -43,7 +43,7 @@ Goal: reinforce the editorial identity that's already doing the heavy lifting in
 
 Sweep `text-[10px]` and `text-[11px]` away from body and metadata copy across `app/` and `components/`. Reserve sub-12px for `tabular-nums` counters and microbadges only.
 
-### Phase 22 — Emoji → Lucide for chrome [SMALL]
+### ~~Phase 22 — Emoji → Lucide for chrome~~ ✓ [SHIPPED]
 
 Phase 11 cleared chrome emoji from `/compare`, `/scene`, `/contract`. Remaining holdouts:
 - Settings sheet icons (🎨 💾 🔒 🧭 ⚠️ 🔑 🔓 🔍) in `app/page.tsx:1004–1173`.
@@ -97,7 +97,7 @@ Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Phase 7 unblocked 
 | 4 | ~~19 — Compare interactions~~ ✓ | Shipped `d2e8f69`. |
 | 5 | ~~16 — Sheet consolidation~~ ✓ | Shipped `6266628`. |
 | 6 | ~~17 — Home page extraction~~ ✓ | Shipped `d453e46` · PR #234. |
-| 7 | **22 — Emoji chrome cleanup** | Next. Phase 17 done — settings sheet is the right place to sweep. |
+| 7 | ~~**22 — Emoji chrome cleanup**~~ ✓ | Shipped. |
 | 8 | **20 — Italic Cormorant vocabulary extension** | Identity reinforcement once chrome is consistent. |
 | 9 | **21 — Body type floor** | Final sweep after layout work has settled. |
 | 10 | **23 — Status colour user-test** | Verification, not change. Run in parallel with later phases. |
@@ -143,6 +143,9 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 19 | /compare interactions — AlignmentBar tap-to-filter + Match count badge | 2026-06-24 · `d2e8f69` |
 | 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>`, CSS blocks purged | 2026-06-24 · `6266628` |
 | 17 | Home page extraction — `app/page.tsx` 1588 → 568 lines; 5 components split out | 2026-06-25 · `d453e46` · PR #234 |
+| 22 | Emoji → Lucide chrome sweep — settings sheet + onboarding ICON_CIRCLE + FEATURE_ROWS all Lucide | 2026-06-25 |
+| — | Onboarding polish — `<br />` bugs killed, copy tightened, content centred, skip moved to action bar | 2026-06-25 |
+| — | Onboarding motion + type — horizontal swipe → vertical scale-fade, spring pop → ease-out, pulse killed, titles → Cormorant italic | 2026-06-25 |
 
 ### v4 (main)
 

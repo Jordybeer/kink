@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Zap, PenLine } from 'lucide-react';
+import { Zap, PenLine, ShieldCheck, HardDrive, Heart, Palette, Lock, Fingerprint, ShieldAlert, HeartOff, User, Tag, Radio, Clapperboard } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -16,11 +16,12 @@ const ICON_CIRCLE: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
   marginBottom: '2rem',
-  animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both',
+  animation: 'ks-icon-pop 0.35s ease-out both',
 };
 const TITLE: React.CSSProperties = {
-  fontSize: '1.5rem', fontWeight: 600, color: 'var(--text)', marginBottom: '1rem',
-  animation: 'ks-slide-up 0.4s ease 0.1s both', opacity: 0,
+  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 500,
+  fontSize: '1.875rem', color: 'var(--text)', marginBottom: '0.875rem', lineHeight: 1.2,
+  animation: 'ks-slide-up 0.35s ease-out 0.08s both', opacity: 0,
 };
 const BODY: React.CSSProperties = {
   fontSize: '0.875rem', color: 'var(--text2)', lineHeight: 1.7, marginBottom: '2rem',
@@ -118,14 +119,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     <>
       <style>{`
         @keyframes ks-fade-in  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ks-slide-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes ks-slide-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-32px); } }
-        @keyframes ks-slide-in  { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes ks-icon-pop  { 0% { opacity:0; transform:scale(0.6) translateY(12px); } 100% { opacity:1; transform:scale(1) translateY(0); } }
-        @keyframes ks-pulse     { 0%,100% { box-shadow:0 0 0 0 rgba(255,255,255,0.2); } 50% { box-shadow:0 0 0 8px rgba(255,255,255,0); } }
+        @keyframes ks-slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ks-slide-out { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.97) translateY(-6px); } }
+        @keyframes ks-slide-in  { from { opacity: 0; transform: scale(0.99) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes ks-icon-pop  { from { opacity: 0; transform: scale(0.9) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes ks-shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
-        .ks-slide-out { animation: ks-slide-out 220ms ease forwards; }
-        .ks-slide-in  { animation: ks-slide-in  220ms ease forwards; }
+        .ks-slide-out { animation: ks-slide-out 180ms ease-in forwards; }
+        .ks-slide-in  { animation: ks-slide-in  260ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
         @media (prefers-reduced-motion: reduce) {
           .ks-slide-out, .ks-slide-in { animation: none; }
         }
@@ -137,7 +137,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       >
         {lockout ? (
           <div style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}>
-            <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem' }} aria-hidden="true">🖤</div>
+            <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartOff size={36} /></div>
             <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
             <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
           </div>
@@ -147,7 +147,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             <div
               key={step}
               className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5rem 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
             >
               {step === 0 && <Step0Content />}
               {step === 1 && <Step1Content />}
@@ -166,14 +166,23 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
             <div style={ACTION_BAR}>
               {step === 0 && (
-                <button
-                  onClick={advance}
-                  style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both, ks-pulse 2s ease 2s infinite', opacity: 0 }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
-                >
-                  Begin
-                </button>
+                <>
+                  <button
+                    onClick={advance}
+                    style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both', opacity: 0 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
+                  >
+                    Begin
+                  </button>
+                  <button
+                    onClick={() => { setLeaving(true); setTimeout(() => { setStep(7); setLeaving(false); }, 220); }}
+                    style={{ ...BTN_SECONDARY, animation: 'ks-fade-in 0.6s ease 1.6s both', opacity: 0 }}
+                    aria-label="Sla de introductie over"
+                  >
+                    Sla over
+                  </button>
+                </>
               )}
 
               {step >= 1 && step <= 5 && (
@@ -231,19 +240,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
             </div>
 
-            {/* Skip (step 0 only) — jumps to age gate, never bypasses it */}
-            {step === 0 && (
-              <button
-                onClick={() => { setLeaving(true); setTimeout(() => { setStep(7); setLeaving(false); }, 220); }}
-                style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text2)'; }}
-                aria-label="Sla de introductie over"
-              >
-                Sla over
-              </button>
-            )}
-
             {/* Progress dots */}
             <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
               {Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => i).map(i => (
@@ -290,7 +286,7 @@ function Step0Content() {
 function Step1Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔒</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck size={48} /></div>
       <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
@@ -309,24 +305,23 @@ function Step1Content() {
 function Step2Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>💾</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><HardDrive size={48} /></div>
       <h2 style={TITLE}>Jij bent je eigen cloud</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        Geen automatische sync — jij bewaart je data.<br />
-        Exporteer je profiel via <strong style={{ color: 'var(--text)' }}>⚙ Instellingen</strong> en bewaar het bestand veilig.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Geen automatische sync — jij bewaart je data.</p>
+        <p style={{ margin: 0 }}>Exporteer via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.</p>
+      </div>
     </div>
   );
 }
 
-type FeatureIcon = string | React.FC<{ size: number }>;
-const FEATURE_ROWS: { icon: FeatureIcon; title: string; sub: string }[] = [
-  { icon: '👤', title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
-  { icon: '🏷',  title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
-  { icon: Zap,   title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
-  { icon: '📡',  title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
-  { icon: '🎬',  title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
-  { icon: PenLine, title: 'Contract',     sub: 'Safeword, aftercare, handtekening → PDF' },
+const FEATURE_ROWS: { icon: React.FC<{ size: number }>; title: string; sub: string }[] = [
+  { icon: User,         title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
+  { icon: Tag,          title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
+  { icon: Zap,          title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
+  { icon: Radio,        title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
+  { icon: Clapperboard, title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
+  { icon: PenLine,      title: 'Contract',       sub: 'Safeword, aftercare, handtekening → PDF' },
 ];
 
 function Step3Content() {
@@ -342,7 +337,7 @@ function Step3Content() {
             animation: `ks-slide-up 0.35s ease ${0.08 + i * 0.06}s both`, opacity: 0,
             textAlign: 'left',
           }}>
-            <span style={{ flexShrink: 0 }} aria-hidden="true">{typeof f.icon === 'string' ? <span style={{ fontSize: '1.25rem' }}>{f.icon}</span> : <f.icon size={20} />}</span>
+            <span style={{ flexShrink: 0, color: 'var(--accent)' }} aria-hidden="true"><f.icon size={20} /></span>
             <div>
               <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>{f.title}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text2)', marginTop: '0.125rem' }}>{f.sub}</div>
@@ -357,12 +352,12 @@ function Step3Content() {
 function Step4Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🖤</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></div>
       <h2 style={TITLE}>Consent, altijd</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
-        Safewords zijn heilig. Grenzen zijn wet.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p style={{ margin: 0 }}>KinkSync is een startpunt voor het gesprek, niet een vervanging.</p>
+        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text)' }}>Safewords zijn heilig. Grenzen zijn wet.</p>
+      </div>
     </div>
   );
 }
@@ -381,8 +376,8 @@ function Step5Content() {
 
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true">
-        <span style={{ fontSize: '2.25rem' }}>🎨</span>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true">
+        <Palette size={48} />
       </div>
       <h2 style={TITLE}>Kies je sfeer</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</p>
@@ -427,12 +422,12 @@ function Step5Content() {
 function Step6IntroContent({ bioAvailable }: { bioAvailable: boolean }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔐</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></div>
       <h2 style={TITLE}>Vergrendel de app</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.<br />
-        Optioneel — je kunt dit ook later instellen via de instellingen.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.</p>
+        <p style={{ margin: 0 }}>Optioneel — je kunt dit ook later instellen.</p>
+      </div>
     </div>
   );
 }
@@ -483,7 +478,7 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
 function Step6BioContent({ bioError }: { bioError: string | null }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔓</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint size={48} /></div>
       <h2 style={TITLE}>PIN ingesteld!</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
@@ -498,12 +493,12 @@ function Step6BioContent({ bioError }: { bioError: string | null }) {
 function Step7Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔞</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldAlert size={48} /></div>
       <h2 style={TITLE}>Voor volwassenen</h2>
-      <p style={BODY}>
-        Hier praten we open over kinks, grenzen en alles daartussen.
-        Ga alleen verder als je 18 jaar of ouder bent.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
+        <p style={{ margin: 0 }}>Ga alleen verder als je 18 jaar of ouder bent.</p>
+      </div>
     </div>
   );
 }
