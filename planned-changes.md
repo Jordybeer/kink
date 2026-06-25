@@ -18,17 +18,9 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 All 4 `sheet-panel`/`sheet-overlay` consumers in `app/page.tsx` migrated to `<Sheet>` from `components/ui/`. Import drag state + `settingsSheetRef` + `useFocusTrap` removed (Sheet handles those internally). CSS blocks `.sheet-overlay` / `.sheet-panel` deleted; z-index ladder comment updated to reflect 150/151.
 
-### Phase 17 — Home page extraction [MEDIUM, structural, gated on Phase 16]
+### ~~Phase 17 — Home page extraction~~ ✓ [SHIPPED]
 
-`app/page.tsx` is 81 KB / ~1250 lines holding seven distinct concerns: profile CRUD, theme picker, PIN flow, biometric setup, encrypted backup export/import, QR scan trigger, destroy-all. State explosion is hostile to changes.
-
-Extract into:
-- `components/sheets/SettingsSheet.tsx` (theme + backup entry + security entry + tour + danger zone)
-- `components/sheets/PinFlowSheet.tsx` (set / confirm / remove + biometric)
-- `components/sheets/EncryptedBackupSheets.tsx` (export-pw + import-pw)
-- `components/sheets/DestroyAllSheet.tsx` (wipe phrase + confirm)
-
-Target: `app/page.tsx` under 400 lines. Same instinct applies later to `app/scene/page.tsx` (37 KB), `app/session/page.tsx` (41 KB), `app/contract/page.tsx` (55 KB) but those are out of scope here.
+`app/page.tsx` 1588 → 568 lines. Five components extracted: `SettingsSheet`, `PinFlowSheet`, `DestroyAllSheet`, `EncryptedBackupSheets` (two named exports), `ProfileList` (groups + inline edit + CTAs). Same instinct applies later to `app/scene/page.tsx` (37 KB), `app/session/page.tsx` (41 KB), `app/contract/page.tsx` (55 KB) but those are out of scope here. Landed `d453e46` · PR #234.
 
 ### ~~Phase 18 — ProfileHero copy dedup~~ ✓ [SHIPPED]
 
@@ -104,7 +96,7 @@ Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Phase 7 unblocked 
 | 3 | ~~18 — ProfileHero copy dedup~~ ✓ | Shipped `42d7083`. |
 | 4 | ~~19 — Compare interactions~~ ✓ | Shipped `d2e8f69`. |
 | 5 | ~~16 — Sheet consolidation~~ ✓ | Shipped `6266628`. |
-| 6 | **17 — Home page extraction** | Next. Phase 16 done — `app/page.tsx` now ready to split. |
+| 6 | ~~17 — Home page extraction~~ ✓ | Shipped · PR #234. |
 | 7 | ~~**22 — Emoji chrome cleanup**~~ ✓ | Shipped. |
 | 8 | **20 — Italic Cormorant vocabulary extension** | Identity reinforcement once chrome is consistent. |
 | 9 | **21 — Body type floor** | Final sweep after layout work has settled. |
@@ -150,6 +142,7 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 18 | ProfileHero copy dedup — `formatProfileMetadata` stripped of count prefix, paragraph gated | 2026-06-24 · `42d7083` |
 | 19 | /compare interactions — AlignmentBar tap-to-filter + Match count badge | 2026-06-24 · `d2e8f69` |
 | 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>`, CSS blocks purged | 2026-06-24 · `6266628` |
+| 17 | Home page extraction — `app/page.tsx` 1588 → 568 lines; 5 components split out | 2026-06-25 · PR #234 |
 | 22 | Emoji → Lucide chrome sweep — settings sheet + onboarding ICON_CIRCLE + FEATURE_ROWS all Lucide | 2026-06-25 |
 | — | Onboarding polish — `<br />` bugs killed, copy tightened, content centred, skip moved to action bar | 2026-06-25 |
 | — | Onboarding motion + type — horizontal swipe → vertical scale-fade, spring pop → ease-out, pulse killed, titles → Cormorant italic | 2026-06-25 |
