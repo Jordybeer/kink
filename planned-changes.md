@@ -151,6 +151,8 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 19 | /compare interactions — AlignmentBar tap-to-filter + Match count badge | 2026-06-24 · `d2e8f69` |
 | 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>`, CSS blocks purged | 2026-06-24 · `6266628` |
 | 22 | Emoji → Lucide chrome sweep — settings sheet + onboarding ICON_CIRCLE + FEATURE_ROWS all Lucide | 2026-06-25 |
+| — | Onboarding polish — `<br />` bugs killed, copy tightened, content centred, skip moved to action bar | 2026-06-25 |
+| — | Onboarding motion + type — horizontal swipe → vertical scale-fade, spring pop → ease-out, pulse killed, titles → Cormorant italic | 2026-06-25 |
 
 ### v4 (main)
 
