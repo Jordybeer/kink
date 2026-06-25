@@ -147,7 +147,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             <div
               key={step}
               className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5rem 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
             >
               {step === 0 && <Step0Content />}
               {step === 1 && <Step1Content />}
@@ -166,14 +166,23 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
             <div style={ACTION_BAR}>
               {step === 0 && (
-                <button
-                  onClick={advance}
-                  style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both, ks-pulse 2s ease 2s infinite', opacity: 0 }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
-                >
-                  Begin
-                </button>
+                <>
+                  <button
+                    onClick={advance}
+                    style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both, ks-pulse 2s ease 2s infinite', opacity: 0 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
+                  >
+                    Begin
+                  </button>
+                  <button
+                    onClick={() => { setLeaving(true); setTimeout(() => { setStep(7); setLeaving(false); }, 220); }}
+                    style={{ ...BTN_SECONDARY, animation: 'ks-fade-in 0.6s ease 1.6s both', opacity: 0 }}
+                    aria-label="Sla de introductie over"
+                  >
+                    Sla over
+                  </button>
+                </>
               )}
 
               {step >= 1 && step <= 5 && (
@@ -230,19 +239,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </>
               )}
             </div>
-
-            {/* Skip (step 0 only) — jumps to age gate, never bypasses it */}
-            {step === 0 && (
-              <button
-                onClick={() => { setLeaving(true); setTimeout(() => { setStep(7); setLeaving(false); }, 220); }}
-                style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text2)'; }}
-                aria-label="Sla de introductie over"
-              >
-                Sla over
-              </button>
-            )}
 
             {/* Progress dots */}
             <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
