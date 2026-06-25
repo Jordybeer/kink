@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor, Lock } from "lucide-react";
+import { Camera, Pin, PinOff, Pencil, Eye, EyeOff, Zap, FileText, Clapperboard, Anchor, Lock, Palette, HardDrive, Key, Fingerprint, Compass, RotateCcw, AlertTriangle, Download, Upload } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp, useMotionSafe } from "@/lib/motion";
 import Sheet from "@/components/ui/Sheet";
@@ -989,7 +989,7 @@ function HomeContent() {
           {/* Thema */}
           <section className="settings-card">
             <div className="flex items-center gap-3 mb-3">
-              <span className="settings-card-icon text-lg" aria-hidden="true">🎨</span>
+              <Palette className="settings-card-icon" size={18} aria-hidden="true" />
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-tight">Thema</h3>
                 <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
@@ -1036,7 +1036,7 @@ function HomeContent() {
           {/* Back-up & herstel */}
           <section className="settings-card">
             <div className="flex items-center gap-3 mb-3">
-              <span className="settings-card-icon text-lg" aria-hidden="true">💾</span>
+              <HardDrive className="settings-card-icon" size={18} aria-hidden="true" />
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-tight">Back-up &amp; herstel</h3>
                 <p className="text-xs truncate" style={{ color: "var(--text2)" }}>Exporteer of herstel je kinklijst</p>
@@ -1048,12 +1048,12 @@ function HomeContent() {
                 className="focus-ring py-3 rounded-xl text-sm font-medium border transition-colors"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
-                ⬇ Maak backup
+                <Download size={14} className="inline align-middle mr-1" />Maak backup
               </button>
               <label className="focus-ring relative py-3 rounded-xl text-sm font-medium border transition-colors text-center cursor-pointer"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
-                ⬆ Herstel
+                <Upload size={14} className="inline align-middle mr-1" />Herstel
                 <input
                   type="file"
                   accept=".json"
@@ -1073,7 +1073,7 @@ function HomeContent() {
           {/* Beveiliging */}
           <section className="settings-card">
             <div className="flex items-center gap-3 mb-3">
-              <span className="settings-card-icon text-lg" aria-hidden="true">🔒</span>
+              <Lock className="settings-card-icon" size={18} aria-hidden="true" />
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-tight">Beveiliging</h3>
                 <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
@@ -1087,7 +1087,7 @@ function HomeContent() {
                   <button onClick={() => openPinFlow(0)}
                     className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                     style={{ borderColor: "var(--border)", color: "var(--text)" }}>
-                    🔑 PIN wijzigen
+                    <Key size={14} className="inline align-middle mr-1" />PIN wijzigen
                   </button>
                   {/* Face ID — alleen beschikbaar als PIN al ingesteld is */}
                   {platformBioAvailable && (
@@ -1095,13 +1095,13 @@ function HomeContent() {
                       <button onClick={() => disableBiometric()}
                         className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                         style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
-                        🔓 Face ID / vingerafdruk uitschakelen
+                        <Fingerprint size={14} className="inline align-middle mr-1" />Face ID / vingerafdruk uitschakelen
                       </button>
                     ) : (
                       <button onClick={handleEnableBiometric} disabled={bioRegistering}
                         className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                         style={{ borderColor: "var(--accent)", color: "var(--accent)", opacity: bioRegistering ? 0.6 : 1 }}>
-                        {bioRegistering ? "Bezig…" : "🔓 Face ID / vingerafdruk inschakelen"}
+                        {bioRegistering ? "Bezig…" : <><Fingerprint size={14} className="inline align-middle mr-1" />Face ID / vingerafdruk inschakelen</>}
                       </button>
                     )
                   )}
@@ -1116,7 +1116,7 @@ function HomeContent() {
                 <button onClick={() => openPinFlow(0)}
                   className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-                  🔒 PIN-vergrendeling instellen
+                  <Lock size={14} className="inline align-middle mr-1" />PIN-vergrendeling instellen
                 </button>
               )}
             </div>
@@ -1125,7 +1125,7 @@ function HomeContent() {
           {/* Rondleiding */}
           <section className="settings-card">
             <div className="flex items-center gap-3 mb-3">
-              <span className="settings-card-icon text-lg" aria-hidden="true">🧭</span>
+              <Compass className="settings-card-icon" size={18} aria-hidden="true" />
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-tight">Rondleiding</h3>
                 <p className="text-xs truncate" style={{ color: "var(--text2)" }}>Bekijk de uitleg opnieuw</p>
@@ -1136,14 +1136,14 @@ function HomeContent() {
               className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
-              🔍 Rondleiding opnieuw starten
+              <RotateCcw size={14} className="inline align-middle mr-1" />Rondleiding opnieuw starten
             </button>
           </section>
 
           {/* Gevarenzone */}
           <section className="settings-card settings-card-danger">
             <div className="flex items-center gap-3 mb-3">
-              <span className="settings-card-icon text-lg" aria-hidden="true">⚠️</span>
+              <AlertTriangle className="settings-card-icon" size={18} aria-hidden="true" />
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-tight">Gevarenzone</h3>
                 <p className="text-xs truncate" style={{ color: "var(--text2)" }}>Wis alles, permanent en onomkeerbaar</p>

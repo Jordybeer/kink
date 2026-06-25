@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Zap, PenLine } from 'lucide-react';
+import { Zap, PenLine, ShieldCheck, HardDrive, Heart, Palette, Lock, Fingerprint, ShieldAlert, HeartOff, User, Tag, Radio, Clapperboard } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -137,7 +137,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       >
         {lockout ? (
           <div style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}>
-            <div style={{ fontSize: '2.25rem', marginBottom: '1.5rem' }} aria-hidden="true">🖤</div>
+            <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartOff size={36} /></div>
             <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
             <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
           </div>
@@ -290,7 +290,7 @@ function Step0Content() {
 function Step1Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔒</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck size={48} /></div>
       <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
@@ -309,7 +309,7 @@ function Step1Content() {
 function Step2Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>💾</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><HardDrive size={48} /></div>
       <h2 style={TITLE}>Jij bent je eigen cloud</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Geen automatische sync — jij bewaart je data.<br />
@@ -319,14 +319,13 @@ function Step2Content() {
   );
 }
 
-type FeatureIcon = string | React.FC<{ size: number }>;
-const FEATURE_ROWS: { icon: FeatureIcon; title: string; sub: string }[] = [
-  { icon: '👤', title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
-  { icon: '🏷',  title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
-  { icon: Zap,   title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
-  { icon: '📡',  title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
-  { icon: '🎬',  title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
-  { icon: PenLine, title: 'Contract',     sub: 'Safeword, aftercare, handtekening → PDF' },
+const FEATURE_ROWS: { icon: React.FC<{ size: number }>; title: string; sub: string }[] = [
+  { icon: User,         title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
+  { icon: Tag,          title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
+  { icon: Zap,          title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
+  { icon: Radio,        title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
+  { icon: Clapperboard, title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
+  { icon: PenLine,      title: 'Contract',       sub: 'Safeword, aftercare, handtekening → PDF' },
 ];
 
 function Step3Content() {
@@ -342,7 +341,7 @@ function Step3Content() {
             animation: `ks-slide-up 0.35s ease ${0.08 + i * 0.06}s both`, opacity: 0,
             textAlign: 'left',
           }}>
-            <span style={{ flexShrink: 0 }} aria-hidden="true">{typeof f.icon === 'string' ? <span style={{ fontSize: '1.25rem' }}>{f.icon}</span> : <f.icon size={20} />}</span>
+            <span style={{ flexShrink: 0, color: 'var(--accent)' }} aria-hidden="true"><f.icon size={20} /></span>
             <div>
               <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>{f.title}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text2)', marginTop: '0.125rem' }}>{f.sub}</div>
@@ -357,7 +356,7 @@ function Step3Content() {
 function Step4Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🖤</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></div>
       <h2 style={TITLE}>Consent, altijd</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
@@ -381,8 +380,8 @@ function Step5Content() {
 
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true">
-        <span style={{ fontSize: '2.25rem' }}>🎨</span>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true">
+        <Palette size={48} />
       </div>
       <h2 style={TITLE}>Kies je sfeer</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</p>
@@ -427,7 +426,7 @@ function Step5Content() {
 function Step6IntroContent({ bioAvailable }: { bioAvailable: boolean }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔐</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></div>
       <h2 style={TITLE}>Vergrendel de app</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.<br />
@@ -483,7 +482,7 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
 function Step6BioContent({ bioError }: { bioError: string | null }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔓</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint size={48} /></div>
       <h2 style={TITLE}>PIN ingesteld!</h2>
       <p style={{ ...BODY, textAlign: 'center' }}>
         Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
@@ -498,7 +497,7 @@ function Step6BioContent({ bioError }: { bioError: string | null }) {
 function Step7Content() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={ICON_CIRCLE} aria-hidden="true"><span style={{ fontSize: '2.75rem' }}>🔞</span></div>
+      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldAlert size={48} /></div>
       <h2 style={TITLE}>Voor volwassenen</h2>
       <p style={BODY}>
         Hier praten we open over kinks, grenzen en alles daartussen.

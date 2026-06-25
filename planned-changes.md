@@ -51,7 +51,7 @@ Goal: reinforce the editorial identity that's already doing the heavy lifting in
 
 Sweep `text-[10px]` and `text-[11px]` away from body and metadata copy across `app/` and `components/`. Reserve sub-12px for `tabular-nums` counters and microbadges only.
 
-### Phase 22 — Emoji → Lucide for chrome [SMALL]
+### ~~Phase 22 — Emoji → Lucide for chrome~~ ✓ [SHIPPED]
 
 Phase 11 cleared chrome emoji from `/compare`, `/scene`, `/contract`. Remaining holdouts:
 - Settings sheet icons (🎨 💾 🔒 🧭 ⚠️ 🔑 🔓 🔍) in `app/page.tsx:1004–1173`.
@@ -105,7 +105,7 @@ Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Phase 7 unblocked 
 | 4 | ~~19 — Compare interactions~~ ✓ | Shipped `d2e8f69`. |
 | 5 | ~~16 — Sheet consolidation~~ ✓ | Shipped `6266628`. |
 | 6 | **17 — Home page extraction** | Next. Phase 16 done — `app/page.tsx` now ready to split. |
-| 7 | **22 — Emoji chrome cleanup** | After 17; smaller files make sweep faster. |
+| 7 | ~~**22 — Emoji chrome cleanup**~~ ✓ | Shipped. |
 | 8 | **20 — Italic Cormorant vocabulary extension** | Identity reinforcement once chrome is consistent. |
 | 9 | **21 — Body type floor** | Final sweep after layout work has settled. |
 | 10 | **23 — Status colour user-test** | Verification, not change. Run in parallel with later phases. |
@@ -150,6 +150,7 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 18 | ProfileHero copy dedup — `formatProfileMetadata` stripped of count prefix, paragraph gated | 2026-06-24 · `42d7083` |
 | 19 | /compare interactions — AlignmentBar tap-to-filter + Match count badge | 2026-06-24 · `d2e8f69` |
 | 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>`, CSS blocks purged | 2026-06-24 · `6266628` |
+| 22 | Emoji → Lucide chrome sweep — settings sheet + onboarding ICON_CIRCLE + FEATURE_ROWS all Lucide | 2026-06-25 |
 
 ### v4 (main)
 
