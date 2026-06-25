@@ -1048,12 +1048,12 @@ function HomeContent() {
                 className="focus-ring py-3 rounded-xl text-sm font-medium border transition-colors"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
-                <Download size={14} className="inline align-middle mr-1" />Maak backup
+                <Download size={14} className="inline align-middle mr-1" aria-hidden="true" />Maak backup
               </button>
               <label className="focus-ring relative py-3 rounded-xl text-sm font-medium border transition-colors text-center cursor-pointer"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
-                <Upload size={14} className="inline align-middle mr-1" />Herstel
+                <Upload size={14} className="inline align-middle mr-1" aria-hidden="true" />Herstel
                 <input
                   type="file"
                   accept=".json"
@@ -1087,7 +1087,7 @@ function HomeContent() {
                   <button onClick={() => openPinFlow(0)}
                     className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                     style={{ borderColor: "var(--border)", color: "var(--text)" }}>
-                    <Key size={14} className="inline align-middle mr-1" />PIN wijzigen
+                    <Key size={14} className="inline align-middle mr-1" aria-hidden="true" />PIN wijzigen
                   </button>
                   {/* Face ID — alleen beschikbaar als PIN al ingesteld is */}
                   {platformBioAvailable && (
@@ -1095,13 +1095,13 @@ function HomeContent() {
                       <button onClick={() => disableBiometric()}
                         className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                         style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
-                        <Fingerprint size={14} className="inline align-middle mr-1" />Face ID / vingerafdruk uitschakelen
+                        <Fingerprint size={14} className="inline align-middle mr-1" aria-hidden="true" />Face ID / vingerafdruk uitschakelen
                       </button>
                     ) : (
                       <button onClick={handleEnableBiometric} disabled={bioRegistering}
                         className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                         style={{ borderColor: "var(--accent)", color: "var(--accent)", opacity: bioRegistering ? 0.6 : 1 }}>
-                        {bioRegistering ? "Bezig…" : <><Fingerprint size={14} className="inline align-middle mr-1" />Face ID / vingerafdruk inschakelen</>}
+                        {bioRegistering ? "Bezig…" : <><Fingerprint size={14} className="inline align-middle mr-1" aria-hidden="true" />Face ID / vingerafdruk inschakelen</>}
                       </button>
                     )
                   )}
@@ -1116,7 +1116,7 @@ function HomeContent() {
                 <button onClick={() => openPinFlow(0)}
                   className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-                  <Lock size={14} className="inline align-middle mr-1" />PIN-vergrendeling instellen
+                  <Lock size={14} className="inline align-middle mr-1" aria-hidden="true" />PIN-vergrendeling instellen
                 </button>
               )}
             </div>
@@ -1136,7 +1136,7 @@ function HomeContent() {
               className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
-              <RotateCcw size={14} className="inline align-middle mr-1" />Rondleiding opnieuw starten
+              <RotateCcw size={14} className="inline align-middle mr-1" aria-hidden="true" />Rondleiding opnieuw starten
             </button>
           </section>
 
