@@ -16,11 +16,12 @@ const ICON_CIRCLE: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
   marginBottom: '2rem',
-  animation: 'ks-icon-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both',
+  animation: 'ks-icon-pop 0.35s ease-out both',
 };
 const TITLE: React.CSSProperties = {
-  fontSize: '1.5rem', fontWeight: 600, color: 'var(--text)', marginBottom: '1rem',
-  animation: 'ks-slide-up 0.4s ease 0.1s both', opacity: 0,
+  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 500,
+  fontSize: '1.875rem', color: 'var(--text)', marginBottom: '0.875rem', lineHeight: 1.2,
+  animation: 'ks-slide-up 0.35s ease-out 0.08s both', opacity: 0,
 };
 const BODY: React.CSSProperties = {
   fontSize: '0.875rem', color: 'var(--text2)', lineHeight: 1.7, marginBottom: '2rem',
@@ -118,14 +119,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     <>
       <style>{`
         @keyframes ks-fade-in  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ks-slide-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes ks-slide-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-32px); } }
-        @keyframes ks-slide-in  { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes ks-icon-pop  { 0% { opacity:0; transform:scale(0.6) translateY(12px); } 100% { opacity:1; transform:scale(1) translateY(0); } }
-        @keyframes ks-pulse     { 0%,100% { box-shadow:0 0 0 0 rgba(255,255,255,0.2); } 50% { box-shadow:0 0 0 8px rgba(255,255,255,0); } }
+        @keyframes ks-slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ks-slide-out { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.97) translateY(-6px); } }
+        @keyframes ks-slide-in  { from { opacity: 0; transform: scale(0.99) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes ks-icon-pop  { from { opacity: 0; transform: scale(0.9) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes ks-shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
-        .ks-slide-out { animation: ks-slide-out 220ms ease forwards; }
-        .ks-slide-in  { animation: ks-slide-in  220ms ease forwards; }
+        .ks-slide-out { animation: ks-slide-out 180ms ease-in forwards; }
+        .ks-slide-in  { animation: ks-slide-in  260ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
         @media (prefers-reduced-motion: reduce) {
           .ks-slide-out, .ks-slide-in { animation: none; }
         }
@@ -169,7 +169,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <>
                   <button
                     onClick={advance}
-                    style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both, ks-pulse 2s ease 2s infinite', opacity: 0 }}
+                    style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both', opacity: 0 }}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
                   >
