@@ -311,10 +311,10 @@ function Step2Content() {
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><HardDrive size={48} /></div>
       <h2 style={TITLE}>Jij bent je eigen cloud</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        Geen automatische sync — jij bewaart je data.<br />
-        Exporteer je profiel via <strong style={{ color: 'var(--text)' }}>⚙ Instellingen</strong> en bewaar het bestand veilig.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Geen automatische sync — jij bewaart je data.</p>
+        <p style={{ margin: 0 }}>Exporteer via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.</p>
+      </div>
     </div>
   );
 }
@@ -358,10 +358,10 @@ function Step4Content() {
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></div>
       <h2 style={TITLE}>Consent, altijd</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        KinkSync is een startpunt voor het gesprek, niet een vervanging.<br />
-        Safewords zijn heilig. Grenzen zijn wet.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p style={{ margin: 0 }}>KinkSync is een startpunt voor het gesprek, niet een vervanging.</p>
+        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text)' }}>Safewords zijn heilig. Grenzen zijn wet.</p>
+      </div>
     </div>
   );
 }
@@ -428,10 +428,10 @@ function Step6IntroContent({ bioAvailable }: { bioAvailable: boolean }) {
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></div>
       <h2 style={TITLE}>Vergrendel de app</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
-        Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.<br />
-        Optioneel — je kunt dit ook later instellen via de instellingen.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.</p>
+        <p style={{ margin: 0 }}>Optioneel — je kunt dit ook later instellen.</p>
+      </div>
     </div>
   );
 }
@@ -499,10 +499,10 @@ function Step7Content() {
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldAlert size={48} /></div>
       <h2 style={TITLE}>Voor volwassenen</h2>
-      <p style={BODY}>
-        Hier praten we open over kinks, grenzen en alles daartussen.
-        Ga alleen verder als je 18 jaar of ouder bent.
-      </p>
+      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
+        <p style={{ margin: 0 }}>Ga alleen verder als je 18 jaar of ouder bent.</p>
+      </div>
     </div>
   );
 }
