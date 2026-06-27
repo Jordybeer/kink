@@ -31,7 +31,7 @@ export default function QRModal({ profile, onClose }: Props) {
     const qrUrl = window.location.origin + "/?p=" + encodeProfileCompact(profile, { includeFetLife });
     setUrl(qrUrl);
     const css = getComputedStyle(document.documentElement);
-    const dark = css.getPropertyValue("--accent").trim() || "#c084fc";
+    const dark = css.getPropertyValue("--accent").trim() || "#8B2FC9";
     const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
     QRCode.toDataURL(qrUrl, {
       width: 280,

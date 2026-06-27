@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131c;
-  --surface2: #181824;
-  --surface3: #2c2c40;
-  --border: #2a2a3d;
+  --bg: #0A0908;
+  --surface: #131110;
+  --surface2: #181513;
+  --surface3: #2C2724;
+  --border: #2A2320;
   --scrim: rgba(0, 0, 0, 0.6);
   --scrim-strong: rgba(0, 0, 0, 0.92);
   --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
-  --border-accent: rgba(192, 132, 252, 0.25);
-  --text: #ede8f5;
-  --text2: #9d9ab8;
-  --accent: #c084fc;
-  --accent2: #f472b6;
-  --accent-glow: rgba(192, 132, 252, 0.15);
-  --on-accent: #000;
+  --border-accent: rgba(139, 47, 201, 0.25);
+  --text: #EDE8E3;
+  --text2: #9D9A96;
+  --accent: #8B2FC9;
+  --accent2: #C2436A;
+  --accent-glow: rgba(139, 47, 201, 0.18);
+  --on-accent: #F2EDE8;
   --yes: #f97316;
   --willing: #10b981;
   --curious: #eab308;
@@ -60,7 +60,7 @@ html, body {
 .btn-accent {
   background: var(--accent);
   color: var(--on-accent);
-  border-radius: 0.75rem;
+  border-radius: 4px;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 700;
@@ -101,7 +101,7 @@ html, body {
 /* Settings cards — each feature gets its own glanceable block */
 .settings-card {
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: 2px;
   background: var(--surface2);
   padding: 1rem;
 }
@@ -112,7 +112,7 @@ html, body {
   width: 2.25rem;
   height: 2.25rem;
   flex: none;
-  border-radius: 0.75rem;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,6 +172,7 @@ html, body {
   --accent: #4ade80;
   --accent2: #34d399;
   --accent-glow: rgba(74, 222, 128, 0.18);
+  --on-accent: #0A0908;
 }
 
 /* Theme: Ledger — paper-at-night, seal-wax red, patinated brass.
@@ -204,6 +205,7 @@ html, body {
   --accent: #e5e5e5;
   --accent2: #a3a3a3;
   --accent-glow: rgba(255, 255, 255, 0.1);
+  --on-accent: #0A0908;
 }
 
 @keyframes ksFadeIn {

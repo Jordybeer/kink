@@ -275,7 +275,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       await postOffer(newCode, pc.localDescription!.sdp);
       const qr = await QRCode.toDataURL(`${location.origin}/session?join=${newCode}`, {
         width: 200, margin: 2, errorCorrectionLevel: "L",
-        color: { dark: "#c084fc", light: "#0a0a0f" },
+        color: { dark: "#8B2FC9", light: "#0a0a0f" },
       });
       setCodeQr(qr);
       setupChannel(ch, profile);

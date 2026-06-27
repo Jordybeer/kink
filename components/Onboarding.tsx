@@ -363,7 +363,7 @@ function Step4Content() {
 }
 
 const THEMES = [
-  { value: 'midnight' as const, label: 'Midnight', color: '#c084fc' },
+  { value: 'midnight' as const, label: 'Midnight', color: '#8B2FC9' },
   { value: 'red'      as const, label: 'Deep Red', color: '#ef4444' },
   { value: 'forest'   as const, label: 'Forest',   color: '#4ade80' },
   { value: 'mono'     as const, label: 'Mono',     color: '#e5e5e5' },
