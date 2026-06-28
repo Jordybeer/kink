@@ -143,16 +143,26 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
         </div>
 
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-bold truncate" style={{ color: "var(--text)" }}>
+          <h2
+            className="truncate"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontWeight: 600,
+              fontSize: "2rem",
+              lineHeight: 1.1,
+              letterSpacing: "-0.01em",
+              color: "var(--text)",
+            }}
+          >
             {profile.name}
-            {profileType === "partner" && (
-              <Lock size={14} aria-hidden="true" style={{ display: "inline-block", marginLeft: "0.4em", color: "var(--text2)" }} />
-            )}
           </h2>
-          <p className="text-sm mt-0.5 leading-snug" style={{ color: "var(--text2)" }}>
-            {profile.role && <>{profile.role}{" · "}</>}
-            <span style={{ color: "var(--accent)" }}>{expLevel}</span>
-            {profile.relationshipStatus && <>{" · "}{profile.relationshipStatus}</>}
+          <p className="text-xs mt-1 leading-snug flex items-center gap-1 flex-wrap" style={{ color: "var(--text2)" }}>
+            {profile.role && <span style={{ color: "var(--text)", fontWeight: 500 }}>{profile.role}</span>}
+            {profile.role && <span aria-hidden="true">·</span>}
+            <span>{expLevel}</span>
+            {profile.relationshipStatus && <><span aria-hidden="true">·</span><span>{profile.relationshipStatus}</span></>}
+            {profileType === "partner" && <Lock size={10} aria-hidden="true" style={{ flexShrink: 0 }} />}
           </p>
           {profileType === "partner" && profile.lockedAt && (
             <span

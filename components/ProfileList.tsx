@@ -109,7 +109,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                   return (
                     <div
                       key={p.id}
-                      className="relative rounded-xl overflow-hidden"
+                      className="relative rounded-xl"
                       style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
                     >
                       {editId === p.id ? (
@@ -227,87 +227,86 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                         </div>
                       ) : (
                         <>
-                          {/* Card header */}
-                          <div className="flex items-center gap-3 px-3 pt-3 pb-2">
-                            {!isMulti && (
-                              <div className="relative flex-none">
-                                <div className="w-11 h-11 rounded-full overflow-hidden" aria-hidden="true">
-                                  {p.avatarDataUrl ? (
-                                    <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
-                                      {initial}
+                          <Link
+                            href={`/profile/${p.id}`}
+                            className="focus-ring block rounded-xl"
+                            aria-label={`Profiel ${p.name} openen`}
+                          >
+                            {/* Card header */}
+                            <div className="flex items-center gap-3 px-3 pt-3 pb-2 pr-12">
+                              {!isMulti && (
+                                <div className="relative flex-none">
+                                  <div className="w-11 h-11 rounded-full overflow-hidden" aria-hidden="true">
+                                    {p.avatarDataUrl ? (
+                                      <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                        {initial}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {p.id === pinnedProfileId && (
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "var(--accent)" }} aria-label="Mijn profiel">
+                                      <Pin size={9} color="#000" />
                                     </div>
                                   )}
                                 </div>
-                                {p.id === pinnedProfileId && (
-                                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "var(--accent)" }} aria-label="Mijn profiel">
-                                    <Pin size={9} color="#000" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-base font-semibold truncate leading-tight">
+                                  {isMulti ? p.role : p.name}
+                                </p>
+                                {isMulti ? (
+                                  <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
+                                    {lvl?.label}
+                                  </p>
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-1 mt-1">
+                                    <RolePill role={p.role} />
+                                    {lvl && <span className="text-xs" style={{ color: "var(--text2)" }}>· {lvl.label}</span>}
+                                    {(() => {
+                                      const pt = getProfileType(p, pinnedProfileId);
+                                      return (
+                                        <span
+                                          className="text-[10px] uppercase tracking-widest flex items-center gap-0.5"
+                                          style={{ color: pt === "primair" ? "var(--accent)" : "var(--text2)" }}
+                                        >
+                                          {pt === "partner" && <Lock size={8} aria-hidden="true" />}
+                                          {pt}
+                                        </span>
+                                      );
+                                    })()}
                                   </div>
                                 )}
                               </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate leading-tight">
-                                {isMulti ? p.role : p.name}
-                              </p>
-                              {isMulti ? (
-                                <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
-                                  {lvl?.label}
-                                </p>
-                              ) : (
-                                <div className="flex flex-wrap items-center gap-1 mt-1">
-                                  <RolePill role={p.role} />
-                                  {lvl && <span className="text-xs" style={{ color: "var(--text2)" }}>· {lvl.label}</span>}
-                                  {(() => {
-                                    const pt = getProfileType(p, pinnedProfileId);
-                                    return (
-                                      <span
-                                        className="text-[10px] uppercase tracking-widest flex items-center gap-0.5"
-                                        style={{ color: pt === "primair" ? "var(--accent)" : "var(--text2)" }}
-                                      >
-                                        {pt === "partner" && <Lock size={8} aria-hidden="true" />}
-                                        {pt}
-                                      </span>
-                                    );
-                                  })()}
-                                </div>
-                              )}
                             </div>
-                            <div className="flex items-center gap-1 flex-none">
-                              <button
-                                onClick={() => startEdit(p)}
-                                aria-label={`Profiel ${p.name} bewerken`}
-                                className="focus-ring w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
-                                style={{ color: "var(--text2)" }}
-                              >
-                                <Pencil size={14} />
-                              </button>
-                              <Link
-                                href={`/profile/${p.id}`}
-                                className="focus-ring px-3 h-9 rounded-lg text-sm font-semibold transition-colors flex-none flex items-center"
-                                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                              >
-                                Open →
-                              </Link>
-                            </div>
-                          </div>
 
-                          {/* Status DNA bar */}
-                          {rated > 0 ? (
-                            <div className="flex h-1.5 mx-3 mb-3 rounded-full overflow-hidden gap-px">
-                              {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => {
-                                const cnt = Object.values(p.entries).filter((e) => e.status === s).length;
-                                if (!cnt) return null;
-                                const pct = (cnt / maxKinks) * 100;
-                                const c = { yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)" }[s];
-                                return <div key={s} style={{ width: `${pct}%`, background: c }} />;
-                              })}
-                              <div style={{ flex: 1, background: "var(--border)" }} />
-                            </div>
-                          ) : (
-                            <div className="h-1.5 mx-3 mb-3 rounded-full" style={{ background: "var(--border)" }} />
-                          )}
+                            {/* Status DNA bar */}
+                            {rated > 0 ? (
+                              <div className="flex h-1.5 mx-3 mb-3 rounded-full overflow-hidden gap-px">
+                                {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => {
+                                  const cnt = Object.values(p.entries ?? {}).filter((e) => e.status === s).length;
+                                  if (!cnt) return null;
+                                  const pct = (cnt / maxKinks) * 100;
+                                  const c = { yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)" }[s];
+                                  return <div key={s} style={{ width: `${pct}%`, background: c }} />;
+                                })}
+                                <div style={{ flex: 1, background: "var(--border)" }} />
+                              </div>
+                            ) : (
+                              <div className="h-1.5 mx-3 mb-3 rounded-full" style={{ background: "var(--border)" }} />
+                            )}
+                          </Link>
+
+                          {/* Absolutely positioned edit button — sibling to Link, not inside it */}
+                          <button
+                            onClick={() => startEdit(p)}
+                            aria-label={`Profiel ${p.name} bewerken`}
+                            className="focus-ring absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
+                            style={{ color: "var(--text2)" }}
+                          >
+                            <Pencil size={14} />
+                          </button>
                         </>
                       )}
                     </div>
