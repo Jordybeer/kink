@@ -263,18 +263,9 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                   <div className="flex flex-wrap items-center gap-1 mt-1">
                                     {p.role && <span className="text-xs font-medium" style={{ color: "var(--text2)" }}>{p.role}</span>}
                                     {lvl && <span className="text-xs" style={{ color: "var(--text2)" }}>· {lvl.label}</span>}
-                                    {(() => {
-                                      const pt = getProfileType(p, pinnedProfileId);
-                                      return (
-                                        <span
-                                          className="text-[10px] uppercase tracking-widest flex items-center gap-0.5"
-                                          style={{ color: pt === "primair" ? "var(--accent)" : "var(--text2)" }}
-                                        >
-                                          {pt === "partner" && <Lock size={8} aria-hidden="true" />}
-                                          {pt}
-                                        </span>
-                                      );
-                                    })()}
+                                    {getProfileType(p, pinnedProfileId) === "partner" && (
+                                      <Lock size={8} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                                    )}
                                   </div>
                                 )}
                               </div>
