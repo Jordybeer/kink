@@ -410,7 +410,7 @@ function HomeContent() {
         onOpenPinFlow={(step = 0) => { setPinFlowStep(step); setPinFlowOpen(true); }}
         onOpenDestroy={() => setDestroyOpen(true)}
         onResetTour={resetProfileTour}
-        onExportBackup={() => setExportOpen(true)}
+        onExportBackup={() => { setSettingsOpen(false); setExportOpen(true); }}
         onImportFile={handleImportFile}
         importError={importError}
         importSuccess={importSuccess}

@@ -108,8 +108,8 @@ export function SheetOptionItem({ label, description, icon, active, onClick }: S
       onClick={onClick}
       className="w-full flex items-center gap-4 p-[14px] rounded-[18px] mb-2 text-left transition-[background,border-color] duration-150 active:scale-[0.97]"
       style={{
-        background: active ? "rgba(192,132,252,0.08)" : "transparent",
-        border: active ? "1px solid rgba(192,132,252,0.2)" : "1px solid transparent",
+        background: active ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "transparent",
+        border: active ? "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" : "1px solid transparent",
         color: "var(--text)",
       }}
     >
@@ -117,7 +117,7 @@ export function SheetOptionItem({ label, description, icon, active, onClick }: S
         <span
           className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-[background,color] duration-150"
           style={{
-            background: active ? "rgba(192,132,252,0.15)" : "var(--surface2)",
+            background: active ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "var(--surface2)",
             color: active ? "var(--accent)" : "var(--text2)",
           }}
         >
@@ -140,7 +140,7 @@ export function SheetOptionItem({ label, description, icon, active, onClick }: S
       {active && (
         <span
           className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{ background: "var(--accent)", boxShadow: "0 0 10px rgba(192,132,252,0.6)" }}
+          style={{ background: "var(--accent)", boxShadow: "0 0 10px var(--accent-glow)" }}
         />
       )}
     </button>
