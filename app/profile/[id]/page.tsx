@@ -18,6 +18,8 @@ import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import { getProfileType } from "@/lib/profileType";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
+import BdsmtestScores from "@/components/BdsmtestScores";
+import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -38,7 +40,7 @@ interface Props {
 export default function ProfilePage({ params }: Props) {
   const t = useMotionSafe();
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour, pinnedProfileId, profileSnapshots, saveProfileSnapshot } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, setBdsmtestScores, profileTourComplete, completeProfileTour, pinnedProfileId, profileSnapshots, saveProfileSnapshot } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
@@ -57,6 +59,8 @@ export default function ProfilePage({ params }: Props) {
   const [editFetLife, setEditFetLife] = useState("");
   const [editBdsmtestUrl, setEditBdsmtestUrl] = useState("");
   const [editUrlError, setEditUrlError] = useState<string | null>(null);
+  const [bdsmPaste, setBdsmPaste] = useState("");
+  const [bdsmParseCount, setBdsmParseCount] = useState<number | null>(null);
   const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
@@ -393,6 +397,11 @@ export default function ProfilePage({ params }: Props) {
           profileType={getProfileType(profile, pinnedProfileId)}
         />
       </div>
+
+      {/* bdsmtest scores — always visible when present */}
+      {(profile.bdsmtestScores?.length ?? 0) > 0 && (
+        <BdsmtestScores scores={profile.bdsmtestScores!} url={profile.bdsmtestUrl} />
+      )}
 
       {/* Tab bar — own profiles only */}
       {!isShared && activeTab && (
@@ -993,6 +1002,43 @@ export default function ProfilePage({ params }: Props) {
           />
           {editUrlError && (
             <p className="text-xs mb-3 px-1" style={{ color: "var(--hard-no)" }}>{editUrlError}</p>
+          )}
+          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
+            BDSMTest resultaten <span className="font-normal opacity-60">(plak je resultaten)</span>
+          </p>
+          <textarea
+            value={bdsmPaste}
+            onChange={(e) => { setBdsmPaste(e.target.value); setBdsmParseCount(null); }}
+            placeholder={"== Results from bdsmtest.org ==\n100% Dominant\n97% Sadist\n…"}
+            rows={4}
+            className="focus-ring w-full rounded-lg px-3 py-2.5 text-xs mb-2 focus:outline-none placeholder-[color:var(--text2)] resize-none font-mono"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const scores = parseBdsmtestOutput(bdsmPaste);
+              if (scores.length > 0) {
+                setBdsmtestScores(profile.id, scores);
+                setBdsmParseCount(scores.length);
+                setBdsmPaste("");
+              }
+            }}
+            disabled={!bdsmPaste.trim()}
+            className="focus-ring w-full py-2 rounded-lg text-xs font-semibold mb-1 transition-opacity disabled:opacity-40"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            Verwerk resultaten
+          </button>
+          {bdsmParseCount !== null && (
+            <p className="text-xs mb-3 px-1" style={{ color: "var(--willing)" }}>
+              {bdsmParseCount} rollen ingeladen ✓
+            </p>
+          )}
+          {(profile.bdsmtestScores?.length ?? 0) > 0 && bdsmParseCount === null && (
+            <p className="text-xs mb-3 px-1" style={{ color: "var(--text2)" }}>
+              {profile.bdsmtestScores!.length} rollen opgeslagen · plak nieuwe tekst om te vervangen
+            </p>
           )}
           <div className="flex gap-2">
             <button

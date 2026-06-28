@@ -93,6 +93,11 @@ export interface ContractSnapshot {
   safeword?: string;
 }
 
+export interface BdsmtestScore {
+  role: string;
+  pct: number;
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -100,6 +105,7 @@ export interface Profile {
   relationshipStatus?: string;
   fetLifeUsername?: string;
   bdsmtestUrl?: string;
+  bdsmtestScores?: BdsmtestScore[];
   privateNote?: string;
   avatarDataUrl?: string;
   isImported?: boolean;

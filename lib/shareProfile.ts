@@ -72,6 +72,7 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
+  if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
 
   return toBase64Url(JSON.stringify(payload));
 }
@@ -114,6 +115,7 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     experienceLevel: p.e,
     ...(p.rs ? { relationshipStatus: p.rs } : {}),
     ...(p.fl ? { fetLifeUsername: p.fl } : {}),
+    ...(p.bs?.length ? { bdsmtestScores: p.bs } : {}),
     customKinks,
     createdAt: p.ca,
     updatedAt: p.ua,

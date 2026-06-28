@@ -30,6 +30,7 @@ interface State {
   deleteProfile: (id: string) => void;
   renameProfile: (id: string, name: string, role: string, experienceLevel: ExperienceLevel, relationshipStatus?: string, fetLifeUsername?: string, bdsmtestUrl?: string) => void;
   updatePrivateNote: (id: string, note: string) => void;
+  setBdsmtestScores: (id: string, scores: import("@/types").BdsmtestScore[]) => void;
   setProfileAvatar: (id: string, avatarDataUrl: string | undefined) => void;
   setEntry: (profileId: string, kinkId: string, patch: Partial<KinkEntry>) => void;
   resetEntry: (profileId: string, kinkId: string) => void;
@@ -133,6 +134,14 @@ export const useStore = create<State>()(
         set((s) => ({
           profiles: s.profiles.map((p) =>
             p.id === id ? { ...p, privateNote: note || undefined } : p
+          ),
+        }));
+      },
+
+      setBdsmtestScores(id, scores) {
+        set((s) => ({
+          profiles: s.profiles.map((p) =>
+            p.id === id ? { ...p, bdsmtestScores: scores, updatedAt: Date.now() } : p
           ),
         }));
       },
