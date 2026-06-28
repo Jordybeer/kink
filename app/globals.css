@@ -11,10 +11,10 @@
   --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
   --border-accent: rgba(139, 47, 201, 0.25);
-  --text: #EDE8E3;
-  --text2: #9D9A96;
+  --text: #ede8f5;
+  --text2: #9d9ab8;
   --accent: #8B2FC9;
-  --accent2: #C2436A;
+  --accent2: #D4527C;
   --accent-glow: rgba(139, 47, 201, 0.18);
   --on-accent: #F2EDE8;
   --yes: #f97316;
