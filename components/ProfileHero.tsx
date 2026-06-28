@@ -42,13 +42,14 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
+  const entries = profile.entries ?? {};
 
-  const statusCounts = Object.values(profile.entries ?? {}).reduce((acc, e) => {
+  const statusCounts = Object.values(entries).reduce((acc, e) => {
     if (e.status) acc[e.status as Status] = (acc[e.status as Status] ?? 0) + 1;
     return acc;
   }, {} as Record<Status, number>);
 
-  const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
+  const totalRated = visibleKinks.filter((k) => entries[k.id]?.status).length;
   const totalVisible = visibleKinks.length;
   const progressPct = totalVisible > 0 ? Math.round((totalRated / totalVisible) * 100) : 0;
 
@@ -68,12 +69,12 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
   const customKinkCount = (profile.customKinks ?? []).length;
 
   const topCategory = CATEGORIES.reduce((best, cat) => {
-    const count = getKinksByCategoryAndLevel(cat, maxLevel).filter((k) => profile.entries[k.id]?.status).length;
-    const bestCount = getKinksByCategoryAndLevel(best, maxLevel).filter((k) => profile.entries[k.id]?.status).length;
+    const count = getKinksByCategoryAndLevel(cat, maxLevel).filter((k) => entries[k.id]?.status).length;
+    const bestCount = getKinksByCategoryAndLevel(best, maxLevel).filter((k) => entries[k.id]?.status).length;
     return count > bestCount ? cat : best;
   }, CATEGORIES[0]);
   const topCategoryHasRatings = getKinksByCategoryAndLevel(topCategory, maxLevel).some(
-    (k) => profile.entries[k.id]?.status
+    (k) => entries[k.id]?.status
   );
 
   const expLevel = profile.experienceLevel ?? "beginner";
