@@ -68,7 +68,7 @@ export default function SettingsSheet({
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                { value: "midnight", label: "Midnight", color: "#8B2FC9" },
+                { value: "midnight", label: "Midnight", color: "#D946AF" },
                 { value: "red",      label: "Deep Red",  color: "#ef4444" },
                 { value: "forest",   label: "Forest",    color: "#4ade80" },
                 { value: "mono",     label: "Mono",      color: "#e5e5e5" },

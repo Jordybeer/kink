@@ -10,13 +10,13 @@
   --scrim-strong: rgba(0, 0, 0, 0.92);
   --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
-  --border-accent: rgba(139, 47, 201, 0.25);
+  --border-accent: rgba(217, 70, 175, 0.25);
   --text: #ede8f5;
   --text2: #9d9ab8;
-  --accent: #8B2FC9;
+  --accent: #D946AF;
   --accent2: #D4527C;
-  --accent-glow: rgba(139, 47, 201, 0.18);
-  --on-accent: #F2EDE8;
+  --accent-glow: rgba(217, 70, 175, 0.18);
+  --on-accent: #0A0908;
   --yes: #f97316;
   --willing: #10b981;
   --curious: #eab308;
