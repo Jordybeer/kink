@@ -7,7 +7,6 @@ import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
-import RolePill from "@/components/RolePill";
 import { getProfileType } from "@/lib/profileType";
 import type { ExperienceLevel } from "@/types";
 
@@ -262,7 +261,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                   </p>
                                 ) : (
                                   <div className="flex flex-wrap items-center gap-1 mt-1">
-                                    <RolePill role={p.role} />
+                                    {p.role && <span className="text-xs font-medium" style={{ color: "var(--text2)" }}>{p.role}</span>}
                                     {lvl && <span className="text-xs" style={{ color: "var(--text2)" }}>· {lvl.label}</span>}
                                     {(() => {
                                       const pt = getProfileType(p, pinnedProfileId);
