@@ -43,7 +43,7 @@ export default function ProfileHero({ profile, maxLevel, onShare, onEdit, onView
   const [menuOpen, setMenuOpen] = useState(false);
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
 
-  const statusCounts = Object.values(profile.entries).reduce((acc, e) => {
+  const statusCounts = Object.values(profile.entries ?? {}).reduce((acc, e) => {
     if (e.status) acc[e.status as Status] = (acc[e.status as Status] ?? 0) + 1;
     return acc;
   }, {} as Record<Status, number>);

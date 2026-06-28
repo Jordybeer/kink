@@ -101,7 +101,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
               )}
               <div className="flex flex-col gap-1.5">
                 {group.map((p) => {
-                  const rated = Object.values(p.entries).filter((e) => e.status).length;
+                  const rated = Object.values(p.entries ?? {}).filter((e) => e.status).length;
                   const maxKinks = KINKS.filter((k) => k.level <= LEVEL_MAX[p.experienceLevel ?? "beginner"]).length;
                   const initial = p.name[0].toUpperCase();
                   const lvl = EXPERIENCE_LEVELS.find((l) => l.value === (p.experienceLevel ?? "beginner"));
