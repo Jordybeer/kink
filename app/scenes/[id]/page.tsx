@@ -75,7 +75,7 @@ export default function SceneDetailPage() {
       >
         {scene.title}
       </h1>
-      <p className="text-[11px] uppercase tracking-[0.15em] mb-0.5" style={{ color: "var(--text2)" }}>
+      <p className="text-xs uppercase tracking-[0.15em] mb-0.5" style={{ color: "var(--text2)" }}>
         {scene.profileAName} — {scene.profileBName}
       </p>
       <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>

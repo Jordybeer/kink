@@ -266,7 +266,7 @@ function HomeContent() {
             {parentCandidates.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs uppercase tracking-widest mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
-                <p className="text-[11px] mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
+                <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
@@ -315,7 +315,7 @@ function HomeContent() {
             <div className="flex flex-col gap-2 mb-4" role="group" aria-label="Rol">
               {ROLE_GROUPS.map((g) => (
                 <div key={g.label}>
-                  <p className="text-[10px] uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
+                  <p className="text-xs uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {g.roles.map((r) => (
                       <button
@@ -350,7 +350,7 @@ function HomeContent() {
                     : { color: "var(--text2)", borderColor: "var(--border)" }}
                 >
                   <span className="font-semibold">{l.label}</span>
-                  <span className="text-[10px] opacity-70">{l.sub}</span>
+                  <span className="text-xs opacity-70">{l.sub}</span>
                 </button>
               ))}
             </div>
@@ -399,8 +399,18 @@ function HomeContent() {
 
         {/* Profile list */}
         {profiles.length === 0 ? (
-          <p className="text-center text-sm py-12" style={{ color: "var(--text2)" }}>
-            Nog geen profielen. Wie ben jij in de speelkamer?
+          <p
+            className="text-center py-12"
+            style={{
+              fontFamily: 'var(--font-display, Georgia, serif)',
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: "1.25rem",
+              lineHeight: 1.35,
+              color: "var(--text2)",
+            }}
+          >
+            Wie ben jij in de speelkamer?
           </p>
         ) : (
           <ProfileList onPromptDelete={promptDelete} />

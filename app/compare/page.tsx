@@ -296,7 +296,7 @@ function ProfileSelectorSheet({
         </p>
         {own.length > 0 && (
           <>
-            <p className="text-[10px] uppercase tracking-widest mb-1 px-1" style={{ color: "var(--text2)" }}>
+            <p className="text-xs uppercase tracking-widest mb-1 px-1" style={{ color: "var(--text2)" }}>
               Jouw profielen
             </p>
             {own.map(renderRow)}
@@ -304,7 +304,7 @@ function ProfileSelectorSheet({
         )}
         {partners.length > 0 && (
           <>
-            <p className="text-[10px] uppercase tracking-widest mt-3 mb-1 px-1" style={{ color: "var(--text2)" }}>
+            <p className="text-xs uppercase tracking-widest mt-3 mb-1 px-1" style={{ color: "var(--text2)" }}>
               Partners
             </p>
             {partners.map(renderRow)}

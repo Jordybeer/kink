@@ -804,7 +804,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               <div key={cat} className="mb-4">
                 <div
                   data-category={cat}
-                  className="text-[10px] uppercase tracking-widest font-bold mb-2 px-1"
+                  className="text-xs uppercase tracking-widest font-bold mb-2 px-1"
                   style={{ color: "var(--accent)" }}
                 >
                   {cat}
@@ -862,8 +862,16 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               Vergelijk uitgebreid →
             </Link>
             <Link href={`/contract?a=${profileId}`}
-              className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
-              style={{ background: "var(--surface)", border: "1px solid var(--accent)", color: "var(--accent)" }}>
+              className="focus-ring block w-full py-3 rounded-xl text-center transition-opacity hover:opacity-90"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--accent)",
+                color: "var(--accent)",
+                fontFamily: 'var(--font-display, Georgia, serif)',
+                fontStyle: "italic",
+                fontWeight: 400,
+                fontSize: "1.05rem",
+              }}>
               Maak een contract →
             </Link>
           </div>

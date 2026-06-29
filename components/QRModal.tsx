@@ -75,7 +75,7 @@ export default function QRModal({ profile, onClose }: Props) {
           />
         )}
 
-        <p className="text-[11px] text-center mb-1" style={{ color: "var(--text2)" }}>
+        <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
           Deelt statussen — notities en wensen blijven privé.
         </p>
 
@@ -98,7 +98,7 @@ export default function QRModal({ profile, onClose }: Props) {
             />
             <span style={{ color: "var(--text2)" }}>
               FetLife-link meesturen{" "}
-              <span className="text-[11px] opacity-60">({profile.fetLifeUsername})</span>
+              <span className="text-xs opacity-60">({profile.fetLifeUsername})</span>
             </span>
           </label>
         )}

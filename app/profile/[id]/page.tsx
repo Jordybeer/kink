@@ -374,7 +374,7 @@ export default function ProfilePage({ params }: Props) {
 
       <div className="px-4 pt-3 pb-1">
         <span
-          className="text-[11px] font-medium transition-opacity"
+          className="text-xs font-medium transition-opacity"
           style={{ color: "var(--accent)", opacity: showSaved ? 1 : 0 }}
         >
           Opgeslagen ✓
@@ -667,7 +667,7 @@ export default function ProfilePage({ params }: Props) {
             <>
               {totalRated > 0 && (
                 <div className="flex items-center justify-between mb-2 px-0.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text2)" }}>
+                  <span className="text-xs font-semibold" style={{ color: "var(--text2)" }}>
                     {totalRated} beoordeeld
                   </span>
                   <button
@@ -693,7 +693,15 @@ export default function ProfilePage({ params }: Props) {
                 if (!ratedKinks.length) return null;
                 return (
                   <div key={cat} className="mb-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 px-0.5" style={{ color: "var(--text2)" }}>
+                    <p
+                      className="text-sm mb-1.5 px-0.5"
+                      style={{
+                        fontFamily: 'var(--font-display, Georgia, serif)',
+                        fontStyle: "italic",
+                        fontWeight: 400,
+                        color: "var(--text2)",
+                      }}
+                    >
                       {cat}
                     </p>
                     <div className="flex flex-col gap-1.5">
@@ -751,7 +759,10 @@ export default function ProfilePage({ params }: Props) {
 
               {ratedCustomKinks.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5 px-0.5" style={{ color: "var(--text2)" }}>
+                  <p
+                    className="text-sm mb-1.5 px-0.5"
+                    style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                  >
                     Meer
                   </p>
                   <div className="flex flex-col gap-1.5">
@@ -805,7 +816,10 @@ export default function ProfilePage({ params }: Props) {
           {/* Private notes — imported profiles only */}
           {isShared && (
             <div className="mt-2 mb-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--text2)" }}>
+              <p
+                className="text-sm mb-1.5"
+                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+              >
                 Persoonlijke notitie
               </p>
               <textarea
@@ -832,7 +846,10 @@ export default function ProfilePage({ params }: Props) {
 
           {!isShared && totalRated > 0 && (
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-[11px] font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: "var(--text2)" }}>
+              <p
+                className="text-sm mb-2 px-0.5"
+                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+              >
                 Download dit profiel
               </p>
               <div className="flex gap-2">
@@ -896,7 +913,7 @@ export default function ProfilePage({ params }: Props) {
               </li>
             ))}
           </ul>
-          <p className="text-[11px] italic mt-4" style={{ color: "var(--text2)" }}>
+          <p className="text-xs italic mt-4" style={{ color: "var(--text2)" }}>
             Tip: tik nogmaals op een actieve knop om hem uit te zetten.
           </p>
         </div>
@@ -953,7 +970,7 @@ export default function ProfilePage({ params }: Props) {
                 }
               >
                 <span className="font-semibold">{l.label}</span>
-                <span className="text-[10px] opacity-70">{l.sub}</span>
+                <span className="text-xs opacity-70">{l.sub}</span>
               </button>
             ))}
           </div>

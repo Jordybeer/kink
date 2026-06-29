@@ -14,7 +14,7 @@ export default function BdsmtestScores({ scores, url }: Props) {
   return (
     <section className="mx-4 mb-3 rounded-2xl px-4 py-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--text2)" }}>
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text2)" }}>
           bdsmtest resultaten
         </span>
         {url && (
@@ -22,7 +22,7 @@ export default function BdsmtestScores({ scores, url }: Props) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring rounded text-[11px]"
+            className="focus-ring rounded text-xs"
             style={{ color: "var(--accent)" }}
           >
             Bekijk ↗
@@ -52,7 +52,7 @@ export default function BdsmtestScores({ scores, url }: Props) {
       </div>
 
       {scores.length > 10 && (
-        <p className="text-[11px] mt-2" style={{ color: "var(--text2)" }}>
+        <p className="text-xs mt-2" style={{ color: "var(--text2)" }}>
           +{scores.length - 10} meer
         </p>
       )}

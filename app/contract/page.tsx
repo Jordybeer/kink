@@ -1064,8 +1064,8 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
               </div>
               {(item.desireA != null || item.desireB != null || item.commentA || item.commentB) && (
                 <div className="mt-1.5 space-y-0.5" style={{ color: "var(--text2)" }}>
-                  {item.desireA != null && <div className="text-[11px]"><span className="font-medium" style={{ color: cA }}>{nA} verlangen:</span> {item.desireA}/5</div>}
-                  {item.desireB != null && <div className="text-[11px]"><span className="font-medium" style={{ color: cB }}>{nB} verlangen:</span> {item.desireB}/5</div>}
+                  {item.desireA != null && <div className="text-xs"><span className="font-medium" style={{ color: cA }}>{nA} verlangen:</span> {item.desireA}/5</div>}
+                  {item.desireB != null && <div className="text-xs"><span className="font-medium" style={{ color: cB }}>{nB} verlangen:</span> {item.desireB}/5</div>}
                   {item.commentA && <div><span className="font-medium" style={{ color: cA }}>{nA}:</span> {item.commentA}</div>}
                   {item.commentB && <div><span className="font-medium" style={{ color: cB }}>{nB}:</span> {item.commentB}</div>}
                 </div>

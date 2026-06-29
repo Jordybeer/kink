@@ -125,7 +125,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                           <div className="flex flex-col gap-2 mb-3" role="group" aria-label="Rol">
                             {ROLE_GROUPS.map((g) => (
                               <div key={g.label}>
-                                <p className="text-[10px] uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
+                                <p className="text-xs uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                   {g.roles.map((r) => (
                                     <button
@@ -163,7 +163,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                 }
                               >
                                 <span className="font-semibold">{l.label}</span>
-                                <span className="text-[10px] opacity-70">{l.sub}</span>
+                                <span className="text-xs opacity-70">{l.sub}</span>
                               </button>
                             ))}
                           </div>
