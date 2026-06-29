@@ -385,10 +385,8 @@ export default function ProfilePage({ params }: Props) {
       <div style={{ opacity: effectiveTab === "bewerken" ? 0.7 : 1, transition: "opacity 220ms ease" }}>
         <ProfileHero
           profile={profile}
-          maxLevel={maxLevel}
           onShare={isShared ? undefined : () => setShareOpen(true)}
           onEdit={isShared ? undefined : handleStartEdit}
-          onViewKinks={isShared ? undefined : () => setActiveTab("bewerken")}
           onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
           onError={(msg) => {
             setErrorMessage(msg);
