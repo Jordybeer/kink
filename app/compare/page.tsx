@@ -92,7 +92,7 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
         className="text-[10px] uppercase tracking-[0.22em] mt-1"
         style={{ color: "var(--text2)" }}
       >
-        {score === null ? "nog niets gewaardeerd" : "overlap"}
+        {score === null ? "rate kinks om te vergelijken" : "overlap"}
       </p>
       {total > 0 && (
         <div

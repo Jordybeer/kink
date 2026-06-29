@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera } from "lucide-react";
+import { Camera, PlusCircle, X } from "lucide-react";
 import Sheet from "@/components/ui/Sheet";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -229,7 +229,7 @@ function HomeContent() {
     <>
       <PageShell width="2xl">
         {/* Hero */}
-        <div className="mb-10 pt-3 text-center">
+        <div className="mb-6 pt-3 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>
           <div className="ks-gradient-rule mx-auto my-4" />
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
@@ -244,8 +244,12 @@ function HomeContent() {
             className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
-              {formOpen ? "▲ Annuleer" : "+ Nieuw profiel"}
+            {formOpen
+              ? <X size={16} aria-hidden="true" style={{ color: "var(--text2)", flexShrink: 0 }} />
+              : <PlusCircle size={16} aria-hidden="true" style={{ color: "var(--accent)", flexShrink: 0 }} />
+            }
+            <span className="flex-1 text-sm font-medium" style={{ color: formOpen ? "var(--text2)" : "var(--text)" }}>
+              {formOpen ? "Annuleer" : "Nieuw profiel"}
             </span>
           </button>
         )}

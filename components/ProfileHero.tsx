@@ -122,28 +122,16 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 : profile.privateNote}
             </p>
           )}
-          {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
-            <div className="text-xs mt-2 flex gap-2 flex-wrap" style={{ color: "var(--accent)" }}>
-              {profile.fetLifeUsername && (
-                <a
-                  href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="focus-ring rounded"
-                >
-                  FetLife ↗
-                </a>
-              )}
-              {profile.bdsmtestUrl && (
-                <a
-                  href={profile.bdsmtestUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="focus-ring rounded"
-                >
-                  BDSMTest ↗
-                </a>
-              )}
+          {profile.fetLifeUsername && (
+            <div className="text-xs mt-2" style={{ color: "var(--accent)" }}>
+              <a
+                href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="focus-ring rounded"
+              >
+                FetLife ↗
+              </a>
             </div>
           )}
         </div>
@@ -167,7 +155,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               aria-label="Profiel bewerken"
               title="Bewerken"
               className="focus-ring flex items-center justify-center rounded-md transition-colors"
-              style={{ minWidth: 44, minHeight: 44, color: "var(--text2)", border: "1px solid var(--border)" }}
+              style={{ minWidth: 44, minHeight: 44, color: "var(--text2)" }}
             >
               <Pencil size={16} />
             </button>

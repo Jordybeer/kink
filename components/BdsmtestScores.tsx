@@ -10,7 +10,6 @@ export default function BdsmtestScores({ scores, url }: Props) {
   if (!scores.length) return null;
 
   const top = scores.slice(0, 10);
-  const max = top[0]?.pct ?? 100;
 
   return (
     <section className="mx-4 mb-3 rounded-2xl px-4 py-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
@@ -39,7 +38,7 @@ export default function BdsmtestScores({ scores, url }: Props) {
               <div
                 className="h-full rounded-full"
                 style={{
-                  width: `${(pct / max) * 100}%`,
+                  width: `${pct}%`,
                   background: "var(--accent)",
                   transition: "width 600ms ease-out",
                 }}

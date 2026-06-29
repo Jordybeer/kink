@@ -5,7 +5,6 @@ import { Pin, PinOff, Pencil, Zap, FileText, Clapperboard, Anchor, Lock } from "
 import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
-import { KINKS, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { getProfileType } from "@/lib/profileType";
 import type { ExperienceLevel } from "@/types";
@@ -100,8 +99,6 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
               )}
               <div className="flex flex-col gap-1.5">
                 {group.map((p) => {
-                  const rated = Object.values(p.entries ?? {}).filter((e) => e.status).length;
-                  const maxKinks = KINKS.filter((k) => k.level <= LEVEL_MAX[p.experienceLevel ?? "beginner"]).length;
                   const initial = p.name[0].toUpperCase();
                   const lvl = EXPERIENCE_LEVELS.find((l) => l.value === (p.experienceLevel ?? "beginner"));
 
@@ -232,7 +229,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                             aria-label={`Profiel ${p.name} openen`}
                           >
                             {/* Card header */}
-                            <div className="flex items-center gap-3 px-3 pt-3 pb-2 pr-12">
+                            <div className="flex items-center gap-3 px-3 pt-3 pb-3 pr-12">
                               {!isMulti && (
                                 <div className="relative flex-none">
                                   <div className="w-11 h-11 rounded-full overflow-hidden" aria-hidden="true">
@@ -271,21 +268,6 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                               </div>
                             </div>
 
-                            {/* Status DNA bar */}
-                            {rated > 0 ? (
-                              <div className="flex h-1.5 mx-3 mb-3 rounded-full overflow-hidden gap-px">
-                                {(["yes", "willing", "maybe", "no", "hard_no"] as const).map((s) => {
-                                  const cnt = Object.values(p.entries ?? {}).filter((e) => e.status === s).length;
-                                  if (!cnt) return null;
-                                  const pct = (cnt / maxKinks) * 100;
-                                  const c = { yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)" }[s];
-                                  return <div key={s} style={{ width: `${pct}%`, background: c }} />;
-                                })}
-                                <div style={{ flex: 1, background: "var(--border)" }} />
-                              </div>
-                            ) : (
-                              <div className="h-1.5 mx-3 mb-3 rounded-full" style={{ background: "var(--border)" }} />
-                            )}
                           </Link>
 
                           {/* Absolutely positioned edit button — sibling to Link, not inside it */}
