@@ -89,7 +89,7 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
         )}
       </div>
       <p
-        className="text-[10px] uppercase tracking-[0.22em] mt-1"
+        className="text-xs uppercase tracking-[0.22em] mt-1"
         style={{ color: "var(--text2)" }}
       >
         {score === null ? "rate kinks om te vergelijken" : "overlap"}
@@ -205,7 +205,7 @@ function ProfileChip({
           {profile ? profile.name : "Kies profiel…"}
         </p>
         {profile && (
-          <p className="text-[10px] truncate leading-tight" style={{ color: colour }}>
+          <p className="text-xs truncate leading-tight" style={{ color: colour }}>
             {isPartner && <Lock size={9} className="inline mr-0.5" aria-hidden />}
             Profiel {slot}
           </p>
@@ -291,7 +291,10 @@ function ProfileSelectorSheet({
   return (
     <Sheet open={open} onClose={onClose} aria-label={`Kies profiel ${slot}`}>
       <SheetContent>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: colour }}>
+        <p
+          className="text-sm mb-3"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+        >
           Profiel {slot}
         </p>
         {own.length > 0 && (
@@ -571,7 +574,7 @@ function ComparePage() {
                 if (!kinks.length) return null;
                 return (
                   <section key={cat} id={`cat-${cat}`} className="mb-6 scroll-mt-32">
-                    <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                    <h2 className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
                       {cat}
                     </h2>
                     <div className="flex flex-col gap-2">
@@ -749,7 +752,7 @@ function ComparePage() {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm font-medium flex-1 flex items-center gap-1.5">
                               {item.name}
-                              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
+                              <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
                                 eigen
                               </span>
                             </span>

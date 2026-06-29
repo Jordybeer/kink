@@ -14,7 +14,7 @@ export default function BdsmtestScores({ scores, url }: Props) {
   return (
     <section className="mx-4 mb-3 rounded-2xl px-4 py-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text2)" }}>
+        <span className="text-xs font-medium" style={{ color: "var(--text2)" }}>
           bdsmtest resultaten
         </span>
         {url && (

@@ -37,7 +37,7 @@ export default function InfoSheet({ kink, onClose }: Props) {
           {kink?.name ?? ""}
         </h2>
 
-        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
+        <p className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
           {kink?.category ?? ""}
         </p>
 

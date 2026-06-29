@@ -696,12 +696,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                 <span style={{ color: "var(--text2)" }}> vs </span>
                 <span style={{ color: "var(--text)" }}>{partnerName}</span><span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
               </div>
-              <div className="text-[10px] mt-0.5 truncate" style={{ color: "var(--text2)" }}>
+              <div className="text-xs mt-0.5 truncate" style={{ color: "var(--text2)" }}>
                 {profile?.role}{remoteProfile ? ` · ${remoteProfile.role}` : ""}
               </div>
             </div>
             <div className="w-2 h-2 rounded-full flex-none animate-pulse" style={{ background: "var(--yes)" }} />
-            <span className="text-[10px] font-medium flex-none" style={{ color: "var(--yes)" }}>Live</span>
+            <span className="text-xs font-medium flex-none" style={{ color: "var(--yes)" }}>Live</span>
           </div>
 
           <div className="mb-24">
@@ -824,7 +824,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                     >
                       <span className="text-sm font-medium flex-1">{kink.name}</span>
                       {isMatchKink ? (
-                        <span className="text-[10px] font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
+                        <span className="text-xs font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
                       ) : (
                         <span
                           className="text-[10px] px-1.5 py-0.5 rounded border flex-none"

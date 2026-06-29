@@ -73,7 +73,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
               maxWidth: 288,
             }}
           >
-            <p id="time-picker-label" className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>
+            <p id="time-picker-label" className="text-xs mb-3" style={{ color: "var(--text2)" }}>
               Starttijd
             </p>
             <div className="flex gap-3">

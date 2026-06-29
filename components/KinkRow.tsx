@@ -51,7 +51,7 @@ function PillRow({ label, current, onSelect, tour }: PillRowProps) {
   return (
     <div data-tour={tour} className="px-3 py-3">
       {label && (
-        <span className="text-[11px] block text-center mb-2" style={{ color: "var(--text2)" }}>{label}</span>
+        <span className="text-xs block text-center mb-2" style={{ color: "var(--text2)" }}>{label}</span>
       )}
       <div className="grid grid-cols-5 gap-1">
         {PREF_PILLS.map(({ status: s, label: pillLabel, danger }) => {
@@ -156,7 +156,7 @@ export default function KinkRow({
             <button
               onClick={() => setTagsOpen((o) => !o)}
               aria-expanded={tagsOpen}
-              className="focus-ring px-3 pt-1 pb-2 text-[11px] flex items-center gap-2 w-full text-left transition-colors"
+              className="focus-ring px-3 pt-1 pb-2 text-xs flex items-center gap-2 w-full text-left transition-colors"
               style={{ color: "var(--text2)" }}
             >
               {tagsOpen ? <ChevronDown size={12} aria-hidden="true" /> : <ChevronRight size={12} aria-hidden="true" />}

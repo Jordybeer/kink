@@ -931,7 +931,7 @@ export default function ProfilePage({ params }: Props) {
           }}
         >
           <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-          <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
             Profiel bijwerken
           </h3>
           <input

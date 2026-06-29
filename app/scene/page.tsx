@@ -903,7 +903,7 @@ function ScenePage() {
 
           {topKinks.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent2)" }}>Meest gebruikt</p>
+              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent2)" }}>Meest gebruikt</p>
               <div className="flex flex-wrap gap-2">
                 {topKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(k.name, k.id)} />
@@ -914,7 +914,7 @@ function ScenePage() {
 
           {mutualKinks.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--yes)" }}>Wederzijds</p>
+              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--yes)" }}>Wederzijds</p>
               <div className="flex flex-wrap gap-2">
                 {mutualKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(k.name, k.id)} />
@@ -925,7 +925,7 @@ function ScenePage() {
 
           {spanningKinks.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--no)" }}>Spanning</p>
+              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--no)" }}>Spanning</p>
               <div className="flex flex-wrap gap-2">
                 {spanningKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(k.name, k.id)} />

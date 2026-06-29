@@ -51,7 +51,7 @@ function TimelinePage() {
           ] as const
         ).map(({ id, setId, label, colour }) => (
           <div key={label}>
-            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>
+            <label className="block text-xs mb-1" style={{ color: "var(--text2)" }}>
               {label}
             </label>
             <select
@@ -97,7 +97,7 @@ function TimelinePage() {
           <ContractTrendsChart contracts={filtered} />
           <div className="rounded p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
                 {profileA.name} &amp; {profileB.name}
               </h2>
               <span className="text-xs" style={{ color: "var(--text2)" }}>

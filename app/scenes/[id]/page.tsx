@@ -88,7 +88,7 @@ export default function SceneDetailPage() {
       {aftercare && traffic ? (
         <section className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text2)" }}>Aftercare</h2>
+            <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>Aftercare</h2>
             <button
               onClick={() => setShowAftercare(true)}
               className="text-xs focus-ring rounded-lg px-3 py-1"
@@ -140,7 +140,7 @@ export default function SceneDetailPage() {
         </section>
       ) : (
         <section className="mb-6">
-          <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>Aftercare</h2>
+          <h2 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>Aftercare</h2>
           <div
             className="rounded p-5 flex flex-col items-center gap-4"
             style={{ background: "var(--surface)", border: "1px dashed var(--border)" }}
@@ -162,7 +162,7 @@ export default function SceneDetailPage() {
       {/* Activiteiten */}
       {scene.items.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>Setlist</h2>
+          <h2 className="text-sm mb-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>Setlist</h2>
           {(() => {
             const total = scene.items.length;
             const parts: string[] = [];

@@ -70,7 +70,7 @@ export default function CategorySection({
                 />
               ))}
               {overflow && (
-                <span className="text-[10px] ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>
+                <span className="text-xs ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>
               )}
             </div>
             <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>

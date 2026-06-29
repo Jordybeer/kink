@@ -587,13 +587,13 @@ function ContractPage() {
 
         {/* Safeword & Nazorg */}
         <div className="mb-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
             Safeword &amp; Nazorg
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Column A */}
             <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_A }}>
+              <div className="text-xs font-semibold" style={{ color: COLOUR_A }}>
                 {profileA.name}
               </div>
               <div className="flex flex-col gap-1.5">
@@ -636,7 +636,7 @@ function ContractPage() {
 
             {/* Column B */}
             <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_B }}>
+              <div className="text-xs font-semibold" style={{ color: COLOUR_B }}>
                 {profileB.name}
               </div>
               <div className="flex flex-col gap-1.5">
@@ -690,7 +690,7 @@ function ContractPage() {
 
         {/* General clauses */}
         <div className="mt-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
             Algemene afspraken
           </h3>
           <ul className="space-y-1.5 text-sm" style={{ color: "var(--text2)" }}>
@@ -708,8 +708,8 @@ function ContractPage() {
         className="rounded-2xl p-6 mb-6 print:hidden"
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: "var(--accent)" }}>
-          Echte namen <span className="font-normal opacity-60 normal-case tracking-normal">(optioneel)</span>
+        <h2 className="text-sm mb-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
+          Echte namen <span style={{ opacity: 0.6, fontStyle: "normal" }}>(optioneel)</span>
         </h2>
         <p className="text-xs mb-4" style={{ color: "var(--text2)" }}>
           Beide velden samen invullen of beide leeg laten. Bij invullen wordt het verbond formeler geformuleerd en verschijnen de echte namen naast de nicknames onder de handtekening.
@@ -757,7 +757,7 @@ function ContractPage() {
         className="rounded-2xl p-6 mb-6"
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+        <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
           Handtekeningen
         </h2>
         <div className="flex gap-4 flex-wrap">
@@ -790,7 +790,7 @@ function ContractPage() {
       {contracts.length > 0 && (
         <div className="mt-8 print:hidden">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+            <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
               Eerdere contracten
             </h2>
             <Link
@@ -898,7 +898,7 @@ function ContractPage() {
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
                 Waarom echte namen?
               </span>
               <button
@@ -1036,7 +1036,7 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
 
   return (
     <div className="mb-5">
-      <h3 className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: colour }}>
+      <h3 className="text-sm mb-2" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: colour }}>
         {title}
       </h3>
       {isKinkDetail(items[0]) ? (
@@ -1168,7 +1168,7 @@ function SignaturePad({
 
   return (
     <div className="flex flex-col items-center gap-2 flex-1 min-w-[140px]">
-      <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
+      <div className="text-xs font-semibold" style={{ color: colour }}>
         {label}
       </div>
       {/* Clickable canvas — tap to open modal */}
@@ -1230,7 +1230,7 @@ function SignaturePad({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
+              <span className="text-xs font-semibold" style={{ color: colour }}>
                 {label}
               </span>
               <button

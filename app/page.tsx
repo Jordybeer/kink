@@ -259,13 +259,13 @@ function HomeContent() {
             className="relative overflow-hidden rounded-xl p-5 mb-8"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <h2 className="font-semibold text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
+            <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
               Nieuw profiel
             </h2>
 
             {parentCandidates.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs uppercase tracking-widest mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
+                <p className="text-xs mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
                 <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button

@@ -45,7 +45,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
 
         {/* Traffic light */}
         <div>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>Hoe voelde het?</p>
+          <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>Hoe voelde het?</p>
           <div className="flex gap-3">
             {LIGHTS.map(({ value, label, color, emoji }) => (
               <button

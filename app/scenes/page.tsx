@@ -71,7 +71,7 @@ function SceneCard({
             {counts.zacht  > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--willing) 15%, transparent)", color: "var(--willing)" }}>{counts.zacht}× zacht</span>}
             {counts.midden > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--maybe) 15%, transparent)", color: "var(--maybe)" }}>{counts.midden}× midden</span>}
             {counts.intens > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--hard-no) 15%, transparent)", color: "var(--hard-no)" }}>{counts.intens}× intens</span>}
-            <span className="text-[10px]" style={{ color: "var(--text2)" }}>{scene.items.length} activiteiten</span>
+            <span className="text-xs" style={{ color: "var(--text2)" }}>{scene.items.length} activiteiten</span>
           </div>
         )}
 
@@ -163,7 +163,7 @@ export default function ScenesPage() {
       <div className="flex flex-col gap-8">
         {sections.map(({ key, label, items }) => (
           <section key={key}>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>{label}</h2>
+            <h2 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>{label}</h2>
             {items.length === 0 ? (
               <EmptySection label={label} />
             ) : (
