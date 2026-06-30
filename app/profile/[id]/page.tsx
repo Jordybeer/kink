@@ -694,12 +694,12 @@ export default function ProfilePage({ params }: Props) {
                 return (
                   <div key={cat} className="mb-4">
                     <p
-                      className="text-sm mb-1.5 px-0.5"
+                      className="text-base mb-2 px-0.5"
                       style={{
                         fontFamily: 'var(--font-display, Georgia, serif)',
                         fontStyle: "italic",
                         fontWeight: 400,
-                        color: "var(--text2)",
+                        color: "var(--text)",
                       }}
                     >
                       {cat}
