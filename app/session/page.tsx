@@ -3,6 +3,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import Link from "next/link";
+import { Lock, Satellite, KeyRound } from "lucide-react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { CustomKink, ExperienceLevel, KinkStatus, Profile } from "@/types";
@@ -560,7 +561,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   );
 
   return (
-    <main style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100dvh" }} className="max-w-lg mx-auto px-4 py-6">
+    <main style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100dvh" }} className="max-w-lg lg:max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => {
@@ -586,27 +587,29 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             className="rounded-xl px-4 py-3 text-xs leading-relaxed"
             style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
           >
-            <span className="font-semibold" style={{ color: "var(--text)" }}>🔒 End-to-end versleuteld — </span>
+            <span className="inline-flex items-center gap-1.5 font-semibold align-middle" style={{ color: "var(--text)" }}><Lock size={13} aria-hidden="true" /> End-to-end versleuteld — </span>
             ook wij kunnen niet meelezen. Je toestel regelt via onze server een verbinding met dat van je partner; daarna gaat alles direct tussen jullie twee. Je kinks en naam verlaten je toestel nooit.
           </div>
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3">
           <button
             onClick={() => setPhase("host_idle")}
-            className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90"
+            className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90 lg:h-full"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <div className="text-2xl mb-1">📡</div>
+            <Satellite size={22} aria-hidden="true" className="mb-1.5" style={{ color: "var(--accent)" }} />
             <div className="text-sm font-bold mb-0.5">Sessie aanmaken</div>
             <div className="text-xs" style={{ color: "var(--text2)" }}>Genereer een code en deel die met je partner.</div>
           </button>
           <button
             onClick={() => setPhase("guest_idle")}
-            className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90"
+            className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90 lg:h-full"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <div className="text-2xl mb-1">🔑</div>
+            <KeyRound size={22} aria-hidden="true" className="mb-1.5" style={{ color: "var(--accent)" }} />
             <div className="text-sm font-bold mb-0.5">Deelnemen met code</div>
             <div className="text-xs" style={{ color: "var(--text2)" }}>Voer de 6-letterige code in van je partner.</div>
           </button>
+          </div>
         </div>
       )}
 

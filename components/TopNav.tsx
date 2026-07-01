@@ -58,7 +58,7 @@ export default function TopNav() {
     ];
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="max-w-2xl mx-auto px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center" aria-label="Hoofdnavigatie">
+        <nav className="max-w-2xl mx-auto px-3 h-14 grid grid-cols-[1fr_auto_1fr] items-center" aria-label="Hoofdnavigatie">
           <div />
           <div className="pwa-hidden flex items-center justify-center gap-1">
             {items.map(({ href, label, icon: Icon, forceActive }) => {
@@ -68,7 +68,7 @@ export default function TopNav() {
                   key={label}
                   href={href}
                   whileTap={TAP_SPRING}
-                  className="focus-ring inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs transition-colors"
+                  className="focus-ring inline-flex items-center gap-1.5 rounded-full px-2 h-8 text-xs whitespace-nowrap transition-colors"
                   style={{ color: active ? "var(--text)" : "var(--text2)", fontWeight: active ? 700 : 500 }}
                   aria-label={label}
                   aria-current={active ? "page" : undefined}

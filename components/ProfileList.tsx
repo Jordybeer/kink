@@ -63,7 +63,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   return (
     <>
       <motion.div
-        className="flex flex-col gap-3 mb-6"
+        className="flex flex-col gap-3 mb-6 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start"
         initial="hidden"
         animate="show"
         variants={STAGGER_CHILDREN}
@@ -291,11 +291,11 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
       </motion.div>
 
       {/* CTAs */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
         {canCompare ? (
           <Link
             href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-            className="focus-ring block rounded-xl p-6 transition-opacity hover:opacity-90"
+            className="focus-ring block rounded-xl p-6 transition-opacity hover:opacity-90 lg:col-span-2 lg:order-1"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
               border: "1px solid var(--border-accent)",
@@ -314,7 +314,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           </Link>
         ) : (
           <div
-            className="rounded-xl p-6 opacity-40"
+            className="rounded-xl p-6 opacity-40 lg:col-span-2 lg:order-1"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             role="button" tabIndex={0} aria-disabled="true"
             aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
@@ -332,7 +332,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
         {profiles.length >= 2 ? (
           <Link
             href={`/contract?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-            className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90"
+            className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90 lg:order-2 lg:h-full"
             style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
           >
             <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
@@ -345,7 +345,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           </Link>
         ) : (
           <div
-            className="rounded-xl p-5 opacity-40"
+            className="rounded-xl p-5 opacity-40 lg:order-2 lg:h-full"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             role="button" tabIndex={0} aria-disabled="true"
             aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
@@ -360,7 +360,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:col-span-2 lg:order-4">
           <Link
             href="/scene"
             className="focus-ring block rounded-xl p-4 transition-opacity hover:opacity-90"
@@ -387,7 +387,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
 
         <Link
           href="/session"
-          className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90"
+          className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90 lg:order-3 lg:h-full"
           style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
         >
           <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>

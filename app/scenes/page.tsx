@@ -155,7 +155,7 @@ export default function ScenesPage() {
   ];
 
   return (
-    <PageShell width="2xl">
+    <PageShell width="2xl" className="lg:max-w-4xl">
       <div className="flex items-center justify-end mb-4">
         <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
       </div>
@@ -167,7 +167,7 @@ export default function ScenesPage() {
             {items.length === 0 ? (
               <EmptySection label={label} />
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
                 {items.map((scene) => (
                   <SceneCard
                     key={scene.id}

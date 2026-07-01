@@ -227,7 +227,7 @@ function HomeContent() {
 
   return (
     <>
-      <PageShell width="2xl">
+      <PageShell width="2xl" className="lg:max-w-4xl">
         {/* Hero */}
         <div className="mb-6 pt-3 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>

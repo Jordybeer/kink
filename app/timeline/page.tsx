@@ -41,7 +41,7 @@ function TimelinePage() {
   const bothSelected = !!profileA && !!profileB;
 
   return (
-    <PageShell width="2xl">
+    <PageShell width="2xl" className="lg:max-w-4xl">
       {/* Profile selectors */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {(

@@ -1,5 +1,12 @@
 # KinkList — Claude guidance
 
+## Regression is the cardinal sin (mandatory, overrides everything)
+Breaking something that already worked is the single worst outcome — worse than shipping nothing, worse than an ugly diff, worse than a slow fix. No feature, refactor, or polish pass is worth a regression.
+- Before touching working code, know exactly what currently works and preserve it. When in doubt, make changes **additive** (e.g. `lg:` overrides that leave mobile byte-identical) rather than rewriting.
+- Prove no regression before you call anything done: re-run the affected tests/audit and compare against the prior behaviour, don't just eyeball the new thing.
+- Mobile-first + the installed PWA are the primary surfaces — a desktop/tablet improvement that degrades either of those is a net loss, not a win.
+- If a change *might* regress and you can't prove it won't, stop and flag it rather than shipping on hope.
+
 ## Git (mandatory)
 - `dev` is the playroom — all work here. `main` only via PR.
 - Never add `Co-Authored-By` trailers. No AI credits, no Happy attribution — commits are yours alone.
