@@ -47,3 +47,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude worktrees and screenshots
+.claude/worktrees/
+screenshots/
+
+# sim runner scripts (ephemeral, contain hardcoded credentials)
+sim_*.mjs
