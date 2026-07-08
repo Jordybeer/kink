@@ -11,8 +11,10 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByText("Dominant").first()).toBeVisible();
   });
 
-  test("DNA-balk is aanwezig", async ({ page }) => {
-    const dna = page.locator('[aria-label*="DNA"], [aria-label*="Kink DNA"]');
+  test("DNA-balk is aanwezig op het bewerken-tabblad", async ({ page }) => {
+    const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
+    await editTab.first().click();
+    const dna = page.locator('[aria-label*="Kink DNA"]');
     expect(await dna.count()).toBeGreaterThan(0);
   });
 
@@ -27,8 +29,10 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("geen horizontale overflow", async ({ page }) => {
-    const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
-    expect(overflow).toBe(false);
+    // De tab glijdt 8px binnen — poll tot de entrance-animatie is uitgehijgd
+    await expect
+      .poll(() => page.evaluate(() => document.body.scrollWidth > document.body.clientWidth), { timeout: 3000 })
+      .toBe(false);
   });
 
   test("geen overflow op mobiel (390px)", async ({ page }) => {
@@ -88,8 +92,10 @@ test.describe("Profielpagina — Sam (gevorderd, Submissive)", () => {
   });
 
   test("hard grens (humiliation_verbal) is verwerkt in de DNA-balk", async ({ page }) => {
-    // DNA bar shows ✕✕ count for hard limits
-    const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/✕✕\s*\d+|\d+\s*✕✕/);
+    // The DNA bar's accessible name carries per-status counts — hard limits included
+    const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
+    await editTab.first().click();
+    const dna = page.locator('[aria-label*="Kink DNA"]').first();
+    await expect(dna).toHaveAttribute("aria-label", /\d+ Harde grens/);
   });
 });
