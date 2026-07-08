@@ -51,6 +51,12 @@ Each item needs its own design pass before code.
 
 Per-kink give/receive direction was killed in `629419b`. The right approach: use `profile.role` at the `profileMatchScore` level to infer give/receive intent for the pair and weight scores accordingly. A Dom + Sub pair scoring "yes + yes" on spanking should resolve role complementarity without either user touching per-kink toggles. **Write a design doc before coding.** Touches `lib/matching.ts` and possibly `lib/roles.ts`.
 
+### Phase — Pair-scoped kink overlay (deferred, design doc first)
+
+"Depends on the dynamic" is real: a kink can be "ja" with this partner and "grens" in general. Today that need routes through subprofiles (a second role under the same name), "Voor hen", tags ("scène specifiek", "vraag eerst"), and the contract as the pair's negotiated truth. **Never** solve it by mutating a partner's imported profile — `lockedAt` guards their stated consent, and compare/contract derive from those entries.
+
+If subprofiles prove too coarse in practice, the honest solution is a pair-scoped overlay ("in deze dynamiek: ja") stored alongside the comparison — new data model touching share encoding, `lib/matching.ts`, and contracts. Phase B-adjacent. Write a design doc before any code, and only after the polish sprint has settled and real use shows subprofiles falling short.
+
 ### Phase B — Agreement Archive Data Model (deferred structural)
 
 Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Storage budget settled at ~15–25 KB per active profile, inside localStorage limits for a 5–10 profile user. Blocks Phase C (Evolution View at `/history`) and Phase D (history consolidation).
@@ -81,6 +87,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 - **Category search result highlight**: highlight matched text.
 - **Kink count badge on category header**: rated/total on `CategorySection` headers (the old scrollspy nav this targeted no longer exists).
 - **Swipe-to-rate gesture**: ⚠️ written for the dead KinkRow — `KinkListRow`'s whole surface now taps open the edit sheet, so a swipe gesture needs a fresh design against the triage deck before any code.
+- **Edit own status from compare row** (2026-07-08): tap your *own* half of a compare row → open the existing `KinkEditSheet`, only when your profile is `origin: "own"`. Partner rows stay immutable — their imported profile is their stated consent (`lockedAt` is the consent model, not a limitation). Closes the leave-compare-edit-return loop with zero new data model.
 - **Overview filter / sort**: filter read-only overview by status, or sort alphabetically.
 - **Home compare CTA pair choice**: now pinned-profile-aware with a hint line (better than the old `profiles[0]`/`[1]`); remaining idea — last-viewed pair or explicit picker when >2 profiles.
 - **"Besproken" toggle is session-only**: persists nothing, hints nothing — persist it or mark "(tijdelijk)".
