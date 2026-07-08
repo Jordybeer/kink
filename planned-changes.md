@@ -18,7 +18,7 @@ From the 2026-07-08 design critique of the triage-deck redesign. Pure polish, no
 - Same clamp/expand parity in `KinkEditSheet` so both surfaces agree about the same text.
 
 **24b — One status vocabulary, one source**
-- `STATUS_LABEL`/`STATUS_VAR` maps are copy-pasted three ways (`StatusOptionRows`, `KinkListRow`, `app/contract/page.tsx` `STATUS_NL`) — which is how `hard_no` drifted between "Grens" (app) and "Harde grens" (contract PDF). Extract to `lib/statusLabels.ts`, kill the drift.
+- `STATUS_LABEL`/`STATUS_VAR`-style maps are copy-pasted **eight** ways (verified 2026-07-08 via `grep -rl "Heel graag"`): `StatusOptionRows`, `KinkListRow`, `StatusPicker`, `app/profile/[id]/page.tsx`, `app/compare/page.tsx`, `app/session/page.tsx`, `app/contract/page.tsx` (`STATUS_NL`), `lib/profileSnapshot.ts` — which is how `hard_no` drifted between "Grens" (app) and "Harde grens" (contract PDF). Extract to `lib/statusLabels.ts`, kill the drift everywhere.
 
 **24c — PDF palette unification**
 - Two PDFs, two different purples, neither the brand: contract title `#6D28D9`, scene title `#3F1F7A`, app accent `#D946AF`. Two body inks (`#1E1B4B` vs `#241A32`), two muted grays (`#6B7280` vs `#4B5563`).
@@ -31,6 +31,9 @@ From the 2026-07-08 design critique of the triage-deck redesign. Pure polish, no
 - Arrow-motif rule: arrows = forward navigation only ("Sla over →"), never on commit actions. Drop the duplicate "Nieuw profiel" h2 inside the form the toggle just opened.
 - InfoSheet type hierarchy inverted vs deck/edit sheet (bold sans name + italic serif category vs the deck's serif italic name + plain category) — unify on the deck's pattern.
 - InfoSheet level badges borrow status colours (Niveau 1 wears `--yes` orange) — levels aren't verdicts; give them a neutral ramp.
+
+**24e — Safety tags surfaced in Overzicht (promoted from the pool)**
+- The read-only Overzicht renders nieuwsgierig + status pill + optional comment, but **never `entry.tags`** — "vraag eerst" and "alleen privé" are invisible to exactly the person (a partner viewing a shared profile) who most needs them. Not a PR #243 regression (verified against `c940e04^` — the old Overzicht didn't show them either), but a long-standing safety gap now cheap to close: a muted tag row on Overzicht cards that have active tags.
 
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
@@ -60,7 +63,7 @@ First attempt reverted (PR #219 closed). Rules in `memory.md` and `corrections.m
 
 ## Suggestion pool (formerly future.md)
 
-Unscoped ideas, grouped by theme. Promote to a phase before working on any of them. Pruned 2026-07-08: DNA-bar items dropped (the DNA bar was executed in June), shipped items removed.
+Unscoped ideas, grouped by theme. Promote to a phase before working on any of them. Pruned + verified against live code 2026-07-08: DNA-bar items dropped (the bar was executed in June), and these were confirmed already shipped — TopNav pill tap feedback (`MotionLink` + `TAP_SPRING`), status active glow (`.status-*` classes + glow keyframes), the 40px profile pencil (gone), vibe badge items (badge no longer exists), reduced-motion scroll guard (blur is static now; `useMotionSafe` gates motion).
 
 ### Navigation polish (TopNav)
 - **Bottom-anchored variant for reach**: same pills, floating bottom-right on phones — the biggest open tradeoff from killing the bottom bar.
@@ -68,28 +71,24 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 - **Sliding active indicator**: framer-motion `layoutId` glide between tabs instead of snapping.
 - **Personal profile pill**: swap the 👤 glyph for the pinned profile's avatar thumbnail.
 - **Notch / standalone safe-area check**: verify `env(safe-area-inset-top)` on notched iPhones in installed PWA mode.
-- **Tap feedback**: subtle scale/opacity press state on pills.
 
 ### Quick wins (CSS/attr only, parallelisable)
 - **Pill scroll hint**: right-edge fade gradient on horizontal pill rows.
-- **Vibe badge animation**: fade in when first calculated.
-- **Status pill active glow**: subtle outer glow matching its colour (like the ⓘ button).
-- **Screen reader live region**: announce status changes via `aria-live="polite"`.
-- **Profile edit (pencil) button still 40px**: `app/profile/[id]/page.tsx` `w-10 h-10` vs the `w-11 h-11` export FABs beside it.
+- **Screen reader live region**: the triage deck already wraps in `aria-live="polite"`; verify status changes made via `KinkEditSheet` are also announced.
 
 ### UX / Interaction
 - **Profile skeleton**: shimmer skeleton for overview cards while Zustand hydrates.
 - **Category search result highlight**: highlight matched text.
-- **Kink count badge on category header**: rated/total in the scrollspy nav.
-- **Swipe-to-rate gesture**: swipe a list row to cycle status, swipe left to clear.
+- **Kink count badge on category header**: rated/total on `CategorySection` headers (the old scrollspy nav this targeted no longer exists).
+- **Swipe-to-rate gesture**: ⚠️ written for the dead KinkRow — `KinkListRow`'s whole surface now taps open the edit sheet, so a swipe gesture needs a fresh design against the triage deck before any code.
 - **Overview filter / sort**: filter read-only overview by status, or sort alphabetically.
-- **Home compare CTA always picks first two profiles**: default to last-viewed pair, or let the user pick.
+- **Home compare CTA pair choice**: now pinned-profile-aware with a hint line (better than the old `profiles[0]`/`[1]`); remaining idea — last-viewed pair or explicit picker when >2 profiles.
 - **"Besproken" toggle is session-only**: persists nothing, hints nothing — persist it or mark "(tijdelijk)".
 
 ### Visual / Design
 - **Light mode**: consider auto light theme via `@media (prefers-color-scheme: light)`.
 - **Avatar upload drag-and-drop**: drag an image onto the avatar button.
-- **Overview card tap-to-edit**: tap a read-only overview card to jump to that kink in the edit flow.
+- **Overview card tap-to-edit**: tap a read-only Overzicht card to open `KinkEditSheet` directly (own profiles only — the accordion flow this originally targeted is gone).
 
 ### Performance / Technical
 - **Playwright CI integration**: run the visual audit in CI.
@@ -104,8 +103,8 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 
 ### Phase 3b follow-ups (nieuwsgierig)
 - **Nieuwsgierig pair distinction on compare page**: `nieuwsgierig+nieuwsgierig` and `maybe+yes` land in the same bucket with identical styling — a subtle cyan dot could tell them apart.
-- **Safety tags visible by default on partner profiles**: "vraag eerst" is safety-relevant; read-only view should not hide it behind a tap.
-- **Nieuwsgierig swatch in contract PDF**: hardcode `#06b6d4` alongside the other PDF hex fallbacks (fold into Phase 24c).
+- ~~Safety tags visible by default on partner profiles~~ → promoted to **Phase 24e**.
+- **Curious flag in contract PDF**: the contract PDF renders no nieuwsgierig/curious signal at all (the old "swatch" item predates 3c's demotion from status → flag). Decide during 24c whether it belongs on the printed page.
 - **Status explainer i18n extraction**: hardcoded Dutch `STATUS_EXPLAINER` — natural extraction point if multilingual ever lands.
 
 ### Features
