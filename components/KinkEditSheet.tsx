@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import Sheet, { SheetContent } from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
+import ClampText from "./ui/ClampText";
 
 const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
 
@@ -37,7 +38,7 @@ export default function KinkEditSheet({
           {kink?.name ?? ""}
         </h2>
         {kink?.description && (
-          <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>{kink.description}</p>
+          <ClampText text={kink.description} className="text-sm mb-4" style={{ color: "var(--text2)" }} />
         )}
         {!kink?.description && <div className="mb-3" />}
 

@@ -6,6 +6,7 @@ import { useMotionSafe } from "@/lib/motion";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import StatusOptionRows from "./StatusOptionRows";
 import InfoSheet from "./InfoSheet";
+import ClampText from "./ui/ClampText";
 
 interface Props {
   kinks: Kink[]; // ordered, level-filtered — the full visible deck
@@ -107,9 +108,11 @@ export default function TriageDeck({
               {current.name}
             </h3>
             {current.description && (
-              <p className="text-sm mt-1 mb-3 line-clamp-2" style={{ color: "var(--text2)" }}>
-                {current.description}
-              </p>
+              <ClampText
+                text={current.description}
+                className="text-sm mt-1 mb-3"
+                style={{ color: "var(--text2)" }}
+              />
             )}
             {!current.description && <div className="mb-3" />}
 
