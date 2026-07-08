@@ -51,7 +51,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     }
   });
 
-  test("kink-status instellen via status-knop", async ({ page }) => {
+  test("kink-status instellen via de triage-stapel", async ({ page }) => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
@@ -59,13 +59,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
     if (await editTab.count() > 0) await editTab.first().click();
 
-    // Dispatch click directly to bypass sticky nav interception
-    const jaBtn = page.locator("button[aria-pressed]").filter({ hasText: /^Ja$/ }).first();
-    if (await jaBtn.count() > 0) {
-      await jaBtn.scrollIntoViewIfNeeded();
-      await jaBtn.dispatchEvent("click");
-      await expect(jaBtn).toHaveAttribute("aria-pressed", "true", { timeout: 3000 });
-    }
+    // The deck offers the five verdicts as stacked rows — take "Ja"
+    const jaBtn = page.locator('button[aria-pressed]').filter({ hasText: "geen probleem mee" }).first();
+    await jaBtn.scrollIntoViewIfNeeded();
+    await jaBtn.dispatchEvent("click");
+
+    // The verdict lands in the ledger as a compact row
+    await expect(page.locator('button[aria-label*=", Ja — bewerken"]').first()).toBeVisible({ timeout: 3000 });
   });
 });
 

@@ -5,9 +5,11 @@ import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import CategorySection from "@/components/CategorySection";
 import SegmentedPill from "@/components/ui/SegmentedPill";
-import KinkRow from "@/components/KinkRow";
+import TriageDeck from "@/components/TriageDeck";
+import KinkListRow from "@/components/KinkListRow";
+import KinkEditSheet from "@/components/KinkEditSheet";
 import Sheet from "@/components/Sheet";
-import type { ExperienceLevel, KinkStatus } from "@/types";
+import type { ExperienceLevel, Kink, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
@@ -48,7 +50,9 @@ export default function ProfilePage({ params }: Props) {
   const [activeTab, setActiveTab] = useState<"overzicht" | "bewerken" | null>(null);
   const [customInput, setCustomInput] = useState("");
   const [search, setSearch] = useState("");
-  const [compact, setCompact] = useState(false);
+  const [editKink, setEditKink] = useState<Kink | null>(null);
+  const [deckFocus, setDeckFocus] = useState<string | null>(null);
+  const deckRef = useRef<HTMLDivElement>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [tourVisible, setTourVisible] = useState(false);
@@ -348,6 +352,12 @@ export default function ProfilePage({ params }: Props) {
     sectionRefs.current.get(cat)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // Back up to the deck with one category under the spotlight.
+  function focusTriage(cat: string) {
+    setDeckFocus(cat);
+    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function handleAddCustom(e: React.FormEvent) {
     e.preventDefault();
     if (!customInput.trim()) return;
@@ -435,27 +445,14 @@ export default function ProfilePage({ params }: Props) {
             <Info size={14} aria-hidden="true" />
             Wat betekenen deze keuzes?
           </button>
-          <div className="px-4 pb-2 flex gap-2">
+          <div className="px-4 pb-2">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Zoek een kink…"
-              className="focus-ring flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
+              className="focus-ring w-full rounded-lg px-3 py-2 text-sm focus:outline-none placeholder-[color:var(--text2)]"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
-            <button
-              onClick={() => setCompact((v) => !v)}
-              aria-label={compact ? "Uitgebreide weergave" : "Compacte weergave"}
-              title={compact ? "Uitgebreide weergave" : "Compacte weergave"}
-              className="focus-ring p-2 rounded-lg border text-xs flex-none transition-colors"
-              style={{
-                border: "1px solid var(--border)",
-                color: compact ? "var(--accent)" : "var(--text2)",
-                background: compact ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
-              }}
-            >
-              {compact ? "≡" : "⊡"}
-            </button>
           </div>
 
           <div
@@ -485,7 +482,7 @@ export default function ProfilePage({ params }: Props) {
                 <button
                   key={cat}
                   data-nav={cat}
-                  onClick={() => { setActiveCategory(cat); scrollToCategory(cat); }}
+                  onClick={() => { setActiveCategory(cat); setDeckFocus(cat === "Meer" ? null : cat); scrollToCategory(cat); }}
                   className="focus-ring flex-none px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
                   style={
                     activeCategory === cat
@@ -498,6 +495,22 @@ export default function ProfilePage({ params }: Props) {
               ))}
             </div>
           </div>
+
+          {!searchTrimmed && (
+            <div
+              ref={deckRef}
+              className="px-4 pt-3"
+              style={{ scrollMarginTop: "calc(var(--nav-h) + 60px)" }}
+            >
+              <TriageDeck
+                kinks={visibleKinks}
+                entries={profile.entries}
+                focusCategory={deckFocus}
+                onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
+                onCuriousChange={(kinkId, v) => { setEntry(profile.id, kinkId, { curious: v }); markSaved(); }}
+              />
+            </div>
+          )}
 
           <div className="px-4 pt-3">
             {searchTrimmed ? (
@@ -512,14 +525,11 @@ export default function ProfilePage({ params }: Props) {
                 ) : (
                   <div className="flex flex-col pl-1">
                     {searchResults.map((kink) => (
-                      <KinkRow
+                      <KinkListRow
                         key={kink.id}
                         kink={kink}
                         entry={profile.entries[kink.id] ?? { status: null, comment: "" }}
-                        onStatusChange={(s) => handleStatus(kink.id, s)}
-                        onTagsChange={(tags) => { setEntry(profile.id, kink.id, { tags }); markSaved(); }}
-                        onCuriousChange={(v) => { setEntry(profile.id, kink.id, { curious: v }); markSaved(); }}
-                        compact={compact}
+                        onOpen={() => setEditKink(kink)}
                       />
                     ))}
                   </div>
@@ -536,9 +546,8 @@ export default function ProfilePage({ params }: Props) {
                         category={cat}
                         kinks={kinks}
                         entries={profile.entries}
-                        onStatusChange={(kinkId, s) => handleStatus(kinkId, s)}
-                        onTagsChange={(kinkId, tags) => { setEntry(profile.id, kinkId, { tags }); markSaved(); }}
-                        onCuriousChange={(kinkId, v) => { setEntry(profile.id, kinkId, { curious: v }); markSaved(); }}
+                        onEdit={(kink) => setEditKink(kink)}
+                        onTriage={() => focusTriage(cat)}
                         onBulkSkip={() => {
                           for (const k of getKinksByCategoryAndLevel(cat, maxLevel)) {
                             setEntry(profile.id, k.id, { status: "no" });
@@ -551,7 +560,6 @@ export default function ProfilePage({ params }: Props) {
                           }
                           markSaved();
                         }}
-                        compact={compact}
                       />
                     </div>
                   );
@@ -918,6 +926,16 @@ export default function ProfilePage({ params }: Props) {
           </p>
         </div>
       </Sheet>
+
+      {/* Kink verdict — bottom sheet */}
+      <KinkEditSheet
+        kink={editKink}
+        entry={editKink ? (profile.entries[editKink.id] ?? { status: null, comment: "" }) : { status: null, comment: "" }}
+        onClose={() => setEditKink(null)}
+        onStatusChange={(s) => { if (editKink) handleStatus(editKink.id, s); }}
+        onTagsChange={(tags) => { if (editKink) { setEntry(profile.id, editKink.id, { tags }); markSaved(); } }}
+        onCuriousChange={(v) => { if (editKink) { setEntry(profile.id, editKink.id, { curious: v }); markSaved(); } }}
+      />
 
       {/* Edit form — bottom sheet */}
       <Sheet open={editing && !isShared} onClose={() => setEditing(false)} aria-label="Profiel bewerken">
