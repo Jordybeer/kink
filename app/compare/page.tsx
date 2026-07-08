@@ -346,6 +346,8 @@ function ComparePage() {
   const [bId, setBId] = useState(cleanParam(searchParams.get("b")));
   const [filterMode, setFilterMode] = useState<"all" | "match" | "conflict" | "hardno">("all");
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
+  // Notes stay muzzled until summoned — 66 cards × two open textareas was 17k px of scroll.
+  const [openNotes, setOpenNotes] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
 
@@ -635,6 +637,11 @@ function ComparePage() {
                             {(() => {
                               const showReadOnlyA = profileA.isImported && !!eA.comment;
                               const showReadOnlyB = profileB.isImported && !!eB.comment;
+                              const canEdit = !profileA.isImported || !profileB.isImported;
+                              const notesOpen =
+                                openNotes.has(kink.id) ||
+                                (!profileA.isImported && !!eA.comment) ||
+                                (!profileB.isImported && !!eB.comment);
                               return (
                                 <>
                                   {(showReadOnlyA || showReadOnlyB) && (
@@ -653,6 +660,17 @@ function ComparePage() {
                                       )}
                                     </div>
                                   )}
+                                  {canEdit && !notesOpen && (
+                                    <button
+                                      onClick={() => setOpenNotes((s) => new Set(s).add(kink.id))}
+                                      aria-label={`Notitie toevoegen voor ${kink.name}`}
+                                      className="focus-ring mt-1 -mb-1 inline-flex items-center h-8 text-xs rounded-lg px-2 -ml-2 transition-colors"
+                                      style={{ color: "var(--text2)" }}
+                                    >
+                                      + Notitie
+                                    </button>
+                                  )}
+                                  {canEdit && notesOpen && (
                                   <div className="mt-2 space-y-1.5">
                                     {!profileA.isImported && (
                                       <textarea
@@ -687,6 +705,7 @@ function ComparePage() {
                                       />
                                     )}
                                   </div>
+                                  )}
                                 </>
                               );
                             })()}
@@ -780,6 +799,26 @@ function ComparePage() {
                             />
                             <EntryBadge entry={eB} colour={COLOUR_B} />
                           </div>
+                          {(() => {
+                            const canEdit = (!profileA.isImported && !!item.aId) || (!profileB.isImported && !!item.bId);
+                            const notesOpen =
+                              openNotes.has(rowKey) ||
+                              (!profileA.isImported && !!item.aId && !!eA.comment) ||
+                              (!profileB.isImported && !!item.bId && !!eB.comment);
+                            if (canEdit && !notesOpen) {
+                              return (
+                                <button
+                                  onClick={() => setOpenNotes((s) => new Set(s).add(rowKey))}
+                                  aria-label={`Notitie toevoegen voor ${item.name}`}
+                                  className="focus-ring mt-1 -mb-1 inline-flex items-center h-8 text-xs rounded-lg px-2 -ml-2 transition-colors"
+                                  style={{ color: "var(--text2)" }}
+                                >
+                                  + Notitie
+                                </button>
+                              );
+                            }
+                            if (!canEdit) return null;
+                            return (
                           <div className="mt-2 space-y-1.5">
                             {!profileA.isImported && item.aId && (
                               <textarea
@@ -814,6 +853,8 @@ function ComparePage() {
                               />
                             )}
                           </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}
