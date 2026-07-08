@@ -1,117 +1,125 @@
-# v5 Backlog — reorganised 2026-06-24 (post UI/UX audit)
+# The Backlog — one ledger to rule them all (merged 2026-07-08)
+
+`future.md` and `planned-changes.md` are now one file. Active phases up top, the suggestion pool beneath, the shipped ledger at the bottom. **Read this at session start; update it when work lands.**
 
 Mobile-first. No regressions. No Playwright unless a feature genuinely needs it. Group commits per phase; each phase ships independently.
 
 ---
 
-## Open Decisions (resolve before scoping the queue below)
-
-- ~~**Avatar ContextMenu**~~ — ✓ shipped `84cc42b`.
-- ~~**Overzicht tab padding**~~ — ✓ shipped `629419b` — Bewerken `pt-2`, Overzicht `pt-4`.
-- ~~**Give/receive direction selector**~~ — ✓ killed. `629419b` — store v15, direction fields stripped from all layers.
-
----
-
 ## Active queue
 
-### ~~Phase 16 — Sheet implementation consolidation~~ ✓ [SHIPPED]
+### Phase 24 — Consistency polish sweep [NEXT UP — start here]
 
-All 4 `sheet-panel`/`sheet-overlay` consumers in `app/page.tsx` migrated to `<Sheet>` from `components/ui/`. Import drag state + `settingsSheetRef` + `useFocusTrap` removed (Sheet handles those internally). CSS blocks `.sheet-overlay` / `.sheet-panel` deleted; z-index ladder comment updated to reflect 150/151.
+From the 2026-07-08 design critique of the triage-deck redesign. Pure polish, nothing additive. Three commit-sized passes, in order:
 
-### ~~Phase 17 — Home page extraction~~ ✓ [SHIPPED]
+**24a — Tap-to-expand kink descriptions**
+- `TriageDeck.tsx:110` clamps descriptions at `line-clamp-2` with zero affordance — the clipped sentence is exactly the safety-relevant content someone needs *before* picking "Heel graag" vs "Grens".
+- Make the paragraph itself tappable to un-clamp in place (`aria-expanded`, subtle "…meer" hint when clamped). Keep the (i) InfoSheet as the discoverable fallback (it adds the level badge).
+- Same clamp/expand parity in `KinkEditSheet` so both surfaces agree about the same text.
 
-`app/page.tsx` 1588 → 568 lines. Five components extracted: `SettingsSheet`, `PinFlowSheet`, `DestroyAllSheet`, `EncryptedBackupSheets` (two named exports), `ProfileList` (groups + inline edit + CTAs). Same instinct applies later to `app/scene/page.tsx` (37 KB), `app/session/page.tsx` (41 KB), `app/contract/page.tsx` (55 KB) but those are out of scope here. Landed `d453e46` · PR #234.
+**24b — One status vocabulary, one source**
+- `STATUS_LABEL`/`STATUS_VAR` maps are copy-pasted three ways (`StatusOptionRows`, `KinkListRow`, `app/contract/page.tsx` `STATUS_NL`) — which is how `hard_no` drifted between "Grens" (app) and "Harde grens" (contract PDF). Extract to `lib/statusLabels.ts`, kill the drift.
 
-### ~~Phase 18 — ProfileHero copy dedup~~ ✓ [SHIPPED]
+**24c — PDF palette unification**
+- Two PDFs, two different purples, neither the brand: contract title `#6D28D9`, scene title `#3F1F7A`, app accent `#D946AF`. Two body inks (`#1E1B4B` vs `#241A32`), two muted grays (`#6B7280` vs `#4B5563`).
+- **Semantic colour bug**: contract prints "Zachte grenzen" in green `#10B981` — the app's `--willing` ("Ja, geen probleem"). A *limit* wearing consent-green is the mixed signal this app exists to prevent.
+- One shared PDF palette constant derived from the app tokens (jsPDF can't read CSS vars — hardcode, but from a single file). Rename the contract generator's `dark` variable that actually holds white.
 
-`formatProfileMetadata` stripped of the count prefix; metadata `<p>` now only renders if custom kinks or top category is present. Single "X van Y beoordeeld" remains in the italic DNA summary line.
-
-### ~~Phase 19 — /compare interaction upgrades~~ ✓ [SHIPPED]
-
-AlignmentBar gained an `onFilter` prop — each colour segment now calls `setFilterMode`. Match tab gets its badge (green count) alongside Bespreken and Grenzen.
-
-### Phase 20 — Italic Cormorant vocabulary extension [MEDIUM, identity]
-
-The `/compare` score masthead (`app/compare/page.tsx:59–141`) is the strongest typographic moment in the product. Carry its italic-serif treatment to:
-- Profile-detail section headers (currently 12px uppercase tracking-widest grey).
-- `"Maak een contract"` CTA (`app/page.tsx:921`, currently semibold sans).
-- Home empty-state copy ("Nog geen profielen. Wie ben jij in de speelkamer?" — text-sm now).
-
-Goal: reinforce the editorial identity that's already doing the heavy lifting in the masthead, rather than letting it be a one-off.
-
-### Phase 21 — Body type floor [SMALL, sweep]
-
-Sweep `text-[10px]` and `text-[11px]` away from body and metadata copy across `app/` and `components/`. Reserve sub-12px for `tabular-nums` counters and microbadges only.
-
-### ~~Phase 22 — Emoji → Lucide for chrome~~ ✓ [SHIPPED]
-
-Phase 11 cleared chrome emoji from `/compare`, `/scene`, `/contract`. Remaining holdouts:
-- Settings sheet icons (🎨 💾 🔒 🧭 ⚠️ 🔑 🔓 🔍) in `app/page.tsx:1004–1173`.
-- Onboarding intro / status screens (🔒 💾 🖤 🎨 🔐 🔓 🔞) in `components/Onboarding.tsx`.
-- `FEATURE_ROWS` (`components/Onboarding.tsx:323–330`) mixes string emoji with `Zap` / `PenLine` Lucide components in the same array — pick one.
-
-Rule: Lucide for app chrome, emoji only for user-authored content.
+**24d — Front-page harmonisation (small)**
+- Home form chips (`px-3 py-1`, ~26px) → `min-h-9` to match KinkEditSheet's chips.
+- "Nieuw profiel" (16px icon, `--text` label) vs "Scan QR" (18px icon, `--text2` label) — same rank, same treatment.
+- Arrow-motif rule: arrows = forward navigation only ("Sla over →"), never on commit actions. Drop the duplicate "Nieuw profiel" h2 inside the form the toggle just opened.
+- InfoSheet type hierarchy inverted vs deck/edit sheet (bold sans name + italic serif category vs the deck's serif italic name + plain category) — unify on the deck's pattern.
+- InfoSheet level badges borrow status colours (Niveau 1 wears `--yes` orange) — levels aren't verdicts; give them a neutral ramp.
 
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
-Phase 3d deliberately mapped `--yes → orange` (desire/heat) and `--willing → green`. The mapping inverts the universal "green = enthusiastic / amber = caution" expectation. Worth a quiet user-test against two real partners before assuming the mapping lands; not a fix request, a verification.
+Phase 3d deliberately mapped `--yes → orange` (desire/heat) and `--willing → green`, inverting the universal "green = enthusiastic / amber = caution" expectation. Worth a quiet user-test against two real partners before assuming the mapping lands; not a fix request, a verification. (Same colour-semantics territory as the 24c green-soft-limits bug — run them together mentally.)
 
 ### Phase 8 — External Imports (research-heavy)
 
 Each item needs its own design pass before code.
-- **BDSMtest meaningful use** — scrape result percentages on paste? Map archetypes (Master, Brat, …) → suggested kink defaults? Display alongside DNA bar? Exploration doc landed in PR #231 (`docs/phase8-external-imports.md`); next step is to pick one of the three sub-questions and prototype.
+- **BDSMtest meaningful use** — paste-parsing shipped (`lib/parseBdsmtest.ts`, `BdsmtestScores`). Remaining: map archetypes (Master, Brat, …) → suggested kink defaults? Exploration doc in `docs/phase8-external-imports.md`.
 - **FetLife kinks import** — text paste → tokenize → fuzzy-match against `lib/kinks.ts`. Screenshot OCR deferred.
 - **Dupe matching** — `lib/kinkAliases.ts` of common alternative spellings.
 - **Identity-vs-dynamic split** — `category: "identity"` flag in `lib/kinks.ts`, surface in a separate ProfileHero strip.
 
-### Phase 10 — Brand micro-polish (deferred indefinitely)
-
-First attempt reverted (PR #219 closed). Rules now in `memory.md:39–48`:
-- ≥3s cycle, ≤30% swing.
-- Coexist with the shimmer, don't replace it.
-- Open question: is the Cormorant wordmark even the right surface for a status-cursor motif? Maybe the underscore belongs in the nav status dot or a footer marker.
-
-Only attempt once Phase 20 has landed and the editorial vocabulary is consistent enough to know what *would* "coexist".
-
 ### Phase — Role-aware complementary matching (deferred, post direction-kill)
 
-Per-kink give/receive direction was killed in `629419b`. The complementary matching problem it partially addressed (Dom gives / Sub receives → high score) was never actually solved by it — the selector was Switch-only and opt-in.
-
-The right approach: use `profile.role` at the `profileMatchScore` level to infer give/receive intent for the pair and weight scores accordingly. A Dom + Sub pair scoring "yes + yes" on spanking should resolve role complementarity without either user touching per-kink toggles.
-
-Not scoped yet. Write a design doc before coding. Touches `lib/matching.ts` and possibly a new `lib/roles.ts` helper.
+Per-kink give/receive direction was killed in `629419b`. The right approach: use `profile.role` at the `profileMatchScore` level to infer give/receive intent for the pair and weight scores accordingly. A Dom + Sub pair scoring "yes + yes" on spanking should resolve role complementarity without either user touching per-kink toggles. **Write a design doc before coding.** Touches `lib/matching.ts` and possibly `lib/roles.ts`.
 
 ### Phase B — Agreement Archive Data Model (deferred structural)
 
-Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Phase 7 unblocked this — storage budget settled at ~15–25 KB per active profile (30 caps × ~500 B–1 KB), inside localStorage limits for a 5–10 profile user. Blocks Phase C (Evolution View at `/history`) and Phase D (history consolidation).
+Migrate `ContractSnapshot` → `ProfileSnapshot` derivatives. Storage budget settled at ~15–25 KB per active profile, inside localStorage limits for a 5–10 profile user. Blocks Phase C (Evolution View at `/history`) and Phase D (history consolidation).
+
+### Phase 10 — Brand micro-polish (deferred indefinitely)
+
+First attempt reverted (PR #219 closed). Rules in `memory.md` and `corrections.md`: ≥3s cycle, ≤30% swing, coexist with the shimmer, match the surface's vocabulary. Only attempt now that Phase 20's editorial vocabulary has landed — and only when feeling brave.
 
 ---
 
-## Recommended Execution Order
+## Suggestion pool (formerly future.md)
 
-| Order | Phase | Why this slot |
-|------:|-------|---------------|
-| 1 | ~~14 — Ledger `#000` sweep~~ ✓ | Shipped `7fcf6d2`. |
-| 2 | ~~15 — hard_no glow timing~~ ✓ | Shipped `7fcf6d2`. |
-| 3 | ~~18 — ProfileHero copy dedup~~ ✓ | Shipped `42d7083`. |
-| 4 | ~~19 — Compare interactions~~ ✓ | Shipped `d2e8f69`. |
-| 5 | ~~16 — Sheet consolidation~~ ✓ | Shipped `6266628`. |
-| 6 | ~~17 — Home page extraction~~ ✓ | Shipped `d453e46` · PR #234. |
-| 7 | ~~**22 — Emoji chrome cleanup**~~ ✓ | Shipped. |
-| 8 | **20 — Italic Cormorant vocabulary extension** | Identity reinforcement once chrome is consistent. |
-| 9 | **21 — Body type floor** | Final sweep after layout work has settled. |
-| 10 | **23 — Status colour user-test** | Verification, not change. Run in parallel with later phases. |
-| 11 | **B — Agreement Archive** | Largest deferred structural work; unblocks C and D. |
-| 12 | **8 — External Imports** | Research first; commit second. |
-| 13 | **10 — Brand polish (re-attempt)** | Last. Pure delight. No dependencies. |
+Unscoped ideas, grouped by theme. Promote to a phase before working on any of them. Pruned 2026-07-08: DNA-bar items dropped (the DNA bar was executed in June), shipped items removed.
 
-Each phase = one commit (or one tight cluster). `npm test` green before commit. No `--no-verify`.
+### Navigation polish (TopNav)
+- **Bottom-anchored variant for reach**: same pills, floating bottom-right on phones — the biggest open tradeoff from killing the bottom bar.
+- **Hide-on-scroll-down / reveal-on-scroll-up**: auto-tuck the header on long kink lists.
+- **Sliding active indicator**: framer-motion `layoutId` glide between tabs instead of snapping.
+- **Personal profile pill**: swap the 👤 glyph for the pinned profile's avatar thumbnail.
+- **Notch / standalone safe-area check**: verify `env(safe-area-inset-top)` on notched iPhones in installed PWA mode.
+- **Tap feedback**: subtle scale/opacity press state on pills.
+
+### Quick wins (CSS/attr only, parallelisable)
+- **Pill scroll hint**: right-edge fade gradient on horizontal pill rows.
+- **Vibe badge animation**: fade in when first calculated.
+- **Status pill active glow**: subtle outer glow matching its colour (like the ⓘ button).
+- **Screen reader live region**: announce status changes via `aria-live="polite"`.
+- **Profile edit (pencil) button still 40px**: `app/profile/[id]/page.tsx` `w-10 h-10` vs the `w-11 h-11` export FABs beside it.
+
+### UX / Interaction
+- **Profile skeleton**: shimmer skeleton for overview cards while Zustand hydrates.
+- **Category search result highlight**: highlight matched text.
+- **Kink count badge on category header**: rated/total in the scrollspy nav.
+- **Swipe-to-rate gesture**: swipe a list row to cycle status, swipe left to clear.
+- **Overview filter / sort**: filter read-only overview by status, or sort alphabetically.
+- **Home compare CTA always picks first two profiles**: default to last-viewed pair, or let the user pick.
+- **"Besproken" toggle is session-only**: persists nothing, hints nothing — persist it or mark "(tijdelijk)".
+
+### Visual / Design
+- **Light mode**: consider auto light theme via `@media (prefers-color-scheme: light)`.
+- **Avatar upload drag-and-drop**: drag an image onto the avatar button.
+- **Overview card tap-to-edit**: tap a read-only overview card to jump to that kink in the edit flow.
+
+### Performance / Technical
+- **Playwright CI integration**: run the visual audit in CI.
+- **Bundle size audit**: `@next/bundle-analyzer` pass.
+- **Custom kink persistence race**: rapid add-then-navigate may drop the write in the persist debounce.
+- **Offline support**: PWA manifest exists but no service-worker caching strategy.
+
+### Accessibility
+- **Keyboard navigation in accordions**: verify focus can't land inside closed CategorySections.
+- **Color-only distinction**: status colours need an icon/pattern channel for colour-vision deficiency (the dashed hard_no border is a start; the other four statuses have nothing).
+- **`<fieldset>/<legend>` semantics**: experience-level / relatiestatus groups use `<p>` + `role="group"` — swap for the standard pairing.
+
+### Phase 3b follow-ups (nieuwsgierig)
+- **Nieuwsgierig pair distinction on compare page**: `nieuwsgierig+nieuwsgierig` and `maybe+yes` land in the same bucket with identical styling — a subtle cyan dot could tell them apart.
+- **Safety tags visible by default on partner profiles**: "vraag eerst" is safety-relevant; read-only view should not hide it behind a tap.
+- **Nieuwsgierig swatch in contract PDF**: hardcode `#06b6d4` alongside the other PDF hex fallbacks (fold into Phase 24c).
+- **Status explainer i18n extraction**: hardcoded Dutch `STATUS_EXPLAINER` — natural extraction point if multilingual ever lands.
+
+### Features
+- **Export to PDF on mobile**: test jsPDF quirks on iOS Safari.
+- **Compare filter "only mutual yes"**: quick filter for enthusiastic matches only.
+- **Kink notes in compare view**: collapsed view of each person's comment on matched kinks (partially shipped via '+ Notitie' — verify remaining gap).
+- **Contract versioning**: multiple contract snapshots per pair with timestamps (overlaps Phase B).
+- **Profile import validation**: schema-validate imported JSON to prevent crashes from malformed imports.
 
 ---
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
-### v5 (this branch, dev)
+### v5 (dev)
 
 | Phase | Title | Landed |
 |-------|-------|--------|
@@ -124,10 +132,10 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 3e | Ledger contrast fix (`--accent` cochineal → vermilion, `--on-accent` bone → near-black) | 2026-06-20 · `35b4244` |
 | 3 — last | Ledger PDF palette (hardcoded RGB → Phase 3d colours) | 2026-06-24 · PR #231 |
 | 4a | Direction toggle gating, harde grens in pill row, thicker active border, rated-first sort | 2026-06-19 · `31cacc1` |
-| 4b | KinkRow UX polish (`grid grid-cols-5`, per-status faint inactive hints, ★ curious flag, direction-after-rating) | 2026-06-20 · `6a07b0d` + `2b5e38d` + `64268ae` |
+| 4b | KinkRow UX polish (grid, per-status faint hints, ★ curious flag, direction-after-rating) | 2026-06-20 · `6a07b0d` + `2b5e38d` + `64268ae` |
 | 4c | Profile tab toggle → `<SegmentedPill>` | 2026-06-20 · `e4ebc74` |
 | 5 | TopNav 3-col layout (hub + focused), 1312 overflow fix | 2026-06-20 · `e4ebc74` |
-| 5b | UI primitive library (`SegmentedPill`, `Accordion`, `SwipeRow`, `ContextMenu`, `Sheet`, `TabBar`, `FAB`, `AmbientGlow`) + CLAUDE.md layer rules | 2026-06-19 · `359cd05` |
+| 5b | UI primitive library (8 primitives) + CLAUDE.md layer rules | 2026-06-19 · `359cd05` |
 | 6a | Datachannel `"P"` variant → Import-on-reveal CTA + `lib/sessionImport.ts` | 2026-06-22 · worktree-edging |
 | 6b | QR camera paste-from-URL fallback + `lib/parseSharePaste.ts` | 2026-06-23 · worktree-inversion |
 | 6c | Avatar sync over datachannel (MIME-gated, 20 kB cap) | 2026-06-23 · worktree-inversion |
@@ -139,19 +147,24 @@ Each phase = one commit (or one tight cluster). `npm test` green before commit. 
 | 13 | Live session bugs (iOS `<select>` zoom, 25s keepalive + ICE restart) | 2026-06-24 · PR #231 |
 | — | Direction selector killed — store v15, all give/receive fields stripped | 2026-06-24 · `629419b` |
 | 14+15 | Ledger `--on-accent` sweep (14 files) + Sheet `var(--surface)` + hard_no glow 3.2s/18% | 2026-06-24 · `7fcf6d2` |
-| 18 | ProfileHero copy dedup — `formatProfileMetadata` stripped of count prefix, paragraph gated | 2026-06-24 · `42d7083` |
+| 18 | ProfileHero copy dedup | 2026-06-24 · `42d7083` |
 | 19 | /compare interactions — AlignmentBar tap-to-filter + Match count badge | 2026-06-24 · `d2e8f69` |
-| 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>`, CSS blocks purged | 2026-06-24 · `6266628` |
+| 16 | Sheet consolidation — 4 legacy `.sheet-panel` consumers → `<Sheet>` | 2026-06-24 · `6266628` |
 | 17 | Home page extraction — `app/page.tsx` 1588 → 568 lines; 5 components split out | 2026-06-25 · `d453e46` · PR #234 |
-| 22 | Emoji → Lucide chrome sweep — settings sheet + onboarding ICON_CIRCLE + FEATURE_ROWS all Lucide | 2026-06-25 |
-| — | Onboarding polish — `<br />` bugs killed, copy tightened, content centred, skip moved to action bar | 2026-06-25 |
-| — | Onboarding motion + type — horizontal swipe → vertical scale-fade, spring pop → ease-out, pulse killed, titles → Cormorant italic | 2026-06-25 |
+| 22 | Emoji → Lucide chrome sweep — settings sheet + onboarding all Lucide | 2026-06-25 |
+| — | Onboarding polish + motion/type pass | 2026-06-25 |
+| 20 | Italic Cormorant vocabulary extension — section headers, CTAs, empty states | 2026-06-29/30 |
+| 21 | Body type floor — sub-12px swept from body/metadata copy, text-xs floor | 2026-06-29/30 |
+| — | bdsmtest.org integration — `parseBdsmtest`, `BdsmtestScores`, share v2 `bs` key; DNA bar killed | 2026-06-29/30 · `179f641` |
+| — | Triage deck — KinkRow decomposed into `TriageDeck`/`KinkEditSheet`/`KinkListRow`/`StatusOptionRows`, TopNav 375px corset fix, compare '+ Notitie' collapse, desktop widening | 2026-07-08 · PR #243 · `c940e04` |
 
 ### v4 (main)
 
-All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18 11:42 UTC. Six-tier match rubric (`MatchKind`, `KinkMatch`, `kinkMatchScore`, `profileMatchScore`) lives in `lib/matching.ts` with disjoint buckets enforced. Chart denominator parity verified post-merge — no regression.
+All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. Six-tier match rubric lives in `lib/matching.ts` with disjoint buckets enforced.
 
 ### Pruning + ops hygiene
 
 - 8 stale worktrees pruned; `worktree-kinbaku` rebased + shipped as PR #231 (2026-06-24).
-- `corrections.md` entries 2026-06-20 (Ledger contrast, chart double-count) and 2026-06-22 (Phase 10 cursor) referenced from Phases 14 + 15 above.
+- `corrections.md` entries 2026-06-20 (Ledger contrast, chart double-count) and 2026-06-22 (Phase 10 cursor) referenced from Phases 14 + 15.
+- 2026-07-08: webpack WasmHash build crash on Node v26.2.0 = corrupted `.next/cache/webpack`; fix is `rm -rf .next/cache/webpack`.
+- 2026-07-08: `future.md` merged into this file and deleted.

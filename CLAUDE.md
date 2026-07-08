@@ -71,9 +71,8 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - `e2e/` — Playwright tests
 - `e2e-offline/` — Playwright offline tests
 - `docs/` — internal documentation
-- `future.md` — Claude suggestions backlog (ask before writing)
 - `corrections.md` — mistake log (read at session start)
-- `planned-changes.md` — active sprint tasks (read + update when completing work)
+- `planned-changes.md` — the single backlog: active phases + suggestion pool + shipped ledger (read at session start, update when work lands; absorbed `future.md` on 2026-07-08)
 - `ideas.md` — raw ideas, read only
 
 ## Hard constraints
@@ -96,12 +95,11 @@ When something goes wrong mid-session (reverted PR, wrong approach, design regre
 Read `memory.md` at session start. Cross-session operational notes the user wants every Claude (claude1 + claude2) to carry. Append new notes here when the user says "remember this" or similar.
 
 ## Planning files
-- `future.md` — Claude suggestions only, ask before writing anything here
 - `ideas.md` — your raw ideas, Claude reads only, never modifies
-- `planned-changes.md` — active sprint, Claude reads and updates when completing tasks
+- `planned-changes.md` — the single backlog. **Read at session start** and begin with the phase marked NEXT UP unless told otherwise. Update when completing tasks. (`future.md` was merged in on 2026-07-08 and deleted.)
 
 ## Suggestions (ask first)
-After each task, ask if suggestions are welcome before writing anything to `future.md`.
+After each task, ask if suggestions are welcome before writing anything to the suggestion pool in `planned-changes.md`.
 
 ## Editing discipline (learned)
 - Read the full element before editing — not just the target line. Avoid duplicate props.
