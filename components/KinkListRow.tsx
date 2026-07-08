@@ -1,22 +1,7 @@
 "use client";
 import { ChevronRight, Star } from "lucide-react";
-import type { Kink, KinkEntry, KinkStatus } from "@/types";
-
-const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag",
-  willing: "Ja",
-  maybe: "Misschien",
-  no: "Voor hen",
-  hard_no: "Grens",
-};
-
-const STATUS_VAR: Record<NonNullable<KinkStatus>, string> = {
-  yes: "var(--yes)",
-  willing: "var(--willing)",
-  maybe: "var(--maybe)",
-  no: "var(--no)",
-  hard_no: "var(--hard-no)",
-};
+import type { Kink, KinkEntry } from "@/types";
+import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 
 interface Props {
   kink: Kink;

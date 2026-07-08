@@ -12,14 +12,7 @@ import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
-
-const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "Heel graag",
-  willing: "Ja",
-  maybe:   "Misschien",
-  no:      "Voor hen",
-  hard_no: "Harde grens",
-};
+import { STATUS_LABEL as STATUS_NL } from "@/lib/statusLabels";
 
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const drawing = useRef(false);

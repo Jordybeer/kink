@@ -11,6 +11,7 @@ import { genCode, postOffer, getOffer, postAnswer, pollAnswer, waitForIceGatheri
 import PageShell from "@/components/PageShell";
 import { buildPartnerProfile, sanitizeRemoteProfileFull, type RemoteProfileFull } from "@/lib/sessionImport";
 import SessionImportAction from "@/components/SessionImportAction";
+import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
 function iceServersSummary(servers: RTCIceServer[]): string {
   const urls = servers.map(s => String(s.urls));
@@ -26,21 +27,9 @@ function iceCandSummary(types: string[]): string {
   return `${types.length} kandidaten (${parts})${counts.relay ? " ✓ relay aanwezig" : " ⚠ GEEN relay — cross-netwerk zal falen"}`;
 }
 
-const STATUS_COLOR: Record<NonNullable<KinkStatus>, string> = {
-  yes: "var(--yes)", willing: "var(--willing)",
-  maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
-};
-const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag", willing: "Ja",
-  maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
-};
-const PILLS: { s: NonNullable<KinkStatus>; label: string }[] = [
-  { s: "yes", label: "Heel graag" }, { s: "willing", label: "Ja" },
-  { s: "maybe", label: "Misschien" }, { s: "no", label: "Voor hen" },
-  { s: "hard_no", label: "Harde grens" },
-];
+const PILLS = STATUS_ORDER.map((s) => ({ s, label: STATUS_LABEL[s] }));
 
-const VALID_STATUSES = new Set<string>(["yes", "willing", "maybe", "no", "hard_no"]);
+const VALID_STATUSES = new Set<string>(STATUS_ORDER);
 
 function sanitizeEntries(raw: unknown): Record<string, KinkStatus> {
   const out: Record<string, KinkStatus> = {};
@@ -731,12 +720,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                         const theirStatus = remote[kink.id] ?? null;
                         return (
                           <div key={kink.id} className={`rounded-xl mb-1 px-3 py-2${partnerTappedId === kink.id ? " partner-card-tap" : ""}`}
-                            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `3px solid ${myStatus ? STATUS_COLOR[myStatus] : "transparent"}` }}>
+                            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `3px solid ${myStatus ? STATUS_VAR[myStatus] : "transparent"}` }}>
                             <div className="flex items-center gap-2 mb-1.5">
                               <span className="text-sm font-medium flex-1 leading-snug">{kink.name}</span>
                               {theirStatus && (
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded border flex-none partner-hidden${partnerShimmer ? " partner-shimmer" : ""}`}
-                                  style={{ color: STATUS_COLOR[theirStatus], borderColor: `color-mix(in srgb, ${STATUS_COLOR[theirStatus]} 35%, transparent)`, background: `color-mix(in srgb, ${STATUS_COLOR[theirStatus]} 15%, transparent)` }}>
+                                  style={{ color: STATUS_VAR[theirStatus], borderColor: `color-mix(in srgb, ${STATUS_VAR[theirStatus]} 35%, transparent)`, background: `color-mix(in srgb, ${STATUS_VAR[theirStatus]} 15%, transparent)` }}>
                                   {STATUS_LABEL[theirStatus]}
                                 </span>
                               )}
@@ -832,9 +821,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                         <span
                           className="text-[10px] px-1.5 py-0.5 rounded border flex-none"
                           style={{
-                            color: STATUS_COLOR[remote[kink.id]!],
-                            borderColor: `color-mix(in srgb, ${STATUS_COLOR[remote[kink.id]!]} 35%, transparent)`,
-                            background: `color-mix(in srgb, ${STATUS_COLOR[remote[kink.id]!]} 15%, transparent)`,
+                            color: STATUS_VAR[remote[kink.id]!],
+                            borderColor: `color-mix(in srgb, ${STATUS_VAR[remote[kink.id]!]} 35%, transparent)`,
+                            background: `color-mix(in srgb, ${STATUS_VAR[remote[kink.id]!]} 15%, transparent)`,
                           }}
                         >
                           {STATUS_LABEL[remote[kink.id]!]}

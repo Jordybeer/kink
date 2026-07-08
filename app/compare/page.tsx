@@ -11,14 +11,7 @@ import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import DiscussedToggle from "@/components/DiscussedToggle";
-
-const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "Heel graag",
-  willing: "Ja",
-  maybe:   "Misschien",
-  no:      "Voor hen",
-  hard_no: "Harde grens",
-};
+import { STATUS_LABEL } from "@/lib/statusLabels";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";

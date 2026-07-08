@@ -1,4 +1,5 @@
 import type { KinkEntry, KinkStatus, ProfileSnapshot } from "@/types";
+import { STATUS_LABEL, STATUS_ORDER } from "@/lib/statusLabels";
 
 export type CountKey = Exclude<KinkStatus, null>;
 
@@ -25,13 +26,15 @@ export interface ProfileTrendSeries {
   readonly cssVar: string;
 }
 
-export const PROFILE_TREND_SERIES: readonly ProfileTrendSeries[] = [
-  { key: "yes",     label: "Heel graag",  cssVar: "--yes" },
-  { key: "willing", label: "Ja",          cssVar: "--willing" },
-  { key: "maybe",   label: "Misschien",   cssVar: "--maybe" },
-  { key: "no",      label: "Voor hen",    cssVar: "--no" },
-  { key: "hard_no", label: "Harde grens", cssVar: "--hard-no" },
-] as const;
+const SERIES_CSS_VAR: Record<CountKey, string> = {
+  yes: "--yes", willing: "--willing", maybe: "--maybe", no: "--no", hard_no: "--hard-no",
+};
+
+export const PROFILE_TREND_SERIES: readonly ProfileTrendSeries[] = STATUS_ORDER.map((key) => ({
+  key,
+  label: STATUS_LABEL[key],
+  cssVar: SERIES_CSS_VAR[key],
+}));
 
 export interface ProfileTrendData {
   labels: string[];

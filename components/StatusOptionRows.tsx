@@ -1,23 +1,15 @@
 "use client";
 import type { KinkStatus } from "@/types";
+import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
-// The five verdicts, stacked full-width for thumbs — hints echo the
-// "Wat betekenen deze keuzes?" explainer so the vocabulary stays one voice.
-const OPTIONS: { status: NonNullable<KinkStatus>; label: string; hint: string; danger?: boolean }[] = [
-  { status: "yes",     label: "Heel graag", hint: "zoek ik actief op" },
-  { status: "willing", label: "Ja",         hint: "geen probleem mee" },
-  { status: "maybe",   label: "Misschien",  hint: "hangt af van context" },
-  { status: "no",      label: "Voor hen",   hint: "geef ik mijn partner" },
-  { status: "hard_no", label: "Grens",      hint: "niet bespreekbaar", danger: true },
-];
-
-const STATUS_VAR: Record<NonNullable<KinkStatus>, string> = {
-  yes: "var(--yes)",
-  willing: "var(--willing)",
-  maybe: "var(--maybe)",
-  no: "var(--no)",
-  hard_no: "var(--hard-no)",
-};
+// The five verdicts, stacked full-width for thumbs — labels and hints come
+// from lib/statusLabels so the vocabulary stays one voice.
+const OPTIONS = STATUS_ORDER.map((status) => ({
+  status,
+  label: STATUS_LABEL[status],
+  hint: STATUS_HINT[status],
+  danger: status === "hard_no",
+}));
 
 interface Props {
   current: KinkStatus;

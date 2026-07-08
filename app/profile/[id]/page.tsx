@@ -22,16 +22,18 @@ import { getProfileType } from "@/lib/profileType";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import BdsmtestScores from "@/components/BdsmtestScores";
 import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
+import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
-const STATUS_COLORS: Record<NonNullable<KinkStatus>, string> = {
-  willing: "var(--willing)", yes: "var(--yes)",
-  maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
-};
-const STATUS_LABELS: Record<NonNullable<KinkStatus>, string> = {
-  yes: "Heel graag", willing: "Ja",
-  maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
+// Longer-form vows behind each verdict — labels come from lib/statusLabels,
+// only the elaboration lives here.
+const STATUS_EXPLAINER: Record<NonNullable<KinkStatus>, string> = {
+  yes:     "Ik wil dit graag. Dit zoek ik actief op.",
+  willing: "Ik ben hier voor. Geen probleem mee.",
+  maybe:   "Onzeker. Hangt af van stemming, context, of met wie.",
+  no:      "Niet voor mij, maar ik wil dit mijn partner geven of ontvangen.",
+  hard_no: "Absolute limiet. Niet bespreekbaar.",
 };
 
 
@@ -181,10 +183,7 @@ export default function ProfilePage({ params }: Props) {
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
 
-  const DNA_COLORS_PAGE: Record<string, string> = {
-    yes: "var(--yes)", willing: "var(--willing)", maybe: "var(--maybe)", no: "var(--no)", hard_no: "var(--hard-no)",
-  };
-  const dnaSegments = (["yes", "willing", "maybe", "no", "hard_no"] as const)
+  const dnaSegments = STATUS_ORDER
     .map((s) => ({
       status: s,
       count: visibleKinks.filter((k) => profile.entries[k.id]?.status === s).length,
@@ -277,9 +276,6 @@ export default function ProfilePage({ params }: Props) {
       yes: [249, 115, 22], willing: [16, 185, 129], maybe: [56, 189, 248],
       no: [129, 140, 248], hard_no: [239, 68, 68],
     };
-    const STATUS_NL: Record<string, string> = {
-      yes: "Heel graag", willing: "Ja", maybe: "Misschien", no: "Voor hen", hard_no: "Harde grens",
-    };
 
     for (const cat of CATEGORIES) {
       const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
@@ -298,7 +294,7 @@ export default function ProfilePage({ params }: Props) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...color);
-        const statusLabel = e.status ? `[${STATUS_NL[e.status]}]` : "";
+        const statusLabel = e.status ? `[${STATUS_LABEL[e.status]}]` : "";
         const tags = (e.tags ?? []).length ? ` [${e.tags!.join(", ")}]` : "";
         doc.text(`• ${k.name}`, margin + 2, y);
         doc.setTextColor(...muted);
@@ -331,7 +327,7 @@ export default function ProfilePage({ params }: Props) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...color);
-        const statusLabel = e?.status ? `[${STATUS_NL[e.status]}]` : "";
+        const statusLabel = e?.status ? `[${STATUS_LABEL[e.status]}]` : "";
         doc.text(`• ${ck.name}  ${statusLabel}`, margin + 2, y);
         y += 4.5;
       }
@@ -464,7 +460,7 @@ export default function ProfilePage({ params }: Props) {
               role="img"
               aria-label={
                 dnaSegments.length
-                  ? `Kink DNA: ${dnaSegments.map((seg) => `${seg.count} ${STATUS_LABELS[seg.status]}`).join(", ")}`
+                  ? `Kink DNA: ${dnaSegments.map((seg) => `${seg.count} ${STATUS_LABEL[seg.status]}`).join(", ")}`
                   : "Kink DNA: nog niets beoordeeld"
               }
               className="h-1.5 rounded-full overflow-hidden flex mb-1.5"
@@ -476,7 +472,7 @@ export default function ProfilePage({ params }: Props) {
                   className="h-full"
                   style={{
                     flex: seg.count,
-                    background: DNA_COLORS_PAGE[seg.status],
+                    background: STATUS_VAR[seg.status],
                     borderRadius:
                       dnaSegments.length === 1 ? "9999px"
                       : i === 0 ? "9999px 0 0 9999px"
@@ -593,7 +589,7 @@ export default function ProfilePage({ params }: Props) {
                     <div className="flex flex-col pl-1 mb-2">
                       {customKinks.map((ck) => {
                         const ckStatus = profile.entries[ck.id]?.status ?? null;
-                        const ckBorderColor = ckStatus ? STATUS_COLORS[ckStatus] : "transparent";
+                        const ckBorderColor = ckStatus ? STATUS_VAR[ckStatus] : "transparent";
                         return (
                           <div
                             key={ck.id}
@@ -620,7 +616,7 @@ export default function ProfilePage({ params }: Props) {
                                   className={`focus-ring rounded-full border text-[11px] font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
                                   style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                                 >
-                                  {s === "yes" ? "Heel graag" : s === "willing" ? "Ja" : s === "maybe" ? "Misschien" : s === "no" ? "Voor hen" : "Harde grens"}
+                                  {STATUS_LABEL[s]}
                                 </button>
                               ))}
                             </div>
@@ -732,7 +728,7 @@ export default function ProfilePage({ params }: Props) {
                             style={{
                               background: "var(--surface)",
                               border: "1px solid var(--border)",
-                              borderLeft: `4px solid ${STATUS_COLORS[s]}`,
+                              borderLeft: `4px solid ${STATUS_VAR[s]}`,
                             }}
                           >
                             <div className="flex items-center gap-2">
@@ -753,12 +749,12 @@ export default function ProfilePage({ params }: Props) {
                               <span
                                 className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
                                 style={{
-                                  color: STATUS_COLORS[s],
-                                  borderColor: `color-mix(in srgb, ${STATUS_COLORS[s]} 35%, transparent)`,
-                                  background: `color-mix(in srgb, ${STATUS_COLORS[s]} 15%, transparent)`,
+                                  color: STATUS_VAR[s],
+                                  borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
+                                  background: `color-mix(in srgb, ${STATUS_VAR[s]} 15%, transparent)`,
                                 }}
                               >
-                                {STATUS_LABELS[s]}
+                                {STATUS_LABEL[s]}
                               </span>
                             </div>
                             {showOverviewComments && entry.comment && (
@@ -792,7 +788,7 @@ export default function ProfilePage({ params }: Props) {
                           style={{
                             background: "var(--surface)",
                             border: "1px solid var(--border)",
-                            borderLeft: `4px solid ${STATUS_COLORS[s]}`,
+                            borderLeft: `4px solid ${STATUS_VAR[s]}`,
                           }}
                         >
                           <div className="flex items-center gap-2">
@@ -813,12 +809,12 @@ export default function ProfilePage({ params }: Props) {
                             <span
                               className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
                               style={{
-                                color: STATUS_COLORS[s],
-                                borderColor: `color-mix(in srgb, ${STATUS_COLORS[s]} 35%, transparent)`,
-                                background: `color-mix(in srgb, ${STATUS_COLORS[s]} 15%, transparent)`,
+                                color: STATUS_VAR[s],
+                                borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
+                                background: `color-mix(in srgb, ${STATUS_VAR[s]} 15%, transparent)`,
                               }}
                             >
-                              {STATUS_LABELS[s]}
+                              {STATUS_LABEL[s]}
                             </span>
                           </div>
                         </div>
@@ -914,15 +910,13 @@ export default function ProfilePage({ params }: Props) {
         >
           <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
           <ul className="flex flex-col gap-3">
-            {[
-              { token: "--yes",     label: "Heel graag",  desc: "Ik wil dit graag. Dit zoek ik actief op." },
-              { token: "--willing", label: "Ja",          desc: "Ik ben hier voor. Geen probleem mee." },
-              { token: "--maybe",   label: "Misschien",   desc: "Onzeker. Hangt af van stemming, context, of met wie." },
-              { token: "--no",      label: "Voor hen",    desc: "Niet voor mij, maar ik wil dit mijn partner geven of ontvangen." },
-              { token: "--hard-no", label: "Harde grens", desc: "Absolute limiet. Niet bespreekbaar." },
-            ].map(({ token, label, desc }) => (
+            {STATUS_ORDER.map((s) => ({
+              s,
+              label: STATUS_LABEL[s],
+              desc: STATUS_EXPLAINER[s],
+            })).map(({ s, label, desc }) => (
               <li key={label} className="flex gap-3">
-                <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: `var(${token})` }} aria-hidden="true" />
+                <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: STATUS_VAR[s] }} aria-hidden="true" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{label}</p>
                   <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>{desc}</p>
