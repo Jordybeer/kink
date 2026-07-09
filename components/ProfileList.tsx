@@ -79,12 +79,20 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                     {group[0].avatarDataUrl ? (
                       <img src={group[0].avatarDataUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                      <div
+                        className="w-full h-full flex items-center justify-center text-xs italic"
+                        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "var(--on-accent)", fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+                      >
                         {groupName[0].toUpperCase()}
                       </div>
                     )}
                   </div>
-                  <span className="text-sm font-semibold">{groupName}</span>
+                  <span
+                    className="text-base italic"
+                    style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+                  >
+                    {groupName}
+                  </span>
                   <span className="text-xs" style={{ color: "var(--text2)" }}>{group.length} rollen</span>
                   {group.length === 2 && (
                     <Link
@@ -244,7 +252,11 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                     {p.avatarDataUrl ? (
                                       <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
                                     ) : (
-                                      <div className={`w-full h-full flex items-center justify-center ${isPortrait ? "text-xl" : "text-sm"} font-bold text-black`} style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                      // Monogram, not sticker — the initial sits in the house serif.
+                                      <div
+                                        className={`w-full h-full flex items-center justify-center ${isPortrait ? "text-2xl" : "text-base"} italic`}
+                                        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "var(--on-accent)", fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+                                      >
                                         {initial}
                                       </div>
                                     )}
@@ -257,18 +269,13 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                {isPortrait ? (
-                                  <p
-                                    className="text-xl italic truncate leading-tight"
-                                    style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
-                                  >
-                                    {p.name}
-                                  </p>
-                                ) : (
-                                  <p className="text-base font-semibold truncate leading-tight">
-                                    {isMulti ? p.role : p.name}
-                                  </p>
-                                )}
+                                {/* Every name speaks the house serif — the portrait just speaks louder. */}
+                                <p
+                                  className={`${isPortrait ? "text-xl" : "text-base"} italic truncate leading-tight`}
+                                  style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+                                >
+                                  {isMulti ? p.role : p.name}
+                                </p>
                                 {isMulti ? (
                                   <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
                                     {lvl?.label}
@@ -296,7 +303,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                           <button
                             onClick={() => startEdit(p)}
                             aria-label={`Profiel ${p.name} bewerken`}
-                            className="focus-ring absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
+                            className="focus-ring absolute top-1/2 -translate-y-1/2 right-2 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
                             style={{ color: "var(--text2)" }}
                           >
                             <Pencil size={14} />
