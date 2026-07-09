@@ -8,33 +8,6 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-### Phase 24 — Consistency polish sweep [NEXT UP — start here]
-
-From the 2026-07-08 design critique of the triage-deck redesign. Pure polish, nothing additive. Three commit-sized passes, in order:
-
-**24a — Tap-to-expand kink descriptions**
-- `TriageDeck.tsx:110` clamps descriptions at `line-clamp-2` with zero affordance — the clipped sentence is exactly the safety-relevant content someone needs *before* picking "Heel graag" vs "Grens".
-- Make the paragraph itself tappable to un-clamp in place (`aria-expanded`, subtle "…meer" hint when clamped). Keep the (i) InfoSheet as the discoverable fallback (it adds the level badge).
-- Same clamp/expand parity in `KinkEditSheet` so both surfaces agree about the same text.
-
-**24b — One status vocabulary, one source**
-- `STATUS_LABEL`/`STATUS_VAR`-style maps are copy-pasted **eight** ways (verified 2026-07-08 via `grep -rl "Heel graag"`): `StatusOptionRows`, `KinkListRow`, `StatusPicker`, `app/profile/[id]/page.tsx`, `app/compare/page.tsx`, `app/session/page.tsx`, `app/contract/page.tsx` (`STATUS_NL`), `lib/profileSnapshot.ts` — which is how `hard_no` drifted between "Grens" (app) and "Harde grens" (contract PDF). Extract to `lib/statusLabels.ts`, kill the drift everywhere.
-
-**24c — PDF palette unification**
-- Two PDFs, two different purples, neither the brand: contract title `#6D28D9`, scene title `#3F1F7A`, app accent `#D946AF`. Two body inks (`#1E1B4B` vs `#241A32`), two muted grays (`#6B7280` vs `#4B5563`).
-- **Semantic colour bug**: contract prints "Zachte grenzen" in green `#10B981` — the app's `--willing` ("Ja, geen probleem"). A *limit* wearing consent-green is the mixed signal this app exists to prevent.
-- One shared PDF palette constant derived from the app tokens (jsPDF can't read CSS vars — hardcode, but from a single file). Rename the contract generator's `dark` variable that actually holds white.
-
-**24d — Front-page harmonisation (small)**
-- Home form chips (`px-3 py-1`, ~26px) → `min-h-9` to match KinkEditSheet's chips.
-- "Nieuw profiel" (16px icon, `--text` label) vs "Scan QR" (18px icon, `--text2` label) — same rank, same treatment.
-- Arrow-motif rule: arrows = forward navigation only ("Sla over →"), never on commit actions. Drop the duplicate "Nieuw profiel" h2 inside the form the toggle just opened.
-- InfoSheet type hierarchy inverted vs deck/edit sheet (bold sans name + italic serif category vs the deck's serif italic name + plain category) — unify on the deck's pattern.
-- InfoSheet level badges borrow status colours (Niveau 1 wears `--yes` orange) — levels aren't verdicts; give them a neutral ramp.
-
-**24e — Safety tags surfaced in Overzicht (promoted from the pool)**
-- The read-only Overzicht renders nieuwsgierig + status pill + optional comment, but **never `entry.tags`** — "vraag eerst" and "alleen privé" are invisible to exactly the person (a partner viewing a shared profile) who most needs them. Not a PR #243 regression (verified against `c940e04^` — the old Overzicht didn't show them either), but a long-standing safety gap now cheap to close: a muted tag row on Overzicht cards that have active tags.
-
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
 Phase 3d deliberately mapped `--yes → orange` (desire/heat) and `--willing → green`, inverting the universal "green = enthusiastic / amber = caution" expectation. Worth a quiet user-test against two real partners before assuming the mapping lands; not a fix request, a verification. (Same colour-semantics territory as the 24c green-soft-limits bug — run them together mentally.)
@@ -163,6 +136,11 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 21 | Body type floor — sub-12px swept from body/metadata copy, text-xs floor | 2026-06-29/30 |
 | — | bdsmtest.org integration — `parseBdsmtest`, `BdsmtestScores`, share v2 `bs` key; DNA bar killed | 2026-06-29/30 · `179f641` |
 | — | Triage deck — KinkRow decomposed into `TriageDeck`/`KinkEditSheet`/`KinkListRow`/`StatusOptionRows`, TopNav 375px corset fix, compare '+ Notitie' collapse, desktop widening | 2026-07-08 · PR #243 · `c940e04` |
+| 24a | Tap-to-expand descriptions — `ClampText` primitive, deck + `KinkEditSheet` parity, "…meer" affordance | 2026-07-09 · `fa34e6b` |
+| 24b | One status vocabulary — `lib/statusLabels.ts` (labels/hints/order/vars), eight copies killed, `hard_no` = "Harde grens" everywhere, dead `StatusPicker` deleted, drift-guard test | 2026-07-09 · `cebec8d` |
+| 24c | PDF palette — `lib/pdfPalette.ts` derived from app tokens, AA-on-paper contrast test, zacht→maybe-blue + bespreken→conflict-amber semantic fix, `dark`→`paper` rename | 2026-07-09 · `1a35785` |
+| 24d | Front-page harmonisation — chips `min-h-9` (home + ProfileList), CTA parity, submit arrow dropped, duplicate form h2 gated, InfoSheet deck hierarchy + neutral level-dot ramp | 2026-07-09 · `2a256f5` |
+| 24e | Safety tags in Overzicht — muted tag row on tagged cards, not gated by the notes toggle | 2026-07-09 · `79fa74f` |
 
 ### v4 (main)
 
