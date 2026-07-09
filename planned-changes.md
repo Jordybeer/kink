@@ -8,12 +8,9 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-### Phase 26 — Home page redesign [NEXT UP — design pass first, then build]
+### Phase 26c — Quiet the salon's back wall [optional polish, owner's call]
 
-User verdict 2026-07-09: "really amateur." Agreed on inspection of `app/page.tsx`: below the wordmark everything is the same `var(--surface2)` rounded-xl box — create-toggle, form, QR row, profile list — zero hierarchy, no editorial voice, form furniture leads while the returning user's real jobs (open my profile, compare us) sit below the fold.
-- **Direction before code** (frontend-design pass): hero as thesis, returning-user-first ordering (profiles + compare CTA above create/scan affordances for `profiles.length > 0`), one signature element, Phase 20 vocabulary throughout.
-- Constraints: mobile-first 375px, PWA is primary surface, `_hasHydrated` gate stays, e2e `home.spec.ts`/`new-user.spec.ts` selectors must survive (`button[type='submit']`, name placeholder).
-- First-run (`profiles.length === 0`) is a separate mood — invitation, not admin.
+26a+b (Salon direction, owner-approved) shipped 2026-07-09. Remaining softness: the secondary CTA cards (contract / nieuwe scène / scènes / live sessie) still read as a wall of equal boxes beneath the one accent compare CTA. Candidate: demote them to compact quiet link rows so the portrait + compare stay the only loud voices. Screenshot-verify at 375px before/after; scenes + live are also reachable via TopNav hub, contract only via compare page, so nothing may be dropped.
 
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
@@ -152,6 +149,8 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 24d | Front-page harmonisation — chips `min-h-9` (home + ProfileList), CTA parity, submit arrow dropped, duplicate form h2 gated, InfoSheet deck hierarchy + neutral level-dot ramp | 2026-07-09 · `2a256f5` |
 | 24e | Safety tags in Overzicht — muted tag row on tagged cards, not gated by the notes toggle | 2026-07-09 · `79fa74f` |
 | 25 | Header nav consistency — 40px circles for bare icon buttons, pill vocabulary unified, icons 15/18, focused title in Cormorant italic | 2026-07-09 · `24f95b4` |
+| 26a | Home salon reorder — profiles + compare CTA first, create/scan demoted to quiet footer row, state-aware hero tagline, first-run untouched | 2026-07-09 · `e72c100` |
+| 26b | Pinned-profile portrait card — 64px avatar, Cormorant italic name, rated count, accent wash | 2026-07-09 · `d39861e` |
 
 ### v4 (main)
 
