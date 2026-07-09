@@ -8,6 +8,21 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
+### Phase 25 — Header nav consistency [NEXT UP — small, commit-sized]
+
+User-reported 2026-07-09: "Header nav is inconsistent with buttons and titles." Verified against `TopNav.tsx` — one component, four icon sizes and two shape languages:
+- Settings button 44×44 `rounded-lg` vs back button 36×36 `rounded-full` — same rank, different dress. Pick one size + one radius for bare icon buttons.
+- Hub pills (`rounded-full h-8 text-xs`, icon 15) vs focused-mode actions "Vergelijk"/"Scène" (`rounded-lg px-3 py-2 text-xs`, icon 13) — two chip vocabularies in the same header. Unify on the pill.
+- Icon sizes 13/15/18/20 → two steps max (nav icons, back chevron).
+- **Focused-mode title is plain `font-bold text-base` sans** — the only page title that never received Phase 20's Cormorant italic voice. Give it the editorial treatment (careful: `truncate` must survive).
+
+### Phase 26 — Home page redesign [design pass first, then build]
+
+User verdict 2026-07-09: "really amateur." Agreed on inspection of `app/page.tsx`: below the wordmark everything is the same `var(--surface2)` rounded-xl box — create-toggle, form, QR row, profile list — zero hierarchy, no editorial voice, form furniture leads while the returning user's real jobs (open my profile, compare us) sit below the fold.
+- **Direction before code** (frontend-design pass): hero as thesis, returning-user-first ordering (profiles + compare CTA above create/scan affordances for `profiles.length > 0`), one signature element, Phase 20 vocabulary throughout.
+- Constraints: mobile-first 375px, PWA is primary surface, `_hasHydrated` gate stays, e2e `home.spec.ts`/`new-user.spec.ts` selectors must survive (`button[type='submit']`, name placeholder).
+- First-run (`profiles.length === 0`) is a separate mood — invitation, not admin.
+
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
 Phase 3d deliberately mapped `--yes → orange` (desire/heat) and `--willing → green`, inverting the universal "green = enthusiastic / amber = caution" expectation. Worth a quiet user-test against two real partners before assuming the mapping lands; not a fix request, a verification. (Same colour-semantics territory as the 24c green-soft-limits bug — run them together mentally.)
@@ -61,6 +76,9 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 - **Kink count badge on category header**: rated/total on `CategorySection` headers (the old scrollspy nav this targeted no longer exists).
 - **Swipe-to-rate gesture**: ⚠️ written for the dead KinkRow — `KinkListRow`'s whole surface now taps open the edit sheet, so a swipe gesture needs a fresh design against the triage deck before any code.
 - **Edit own status from compare row** (2026-07-08): tap your *own* half of a compare row → open the existing `KinkEditSheet`, only when your profile is `origin: "own"`. Partner rows stay immutable — their imported profile is their stated consent (`lockedAt` is the consent model, not a limitation). Closes the leave-compare-edit-return loop with zero new data model.
+- **Overzicht notes un-truncate** (2026-07-09): partner comments on Overzicht cards are single-line `truncate` with no way to read the rest — swap for the `ClampText` primitive from 24a (tap to expand, same affordance as the deck).
+- **Safety tags ride along** (2026-07-09, 24e follow-through): `entry.tags` now show in Overzicht but are still invisible on compare rows and in both the profile and contract PDFs — the contract is the negotiated document, "vraag eerst" arguably belongs on the printed page most of all. Pairs with the curious-flag-in-contract-PDF item below.
+- **STATUS_EXPLAINER into lib/statusLabels** (2026-07-09): the long-form verdict explainers stayed local to the profile page while `STATUS_HINT` moved to the lib in 24b — one voice, one file; also hands the i18n-extraction item its natural home. (Verified same day: custom kinks *do* render in read-only Overzicht under "Meer" — no gap there.)
 - **Overview filter / sort**: filter read-only overview by status, or sort alphabetically.
 - **Home compare CTA pair choice**: now pinned-profile-aware with a hint line (better than the old `profiles[0]`/`[1]`); remaining idea — last-viewed pair or explicit picker when >2 profiles.
 - **"Besproken" toggle is session-only**: persists nothing, hints nothing — persist it or mark "(tijdelijk)".
