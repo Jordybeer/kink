@@ -8,17 +8,9 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-**Owner-set priority order (2026-07-09, for the next session): 28 → 29 → 30 → 31, then resume the rest of this queue while implementing suggestion-pool items alongside.**
+**Owner-set priority order (2026-07-09): 29 → 30 → 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phase 28 shipped 2026-07-09 — see ledger.)**
 
-### Phase 28 — Typography consistency + mobile readability sweep [NEXT UP — priority]
-
-Owner mandate 2026-07-09: make the entire typography consistent across the whole project, and prove it meets standard mobile web readability.
-- **Audit first, then sweep**: inventory every type role in the wild (display serif, body, labels, eyebrows, badges, tabular numbers) across all pages + components; find the strays that Phases 20/21 and tonight's 25/26/27 missed.
-- **Readability floor**: body ≥ 16px on mobile where iOS zoom matters (inputs already learned this in Phase 13), metadata ≥ 12px (Phase 21 floor — verify it held), line-height ≥ 1.4 for prose, line length sane at 375px, contrast AA everywhere (`corrections.md` 2026-06-20 rule).
-- **One vocabulary**: Cormorant italic = titles/section voices only; sans = body/UI; document the roles in CLAUDE.md or a `docs/type-system.md` so drift has a source of truth to violate.
-- Screenshot-verify per page at 375px; the full e2e suite guards behaviour.
-
-### Phase 29 — Nieuwsgierig star affordance [priority, after 28]
+### Phase 29 — Nieuwsgierig star affordance [NEXT UP — priority]
 
 Owner report 2026-07-09: "The starred interested button is there but subtle and not very clear what it does or that it's even there."
 - The ★ on the triage deck (`TriageDeck.tsx` header row) and in `KinkEditSheet` reads as decoration — no label on the deck, low-contrast ghost background, and nothing teaches what "nieuwsgierig" marks.
@@ -180,7 +172,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 26c | Back wall hushed — contract/scène/scènes/live demoted from cards to slim quiet rows, all destinations + aria intact | 2026-07-09 · `a761d3e` |
 | 27a | Compare badges wear status colours (dashed grens) — person stays in column/headers; verified not-a-regression, person-pink dated to pre-June-16 redesign | 2026-07-09 · `7face92` |
 | 27b | Home card typography — serif names on all cards, on-accent serif monogram avatars, pencil centred | 2026-07-09 · `6602e5f` |
-| 28 | Typography consistency + mobile readability sweep — sub-12px reading copy bumped to `text-xs`, off-scale 13/15/17px snapped to the Tailwind scale, inline serif CTA sizes classed, exemptions grandfathered (pills/mono/tab labels), `docs/type-system.md` is now the source of truth | 2026-07-09 |
+| 28 | Typography consistency + mobile readability sweep — sub-12px reading copy bumped to `text-xs`, off-scale 13/15/17px snapped to the Tailwind scale, inline serif CTA sizes classed, exemptions grandfathered (pills/mono/tab labels), `docs/type-system.md` is now the source of truth | 2026-07-09 · `08fb28d` |
 
 ### v4 (main)
 
