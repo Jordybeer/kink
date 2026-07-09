@@ -225,6 +225,13 @@ function HomeContent() {
   const parentCandidates = eligibleParentProfiles(profiles, pinnedProfileId);
   const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
 
+  // The hero speaks to the state of the house, not into the void.
+  const tagline =
+    profiles.length === 1 ? "Eén profiel staat klaar. Nodig je partner uit."
+    : profiles.length === 2 ? "Twee profielen. Eén gesprek."
+    : profiles.length > 2 ? "Alle stemmen aan tafel. Eén gesprek."
+    : "Verken grenzen. Samen.";
+
   return (
     <>
       <PageShell width="2xl" className="lg:max-w-4xl">
@@ -233,26 +240,42 @@ function HomeContent() {
           <h1 className="text-6xl"><Wordmark /></h1>
           <div className="ks-gradient-rule mx-auto my-4" />
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
-            Verken grenzen. Samen.
+            {tagline}
           </p>
         </div>
 
-        {/* Create profile form */}
+        {/* The salon: profiles take the stage first, admin waits by the door */}
+        {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
+
+        {/* Quiet footer actions — the staff entrance */}
         {profiles.length > 0 && (
-          <button
-            onClick={() => setFormOpen(v => !v)}
-            className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            {formOpen
-              ? <X size={16} aria-hidden="true" style={{ color: "var(--text2)", flexShrink: 0 }} />
-              : <PlusCircle size={16} aria-hidden="true" style={{ color: "var(--accent)", flexShrink: 0 }} />
-            }
-            <span className="flex-1 text-sm font-medium" style={{ color: formOpen ? "var(--text2)" : "var(--text)" }}>
+          <div className="flex items-center justify-center gap-2 mt-6 mb-4">
+            <button
+              onClick={() => setFormOpen((v) => !v)}
+              className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
+              style={{ color: formOpen ? "var(--text2)" : "var(--accent)" }}
+            >
+              {formOpen
+                ? <X size={16} aria-hidden="true" />
+                : <PlusCircle size={16} aria-hidden="true" />}
               {formOpen ? "Annuleer" : "Nieuw profiel"}
-            </span>
-          </button>
+            </button>
+            {!importPreview && (
+              <>
+                <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
+                <button
+                  onClick={() => setScanOpen(true)}
+                  className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <Camera size={16} aria-hidden="true" />
+                  Scan QR
+                </button>
+              </>
+            )}
+          </div>
         )}
+
         {(profiles.length === 0 || formOpen) && (
           <form
             onSubmit={(e) => { handleCreate(e); setFormOpen(false); }}
@@ -387,8 +410,8 @@ function HomeContent() {
           </form>
         )}
 
-        {/* Scan QR */}
-        {!importPreview && (
+        {/* First-run keeps the full-width invitation to scan */}
+        {profiles.length === 0 && !importPreview && (
           <button
             onClick={() => setScanOpen(true)}
             className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
@@ -401,8 +424,7 @@ function HomeContent() {
           </button>
         )}
 
-        {/* Profile list */}
-        {profiles.length === 0 ? (
+        {profiles.length === 0 && (
           <p
             className="text-center py-12"
             style={{
@@ -416,8 +438,6 @@ function HomeContent() {
           >
             Wie ben jij in de speelkamer?
           </p>
-        ) : (
-          <ProfileList onPromptDelete={promptDelete} />
         )}
       </PageShell>
 
