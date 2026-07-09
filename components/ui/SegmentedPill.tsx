@@ -58,7 +58,7 @@ export default function SegmentedPill<T extends string>({ segments, value, onCha
             onClick={() => onChange(seg.value)}
             role="radio"
             aria-checked={active}
-            className="relative z-[1] flex-1 py-3 px-4 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.97]"
+            className="relative z-[1] flex-1 py-3 px-4 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.97]"
             style={{
               background: "transparent",
               border: "none",

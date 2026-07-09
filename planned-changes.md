@@ -150,6 +150,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 26c | Back wall hushed — contract/scène/scènes/live demoted from cards to slim quiet rows, all destinations + aria intact | 2026-07-09 · `a761d3e` |
 | 27a | Compare badges wear status colours (dashed grens) — person stays in column/headers; verified not-a-regression, person-pink dated to pre-June-16 redesign | 2026-07-09 · `7face92` |
 | 27b | Home card typography — serif names on all cards, on-accent serif monogram avatars, pencil centred | 2026-07-09 · `6602e5f` |
+| 28 | Typography consistency + mobile readability sweep — sub-12px reading copy bumped to `text-xs`, off-scale 13/15/17px snapped to the Tailwind scale, inline serif CTA sizes classed, exemptions grandfathered (pills/mono/tab labels), `docs/type-system.md` is now the source of truth | 2026-07-09 |
 
 ### v4 (main)
 

@@ -332,7 +332,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           >
             <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--accent)" }}>
               <Zap size={18} aria-hidden="true" className="flex-none" />
-              <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 400, fontSize: "1.2rem", lineHeight: 1.2 }}>Vergelijk profielen</span>
+              <span className="text-lg italic leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}>Vergelijk profielen</span>
             </div>
             <div className="text-sm" style={{ color: "var(--text2)" }}>
               Zie waar jullie grenzen raken — en waar ze uitdagen.
@@ -350,7 +350,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           >
             <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--text2)" }}>
               <Zap size={18} aria-hidden="true" className="flex-none" />
-              <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 400, fontSize: "1.2rem", lineHeight: 1.2 }}>Vergelijk profielen</span>
+              <span className="text-lg italic leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}>Vergelijk profielen</span>
             </div>
             <div className="text-sm" style={{ color: "var(--text2)" }}>
               Voeg een tweede profiel toe om te vergelijken.

@@ -708,9 +708,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                     className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left"
                     style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `4px solid ${isOpen ? "var(--accent)" : "transparent"}` }}>
                     <span className="text-sm font-semibold flex-1">{cat}</span>
-                    {myCount > 0 && <span className="text-[10px]" style={{ color: "var(--accent)" }}>jij: {myCount}</span>}
-                    {theirCount > 0 && <span className="text-[10px]" style={{ color: "var(--text2)" }}>partner: {theirCount}</span>}
-                    <span className="text-[10px]" style={{ color: "var(--text2)" }}>{isOpen ? "▲" : "▼"}</span>
+                    {myCount > 0 && <span className="text-xs" style={{ color: "var(--accent)" }}>jij: {myCount}</span>}
+                    {theirCount > 0 && <span className="text-xs" style={{ color: "var(--text2)" }}>partner: {theirCount}</span>}
+                    <span className="text-xs" style={{ color: "var(--text2)" }}>{isOpen ? "▲" : "▼"}</span>
                   </button>
 
                   {isOpen && (
@@ -736,7 +736,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                                   onClick={() => phase === "connected" && handleStatusChange(kink.id, myStatus === s ? null : s)}
                                   disabled={phase !== "connected"}
                                   aria-pressed={myStatus === s}
-                                  className={`focus-ring rounded-full border text-[11px] px-2.5 py-2.5 transition-colors disabled:opacity-50${myStatus === s ? ` status-${s}` : ""}`}
+                                  className={`focus-ring rounded-full border text-xs px-2.5 py-2.5 transition-colors disabled:opacity-50${myStatus === s ? ` status-${s}` : ""}`}
                                   style={myStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}>
                                   {label}
                                 </button>

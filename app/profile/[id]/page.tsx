@@ -520,7 +520,7 @@ export default function ProfilePage({ params }: Props) {
           <div className="px-4 pt-3">
             {searchTrimmed ? (
               <div>
-                <p className="text-[11px] mb-2 tabular-nums" style={{ color: "var(--text2)" }}>
+                <p className="text-xs mb-2 tabular-nums" style={{ color: "var(--text2)" }}>
                   {searchResults.length} resultaten
                 </p>
                 {searchResults.length === 0 ? (
@@ -597,7 +597,7 @@ export default function ProfilePage({ params }: Props) {
                             style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: `4px solid ${ckBorderColor}` }}
                           >
                             <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
-                              <span className="flex-1 text-[15px] font-medium">{ck.name}</span>
+                              <span className="flex-1 text-sm font-medium">{ck.name}</span>
                               <button
                                 onClick={() => removeCustomKink(profile.id, ck.id)}
                                 aria-label={`${ck.name} verwijderen`}
@@ -613,7 +613,7 @@ export default function ProfilePage({ params }: Props) {
                                   key={s}
                                   onClick={() => handleStatus(ck.id, ckStatus === s ? null : s)}
                                   aria-pressed={ckStatus === s}
-                                  className={`focus-ring rounded-full border text-[11px] font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
+                                  className={`focus-ring rounded-full border text-xs font-medium transition-colors whitespace-nowrap flex-none px-2.5 py-1.5${ckStatus === s ? ` status-${s}` : ""}`}
                                   style={ckStatus !== s ? { color: "var(--text2)", borderColor: "var(--border)" } : {}}
                                 >
                                   {STATUS_LABEL[s]}

@@ -496,7 +496,7 @@ function ComparePage() {
                 <button
                   key={cat}
                   onClick={() => scrollToCategory(cat)}
-                  className="focus-ring flex-none px-1.5 py-0.5 text-[10px] uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
+                  className="focus-ring flex-none px-1.5 py-0.5 text-xs uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
                   style={categoryPillStyle(rate)}
                 >
                   {catAbbrev(cat)}

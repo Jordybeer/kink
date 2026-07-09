@@ -45,7 +45,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
                 transition={{ ...SPRING, delay }}
               >
                 <span
-                  className="px-3 py-[6px] rounded-[8px] text-[13px] font-medium"
+                  className="px-3 py-[6px] rounded-[8px] text-sm font-medium"
                   style={{
                     background: "var(--surface2)",
                     border: "1px solid var(--border)",

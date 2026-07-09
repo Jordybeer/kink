@@ -79,7 +79,7 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
               />
 
               {title && (
-                <h2 className="text-[17px] font-bold mb-4 px-1">{title}</h2>
+                <h2 className="text-lg font-bold mb-4 px-1">{title}</h2>
               )}
 
               {children}
@@ -126,13 +126,13 @@ export function SheetOptionItem({ label, description, icon, active, onClick }: S
       )}
       <span className="flex-1 min-w-0">
         <span
-          className="block text-[14px] font-semibold"
+          className="block text-sm font-semibold"
           style={{ color: active ? "var(--accent)" : "var(--text)" }}
         >
           {label}
         </span>
         {description && (
-          <span className="block text-[12px] mt-0.5" style={{ color: "var(--text2)" }}>
+          <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
             {description}
           </span>
         )}

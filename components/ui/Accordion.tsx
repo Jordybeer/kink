@@ -38,7 +38,7 @@ export default function Accordion({ trigger, icon, children, defaultOpen = false
               {icon}
             </span>
           )}
-          <span className="text-[14px] font-medium">{trigger}</span>
+          <span className="text-sm font-medium">{trigger}</span>
         </span>
 
         <motion.span
