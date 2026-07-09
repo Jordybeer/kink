@@ -148,6 +148,8 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 26a | Home salon reorder — profiles + compare CTA first, create/scan demoted to quiet footer row, state-aware hero tagline, first-run untouched | 2026-07-09 · `e72c100` |
 | 26b | Pinned-profile portrait card — 64px avatar, Cormorant italic name, rated count, accent wash | 2026-07-09 · `d39861e` |
 | 26c | Back wall hushed — contract/scène/scènes/live demoted from cards to slim quiet rows, all destinations + aria intact | 2026-07-09 · `a761d3e` |
+| 27a | Compare badges wear status colours (dashed grens) — person stays in column/headers; verified not-a-regression, person-pink dated to pre-June-16 redesign | 2026-07-09 · `7face92` |
+| 27b | Home card typography — serif names on all cards, on-accent serif monogram avatars, pencil centred | 2026-07-09 · `6602e5f` |
 
 ### v4 (main)
 
