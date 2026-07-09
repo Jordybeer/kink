@@ -8,15 +8,7 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-### Phase 25 — Header nav consistency [NEXT UP — small, commit-sized]
-
-User-reported 2026-07-09: "Header nav is inconsistent with buttons and titles." Verified against `TopNav.tsx` — one component, four icon sizes and two shape languages:
-- Settings button 44×44 `rounded-lg` vs back button 36×36 `rounded-full` — same rank, different dress. Pick one size + one radius for bare icon buttons.
-- Hub pills (`rounded-full h-8 text-xs`, icon 15) vs focused-mode actions "Vergelijk"/"Scène" (`rounded-lg px-3 py-2 text-xs`, icon 13) — two chip vocabularies in the same header. Unify on the pill.
-- Icon sizes 13/15/18/20 → two steps max (nav icons, back chevron).
-- **Focused-mode title is plain `font-bold text-base` sans** — the only page title that never received Phase 20's Cormorant italic voice. Give it the editorial treatment (careful: `truncate` must survive).
-
-### Phase 26 — Home page redesign [design pass first, then build]
+### Phase 26 — Home page redesign [NEXT UP — design pass first, then build]
 
 User verdict 2026-07-09: "really amateur." Agreed on inspection of `app/page.tsx`: below the wordmark everything is the same `var(--surface2)` rounded-xl box — create-toggle, form, QR row, profile list — zero hierarchy, no editorial voice, form furniture leads while the returning user's real jobs (open my profile, compare us) sit below the fold.
 - **Direction before code** (frontend-design pass): hero as thesis, returning-user-first ordering (profiles + compare CTA above create/scan affordances for `profiles.length > 0`), one signature element, Phase 20 vocabulary throughout.
@@ -159,6 +151,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 24c | PDF palette — `lib/pdfPalette.ts` derived from app tokens, AA-on-paper contrast test, zacht→maybe-blue + bespreken→conflict-amber semantic fix, `dark`→`paper` rename | 2026-07-09 · `1a35785` |
 | 24d | Front-page harmonisation — chips `min-h-9` (home + ProfileList), CTA parity, submit arrow dropped, duplicate form h2 gated, InfoSheet deck hierarchy + neutral level-dot ramp | 2026-07-09 · `2a256f5` |
 | 24e | Safety tags in Overzicht — muted tag row on tagged cards, not gated by the notes toggle | 2026-07-09 · `79fa74f` |
+| 25 | Header nav consistency — 40px circles for bare icon buttons, pill vocabulary unified, icons 15/18, focused title in Cormorant italic | 2026-07-09 · `24f95b4` |
 
 ### v4 (main)
 
