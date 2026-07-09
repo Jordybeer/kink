@@ -8,6 +8,36 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
+**Owner-set priority order (2026-07-09, for the next session): 28 → 29 → 30 → 31, then resume the rest of this queue while implementing suggestion-pool items alongside.**
+
+### Phase 28 — Typography consistency + mobile readability sweep [NEXT UP — priority]
+
+Owner mandate 2026-07-09: make the entire typography consistent across the whole project, and prove it meets standard mobile web readability.
+- **Audit first, then sweep**: inventory every type role in the wild (display serif, body, labels, eyebrows, badges, tabular numbers) across all pages + components; find the strays that Phases 20/21 and tonight's 25/26/27 missed.
+- **Readability floor**: body ≥ 16px on mobile where iOS zoom matters (inputs already learned this in Phase 13), metadata ≥ 12px (Phase 21 floor — verify it held), line-height ≥ 1.4 for prose, line length sane at 375px, contrast AA everywhere (`corrections.md` 2026-06-20 rule).
+- **One vocabulary**: Cormorant italic = titles/section voices only; sans = body/UI; document the roles in CLAUDE.md or a `docs/type-system.md` so drift has a source of truth to violate.
+- Screenshot-verify per page at 375px; the full e2e suite guards behaviour.
+
+### Phase 29 — Nieuwsgierig star affordance [priority, after 28]
+
+Owner report 2026-07-09: "The starred interested button is there but subtle and not very clear what it does or that it's even there."
+- The ★ on the triage deck (`TriageDeck.tsx` header row) and in `KinkEditSheet` reads as decoration — no label on the deck, low-contrast ghost background, and nothing teaches what "nieuwsgierig" marks.
+- Candidates (design pass first): visible label or tooltip-on-first-use, stronger resting state, a one-time hint in the deck flow, and/or a line in the status explainer sheet. The KinkEditSheet chip already says "Nieuwsgierig" — the deck's naked icon is the main offender.
+- Success = a new user can say what the star does without being told.
+
+### Phase 30 — Onboarding + profile spotlight tour: review & redesign [priority, after 29]
+
+Full up-to-date review and redesign for new users:
+- **Onboarding flow** (`components/Onboarding.tsx`): walk it as a stranger — copy, pacing, type (post-Phase 28 vocabulary), what it promises vs what home now delivers (the salon changed the landing reality; onboarding still narrates the old world?).
+- **Profile spotlight tour** (`components/ProfileTour.tsx` + `data-tour` anchors): PR #243 replaced KinkRow with the triage deck — verify every `data-tour` anchor still exists and the tour's story matches the deck flow (deck card, pills, info, hard-no, curious star — ties into Phase 29).
+- Design pass before code for both; screenshot-verify; `new-user.spec.ts` + onboarding e2e guard the flows.
+
+### Phase 31 — Main ↔ dev audit: what improved, what regressed [priority, after 30]
+
+Compare `main` (v4, PR #192) against `dev` (v5, everything since):
+- Diff the surfaces, not just the code: page-by-page behaviour + screenshot comparison at 375px, list what v5 genuinely improved and anything that quietly regressed (features lost, flows broken, density/readability changes).
+- Deliverable: a written verdict in `docs/` + regression fixes queued as phases; this is the gate before any dev → main promotion PR.
+
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
 Phase 3d deliberately mapped `--yes → orange` (desire/heat) and `--willing → green`, inverting the universal "green = enthusiastic / amber = caution" expectation. Worth a quiet user-test against two real partners before assuming the mapping lands; not a fix request, a verification. (Same colour-semantics territory as the 24c green-soft-limits bug — run them together mentally.)
@@ -162,3 +192,5 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 - `corrections.md` entries 2026-06-20 (Ledger contrast, chart double-count) and 2026-06-22 (Phase 10 cursor) referenced from Phases 14 + 15.
 - 2026-07-08: webpack WasmHash build crash on Node v26.2.0 = corrupted `.next/cache/webpack`; fix is `rm -rf .next/cache/webpack`.
 - 2026-07-08: `future.md` merged into this file and deleted.
+- 2026-07-09: dead Unix socket named `cloud` in the repo root crashes Turbopack's CSS scan ("No such device or address", os error 6) — check `ss -xl` for listeners, then `rm` it. A stale 7-day dev server holding :3000 with HTTP 500 blocks Playwright's `reuseExistingServer` — kill and let it respawn.
+- 2026-07-09: ephemeral screenshot pattern — drop a throwaway spec in `e2e/` using `seedAndGo` + `pinnedProfileId`, run `--project=desktop`, delete the spec; keeps visual proof without polluting the suite.
