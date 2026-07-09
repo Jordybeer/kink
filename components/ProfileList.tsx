@@ -101,12 +101,20 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                 {group.map((p) => {
                   const initial = p.name[0].toUpperCase();
                   const lvl = EXPERIENCE_LEVELS.find((l) => l.value === (p.experienceLevel ?? "beginner"));
+                  // The pinned profile sits for a portrait; the rest mingle.
+                  const isPortrait = !isMulti && p.id === pinnedProfileId;
+                  const ratedCount = Object.values(p.entries).filter((e) => e.status).length;
 
                   return (
                     <div
                       key={p.id}
                       className="relative rounded-xl"
-                      style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                      style={{
+                        background: isPortrait
+                          ? "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), var(--surface2))"
+                          : "var(--surface2)",
+                        border: `1px solid ${isPortrait ? "var(--border-accent)" : "var(--border)"}`,
+                      }}
                     >
                       {editId === p.id ? (
                         <div className="p-4">
@@ -229,14 +237,14 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                             aria-label={`Profiel ${p.name} openen`}
                           >
                             {/* Card header */}
-                            <div className="flex items-center gap-3 px-3 pt-3 pb-3 pr-12">
+                            <div className={`flex items-center gap-3 px-3 pb-3 pr-12 ${isPortrait ? "pt-4" : "pt-3"}`}>
                               {!isMulti && (
                                 <div className="relative flex-none">
-                                  <div className="w-11 h-11 rounded-full overflow-hidden" aria-hidden="true">
+                                  <div className={`${isPortrait ? "w-16 h-16" : "w-11 h-11"} rounded-full overflow-hidden`} aria-hidden="true">
                                     {p.avatarDataUrl ? (
                                       <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
                                     ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-black" style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
+                                      <div className={`w-full h-full flex items-center justify-center ${isPortrait ? "text-xl" : "text-sm"} font-bold text-black`} style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))" }}>
                                         {initial}
                                       </div>
                                     )}
@@ -249,9 +257,18 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="text-base font-semibold truncate leading-tight">
-                                  {isMulti ? p.role : p.name}
-                                </p>
+                                {isPortrait ? (
+                                  <p
+                                    className="text-xl italic truncate leading-tight"
+                                    style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+                                  >
+                                    {p.name}
+                                  </p>
+                                ) : (
+                                  <p className="text-base font-semibold truncate leading-tight">
+                                    {isMulti ? p.role : p.name}
+                                  </p>
+                                )}
                                 {isMulti ? (
                                   <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
                                     {lvl?.label}
@@ -264,6 +281,11 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                       <Lock size={8} aria-hidden="true" style={{ color: "var(--text2)" }} />
                                     )}
                                   </div>
+                                )}
+                                {isPortrait && ratedCount > 0 && (
+                                  <p className="text-xs mt-1 tabular-nums" style={{ color: "var(--text2)" }}>
+                                    {ratedCount} beoordeeld
+                                  </p>
                                 )}
                               </div>
                             </div>
