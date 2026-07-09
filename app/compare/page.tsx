@@ -11,13 +11,16 @@ import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import DiscussedToggle from "@/components/DiscussedToggle";
-import { STATUS_LABEL } from "@/lib/statusLabels";
+import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
 
-function StatusBadge({ status, colour }: { status: KinkStatus; colour: string }) {
+// Verdicts wear their own colours — who said it is already told by the
+// column; what they said deserves the house language (dashed for a grens).
+function StatusBadge({ status }: { status: KinkStatus }) {
   if (!status) return <span className="text-xs" style={{ color: "var(--text2)" }}>—</span>;
+  const colour = STATUS_VAR[status];
   return (
     <span
       className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap"
@@ -25,6 +28,7 @@ function StatusBadge({ status, colour }: { status: KinkStatus; colour: string })
         color: colour,
         borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
         background: `color-mix(in srgb, ${colour} 15%, transparent)`,
+        borderStyle: status === "hard_no" ? "dashed" : "solid",
       }}
     >
       {STATUS_LABEL[status]}
@@ -32,8 +36,8 @@ function StatusBadge({ status, colour }: { status: KinkStatus; colour: string })
   );
 }
 
-function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
-  return <StatusBadge status={entry.status} colour={colour} />;
+function EntryBadge({ entry }: { entry: KinkEntry }) {
+  return <StatusBadge status={entry.status} />;
 }
 
 function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
@@ -617,7 +621,7 @@ function ComparePage() {
                               </button>
                             </div>
                             <div className="flex items-center gap-2 mb-1">
-                              <EntryBadge entry={eA} colour={COLOUR_A} />
+                              <EntryBadge entry={eA} />
                               <div
                                 className="flex-1 h-px"
                                 style={{
@@ -625,7 +629,7 @@ function ComparePage() {
                                   opacity: matched ? 0.6 : 0.25,
                                 }}
                               />
-                              <EntryBadge entry={eB} colour={COLOUR_B} />
+                              <EntryBadge entry={eB} />
                             </div>
                             {(() => {
                               const showReadOnlyA = profileA.isImported && !!eA.comment;
@@ -782,7 +786,7 @@ function ComparePage() {
                             </button>
                           </div>
                           <div className="flex items-center gap-2">
-                            <EntryBadge entry={eA} colour={COLOUR_A} />
+                            <EntryBadge entry={eA} />
                             <div
                               className="flex-1 h-px"
                               style={{
@@ -790,7 +794,7 @@ function ComparePage() {
                                 opacity: matched ? 0.6 : 0.25,
                               }}
                             />
-                            <EntryBadge entry={eB} colour={COLOUR_B} />
+                            <EntryBadge entry={eB} />
                           </div>
                           {(() => {
                             const canEdit = (!profileA.isImported && !!item.aId) || (!profileB.isImported && !!item.bId);
