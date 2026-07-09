@@ -762,6 +762,21 @@ export default function ProfilePage({ params }: Props) {
                                 {entry.comment}
                               </p>
                             )}
+                            {/* Safety tags never hide behind the notes toggle —
+                                "vraag eerst" exists for the partner reading this. */}
+                            {(entry.tags?.length ?? 0) > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {entry.tags!.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap"
+                                    style={{ background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
