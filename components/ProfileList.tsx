@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Pin, PinOff, Pencil, Zap, FileText, Clapperboard, Anchor, Lock } from "lucide-react";
+import { Pin, PinOff, Pencil, Zap, FileText, Clapperboard, Anchor, Lock, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
@@ -351,75 +351,46 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           </div>
         )}
 
-        {profiles.length >= 2 ? (
-          <Link
-            href={`/contract?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-            className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90 lg:order-2 lg:h-full"
-            style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-          >
-            <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
-              <FileText size={16} aria-hidden="true" />
-              Maak een contract
+        {/* The back wall keeps its voice down — slim rows, one loud CTA above */}
+        <div className="flex flex-col gap-1.5 lg:col-span-2 lg:order-2">
+          {profiles.length >= 2 ? (
+            <Link
+              href={`/contract?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
+              className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3 transition-colors"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+            >
+              <FileText size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+              <span className="flex-1 text-sm font-medium truncate">Maak een contract</span>
+              <ChevronRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+            </Link>
+          ) : (
+            <div
+              className="flex items-center gap-2.5 min-h-12 rounded-xl px-3 opacity-40"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+              role="button" tabIndex={0} aria-disabled="true"
+              aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
+            >
+              <FileText size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+              <span className="flex-1 text-sm font-medium truncate" style={{ color: "var(--text2)" }}>Maak een contract</span>
             </div>
-            <div className="text-sm" style={{ color: "var(--text2)" }}>
-              Safewords, aftercare en grenzen — op papier en exporteerbaar.
-            </div>
-          </Link>
-        ) : (
-          <div
-            className="rounded-xl p-5 opacity-40 lg:order-2 lg:h-full"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-            role="button" tabIndex={0} aria-disabled="true"
-            aria-label="Maak een contract — voeg twee profielen toe om een contract te maken"
-          >
-            <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--text2)" }}>
-              <FileText size={16} aria-hidden="true" />
-              Maak een contract
-            </div>
-            <div className="text-sm" style={{ color: "var(--text2)" }}>
-              Voeg twee profielen toe om een contract te maken.
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3 lg:col-span-2 lg:order-4">
-          <Link
-            href="/scene"
-            className="focus-ring block rounded-xl p-4 transition-opacity hover:opacity-90"
-            style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-          >
-            <div className="flex items-center gap-1.5 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
-              <Clapperboard size={15} aria-hidden="true" />
-              Nieuwe scène
-            </div>
-            <div className="text-xs" style={{ color: "var(--text2)" }}>Schrijf de regels voordat het spel begint.</div>
-          </Link>
-          <Link
-            href="/scenes"
-            className="focus-ring block rounded-xl p-4 transition-opacity hover:opacity-90"
-            style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-          >
-            <div className="flex items-center gap-1.5 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
-              <Clapperboard size={15} aria-hidden="true" />
-              Scènes
-            </div>
-            <div className="text-xs" style={{ color: "var(--text2)" }}>Alle scènes — gepland en voltooid.</div>
-          </Link>
+          )}
+          {[
+            { href: "/scene", label: "Nieuwe scène", icon: Clapperboard },
+            { href: "/scenes", label: "Scènes", icon: Clapperboard },
+            { href: "/session", label: "Live sessie", icon: Anchor },
+          ].map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3 transition-colors"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+            >
+              <Icon size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+              <span className="flex-1 text-sm font-medium truncate">{label}</span>
+              <ChevronRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+            </Link>
+          ))}
         </div>
-
-        <Link
-          href="/session"
-          className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90 lg:order-3 lg:h-full"
-          style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-        >
-          <div className="flex items-center gap-2 text-base font-semibold mb-1" style={{ color: "var(--accent)" }}>
-            <Anchor size={16} aria-hidden="true" />
-            Live sessie
-          </div>
-          <div className="text-sm" style={{ color: "var(--text2)" }}>
-            Vergelijk kinks live — elk op eigen toestel.
-          </div>
-        </Link>
       </div>
     </>
   );
