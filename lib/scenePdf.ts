@@ -1,22 +1,19 @@
 import type { SceneRecord, SceneItem, Profile } from "@/types";
+import { hexToRgb, PDF_PAPER_PALETTE } from "@/lib/pdfPalette";
 
-// Palette constant — jsPDF cannot read CSS custom properties; update here if Ledger palette changes
+// Shared print palette from lib/pdfPalette; only the scene-specific voices
+// (safeword strip, intensity ramp) live here.
 const LEDGER_PALETTE = {
-  paper:   "#ffffff",
-  title:   "#3f1f7a",
-  body:    "#241a32",
-  muted:   "#4b5563",
+  paper:   PDF_PAPER_PALETTE.paper,
+  title:   PDF_PAPER_PALETTE.accent,
+  body:    PDF_PAPER_PALETTE.ink,
+  muted:   PDF_PAPER_PALETTE.muted,
   safeBg:  "#fee2e2",
   safeFg:  "#991b1b",
   zacht:   "#2563eb",
   midden:  "#ea580c",
   intens:  "#991b1b",
 };
-
-function hexToRgb(hex: string): [number, number, number] {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
 
 export interface IntensitySummary {
   zacht: number;

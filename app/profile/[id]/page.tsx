@@ -23,6 +23,7 @@ import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import BdsmtestScores from "@/components/BdsmtestScores";
 import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
+import { hexToRgb, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -272,10 +273,9 @@ export default function ProfilePage({ params }: Props) {
     doc.line(margin, y, W - margin, y);
     y += 6;
 
-    const STATUS_COLORS_PDF: Record<string, [number, number, number]> = {
-      yes: [249, 115, 22], willing: [16, 185, 129], maybe: [56, 189, 248],
-      no: [129, 140, 248], hard_no: [239, 68, 68],
-    };
+    const STATUS_COLORS_PDF = Object.fromEntries(
+      STATUS_ORDER.map((s) => [s, hexToRgb(PDF_STATUS_ON_DARK[s])])
+    ) as Record<string, [number, number, number]>;
 
     for (const cat of CATEGORIES) {
       const kinks = getKinksByCategoryAndLevel(cat, maxLevel);

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
 import { STATUS_LABEL as STATUS_NL } from "@/lib/statusLabels";
+import { hexToRgb, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
 
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const drawing = useRef(false);
@@ -262,12 +263,13 @@ function ContractPage() {
       const lineW = W - margin * 2;
       let y = 20;
 
-      const accent = [109, 40, 217] as [number, number, number];
-      const dark = [255, 255, 255] as [number, number, number];
-      const muted = [107, 114, 128] as [number, number, number];
+      const accent = hexToRgb(PDF_PAPER_PALETTE.accent);
+      const paper = hexToRgb(PDF_PAPER_PALETTE.paper);
+      const ink = hexToRgb(PDF_PAPER_PALETTE.ink);
+      const muted = hexToRgb(PDF_PAPER_PALETTE.muted);
 
       // Background
-      doc.setFillColor(...dark);
+      doc.setFillColor(...paper);
       doc.rect(0, 0, W, 297, "F");
 
       // Title
@@ -302,7 +304,7 @@ function ContractPage() {
       doc.setTextColor(...muted);
       const pLines = doc.splitTextToSize(preamble, lineW) as string[];
       for (const line of pLines) {
-        if (y > 272) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
+        if (y > 272) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
         doc.text(line, margin, y);
         y += 4;
       }
@@ -312,7 +314,7 @@ function ContractPage() {
       const hasSignalData = (s: Signals) => SIGNAL_LEVELS.some((l) => s[l.key] !== DEFAULT_SIGNALS[l.key] && s[l.key].trim());
       const hasSafewordData = hasSignalData(signalsA) || hasSignalData(signalsB) || aftercareA.length > 0 || aftercareB.length > 0;
       if (hasSafewordData) {
-        if (y > 250) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+        if (y > 250) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...accent);
@@ -320,7 +322,7 @@ function ContractPage() {
         y += 5;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(30, 27, 75);
+        doc.setTextColor(...ink);
 
         for (const [signals, profile] of [[signalsA, profileA], [signalsB, profileB]] as const) {
           for (const l of SIGNAL_LEVELS) {
@@ -335,7 +337,7 @@ function ContractPage() {
 
       const newPage = () => {
         doc.addPage();
-        doc.setFillColor(...dark);
+        doc.setFillColor(...paper);
         doc.rect(0, 0, W, 297, "F");
         y = 20;
       };
@@ -384,7 +386,7 @@ function ContractPage() {
               doc.setFont("helvetica", "normal");
               doc.setFontSize(8.5);
             }
-            doc.setTextColor(30, 27, 75);
+            doc.setTextColor(...ink);
             doc.text(nameLines, margin, y);
             doc.text(sA, col2X, y);
             doc.text(sB, col3X, y);
@@ -394,7 +396,7 @@ function ContractPage() {
           const colW = (lineW - 10) / 2;
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8.5);
-          doc.setTextColor(30, 27, 75);
+          doc.setTextColor(...ink);
           let i = 0;
           while (i < items.length) {
             const left = `• ${itemLabel(items[i])}`;
@@ -406,7 +408,7 @@ function ContractPage() {
               newPage();
               doc.setFont("helvetica", "normal");
               doc.setFontSize(8.5);
-              doc.setTextColor(30, 27, 75);
+              doc.setTextColor(...ink);
             }
             lLines.forEach((l, li) => doc.text(l, margin + 3, y + li * 4.2));
             rLines.forEach((l, li) => doc.text(l, margin + colW + 10, y + li * 4.2));
@@ -420,13 +422,13 @@ function ContractPage() {
         y += 10;
       };
 
-      section("Gedeelde verlangens", [...shared, ...customShared], [249, 115, 22]);
-      section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), [239, 68, 68]);
-      section("Zachte grenzen", softLimits, [16, 185, 129]);
-      section("Bespreking nodig", discuss, [56, 189, 248]);
+      section("Gedeelde verlangens", [...shared, ...customShared], hexToRgb(PDF_STATUS_ON_PAPER.yes));
+      section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), hexToRgb(PDF_STATUS_ON_PAPER.hard_no));
+      section("Zachte grenzen", softLimits, hexToRgb(PDF_STATUS_ON_PAPER.maybe));
+      section("Bespreking nodig", discuss, hexToRgb(PDF_STATUS_ON_PAPER.conflict));
 
       // Safeword clause
-      if (y > 240) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+      if (y > 240) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
@@ -438,7 +440,7 @@ function ContractPage() {
       y += 6;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.setTextColor(30, 27, 75);
+      doc.setTextColor(...ink);
       const clauses = [
         "Safeword stopt alles — altijd en zonder uitleg.",
         "Aftercare is geen optie, maar een afspraak.",
@@ -453,7 +455,7 @@ function ContractPage() {
       y += 12;
 
       // Signatures
-      if (y > 220) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
+      if (y > 220) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
       doc.setDrawColor(...accent);
       doc.setLineWidth(0.4);
       doc.line(margin, y, W - margin, y);
