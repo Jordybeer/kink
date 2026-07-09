@@ -133,7 +133,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                       type="button"
                                       onClick={() => setEditRole(r)}
                                       aria-pressed={editRole === r}
-                                      className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                                      className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
                                       style={
                                         editRole === r
                                           ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
@@ -175,7 +175,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                 type="button"
                                 onClick={() => setEditRelationshipStatus((rs) => (rs === s ? "" : s))}
                                 aria-pressed={editRelationshipStatus === s}
-                                className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                                className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
                                 style={
                                   editRelationshipStatus === s
                                     ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }

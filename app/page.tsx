@@ -259,9 +259,13 @@ function HomeContent() {
             className="relative overflow-hidden rounded-xl p-5 mb-8"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
-              Nieuw profiel
-            </h2>
+            {/* The toggle above already announces "Nieuw profiel" — only title
+                the form when it stands alone (first-run, no toggle). */}
+            {profiles.length === 0 && (
+              <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
+                Nieuw profiel
+              </h2>
+            )}
 
             {parentCandidates.length > 0 && (
               <div className="mb-4">
@@ -272,7 +276,7 @@ function HomeContent() {
                     type="button"
                     onClick={() => { setParentName(null); setName(""); }}
                     aria-pressed={parentName === null}
-                    className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                    className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
                     style={parentName === null
                       ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                       : { color: "var(--text2)", borderColor: "var(--border)" }}
@@ -285,7 +289,7 @@ function HomeContent() {
                       type="button"
                       onClick={() => { setParentName(candidate); setName(candidate); }}
                       aria-pressed={parentName === candidate}
-                      className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                      className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
                       style={parentName === candidate
                         ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                         : { color: "var(--text2)", borderColor: "var(--border)" }}
@@ -323,7 +327,7 @@ function HomeContent() {
                         type="button"
                         onClick={() => setRole(r)}
                         aria-pressed={role === r}
-                        className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                        className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
                         style={role === r
                           ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                           : { color: "var(--text2)", borderColor: "var(--border)" }}
@@ -363,7 +367,7 @@ function HomeContent() {
                   type="button"
                   onClick={() => setRelationshipStatus((rs) => (rs === s ? "" : s))}
                   aria-pressed={relationshipStatus === s}
-                  className="focus-ring px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                  className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
                   style={relationshipStatus === s
                     ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
                     : { color: "var(--text2)", borderColor: "var(--border)" }}
@@ -378,7 +382,7 @@ function HomeContent() {
               className="focus-ring w-full py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              Sla jezelf vast →
+              Sla jezelf vast
             </button>
           </form>
         )}
@@ -390,8 +394,8 @@ function HomeContent() {
             className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <Camera size={18} aria-hidden="true" />
-            <span className="flex-1 text-sm font-medium" style={{ color: "var(--text2)" }}>
+            <Camera size={16} aria-hidden="true" style={{ color: "var(--accent)", flexShrink: 0 }} />
+            <span className="flex-1 text-sm font-medium" style={{ color: "var(--text)" }}>
               Scan QR — importeer profiel van partner
             </span>
           </button>
