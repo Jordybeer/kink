@@ -8,10 +8,6 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-### Phase 26c — Quiet the salon's back wall [optional polish, owner's call]
-
-26a+b (Salon direction, owner-approved) shipped 2026-07-09. Remaining softness: the secondary CTA cards (contract / nieuwe scène / scènes / live sessie) still read as a wall of equal boxes beneath the one accent compare CTA. Candidate: demote them to compact quiet link rows so the portrait + compare stay the only loud voices. Screenshot-verify at 375px before/after; scenes + live are also reachable via TopNav hub, contract only via compare page, so nothing may be dropped.
-
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
 Phase 3d deliberately mapped `--yes → orange` (desire/heat) and `--willing → green`, inverting the universal "green = enthusiastic / amber = caution" expectation. Worth a quiet user-test against two real partners before assuming the mapping lands; not a fix request, a verification. (Same colour-semantics territory as the 24c green-soft-limits bug — run them together mentally.)
@@ -151,6 +147,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 25 | Header nav consistency — 40px circles for bare icon buttons, pill vocabulary unified, icons 15/18, focused title in Cormorant italic | 2026-07-09 · `24f95b4` |
 | 26a | Home salon reorder — profiles + compare CTA first, create/scan demoted to quiet footer row, state-aware hero tagline, first-run untouched | 2026-07-09 · `e72c100` |
 | 26b | Pinned-profile portrait card — 64px avatar, Cormorant italic name, rated count, accent wash | 2026-07-09 · `d39861e` |
+| 26c | Back wall hushed — contract/scène/scènes/live demoted from cards to slim quiet rows, all destinations + aria intact | 2026-07-09 · `a761d3e` |
 
 ### v4 (main)
 
