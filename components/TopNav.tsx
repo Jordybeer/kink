@@ -85,8 +85,8 @@ export default function TopNav() {
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              className="focus-ring flex items-center justify-center rounded-lg"
-              style={{ width: 44, height: 44, color: "var(--text2)" }}
+              className="focus-ring flex items-center justify-center h-10 w-10 rounded-full"
+              style={{ color: "var(--text2)" }}
             >
               <Settings size={18} aria-hidden="true" />
             </button>
@@ -111,34 +111,37 @@ export default function TopNav() {
           <MotionLink
             href={back}
             whileTap={TAP_SPRING}
-            className="focus-ring -ml-1 flex items-center justify-center h-9 w-9 rounded-full"
+            className="focus-ring -ml-1 flex items-center justify-center h-10 w-10 rounded-full"
             style={{ color: "var(--text2)" }}
             aria-label="Terug"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
           </MotionLink>
         </div>
-        <span className="font-bold text-base truncate text-center px-2">
+        <span
+          className="text-base italic truncate text-center px-2"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+        >
           {title}
         </span>
         <div className="flex items-center justify-end gap-2">
           {profileIdFromPath && (
             <Link
               href={`/compare?a=${profileIdFromPath}`}
-              className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg"
+              className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 h-8 rounded-full"
               style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
             >
-              <Zap size={13} />
+              <Zap size={15} />
               Vergelijk
             </Link>
           )}
           {profileIdFromPath && (
             <Link
               href="/scene"
-              className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg"
+              className="focus-ring flex items-center gap-1 text-xs font-medium px-3 h-8 rounded-full"
               style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
             >
-              <Clapperboard size={13} />
+              <Clapperboard size={15} />
               Scène
             </Link>
           )}
