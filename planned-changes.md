@@ -99,6 +99,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 - **Status explainer i18n extraction**: hardcoded Dutch `STATUS_EXPLAINER` — natural extraction point if multilingual ever lands.
 
 ### Features
+- **Desire score in contract PDF** (2026-07-11): the on-screen contract cards show `verlangen x/5` per party; the PDF table now carries comments but still drops desire — same bullet-under-the-name pattern would fit.
 - **Export to PDF on mobile**: test jsPDF quirks on iOS Safari.
 - **Compare filter "only mutual yes"**: quick filter for enthusiastic matches only.
 - **Kink notes in compare view**: collapsed view of each person's comment on matched kinks (partially shipped via '+ Notitie' — verify remaining gap).
