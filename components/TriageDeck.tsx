@@ -82,13 +82,15 @@ export default function TriageDeck({
                 onClick={() => onCuriousChange(current.id, !entries[current.id]?.curious)}
                 aria-pressed={!!entries[current.id]?.curious}
                 aria-label={entries[current.id]?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}
-                className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg flex-none transition-colors"
-                style={{
-                  color: entries[current.id]?.curious ? "var(--curious)" : "var(--text2)",
-                  background: "var(--info-ghost)",
-                }}
+                className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1 flex-none"
+                style={
+                  entries[current.id]?.curious
+                    ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
+                    : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
+                }
               >
-                <Star size={15} fill={entries[current.id]?.curious ? "currentColor" : "none"} aria-hidden="true" />
+                <Star size={11} fill={entries[current.id]?.curious ? "currentColor" : "none"} aria-hidden="true" />
+                Nieuwsgierig
               </button>
               <button
                 data-tour="info"

@@ -938,6 +938,15 @@ export default function ProfilePage({ params }: Props) {
                 </div>
               </li>
             ))}
+            <li className="flex gap-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <Star size={12} fill="currentColor" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
+                <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>
+                  Los van je oordeel: markeer met de ster wat je wil verkennen. Kan naast elke keuze bestaan — een ster is geen ja.
+                </p>
+              </div>
+            </li>
           </ul>
           <p className="text-xs italic mt-4" style={{ color: "var(--text2)" }}>
             Tip: tik nogmaals op een actieve knop om hem uit te zetten.

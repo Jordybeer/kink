@@ -8,16 +8,9 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-**Owner-set priority order (2026-07-09): 29 → 30 → 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phase 28 shipped 2026-07-09 — see ledger.)**
+**Owner-set priority order (2026-07-09): 30 → 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28 + 29 shipped — see ledger.)**
 
-### Phase 29 — Nieuwsgierig star affordance [NEXT UP — priority]
-
-Owner report 2026-07-09: "The starred interested button is there but subtle and not very clear what it does or that it's even there."
-- The ★ on the triage deck (`TriageDeck.tsx` header row) and in `KinkEditSheet` reads as decoration — no label on the deck, low-contrast ghost background, and nothing teaches what "nieuwsgierig" marks.
-- Candidates (design pass first): visible label or tooltip-on-first-use, stronger resting state, a one-time hint in the deck flow, and/or a line in the status explainer sheet. The KinkEditSheet chip already says "Nieuwsgierig" — the deck's naked icon is the main offender.
-- Success = a new user can say what the star does without being told.
-
-### Phase 30 — Onboarding + profile spotlight tour: review & redesign [priority, after 29]
+### Phase 30 — Onboarding + profile spotlight tour: review & redesign [NEXT UP — priority]
 
 Full up-to-date review and redesign for new users:
 - **Onboarding flow** (`components/Onboarding.tsx`): walk it as a stranger — copy, pacing, type (post-Phase 28 vocabulary), what it promises vs what home now delivers (the salon changed the landing reality; onboarding still narrates the old world?).
@@ -173,6 +166,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 27a | Compare badges wear status colours (dashed grens) — person stays in column/headers; verified not-a-regression, person-pink dated to pre-June-16 redesign | 2026-07-09 · `7face92` |
 | 27b | Home card typography — serif names on all cards, on-accent serif monogram avatars, pencil centred | 2026-07-09 · `6602e5f` |
 | 28 | Typography consistency + mobile readability sweep — sub-12px reading copy bumped to `text-xs`, off-scale 13/15/17px snapped to the Tailwind scale, inline serif CTA sizes classed, exemptions grandfathered (pills/mono/tab labels), `docs/type-system.md` is now the source of truth | 2026-07-09 · `08fb28d` |
+| 29 | Nieuwsgierig star affordance — deck's naked ★ icon replaced with the KinkEditSheet's labeled "Nieuwsgierig" chip (one vocabulary), status explainer teaches the star ("een ster is geen ja") | 2026-07-10 |
 
 ### v4 (main)
 
