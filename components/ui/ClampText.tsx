@@ -48,7 +48,7 @@ export default function ClampText({ text, className = "", style }: Props) {
   if (!clipped) {
     return (
       <p className={className} style={style}>
-        <span ref={ref} className="line-clamp-2 block">{text}</span>
+        <span ref={ref} className="line-clamp-2">{text}</span>
       </p>
     );
   }
@@ -76,7 +76,7 @@ export default function ClampText({ text, className = "", style }: Props) {
         style={{ visibility: expanded ? "hidden" : "visible" }}
         className={`focus-ring block w-full text-left ${className}`}
       >
-        <span ref={ref} className="line-clamp-2 block">{text}</span>
+        <span ref={ref} className="line-clamp-2">{text}</span>
         <span aria-hidden="true" className="block text-xs mt-0.5" style={{ color: "var(--accent)" }}>
           …meer
         </span>
