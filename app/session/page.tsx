@@ -536,8 +536,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     <>
       <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Jouw profiel</p>
       <select value={profileId} onChange={e => setProfileId(e.target.value)}
-        className="focus-ring w-full rounded-lg px-3 py-2.5 text-base mb-4 focus:outline-none"
-        style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
+        className="ks-select focus-ring w-full rounded-lg px-3 py-2.5 text-base mb-4 focus:outline-none"
+        style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>
         {profiles.map(p => <option key={p.id} value={p.id}>{p.name} — {p.role}</option>)}
       </select>
       {profiles.length === 0 && (

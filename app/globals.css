@@ -60,10 +60,21 @@ html, body {
 .btn-accent {
   background: var(--accent);
   color: var(--on-accent);
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 700;
+}
+
+/* Native select, dressed for the room — OS chrome off, house caret on */
+.ks-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23ffffff' stroke-opacity='0.55' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 12px 8px;
+  padding-right: 2.4rem !important;
 }
 
 /* CSS accordion — grid-template-rows trick, no JS height measurement */
@@ -101,7 +112,7 @@ html, body {
 /* Settings cards — each feature gets its own glanceable block */
 .settings-card {
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: 12px;
   background: var(--surface2);
   padding: 1rem;
 }
@@ -112,7 +123,7 @@ html, body {
   width: 2.25rem;
   height: 2.25rem;
   flex: none;
-  border-radius: 2px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;

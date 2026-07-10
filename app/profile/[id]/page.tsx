@@ -990,8 +990,8 @@ export default function ProfilePage({ params }: Props) {
           <select
             value={editRole}
             onChange={(e) => setEditRole(e.target.value)}
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            className="ks-select focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
+            style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             {ROLE_GROUPS.map((g) => (
               <optgroup key={g.label} label={g.label}>
