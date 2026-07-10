@@ -27,6 +27,18 @@ export const STATUS_HINT: Record<NonNullable<KinkStatus>, string> = {
   hard_no: "niet bespreekbaar",
 };
 
+// Rank a pair of verdicts by eagerness so contract tables can list rows
+// in the house hierarchy: Heel graag > Ja > Misschien > Voor hen > Harde
+// grens, with an unrated side sorting last. The keenest verdict leads,
+// the partner's verdict breaks ties — so "Heel graag + Voor hen" prints
+// above "Ja + Ja". Lower rank = higher on the page.
+export function statusPairRank(a: KinkStatus | null, b: KinkStatus | null): number {
+  const worst = STATUS_ORDER.length;
+  const rank = (s: KinkStatus | null) => (s ? STATUS_ORDER.indexOf(s) : worst);
+  const [lo, hi] = [rank(a), rank(b)].sort((x, y) => x - y);
+  return lo * (worst + 1) + hi;
+}
+
 export const STATUS_VAR: Record<NonNullable<KinkStatus>, string> = {
   yes:     "var(--yes)",
   willing: "var(--willing)",

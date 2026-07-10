@@ -12,7 +12,7 @@ import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
-import { STATUS_LABEL as STATUS_NL } from "@/lib/statusLabels";
+import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
 import { hexToRgb, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
 
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
@@ -203,6 +203,21 @@ function ContractPage() {
     else if (hasA || hasB) discuss.push(detail);
   }
 
+  // Every section lists its rows in the house hierarchy — the keenest
+  // pair first (Heel graag > Ja > Misschien > Voor hen > Harde grens),
+  // alphabetical within equals. Order reflects choices, not KINKS order.
+  const byChoice = (a: KinkDetail, b: KinkDetail) =>
+    statusPairRank(a.statusA, a.statusB) - statusPairRank(b.statusA, b.statusB) ||
+    a.name.localeCompare(b.name, "nl");
+  const sharedAll = [...shared, ...customShared].sort(byChoice);
+  softLimits.sort(byChoice);
+  discuss.sort(byChoice);
+  hardLimitDetails.sort(byChoice);
+  // Keep the on-screen hard-limit chips marching in the same order as
+  // the PDF's detail rows.
+  const hardOrder = new Map(hardLimitDetails.map((d, i) => [d.name, i]));
+  hardLimits.sort((a, b) => (hardOrder.get(a.name) ?? 0) - (hardOrder.get(b.name) ?? 0));
+
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
   const trimmedRealNameA = realNameA.trim();
@@ -384,7 +399,15 @@ function ContractPage() {
             const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
             const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
             const nameLines = doc.splitTextToSize(`• ${item.name}`, 78) as string[];
-            const rowH = nameLines.length * 4.2 + 1;
+            // Each party's whisper prints as its own bullet under the kink
+            // name — measured at the comment font so wrapping is honest.
+            doc.setFontSize(7.5);
+            const comments = [
+              item.commentA ? (doc.splitTextToSize(`• ${profileA.name}: ${item.commentA}`, lineW - 8) as string[]) : [],
+              item.commentB ? (doc.splitTextToSize(`• ${profileB.name}: ${item.commentB}`, lineW - 8) as string[]) : [],
+            ].flat();
+            doc.setFontSize(8.5);
+            const rowH = nameLines.length * 4.2 + (comments.length ? comments.length * 3.6 + 1 : 0) + 1;
             if (y + rowH > 272) {
               newPage();
               doc.setFont("helvetica", "normal");
@@ -394,6 +417,14 @@ function ContractPage() {
             doc.text(nameLines, margin, y);
             doc.text(sA, col2X, y);
             doc.text(sB, col3X, y);
+            if (comments.length) {
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(7.5);
+              doc.setTextColor(...muted);
+              doc.text(comments, margin + 4, y + nameLines.length * 4.2);
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(8.5);
+            }
             y += rowH;
           }
         } else {
@@ -426,11 +457,13 @@ function ContractPage() {
         y += 10;
       };
 
-      section("Gedeelde verlangens", [...shared, ...customShared], hexToRgb(PDF_STATUS_ON_PAPER.yes));
+      // Sections descend the choice ladder: shared desires, then soft
+      // limits, then hard limits, and what still needs talking comes last.
+      section("Gedeelde verlangens", sharedAll, hexToRgb(PDF_STATUS_ON_PAPER.yes));
+      section("Zachte grenzen", softLimits, hexToRgb(PDF_STATUS_ON_PAPER.maybe));
       // Hard limits print as the same party-column table as the other
       // sections — the "who" reads from whose column says Harde grens.
       section("Harde grenzen", hardLimitDetails, hexToRgb(PDF_STATUS_ON_PAPER.hard_no));
-      section("Zachte grenzen", softLimits, hexToRgb(PDF_STATUS_ON_PAPER.maybe));
       section("Bespreking nodig", discuss, hexToRgb(PDF_STATUS_ON_PAPER.conflict));
 
       // Safeword clause
@@ -687,13 +720,13 @@ function ContractPage() {
           </div>
         </div>
 
-        <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
+        <ContractSection title="Gedeelde verlangens" items={sharedAll} colour="var(--yes)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
+        <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
         <ContractSection
           title="Harde grenzen"
           items={hardLimits.map((h) => ({ text: h.name, tag: h.who }))}
           colour="var(--hard-no)"
         />
-        <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
         <ContractSection title="Bespreking nodig" items={discuss} colour="var(--willing)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
 
         {/* General clauses */}
