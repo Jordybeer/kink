@@ -362,7 +362,7 @@ function ContractPage() {
         doc.setDrawColor(...colour);
         doc.setLineWidth(0.25);
         doc.line(margin, y, margin + lineW, y);
-        y += 4;
+        y += 6; // was 4 — the one rule in the doc sitting tighter than its neighbours
 
         const isKinkRow = items.length > 0 && typeof items[0] === "object" && items[0] !== null && "name" in (items[0] as object);
 

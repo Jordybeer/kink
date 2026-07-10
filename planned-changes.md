@@ -164,6 +164,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 30b | Onboarding dramaturgy — age gate moved to the door (step 1), privacy+backup merged into one three-card trust step, feature brochure cut (salon + tour teach better), consent vow in serif ("Safewords zijn heilig"), finale hands off via "Maak je eerste profiel"; CSS keyframes → house framer-motion springs with stagger, reduced-motion safe | 2026-07-10 |
 | 30c | Purple exorcism + theme soft-removal — last three purple-400 fossils (`#c084fc` in FAB glow, Accordion chip, profile-PDF chrome) replaced with accent tokens / new `PDF_DARK_PAGE` palette (+ drift-guard test); theme pickers removed from onboarding (6 steps now) and settings, store `theme` + ThemeProvider untouched so existing choices keep applying | 2026-07-10 |
 | — | PDF signature block unglued — contract's name+date were crushed 4mm/4mm/4mm against the signature box and its own divider rule; respaced to 6/6/5mm with named `sigLineY`/`sigNameY`/`sigDateY`, ink inset widened 1mm → 2.5mm; scene ledger's first item also unglued from the safeword strip (3mm → 5mm clearance). Verified by rendering both generators standalone via jsPDF+pdftoppm and eyeballing the raster | 2026-07-10 |
+| — | Contract section rules unglued — the coloured underline beneath each of the four section headers (Gedeelde verlangens, Harde grenzen, Zachte grenzen, Bespreking nodig) sat only 4mm above its content, the one rule in the doc tighter than its 6–10mm neighbours; bumped to 6mm to match | 2026-07-10 |
 
 ### v4 (main)
 
