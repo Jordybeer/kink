@@ -161,6 +161,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 28 | Typography consistency + mobile readability sweep — sub-12px reading copy bumped to `text-xs`, off-scale 13/15/17px snapped to the Tailwind scale, inline serif CTA sizes classed, exemptions grandfathered (pills/mono/tab labels), `docs/type-system.md` is now the source of truth | 2026-07-09 · `08fb28d` |
 | 29 | Nieuwsgierig star affordance — deck's naked ★ icon replaced with the KinkEditSheet's labeled "Nieuwsgierig" chip (one vocabulary), status explainer teaches the star ("een ster is geen ja") | 2026-07-10 |
 | 30 | Onboarding + tour truth pass — dead status vocabulary ("nee") replaced with the living one, tour speaks "tik"-voice and rows-not-pills, fifth tour step spotlights the curious chip, `new-user.spec.ts` rewritten to walk the real flow (PIN step + non-bypassable age gate; was 4/5 failing on dev) | 2026-07-10 |
+| 30b | Onboarding dramaturgy — age gate moved to the door (step 1), privacy+backup merged into one three-card trust step, feature brochure cut (salon + tour teach better), consent vow in serif ("Safewords zijn heilig"), finale hands off via "Maak je eerste profiel"; CSS keyframes → house framer-motion springs with stagger, reduced-motion safe | 2026-07-10 |
 
 ### v4 (main)
 

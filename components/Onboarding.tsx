@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Zap, PenLine, ShieldCheck, HardDrive, Heart, Palette, Lock, Fingerprint, ShieldAlert, HeartOff, User, Tag, Radio, Clapperboard } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { PenLine, ShieldCheck, Heart, Palette, Lock, Fingerprint, ShieldAlert, HeartOff } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
 import { isPlatformAuthenticatorAvailable, registerBiometric } from '@/lib/webauthn';
+import { useMotionSafe, TAP_SPRING, STAGGER_CHILDREN, fadeUp, SHAKE_ANIM } from '@/lib/motion';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -16,16 +18,18 @@ const ICON_CIRCLE: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
   marginBottom: '2rem',
-  animation: 'ks-icon-pop 0.35s ease-out both',
 };
 const TITLE: React.CSSProperties = {
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 500,
   fontSize: '1.875rem', color: 'var(--text)', marginBottom: '0.875rem', lineHeight: 1.2,
-  animation: 'ks-slide-up 0.35s ease-out 0.08s both', opacity: 0,
 };
 const BODY: React.CSSProperties = {
   fontSize: '0.875rem', color: 'var(--text2)', lineHeight: 1.7, marginBottom: '2rem',
-  animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0,
+};
+const CARD: React.CSSProperties = {
+  background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
+  border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)',
+  borderRadius: '0.75rem', padding: '0.75rem 1rem', textAlign: 'left',
 };
 
 // Shared action-button styles
@@ -45,7 +49,8 @@ const BTN_SECONDARY: React.CSSProperties = {
   fontSize: '0.875rem', cursor: 'pointer', width: '100%', maxWidth: '22rem',
 };
 
-// The fixed slot where all continue/action buttons live — outside the animated div
+// The fixed slot where all continue/action buttons live — outside the animated
+// step container (transforms break fixed positioning, learned the hard way).
 const ACTION_BAR: React.CSSProperties = {
   position: 'fixed', bottom: '5rem', left: 0, right: 0,
   display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -54,17 +59,24 @@ const ACTION_BAR: React.CSSProperties = {
 
 const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
 const PIN_LENGTH = 4;
-const TOTAL_STEPS = 7;
 
-type S6Sub = "intro" | "pin1" | "pin2" | "biometric";
+// The dramaturgy: welcome → the door (18+) → trust → consent → sfeer → slot → eerste profiel.
+// The age gate stands at the entrance, not the exit; the finale hands off into the app.
+const STEP_COUNT = 7;
+
+type S5Sub = "intro" | "pin1" | "pin2" | "biometric";
+
+const childV = fadeUp(10);
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
+  const t = useMotionSafe();
   const [step, setStep] = useState(0);
-  const [leaving, setLeaving] = useState(false);
   const [lockout, setLockout] = useState(false);
+  // "Sla over" jumps to the age gate — never around it. Passing it then completes.
+  const [skipRequested, setSkipRequested] = useState(false);
 
-  // Step6 state lives here so action buttons can render outside the animated div
-  const [s6sub, setS6sub] = useState<S6Sub>("intro");
+  // Lock-step state lives here so action buttons can render outside the animated div
+  const [s5sub, setS5sub] = useState<S5Sub>("intro");
   const [pin1, setPin1] = useState<string[]>([]);
   const [pin2, setPin2] = useState<string[]>([]);
   const [shake, setShake] = useState(false);
@@ -77,28 +89,30 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   useEffect(() => { isPlatformAuthenticatorAvailable().then(setBioAvailable); }, []);
 
-  const advance = useCallback(() => {
-    setLeaving(true);
-    setTimeout(() => { setStep(s => s + 1); setLeaving(false); }, 220);
-  }, []);
+  const advance = useCallback(() => setStep(s => s + 1), []);
+
+  function passGate() {
+    if (skipRequested) onComplete();
+    else advance();
+  }
 
   async function handlePinKey(k: string) {
-    const active = s6sub === "pin1" ? pin1 : pin2;
-    const setActive = s6sub === "pin1" ? setPin1 : setPin2;
+    const active = s5sub === "pin1" ? pin1 : pin2;
+    const setActive = s5sub === "pin1" ? setPin1 : setPin2;
     if (k === "⌫") { setActive(d => d.slice(0, -1)); return; }
     if (active.length >= PIN_LENGTH) return;
     const next = [...active, k];
     setActive(next);
     if (next.length < PIN_LENGTH) return;
-    if (s6sub === "pin1") { setS6sub("pin2"); return; }
+    if (s5sub === "pin1") { setS5sub("pin2"); return; }
     if (next.join("") !== pin1.join("")) {
       setShake(true);
-      setTimeout(() => { setShake(false); setPin1([]); setPin2([]); setS6sub("pin1"); }, 500);
+      setTimeout(() => { setShake(false); setPin1([]); setPin2([]); setS5sub("pin1"); }, 500);
       return;
     }
     const hash = await hashPin(next.join(""));
     setAppLockPin(hash);
-    if (bioAvailable) setS6sub("biometric"); else advance();
+    if (bioAvailable) setS5sub("biometric"); else advance();
   }
 
   async function handleEnableBio() {
@@ -113,251 +127,232 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   }
 
-  const currentDigits = s6sub === "pin1" ? pin1 : pin2;
+  const currentDigits = s5sub === "pin1" ? pin1 : pin2;
+  const barKey = step === 5 ? `5-${s5sub}` : String(step);
 
   return (
-    <>
-      <style>{`
-        @keyframes ks-fade-in  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ks-slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes ks-slide-out { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.97) translateY(-6px); } }
-        @keyframes ks-slide-in  { from { opacity: 0; transform: scale(0.99) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes ks-icon-pop  { from { opacity: 0; transform: scale(0.9) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes ks-shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
-        .ks-slide-out { animation: ks-slide-out 180ms ease-in forwards; }
-        .ks-slide-in  { animation: ks-slide-in  260ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-        @media (prefers-reduced-motion: reduce) {
-          .ks-slide-out, .ks-slide-in { animation: none; }
-        }
-      `}</style>
-
-      <div
-        style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', transition: 'background 200ms ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-        role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync"
-      >
-        {lockout ? (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}>
-            <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartOff size={36} /></div>
-            <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
-          </div>
-        ) : (
-          <>
-            {/* ── Animated content — NO buttons here (transform breaks fixed positioning) ── */}
-            <div
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', transition: 'background 200ms ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+      role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync"
+    >
+      {lockout ? (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t.fast}
+          style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}
+        >
+          <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartOff size={36} /></div>
+          <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
+        </motion.div>
+      ) : (
+        <>
+          {/* ── Animated step stage — NO buttons here (transform breaks fixed positioning) ── */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
               key={step}
-              className={leaving ? 'ks-slide-out' : 'ks-slide-in'}
+              initial={{ opacity: 0, y: 16, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98, transition: t.exit }}
+              transition={t.enter}
               style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5rem 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
             >
-              {step === 0 && <Step0Content />}
-              {step === 1 && <Step1Content />}
-              {step === 2 && <Step2Content />}
-              {step === 3 && <Step3Content />}
-              {step === 4 && <Step4Content />}
-              {step === 5 && <Step5Content />}
-              {step === 6 && s6sub === "intro"   && <Step6IntroContent bioAvailable={bioAvailable} />}
-              {step === 6 && s6sub === "biometric" && <Step6BioContent bioError={bioError} />}
-              {step === 6 && (s6sub === "pin1" || s6sub === "pin2") && (
-                <Step6PinContent sub={s6sub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
-              )}
-              {step === 7 && <Step7Content />}
-            </div>
+              <motion.div
+                variants={STAGGER_CHILDREN} initial="hidden" animate="show"
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                {step === 0 && <Step0Welcome />}
+                {step === 1 && <Step1Gate />}
+                {step === 2 && <Step2Data />}
+                {step === 3 && <Step3Consent />}
+                {step === 4 && <Step4Theme />}
+                {step === 5 && s5sub === "intro" && <Step5LockIntro bioAvailable={bioAvailable} />}
+                {step === 5 && s5sub === "biometric" && <Step5Bio bioError={bioError} />}
+                {step === 5 && (s5sub === "pin1" || s5sub === "pin2") && (
+                  <Step5Pin sub={s5sub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
+                )}
+                {step === 6 && <Step6Finale />}
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
 
-            {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
-            <div style={ACTION_BAR}>
-              {step === 0 && (
-                <>
-                  <button
-                    onClick={advance}
-                    style={{ ...BTN_GHOST, animation: 'ks-fade-in 0.8s ease 1.2s both', opacity: 0 }}
+          {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
+          <div style={ACTION_BAR}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={barKey}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={t.fast}
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}
+              >
+                {step === 0 && (
+                  <>
+                    <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_GHOST}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
+                    >
+                      Begin
+                    </motion.button>
+                    <motion.button whileTap={TAP_SPRING}
+                      onClick={() => { setSkipRequested(true); setStep(1); }}
+                      style={BTN_SECONDARY}
+                      aria-label="Sla de introductie over"
+                    >
+                      Sla over
+                    </motion.button>
+                  </>
+                )}
+
+                {step === 1 && (
+                  <>
+                    <motion.button whileTap={TAP_SPRING} onClick={passGate} style={BTN_PRIMARY}>
+                      Ja, ik ben 18+
+                    </motion.button>
+                    <motion.button whileTap={TAP_SPRING} onClick={() => setLockout(true)} style={BTN_SECONDARY}>
+                      Ik ben jonger
+                    </motion.button>
+                  </>
+                )}
+
+                {step >= 2 && step <= 4 && (
+                  <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_GHOST}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
                   >
-                    Begin
-                  </button>
-                  <button
-                    onClick={() => { setLeaving(true); setTimeout(() => { setStep(7); setLeaving(false); }, 220); }}
-                    style={{ ...BTN_SECONDARY, animation: 'ks-fade-in 0.6s ease 1.6s both', opacity: 0 }}
-                    aria-label="Sla de introductie over"
+                    {step === 4 ? 'Ga door →' : 'Volgende →'}
+                  </motion.button>
+                )}
+
+                {step === 5 && s5sub === "intro" && (
+                  <>
+                    <motion.button whileTap={TAP_SPRING} onClick={() => setS5sub("pin1")} style={BTN_PRIMARY}>PIN instellen</motion.button>
+                    <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_SECONDARY}>Sla over</motion.button>
+                  </>
+                )}
+
+                {step === 5 && (s5sub === "pin1" || s5sub === "pin2") && (
+                  <motion.button whileTap={TAP_SPRING}
+                    onClick={() => { setPin1([]); setPin2([]); setS5sub("intro"); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
                   >
-                    Sla over
-                  </button>
-                </>
-              )}
+                    ← Terug
+                  </motion.button>
+                )}
 
-              {step >= 1 && step <= 5 && (
-                <button
-                  onClick={advance}
-                  style={BTN_GHOST}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
-                >
-                  {step === 5 ? 'Ga door →' : 'Volgende →'}
-                </button>
-              )}
+                {step === 5 && s5sub === "biometric" && (
+                  <>
+                    <motion.button whileTap={TAP_SPRING}
+                      onClick={handleEnableBio}
+                      disabled={bioLoading}
+                      style={{ ...BTN_PRIMARY, background: bioLoading ? 'var(--surface2)' : 'linear-gradient(135deg, var(--accent), var(--accent2))', color: bioLoading ? 'var(--text2)' : 'var(--on-accent)', cursor: bioLoading ? 'default' : 'pointer' }}
+                    >
+                      {bioLoading ? 'Even wachten…' : 'Face ID / vingerafdruk inschakelen'}
+                    </motion.button>
+                    <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_SECONDARY}>Nee, alleen PIN</motion.button>
+                  </>
+                )}
 
-              {step === 6 && s6sub === "intro" && (
-                <>
-                  <button onClick={() => setS6sub("pin1")} style={BTN_PRIMARY}>PIN instellen</button>
-                  <button onClick={advance} style={BTN_SECONDARY}>Sla over</button>
-                </>
-              )}
+                {step === 6 && (
+                  <motion.button whileTap={TAP_SPRING} onClick={onComplete} style={BTN_PRIMARY}>
+                    Maak je eerste profiel
+                  </motion.button>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-              {step === 6 && (s6sub === "pin1" || s6sub === "pin2") && (
-                <button
-                  onClick={() => { setPin1([]); setPin2([]); setS6sub("intro"); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
-                >
-                  ← Terug
-                </button>
-              )}
-
-              {step === 6 && s6sub === "biometric" && (
-                <>
-                  <button
-                    onClick={handleEnableBio}
-                    disabled={bioLoading}
-                    style={{ ...BTN_PRIMARY, background: bioLoading ? 'var(--surface2)' : 'linear-gradient(135deg, var(--accent), var(--accent2))', color: bioLoading ? 'var(--text2)' : 'var(--on-accent)', cursor: bioLoading ? 'default' : 'pointer' }}
-                  >
-                    {bioLoading ? 'Even wachten…' : 'Face ID / vingerafdruk inschakelen'}
-                  </button>
-                  <button onClick={advance} style={BTN_SECONDARY}>Nee, alleen PIN</button>
-                </>
-              )}
-
-              {step === 7 && (
-                <>
-                  <button
-                    onClick={onComplete}
-                    style={BTN_PRIMARY}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
-                  >
-                    Ja, ik ben 18+
-                  </button>
-                  <button onClick={() => setLockout(true)} style={BTN_SECONDARY}>Ik ben jonger</button>
-                </>
-              )}
-            </div>
-
-            {/* Progress dots */}
-            <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
-              {Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => i).map(i => (
-                <div key={i} style={{
-                  height: 4,
-                  width: i === step ? 24 : 8,
-                  borderRadius: 999,
-                  background: i === step ? 'var(--accent)' : 'var(--border)',
-                  transition: 'width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease',
-                }} />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </>
+          {/* Progress dots */}
+          <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
+            {Array.from({ length: STEP_COUNT }, (_, i) => i).map(i => (
+              <div key={i} style={{
+                height: 4,
+                width: i === step ? 24 : 8,
+                borderRadius: 999,
+                background: i === step ? 'var(--accent)' : 'var(--border)',
+                transition: 'width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease',
+              }} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
 /* ── Step content components (pure content, no buttons) ─────────────────── */
 
-function Step0Content() {
+function Step0Welcome() {
   return (
     <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
       {/* Ambient glow behind the wordmark */}
-      <div aria-hidden="true" style={{
-        position: 'absolute', top: '50%', left: '50%',
-        transform: 'translate(-50%, -60%)',
-        width: '18rem', height: '10rem',
-        background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
-        pointerEvents: 'none',
-        animation: 'ks-fade-in 1.5s ease 0.3s both', opacity: 0,
-      }} />
-      <h1 style={{ fontSize: '2.25rem', fontWeight: 700, margin: 0, animation: 'ks-fade-in 1s ease forwards', opacity: 0, position: 'relative' }}>
+      <motion.div aria-hidden="true"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.3 }}
+        style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -60%)',
+          width: '18rem', height: '10rem',
+          background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+      <motion.h1 variants={childV} style={{ fontSize: '2.25rem', fontWeight: 700, margin: 0, position: 'relative' }}>
         <Wordmark style={{ letterSpacing: '0.08em' }} />
-      </h1>
-      <p style={{ fontSize: '0.875rem', color: 'var(--text2)', marginTop: '0.5rem', animation: 'ks-fade-in 1s ease 0.5s forwards', opacity: 0, position: 'relative' }}>
+      </motion.h1>
+      <motion.p variants={childV} style={{ fontSize: '0.875rem', color: 'var(--text2)', marginTop: '0.5rem', position: 'relative' }}>
         Verken grenzen. Samen.
-      </p>
+      </motion.p>
     </div>
   );
 }
 
-function Step1Content() {
+function Step1Gate() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck size={48} /></div>
-      <h2 style={TITLE}>Jouw data verlaat dit apparaat nooit</h2>
-      <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldAlert size={48} /></motion.div>
+      <motion.h2 variants={childV} style={TITLE}>Voor volwassenen</motion.h2>
+      <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
+        <p style={{ margin: 0 }}>Ga alleen verder als je 18 jaar of ouder bent.</p>
+      </motion.div>
+    </div>
+  );
+}
+
+function Step2Data() {
+  return (
+    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck size={48} /></motion.div>
+      <motion.h2 variants={childV} style={TITLE}>Jouw data verlaat dit apparaat nooit</motion.h2>
+      <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+        <motion.div variants={childV} style={CARD}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>De app</div>
           Geen account, geen server, geen tracking. Alles staat in je browser en nergens anders.
-        </div>
-        <div style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
+        </motion.div>
+        <motion.div variants={childV} style={CARD}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Live sessie</div>
           End-to-end versleuteld — ook wij kunnen niet meelezen. Je kinks en naam verlaten je toestel nooit.
-        </div>
+        </motion.div>
+        <motion.div variants={childV} style={CARD}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Back-up</div>
+          Jij bent je eigen cloud: exporteer een back-up via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.
+        </motion.div>
       </div>
     </div>
   );
 }
 
-function Step2Content() {
+function Step3Consent() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><HardDrive size={48} /></div>
-      <h2 style={TITLE}>Jij bent je eigen cloud</h2>
-      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <p style={{ margin: 0 }}>Geen automatische sync — jij bewaart je data.</p>
-        <p style={{ margin: 0 }}>Exporteer een back-up via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.</p>
-      </div>
-    </div>
-  );
-}
-
-const FEATURE_ROWS: { icon: React.FC<{ size: number }>; title: string; sub: string }[] = [
-  { icon: User,         title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
-  { icon: Tag,          title: 'Kinks',          sub: 'Van heel graag tot harde grens — met een ster voor nieuwsgierig' },
-  { icon: Zap,          title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
-  { icon: Radio,        title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
-  { icon: Clapperboard, title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
-  { icon: PenLine,      title: 'Contract',       sub: 'Safeword, aftercare, handtekening → PDF' },
-];
-
-function Step3Content() {
-  return (
-    <div style={{ maxWidth: '26rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 style={TITLE}>Wat kun je doen?</h2>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-        {FEATURE_ROWS.map((f, i) => (
-          <div key={f.title} style={{
-            display: 'flex', alignItems: 'center', gap: '0.875rem',
-            background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)',
-            borderRadius: '0.75rem', padding: '0.625rem 0.875rem',
-            animation: `ks-slide-up 0.35s ease ${0.08 + i * 0.06}s both`, opacity: 0,
-            textAlign: 'left',
-          }}>
-            <span style={{ flexShrink: 0, color: 'var(--accent)' }} aria-hidden="true"><f.icon size={20} /></span>
-            <div>
-              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>{f.title}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text2)', marginTop: '0.125rem' }}>{f.sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Step4Content() {
-  return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></div>
-      <h2 style={TITLE}>Consent, altijd</h2>
-      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <p style={{ margin: 0 }}>KinkSync is een startpunt voor het gesprek, niet een vervanging.</p>
-        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text)' }}>Safewords zijn heilig. Grenzen zijn wet.</p>
-      </div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></motion.div>
+      <motion.h2 variants={childV} style={TITLE}>Consent, altijd</motion.h2>
+      <motion.p variants={childV} style={{
+        fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 500,
+        fontSize: '1.25rem', lineHeight: 1.4, color: 'var(--text)', margin: '0 0 1rem',
+      }}>
+        Safewords zijn heilig.<br />Grenzen zijn wet.
+      </motion.p>
+      <motion.p variants={childV} style={{ ...BODY, textAlign: 'center', margin: 0 }}>
+        KinkSync is een startpunt voor het gesprek — nooit een vervanging ervan. Niets hier is een afspraak totdat jullie het samen zeggen.
+      </motion.p>
     </div>
   );
 }
@@ -370,76 +365,81 @@ const THEMES = [
   { value: 'ledger'   as const, label: 'Ledger',   color: '#E85445' },
 ];
 
-function Step5Content() {
+function Step4Theme() {
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true">
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true">
         <Palette size={48} />
-      </div>
-      <h2 style={TITLE}>Kies je sfeer</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</p>
-      <div style={{
+      </motion.div>
+      <motion.h2 variants={childV} style={TITLE}>Kies je sfeer</motion.h2>
+      <motion.p variants={childV} style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</motion.p>
+      <motion.div variants={childV} style={{
         width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
         borderRadius: '0.875rem', padding: '0.875rem 1rem',
         display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem',
-        animation: 'ks-slide-up 0.4s ease 0.15s both', opacity: 0,
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.125rem' }}>Voorbeeld</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>Zo ziet de app eruit</div>
         </div>
         <div style={{ background: 'var(--accent)', color: 'var(--on-accent)', borderRadius: '9999px', padding: '0.3125rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>Ja</div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%', animation: 'ks-slide-up 0.4s ease 0.2s both', opacity: 0 }}>
-        {THEMES.map((t) => {
-          const selected = theme === t.value;
+      </motion.div>
+      <motion.div variants={childV} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%' }}>
+        {THEMES.map((th) => {
+          const selected = theme === th.value;
           return (
-            <button
-              key={t.value}
-              onClick={() => setTheme(t.value)}
+            <motion.button
+              key={th.value}
+              whileTap={TAP_SPRING}
+              onClick={() => setTheme(th.value)}
               aria-pressed={selected}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.625rem',
                 padding: '1rem 0.75rem', borderRadius: '0.875rem', cursor: 'pointer',
-                background: selected ? `color-mix(in srgb, ${t.color} 12%, transparent)` : 'var(--surface2)',
-                border: selected ? `2px solid ${t.color}` : '2px solid var(--border)',
+                background: selected ? `color-mix(in srgb, ${th.color} 12%, transparent)` : 'var(--surface2)',
+                border: selected ? `2px solid ${th.color}` : '2px solid var(--border)',
                 transition: 'border-color 150ms ease, background 150ms ease',
               }}
             >
-              <span style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: t.color, display: 'block', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: selected ? t.color : 'var(--text2)' }}>{t.label}</span>
-            </button>
+              <span style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: th.color, display: 'block', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: selected ? th.color : 'var(--text2)' }}>{th.label}</span>
+            </motion.button>
           );
         })}
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-function Step6IntroContent({ bioAvailable }: { bioAvailable: boolean }) {
+function Step5LockIntro({ bioAvailable }: { bioAvailable: boolean }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></div>
-      <h2 style={TITLE}>Vergrendel de app</h2>
-      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></motion.div>
+      <motion.h2 variants={childV} style={TITLE}>Vergrendel de app</motion.h2>
+      <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.</p>
         <p style={{ margin: 0 }}>Optioneel — je kunt dit ook later instellen.</p>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: string[]; shake: boolean; onKey: (k: string) => void }) {
+function Step5Pin({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: string[]; shake: boolean; onKey: (k: string) => void }) {
   return (
     <div style={{ maxWidth: '18rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 style={TITLE}>{sub === "pin1" ? "Kies een PIN" : "Bevestig je PIN"}</h2>
-      <p style={{ fontSize: '0.8125rem', color: 'var(--text2)', marginBottom: '1.5rem' }}>
+      <motion.h2 variants={childV} style={TITLE}>{sub === "pin1" ? "Kies een PIN" : "Bevestig je PIN"}</motion.h2>
+      <motion.p variants={childV} style={{ fontSize: '0.8125rem', color: 'var(--text2)', marginBottom: '1.5rem' }}>
         {sub === "pin1" ? "Kies een code van 4 cijfers" : "Voer je PIN nog een keer in"}
-      </p>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', marginBottom: '1.5rem', animation: shake ? 'ks-shake 0.4s ease' : 'none' }}>
+      </motion.p>
+      <motion.div
+        variants={childV}
+        animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : undefined}
+        transition={shake ? SHAKE_ANIM : undefined}
+        style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', marginBottom: '1.5rem' }}
+      >
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
           <div key={i} style={{
             width: 12, height: 12, borderRadius: '9999px',
@@ -447,8 +447,8 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
             transition: 'background 150ms ease',
           }} />
         ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', width: '100%' }}>
+      </motion.div>
+      <motion.div variants={childV} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', width: '100%' }}>
         {PIN_KEYS.map((k, i) => (
           <button
             key={i}
@@ -470,35 +470,35 @@ function Step6PinContent({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; 
             {k}
           </button>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-function Step6BioContent({ bioError }: { bioError: string | null }) {
+function Step5Bio({ bioError }: { bioError: string | null }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint size={48} /></div>
-      <h2 style={TITLE}>PIN ingesteld!</h2>
-      <p style={{ ...BODY, textAlign: 'center' }}>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint size={48} /></motion.div>
+      <motion.h2 variants={childV} style={TITLE}>PIN ingesteld!</motion.h2>
+      <motion.p variants={childV} style={{ ...BODY, textAlign: 'center' }}>
         Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
-      </p>
+      </motion.p>
       {bioError && (
-        <p style={{ fontSize: '0.8125rem', color: 'var(--hard-no)', marginBottom: '1rem' }}>{bioError}</p>
+        <motion.p variants={childV} style={{ fontSize: '0.8125rem', color: 'var(--hard-no)', marginBottom: '1rem' }}>{bioError}</motion.p>
       )}
     </div>
   );
 }
 
-function Step7Content() {
+function Step6Finale() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldAlert size={48} /></div>
-      <h2 style={TITLE}>Voor volwassenen</h2>
-      <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
-        <p style={{ margin: 0 }}>Ga alleen verder als je 18 jaar of ouder bent.</p>
-      </div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenLine size={48} /></motion.div>
+      <motion.h2 variants={childV} style={TITLE}>Het speelveld is van jou</motion.h2>
+      <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ margin: 0 }}>Begin met je eigen profiel — kinks, grenzen, verlangens.</p>
+        <p style={{ margin: 0 }}>Alles op jouw tempo. Alles blijft van jou.</p>
+      </motion.div>
     </div>
   );
 }

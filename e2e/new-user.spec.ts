@@ -18,27 +18,24 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /begin/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 1 — privacy
+    // Step 1 — de deur: leeftijdscheck staat aan het begin, niet aan het eind
+    await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
+    await page.getByRole("button", { name: /18\+/i }).click();
+    await page.waitForTimeout(300);
+
+    // Step 2 — data: privacy + live + back-up in één stap
     await expect(page.getByText(/verlaat dit apparaat nooit/i)).toBeVisible();
+    await expect(page.getByText(/back-up/i).first()).toBeVisible();
     await page.getByRole("button", { name: /volgende/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 2 — backup
-    await expect(page.getByText(/back-up/i)).toBeVisible();
-    await page.getByRole("button", { name: /volgende/i }).click();
-    await page.waitForTimeout(300);
-
-    // Step 3 — features
-    await expect(page.getByText(/wat kun je doen/i)).toBeVisible();
-    await page.getByRole("button", { name: /volgende/i }).click();
-    await page.waitForTimeout(300);
-
-    // Step 4 — consent
+    // Step 3 — consent
     await expect(page.getByText(/consent, altijd/i)).toBeVisible();
+    await expect(page.getByText(/safewords zijn heilig/i)).toBeVisible();
     await page.getByRole("button", { name: /volgende/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 5 — thema kiezen
+    // Step 4 — thema kiezen
     await expect(page.getByText(/kies je sfeer/i)).toBeVisible();
     // Select a non-default theme to exercise setTheme
     await page.getByRole("button", { name: /deep red/i }).click();
@@ -48,19 +45,19 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 6 — app lock (optioneel, hier overslaan)
+    // Step 5 — app lock (optioneel, hier overslaan)
     await expect(page.getByRole("heading", { name: /vergrendel de app/i })).toBeVisible();
     await page.getByRole("button", { name: "Sla over" }).click();
     await page.waitForTimeout(300);
 
-    // Step 7 — leeftijdscheck
-    await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
-    await page.getByRole("button", { name: /18\+/i }).click();
+    // Step 6 — finale: de handdruk het speelveld op
+    await expect(page.getByRole("heading", { name: /het speelveld is van jou/i })).toBeVisible();
+    await page.getByRole("button", { name: /maak je eerste profiel/i }).click();
     await page.waitForTimeout(400);
 
-    // Should be on home — onboarding gone
+    // Should be on home — onboarding gone, create form ready
     await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
-    await expect(page.getByRole("dialog", { name: /introductie/i })).not.toBeVisible();
+    await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
   test("sla over springt naar de leeftijdscheck — nooit eromheen", async ({ page }) => {
@@ -75,16 +72,6 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
 
   test("lockout bij 'ik ben jonger'", async ({ page }) => {
     await page.getByRole("button", { name: /begin/i }).click();
-    await page.waitForTimeout(300);
-    for (let i = 0; i < 4; i++) {
-      await page.getByRole("button", { name: /volgende/i }).click();
-      await page.waitForTimeout(300);
-    }
-    await expect(page.getByText(/kies je sfeer/i)).toBeVisible();
-    await page.getByRole("button", { name: /ga door/i }).click();
-    await page.waitForTimeout(300);
-    await expect(page.getByRole("heading", { name: /vergrendel de app/i })).toBeVisible();
-    await page.getByRole("button", { name: "Sla over" }).click();
     await page.waitForTimeout(300);
     await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
     await page.getByRole("button", { name: /jonger/i }).click();
