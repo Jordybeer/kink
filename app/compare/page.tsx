@@ -2,7 +2,7 @@
 import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeftRight, Clapperboard, FileText, ChevronDown, Lock } from "lucide-react";
+import { ArrowsLeftRight, FilmSlate, FileText, CaretDown, Lock } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry, Profile } from "@/types";
@@ -208,7 +208,7 @@ function ProfileChip({
           </p>
         )}
       </div>
-      <ChevronDown size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
+      <CaretDown size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
     </button>
   );
 }
@@ -465,7 +465,7 @@ function ComparePage() {
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             aria-label="Wissel profielen"
           >
-            <ArrowLeftRight size={15} />
+            <ArrowsLeftRight size={15} />
           </button>
           <ProfileChip
             profile={profileB}
@@ -868,7 +868,7 @@ function ComparePage() {
                   className="focus-ring flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-medium transition-opacity hover:opacity-80"
                   style={{ borderColor: "var(--border)", color: "var(--text)" }}
                 >
-                  <Clapperboard size={14} aria-hidden="true" />
+                  <FilmSlate size={14} aria-hidden="true" />
                   Plan een scène
                 </Link>
                 <Link

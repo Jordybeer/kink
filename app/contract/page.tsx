@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { X, TrendingUp, Trash2 } from "lucide-react";
+import { X, TrendUp, Trash } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -852,7 +852,7 @@ function ContractPage() {
               className="focus-ring text-xs transition-colors inline-flex items-center gap-1"
               style={{ color: "var(--text2)" }}
             >
-              <TrendingUp size={12} aria-hidden="true" />
+              <TrendUp size={12} aria-hidden="true" />
               Bekijk grafiek
             </Link>
           </div>
@@ -905,7 +905,7 @@ function ContractPage() {
                       className="focus-ring p-2 rounded-lg"
                       style={{ color: "var(--text2)" }}
                     >
-                      <Trash2 size={15} aria-hidden="true" />
+                      <Trash size={15} aria-hidden="true" />
                     </button>
                   </div>
                 )}

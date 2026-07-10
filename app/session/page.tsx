@@ -3,7 +3,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import Link from "next/link";
-import { Lock, Satellite, KeyRound } from "lucide-react";
+import { Lock, Broadcast, Key } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { CustomKink, ExperienceLevel, KinkStatus, Profile } from "@/types";
@@ -585,7 +585,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90 lg:h-full"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <Satellite size={22} aria-hidden="true" className="mb-1.5" style={{ color: "var(--accent)" }} />
+            <Broadcast size={22} aria-hidden="true" className="mb-1.5" style={{ color: "var(--accent)" }} />
             <div className="text-sm font-bold mb-0.5">Sessie aanmaken</div>
             <div className="text-xs" style={{ color: "var(--text2)" }}>Genereer een code en deel die met je partner.</div>
           </button>
@@ -594,7 +594,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             className="focus-ring w-full text-left px-4 py-4 rounded-2xl transition-opacity hover:opacity-90 lg:h-full"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <KeyRound size={22} aria-hidden="true" className="mb-1.5" style={{ color: "var(--accent)" }} />
+            <Key size={22} aria-hidden="true" className="mb-1.5" style={{ color: "var(--accent)" }} />
             <div className="text-sm font-bold mb-0.5">Deelnemen met code</div>
             <div className="text-xs" style={{ color: "var(--text2)" }}>Voer de 6-letterige code in van je partner.</div>
           </button>

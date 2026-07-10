@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Pin, PinOff, Pencil, Zap, FileText, Clapperboard, Anchor, Lock, ChevronRight } from "lucide-react";
+import { PushPin, PushPinSlash, PencilSimple, Lightning, FileText, FilmSlate, Anchor, Lock, CaretRight } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
@@ -226,7 +226,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                 ? { borderColor: "var(--accent)", color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }
                                 : { borderColor: "var(--border)", color: "var(--text2)" }}
                             >
-                              {p.id === pinnedProfileId ? <><PinOff size={12} /> Losmaken</> : <><Pin size={12} /> Mijn profiel</>}
+                              {p.id === pinnedProfileId ? <><PushPinSlash size={12} /> Losmaken</> : <><PushPin size={12} /> Mijn profiel</>}
                             </button>
                             <button
                               onClick={() => { setEditId(null); onPromptDelete(p.id); }}
@@ -263,7 +263,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                   </div>
                                   {p.id === pinnedProfileId && (
                                     <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "var(--accent)" }} aria-label="Mijn profiel">
-                                      <Pin size={9} color="#000" />
+                                      <PushPin size={9} color="#000" />
                                     </div>
                                   )}
                                 </div>
@@ -306,7 +306,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                             className="focus-ring absolute top-1/2 -translate-y-1/2 right-2 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
                             style={{ color: "var(--text2)" }}
                           >
-                            <Pencil size={14} />
+                            <PencilSimple size={14} />
                           </button>
                         </>
                       )}
@@ -331,7 +331,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             }}
           >
             <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--accent)" }}>
-              <Zap size={18} aria-hidden="true" className="flex-none" />
+              <Lightning size={18} aria-hidden="true" className="flex-none" />
               <span className="text-lg italic leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}>Vergelijk profielen</span>
             </div>
             <div className="text-sm" style={{ color: "var(--text2)" }}>
@@ -349,7 +349,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
           >
             <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--text2)" }}>
-              <Zap size={18} aria-hidden="true" className="flex-none" />
+              <Lightning size={18} aria-hidden="true" className="flex-none" />
               <span className="text-lg italic leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}>Vergelijk profielen</span>
             </div>
             <div className="text-sm" style={{ color: "var(--text2)" }}>
@@ -368,7 +368,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             >
               <FileText size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
               <span className="flex-1 text-sm font-medium truncate">Maak een contract</span>
-              <ChevronRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+              <CaretRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
             </Link>
           ) : (
             <div
@@ -382,8 +382,8 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             </div>
           )}
           {[
-            { href: "/scene", label: "Nieuwe scène", icon: Clapperboard },
-            { href: "/scenes", label: "Scènes", icon: Clapperboard },
+            { href: "/scene", label: "Nieuwe scène", icon: FilmSlate },
+            { href: "/scenes", label: "Scènes", icon: FilmSlate },
             { href: "/session", label: "Live sessie", icon: Anchor },
           ].map(({ href, label, icon: Icon }) => (
             <Link
@@ -394,7 +394,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             >
               <Icon size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
               <span className="flex-1 text-sm font-medium truncate">{label}</span>
-              <ChevronRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+              <CaretRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
             </Link>
           ))}
         </div>

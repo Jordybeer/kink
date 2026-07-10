@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import type { Kink, KinkEntry } from "@/types";
 import KinkListRow from "./KinkListRow";
 
@@ -56,7 +56,7 @@ export default function CategorySection({
           className="focus-ring flex-1 flex items-center gap-2 px-3 py-2.5 text-left min-w-0"
         >
           <span className="text-[var(--accent)] flex-none">
-            {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            {open ? <CaretDown size={16} /> : <CaretRight size={16} />}
           </span>
           <span
             className="text-base italic flex-1 text-left truncate"

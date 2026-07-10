@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, PlusSquare, Check, WifiOff, Smartphone, Zap } from "lucide-react";
+import { ShareNetwork, PlusSquare, Check, WifiSlash, DeviceMobile, Lightning } from "@phosphor-icons/react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 const IOS_STEPS = [
   {
-    icon: Share2,
+    icon: ShareNetwork,
     title: "Tap het deel-icoon",
     body: "□↑ in de Safari-navigatiebalk onderin.",
   },
@@ -28,9 +28,9 @@ const IOS_STEPS = [
 ];
 
 const FEATURES = [
-  { icon: WifiOff,    label: "Werkt offline" },
-  { icon: Smartphone, label: "Geen adresbalk" },
-  { icon: Zap,        label: "Razendsnel" },
+  { icon: WifiSlash,    label: "Werkt offline" },
+  { icon: DeviceMobile, label: "Geen adresbalk" },
+  { icon: Lightning,        label: "Razendsnel" },
 ];
 
 export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) {

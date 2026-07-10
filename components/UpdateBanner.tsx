@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 export default function UpdateBanner() {

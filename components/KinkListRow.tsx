@@ -1,5 +1,5 @@
 "use client";
-import { ChevronRight, Star } from "lucide-react";
+import { CaretRight, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry } from "@/types";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 
@@ -28,7 +28,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
     >
       <span className="flex-1 text-sm font-medium truncate">{kink.name}</span>
       {entry.curious && (
-        <Star size={12} fill="currentColor" aria-label="Nieuwsgierig" className="flex-none" style={{ color: "var(--curious)" }} />
+        <Star size={12} weight="fill" aria-label="Nieuwsgierig" className="flex-none" style={{ color: "var(--curious)" }} />
       )}
       {s ? (
         <span
@@ -46,7 +46,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
           beoordeel
         </span>
       )}
-      <ChevronRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+      <CaretRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
     </button>
   );
 }

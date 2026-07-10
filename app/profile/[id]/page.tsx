@@ -13,7 +13,7 @@ import type { ExperienceLevel, Kink, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, FileDown, FileText, Info, MessageSquare, Star, UserX } from "lucide-react";
+import { CaretDown, CaretRight, FileArrowDown, FileText, Info, ChatCircle, Star, UserMinus } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -156,7 +156,7 @@ export default function ProfilePage({ params }: Props) {
     return (
       <PageShell width="2xl">
         <EmptyState
-          icon={UserX}
+          icon={UserMinus}
           title="Profiel niet gevonden"
           message="Het is misschien verwijderd of de link is niet (meer) geldig."
           ctaHref="/"
@@ -578,7 +578,7 @@ export default function ProfilePage({ params }: Props) {
                     className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1"
                     style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "4px solid var(--accent)" }}
                   >
-                    {meerOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    {meerOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
                     <span className="font-semibold text-sm flex-1 text-left">Meer</span>
                     <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                       {customKinks.length} eigen
@@ -694,7 +694,7 @@ export default function ProfilePage({ params }: Props) {
                       background: showOverviewComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                     }}
                   >
-                    <MessageSquare size={14} aria-hidden="true" />
+                    <ChatCircle size={14} aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -742,7 +742,7 @@ export default function ProfilePage({ params }: Props) {
                                     background: "color-mix(in srgb, var(--curious) 15%, transparent)",
                                   }}
                                 >
-                                  <Star size={9} fill="currentColor" aria-hidden="true" />
+                                  <Star size={9} weight="fill" aria-hidden="true" />
                                   Nieuwsgierig
                                 </span>
                               )}
@@ -817,7 +817,7 @@ export default function ProfilePage({ params }: Props) {
                                   background: "color-mix(in srgb, var(--curious) 15%, transparent)",
                                 }}
                               >
-                                <Star size={9} fill="currentColor" aria-hidden="true" />
+                                <Star size={9} weight="fill" aria-hidden="true" />
                                 Nieuwsgierig
                               </span>
                             )}
@@ -896,7 +896,7 @@ export default function ProfilePage({ params }: Props) {
                   className="focus-ring flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors"
                   style={{ background: "var(--accent)", color: "var(--on-accent)", minHeight: 44 }}
                 >
-                  <FileDown size={16} aria-hidden="true" />
+                  <FileArrowDown size={16} aria-hidden="true" />
                   PDF
                 </button>
               </div>
@@ -939,7 +939,7 @@ export default function ProfilePage({ params }: Props) {
               </li>
             ))}
             <li className="flex gap-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <Star size={12} fill="currentColor" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
+              <Star size={12} weight="fill" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
               <div className="flex-1">
                 <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
                 <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>

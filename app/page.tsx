@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, PlusCircle, X } from "lucide-react";
+import { Camera, PlusCircle, X } from "@phosphor-icons/react";
 import Sheet from "@/components/ui/Sheet";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";

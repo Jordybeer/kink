@@ -9,7 +9,7 @@ import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { CaretUp, CaretDown } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 
 function uid() {
@@ -406,7 +406,7 @@ function SceneItemRow({
               className="focus-ring rounded-lg disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
-              <ChevronUp size={16} aria-hidden="true" />
+              <CaretUp size={16} aria-hidden="true" />
             </button>
             <button
               onClick={() => onMoveDown(index)}
@@ -415,7 +415,7 @@ function SceneItemRow({
               className="focus-ring rounded-lg disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
-              <ChevronDown size={16} aria-hidden="true" />
+              <CaretDown size={16} aria-hidden="true" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
