@@ -154,7 +154,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98, transition: t.exit }}
               transition={t.enter}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '5rem 1.5rem 10rem', overflowY: 'auto', maxHeight: '100dvh' }}
+              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 1.5rem 14rem', overflowY: 'auto', maxHeight: '100dvh' }}
             >
               <motion.div
                 variants={STAGGER_CHILDREN} initial="hidden" animate="show"
@@ -387,7 +387,7 @@ function Step4Theme() {
         </div>
         <div style={{ background: 'var(--accent)', color: 'var(--on-accent)', borderRadius: '9999px', padding: '0.3125rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>Ja</div>
       </motion.div>
-      <motion.div variants={childV} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%' }}>
+      <motion.div variants={childV} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', width: '100%' }}>
         {THEMES.map((th) => {
           const selected = theme === th.value;
           return (
@@ -397,8 +397,9 @@ function Step4Theme() {
               onClick={() => setTheme(th.value)}
               aria-pressed={selected}
               style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.625rem',
-                padding: '1rem 0.75rem', borderRadius: '0.875rem', cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
+                width: 'calc((100% - 1.5rem) / 3)',
+                padding: '0.75rem 0.25rem', borderRadius: '0.875rem', cursor: 'pointer',
                 background: selected ? `color-mix(in srgb, ${th.color} 12%, transparent)` : 'var(--surface2)',
                 border: selected ? `2px solid ${th.color}` : '2px solid var(--border)',
                 transition: 'border-color 150ms ease, background 150ms ease',
