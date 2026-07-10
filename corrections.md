@@ -6,6 +6,12 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-10 — The watchdog was asleep: e2e specs rot silently
+
+**What was found:** Phase 30's "guard" (`new-user.spec.ts`) was 4/5 failing on dev *before any change* — the PIN step (added June 3) and the L-01 age-gate fix had changed the onboarding flow, and nobody re-ran the spec. It sat broken for five weeks while unit tests stayed green.
+
+**Rule:** When a user flow changes, run its e2e spec in the same session and fix it in the same commit. And before trusting any spec as a regression guard, run it against unchanged code first — a failing baseline means the spec, not your change, is the suspect.
+
 ## 2026-07-09 — "Regression" reports need a git alibi before agreement
 
 **What nearly went wrong:** The owner reported compare-page badges "losing kink colors" as a regression. It pattern-matched perfectly to the evening's refactors (status labels had just been centralised in that exact file). Agreeing on vibes would have sent the session hunting a regression in commits that were innocent.
