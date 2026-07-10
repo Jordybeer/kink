@@ -79,6 +79,7 @@ export default function TriageDeck({
                 {current.category} · <span className="tabular-nums">nog {remainingInCat}</span>
               </p>
               <button
+                data-tour="curious"
                 onClick={() => onCuriousChange(current.id, !entries[current.id]?.curious)}
                 aria-pressed={!!entries[current.id]?.curious}
                 aria-label={entries[current.id]?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}

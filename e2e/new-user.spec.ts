@@ -48,7 +48,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 6 — leeftijdscheck
+    // Step 6 — app lock (optioneel, hier overslaan)
+    await expect(page.getByRole("heading", { name: /vergrendel de app/i })).toBeVisible();
+    await page.getByRole("button", { name: "Sla over" }).click();
+    await page.waitForTimeout(300);
+
+    // Step 7 — leeftijdscheck
     await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
     await page.waitForTimeout(400);
@@ -58,8 +63,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("dialog", { name: /introductie/i })).not.toBeVisible();
   });
 
-  test("sla over knop omzeilt onboarding direct", async ({ page }) => {
+  test("sla over springt naar de leeftijdscheck — nooit eromheen", async ({ page }) => {
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
+    await page.waitForTimeout(400);
+    // The gate is not skippable (L-01): skip lands on the age check, not home
+    await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
+    await page.getByRole("button", { name: /18\+/i }).click();
     await page.waitForTimeout(400);
     await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
   });
@@ -74,6 +83,9 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByText(/kies je sfeer/i)).toBeVisible();
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(300);
+    await expect(page.getByRole("heading", { name: /vergrendel de app/i })).toBeVisible();
+    await page.getByRole("button", { name: "Sla over" }).click();
+    await page.waitForTimeout(300);
     await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
     await page.getByRole("button", { name: /jonger/i }).click();
     await page.waitForTimeout(200);
@@ -81,8 +93,10 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   });
 
   test("nieuw profiel aanmaken direct na onboarding", async ({ page }) => {
-    // Fast-path via skip
+    // Fast-path via skip → age gate → home
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: /18\+/i }).click();
     await page.waitForTimeout(400);
 
     await page.getByPlaceholder(/naam of alias/i).fill("Testmeester");

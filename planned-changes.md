@@ -8,16 +8,9 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-**Owner-set priority order (2026-07-09): 30 → 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28 + 29 shipped — see ledger.)**
+**Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
-### Phase 30 — Onboarding + profile spotlight tour: review & redesign [NEXT UP — priority]
-
-Full up-to-date review and redesign for new users:
-- **Onboarding flow** (`components/Onboarding.tsx`): walk it as a stranger — copy, pacing, type (post-Phase 28 vocabulary), what it promises vs what home now delivers (the salon changed the landing reality; onboarding still narrates the old world?).
-- **Profile spotlight tour** (`components/ProfileTour.tsx` + `data-tour` anchors): PR #243 replaced KinkRow with the triage deck — verify every `data-tour` anchor still exists and the tour's story matches the deck flow (deck card, pills, info, hard-no, curious star — ties into Phase 29).
-- Design pass before code for both; screenshot-verify; `new-user.spec.ts` + onboarding e2e guard the flows.
-
-### Phase 31 — Main ↔ dev audit: what improved, what regressed [priority, after 30]
+### Phase 31 — Main ↔ dev audit: what improved, what regressed [NEXT UP — priority]
 
 Compare `main` (v4, PR #192) against `dev` (v5, everything since):
 - Diff the surfaces, not just the code: page-by-page behaviour + screenshot comparison at 375px, list what v5 genuinely improved and anything that quietly regressed (features lost, flows broken, density/readability changes).
@@ -167,6 +160,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | 27b | Home card typography — serif names on all cards, on-accent serif monogram avatars, pencil centred | 2026-07-09 · `6602e5f` |
 | 28 | Typography consistency + mobile readability sweep — sub-12px reading copy bumped to `text-xs`, off-scale 13/15/17px snapped to the Tailwind scale, inline serif CTA sizes classed, exemptions grandfathered (pills/mono/tab labels), `docs/type-system.md` is now the source of truth | 2026-07-09 · `08fb28d` |
 | 29 | Nieuwsgierig star affordance — deck's naked ★ icon replaced with the KinkEditSheet's labeled "Nieuwsgierig" chip (one vocabulary), status explainer teaches the star ("een ster is geen ja") | 2026-07-10 |
+| 30 | Onboarding + tour truth pass — dead status vocabulary ("nee") replaced with the living one, tour speaks "tik"-voice and rows-not-pills, fifth tour step spotlights the curious chip, `new-user.spec.ts` rewritten to walk the real flow (PIN step + non-bypassable age gate; was 4/5 failing on dev) | 2026-07-10 |
 
 ### v4 (main)
 

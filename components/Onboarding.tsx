@@ -309,7 +309,7 @@ function Step2Content() {
       <h2 style={TITLE}>Jij bent je eigen cloud</h2>
       <div style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Geen automatische sync — jij bewaart je data.</p>
-        <p style={{ margin: 0 }}>Exporteer via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.</p>
+        <p style={{ margin: 0 }}>Exporteer een back-up via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.</p>
       </div>
     </div>
   );
@@ -317,7 +317,7 @@ function Step2Content() {
 
 const FEATURE_ROWS: { icon: React.FC<{ size: number }>; title: string; sub: string }[] = [
   { icon: User,         title: 'Profiel',        sub: 'Foto, rol, FetLife-link — allemaal optioneel' },
-  { icon: Tag,          title: 'Kinks',          sub: 'Ja / graag / misschien / nee / harde grens' },
+  { icon: Tag,          title: 'Kinks',          sub: 'Van heel graag tot harde grens — met een ster voor nieuwsgierig' },
   { icon: Zap,          title: 'Vergelijken',    sub: 'Zie direct waar jullie overlap zit' },
   { icon: Radio,        title: 'Live sessie',    sub: 'End-to-end versleuteld — vergelijk live op afstand' },
   { icon: Clapperboard, title: 'Scène planner', sub: 'Plan elke scène tot in detail' },
