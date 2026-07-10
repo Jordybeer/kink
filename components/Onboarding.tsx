@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PenLine, ShieldCheck, Heart, Palette, Lock, Fingerprint, ShieldAlert, HeartOff } from 'lucide-react';
+import { PenLine, ShieldCheck, Heart, Lock, Fingerprint, ShieldAlert, HeartOff } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -60,11 +60,11 @@ const ACTION_BAR: React.CSSProperties = {
 const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
 const PIN_LENGTH = 4;
 
-// The dramaturgy: welcome → the door (18+) → trust → consent → sfeer → slot → eerste profiel.
+// The dramaturgy: welcome → the door (18+) → trust → consent → slot → eerste profiel.
 // The age gate stands at the entrance, not the exit; the finale hands off into the app.
-const STEP_COUNT = 7;
+const STEP_COUNT = 6;
 
-type S5Sub = "intro" | "pin1" | "pin2" | "biometric";
+type LockSub = "intro" | "pin1" | "pin2" | "biometric";
 
 const childV = fadeUp(10);
 
@@ -76,7 +76,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [skipRequested, setSkipRequested] = useState(false);
 
   // Lock-step state lives here so action buttons can render outside the animated div
-  const [s5sub, setS5sub] = useState<S5Sub>("intro");
+  const [lockSub, setLockSub] = useState<LockSub>("intro");
   const [pin1, setPin1] = useState<string[]>([]);
   const [pin2, setPin2] = useState<string[]>([]);
   const [shake, setShake] = useState(false);
@@ -97,22 +97,22 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   }
 
   async function handlePinKey(k: string) {
-    const active = s5sub === "pin1" ? pin1 : pin2;
-    const setActive = s5sub === "pin1" ? setPin1 : setPin2;
+    const active = lockSub === "pin1" ? pin1 : pin2;
+    const setActive = lockSub === "pin1" ? setPin1 : setPin2;
     if (k === "⌫") { setActive(d => d.slice(0, -1)); return; }
     if (active.length >= PIN_LENGTH) return;
     const next = [...active, k];
     setActive(next);
     if (next.length < PIN_LENGTH) return;
-    if (s5sub === "pin1") { setS5sub("pin2"); return; }
+    if (lockSub === "pin1") { setLockSub("pin2"); return; }
     if (next.join("") !== pin1.join("")) {
       setShake(true);
-      setTimeout(() => { setShake(false); setPin1([]); setPin2([]); setS5sub("pin1"); }, 500);
+      setTimeout(() => { setShake(false); setPin1([]); setPin2([]); setLockSub("pin1"); }, 500);
       return;
     }
     const hash = await hashPin(next.join(""));
     setAppLockPin(hash);
-    if (bioAvailable) setS5sub("biometric"); else advance();
+    if (bioAvailable) setLockSub("biometric"); else advance();
   }
 
   async function handleEnableBio() {
@@ -127,8 +127,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   }
 
-  const currentDigits = s5sub === "pin1" ? pin1 : pin2;
-  const barKey = step === 5 ? `5-${s5sub}` : String(step);
+  const currentDigits = lockSub === "pin1" ? pin1 : pin2;
+  const barKey = step === 4 ? `4-${lockSub}` : String(step);
 
   return (
     <div
@@ -164,13 +164,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 {step === 1 && <Step1Gate />}
                 {step === 2 && <Step2Data />}
                 {step === 3 && <Step3Consent />}
-                {step === 4 && <Step4Theme />}
-                {step === 5 && s5sub === "intro" && <Step5LockIntro bioAvailable={bioAvailable} />}
-                {step === 5 && s5sub === "biometric" && <Step5Bio bioError={bioError} />}
-                {step === 5 && (s5sub === "pin1" || s5sub === "pin2") && (
-                  <Step5Pin sub={s5sub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
+                                {step === 4 && lockSub === "intro" && <StepLockIntro bioAvailable={bioAvailable} />}
+                {step === 4 && lockSub === "biometric" && <StepBio bioError={bioError} />}
+                {step === 4 && (lockSub === "pin1" || lockSub === "pin2") && (
+                  <StepPin sub={lockSub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
                 )}
-                {step === 6 && <Step6Finale />}
+                {step === 5 && <StepFinale />}
               </motion.div>
             </motion.div>
           </AnimatePresence>
@@ -213,32 +212,32 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </>
                 )}
 
-                {step >= 2 && step <= 4 && (
+                {step >= 2 && step <= 3 && (
                   <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_GHOST}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
                   >
-                    {step === 4 ? 'Ga door →' : 'Volgende →'}
+                    {step === 3 ? 'Ga door →' : 'Volgende →'}
                   </motion.button>
                 )}
 
-                {step === 5 && s5sub === "intro" && (
+                {step === 4 && lockSub === "intro" && (
                   <>
-                    <motion.button whileTap={TAP_SPRING} onClick={() => setS5sub("pin1")} style={BTN_PRIMARY}>PIN instellen</motion.button>
+                    <motion.button whileTap={TAP_SPRING} onClick={() => setLockSub("pin1")} style={BTN_PRIMARY}>PIN instellen</motion.button>
                     <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_SECONDARY}>Sla over</motion.button>
                   </>
                 )}
 
-                {step === 5 && (s5sub === "pin1" || s5sub === "pin2") && (
+                {step === 4 && (lockSub === "pin1" || lockSub === "pin2") && (
                   <motion.button whileTap={TAP_SPRING}
-                    onClick={() => { setPin1([]); setPin2([]); setS5sub("intro"); }}
+                    onClick={() => { setPin1([]); setPin2([]); setLockSub("intro"); }}
                     style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
                   >
                     ← Terug
                   </motion.button>
                 )}
 
-                {step === 5 && s5sub === "biometric" && (
+                {step === 4 && lockSub === "biometric" && (
                   <>
                     <motion.button whileTap={TAP_SPRING}
                       onClick={handleEnableBio}
@@ -251,7 +250,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </>
                 )}
 
-                {step === 6 && (
+                {step === 5 && (
                   <motion.button whileTap={TAP_SPRING} onClick={onComplete} style={BTN_PRIMARY}>
                     Maak je eerste profiel
                   </motion.button>
@@ -357,65 +356,7 @@ function Step3Consent() {
   );
 }
 
-const THEMES = [
-  { value: 'midnight' as const, label: 'Midnight', color: '#D946AF' },
-  { value: 'red'      as const, label: 'Deep Red', color: '#ef4444' },
-  { value: 'forest'   as const, label: 'Forest',   color: '#4ade80' },
-  { value: 'mono'     as const, label: 'Mono',     color: '#e5e5e5' },
-  { value: 'ledger'   as const, label: 'Ledger',   color: '#E85445' },
-];
-
-function Step4Theme() {
-  const theme = useStore((s) => s.theme);
-  const setTheme = useStore((s) => s.setTheme);
-
-  return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true">
-        <Palette size={48} />
-      </motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Kies je sfeer</motion.h2>
-      <motion.p variants={childV} style={{ ...BODY, textAlign: 'center' }}>Je kunt dit altijd later aanpassen via de instellingen.</motion.p>
-      <motion.div variants={childV} style={{
-        width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: '0.875rem', padding: '0.875rem 1rem',
-        display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem',
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.125rem' }}>Voorbeeld</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>Zo ziet de app eruit</div>
-        </div>
-        <div style={{ background: 'var(--accent)', color: 'var(--on-accent)', borderRadius: '9999px', padding: '0.3125rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>Ja</div>
-      </motion.div>
-      <motion.div variants={childV} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', width: '100%' }}>
-        {THEMES.map((th) => {
-          const selected = theme === th.value;
-          return (
-            <motion.button
-              key={th.value}
-              whileTap={TAP_SPRING}
-              onClick={() => setTheme(th.value)}
-              aria-pressed={selected}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
-                width: 'calc((100% - 1.5rem) / 3)',
-                padding: '0.75rem 0.25rem', borderRadius: '0.875rem', cursor: 'pointer',
-                background: selected ? `color-mix(in srgb, ${th.color} 12%, transparent)` : 'var(--surface2)',
-                border: selected ? `2px solid ${th.color}` : '2px solid var(--border)',
-                transition: 'border-color 150ms ease, background 150ms ease',
-              }}
-            >
-              <span style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: th.color, display: 'block', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: selected ? th.color : 'var(--text2)' }}>{th.label}</span>
-            </motion.button>
-          );
-        })}
-      </motion.div>
-    </div>
-  );
-}
-
-function Step5LockIntro({ bioAvailable }: { bioAvailable: boolean }) {
+function StepLockIntro({ bioAvailable }: { bioAvailable: boolean }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></motion.div>
@@ -428,7 +369,7 @@ function Step5LockIntro({ bioAvailable }: { bioAvailable: boolean }) {
   );
 }
 
-function Step5Pin({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: string[]; shake: boolean; onKey: (k: string) => void }) {
+function StepPin({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: string[]; shake: boolean; onKey: (k: string) => void }) {
   return (
     <div style={{ maxWidth: '18rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <motion.h2 variants={childV} style={TITLE}>{sub === "pin1" ? "Kies een PIN" : "Bevestig je PIN"}</motion.h2>
@@ -476,7 +417,7 @@ function Step5Pin({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits:
   );
 }
 
-function Step5Bio({ bioError }: { bioError: string | null }) {
+function StepBio({ bioError }: { bioError: string | null }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint size={48} /></motion.div>
@@ -491,7 +432,7 @@ function Step5Bio({ bioError }: { bioError: string | null }) {
   );
 }
 
-function Step6Finale() {
+function StepFinale() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenLine size={48} /></motion.div>

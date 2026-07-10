@@ -35,6 +35,16 @@ export const PDF_STATUS_ON_PAPER: Record<NonNullable<KinkStatus> | "conflict", s
   conflict: "#b45309", // --conflict #f59e0b
 };
 
+// Page chrome on the dark profile export — snapshots of the midnight
+// screen tokens (--accent / --text2 / --text). The export wears the
+// brand's pink now; the last purple-400 died with the June accent shift.
+export const PDF_DARK_PAGE = {
+  accent: "#d946af", // --accent
+  bg:     "#14121c", // deep page ground (neutral dark plum, unchanged)
+  muted:  "#9d9ab8", // --text2
+  light:  "#ede8f5", // --text
+} as const;
+
 // Status hues on a dark page (profile export) — the raw screen tokens,
 // which were tuned for exactly this surface.
 export const PDF_STATUS_ON_DARK: Record<NonNullable<KinkStatus>, string> = {

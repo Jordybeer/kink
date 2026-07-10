@@ -23,7 +23,7 @@ import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import BdsmtestScores from "@/components/BdsmtestScores";
 import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
-import { hexToRgb, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
+import { hexToRgb, PDF_DARK_PAGE, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
 
@@ -241,10 +241,10 @@ export default function ProfilePage({ params }: Props) {
     const lineW = W - margin * 2;
     let y = 20;
 
-    const accent: [number, number, number] = [192, 132, 252];
-    const dark: [number, number, number] = [20, 18, 28];
-    const muted: [number, number, number] = [120, 110, 160];
-    const light: [number, number, number] = [220, 215, 240];
+    const accent = hexToRgb(PDF_DARK_PAGE.accent);
+    const dark = hexToRgb(PDF_DARK_PAGE.bg);
+    const muted = hexToRgb(PDF_DARK_PAGE.muted);
+    const light = hexToRgb(PDF_DARK_PAGE.light);
 
     doc.setFillColor(...dark);
     doc.rect(0, 0, W, 297, "F");

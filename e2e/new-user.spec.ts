@@ -32,25 +32,15 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     // Step 3 — consent
     await expect(page.getByText(/consent, altijd/i)).toBeVisible();
     await expect(page.getByText(/safewords zijn heilig/i)).toBeVisible();
-    await page.getByRole("button", { name: /volgende/i }).click();
-    await page.waitForTimeout(300);
-
-    // Step 4 — thema kiezen
-    await expect(page.getByText(/kies je sfeer/i)).toBeVisible();
-    // Select a non-default theme to exercise setTheme
-    await page.getByRole("button", { name: /deep red/i }).click();
-    await page.waitForTimeout(100);
-    // Verify it's selected (aria-pressed)
-    await expect(page.getByRole("button", { name: /deep red/i })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(300);
 
-    // Step 5 — app lock (optioneel, hier overslaan)
+    // Step 4 — app lock (optioneel, hier overslaan)
     await expect(page.getByRole("heading", { name: /vergrendel de app/i })).toBeVisible();
     await page.getByRole("button", { name: "Sla over" }).click();
     await page.waitForTimeout(300);
 
-    // Step 6 — finale: de handdruk het speelveld op
+    // Step 5 — finale: de handdruk het speelveld op
     await expect(page.getByRole("heading", { name: /het speelveld is van jou/i })).toBeVisible();
     await page.getByRole("button", { name: /maak je eerste profiel/i }).click();
     await page.waitForTimeout(400);

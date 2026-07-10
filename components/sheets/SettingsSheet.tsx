@@ -27,7 +27,7 @@ export default function SettingsSheet({
   importError,
   importSuccess,
 }: SettingsSheetProps) {
-  const { theme, setTheme, appLockEnabled, biometricEnabled, disableBiometric, enableBiometric } = useStore();
+  const { appLockEnabled, biometricEnabled, disableBiometric, enableBiometric } = useStore();
 
   const [platformBioAvailable, setPlatformBioAvailable] = useState(false);
   const [bioRegistering, setBioRegistering] = useState(false);
@@ -54,45 +54,8 @@ export default function SettingsSheet({
     <Sheet open={open} onClose={onClose} title="Instellingen" aria-label="Instellingen">
       <div className="overflow-y-auto" style={{ maxHeight: "60svh" }}>
 
-        {/* Thema */}
-        <section className="settings-card">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="settings-card-icon text-lg" aria-hidden="true">🎨</span>
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold leading-tight">Thema</h3>
-              <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
-                {{ midnight: "Midnight", red: "Deep Red", forest: "Forest", mono: "Mono", ledger: "Ledger" }[theme] ?? "Midnight"}
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {(
-              [
-                { value: "midnight", label: "Midnight", color: "#D946AF" },
-                { value: "red",      label: "Deep Red",  color: "#ef4444" },
-                { value: "forest",   label: "Forest",    color: "#4ade80" },
-                { value: "mono",     label: "Mono",      color: "#e5e5e5" },
-                { value: "ledger",   label: "Ledger",    color: "#C73E2E" },
-              ] as { value: "midnight" | "red" | "forest" | "mono" | "ledger"; label: string; color: string }[]
-            ).map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setTheme(t.value)}
-                aria-pressed={theme === t.value}
-                className="focus-ring rounded-xl p-3 flex items-center gap-2 border transition-colors text-left"
-                style={
-                  theme === t.value
-                    ? { borderColor: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }
-                    : { borderColor: "var(--border)" }
-                }
-              >
-                <span className="rounded-full flex-none" style={{ width: 20, height: 20, background: t.color }} aria-hidden="true" />
-                <span className="text-sm font-medium">{t.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* Thema-kiezer soft-verwijderd 2026-07-10 — de store onthoudt `theme`
+            en ThemeProvider blijft het toepassen; alleen de UI is weg. */}
 
         {/* Back-up & herstel */}
         <section className="settings-card">

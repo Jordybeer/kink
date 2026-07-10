@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hexToRgb, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
+import { hexToRgb, PDF_DARK_PAGE, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
 import { STATUS_ORDER } from "@/lib/statusLabels";
 
 // WCAG relative luminance → contrast ratio, so a colour can never sneak
@@ -34,5 +34,12 @@ describe("pdfPalette", () => {
       expect(PDF_STATUS_ON_PAPER[s]).toMatch(/^#[0-9a-f]{6}$/);
       expect(PDF_STATUS_ON_DARK[s]).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+
+  it("dark-page chrome wears the brand pink, not the dead purple-400", () => {
+    expect(PDF_DARK_PAGE.accent).toBe("#d946af"); // --accent
+    expect(PDF_DARK_PAGE.muted).toBe("#9d9ab8");  // --text2
+    expect(PDF_DARK_PAGE.light).toBe("#ede8f5");  // --text
+    expect(Object.values(PDF_DARK_PAGE)).not.toContain("#c084fc");
   });
 });
