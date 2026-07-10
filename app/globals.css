@@ -226,7 +226,7 @@ html, body {
 .ks-icon-pop { animation: ksIconPop 400ms cubic-bezier(0.34,1.56,0.64,1) both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
-/* Brand wordmark — Cormorant Garamond display, gradient letters, slow sheen sweep */
+/* Brand wordmark — Fraunces display, gradient letters, slow sheen sweep */
 .ks-wordmark {
   font-family: var(--font-display, Georgia, "Times New Roman", serif);
   font-weight: 400;
