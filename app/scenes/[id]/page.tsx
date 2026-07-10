@@ -193,7 +193,7 @@ export default function SceneDetailPage() {
                       {item.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-[10px] px-1.5 py-0.5 rounded-full border"
+                          className="text-[11px] px-1.5 py-0.5 rounded-full border"
                           style={{ borderColor: "var(--border)", color: "var(--text2)" }}
                         >
                           {tag}

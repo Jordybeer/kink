@@ -533,7 +533,7 @@ function ComparePage() {
                   {labels[f]}
                   {badge !== null && badge > 0 && (
                     <span
-                      className="text-[10px] px-1 py-px rounded font-semibold tabular-nums"
+                      className="text-[11px] px-1 py-px rounded font-semibold tabular-nums"
                       style={{
                         background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`,
                         color: badgeColour,
@@ -610,7 +610,7 @@ function ComparePage() {
                               <button
                                 onClick={() => toggleDiscussed(kink.id)}
                                 aria-label={isDiscussed ? `${kink.name} als niet besproken markeren` : `${kink.name} als besproken markeren`}
-                                className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                                className="text-[11px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
                                 style={
                                   isDiscussed
                                     ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
@@ -775,7 +775,7 @@ function ComparePage() {
                             <button
                               onClick={() => toggleDiscussed(rowKey)}
                               aria-label={isDiscussed ? `${item.name} als niet besproken markeren` : `${item.name} als besproken markeren`}
-                              className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                              className="text-[11px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
                               style={
                                 isDiscussed
                                   ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }

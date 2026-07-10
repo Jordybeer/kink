@@ -735,7 +735,7 @@ export default function ProfilePage({ params }: Props) {
                               <span className="text-sm flex-1 leading-snug">{kink.name}</span>
                               {entry.curious && (
                                 <span
-                                  className="text-[11px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
+                                  className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
                                   style={{
                                     color: "var(--curious)",
                                     borderColor: "var(--curious)",
@@ -769,7 +769,7 @@ export default function ProfilePage({ params }: Props) {
                                 {entry.tags!.map((tag) => (
                                   <span
                                     key={tag}
-                                    className="text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap"
+                                    className="text-xs px-2 py-0.5 rounded-full border whitespace-nowrap"
                                     style={{ background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
                                   >
                                     {tag}
@@ -810,7 +810,7 @@ export default function ProfilePage({ params }: Props) {
                             <span className="text-sm flex-1">{ck.name}</span>
                             {profile.entries[ck.id].curious && (
                               <span
-                                className="text-[11px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
+                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
                                 style={{
                                   color: "var(--curious)",
                                   borderColor: "var(--curious)",

@@ -51,7 +51,7 @@ export default function BottomNav() {
             aria-current={active ? "page" : undefined}
           >
             <Icon size={20} weight={active ? "fill" : "regular"} />
-            <span style={{ fontSize: 10 }}>{label}</span>
+            <span style={{ fontSize: 12, letterSpacing: "0.01em" }}>{label}</span>
           </Link>
         );
       })}

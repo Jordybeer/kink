@@ -136,7 +136,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                     </div>
                     <div style={{
                       flexShrink: 0, marginLeft: "auto",
-                      fontSize: "0.6875rem", fontWeight: 700,
+                      fontSize: "0.75rem", fontWeight: 700,
                       color: "var(--text2)", opacity: 0.5,
                     }}>
                       {i + 1}
@@ -161,7 +161,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                     padding: "0.875rem 0.5rem",
                   }}>
                     <Icon size={18} style={{ color: "var(--accent)" }} />
-                    <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--text2)", textAlign: "center", lineHeight: 1.3 }}>{label}</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text2)", textAlign: "center", lineHeight: 1.3 }}>{label}</span>
                   </div>
                 ))}
               </div>

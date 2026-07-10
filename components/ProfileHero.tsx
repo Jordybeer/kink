@@ -106,7 +106,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           </p>
           {profileType === "partner" && profile.lockedAt && (
             <span
-              className="inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-full"
+              className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full"
               style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
             >
               Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}

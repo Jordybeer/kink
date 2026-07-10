@@ -724,7 +724,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                             <div className="flex items-center gap-2 mb-1.5">
                               <span className="text-sm font-medium flex-1 leading-snug">{kink.name}</span>
                               {theirStatus && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border flex-none partner-hidden${partnerShimmer ? " partner-shimmer" : ""}`}
+                                <span className={`text-[11px] px-1.5 py-0.5 rounded border flex-none partner-hidden${partnerShimmer ? " partner-shimmer" : ""}`}
                                   style={{ color: STATUS_VAR[theirStatus], borderColor: `color-mix(in srgb, ${STATUS_VAR[theirStatus]} 35%, transparent)`, background: `color-mix(in srgb, ${STATUS_VAR[theirStatus]} 15%, transparent)` }}>
                                   {STATUS_LABEL[theirStatus]}
                                 </span>
@@ -819,7 +819,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                         <span className="text-xs font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
                       ) : (
                         <span
-                          className="text-[10px] px-1.5 py-0.5 rounded border flex-none"
+                          className="text-[11px] px-1.5 py-0.5 rounded border flex-none"
                           style={{
                             color: STATUS_VAR[remote[kink.id]!],
                             borderColor: `color-mix(in srgb, ${STATUS_VAR[remote[kink.id]!]} 35%, transparent)`,
