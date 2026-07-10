@@ -395,19 +395,28 @@ function ContractPage() {
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8.5);
+          // The first column keeps to itself: names stop 8mm short of the
+          // status columns, and comment bullets (indented 4mm) stop 6mm
+          // short — nothing in column one runs under a party's verdict.
+          const nameW = col2X - margin - 8;
+          const commentW = col2X - margin - 10;
           for (const item of items as KinkDetailItem[]) {
             const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
             const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
-            const nameLines = doc.splitTextToSize(`• ${item.name}`, 78) as string[];
-            // Each party's whisper prints as its own bullet under the kink
-            // name — measured at the comment font so wrapping is honest.
+            const nameLines = doc.splitTextToSize(`• ${item.name}`, nameW) as string[];
+            // Each party's whisper prints as its own bullet block under the
+            // kink name — measured at the comment font so wrapping is
+            // honest, with a breath of air between the two voices.
             doc.setFontSize(7.5);
-            const comments = [
-              item.commentA ? (doc.splitTextToSize(`• ${profileA.name}: ${item.commentA}`, lineW - 8) as string[]) : [],
-              item.commentB ? (doc.splitTextToSize(`• ${profileB.name}: ${item.commentB}`, lineW - 8) as string[]) : [],
-            ].flat();
+            const commentBlocks = [
+              item.commentA ? (doc.splitTextToSize(`• ${profileA.name}: ${item.commentA}`, commentW) as string[]) : [],
+              item.commentB ? (doc.splitTextToSize(`• ${profileB.name}: ${item.commentB}`, commentW) as string[]) : [],
+            ].filter((b) => b.length);
             doc.setFontSize(8.5);
-            const rowH = nameLines.length * 4.2 + (comments.length ? comments.length * 3.6 + 1 : 0) + 1;
+            const commentLineCount = commentBlocks.reduce((n, b) => n + b.length, 0);
+            const commentGap = Math.max(0, commentBlocks.length - 1) * 1.4;
+            const rowH = nameLines.length * 4.2 +
+              (commentLineCount ? commentLineCount * 3.6 + commentGap + 1.5 : 0) + 1.5;
             if (y + rowH > 272) {
               newPage();
               doc.setFont("helvetica", "normal");
@@ -417,11 +426,15 @@ function ContractPage() {
             doc.text(nameLines, margin, y);
             doc.text(sA, col2X, y);
             doc.text(sB, col3X, y);
-            if (comments.length) {
+            if (commentBlocks.length) {
               doc.setFont("helvetica", "italic");
               doc.setFontSize(7.5);
               doc.setTextColor(...muted);
-              doc.text(comments, margin + 4, y + nameLines.length * 4.2);
+              let cy = y + nameLines.length * 4.2;
+              for (const block of commentBlocks) {
+                doc.text(block, margin + 4, cy);
+                cy += block.length * 3.6 + 1.4;
+              }
               doc.setFont("helvetica", "normal");
               doc.setFontSize(8.5);
             }
