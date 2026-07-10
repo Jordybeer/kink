@@ -469,33 +469,40 @@ function ContractPage() {
 
       const sigW = (lineW - 10) / 2;
       const sigH = 30;
+      const boxTop = y;
 
       const sigDataA = canvasARef.current?.toDataURL("image/png") ?? null;
       const sigDataB = canvasBRef.current?.toDataURL("image/png") ?? null;
 
       doc.setDrawColor(...muted);
       doc.setLineWidth(0.3);
-      doc.rect(margin, y, sigW, sigH);
-      doc.rect(margin + sigW + 10, y, sigW, sigH);
+      doc.rect(margin, boxTop, sigW, sigH);
+      doc.rect(margin + sigW + 10, boxTop, sigW, sigH);
 
-      if (sigDataA) doc.addImage(sigDataA, "PNG", margin + 1, y + 1, sigW - 2, sigH - 2);
-      if (sigDataB) doc.addImage(sigDataB, "PNG", margin + sigW + 11, y + 1, sigW - 2, sigH - 2);
+      // Inset generously so ink can bleed toward the border without touching it.
+      const sigPad = 2.5;
+      if (sigDataA) doc.addImage(sigDataA, "PNG", margin + sigPad, boxTop + sigPad, sigW - sigPad * 2, sigH - sigPad * 2);
+      if (sigDataB) doc.addImage(sigDataB, "PNG", margin + sigW + 10 + sigPad, boxTop + sigPad, sigW - sigPad * 2, sigH - sigPad * 2);
 
-      y += sigH + 8;
+      // Give the rule room to breathe below the box, then the name, then the
+      // date — each its own line instead of huddling against the box (was a
+      // 4mm/4mm/4mm crush that read as "glued" to the signature box).
+      const sigLineY = boxTop + sigH + 6;
       doc.setDrawColor(...muted);
       doc.setLineWidth(0.2);
-      doc.line(margin, y - 4, W - margin, y - 4);
+      doc.line(margin, sigLineY, W - margin, sigLineY);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
       const sigLabelA = useRealNames ? `${trimmedRealNameA} (${profileA.name})` : profileA.name;
       const sigLabelB = useRealNames ? `${trimmedRealNameB} (${profileB.name})` : profileB.name;
-      doc.text(sigLabelA, margin + sigW / 2, y, { align: "center" });
-      doc.text(sigLabelB, margin + sigW + 10 + sigW / 2, y, { align: "center" });
-      y += 4;
-      doc.text(today, margin + sigW / 2, y, { align: "center" });
-      doc.text(today, margin + sigW + 10 + sigW / 2, y, { align: "center" });
-      y += 14;
+      const sigNameY = sigLineY + 6;
+      doc.text(sigLabelA, margin + sigW / 2, sigNameY, { align: "center" });
+      doc.text(sigLabelB, margin + sigW + 10 + sigW / 2, sigNameY, { align: "center" });
+      const sigDateY = sigNameY + 5;
+      doc.text(today, margin + sigW / 2, sigDateY, { align: "center" });
+      doc.text(today, margin + sigW + 10 + sigW / 2, sigDateY, { align: "center" });
+      y = sigDateY + 10;
 
       try { doc.save(`contract-${profileA.name}-${profileB.name}.pdf`); } catch { /* PDF-fout is niet fataal */ }
 

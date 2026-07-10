@@ -131,7 +131,7 @@ export async function exportScenePdf(
     doc.setFontSize(9);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.safeFg));
     doc.text(`SAFEWORD: ${scene.safeword}`, margin, y + 5.5);
-    y += 12;
+    y += 14; // 5mm clear below the strip — 3mm read as the first item glued to it
   }
 
   // ── 3. Activities ────────────────────────────────────────────────────────
