@@ -139,6 +139,9 @@ function ContractPage() {
   };
   const shared: KinkDetail[] = [];
   const hardLimits: { name: string; who: string }[] = [];
+  // Same rows as hardLimits but in KinkDetail form, so the PDF can print
+  // hard limits in the same party-column table as every other section.
+  const hardLimitDetails: KinkDetail[] = [];
   const softLimits: KinkDetail[] = [];
   const discuss: KinkDetail[] = [];
 
@@ -163,6 +166,7 @@ function ContractPage() {
       const bHard = entryB.status === "hard_no";
       const who = aHard && bHard ? "beiden" : aHard ? profileA.name : profileB.name;
       hardLimits.push({ name: kink.name, who });
+      hardLimitDetails.push(detail);
     } else if (isKinkMatch(entryA, entryB)) {
       shared.push(detail);
     } else if (kinkMatchScore(entryA, entryB).kind === "soft") {
@@ -423,7 +427,9 @@ function ContractPage() {
       };
 
       section("Gedeelde verlangens", [...shared, ...customShared], hexToRgb(PDF_STATUS_ON_PAPER.yes));
-      section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), hexToRgb(PDF_STATUS_ON_PAPER.hard_no));
+      // Hard limits print as the same party-column table as the other
+      // sections — the "who" reads from whose column says Harde grens.
+      section("Harde grenzen", hardLimitDetails, hexToRgb(PDF_STATUS_ON_PAPER.hard_no));
       section("Zachte grenzen", softLimits, hexToRgb(PDF_STATUS_ON_PAPER.maybe));
       section("Bespreking nodig", discuss, hexToRgb(PDF_STATUS_ON_PAPER.conflict));
 
