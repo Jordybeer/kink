@@ -10,11 +10,15 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 **Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
-### Phase 31 — Main ↔ dev audit: what improved, what regressed [NEXT UP — priority]
+### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 
-Compare `main` (v4, PR #192) against `dev` (v5, everything since):
-- Diff the surfaces, not just the code: page-by-page behaviour + screenshot comparison at 375px, list what v5 genuinely improved and anything that quietly regressed (features lost, flows broken, density/readability changes).
-- Deliverable: a written verdict in `docs/` + regression fixes queued as phases; this is the gate before any dev → main promotion PR.
+Verdict: v5 improves or holds every surface; zero code regressions. Two rot
+findings fixed in-session (vacuous DNA e2e spec rewritten; `reuseExistingServer`
+guarded behind `!CI` after a stale server green-lit a run that never exercised
+dev). Upgrade path v4→v5 is byte-compatible (same persist v15, additive-only
+store diff). Verification of record: 179/179 e2e on a fresh server + 228 unit +
+clean build. Remaining human half of the gate: owner device walk-through and one
+iOS Safari PDF export before the dev → main promotion PR.
 
 ### Phase 23 — Status colour user-test [DEFER, verification]
 
@@ -173,6 +177,9 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | — | Contract section rules unglued — the coloured underline beneath each of the four section headers (Gedeelde verlangens, Harde grenzen, Zachte grenzen, Bespreking nodig) sat only 4mm above its content, the one rule in the doc tighter than its 6–10mm neighbours; bumped to 6mm to match | 2026-07-10 |
 | — | Redesign stack (branches `redesign/foundation` → `readability` → `controls` → `pdf-voice` → `geometry` → `pdf-polish`, unmerged) — Fraunces + Instrument Sans typography, Lucide → Phosphor (43 icons), 12px readability floor, house-caret selects, PDF house fonts (lazy ~37KB TTF subsets via `lib/pdfFonts`), btn-accent's off-scale 10px radius snapped to the 12px CTA tier, ProfileHero focus rings gone circular | 2026-07-11 · `bccf4da`…`b0fb6ad` |
 | — | Five PDF whims granted — status-tinted verdicts in the contract table, party-coloured comment bullets (new `PDF_PARTY_ON_PAPER`, AA-leashed), Val/Noor column heads reprint after mid-table page breaks, "pagina 2 van 4" footers on multi-pagers, `setProperties` metadata on all three exports; proven with a 39-kink 4-page fat contract signed through the real app | 2026-07-11 · `4572efe` |
+| — | Fraunces stands up straight — kink titles in the triage deck, edit sheet and category headers keep the serif voice, lose the italic lean | 2026-07-11 · `c8776e6` |
+| — | The lock no longer bites its own keyholder — PIN set mid-onboarding no longer summons the lock screen and amnesia-resets the wizard; onboarding raises `app_unlocked` before the store write, the lock effect reads sessionStorage live (stale mount-time ref executed), regression e2e proven red-then-green, corrections.md entry | 2026-07-11 · `03c1ee2` |
+| 31 | Main ↔ dev audit — page-by-page 375px shootout of both production builds, verdict in `docs/phase31-main-dev-audit.md`: v5 improves or holds all eight surfaces, zero code regressions, v4→v5 upgrade byte-compatible; exposed and fixed the vacuous DNA e2e spec (ghost v8 kink ids) and the stale-server mirage (`reuseExistingServer` now `!CI`); verification of record 179/179 e2e fresh-server + 228 unit + clean build | 2026-07-11 |
 
 ### v4 (main)
 

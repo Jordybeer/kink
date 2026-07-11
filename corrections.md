@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-11 — A green suite that never ran the code: the stale-server mirage
+
+**What went wrong:** A full e2e run reported 178 passed while one of its tests (`ui-audit` DNA bar) *cannot* pass against dev's code — the asserted `aria-label` only exists on main. `playwright.config.ts` had `reuseExistingServer: true`, so the run almost certainly latched onto a stale dev server left on :3000 by an earlier session, and "verified" old code. Compounding it, the test's seed used v8-era kink ids that no longer exist, so its content assertions passed vacuously on an empty overview.
+
+**Rule:** A verification run must own its server. Run gate-keeping e2e with `CI=1` (config now sets `reuseExistingServer: !process.env.CI`) or confirm nothing is listening on the port first (`ss -ltnp | grep :3000`). And when a spec guards seeded content, assert the *count* ("5 beoordeeld"), never the mere presence of a word that also appears in the empty state.
+
+---
+
 ## 2026-07-11 — PIN mid-onboarding summoned the lock screen, wizard woke up amnesiac
 
 **What went wrong:** Onboarding's PIN step called `setAppLockPin(hash)`, which flipped `appLockEnabled` in the store. `HomeContent`'s lock effect saw the flip, checked a `useRef` **snapshot** of `sessionStorage.app_unlocked` taken at mount (false on a fresh install), and set `lockState = "locked"`. The lock gate renders *before* the onboarding gate, so `<Onboarding>` unmounted, its local `step` state died, and after unlocking the wizard restarted at slide one. This bug had been fixed before and was reintroduced — the e3c5494 fix only covered re-navigation, and the Phase 17 monolith split preserved the stale-ref pattern.

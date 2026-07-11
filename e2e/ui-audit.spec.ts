@@ -75,7 +75,7 @@ test.describe("UI audit", () => {
         id: "test-pw-001",
         name: "Playwright",
         role: "Switch",
-        experienceLevel: "gevorderd",
+        experienceLevel: "ervaren",
         customKinks: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -127,31 +127,38 @@ test.describe("UI audit", () => {
         id: "test-pw-001",
         name: "Playwright",
         role: "Switch",
-        experienceLevel: "gevorderd",
+        experienceLevel: "ervaren",
         customKinks: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
         entries: {
-          "bdsm-general": { status: "yes", score: null, comment: "notitie hier" },
-          "bondage-rope": { status: "willing", score: null, comment: "" },
-          "impact-spanking": { status: "maybe", score: null, comment: "" },
-          "pain-biting": { status: "no", score: null, comment: "" },
-          "humiliation-general": { status: "hard_no", score: null, comment: "" },
+          // Live kink ids from lib/kinks.ts — the v8-era slugs rotted into
+          // ghosts and made this test pass on an empty overview for weeks.
+          spanking_hand: { status: "yes", score: null, comment: "notitie hier" },
+          spanking_implement: { status: "willing", score: null, comment: "" },
+          flogging: { status: "maybe", score: null, comment: "" },
+          caning: { status: "no", score: null, comment: "" },
+          cropping: { status: "hard_no", score: null, comment: "" },
         }
       };
-      const s = { state: { profiles: [profile] }, version: 8 };
+      const s = { state: { profiles: [profile] }, version: 15 };
       localStorage.setItem("kink-profiles", JSON.stringify(s));
     });
     await page.goto("/profile/test-pw-001");
     await page.waitForLoadState("networkidle");
 
-    // DNA bar should exist
-    const dnaBar = page.locator('[aria-label="Kink DNA verdeling"]');
-    expect(await dnaBar.count()).toBeGreaterThan(0);
+    // Overview should count the five rated kinks — not the vacuous
+    // "Nog niets beoordeeld." that also contains the word.
+    await expect(page.locator("text=5 beoordeeld").first()).toBeVisible();
 
-    // Overview section should show rated count
-    const ratedText = page.locator("text=beoordeeld");
-    expect(await ratedText.count()).toBeGreaterThan(0);
+    // The DNA bar left the hero in 5bd1c25 ("hero is identity, not
+    // statistics") — it now lives in the Bewerken tab's sticky header,
+    // and the tabs themselves are radios these days.
+    await page.getByRole("radio", { name: "Bewerken" }).click();
+    const dnaBar = page.locator('[aria-label^="Kink DNA:"]');
+    await expect(dnaBar.first()).toBeVisible();
+    const dnaLabel = await dnaBar.first().getAttribute("aria-label");
+    expect(dnaLabel).not.toContain("nog niets beoordeeld");
 
     // No ★ characters anywhere on page
     const pageText = await page.evaluate(() => document.body.innerText);
