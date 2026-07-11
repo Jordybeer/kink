@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
@@ -124,16 +124,20 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             </p>
           )}
           {profile.fetLifeUsername && (
-            <div className="text-xs mt-2" style={{ color: "var(--accent)" }}>
-              <a
-                href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="focus-ring rounded"
-              >
-                FetLife ↗
-              </a>
-            </div>
+            <a
+              href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="focus-ring inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-medium transition-colors"
+              style={{
+                color: "var(--accent)",
+                border: "1px solid var(--border-accent)",
+                background: "color-mix(in srgb, var(--accent) 8%, transparent)",
+              }}
+            >
+              FetLife
+              <ArrowSquareOut size={11} aria-hidden="true" />
+            </a>
           )}
         </div>
 
@@ -144,8 +148,14 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               onClick={onShare}
               aria-label="Profiel delen"
               title="Delen"
-              className="focus-ring flex items-center justify-center rounded-full transition-colors"
-              style={{ minWidth: 44, minHeight: 44, color: "var(--accent)" }}
+              className="ks-icon-pop focus-ring flex items-center justify-center rounded-full transition-colors"
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                color: "var(--accent)",
+                background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                border: "1px solid var(--border-accent)",
+              }}
             >
               <ShareNetwork size={18} aria-hidden="true" />
             </button>
@@ -155,8 +165,14 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               onClick={onEdit}
               aria-label="Profiel bewerken"
               title="Bewerken"
-              className="focus-ring flex items-center justify-center rounded-full transition-colors"
-              style={{ minWidth: 44, minHeight: 44, color: "var(--text2)" }}
+              className="ks-icon-pop focus-ring flex items-center justify-center rounded-full transition-colors"
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                color: "var(--text2)",
+                background: "var(--surface2)",
+                border: "1px solid var(--border)",
+              }}
             >
               <PencilSimple size={16} />
             </button>

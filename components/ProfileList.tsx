@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { PushPin, PushPinSlash, PencilSimple, Lightning, FileText, FilmSlate, Anchor, Lock, CaretRight } from "@phosphor-icons/react";
+import { PushPin, PushPinSlash, PencilSimple, FileText, FilmSlate, Anchor, Lock, CaretRight } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
@@ -322,39 +322,67 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
 
       {/* CTAs */}
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
-        {canCompare ? (
+        {canCompare ? (() => {
+          const pairA = profiles.find((p) => p.id === compareProfiles[0]);
+          const pairB = profiles.find((p) => p.id === compareProfiles[1]);
+          return (
           <Link
             href={`/compare?a=${compareProfiles[0]}&b=${compareProfiles[1]}`}
-            className="focus-ring block rounded-xl p-6 transition-opacity hover:opacity-90 lg:col-span-2 lg:order-1"
+            className="focus-ring block rounded-xl p-5 transition-opacity hover:opacity-90 lg:col-span-2 lg:order-1"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
               border: "1px solid var(--border-accent)",
             }}
           >
-            <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--accent)" }}>
-              <Lightning size={18} aria-hidden="true" className="flex-none" />
-              <span className="text-lg italic leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}>Vergelijk profielen</span>
+            <div className="flex items-center gap-4">
+              {/* The two faces this card will put across the table from
+                  each other — the comparison, worn as a lapel pin. */}
+              <div className="flex items-center flex-none" aria-hidden="true">
+                <CompareCoin p={pairA} />
+                <CompareCoin p={pairB} overlap />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: "var(--text2)" }}>
+                  Vergelijk
+                </p>
+                <p
+                  className="text-lg italic leading-tight truncate"
+                  style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "var(--text)" }}
+                >
+                  {pairA?.name}
+                  <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
+                  {pairB?.name}
+                </p>
+                <p className="text-sm mt-0.5" style={{ color: "var(--text2)" }}>
+                  Zie waar jullie grenzen raken — en waar ze uitdagen.
+                </p>
+              </div>
+              <CaretRight size={16} aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
             </div>
-            <div className="text-sm" style={{ color: "var(--text2)" }}>
-              Zie waar jullie grenzen raken — en waar ze uitdagen.
-            </div>
-            {profiles.length > 2 && (
-              <div className="text-xs mt-1.5 opacity-50">{pinnedProfile ? `${pinnedProfile.name} + eerste andere` : "eerste twee profielen"}</div>
-            )}
           </Link>
-        ) : (
+          );
+        })() : (
           <div
-            className="rounded-xl p-6 opacity-40 lg:col-span-2 lg:order-1"
+            className="rounded-xl p-5 lg:col-span-2 lg:order-1"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             role="button" tabIndex={0} aria-disabled="true"
             aria-label="Vergelijk profielen — voeg een tweede profiel toe om te vergelijken"
           >
-            <div className="flex items-center gap-2 mb-1.5" style={{ color: "var(--text2)" }}>
-              <Lightning size={18} aria-hidden="true" className="flex-none" />
-              <span className="text-lg italic leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}>Vergelijk profielen</span>
-            </div>
-            <div className="text-sm" style={{ color: "var(--text2)" }}>
-              Voeg een tweede profiel toe om te vergelijken.
+            <div className="flex items-center gap-4">
+              {/* One face at the table, one seat still open — the empty
+                  coin is the invitation. */}
+              <div className="flex items-center flex-none" aria-hidden="true">
+                <CompareCoin p={profiles[0]} />
+                <CompareCoin overlap />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: "var(--text2)" }}>
+                  Vergelijk
+                </p>
+                <p className="text-sm" style={{ color: "var(--text2)" }}>
+                  Voeg een tweede profiel toe om te vergelijken.
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -401,5 +429,35 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
         </div>
       </div>
     </>
+  );
+}
+
+// A profile struck as a small coin — photo if one exists, otherwise the
+// monogram in its wardrobe duotone. An absent profile mints a vacant coin:
+// a dashed seat waiting for the second player.
+function CompareCoin({ p, overlap }: { p?: { name: string; avatarDataUrl?: string }; overlap?: boolean }) {
+  const offset = overlap ? "-ml-3" : "";
+  if (!p) {
+    return (
+      <div
+        className={`w-12 h-12 rounded-full flex-none ${offset}`}
+        style={{ border: "1.5px dashed var(--border-accent)", background: "var(--surface)" }}
+      />
+    );
+  }
+  return (
+    <div
+      className={`w-12 h-12 rounded-full overflow-hidden flex-none ${offset}`}
+      style={overlap ? { boxShadow: "0 0 0 2px var(--surface)" } : undefined}
+    >
+      {p.avatarDataUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-lg italic" style={avatarStyle(p.name)}>
+          {p.name[0].toUpperCase()}
+        </div>
+      )}
+    </div>
   );
 }
