@@ -35,6 +35,14 @@ export const PDF_STATUS_ON_PAPER: Record<NonNullable<KinkStatus> | "conflict", s
   conflict: "#b45309", // --conflict #f59e0b
 };
 
+// The two voices on paper — Profile A wears the brand accent, Profile B
+// the rose of --accent2 (#D4527C), each darkened until it holds AA on
+// white. Used for the comment bullets in the contract table.
+export const PDF_PARTY_ON_PAPER = {
+  a: "#a61e85", // = PDF_PAPER_PALETTE.accent
+  b: "#ab2a50", // --accent2, darkened for paper
+} as const;
+
 // Page chrome on the dark profile export — snapshots of the midnight
 // screen tokens (--accent / --text2 / --text). The export wears the
 // brand's pink now; the last purple-400 died with the June accent shift.

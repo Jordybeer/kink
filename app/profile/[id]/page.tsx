@@ -13,7 +13,7 @@ import type { ExperienceLevel, Kink, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { ChevronDown, ChevronRight, FileDown, FileText, Info, MessageSquare, Star, UserX } from "lucide-react";
+import { CaretDown, CaretRight, FileArrowDown, FileText, Info, ChatCircle, Star, UserMinus } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -156,7 +156,7 @@ export default function ProfilePage({ params }: Props) {
     return (
       <PageShell width="2xl">
         <EmptyState
-          icon={UserX}
+          icon={UserMinus}
           title="Profiel niet gevonden"
           message="Het is misschien verwijderd of de link is niet (meer) geldig."
           ctaHref="/"
@@ -236,6 +236,13 @@ export default function ProfilePage({ params }: Props) {
   async function handlePDFExport() {
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const { registerPdfFonts } = await import("@/lib/pdfFonts");
+    await registerPdfFonts(doc);
+    // The export introduces itself in the reader's title bar.
+    doc.setProperties({
+      title: `KinkSync Profiel — ${profile!.name}`,
+      creator: "KinkSync (kinksync.be)",
+    });
     const W = 210;
     const margin = 20;
     const lineW = W - margin * 2;
@@ -248,23 +255,23 @@ export default function ProfilePage({ params }: Props) {
 
     doc.setFillColor(...dark);
     doc.rect(0, 0, W, 297, "F");
-    doc.setFont("helvetica", "bold");
+    doc.setFont("display", "bold");
     doc.setFontSize(18);
     doc.setTextColor(...accent);
     doc.text("KinkSync", W / 2, y, { align: "center" });
     y += 5;
     doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setTextColor(...muted);
     doc.text("kinksync.be", W / 2, y, { align: "center" });
     y += 7;
     doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("body", "bold");
     doc.setTextColor(...light);
     doc.text(`${profile!.name} — ${profile!.role}`, W / 2, y, { align: "center" });
     y += 5;
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setTextColor(...muted);
     doc.text(`${profile!.experienceLevel} · Gegenereerd op ${new Date().toLocaleDateString("nl-NL")}`, W / 2, y, { align: "center" });
     y += 5;
@@ -282,7 +289,7 @@ export default function ProfilePage({ params }: Props) {
       const active = kinks.filter((k) => profile!.entries[k.id]?.status);
       if (!active.length) continue;
       if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(9);
       doc.setTextColor(...accent);
       doc.text(cat.toUpperCase(), margin, y);
@@ -291,7 +298,7 @@ export default function ProfilePage({ params }: Props) {
         if (y > 265) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
         const e = profile!.entries[k.id];
         const color = e.status ? STATUS_COLORS_PDF[e.status] : muted;
-        doc.setFont("helvetica", "normal");
+        doc.setFont("body", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...color);
         const statusLabel = e.status ? `[${STATUS_LABEL[e.status]}]` : "";
@@ -301,7 +308,7 @@ export default function ProfilePage({ params }: Props) {
         doc.text(`${statusLabel}${tags}`, margin + 2 + doc.getTextWidth(`• ${k.name}`) + 3, y);
         y += 4.5;
         if (e.comment) {
-          doc.setFont("helvetica", "italic");
+          doc.setFont("body", "italic");
           doc.setFontSize(8);
           doc.setTextColor(...muted);
           const commentLines = doc.splitTextToSize(`  ${e.comment}`, lineW - 5);
@@ -316,7 +323,7 @@ export default function ProfilePage({ params }: Props) {
     const activeCustom = customKinksList.filter((ck) => profile!.entries[ck.id]?.status);
     if (activeCustom.length) {
       if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(9);
       doc.setTextColor(...accent);
       doc.text("MEER (EIGEN KINKS)", margin, y);
@@ -324,7 +331,7 @@ export default function ProfilePage({ params }: Props) {
       for (const ck of activeCustom) {
         const e = profile!.entries[ck.id];
         const color = e?.status ? STATUS_COLORS_PDF[e.status] : muted;
-        doc.setFont("helvetica", "normal");
+        doc.setFont("body", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...color);
         const statusLabel = e?.status ? `[${STATUS_LABEL[e.status]}]` : "";
@@ -336,7 +343,7 @@ export default function ProfilePage({ params }: Props) {
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...muted);
       doc.text(`${i} / ${pageCount}`, W - margin, 290, { align: "right" });
@@ -578,7 +585,7 @@ export default function ProfilePage({ params }: Props) {
                     className="focus-ring w-full flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1"
                     style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "4px solid var(--accent)" }}
                   >
-                    {meerOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    {meerOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
                     <span className="font-semibold text-sm flex-1 text-left">Meer</span>
                     <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                       {customKinks.length} eigen
@@ -694,7 +701,7 @@ export default function ProfilePage({ params }: Props) {
                       background: showOverviewComments ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                     }}
                   >
-                    <MessageSquare size={14} aria-hidden="true" />
+                    <ChatCircle size={14} aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -735,14 +742,14 @@ export default function ProfilePage({ params }: Props) {
                               <span className="text-sm flex-1 leading-snug">{kink.name}</span>
                               {entry.curious && (
                                 <span
-                                  className="text-[11px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
+                                  className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
                                   style={{
                                     color: "var(--curious)",
                                     borderColor: "var(--curious)",
                                     background: "color-mix(in srgb, var(--curious) 15%, transparent)",
                                   }}
                                 >
-                                  <Star size={9} fill="currentColor" aria-hidden="true" />
+                                  <Star size={9} weight="fill" aria-hidden="true" />
                                   Nieuwsgierig
                                 </span>
                               )}
@@ -769,7 +776,7 @@ export default function ProfilePage({ params }: Props) {
                                 {entry.tags!.map((tag) => (
                                   <span
                                     key={tag}
-                                    className="text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap"
+                                    className="text-xs px-2 py-0.5 rounded-full border whitespace-nowrap"
                                     style={{ background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
                                   >
                                     {tag}
@@ -810,14 +817,14 @@ export default function ProfilePage({ params }: Props) {
                             <span className="text-sm flex-1">{ck.name}</span>
                             {profile.entries[ck.id].curious && (
                               <span
-                                className="text-[11px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
+                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
                                 style={{
                                   color: "var(--curious)",
                                   borderColor: "var(--curious)",
                                   background: "color-mix(in srgb, var(--curious) 15%, transparent)",
                                 }}
                               >
-                                <Star size={9} fill="currentColor" aria-hidden="true" />
+                                <Star size={9} weight="fill" aria-hidden="true" />
                                 Nieuwsgierig
                               </span>
                             )}
@@ -896,7 +903,7 @@ export default function ProfilePage({ params }: Props) {
                   className="focus-ring flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors"
                   style={{ background: "var(--accent)", color: "var(--on-accent)", minHeight: 44 }}
                 >
-                  <FileDown size={16} aria-hidden="true" />
+                  <FileArrowDown size={16} aria-hidden="true" />
                   PDF
                 </button>
               </div>
@@ -939,7 +946,7 @@ export default function ProfilePage({ params }: Props) {
               </li>
             ))}
             <li className="flex gap-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <Star size={12} fill="currentColor" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
+              <Star size={12} weight="fill" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
               <div className="flex-1">
                 <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
                 <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>
@@ -990,8 +997,8 @@ export default function ProfilePage({ params }: Props) {
           <select
             value={editRole}
             onChange={(e) => setEditRole(e.target.value)}
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+            className="ks-select focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
+            style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             {ROLE_GROUPS.map((g) => (
               <optgroup key={g.label} label={g.label}>

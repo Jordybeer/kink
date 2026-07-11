@@ -23,7 +23,7 @@ export default function InfoSheet({ kink, onClose }: Props) {
             status colour. Intensity speaks through the filled dots. */}
         {kink && (
           <span
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full mb-4 border"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full mb-4 border"
             style={{ background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
           >
             <span className="inline-flex gap-0.5" aria-hidden="true">

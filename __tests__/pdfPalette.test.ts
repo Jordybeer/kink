@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hexToRgb, PDF_DARK_PAGE, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
+import { hexToRgb, PDF_DARK_PAGE, PDF_PAPER_PALETTE, PDF_PARTY_ON_PAPER, PDF_STATUS_ON_PAPER, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
 import { STATUS_ORDER } from "@/lib/statusLabels";
 
 // WCAG relative luminance → contrast ratio, so a colour can never sneak
@@ -23,6 +23,7 @@ describe("pdfPalette", () => {
     const onPaper = [
       PDF_PAPER_PALETTE.accent, PDF_PAPER_PALETTE.ink, PDF_PAPER_PALETTE.muted,
       ...Object.values(PDF_STATUS_ON_PAPER),
+      ...Object.values(PDF_PARTY_ON_PAPER),
     ];
     for (const hex of onPaper) {
       expect(contrastOnWhite(hex), `${hex} on white`).toBeGreaterThanOrEqual(4.5);
@@ -34,6 +35,13 @@ describe("pdfPalette", () => {
       expect(PDF_STATUS_ON_PAPER[s]).toMatch(/^#[0-9a-f]{6}$/);
       expect(PDF_STATUS_ON_DARK[s]).toMatch(/^#[0-9a-f]{6}$/);
     }
+  });
+
+  it("the two party voices on paper are real hexes and never the same ink", () => {
+    expect(PDF_PARTY_ON_PAPER.a).toMatch(/^#[0-9a-f]{6}$/);
+    expect(PDF_PARTY_ON_PAPER.b).toMatch(/^#[0-9a-f]{6}$/);
+    expect(PDF_PARTY_ON_PAPER.a).not.toBe(PDF_PARTY_ON_PAPER.b);
+    expect(PDF_PARTY_ON_PAPER.a).toBe(PDF_PAPER_PALETTE.accent); // A wears the brand
   });
 
   it("dark-page chrome wears the brand pink, not the dead purple-400", () => {

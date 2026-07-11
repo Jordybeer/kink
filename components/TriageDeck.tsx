@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Info, Star } from "lucide-react";
+import { Info, Star } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import StatusOptionRows from "./StatusOptionRows";
@@ -90,7 +90,7 @@ export default function TriageDeck({
                     : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
                 }
               >
-                <Star size={11} fill={entries[current.id]?.curious ? "currentColor" : "none"} aria-hidden="true" />
+                <Star size={11} weight={entries[current.id]?.curious ? "fill" : "regular"} aria-hidden="true" />
                 Nieuwsgierig
               </button>
               <button

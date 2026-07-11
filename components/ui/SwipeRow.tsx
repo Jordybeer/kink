@@ -82,7 +82,7 @@ export default function SwipeRow({ children, actions }: Props) {
           <button
             key={i}
             onClick={() => { action.onClick?.(); close(); }}
-            className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium active:scale-[0.97] transition-transform duration-150"
+            className="flex flex-col items-center justify-center gap-1 text-xs font-medium active:scale-[0.97] transition-transform duration-150"
             style={{
               width: ACTION_W,
               background: action.color ?? "var(--surface2)",

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, Clapperboard, Anchor, User } from "lucide-react";
+import { Lightning, FilmSlate, Anchor, User } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 
 export default function BottomNav() {
@@ -17,8 +17,8 @@ export default function BottomNav() {
   const profileHref = firstProfileId ? `/profile/${firstProfileId}` : "/";
 
   const items = [
-    { href: "/compare", label: "Vergelijk",  icon: Zap         },
-    { href: "/scenes",  label: "Scènes",     icon: Clapperboard },
+    { href: "/compare", label: "Vergelijk",  icon: Lightning         },
+    { href: "/scenes",  label: "Scènes",     icon: FilmSlate },
     { href: "/session", label: "Live",       icon: Anchor       },
     { href: profileHref, label: "Profiel",   icon: User         },
   ] as const;
@@ -50,8 +50,8 @@ export default function BottomNav() {
             }}
             aria-current={active ? "page" : undefined}
           >
-            <Icon size={20} strokeWidth={active ? 2 : 1.5} />
-            <span style={{ fontSize: 10 }}>{label}</span>
+            <Icon size={20} weight={active ? "fill" : "regular"} />
+            <span style={{ fontSize: 12, letterSpacing: "0.01em" }}>{label}</span>
           </Link>
         );
       })}

@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { ImagePlus, Lock, Pencil, RefreshCw, Share2, Trash2 } from "lucide-react";
+import { CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
@@ -45,10 +45,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             onClose={() => setMenuOpen(false)}
             align="left"
             items={profile.avatarDataUrl ? [
-              { label: "Foto bijwerken", icon: <RefreshCw size={14} />, onClick: () => fileInputRef.current?.click() },
-              { label: "Foto verwijderen", icon: <Trash2 size={14} />, danger: true, onClick: () => onAvatarChange?.(undefined) },
+              { label: "Foto bijwerken", icon: <ArrowsClockwise size={14} />, onClick: () => fileInputRef.current?.click() },
+              { label: "Foto verwijderen", icon: <Trash size={14} />, danger: true, onClick: () => onAvatarChange?.(undefined) },
             ] : [
-              { label: "Upload foto", icon: <ImagePlus size={14} />, onClick: () => fileInputRef.current?.click() },
+              { label: "Upload foto", icon: <CameraPlus size={14} />, onClick: () => fileInputRef.current?.click() },
             ]}
           >
             <button
@@ -106,7 +106,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           </p>
           {profileType === "partner" && profile.lockedAt && (
             <span
-              className="inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-full"
+              className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full"
               style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
             >
               Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
@@ -143,10 +143,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               onClick={onShare}
               aria-label="Profiel delen"
               title="Delen"
-              className="focus-ring flex items-center justify-center rounded-md transition-colors"
+              className="focus-ring flex items-center justify-center rounded-full transition-colors"
               style={{ minWidth: 44, minHeight: 44, color: "var(--accent)" }}
             >
-              <Share2 size={18} aria-hidden="true" />
+              <ShareNetwork size={18} aria-hidden="true" />
             </button>
           )}
           {onEdit && (
@@ -154,10 +154,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               onClick={onEdit}
               aria-label="Profiel bewerken"
               title="Bewerken"
-              className="focus-ring flex items-center justify-center rounded-md transition-colors"
+              className="focus-ring flex items-center justify-center rounded-full transition-colors"
               style={{ minWidth: 44, minHeight: 44, color: "var(--text2)" }}
             >
-              <Pencil size={16} />
+              <PencilSimple size={16} />
             </button>
           )}
         </div>

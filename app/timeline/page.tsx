@@ -57,8 +57,8 @@ function TimelinePage() {
             <select
               value={id}
               onChange={(e) => setId(e.target.value)}
-              className="focus-ring w-full rounded-lg px-2 py-2 text-sm focus:outline-none"
-              style={{ background: "var(--surface)", border: `1px solid ${colour}`, color: "var(--text)" }}
+              className="ks-select focus-ring w-full rounded-lg px-2 py-2 text-sm focus:outline-none"
+              style={{ backgroundColor: "var(--surface)", border: `1px solid color-mix(in srgb, ${colour} 55%, var(--border))`, color: "var(--text)" }}
             >
               <option value="">— selecteer —</option>
               {profiles.map((p) => (

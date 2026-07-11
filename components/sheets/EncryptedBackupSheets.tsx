@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import type { EncryptedBackup } from "@/lib/crypto";
@@ -99,7 +99,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
                   style={{ color: "var(--text2)" }}>
-                  {pwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               <div className="relative">
@@ -116,7 +116,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
                   style={{ color: "var(--text2)" }}>
-                  {pwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {pwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
@@ -218,7 +218,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
               aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
               className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
               style={{ color: "var(--text2)" }}>
-              {pwShow ? <EyeOff size={16} /> : <Eye size={16} />}
+              {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>
           </div>
           {pwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{pwError}</p>}

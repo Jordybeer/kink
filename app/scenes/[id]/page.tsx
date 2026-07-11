@@ -2,7 +2,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { SearchX } from "lucide-react";
+import { MagnifyingGlassMinus } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
@@ -36,7 +36,7 @@ export default function SceneDetailPage() {
     return (
       <PageShell width="2xl">
         <EmptyState
-          icon={SearchX}
+          icon={MagnifyingGlassMinus}
           title="Scène niet gevonden"
           message="Hij is misschien gewist of de link is verlopen."
           ctaHref="/scenes"
@@ -193,7 +193,7 @@ export default function SceneDetailPage() {
                       {item.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-[10px] px-1.5 py-0.5 rounded-full border"
+                          className="text-[11px] px-1.5 py-0.5 rounded-full border"
                           style={{ borderColor: "var(--border)", color: "var(--text2)" }}
                         >
                           {tag}

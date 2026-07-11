@@ -3,16 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Anchor, ChevronLeft, Clapperboard, Settings, User, Zap } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Anchor, CaretLeft, FilmSlate, GearSix, User, Lightning } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 
 const MotionLink = motion.create(Link);
 
-const HUB_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: "/compare", label: "Vergelijk", icon: Zap },
-  { href: "/scenes",  label: "Scènes",   icon: Clapperboard },
+const HUB_ITEMS: { href: string; label: string; icon: Icon }[] = [
+  { href: "/compare", label: "Vergelijk", icon: Lightning },
+  { href: "/scenes",  label: "Scènes",   icon: FilmSlate },
   { href: "/session", label: "Live",     icon: Anchor },
 ];
 
@@ -52,7 +52,7 @@ export default function TopNav() {
   } as const;
 
   if (isHub) {
-    const items: { href: string; label: string; icon: LucideIcon; forceActive?: boolean }[] = [
+    const items: { href: string; label: string; icon: Icon; forceActive?: boolean }[] = [
       ...HUB_ITEMS,
       { href: profileHref, label: "Profiel", icon: User, forceActive: profileActive },
     ];
@@ -88,7 +88,7 @@ export default function TopNav() {
               className="focus-ring flex items-center justify-center h-10 w-10 rounded-full"
               style={{ color: "var(--text2)" }}
             >
-              <Settings size={18} aria-hidden="true" />
+              <GearSix size={18} aria-hidden="true" />
             </button>
           </div>
         </nav>
@@ -115,7 +115,7 @@ export default function TopNav() {
             style={{ color: "var(--text2)" }}
             aria-label="Terug"
           >
-            <ChevronLeft size={18} />
+            <CaretLeft size={18} />
           </MotionLink>
         </div>
         <span
@@ -131,7 +131,7 @@ export default function TopNav() {
               className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 h-8 rounded-full"
               style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
             >
-              <Zap size={15} />
+              <Lightning size={15} />
               Vergelijk
             </Link>
           )}
@@ -141,7 +141,7 @@ export default function TopNav() {
               className="focus-ring flex items-center gap-1 text-xs font-medium px-3 h-8 rounded-full"
               style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
             >
-              <Clapperboard size={15} />
+              <FilmSlate size={15} />
               Scène
             </Link>
           )}

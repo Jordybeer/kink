@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Fraunces, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import TopNav from "@/components/TopNav";
@@ -9,12 +9,19 @@ import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import AmbientGlow from "@/components/ui/AmbientGlow";
 
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
-const cormorant = Cormorant_Garamond({
+/* Body voice — Instrument Sans: tall x-height, warm grotesque, reads clean at 12px on a phone */
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  style: ["normal", "italic"],
+});
+/* Display voice — Fraunces: editorial serif with teeth; optical sizing keeps small italics legible
+   where Cormorant went hairline-thin */
+const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["300", "400"],
   style: ["normal", "italic"],
+  axes: ["opsz", "SOFT"],
 });
 
 export const metadata: Metadata = {
@@ -39,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl" data-theme="midnight" className={`h-full ${dmSans.variable} ${cormorant.variable}`}>
+    <html lang="nl" data-theme="midnight" className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}>
       <head>
         {/* Synchronous capture of beforeinstallprompt — must run before any module.
             useEffect (post-hydration) is too late on fast devices. */}

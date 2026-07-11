@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { X, TrendingUp, Trash2 } from "lucide-react";
+import { X, TrendUp, Trash } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
 import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
-import { hexToRgb, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
+import { hexToRgb, PDF_PAPER_PALETTE, PDF_PARTY_ON_PAPER, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
 
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const drawing = useRef(false);
@@ -277,6 +277,15 @@ function ContractPage() {
     try {
       const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const { registerPdfFonts } = await import("@/lib/pdfFonts");
+      await registerPdfFonts(doc);
+      // The file introduces itself in a reader's title bar — no more "untitled".
+      doc.setProperties({
+        title: `KinkSync Overeenkomst — ${profileA.name} & ${profileB.name}`,
+        subject: `Opgesteld op ${today}`,
+        author: `${profileA.name} & ${profileB.name}`,
+        creator: "KinkSync (kinksync.be)",
+      });
       const W = 210;
       const margin = 20;
       const lineW = W - margin * 2;
@@ -292,7 +301,7 @@ function ContractPage() {
       doc.rect(0, 0, W, 297, "F");
 
       // Title
-      doc.setFont("helvetica", "bold");
+      doc.setFont("display", "bold");
       doc.setFontSize(20);
       doc.setTextColor(...accent);
       doc.text("KinkSync Overeenkomst", W / 2, y, { align: "center" });
@@ -300,7 +309,7 @@ function ContractPage() {
 
       // Subtitle
       doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setTextColor(...muted);
       doc.text("kinksync.be", W / 2, y, { align: "center" });
       y += 5;
@@ -318,12 +327,12 @@ function ContractPage() {
       y += 10;
 
       // Preamble — paginate line by line so long text can't overflow the page
-      doc.setFont("helvetica", "italic");
+      doc.setFont("body", "italic");
       doc.setFontSize(8);
       doc.setTextColor(...muted);
       const pLines = doc.splitTextToSize(preamble, lineW) as string[];
       for (const line of pLines) {
-        if (y > 272) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
+        if (y > 272) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("body", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
         doc.text(line, margin, y);
         y += 4;
       }
@@ -334,12 +343,12 @@ function ContractPage() {
       const hasSafewordData = hasSignalData(signalsA) || hasSignalData(signalsB) || aftercareA.length > 0 || aftercareB.length > 0;
       if (hasSafewordData) {
         if (y > 250) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
-        doc.setFont("helvetica", "bold");
+        doc.setFont("body", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...accent);
         doc.text("Signalen & Nazorg", margin, y);
         y += 5;
-        doc.setFont("helvetica", "normal");
+        doc.setFont("body", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...ink);
 
@@ -373,7 +382,7 @@ function ContractPage() {
         if (!items.length) return;
 
         if (y > 258) { newPage(); }
-        doc.setFont("helvetica", "bold");
+        doc.setFont("display", "bold");
         doc.setFontSize(11);
         doc.setTextColor(...colour);
         doc.text(title, margin, y);
@@ -386,63 +395,76 @@ function ContractPage() {
         const isKinkRow = items.length > 0 && typeof items[0] === "object" && items[0] !== null && "name" in (items[0] as object);
 
         if (isKinkRow) {
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...muted);
-          doc.text(profileA.name, col2X, y);
-          doc.text(profileB.name, col3X, y);
-          y += 4.5;
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(8.5);
+          // The column heads print once per table — and again after every
+          // page break, so a spilled section never leaves the reader
+          // guessing whose column is whose.
+          const printColumnHeads = () => {
+            doc.setFont("body", "bold");
+            doc.setFontSize(7.5);
+            doc.setTextColor(...muted);
+            doc.text(profileA.name, col2X, y);
+            doc.text(profileB.name, col3X, y);
+            y += 4.5;
+            doc.setFont("body", "normal");
+            doc.setFontSize(8.5);
+          };
+          printColumnHeads();
           // The first column keeps to itself: names stop 8mm short of the
-          // status columns, and comment bullets (indented 4mm) stop 6mm
-          // short — nothing in column one runs under a party's verdict.
+          // status columns, and comment text (bullet at 4mm, text at 6mm)
+          // stops 6mm short — nothing runs under a party's verdict.
           const nameW = col2X - margin - 8;
-          const commentW = col2X - margin - 10;
+          const commentW = col2X - margin - 12;
           for (const item of items as KinkDetailItem[]) {
             const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
             const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
             const nameLines = doc.splitTextToSize(`• ${item.name}`, nameW) as string[];
             // Each party's whisper prints as its own bullet block under the
             // kink name — measured at the comment font so wrapping is
-            // honest, with a breath of air between the two voices.
+            // honest, with a breath of air between the two voices. The
+            // bullet itself wears the party's colour, echoing the screen.
             doc.setFontSize(7.5);
             const commentBlocks = [
-              item.commentA ? (doc.splitTextToSize(`• ${profileA.name}: ${item.commentA}`, commentW) as string[]) : [],
-              item.commentB ? (doc.splitTextToSize(`• ${profileB.name}: ${item.commentB}`, commentW) as string[]) : [],
-            ].filter((b) => b.length);
+              item.commentA ? { party: hexToRgb(PDF_PARTY_ON_PAPER.a), lines: doc.splitTextToSize(`${profileA.name}: ${item.commentA}`, commentW) as string[] } : null,
+              item.commentB ? { party: hexToRgb(PDF_PARTY_ON_PAPER.b), lines: doc.splitTextToSize(`${profileB.name}: ${item.commentB}`, commentW) as string[] } : null,
+            ].filter((b): b is { party: [number, number, number]; lines: string[] } => b !== null && b.lines.length > 0);
             doc.setFontSize(8.5);
-            const commentLineCount = commentBlocks.reduce((n, b) => n + b.length, 0);
+            const commentLineCount = commentBlocks.reduce((n, b) => n + b.lines.length, 0);
             const commentGap = Math.max(0, commentBlocks.length - 1) * 1.4;
             const rowH = nameLines.length * 4.2 +
               (commentLineCount ? commentLineCount * 3.6 + commentGap + 1.5 : 0) + 1.5;
             if (y + rowH > 272) {
               newPage();
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(8.5);
+              printColumnHeads();
             }
             doc.setTextColor(...ink);
             doc.text(nameLines, margin, y);
+            // Verdicts wear their status colour — scannable at arm's length,
+            // same families the screen speaks (AA-on-paper verified).
+            doc.setTextColor(...(item.statusA ? hexToRgb(PDF_STATUS_ON_PAPER[item.statusA]) : muted));
             doc.text(sA, col2X, y);
+            doc.setTextColor(...(item.statusB ? hexToRgb(PDF_STATUS_ON_PAPER[item.statusB]) : muted));
             doc.text(sB, col3X, y);
+            doc.setTextColor(...ink);
             if (commentBlocks.length) {
-              doc.setFont("helvetica", "italic");
+              doc.setFont("body", "italic");
               doc.setFontSize(7.5);
-              doc.setTextColor(...muted);
               let cy = y + nameLines.length * 4.2;
               for (const block of commentBlocks) {
-                doc.text(block, margin + 4, cy);
-                cy += block.length * 3.6 + 1.4;
+                doc.setTextColor(...block.party);
+                doc.text("•", margin + 4, cy);
+                doc.setTextColor(...muted);
+                doc.text(block.lines, margin + 6, cy);
+                cy += block.lines.length * 3.6 + 1.4;
               }
-              doc.setFont("helvetica", "normal");
+              doc.setFont("body", "normal");
               doc.setFontSize(8.5);
+              doc.setTextColor(...ink);
             }
             y += rowH;
           }
         } else {
           const colW = (lineW - 10) / 2;
-          doc.setFont("helvetica", "normal");
+          doc.setFont("body", "normal");
           doc.setFontSize(8.5);
           doc.setTextColor(...ink);
           let i = 0;
@@ -454,7 +476,7 @@ function ContractPage() {
             const rowH = Math.max(lLines.length, rLines.length) * 4.2 + 1;
             if (y + rowH > 272) {
               newPage();
-              doc.setFont("helvetica", "normal");
+              doc.setFont("body", "normal");
               doc.setFontSize(8.5);
               doc.setTextColor(...ink);
             }
@@ -481,7 +503,7 @@ function ContractPage() {
 
       // Safeword clause
       if (y > 240) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
       doc.text("Algemene afspraken", margin, y);
@@ -490,7 +512,7 @@ function ContractPage() {
       doc.setLineWidth(0.25);
       doc.line(margin, y, margin + lineW, y);
       y += 6;
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...ink);
       const clauses = [
@@ -513,7 +535,7 @@ function ContractPage() {
       doc.line(margin, y, W - margin, y);
       y += 6;
 
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
       doc.text("Handtekeningen", margin, y);
@@ -543,7 +565,7 @@ function ContractPage() {
       doc.setDrawColor(...muted);
       doc.setLineWidth(0.2);
       doc.line(margin, sigLineY, W - margin, sigLineY);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
       const sigLabelA = useRealNames ? `${trimmedRealNameA} (${profileA.name})` : profileA.name;
@@ -555,6 +577,19 @@ function ContractPage() {
       doc.text(today, margin + sigW / 2, sigDateY, { align: "center" });
       doc.text(today, margin + sigW + 10 + sigW / 2, sigDateY, { align: "center" });
       y = sigDateY + 10;
+
+      // Loose pages of a signed document want to know their place —
+      // "pagina 2 van 3" in the footer, but only when there's more than one.
+      const pageCount = doc.getNumberOfPages();
+      if (pageCount > 1) {
+        doc.setFont("body", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...muted);
+        for (let p = 1; p <= pageCount; p++) {
+          doc.setPage(p);
+          doc.text(`pagina ${p} van ${pageCount}`, W / 2, 290, { align: "center" });
+        }
+      }
 
       try { doc.save(`contract-${profileA.name}-${profileB.name}.pdf`); } catch { /* PDF-fout is niet fataal */ }
 
@@ -852,7 +887,7 @@ function ContractPage() {
               className="focus-ring text-xs transition-colors inline-flex items-center gap-1"
               style={{ color: "var(--text2)" }}
             >
-              <TrendingUp size={12} aria-hidden="true" />
+              <TrendUp size={12} aria-hidden="true" />
               Bekijk grafiek
             </Link>
           </div>
@@ -905,7 +940,7 @@ function ContractPage() {
                       className="focus-ring p-2 rounded-lg"
                       style={{ color: "var(--text2)" }}
                     >
-                      <Trash2 size={15} aria-hidden="true" />
+                      <Trash size={15} aria-hidden="true" />
                     </button>
                   </div>
                 )}
@@ -1104,14 +1139,14 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
               <div className="flex items-center gap-2">
                 <div className="flex flex-col gap-0.5">
                   {item.statusA
-                    ? <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
+                    ? <span className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
                     : <span style={{ color: "var(--text2)", fontSize: "11px" }}>{nA}: —</span>
                   }
                 </div>
                 <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
                 <div className="flex flex-col gap-0.5 items-end">
                   {item.statusB
-                    ? <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
+                    ? <span className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
                     : <span style={{ color: "var(--text2)", fontSize: "11px" }}>—: {nB}</span>
                   }
                 </div>

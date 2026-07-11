@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PenLine, ShieldCheck, Heart, Lock, Fingerprint, ShieldAlert, HeartOff } from 'lucide-react';
+import { PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from '@phosphor-icons/react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -140,7 +140,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t.fast}
           style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}
         >
-          <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartOff size={36} /></div>
+          <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartBreak size={36} /></div>
           <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
           <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
         </motion.div>
@@ -305,7 +305,7 @@ function Step0Welcome() {
 function Step1Gate() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldAlert size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldWarning size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Voor volwassenen</motion.h2>
       <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
@@ -435,7 +435,7 @@ function StepBio({ bioError }: { bioError: string | null }) {
 function StepFinale() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenLine size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenNib size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Het speelveld is van jou</motion.h2>
       <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Begin met je eigen profiel — kinks, grenzen, verlangens.</p>

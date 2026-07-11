@@ -1,5 +1,5 @@
 "use client";
-import { Star } from "lucide-react";
+import { Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import Sheet, { SheetContent } from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
@@ -55,7 +55,7 @@ export default function KinkEditSheet({
                 : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
             }
           >
-            <Star size={11} fill={entry.curious ? "currentColor" : "none"} aria-hidden="true" />
+            <Star size={11} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
             Nieuwsgierig
           </button>
           {TAGS.map((tag) => {

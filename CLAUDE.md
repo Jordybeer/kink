@@ -19,7 +19,8 @@ Breaking something that already worked is the single worst outcome — worse tha
 - Hotfixes to production: branch off `main`, PR to `main`, then merge back to `dev`.
 
 ## Worktree & branch naming (mandatory)
-Always use the `worktree` skill — both when spawning a new worktree and when shipping (test → push → PR to dev).
+Use the `worktree` skill for spawning worktrees and shipping (test → push → PR to dev).
+**Never auto-invoke it** — only call `/worktree` when the user explicitly asks. It freezes when auto-triggered.
 
 ## Parallel Claude sessions (mandatory)
 Two Claude accounts — **claude1** and **claude2** — work this repo simultaneously under separate logins. Both:
@@ -37,7 +38,8 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 - Each commit must pass `npm test` green before pushing.
 
 ## Frontend design
-Always use the `frontend-design` skill when building new UI, restyling components, or making visual/layout decisions.
+The `frontend-design` skill is available for UI/visual decisions.
+**Never auto-invoke it** — only call `/frontend-design` when the user explicitly asks. It freezes when auto-triggered.
 
 ## Tone (mandatory, entire repo)
 Playful, kinky, BDSM-themed throughout — commits, docs, comments, PRs.
