@@ -32,7 +32,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
       )}
       {s ? (
         <span
-          className="flex-none text-xs px-2 py-0.5 rounded-full border whitespace-nowrap"
+          className="flex-none text-xs px-2 py-0.5 rounded-full border whitespace-nowrap min-w-[5.5rem] text-center"
           style={
             s === "hard_no"
               ? { color: colour, borderColor: colour, borderStyle: "dashed" }
@@ -42,7 +42,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
           {STATUS_LABEL[s]}
         </span>
       ) : (
-        <span className="flex-none text-xs" style={{ color: "var(--text2)" }}>
+        <span className="flex-none text-xs min-w-[5.5rem] text-center" style={{ color: "var(--text2)" }}>
           beoordeel
         </span>
       )}
