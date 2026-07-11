@@ -59,9 +59,6 @@ function HomeContent() {
 
   // App lock
   const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
-  const sessionUnlocked = useRef(
-    typeof sessionStorage !== "undefined" && sessionStorage.getItem("app_unlocked") === "1"
-  );
 
   // Profile create form
   const [name, setName] = useState("");
@@ -91,7 +88,10 @@ function HomeContent() {
   const [importDone, setImportDone] = useState(false);
 
   useEffect(() => {
-    if (_hasHydrated && appLockEnabled && !sessionUnlocked.current) setLockState("locked");
+    // Read the flag live, never a mount-time snapshot — onboarding raises it
+    // mid-session the moment a PIN is chosen, and a stale read here yanks the
+    // wizard back to slide one (corrections.md 2026-07-11).
+    if (_hasHydrated && appLockEnabled && sessionStorage.getItem("app_unlocked") !== "1") setLockState("locked");
   }, [_hasHydrated, appLockEnabled]);
 
   useEffect(() => {
@@ -213,7 +213,6 @@ function HomeContent() {
         biometricCredentialId={biometricEnabled ? biometricCredentialId : null}
         onUnlock={() => {
           sessionStorage.setItem("app_unlocked", "1");
-          sessionUnlocked.current = true;
           setLockState("unlocked");
         }}
       />

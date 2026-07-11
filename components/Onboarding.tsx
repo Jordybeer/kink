@@ -111,6 +111,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       return;
     }
     const hash = await hashPin(next.join(""));
+    // Whoever just chose this PIN is standing right here — mark the session
+    // unlocked BEFORE the store flips appLockEnabled, or HomeContent trades
+    // the wizard for the lock screen and the wizard forgets its page.
+    sessionStorage.setItem("app_unlocked", "1");
     setAppLockPin(hash);
     if (bioAvailable) setLockSub("biometric"); else advance();
   }

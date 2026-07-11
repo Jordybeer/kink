@@ -50,6 +50,41 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
+  test("pin instellen gooit de wizard niet terug naar slide één", async ({ page }) => {
+    // Regression guard (corrections.md 2026-07-11): setAppLockPin mid-wizard
+    // flipped appLockEnabled, HomeContent swapped Onboarding for the lock
+    // screen, and the wizard woke up amnesiac on the welcome slide.
+    await page.getByRole("button", { name: /begin/i }).click();
+    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /18\+/i }).click();
+    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /volgende/i }).click();
+    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /ga door/i }).click();
+    await page.waitForTimeout(300);
+
+    // Step 4 — choose the PIN path instead of skipping
+    await page.getByRole("button", { name: /pin instellen/i }).click();
+    await page.waitForTimeout(300);
+    const tapPin = async () => {
+      for (const d of ["1", "2", "3", "4"]) {
+        await page.getByRole("button", { name: d, exact: true }).click();
+      }
+    };
+    await expect(page.getByRole("heading", { name: /kies een pin/i })).toBeVisible();
+    await tapPin();
+    await expect(page.getByRole("heading", { name: /bevestig je pin/i })).toBeVisible();
+    await tapPin();
+    await page.waitForTimeout(400);
+
+    // The wizard must march on (biometric offer or finale) — never the
+    // lock screen, never back to the welcome slide.
+    await expect(
+      page.getByRole("heading", { name: /pin ingesteld|het speelveld is van jou/i })
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /^begin$/i })).not.toBeVisible();
+  });
+
   test("sla over springt naar de leeftijdscheck — nooit eromheen", async ({ page }) => {
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
     await page.waitForTimeout(400);

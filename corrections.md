@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-11 — PIN mid-onboarding summoned the lock screen, wizard woke up amnesiac
+
+**What went wrong:** Onboarding's PIN step called `setAppLockPin(hash)`, which flipped `appLockEnabled` in the store. `HomeContent`'s lock effect saw the flip, checked a `useRef` **snapshot** of `sessionStorage.app_unlocked` taken at mount (false on a fresh install), and set `lockState = "locked"`. The lock gate renders *before* the onboarding gate, so `<Onboarding>` unmounted, its local `step` state died, and after unlocking the wizard restarted at slide one. This bug had been fixed before and was reintroduced — the e3c5494 fix only covered re-navigation, and the Phase 17 monolith split preserved the stale-ref pattern.
+
+**Rule:** Enabling the app lock must never lock out the person who just enabled it. (1) Any flow that calls `setAppLockPin` while the user is present sets `sessionStorage.app_unlocked = "1"` *before* the store write. (2) The lock effect reads `sessionStorage` **live**, never a mount-time ref/snapshot — session flags raised mid-session must be honoured. (3) The regression test lives in `e2e/new-user.spec.ts` ("pin instellen gooit de wizard niet terug naar slide één") — it was proven red against the broken code; keep it green.
+
+---
+
 ## 2026-07-10 — The watchdog was asleep: e2e specs rot silently
 
 **What was found:** Phase 30's "guard" (`new-user.spec.ts`) was 4/5 failing on dev *before any change* — the PIN step (added June 3) and the L-01 age-gate fix had changed the onboarding flow, and nobody re-ran the spec. It sat broken for five weeks while unit tests stayed green.
