@@ -59,7 +59,7 @@ export default function CategorySection({
             {open ? <CaretDown size={16} /> : <CaretRight size={16} />}
           </span>
           <span
-            className="text-base italic flex-1 text-left truncate"
+            className="text-base flex-1 text-left truncate"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
           >
             {category}

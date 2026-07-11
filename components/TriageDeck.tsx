@@ -105,7 +105,7 @@ export default function TriageDeck({
             </div>
 
             <h3
-              className="text-2xl italic mt-1 leading-tight"
+              className="text-2xl mt-1 leading-tight"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
             >
               {current.name}

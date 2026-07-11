@@ -32,7 +32,7 @@ export default function KinkEditSheet({
       <SheetContent>
         <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>{kink?.category}</p>
         <h2
-          className="text-xl italic leading-tight mb-1"
+          className="text-xl leading-tight mb-1"
           style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
         >
           {kink?.name ?? ""}
