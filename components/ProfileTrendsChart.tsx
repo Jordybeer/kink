@@ -16,9 +16,12 @@ import {
 import type { ProfileSnapshot } from "@/types";
 import {
   PROFILE_TREND_SERIES,
+  diffSnapshotEntries,
   prepareProfileTrendData,
   type CountKey,
 } from "@/lib/profileSnapshot";
+import { KINKS } from "@/lib/kinks";
+import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 
 ChartJS.register(
   LineController,
@@ -218,6 +221,8 @@ export function ProfileTrendsChart({ snapshots }: Props) {
         <Line data={data} options={options} aria-label={ariaLabel} role="img" />
       </div>
 
+      <ShiftLedger snapshots={prep.ascending} />
+
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Toon series">
         {PROFILE_TREND_SERIES.map((s) => {
           const color = seriesColor[s.key];
@@ -256,6 +261,64 @@ export function ProfileTrendsChart({ snapshots }: Props) {
         })}
       </div>
     </section>
+  );
+}
+
+// What actually moved between the last two saved moments — the chart shows
+// that lines wander, this names the kinks that did the wandering.
+const SHIFT_PREVIEW = 5;
+
+function ShiftLedger({ snapshots }: { snapshots: ProfileSnapshot[] }) {
+  const [showAll, setShowAll] = useState(false);
+  const prev = snapshots[snapshots.length - 2];
+  const last = snapshots[snapshots.length - 1];
+  const shifts = useMemo(
+    () => (prev && last ? diffSnapshotEntries(prev.entries, last.entries) : []),
+    [prev, last]
+  );
+  const names = useMemo(() => {
+    const m = new Map<string, string>(KINKS.map((k) => [k.id, k.name]));
+    for (const ck of last?.customKinks ?? []) m.set(ck.id, ck.name);
+    for (const ck of prev?.customKinks ?? []) if (!m.has(ck.id)) m.set(ck.id, ck.name);
+    return m;
+  }, [prev, last]);
+
+  if (!shifts.length) return null;
+  const visible = showAll ? shifts : shifts.slice(0, SHIFT_PREVIEW);
+  const hiddenCount = shifts.length - visible.length;
+
+  return (
+    <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+      <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text2)" }}>
+        Sinds vorig moment
+      </p>
+      <ul className="flex flex-col gap-1">
+        {visible.map((s) => (
+          <li key={s.kinkId} className="flex items-baseline gap-2 text-xs">
+            <span className="truncate" style={{ color: "var(--text)" }}>
+              {names.get(s.kinkId) ?? s.kinkId}
+            </span>
+            <span className="flex-none" style={{ color: "var(--text2)" }}>
+              {s.from ? STATUS_LABEL[s.from] : "nieuw"}
+              {" → "}
+            </span>
+            <span className="flex-none font-medium" style={{ color: s.to ? STATUS_VAR[s.to] : "var(--text2)" }}>
+              {s.to ? STATUS_LABEL[s.to] : "ingetrokken"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="focus-ring mt-1.5 text-xs"
+          style={{ color: "var(--accent)" }}
+        >
+          +{hiddenCount} meer
+        </button>
+      )}
+    </div>
   );
 }
 
