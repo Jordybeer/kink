@@ -4,6 +4,7 @@ import { CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } 
 import ContextMenu from "@/components/ui/ContextMenu";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
+import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
 
 interface ProfileHeroProps {
@@ -62,8 +63,8 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 <img src={profile.avatarDataUrl} alt={profile.name} className="w-full h-full object-cover" />
               ) : (
                 <div
-                  className="w-full h-full flex items-center justify-center text-2xl font-bold"
-                  style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "var(--on-accent)" }}
+                  className="w-full h-full flex items-center justify-center text-2xl italic"
+                  style={avatarStyle(profile.name)}
                 >
                   {initial}
                 </div>

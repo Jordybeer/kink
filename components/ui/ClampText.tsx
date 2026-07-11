@@ -77,7 +77,7 @@ export default function ClampText({ text, className = "", style }: Props) {
         className={`focus-ring block w-full text-left ${className}`}
       >
         <span ref={ref} className="line-clamp-2">{text}</span>
-        <span aria-hidden="true" className="block text-xs mt-0.5" style={{ color: "var(--accent)" }}>
+        <span aria-hidden="true" className="block text-xs mt-0.5 text-right" style={{ color: "var(--accent)" }}>
           …meer
         </span>
       </button>
@@ -99,7 +99,7 @@ export default function ClampText({ text, className = "", style }: Props) {
             style={{ maxHeight: "45vh", background: "var(--surface2)", border: "1px solid var(--border-accent)", boxShadow: "0 10px 28px rgba(0,0,0,0.45)", color: "var(--text)" }}
           >
             <span className="block">{text}</span>
-            <span aria-hidden="true" className="block text-xs mt-1.5" style={{ color: "var(--accent)" }}>
+            <span aria-hidden="true" className="block text-xs mt-1.5 text-right" style={{ color: "var(--accent)" }}>
               minder ↑
             </span>
           </motion.div>

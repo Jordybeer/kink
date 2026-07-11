@@ -7,6 +7,7 @@ import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { getProfileType } from "@/lib/profileType";
+import { avatarStyle } from "@/lib/avatar";
 import type { ExperienceLevel } from "@/types";
 
 interface ProfileListProps {
@@ -81,7 +82,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                     ) : (
                       <div
                         className="w-full h-full flex items-center justify-center text-xs italic"
-                        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "var(--on-accent)", fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+                        style={avatarStyle(groupName)}
                       >
                         {groupName[0].toUpperCase()}
                       </div>
@@ -255,7 +256,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                       // Monogram, not sticker — the initial sits in the house serif.
                                       <div
                                         className={`w-full h-full flex items-center justify-center ${isPortrait ? "text-2xl" : "text-base"} italic`}
-                                        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "var(--on-accent)", fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+                                        style={avatarStyle(p.name)}
                                       >
                                         {initial}
                                       </div>
