@@ -143,7 +143,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               onClick={onShare}
               aria-label="Profiel delen"
               title="Delen"
-              className="focus-ring flex items-center justify-center rounded-md transition-colors"
+              className="focus-ring flex items-center justify-center rounded-full transition-colors"
               style={{ minWidth: 44, minHeight: 44, color: "var(--accent)" }}
             >
               <ShareNetwork size={18} aria-hidden="true" />
@@ -154,7 +154,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               onClick={onEdit}
               aria-label="Profiel bewerken"
               title="Bewerken"
-              className="focus-ring flex items-center justify-center rounded-md transition-colors"
+              className="focus-ring flex items-center justify-center rounded-full transition-colors"
               style={{ minWidth: 44, minHeight: 44, color: "var(--text2)" }}
             >
               <PencilSimple size={16} />
