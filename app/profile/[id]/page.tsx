@@ -238,6 +238,11 @@ export default function ProfilePage({ params }: Props) {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const { registerPdfFonts } = await import("@/lib/pdfFonts");
     await registerPdfFonts(doc);
+    // The export introduces itself in the reader's title bar.
+    doc.setProperties({
+      title: `KinkSync Profiel — ${profile!.name}`,
+      creator: "KinkSync (kinksync.be)",
+    });
     const W = 210;
     const margin = 20;
     const lineW = W - margin * 2;

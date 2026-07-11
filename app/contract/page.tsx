@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
 import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
-import { hexToRgb, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
+import { hexToRgb, PDF_PAPER_PALETTE, PDF_PARTY_ON_PAPER, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
 
 function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const drawing = useRef(false);
@@ -279,6 +279,13 @@ function ContractPage() {
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const { registerPdfFonts } = await import("@/lib/pdfFonts");
       await registerPdfFonts(doc);
+      // The file introduces itself in a reader's title bar — no more "untitled".
+      doc.setProperties({
+        title: `KinkSync Overeenkomst — ${profileA.name} & ${profileB.name}`,
+        subject: `Opgesteld op ${today}`,
+        author: `${profileA.name} & ${profileB.name}`,
+        creator: "KinkSync (kinksync.be)",
+      });
       const W = 210;
       const margin = 20;
       const lineW = W - margin * 2;
@@ -388,57 +395,70 @@ function ContractPage() {
         const isKinkRow = items.length > 0 && typeof items[0] === "object" && items[0] !== null && "name" in (items[0] as object);
 
         if (isKinkRow) {
-          doc.setFont("body", "bold");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...muted);
-          doc.text(profileA.name, col2X, y);
-          doc.text(profileB.name, col3X, y);
-          y += 4.5;
-
-          doc.setFont("body", "normal");
-          doc.setFontSize(8.5);
+          // The column heads print once per table — and again after every
+          // page break, so a spilled section never leaves the reader
+          // guessing whose column is whose.
+          const printColumnHeads = () => {
+            doc.setFont("body", "bold");
+            doc.setFontSize(7.5);
+            doc.setTextColor(...muted);
+            doc.text(profileA.name, col2X, y);
+            doc.text(profileB.name, col3X, y);
+            y += 4.5;
+            doc.setFont("body", "normal");
+            doc.setFontSize(8.5);
+          };
+          printColumnHeads();
           // The first column keeps to itself: names stop 8mm short of the
-          // status columns, and comment bullets (indented 4mm) stop 6mm
-          // short — nothing in column one runs under a party's verdict.
+          // status columns, and comment text (bullet at 4mm, text at 6mm)
+          // stops 6mm short — nothing runs under a party's verdict.
           const nameW = col2X - margin - 8;
-          const commentW = col2X - margin - 10;
+          const commentW = col2X - margin - 12;
           for (const item of items as KinkDetailItem[]) {
             const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
             const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
             const nameLines = doc.splitTextToSize(`• ${item.name}`, nameW) as string[];
             // Each party's whisper prints as its own bullet block under the
             // kink name — measured at the comment font so wrapping is
-            // honest, with a breath of air between the two voices.
+            // honest, with a breath of air between the two voices. The
+            // bullet itself wears the party's colour, echoing the screen.
             doc.setFontSize(7.5);
             const commentBlocks = [
-              item.commentA ? (doc.splitTextToSize(`• ${profileA.name}: ${item.commentA}`, commentW) as string[]) : [],
-              item.commentB ? (doc.splitTextToSize(`• ${profileB.name}: ${item.commentB}`, commentW) as string[]) : [],
-            ].filter((b) => b.length);
+              item.commentA ? { party: hexToRgb(PDF_PARTY_ON_PAPER.a), lines: doc.splitTextToSize(`${profileA.name}: ${item.commentA}`, commentW) as string[] } : null,
+              item.commentB ? { party: hexToRgb(PDF_PARTY_ON_PAPER.b), lines: doc.splitTextToSize(`${profileB.name}: ${item.commentB}`, commentW) as string[] } : null,
+            ].filter((b): b is { party: [number, number, number]; lines: string[] } => b !== null && b.lines.length > 0);
             doc.setFontSize(8.5);
-            const commentLineCount = commentBlocks.reduce((n, b) => n + b.length, 0);
+            const commentLineCount = commentBlocks.reduce((n, b) => n + b.lines.length, 0);
             const commentGap = Math.max(0, commentBlocks.length - 1) * 1.4;
             const rowH = nameLines.length * 4.2 +
               (commentLineCount ? commentLineCount * 3.6 + commentGap + 1.5 : 0) + 1.5;
             if (y + rowH > 272) {
               newPage();
-              doc.setFont("body", "normal");
-              doc.setFontSize(8.5);
+              printColumnHeads();
             }
             doc.setTextColor(...ink);
             doc.text(nameLines, margin, y);
+            // Verdicts wear their status colour — scannable at arm's length,
+            // same families the screen speaks (AA-on-paper verified).
+            doc.setTextColor(...(item.statusA ? hexToRgb(PDF_STATUS_ON_PAPER[item.statusA]) : muted));
             doc.text(sA, col2X, y);
+            doc.setTextColor(...(item.statusB ? hexToRgb(PDF_STATUS_ON_PAPER[item.statusB]) : muted));
             doc.text(sB, col3X, y);
+            doc.setTextColor(...ink);
             if (commentBlocks.length) {
               doc.setFont("body", "italic");
               doc.setFontSize(7.5);
-              doc.setTextColor(...muted);
               let cy = y + nameLines.length * 4.2;
               for (const block of commentBlocks) {
-                doc.text(block, margin + 4, cy);
-                cy += block.length * 3.6 + 1.4;
+                doc.setTextColor(...block.party);
+                doc.text("•", margin + 4, cy);
+                doc.setTextColor(...muted);
+                doc.text(block.lines, margin + 6, cy);
+                cy += block.lines.length * 3.6 + 1.4;
               }
               doc.setFont("body", "normal");
               doc.setFontSize(8.5);
+              doc.setTextColor(...ink);
             }
             y += rowH;
           }
@@ -557,6 +577,19 @@ function ContractPage() {
       doc.text(today, margin + sigW / 2, sigDateY, { align: "center" });
       doc.text(today, margin + sigW + 10 + sigW / 2, sigDateY, { align: "center" });
       y = sigDateY + 10;
+
+      // Loose pages of a signed document want to know their place —
+      // "pagina 2 van 3" in the footer, but only when there's more than one.
+      const pageCount = doc.getNumberOfPages();
+      if (pageCount > 1) {
+        doc.setFont("body", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...muted);
+        for (let p = 1; p <= pageCount; p++) {
+          doc.setPage(p);
+          doc.text(`pagina ${p} van ${pageCount}`, W / 2, 290, { align: "center" });
+        }
+      }
 
       try { doc.save(`contract-${profileA.name}-${profileB.name}.pdf`); } catch { /* PDF-fout is niet fataal */ }
 

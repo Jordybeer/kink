@@ -84,6 +84,11 @@ export async function exportScenePdf(
   const doc = new jsPDF({ unit: "mm", format: "a5" });
   const { registerPdfFonts } = await import("./pdfFonts");
   await registerPdfFonts(doc);
+  // The ledger states its name in the reader's title bar.
+  doc.setProperties({
+    title: `KinkSync Scène — ${scene.title.trim() || "Scène"}`,
+    creator: "KinkSync (kinksync.be)",
+  });
   doc.setFillColor(...hexToRgb(LEDGER_PALETTE.paper));
   doc.rect(0, 0, W, H, "F");
 
