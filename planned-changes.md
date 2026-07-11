@@ -98,12 +98,8 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 - **Curious flag in contract PDF**: the contract PDF renders no nieuwsgierig/curious signal at all (the old "swatch" item predates 3c's demotion from status → flag). Decide during 24c whether it belongs on the printed page.
 - **Status explainer i18n extraction**: hardcoded Dutch `STATUS_EXPLAINER` — natural extraction point if multilingual ever lands.
 
-### PDF polish (2026-07-11, spotted while working the contract table)
-- **Column headers on page break**: the Robin/Sam header row prints once per section — a section that spills onto a second page leaves the reader guessing whose column is whose. Reprint the header row inside `newPage()` when mid-table.
-- **Verdicts in their own colour**: statuses print in plain ink while the screen wears `PDF_STATUS_ON_PAPER` tints everywhere else — tinting "Heel graag"/"Harde grens" per status would make the table scannable at arm's length (palette + AA-on-paper test already exist from 24c).
-- **Page numbers on multi-page contracts**: a signed paper document with loose pages wants "pagina 2 van 3" in the footer — jsPDF `getNumberOfPages()` pass after layout.
-- **PDF metadata**: `doc.setProperties({ title, author })` so the file identifies itself in a reader's title bar instead of "untitled".
-- **Comment bullets in party colour**: the two voices are told apart only by name — a whisper of COLOUR_A/COLOUR_B (paper-safe variants) on the bullet or name would echo the screen's vocabulary.
+### PDF polish
+- ~~All five whims of 2026-07-11~~ → shipped on `redesign/pdf-polish` (see ledger): column-head reprint on page break, status-tinted verdicts, page numbers, metadata, party-coloured comment bullets.
 
 ### Features
 - **Desire score in contract PDF** (2026-07-11): the on-screen contract cards show `verlangen x/5` per party; the PDF table now carries comments but still drops desire — same bullet-under-the-name pattern would fit.
@@ -175,6 +171,8 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 | — | Contract speaks the choice ladder — sections now descend Gedeelde verlangens → Zachte grenzen → Harde grenzen → Bespreking nodig (te bespreken last), rows within every section sort keenest-pair-first via `statusPairRank` in `lib/statusLabels.ts` (+ unit test; ties break alphabetically, on-screen hard-limit chips march in the same order), and the PDF table finally whispers what the screen already showed: each party's comment as a muted italic bullet under its kink name, pagination-aware | 2026-07-11 · `4d135d5` |
 | — | Columns learn their place, comments learn to breathe — kink names now wrap 8mm shy of the party columns (was 4mm), comment bullets stay inside the first column instead of sprawling under both verdicts, each party's comment prints as its own block with 1.4mm of air between the voices, rows +0.5mm padding; pagination accounts for every gap, verified by raster | 2026-07-11 · `6e0b903` |
 | — | Contract section rules unglued — the coloured underline beneath each of the four section headers (Gedeelde verlangens, Harde grenzen, Zachte grenzen, Bespreking nodig) sat only 4mm above its content, the one rule in the doc tighter than its 6–10mm neighbours; bumped to 6mm to match | 2026-07-10 |
+| — | Redesign stack (branches `redesign/foundation` → `readability` → `controls` → `pdf-voice` → `geometry` → `pdf-polish`, unmerged) — Fraunces + Instrument Sans typography, Lucide → Phosphor (43 icons), 12px readability floor, house-caret selects, PDF house fonts (lazy ~37KB TTF subsets via `lib/pdfFonts`), btn-accent's off-scale 10px radius snapped to the 12px CTA tier, ProfileHero focus rings gone circular | 2026-07-11 · `bccf4da`…`b0fb6ad` |
+| — | Five PDF whims granted — status-tinted verdicts in the contract table, party-coloured comment bullets (new `PDF_PARTY_ON_PAPER`, AA-leashed), Val/Noor column heads reprint after mid-table page breaks, "pagina 2 van 4" footers on multi-pagers, `setProperties` metadata on all three exports; proven with a 39-kink 4-page fat contract signed through the real app | 2026-07-11 · `4572efe` |
 
 ### v4 (main)
 
