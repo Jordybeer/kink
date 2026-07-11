@@ -82,6 +82,8 @@ export async function exportScenePdf(
   const usableHeight = H - 20;
 
   const doc = new jsPDF({ unit: "mm", format: "a5" });
+  const { registerPdfFonts } = await import("./pdfFonts");
+  await registerPdfFonts(doc);
   doc.setFillColor(...hexToRgb(LEDGER_PALETTE.paper));
   doc.rect(0, 0, W, H, "F");
 
@@ -89,7 +91,7 @@ export async function exportScenePdf(
 
   // ── 1. Header block ──────────────────────────────────────────────────────
   const displayTitle = scene.title.trim() || "Scène";
-  doc.setFont("helvetica", "bold");
+  doc.setFont("display", "bold");
   doc.setFontSize(24);
   doc.setTextColor(...hexToRgb(LEDGER_PALETTE.title));
   const titleLines = doc.splitTextToSize(displayTitle, usableWidth) as string[];
@@ -99,7 +101,7 @@ export async function exportScenePdf(
   const aName = opts?.profileA?.name ?? scene.profileAName;
   const bName = opts?.profileB?.name ?? scene.profileBName;
   if (aName || bName) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setFontSize(12);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
     doc.text(`${aName} — ${bName}`, margin, y);
@@ -110,7 +112,7 @@ export async function exportScenePdf(
   if (scene.plannedDate) dateParts.push(scene.plannedDate);
   if (scene.plannedTime) dateParts.push(scene.plannedTime);
   if (dateParts.length) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setFontSize(10);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
     doc.text(dateParts.join("  "), margin, y);
@@ -127,7 +129,7 @@ export async function exportScenePdf(
   if (scene.safeword) {
     doc.setFillColor(...hexToRgb(LEDGER_PALETTE.safeBg));
     doc.rect(0, y, W, 9, "F");
-    doc.setFont("helvetica", "bold");
+    doc.setFont("body", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.safeFg));
     doc.text(`SAFEWORD: ${scene.safeword}`, margin, y + 5.5);
@@ -158,13 +160,13 @@ export async function exportScenePdf(
     doc.setFillColor(...ic);
     doc.rect(margin, y - 3, 2, 3.5, "F");
 
-    doc.setFont("helvetica", "bold");
+    doc.setFont("body", "bold");
     doc.setFontSize(10);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
     doc.text(item.name, margin + 4, y);
 
     if (item.duration) {
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
       doc.text(item.duration, W - margin, y, { align: "right" });
@@ -172,7 +174,7 @@ export async function exportScenePdf(
     y += 4;
 
     if (tagLine) {
-      doc.setFont("helvetica", "italic");
+      doc.setFont("body", "italic");
       doc.setFontSize(7);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
       doc.text(tagLine, margin + 4, y);
@@ -180,7 +182,7 @@ export async function exportScenePdf(
     }
 
     if (noteLines.length) {
-      doc.setFont("helvetica", "italic");
+      doc.setFont("body", "italic");
       doc.setFontSize(8);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
       doc.text(noteLines, margin + 4, y);
@@ -188,7 +190,7 @@ export async function exportScenePdf(
     }
 
     // Intensity label (small, coloured)
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...ic);
     doc.text(intensityLabel(item.intensity), margin + 4, y);
@@ -213,7 +215,7 @@ export async function exportScenePdf(
   doc.line(margin, y, W - margin, y);
   y += 5;
 
-  doc.setFont("helvetica", "normal");
+  doc.setFont("body", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
   doc.text(sentence, margin, y);
@@ -231,25 +233,25 @@ export async function exportScenePdf(
     const af = scene.aftercare;
     const trafficLabel = TRAFFIC_LABEL[af.trafficLight] ?? af.trafficLight;
 
-    doc.setFont("helvetica", "bold");
+    doc.setFont("display", "bold");
     doc.setFontSize(18);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.title));
     doc.text("Aftercare", margin, y);
     y += 8;
 
-    doc.setFont("helvetica", "bold");
+    doc.setFont("body", "bold");
     doc.setFontSize(14);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
     doc.text(trafficLabel, margin, y);
     y += 8;
 
     if (af.wentWell) {
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(9);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
       doc.text("Wat werkte goed", margin, y);
       y += 5;
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(10);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
       const wentWellLines = doc.splitTextToSize(af.wentWell, usableWidth) as string[];
@@ -258,12 +260,12 @@ export async function exportScenePdf(
     }
 
     if (af.remember) {
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(9);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
       doc.text("Onthouden voor volgende keer", margin, y);
       y += 5;
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(10);
       doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
       const rememberLines = doc.splitTextToSize(af.remember, usableWidth) as string[];

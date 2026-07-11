@@ -277,6 +277,8 @@ function ContractPage() {
     try {
       const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const { registerPdfFonts } = await import("@/lib/pdfFonts");
+      await registerPdfFonts(doc);
       const W = 210;
       const margin = 20;
       const lineW = W - margin * 2;
@@ -292,7 +294,7 @@ function ContractPage() {
       doc.rect(0, 0, W, 297, "F");
 
       // Title
-      doc.setFont("helvetica", "bold");
+      doc.setFont("display", "bold");
       doc.setFontSize(20);
       doc.setTextColor(...accent);
       doc.text("KinkSync Overeenkomst", W / 2, y, { align: "center" });
@@ -300,7 +302,7 @@ function ContractPage() {
 
       // Subtitle
       doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setTextColor(...muted);
       doc.text("kinksync.be", W / 2, y, { align: "center" });
       y += 5;
@@ -318,12 +320,12 @@ function ContractPage() {
       y += 10;
 
       // Preamble — paginate line by line so long text can't overflow the page
-      doc.setFont("helvetica", "italic");
+      doc.setFont("body", "italic");
       doc.setFontSize(8);
       doc.setTextColor(...muted);
       const pLines = doc.splitTextToSize(preamble, lineW) as string[];
       for (const line of pLines) {
-        if (y > 272) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
+        if (y > 272) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("body", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
         doc.text(line, margin, y);
         y += 4;
       }
@@ -334,12 +336,12 @@ function ContractPage() {
       const hasSafewordData = hasSignalData(signalsA) || hasSignalData(signalsB) || aftercareA.length > 0 || aftercareB.length > 0;
       if (hasSafewordData) {
         if (y > 250) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
-        doc.setFont("helvetica", "bold");
+        doc.setFont("body", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...accent);
         doc.text("Signalen & Nazorg", margin, y);
         y += 5;
-        doc.setFont("helvetica", "normal");
+        doc.setFont("body", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...ink);
 
@@ -373,7 +375,7 @@ function ContractPage() {
         if (!items.length) return;
 
         if (y > 258) { newPage(); }
-        doc.setFont("helvetica", "bold");
+        doc.setFont("display", "bold");
         doc.setFontSize(11);
         doc.setTextColor(...colour);
         doc.text(title, margin, y);
@@ -386,14 +388,14 @@ function ContractPage() {
         const isKinkRow = items.length > 0 && typeof items[0] === "object" && items[0] !== null && "name" in (items[0] as object);
 
         if (isKinkRow) {
-          doc.setFont("helvetica", "bold");
+          doc.setFont("body", "bold");
           doc.setFontSize(7.5);
           doc.setTextColor(...muted);
           doc.text(profileA.name, col2X, y);
           doc.text(profileB.name, col3X, y);
           y += 4.5;
 
-          doc.setFont("helvetica", "normal");
+          doc.setFont("body", "normal");
           doc.setFontSize(8.5);
           // The first column keeps to itself: names stop 8mm short of the
           // status columns, and comment bullets (indented 4mm) stop 6mm
@@ -419,7 +421,7 @@ function ContractPage() {
               (commentLineCount ? commentLineCount * 3.6 + commentGap + 1.5 : 0) + 1.5;
             if (y + rowH > 272) {
               newPage();
-              doc.setFont("helvetica", "normal");
+              doc.setFont("body", "normal");
               doc.setFontSize(8.5);
             }
             doc.setTextColor(...ink);
@@ -427,7 +429,7 @@ function ContractPage() {
             doc.text(sA, col2X, y);
             doc.text(sB, col3X, y);
             if (commentBlocks.length) {
-              doc.setFont("helvetica", "italic");
+              doc.setFont("body", "italic");
               doc.setFontSize(7.5);
               doc.setTextColor(...muted);
               let cy = y + nameLines.length * 4.2;
@@ -435,14 +437,14 @@ function ContractPage() {
                 doc.text(block, margin + 4, cy);
                 cy += block.length * 3.6 + 1.4;
               }
-              doc.setFont("helvetica", "normal");
+              doc.setFont("body", "normal");
               doc.setFontSize(8.5);
             }
             y += rowH;
           }
         } else {
           const colW = (lineW - 10) / 2;
-          doc.setFont("helvetica", "normal");
+          doc.setFont("body", "normal");
           doc.setFontSize(8.5);
           doc.setTextColor(...ink);
           let i = 0;
@@ -454,7 +456,7 @@ function ContractPage() {
             const rowH = Math.max(lLines.length, rLines.length) * 4.2 + 1;
             if (y + rowH > 272) {
               newPage();
-              doc.setFont("helvetica", "normal");
+              doc.setFont("body", "normal");
               doc.setFontSize(8.5);
               doc.setTextColor(...ink);
             }
@@ -481,7 +483,7 @@ function ContractPage() {
 
       // Safeword clause
       if (y > 240) { doc.addPage(); doc.setFillColor(...paper); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
       doc.text("Algemene afspraken", margin, y);
@@ -490,7 +492,7 @@ function ContractPage() {
       doc.setLineWidth(0.25);
       doc.line(margin, y, margin + lineW, y);
       y += 6;
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...ink);
       const clauses = [
@@ -513,7 +515,7 @@ function ContractPage() {
       doc.line(margin, y, W - margin, y);
       y += 6;
 
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
       doc.text("Handtekeningen", margin, y);
@@ -543,7 +545,7 @@ function ContractPage() {
       doc.setDrawColor(...muted);
       doc.setLineWidth(0.2);
       doc.line(margin, sigLineY, W - margin, sigLineY);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...muted);
       const sigLabelA = useRealNames ? `${trimmedRealNameA} (${profileA.name})` : profileA.name;

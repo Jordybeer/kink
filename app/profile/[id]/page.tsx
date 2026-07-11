@@ -236,6 +236,8 @@ export default function ProfilePage({ params }: Props) {
   async function handlePDFExport() {
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const { registerPdfFonts } = await import("@/lib/pdfFonts");
+    await registerPdfFonts(doc);
     const W = 210;
     const margin = 20;
     const lineW = W - margin * 2;
@@ -248,23 +250,23 @@ export default function ProfilePage({ params }: Props) {
 
     doc.setFillColor(...dark);
     doc.rect(0, 0, W, 297, "F");
-    doc.setFont("helvetica", "bold");
+    doc.setFont("display", "bold");
     doc.setFontSize(18);
     doc.setTextColor(...accent);
     doc.text("KinkSync", W / 2, y, { align: "center" });
     y += 5;
     doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setTextColor(...muted);
     doc.text("kinksync.be", W / 2, y, { align: "center" });
     y += 7;
     doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("body", "bold");
     doc.setTextColor(...light);
     doc.text(`${profile!.name} — ${profile!.role}`, W / 2, y, { align: "center" });
     y += 5;
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("body", "normal");
     doc.setTextColor(...muted);
     doc.text(`${profile!.experienceLevel} · Gegenereerd op ${new Date().toLocaleDateString("nl-NL")}`, W / 2, y, { align: "center" });
     y += 5;
@@ -282,7 +284,7 @@ export default function ProfilePage({ params }: Props) {
       const active = kinks.filter((k) => profile!.entries[k.id]?.status);
       if (!active.length) continue;
       if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(9);
       doc.setTextColor(...accent);
       doc.text(cat.toUpperCase(), margin, y);
@@ -291,7 +293,7 @@ export default function ProfilePage({ params }: Props) {
         if (y > 265) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
         const e = profile!.entries[k.id];
         const color = e.status ? STATUS_COLORS_PDF[e.status] : muted;
-        doc.setFont("helvetica", "normal");
+        doc.setFont("body", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...color);
         const statusLabel = e.status ? `[${STATUS_LABEL[e.status]}]` : "";
@@ -301,7 +303,7 @@ export default function ProfilePage({ params }: Props) {
         doc.text(`${statusLabel}${tags}`, margin + 2 + doc.getTextWidth(`• ${k.name}`) + 3, y);
         y += 4.5;
         if (e.comment) {
-          doc.setFont("helvetica", "italic");
+          doc.setFont("body", "italic");
           doc.setFontSize(8);
           doc.setTextColor(...muted);
           const commentLines = doc.splitTextToSize(`  ${e.comment}`, lineW - 5);
@@ -316,7 +318,7 @@ export default function ProfilePage({ params }: Props) {
     const activeCustom = customKinksList.filter((ck) => profile!.entries[ck.id]?.status);
     if (activeCustom.length) {
       if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
+      doc.setFont("body", "bold");
       doc.setFontSize(9);
       doc.setTextColor(...accent);
       doc.text("MEER (EIGEN KINKS)", margin, y);
@@ -324,7 +326,7 @@ export default function ProfilePage({ params }: Props) {
       for (const ck of activeCustom) {
         const e = profile!.entries[ck.id];
         const color = e?.status ? STATUS_COLORS_PDF[e.status] : muted;
-        doc.setFont("helvetica", "normal");
+        doc.setFont("body", "normal");
         doc.setFontSize(9);
         doc.setTextColor(...color);
         const statusLabel = e?.status ? `[${STATUS_LABEL[e.status]}]` : "";
@@ -336,7 +338,7 @@ export default function ProfilePage({ params }: Props) {
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("body", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...muted);
       doc.text(`${i} / ${pageCount}`, W - margin, 290, { align: "right" });
