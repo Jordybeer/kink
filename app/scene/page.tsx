@@ -707,16 +707,19 @@ function ScenePage() {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-1.5 flex-none">
-            <input
-              type="date"
-              value={sceneDate}
-              onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
-              className="focus:outline-none focus-ring rounded-lg px-2"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
-            />
-            <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
-          </div>
+        </div>
+
+        {/* Date & time — their own row, so the title never gets elbowed
+            into "Val & N…" on a 375px screen */}
+        <div className="flex items-center gap-1.5 mb-3">
+          <input
+            type="date"
+            value={sceneDate}
+            onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
+            className="focus:outline-none focus-ring rounded-lg px-2 flex-1"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark", maxWidth: 180 }}
+          />
+          <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
         </div>
 
         {/* Profile hint */}
@@ -812,11 +815,13 @@ function ScenePage() {
             </p>
           </div>
         )}
-        <div className="max-w-2xl mx-auto flex gap-2">
+        {/* Five controls never fit one 375px row — the manual-add pair takes
+            its own line on mobile and rejoins the bar from sm up */}
+        <div className="max-w-2xl mx-auto flex flex-wrap gap-2">
 
           {/* Manual add — hidden when completed */}
           {!isCompleted && (
-            <>
+            <div className="flex gap-2 w-full sm:w-auto sm:flex-1">
               <input
                 type="text"
                 value={newItemName}
@@ -834,14 +839,14 @@ function ScenePage() {
               >
                 +
               </button>
-            </>
+            </div>
           )}
 
           {/* PDF */}
           <button
             onClick={handleExport}
             disabled={items.length === 0}
-            className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-none"
+            className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 52, height: 44, padding: "0 12px" }}
             aria-label="Exporteer als PDF"
           >
@@ -853,7 +858,7 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
                 {savedStatus === "draft" ? "Concept ✓" : "Opslaan"}
@@ -861,7 +866,7 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
                 {savedStatus === "planned" ? "Gepland ✓" : "Plannen"}
