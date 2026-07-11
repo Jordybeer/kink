@@ -5,7 +5,8 @@ import { PushPin, PushPinSlash, PencilSimple, FileText, FilmSlate, Anchor, Lock,
 import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
-import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
+import { EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
+import RolePicker from "@/components/RolePicker";
 import { getProfileType } from "@/lib/profileType";
 import { avatarStyle } from "@/lib/avatar";
 import type { ExperienceLevel } from "@/types";
@@ -139,30 +140,8 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                             )}
                           </div>
                           <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Rol</p>
-                          <div className="flex flex-col gap-2 mb-3" role="group" aria-label="Rol">
-                            {ROLE_GROUPS.map((g) => (
-                              <div key={g.label}>
-                                <p className="text-xs uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {g.roles.map((r) => (
-                                    <button
-                                      key={r}
-                                      type="button"
-                                      onClick={() => setEditRole(r)}
-                                      aria-pressed={editRole === r}
-                                      className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                                      style={
-                                        editRole === r
-                                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                                          : { color: "var(--text2)", borderColor: "var(--border)" }
-                                      }
-                                    >
-                                      {r}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
+                          <div className="mb-3">
+                            <RolePicker value={editRole} onChange={setEditRole} />
                           </div>
                           <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
                           <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">

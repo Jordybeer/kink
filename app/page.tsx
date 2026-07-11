@@ -5,7 +5,8 @@ import Sheet from "@/components/ui/Sheet";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
+import { EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
+import RolePicker from "@/components/RolePicker";
 import type { ExperienceLevel, Profile, ContractSnapshot } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
@@ -338,28 +339,8 @@ function HomeContent() {
             </div>
 
             <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
-            <div className="flex flex-col gap-2 mb-4" role="group" aria-label="Rol">
-              {ROLE_GROUPS.map((g) => (
-                <div key={g.label}>
-                  <p className="text-xs uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--text2)" }}>{g.label}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {g.roles.map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setRole(r)}
-                        aria-pressed={role === r}
-                        className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                        style={role === r
-                          ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                          : { color: "var(--text2)", borderColor: "var(--border)" }}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="mb-4">
+              <RolePicker value={role} onChange={setRole} />
             </div>
 
             <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
