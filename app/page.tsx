@@ -241,9 +241,15 @@ function HomeContent() {
         <div className="mb-6 pt-3 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>
           <div className="ks-gradient-rule mx-auto my-4" />
+          {/* The vow stays on the door; the house-state whisper sits beneath it. */}
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
-            {tagline}
+            Verken grenzen. Samen.
           </p>
+          {profiles.length > 0 && (
+            <p className="text-xs mt-1" style={{ color: "var(--text2)", opacity: 0.7 }}>
+              {tagline}
+            </p>
+          )}
         </div>
 
         {/* The salon: profiles take the stage first, admin waits by the door */}
