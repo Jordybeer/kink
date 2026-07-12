@@ -64,9 +64,32 @@ interface State {
 
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 
+// One auto-moment per profile per day, and only when something actually
+// changed — Verloop feeds itself without the owner performing rituals,
+// and the 30-cap becomes a rolling month instead of a burst of noise.
+const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
 export const useStore = create<State>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      function maybeAutoSnapshot(profileId: string) {
+        const s = get();
+        const profile = s.profiles.find((p) => p.id === profileId);
+        if (!profile) return;
+        const newest = s.profileSnapshots.find((snap) => snap.profileId === profileId);
+        if (newest) {
+          // Cheap gate first: a fresh moment (manual or auto) holds the door 24h.
+          if (Date.now() - newest.date < AUTO_SNAPSHOT_MIN_INTERVAL_MS) return;
+          // No-op guard: don't immortalise a day where nothing moved.
+          if (
+            JSON.stringify(newest.entries) === JSON.stringify(profile.entries) &&
+            JSON.stringify(newest.customKinks) === JSON.stringify(profile.customKinks)
+          ) return;
+        }
+        s.saveProfileSnapshot(profileId);
+      }
+
+      return {
       profiles: [],
       contracts: [],
       profileSnapshots: [],
@@ -166,6 +189,7 @@ export const useStore = create<State>()(
             };
           }),
         }));
+        maybeAutoSnapshot(profileId);
       },
 
       resetEntry(profileId, kinkId) {
@@ -177,6 +201,7 @@ export const useStore = create<State>()(
             return { ...p, updatedAt: Date.now(), entries };
           }),
         }));
+        maybeAutoSnapshot(profileId);
       },
 
       getEntry(profileId, kinkId) {
@@ -197,6 +222,7 @@ export const useStore = create<State>()(
                 }
           ),
         }));
+        maybeAutoSnapshot(profileId);
       },
 
       removeCustomKink(profileId, kinkId) {
@@ -211,6 +237,7 @@ export const useStore = create<State>()(
                 }
           ),
         }));
+        maybeAutoSnapshot(profileId);
       },
 
       saveContract(snapshot) {
@@ -300,6 +327,11 @@ export const useStore = create<State>()(
             scenes: s.scenes.map((sc) => sc.id === id ? { ...sc, status: "completed" as const, aftercare, updatedAt: Date.now() } : sc),
           };
         });
+        const scene = get().scenes.find((sc) => sc.id === id);
+        if (scene) {
+          maybeAutoSnapshot(scene.profileAId);
+          maybeAutoSnapshot(scene.profileBId);
+        }
       },
 
       completeOnboarding() {
@@ -349,7 +381,8 @@ export const useStore = create<State>()(
       disableBiometric() {
         set({ biometricEnabled: false, biometricCredentialId: null });
       },
-    }),
+      };
+    },
     {
       name: "kink-profiles",
       partialize: (state) => ({
