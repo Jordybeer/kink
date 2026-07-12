@@ -6,12 +6,14 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
 import PageShell from "@/components/PageShell";
+import EmptyState from "@/components/EmptyState";
+import { Play, Trash, FilmSlate } from "@phosphor-icons/react";
 import type { SceneRecord } from "@/types";
 
 const TRAFFIC = {
-  green: { emoji: "🟢", label: "Geweldig",    color: "var(--yes)"     },
-  amber: { emoji: "🟡", label: "Goed, maar…", color: "var(--maybe)"   },
-  red:   { emoji: "🔴", label: "Zwaar",        color: "var(--hard-no)" },
+  green: { label: "Geweldig",    color: "var(--yes)"     },
+  amber: { label: "Goed, maar…", color: "var(--maybe)"   },
+  red:   { label: "Zwaar",        color: "var(--hard-no)" },
 };
 
 function intensityCounts(items: SceneRecord["items"]) {
@@ -49,7 +51,7 @@ function SceneCard({
           className="flex items-center gap-2.5 px-4 py-2.5"
           style={{ background: `color-mix(in srgb, ${traffic.color} 8%, transparent)`, borderBottom: "1px solid var(--border)" }}
         >
-          <span className="text-lg" aria-hidden="true">{traffic.emoji}</span>
+          <span className="w-2.5 h-2.5 rounded-full flex-none" style={{ background: traffic.color }} aria-hidden="true" />
           <span className="text-xs font-semibold" style={{ color: traffic.color }}>{traffic.label}</span>
           <span className="text-xs ml-auto" style={{ color: "var(--text2)" }}>{date}</span>
         </div>
@@ -103,10 +105,10 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring"
+                className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring inline-flex items-center justify-center gap-1.5"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
-                ▶ Spelen
+                <Play size={12} weight="fill" aria-hidden="true" /> Spelen
               </button>
               <button
                 onClick={() => onAftercare(scene.id)}
@@ -123,7 +125,7 @@ function SceneCard({
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
             aria-label="Scène verwijderen"
           >
-            🗑
+            <Trash size={14} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -131,9 +133,15 @@ function SceneCard({
   );
 }
 
-function EmptySection({ label }: { label: string }) {
+const SECTION_INVITES: Record<string, string> = {
+  planned:   "Niets gepland — kies een moment en zet het vast.",
+  drafts:    "Geen concepten — half afgemaakte ideeën wachten hier.",
+  completed: "Nog niets afgerond — na het spelen leeft de scène hier verder.",
+};
+
+function EmptySection({ invite }: { invite: string }) {
   return (
-    <p className="text-sm text-center py-6" style={{ color: "var(--text2)" }}>Nog geen {label.toLowerCase()}</p>
+    <p className="text-sm text-center py-6" style={{ color: "var(--text2)" }}>{invite}</p>
   );
 }
 
@@ -156,16 +164,29 @@ export default function ScenesPage() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-4xl">
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-end justify-between mb-5">
+        <div>
+          <h1 className="text-2xl" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>Scènes</h1>
+          <p className="text-xs uppercase tracking-[0.22em] mt-1" style={{ color: "var(--text2)" }}>gepland · gespeeld · onthouden</p>
+        </div>
         <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
       </div>
 
+      {scenes.length === 0 ? (
+        <EmptyState
+          icon={FilmSlate}
+          title="Nog geen scènes"
+          message="Plan je eerste scène en bewaar wat jullie samen willen proberen."
+          ctaHref="/scene"
+          ctaLabel="Plan een scène"
+        />
+      ) : (
       <div className="flex flex-col gap-8">
         {sections.map(({ key, label, items }) => (
           <section key={key}>
             <h2 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>{label}</h2>
             {items.length === 0 ? (
-              <EmptySection label={label} />
+              <EmptySection invite={SECTION_INVITES[key]} />
             ) : (
               <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
                 {items.map((scene) => (
@@ -181,6 +202,7 @@ export default function ScenesPage() {
           </section>
         ))}
       </div>
+      )}
 
       {aftercareTarget && (
         <AftercareSheet

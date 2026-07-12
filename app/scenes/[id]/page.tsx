@@ -2,7 +2,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { MagnifyingGlassMinus } from "@phosphor-icons/react";
+import { MagnifyingGlassMinus, Play } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
@@ -213,8 +213,8 @@ export default function SceneDetailPage() {
       {/* Actions */}
       <div className="flex flex-col gap-4 mt-2">
         {scene.status !== "completed" && (
-          <Link href={`/scene?id=${scene.id}`} className="btn-accent focus-ring w-full text-center">
-            ▶ Spelen
+          <Link href={`/scene?id=${scene.id}`} className="btn-accent focus-ring w-full text-center inline-flex items-center justify-center gap-1.5">
+            <Play size={13} weight="fill" aria-hidden="true" /> Spelen
           </Link>
         )}
 
