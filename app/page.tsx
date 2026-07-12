@@ -293,7 +293,7 @@ function HomeContent() {
             {parentCandidates.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
-                <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
+                <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"

@@ -478,7 +478,7 @@ function ComparePage() {
           />
         </div>
         {samePairError && (
-          <p className="text-xs mt-2 px-1" style={{ color: "var(--conflict)" }}>
+          <p className="text-sm mt-2 px-1" style={{ color: "var(--conflict)" }}>
             Kies twee verschillende profielen om te vergelijken.
           </p>
         )}

@@ -703,7 +703,7 @@ export default function ProfilePage({ params }: Props) {
                 className="focus-ring w-full text-sm rounded-lg border px-3 py-2 placeholder-[color:var(--text2)] focus:outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
               />
-              <p className="text-xs mt-2 text-center" style={{ color: "var(--text2)" }}>
+              <p className="text-sm mt-2 text-center" style={{ color: "var(--text2)" }}>
                 🔒 Geïmporteerd profiel — delen is uitgeschakeld
               </p>
             </div>

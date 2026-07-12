@@ -121,7 +121,7 @@ export default function SceneDetailPage() {
                 </div>
               ) : (
                 <div className="px-4 py-3">
-                  <p className="text-xs" style={{ color: "var(--text2)" }}>Wat werkte goed — <em>niet ingevuld</em></p>
+                  <p className="text-sm" style={{ color: "var(--text2)" }}>Wat werkte goed — <em>niet ingevuld</em></p>
                 </div>
               )}
 
@@ -132,7 +132,7 @@ export default function SceneDetailPage() {
                 </div>
               ) : (
                 <div className="px-4 py-3">
-                  <p className="text-xs" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer — <em>niet ingevuld</em></p>
+                  <p className="text-sm" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer — <em>niet ingevuld</em></p>
                 </div>
               )}
             </div>

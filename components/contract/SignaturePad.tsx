@@ -167,7 +167,7 @@ export default function SignaturePad({
           Veld wissen
         </button>
       </div>
-      <div className="text-xs text-center" style={{ color: "var(--text2)" }}>
+      <div className="text-sm text-center" style={{ color: "var(--text2)" }}>
         Teken hier met vinger of muis
       </div>
 
@@ -212,7 +212,7 @@ export default function SignaturePad({
               label={label}
               sourceRef={canvasRef}
             />
-            <p className="text-xs text-center mt-2" style={{ color: "var(--text2)" }}>
+            <p className="text-sm text-center mt-2" style={{ color: "var(--text2)" }}>
               Teken hier met vinger of muis
             </p>
             <div className="flex items-center justify-between mt-4">

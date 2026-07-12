@@ -448,7 +448,7 @@ function ContractPage() {
         <h2 className="text-sm mb-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
           Echte namen <span style={{ opacity: 0.6, fontStyle: "normal" }}>(optioneel)</span>
         </h2>
-        <p className="text-xs mb-4" style={{ color: "var(--text2)" }}>
+        <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>
           Beide velden samen invullen of beide leeg laten. Bij invullen wordt het verbond formeler geformuleerd en verschijnen de echte namen naast de nicknames onder de handtekening.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

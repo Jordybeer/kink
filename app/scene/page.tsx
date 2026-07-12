@@ -657,7 +657,7 @@ function ScenePage() {
                 </svg>
               </div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Lege setlist</p>
-              <p className="text-xs" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
+              <p className="text-sm" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
             </div>
           ) : (
             <div>

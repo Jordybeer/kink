@@ -37,7 +37,7 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
               <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: STATUS_VAR[s] }} aria-hidden="true" />
               <div className="flex-1">
                 <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{label}</p>
-                <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>{desc}</p>
+                <p className="text-sm leading-snug" style={{ color: "var(--text2)" }}>{desc}</p>
               </div>
             </li>
           ))}
@@ -45,13 +45,13 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
             <Star size={12} weight="fill" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
-              <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>
+              <p className="text-sm leading-snug" style={{ color: "var(--text2)" }}>
                 Los van je oordeel: markeer met de ster wat je wil verkennen. Kan naast elke keuze bestaan — een ster is geen ja.
               </p>
             </div>
           </li>
         </ul>
-        <p className="text-xs italic mt-4" style={{ color: "var(--text2)" }}>
+        <p className="text-sm italic mt-4" style={{ color: "var(--text2)" }}>
           Tip: tik nogmaals op een actieve knop om hem uit te zetten.
         </p>
       </div>
