@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+// 390 is the Pixel-ish default; 375 is the smallest phone the house dresses
+// for — every overflow guard runs at both so the corset never pinches.
+const MOBILE_VIEWPORTS = [
+  { width: 390, height: 844, label: "390px" },
+  { width: 375, height: 667, label: "375px" },
+] as const;
+
 test.describe("UI audit", () => {
 
   test("home page — no overflow on any axis, screenshot", async ({ page }) => {
@@ -40,32 +47,34 @@ test.describe("UI audit", () => {
     expect(xOverflow).toBe(false);
   });
 
-  test("mobile viewport — home page no overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 14
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    await page.screenshot({ path: "/tmp/pw-home-mobile.png", fullPage: true });
-    const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
-    expect(xOverflow).toBe(false);
-  });
+  for (const vp of MOBILE_VIEWPORTS) {
+    test(`mobile viewport ${vp.label} — home page no overflow`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      await page.screenshot({ path: `/tmp/pw-home-mobile-${vp.width}.png`, fullPage: true });
+      const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
+      expect(xOverflow).toBe(false);
+    });
 
-  test("mobile viewport — compare page no overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/compare");
-    await page.waitForLoadState("networkidle");
-    await page.screenshot({ path: "/tmp/pw-compare-mobile.png", fullPage: true });
-    const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
-    expect(xOverflow).toBe(false);
-  });
+    test(`mobile viewport ${vp.label} — compare page no overflow`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto("/compare");
+      await page.waitForLoadState("networkidle");
+      await page.screenshot({ path: `/tmp/pw-compare-mobile-${vp.width}.png`, fullPage: true });
+      const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
+      expect(xOverflow).toBe(false);
+    });
 
-  test("mobile viewport — contract page no overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/contract");
-    await page.waitForLoadState("networkidle");
-    await page.screenshot({ path: "/tmp/pw-contract-mobile.png", fullPage: true });
-    const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
-    expect(xOverflow).toBe(false);
-  });
+    test(`mobile viewport ${vp.label} — contract page no overflow`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto("/contract");
+      await page.waitForLoadState("networkidle");
+      await page.screenshot({ path: `/tmp/pw-contract-mobile-${vp.width}.png`, fullPage: true });
+      const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
+      expect(xOverflow).toBe(false);
+    });
+  }
 
   test("seed profile then visit profile page", async ({ page }) => {
     // Seed localStorage with a test profile
@@ -97,9 +106,9 @@ test.describe("UI audit", () => {
     await page.waitForLoadState("networkidle");
     await page.screenshot({ path: "/tmp/pw-profile.png", fullPage: true });
 
-    // Check key elements are visible
-    const heroVisible = await page.locator("text=Playwright").isVisible();
-    expect(heroVisible).toBe(true);
+    // Check key elements are visible — the name wears three collars now
+    // (nav pill, sr-only h1, hero h2), so aim at the hero heading precisely.
+    await expect(page.locator("h2").filter({ hasText: "Playwright" }).first()).toBeVisible();
 
     // Check Bewerken tab is visible in the profile hero area
     const bewerkenTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
