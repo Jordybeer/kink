@@ -94,6 +94,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               lineHeight: 1.1,
               letterSpacing: "-0.01em",
               color: "var(--text)",
+              // Italic serif overhangs its box — pad the clip so tails survive the truncate.
+              paddingRight: "0.15em",
+              paddingBottom: "0.15em",
+              marginBottom: "-0.15em",
             }}
           >
             {profile.name}
