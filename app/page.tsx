@@ -129,19 +129,21 @@ function HomeContent() {
     dismissInstallPrompt();
   }
 
-  function handleCreate(e: React.FormEvent) {
+  // Returns whether the profile was actually born — the form only closes on obedience.
+  function handleCreate(e: React.FormEvent): boolean {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) return false;
     if (parentName === null) {
       const duplicate = profiles.some(
         (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
       );
-      if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return; }
+      if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return false; }
     }
     setNameError(null);
     const id = createProfile(name.trim(), role, experienceLevel, relationshipStatus || undefined);
     setName(""); setRelationshipStatus(""); setParentName(null);
     router.push(`/profile/${id}`);
+    return true;
   }
 
   function promptDelete(id: string) {
@@ -278,7 +280,7 @@ function HomeContent() {
 
         {(profiles.length === 0 || formOpen) && (
           <form
-            onSubmit={(e) => { handleCreate(e); setFormOpen(false); }}
+            onSubmit={(e) => { if (handleCreate(e)) setFormOpen(false); }}
             className="relative overflow-hidden rounded-xl p-5 mb-8"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >

@@ -31,6 +31,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   function handleClose() { reset(); onClose(); }
 
   async function handleExport() {
+    if (loading) return; // one export at a time — no double-dipping while the crypto works
     if (pw.length < 8) { setPwError("Wachtwoord moet minstens 8 tekens zijn."); return; }
     if (pw !== pwConfirm) { setPwError("Wachtwoorden komen niet overeen."); return; }
     setLoading(true);
