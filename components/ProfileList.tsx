@@ -143,8 +143,9 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                           <div className="mb-3">
                             <RolePicker value={editRole} onChange={setEditRole} />
                           </div>
-                          <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
-                          <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
+                          <fieldset className="mb-4 border-0 p-0 m-0">
+                          <legend className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Ervaringsniveau</legend>
+                          <div className="grid grid-cols-4 gap-1.5">
                             {EXPERIENCE_LEVELS.map((l) => (
                               <button
                                 key={l.value}
@@ -163,8 +164,10 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                               </button>
                             ))}
                           </div>
-                          <p className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Relatiestatus <span className="opacity-60">(optioneel)</span></p>
-                          <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Relatiestatus">
+                          </fieldset>
+                          <fieldset className="mb-4 border-0 p-0 m-0">
+                          <legend className="text-xs mb-1.5" style={{ color: "var(--text2)" }}>Relatiestatus <span className="opacity-60">(optioneel)</span></legend>
+                          <div className="flex flex-wrap gap-1.5">
                             {RELATIONSHIP_STATUSES.map((s) => (
                               <button
                                 key={s}
@@ -182,6 +185,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                               </button>
                             ))}
                           </div>
+                          </fieldset>
                           <div className="flex gap-2">
                             <button
                               onClick={saveEdit}

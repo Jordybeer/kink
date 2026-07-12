@@ -2,6 +2,7 @@
 import { CaretRight, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry } from "@/types";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
+import StatusGlyph from "./StatusGlyph";
 
 interface Props {
   kink: Kink;
@@ -32,13 +33,14 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
       )}
       {s ? (
         <span
-          className="flex-none text-xs px-2 py-0.5 rounded-full border whitespace-nowrap min-w-[5.5rem] text-center"
+          className="flex-none text-xs px-2 py-0.5 rounded-full border whitespace-nowrap min-w-[5.5rem] text-center inline-flex items-center justify-center gap-1"
           style={
             s === "hard_no"
               ? { color: colour, borderColor: colour, borderStyle: "dashed" }
               : { color: colour, borderColor: `color-mix(in srgb, ${colour} 45%, transparent)`, background: `color-mix(in srgb, ${colour} 12%, transparent)` }
           }
         >
+          <StatusGlyph status={s} />
           {STATUS_LABEL[s]}
         </span>
       ) : (

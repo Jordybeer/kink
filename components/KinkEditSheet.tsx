@@ -1,6 +1,7 @@
 "use client";
 import { Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
+import { STATUS_LABEL } from "@/lib/statusLabels";
 import Sheet, { SheetContent } from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
 import ClampText from "./ui/ClampText";
@@ -41,6 +42,12 @@ export default function KinkEditSheet({
           <ClampText text={kink.description} className="text-sm mb-4" style={{ color: "var(--text2)" }} />
         )}
         {!kink?.description && <div className="mb-3" />}
+
+        {/* Screen readers hear the verdict change — the deck already
+            announces; the edit sheet was silent until now. */}
+        <div aria-live="polite" className="sr-only">
+          {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
+        </div>
 
         <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
 

@@ -11,6 +11,7 @@ import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import DiscussedToggle from "@/components/DiscussedToggle";
+import StatusGlyph from "@/components/StatusGlyph";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 
 const COLOUR_A = "var(--accent)";
@@ -23,7 +24,7 @@ function StatusBadge({ status }: { status: KinkStatus }) {
   const colour = STATUS_VAR[status];
   return (
     <span
-      className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap"
+      className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center gap-1"
       style={{
         color: colour,
         borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
@@ -31,6 +32,7 @@ function StatusBadge({ status }: { status: KinkStatus }) {
         borderStyle: status === "hard_no" ? "dashed" : "solid",
       }}
     >
+      <StatusGlyph status={status} />
       {STATUS_LABEL[status]}
     </span>
   );
