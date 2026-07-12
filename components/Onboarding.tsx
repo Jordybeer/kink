@@ -327,7 +327,7 @@ function Step2Data() {
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
         <motion.div variants={childV} style={CARD}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>De app</div>
-          Geen account, geen server, geen tracking. Alles staat in je browser en nergens anders.
+          Geen account, geen server, geen tracking. Eenmaal op je beginscherm werkt de app volledig offline.
         </motion.div>
         <motion.div variants={childV} style={CARD}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Live sessie</div>
