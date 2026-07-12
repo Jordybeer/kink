@@ -56,6 +56,13 @@ First attempt reverted (PR #219 closed). Rules in `memory.md` and `corrections.m
 
 Unscoped ideas, grouped by theme. Promote to a phase before working on any of them. Pruned + verified against live code 2026-07-08: DNA-bar items dropped (the bar was executed in June), and these were confirmed already shipped — TopNav pill tap feedback (`MotionLink` + `TAP_SPRING`), status active glow (`.status-*` classes + glow keyframes), the 40px profile pencil (gone), vibe badge items (badge no longer exists), reduced-motion scroll guard (blur is static now; `useMotionSafe` gates motion).
 
+### Nine-Tails afterglow (added 2026-07-12, from the sweep itself)
+- **e2e fixture rot guard**: `buildStore` still seeds persist `version: 8` — the migration wipes any seeded `scenes` (pre-v10 payloads get `scenes = []`). Bit the Phase 9 proof shots. Bump the fixture to v15 and teach `buildStore` extras to carry `scenes`/`contracts` so future specs don't rediscover this.
+- **TRAFFIC map deduped**: the green/amber/red label+colour map lives twice (`app/scenes/page.tsx` and `app/scenes/[id]/page.tsx`). One home in `lib/` next to the status vocabulary.
+- **ProfileSelect accent prop**: the old timeline selects wore their line colours on the border; the house dropdown lost that. An optional `accent` prop would restore the A/B colour echo without forking the component.
+- **CI e2e graduation**: the advisory job gets its first real runs on PR #248 — if it stays green there, flip `continue-on-error` off in a one-line follow-up.
+- **Rare-state e2e for the unswept two**: session "connected" and AppLock never appear in screenshot sweeps (need a live peer / PIN hash). A mocked-signaling fixture would close the last visual blind spots.
+
 ### Navigation polish (TopNav)
 - **Bottom-anchored variant for reach**: same pills, floating bottom-right on phones — the biggest open tradeoff from killing the bottom bar.
 - **Hide-on-scroll-down / reveal-on-scroll-up**: auto-tuck the header on long kink lists.
