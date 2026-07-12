@@ -592,7 +592,7 @@ export default function ProfilePage({ params }: Props) {
                                 </span>
                               )}
                               <span
-                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none"
+                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] text-center"
                                 style={{
                                   color: STATUS_VAR[s],
                                   borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
@@ -667,7 +667,7 @@ export default function ProfilePage({ params }: Props) {
                               </span>
                             )}
                             <span
-                              className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none"
+                              className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] text-center"
                               style={{
                                 color: STATUS_VAR[s],
                                 borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
