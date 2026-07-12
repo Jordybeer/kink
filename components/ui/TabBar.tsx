@@ -45,7 +45,7 @@ export default function TabBar<T extends string>({ tabs, value, onChange }: Prop
           >
             {tab.icon}
 
-            <span className="text-[10px] font-semibold leading-none">{tab.label}</span>
+            <span className="text-[11px] font-semibold leading-none">{tab.label}</span>
           </button>
         );
       })}

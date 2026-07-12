@@ -1,5 +1,7 @@
 import type { Profile, KinkEntry, KinkStatus, CustomKink } from "@/types";
 import { KINKS } from "@/lib/kinks";
+import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
+import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/sessionImport";
 
 // ── v1 encoding (full JSON, used for copy-link) ──────────────────────────────
 
@@ -15,8 +17,9 @@ function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
 }
 
 export function encodeProfile(profile: Profile, opts?: { includeFetLife?: boolean }): string {
+  // privateNote is called private for a reason — it never rides a share link.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { avatarDataUrl, fetLifeUsername, ...rest } = profile;
+  const { avatarDataUrl, fetLifeUsername, privateNote, ...rest } = profile;
 
   const compactedEntries: Record<string, unknown> = {};
   for (const [id, entry] of Object.entries(rest.entries)) {
@@ -72,6 +75,7 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
+  if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
 
   return toBase64Url(JSON.stringify(payload));
 }
@@ -97,26 +101,46 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
   }
 
   const customKinks: CustomKink[] = [];
-  for (const [id, name, sc, desireNum, exp] of (p.ck ?? [])) {
-    customKinks.push({ id, name });
+  for (const row of (Array.isArray(p.ck) ? p.ck : [])) {
+    if (customKinks.length >= MAX_CUSTOM_KINKS) break;
+    if (!Array.isArray(row)) continue;
+    const [id, name, sc, desireNum, exp] = row;
+    if (typeof id !== "string" || typeof name !== "string") continue;
+    const cleanId = clamp(id, MAX_KINK_ID_LEN);
+    const cleanName = clamp(name, MAX_KINK_NAME_LEN);
+    if (!cleanId || !cleanName) continue;
+    customKinks.push({ id: cleanId, name: cleanName });
     const status = S_DEC[sc] ?? null;
-    const desire = desireNum || null;
+    const desire = typeof desireNum === "number" && Number.isFinite(desireNum) && desireNum
+      ? Math.min(5, Math.max(0, Math.round(desireNum))) : null;
     const experienced = exp === true ? true : exp === false ? false : null;
     if (status !== null || desire !== null || experienced !== null) {
-      entries[id] = { status, desire, experienced, comment: "" };
+      entries[cleanId] = { status, desire, experienced, comment: "" };
     }
   }
 
+  // The v2 wire fields get the same frisking as every other door — strings
+  // clamped, enums enforced, scores capped. A QR code is still a stranger.
+  if (typeof p.id !== "string" || typeof p.n !== "string") {
+    throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+  }
+  const id = clamp(p.id, MAX_ID_LEN);
+  const name = clamp(p.n, MAX_NAME_LEN);
+  if (!id || !name) throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+  const bdsmtestScores = sanitizeBdsmtestScores(p.bs);
+
   return {
-    id: p.id,
-    name: p.n,
-    role: p.r,
-    experienceLevel: p.e,
-    ...(p.rs ? { relationshipStatus: p.rs } : {}),
-    ...(p.fl ? { fetLifeUsername: p.fl } : {}),
+    id,
+    name,
+    role: typeof p.r === "string" ? clamp(p.r, MAX_ROLE_LEN) : "",
+    experienceLevel: typeof p.e === "string" && (VALID_LEVELS as readonly string[]).includes(p.e)
+      ? (p.e as Profile["experienceLevel"]) : "beginner",
+    ...(typeof p.rs === "string" && p.rs.trim() ? { relationshipStatus: clamp(p.rs, 200) } : {}),
+    ...(typeof p.fl === "string" && p.fl.trim() ? { fetLifeUsername: clamp(p.fl, 200) } : {}),
+    ...(bdsmtestScores ? { bdsmtestScores } : {}),
     customKinks,
-    createdAt: p.ca,
-    updatedAt: p.ua,
+    createdAt: typeof p.ca === "number" && Number.isFinite(p.ca) ? p.ca : Date.now(),
+    updatedAt: typeof p.ua === "number" && Number.isFinite(p.ua) ? p.ua : Date.now(),
     entries,
     isImported: true,
   };
@@ -130,14 +154,13 @@ export function decodeProfileCompact(encoded: string): Profile {
 export function decodeAny(encoded: string): Profile {
   const parsed = JSON.parse(fromBase64Url(encoded));
   if (parsed.v === 2) return decodeProfileCompactFromParsed(parsed);
-  if (
-    typeof parsed.id !== "string" ||
-    typeof parsed.name !== "string" ||
-    parsed.entries === null || typeof parsed.entries !== "object"
-  ) {
+  // v1 payloads used to stroll in on a bare TypeScript cast — now the full
+  // bouncer checks every field before the URL's word becomes store truth.
+  const clean = sanitizeProfileFull(parsed);
+  if (!clean) {
     throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
   }
-  return { ...(parsed as Profile), isImported: true };
+  return { ...clean, isImported: true };
 }
 
 // ── shared UTF-8-safe base64 helpers ─────────────────────────────────────────

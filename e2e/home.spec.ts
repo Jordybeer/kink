@@ -54,7 +54,7 @@ test.describe("Profiel aanmaken via UI", () => {
     await expect(nameInput).toBeVisible({ timeout: 5000 });
     await nameInput.fill("TestPersoon");
 
-    // Submit button text is "Sla jezelf vast →"
+    // Submit button text is "Sla jezelf vast"
     const saveBtn = page.locator("button[type='submit']").first();
     await saveBtn.scrollIntoViewIfNeeded();
     await saveBtn.click({ force: true });

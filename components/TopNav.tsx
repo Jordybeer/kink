@@ -3,16 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Anchor, ChevronLeft, Clapperboard, Settings, User, Zap } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Anchor, CaretLeft, FilmSlate, GearSix, User, Lightning } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 
 const MotionLink = motion.create(Link);
 
-const HUB_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: "/compare", label: "Vergelijk", icon: Zap },
-  { href: "/scenes",  label: "Scènes",   icon: Clapperboard },
+const HUB_ITEMS: { href: string; label: string; icon: Icon }[] = [
+  { href: "/compare", label: "Vergelijk", icon: Lightning },
+  { href: "/scenes",  label: "Scènes",   icon: FilmSlate },
   { href: "/session", label: "Live",     icon: Anchor },
 ];
 
@@ -52,15 +52,15 @@ export default function TopNav() {
   } as const;
 
   if (isHub) {
-    const items: { href: string; label: string; icon: LucideIcon; forceActive?: boolean }[] = [
+    const items: { href: string; label: string; icon: Icon; forceActive?: boolean }[] = [
       ...HUB_ITEMS,
       { href: profileHref, label: "Profiel", icon: User, forceActive: profileActive },
     ];
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="max-w-2xl mx-auto px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center" aria-label="Hoofdnavigatie">
+        <nav className="max-w-2xl mx-auto px-3 h-14 grid grid-cols-[1fr_auto_1fr] items-center" aria-label="Hoofdnavigatie">
           <div />
-          <div className="pwa-hidden flex items-center justify-center gap-1">
+          <div className="pwa-hidden flex items-center justify-center gap-0.5 sm:gap-1">
             {items.map(({ href, label, icon: Icon, forceActive }) => {
               const active = forceActive !== undefined ? forceActive : (path === href || path.startsWith(href + "/"));
               return (
@@ -68,7 +68,7 @@ export default function TopNav() {
                   key={label}
                   href={href}
                   whileTap={TAP_SPRING}
-                  className="focus-ring inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-xs transition-colors"
+                  className="focus-ring inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-1.5 sm:px-2 h-8 text-xs whitespace-nowrap transition-colors"
                   style={{ color: active ? "var(--text)" : "var(--text2)", fontWeight: active ? 700 : 500 }}
                   aria-label={label}
                   aria-current={active ? "page" : undefined}
@@ -85,10 +85,10 @@ export default function TopNav() {
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              className="focus-ring flex items-center justify-center rounded-lg"
-              style={{ width: 44, height: 44, color: "var(--text2)" }}
+              className="focus-ring flex items-center justify-center h-10 w-10 rounded-full"
+              style={{ color: "var(--text2)" }}
             >
-              <Settings size={18} aria-hidden="true" />
+              <GearSix size={18} aria-hidden="true" />
             </button>
           </div>
         </nav>
@@ -111,34 +111,37 @@ export default function TopNav() {
           <MotionLink
             href={back}
             whileTap={TAP_SPRING}
-            className="focus-ring -ml-1 flex items-center justify-center h-9 w-9 rounded-full"
+            className="focus-ring -ml-1 flex items-center justify-center h-10 w-10 rounded-full"
             style={{ color: "var(--text2)" }}
             aria-label="Terug"
           >
-            <ChevronLeft size={20} />
+            <CaretLeft size={18} />
           </MotionLink>
         </div>
-        <span className="font-bold text-base truncate text-center px-2">
+        <span
+          className="text-base italic truncate text-center px-2"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+        >
           {title}
         </span>
         <div className="flex items-center justify-end gap-2">
           {profileIdFromPath && (
             <Link
               href={`/compare?a=${profileIdFromPath}`}
-              className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg"
+              className="pwa-hidden focus-ring flex items-center gap-1 text-xs font-medium px-3 h-8 rounded-full"
               style={{ color: "var(--accent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
             >
-              <Zap size={13} />
+              <Lightning size={15} />
               Vergelijk
             </Link>
           )}
           {profileIdFromPath && (
             <Link
               href="/scene"
-              className="focus-ring flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg"
+              className="focus-ring flex items-center gap-1 text-xs font-medium px-3 h-8 rounded-full"
               style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
             >
-              <Clapperboard size={13} />
+              <FilmSlate size={15} />
               Scène
             </Link>
           )}

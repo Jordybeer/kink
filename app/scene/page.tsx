@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { motion } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -7,9 +9,10 @@ import { KINKS } from "@/lib/kinks";
 import type { Profile, SceneItem, ContractSnapshot } from "@/types";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
+import ProfileSelect from "@/components/ProfileSelect";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { CaretUp, CaretDown } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 
 function uid() {
@@ -31,125 +34,6 @@ function contractForPair(
   );
 }
 
-// ─── Profile select (custom animated dropdown) ───────────────────────────────
-
-function ProfileSelect({
-  profiles,
-  value,
-  onChange,
-  placeholder,
-}: {
-  profiles: Profile[];
-  value: string;
-  onChange: (id: string) => void;
-  placeholder: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = profiles.find((p) => p.id === value);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  return (
-    <div ref={ref} style={{ position: "relative", flex: 1, minWidth: 0 }}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full focus-ring"
-        style={{
-          background: "var(--surface2)",
-          border: `1px solid ${open ? "var(--accent)" : "var(--border)"}`,
-          borderRadius: 10,
-          padding: "10px 12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
-          color: selected ? "var(--text)" : "var(--text2)",
-          fontSize: 14,
-          minHeight: 44,
-          width: "100%",
-          transition: "border-color 150ms ease",
-        }}
-      >
-        <span className="truncate">{selected?.name ?? placeholder}</span>
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
-          fill="none"
-          style={{
-            flexShrink: 0,
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 200ms ease",
-            color: "var(--text2)",
-          }}
-          aria-hidden="true"
-        >
-          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-
-      <div
-        style={{
-          position: "absolute",
-          top: "calc(100% + 4px)",
-          left: 0,
-          right: 0,
-          background: "var(--surface2)",
-          border: "1px solid var(--border-accent)",
-          borderRadius: 10,
-          overflow: "hidden",
-          zIndex: 10,
-          maxHeight: open ? 220 : 0,
-          opacity: open ? 1 : 0,
-          transform: open ? "scaleY(1) translateY(0)" : "scaleY(0.9) translateY(-4px)",
-          transformOrigin: "top",
-          transition: "max-height 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease, transform 180ms ease",
-          pointerEvents: open ? "auto" : "none",
-        }}
-      >
-        <div style={{ overflowY: "auto", maxHeight: 220 }}>
-          {profiles.length === 0 ? (
-            <p style={{ padding: "10px 12px", fontSize: 13, color: "var(--text2)" }}>
-              Geen profielen
-            </p>
-          ) : (
-            profiles.map((p, i) => (
-              <button
-                key={p.id}
-                onClick={() => { onChange(p.id); setOpen(false); }}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  textAlign: "left",
-                  fontSize: 14,
-                  color: p.id === value ? "var(--accent)" : "var(--text)",
-                  background: p.id === value
-                    ? "color-mix(in srgb, var(--accent) 8%, transparent)"
-                    : "transparent",
-                  borderBottom: i < profiles.length - 1 ? "1px solid var(--border)" : "none",
-                  display: "block",
-                  minHeight: 44,
-                  transition: "background 120ms ease",
-                }}
-              >
-                {p.name}
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Contract gate ────────────────────────────────────────────────────────────
 
 function ContractGate({
@@ -164,14 +48,9 @@ function ContractGate({
   contracts: ContractSnapshot[];
 }) {
   const router = useRouter();
-  const [entered, setEntered] = useState(false);
+  const t = useMotionSafe();
   const [selectedA, setSelectedA] = useState(initialA);
   const [selectedB, setSelectedB] = useState(initialB);
-
-  useEffect(() => {
-    const t = requestAnimationFrame(() => setEntered(true));
-    return () => cancelAnimationFrame(t);
-  }, []);
 
   const canProceed = selectedA && selectedB && selectedA !== selectedB;
   const existingContract = canProceed ? contractForPair(contracts, selectedA, selectedB) : undefined;
@@ -194,7 +73,10 @@ function ContractGate({
         WebkitBackdropFilter: "blur(20px) saturate(0.6)",
       }}
     >
-      <div
+      <motion.div
+        initial={{ scale: 0.92, y: 20, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        transition={t.modal}
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
@@ -202,12 +84,6 @@ function ContractGate({
           maxWidth: 440,
           width: "100%",
           padding: "28px 24px 24px",
-          transform: entered
-            ? "scale(1) translateY(0)"
-            : "scale(0.92) translateY(20px)",
-          opacity: entered ? 1 : 0,
-          transition:
-            "transform 320ms cubic-bezier(0.34,1.4,0.64,1), opacity 280ms ease",
         }}
       >
         {/* Lock icon */}
@@ -302,7 +178,7 @@ function ContractGate({
         >
           Terug
         </button>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -373,7 +249,8 @@ function SceneItemRow({
       }}
     >
       <div
-        style={{ width: 3, background: color, flexShrink: 0, transition: "background 120ms ease" }}
+        className="transition-colors"
+        style={{ width: 3, background: color, flexShrink: 0 }}
         aria-hidden="true"
       />
 
@@ -388,7 +265,7 @@ function SceneItemRow({
                 {item.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] px-1.5 py-0.5 rounded-full border"
+                    className="text-[11px] px-1.5 py-0.5 rounded-full border"
                     style={{ borderColor: "var(--border)", color: "var(--text2)" }}
                   >
                     {tag}
@@ -406,7 +283,7 @@ function SceneItemRow({
               className="focus-ring rounded-lg disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
-              <ChevronUp size={16} aria-hidden="true" />
+              <CaretUp size={16} aria-hidden="true" />
             </button>
             <button
               onClick={() => onMoveDown(index)}
@@ -415,7 +292,7 @@ function SceneItemRow({
               className="focus-ring rounded-lg disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
-              <ChevronDown size={16} aria-hidden="true" />
+              <CaretDown size={16} aria-hidden="true" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
@@ -439,10 +316,9 @@ function SceneItemRow({
                   key={v}
                   onClick={() => onUpdate(item.id, { intensity: v })}
                   aria-pressed={active}
-                  className="text-xs px-3 rounded-full border focus-ring"
+                  className="text-xs px-3 rounded-full border focus-ring transition-colors"
                   style={{
                     minHeight: 44,
-                    transition: "background 120ms ease, border-color 120ms ease, color 120ms ease",
                     background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
                     borderColor: active ? c : "var(--border)",
                     color: active ? c : "var(--text2)",
@@ -456,7 +332,7 @@ function SceneItemRow({
               onClick={() => setDetailsOpen((o) => !o)}
               aria-label={detailsOpen ? "Details verbergen" : "Duur & notitie"}
               aria-expanded={detailsOpen}
-              className="text-xs ml-auto focus-ring rounded px-2"
+              className="text-xs ml-auto focus-ring rounded-lg px-2"
               style={{ minHeight: 44, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
             >
               {detailsOpen ? "Minder" : "Details"}
@@ -493,9 +369,8 @@ function KinkChip({
     <button
       onClick={onAdd}
       disabled={added}
-      className="text-xs px-3 py-1.5 rounded-full border focus-ring disabled:opacity-40 flex items-center gap-1"
+      className="text-xs px-3 py-1.5 rounded-full border focus-ring disabled:opacity-40 flex items-center gap-1 transition-colors"
       style={{
-        transition: "background 120ms, border-color 120ms, color 120ms",
         background: added ? "transparent" : `color-mix(in srgb, ${color} 12%, transparent)`,
         borderColor: added ? "var(--border)" : `color-mix(in srgb, ${color} 45%, transparent)`,
         color: added ? "var(--text2)" : color,
@@ -698,7 +573,7 @@ function ScenePage() {
               value={sceneTitle}
               onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
-              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded font-bold"
+              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded-lg font-bold"
               style={{ color: "var(--text)" }}
             />
             {profileA && profileB && (
@@ -707,16 +582,19 @@ function ScenePage() {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-1.5 flex-none">
-            <input
-              type="date"
-              value={sceneDate}
-              onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
-              className="focus:outline-none focus-ring rounded-lg px-2"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark" }}
-            />
-            <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
-          </div>
+        </div>
+
+        {/* Date & time — their own row, so the title never gets elbowed
+            into "Val & N…" on a 375px screen */}
+        <div className="flex items-center gap-1.5 mb-3">
+          <input
+            type="date"
+            value={sceneDate}
+            onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
+            className="focus:outline-none focus-ring rounded-lg px-2 flex-1"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark", maxWidth: 180 }}
+          />
+          <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
         </div>
 
         {/* Profile hint */}
@@ -775,11 +653,11 @@ function ScenePage() {
                   <rect x="8" y="22" width="24" height="4" rx="2" fill="var(--text2)"/>
                   <rect x="8" y="32" width="20" height="4" rx="2" fill="var(--text2)"/>
                   <circle cx="38" cy="34" r="8" fill="var(--accent)" opacity="0.7"/>
-                  <path d="M35 34h6M38 31v6" stroke="#000" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M35 34h6M38 31v6" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Lege setlist</p>
-              <p className="text-xs" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
+              <p className="text-sm" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
             </div>
           ) : (
             <div>
@@ -812,11 +690,13 @@ function ScenePage() {
             </p>
           </div>
         )}
-        <div className="max-w-2xl mx-auto flex gap-2">
+        {/* Five controls never fit one 375px row — the manual-add pair takes
+            its own line on mobile and rejoins the bar from sm up */}
+        <div className="max-w-2xl mx-auto flex flex-wrap gap-2">
 
           {/* Manual add — hidden when completed */}
           {!isCompleted && (
-            <>
+            <div className="flex gap-2 w-full sm:w-auto sm:flex-1">
               <input
                 type="text"
                 value={newItemName}
@@ -834,14 +714,14 @@ function ScenePage() {
               >
                 +
               </button>
-            </>
+            </div>
           )}
 
           {/* PDF */}
           <button
             onClick={handleExport}
             disabled={items.length === 0}
-            className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-none"
+            className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 52, height: 44, padding: "0 12px" }}
             aria-label="Exporteer als PDF"
           >
@@ -853,7 +733,7 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
                 {savedStatus === "draft" ? "Concept ✓" : "Opslaan"}
@@ -861,7 +741,7 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
                 {savedStatus === "planned" ? "Gepland ✓" : "Plannen"}
@@ -903,7 +783,7 @@ function ScenePage() {
 
           {topKinks.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent2)" }}>Meest gebruikt</p>
+              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent2)" }}>Meest gebruikt</p>
               <div className="flex flex-wrap gap-2">
                 {topKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(k.name, k.id)} />
@@ -914,7 +794,7 @@ function ScenePage() {
 
           {mutualKinks.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--yes)" }}>Wederzijds</p>
+              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--yes)" }}>Wederzijds</p>
               <div className="flex flex-wrap gap-2">
                 {mutualKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(k.name, k.id)} />
@@ -925,7 +805,7 @@ function ScenePage() {
 
           {spanningKinks.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--no)" }}>Spanning</p>
+              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--no)" }}>Spanning</p>
               <div className="flex flex-wrap gap-2">
                 {spanningKinks.map((k) => (
                   <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(k.name, k.id)} />

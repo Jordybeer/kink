@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131c;
-  --surface2: #181824;
-  --surface3: #2c2c40;
-  --border: #2a2a3d;
+  --bg: #09080E;
+  --surface: #110F19;
+  --surface2: #16141F;
+  --surface3: #26222E;
+  --border: #221F2C;
   --scrim: rgba(0, 0, 0, 0.6);
   --scrim-strong: rgba(0, 0, 0, 0.92);
   --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
-  --border-accent: rgba(192, 132, 252, 0.25);
+  --border-accent: rgba(217, 70, 175, 0.25);
   --text: #ede8f5;
   --text2: #9d9ab8;
-  --accent: #c084fc;
-  --accent2: #f472b6;
-  --accent-glow: rgba(192, 132, 252, 0.15);
-  --on-accent: #000;
+  --accent: #D946AF;
+  --accent2: #D4527C;
+  --accent-glow: rgba(217, 70, 175, 0.18);
+  --on-accent: #09080E;
   --yes: #f97316;
   --willing: #10b981;
   --curious: #eab308;
@@ -60,10 +60,21 @@ html, body {
 .btn-accent {
   background: var(--accent);
   color: var(--on-accent);
-  border-radius: 0.75rem;
+  border-radius: 0.75rem; /* rounded-xl — the large-CTA radius, same as the sheet buttons */
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 700;
+}
+
+/* Native select, dressed for the room — OS chrome off, house caret on */
+.ks-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23ffffff' stroke-opacity='0.55' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 12px 8px;
+  padding-right: 2.4rem !important;
 }
 
 /* CSS accordion — grid-template-rows trick, no JS height measurement */
@@ -101,7 +112,7 @@ html, body {
 /* Settings cards — each feature gets its own glanceable block */
 .settings-card {
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: 12px;
   background: var(--surface2);
   padding: 1rem;
 }
@@ -112,7 +123,7 @@ html, body {
   width: 2.25rem;
   height: 2.25rem;
   flex: none;
-  border-radius: 0.75rem;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,6 +183,7 @@ html, body {
   --accent: #4ade80;
   --accent2: #34d399;
   --accent-glow: rgba(74, 222, 128, 0.18);
+  --on-accent: #0A0908;
 }
 
 /* Theme: Ledger — paper-at-night, seal-wax red, patinated brass.
@@ -204,6 +216,7 @@ html, body {
   --accent: #e5e5e5;
   --accent2: #a3a3a3;
   --accent-glow: rgba(255, 255, 255, 0.1);
+  --on-accent: #0A0908;
 }
 
 @keyframes ksFadeIn {
@@ -224,7 +237,7 @@ html, body {
 .ks-icon-pop { animation: ksIconPop 400ms cubic-bezier(0.34,1.56,0.64,1) both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
-/* Brand wordmark — Cormorant Garamond display, gradient letters, slow sheen sweep */
+/* Brand wordmark — Fraunces display, gradient letters, slow sheen sweep */
 .ks-wordmark {
   font-family: var(--font-display, Georgia, "Times New Roman", serif);
   font-weight: 400;

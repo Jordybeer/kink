@@ -26,7 +26,10 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",
-    reuseExistingServer: true,
+    // Local dev may reuse a running server; a gate-keeping run (CI=1) must
+    // own its own — a stale server once green-lit code that never ran
+    // (corrections.md 2026-07-11, the stale-server mirage).
+    reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },
 });

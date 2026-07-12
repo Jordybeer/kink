@@ -31,7 +31,7 @@ export default function QRModal({ profile, onClose }: Props) {
     const qrUrl = window.location.origin + "/?p=" + encodeProfileCompact(profile, { includeFetLife });
     setUrl(qrUrl);
     const css = getComputedStyle(document.documentElement);
-    const dark = css.getPropertyValue("--accent").trim() || "#c084fc";
+    const dark = css.getPropertyValue("--accent").trim() || "#D946AF";
     const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
     QRCode.toDataURL(qrUrl, {
       width: 280,
@@ -75,7 +75,7 @@ export default function QRModal({ profile, onClose }: Props) {
           />
         )}
 
-        <p className="text-[11px] text-center mb-1" style={{ color: "var(--text2)" }}>
+        <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
           Deelt statussen — notities en wensen blijven privé.
         </p>
 
@@ -98,7 +98,7 @@ export default function QRModal({ profile, onClose }: Props) {
             />
             <span style={{ color: "var(--text2)" }}>
               FetLife-link meesturen{" "}
-              <span className="text-[11px] opacity-60">({profile.fetLifeUsername})</span>
+              <span className="text-xs opacity-60">({profile.fetLifeUsername})</span>
             </span>
           </label>
         )}

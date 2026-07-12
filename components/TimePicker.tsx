@@ -73,7 +73,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
               maxWidth: 288,
             }}
           >
-            <p id="time-picker-label" className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--text2)" }}>
+            <p id="time-picker-label" className="text-xs mb-3" style={{ color: "var(--text2)" }}>
               Starttijd
             </p>
             <div className="flex gap-3">
@@ -85,7 +85,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
                     type="button"
                     onClick={() => setHour(h)}
                     aria-pressed={hour === h}
-                    className="focus-ring rounded py-2 text-xs tabular-nums font-medium"
+                    className="focus-ring rounded-lg py-2 text-xs tabular-nums font-medium"
                     style={
                       hour === h
                         ? { background: "var(--accent)", color: "var(--on-accent)" }
@@ -104,7 +104,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
                     type="button"
                     onClick={() => setMinute(m)}
                     aria-pressed={minute === m}
-                    className="focus-ring rounded py-2 px-2 text-xs tabular-nums font-medium"
+                    className="focus-ring rounded-lg py-2 px-2 text-xs tabular-nums font-medium"
                     style={
                       minute === m
                         ? { background: "var(--accent)", color: "var(--on-accent)" }

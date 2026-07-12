@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { X, TrendingUp, Trash2 } from "lucide-react";
+import { X, TrendUp, Trash } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -8,82 +8,18 @@ import { KINKS } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit, kinkMatchScore } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
+import ContractSection from "@/components/contract/ContractSection";
+import SignaturePad from "@/components/contract/SignaturePad";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { canvasHasInk } from "@/lib/canvasUtils";
-
-const STATUS_NL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "Heel graag",
-  willing: "Ja",
-  maybe:   "Misschien",
-  no:      "Voor hen",
-  hard_no: "Harde grens",
-};
-
-function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
-  const drawing = useRef(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvas.offsetWidth * dpr;
-    canvas.height = canvas.offsetHeight * dpr;
-
-    const ctx = canvas.getContext("2d")!;
-    ctx.scale(dpr, dpr);
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c084fc";
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    const getPos = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    };
-
-    const onDown = (e: PointerEvent) => {
-      drawing.current = true;
-      canvas.setPointerCapture(e.pointerId);
-      const { x, y } = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!drawing.current) return;
-      const { x, y } = getPos(e);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    };
-    const onUp = () => { drawing.current = false; };
-
-    canvas.addEventListener("pointerdown", onDown);
-    canvas.addEventListener("pointermove", onMove);
-    canvas.addEventListener("pointerup", onUp);
-    canvas.addEventListener("pointercancel", onUp);
-    return () => {
-      canvas.removeEventListener("pointerdown", onDown);
-      canvas.removeEventListener("pointermove", onMove);
-      canvas.removeEventListener("pointerup", onUp);
-      canvas.removeEventListener("pointercancel", onUp);
-    };
-  }, [canvasRef]);
-}
-
+import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
+import { buildContractPdf, isKinkDetail, DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
+import type { ContractItem, KinkDetailItem, Signals } from "@/lib/contractPdf";
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 
-type SignalKey = "green" | "yellow" | "red" | "black";
-type Signals = Record<SignalKey, string>;
-const SIGNAL_LEVELS: { key: SignalKey; color: string; meaning: string }[] = [
-  { key: "green",  color: "var(--yes)",   meaning: "Meer / harder" },
-  { key: "yellow", color: "var(--maybe)", meaning: "Vertraag / check in" },
-  { key: "red",    color: "var(--no)",    meaning: "Stop dit" },
-  { key: "black",  color: "var(--text2)", meaning: "Stop alles" },
-];
-const DEFAULT_SIGNALS: Signals = { green: "Meer", yellow: "Geel", red: "Rood", black: "Safeword" };
 
 function ContractPage() {
   const searchParams = useSearchParams();
@@ -145,6 +81,9 @@ function ContractPage() {
   };
   const shared: KinkDetail[] = [];
   const hardLimits: { name: string; who: string }[] = [];
+  // Same rows as hardLimits but in KinkDetail form, so the PDF can print
+  // hard limits in the same party-column table as every other section.
+  const hardLimitDetails: KinkDetail[] = [];
   const softLimits: KinkDetail[] = [];
   const discuss: KinkDetail[] = [];
 
@@ -169,6 +108,7 @@ function ContractPage() {
       const bHard = entryB.status === "hard_no";
       const who = aHard && bHard ? "beiden" : aHard ? profileA.name : profileB.name;
       hardLimits.push({ name: kink.name, who });
+      hardLimitDetails.push(detail);
     } else if (isKinkMatch(entryA, entryB)) {
       shared.push(detail);
     } else if (kinkMatchScore(entryA, entryB).kind === "soft") {
@@ -204,6 +144,21 @@ function ContractPage() {
     if (isKinkMatch(entryA, entryB)) customShared.push(detail);
     else if (hasA || hasB) discuss.push(detail);
   }
+
+  // Every section lists its rows in the house hierarchy — the keenest
+  // pair first (Heel graag > Ja > Misschien > Voor hen > Harde grens),
+  // alphabetical within equals. Order reflects choices, not KINKS order.
+  const byChoice = (a: KinkDetail, b: KinkDetail) =>
+    statusPairRank(a.statusA, a.statusB) - statusPairRank(b.statusA, b.statusB) ||
+    a.name.localeCompare(b.name, "nl");
+  const sharedAll = [...shared, ...customShared].sort(byChoice);
+  softLimits.sort(byChoice);
+  discuss.sort(byChoice);
+  hardLimitDetails.sort(byChoice);
+  // Keep the on-screen hard-limit chips marching in the same order as
+  // the PDF's detail rows.
+  const hardOrder = new Map(hardLimitDetails.map((d, i) => [d.name, i]));
+  hardLimits.sort((a, b) => (hardOrder.get(a.name) ?? 0) - (hardOrder.get(b.name) ?? 0));
 
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
@@ -262,247 +217,29 @@ function ContractPage() {
     setCeremony(false);
     setGenerating(true);
     try {
-      const { default: jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const W = 210;
-      const margin = 20;
-      const lineW = W - margin * 2;
-      let y = 20;
+      // Everything between "new jsPDF" and the footers lives in
+      // lib/contractPdf now — a pure move; the page only gathers inputs,
+      // saves the file and books the snapshot.
+      const { doc, filename } = await buildContractPdf({
+        profileA: { name: profileA.name, role: profileA.role },
+        profileB: { name: profileB.name, role: profileB.role },
+        preamble,
+        today,
+        signalsA,
+        signalsB,
+        aftercareA,
+        aftercareB,
+        sharedAll: sharedAll as KinkDetailItem[],
+        softLimits: softLimits as KinkDetailItem[],
+        hardLimitDetails: hardLimitDetails as KinkDetailItem[],
+        discuss: discuss as KinkDetailItem[],
+        sigDataA: canvasARef.current?.toDataURL("image/png") ?? null,
+        sigDataB: canvasBRef.current?.toDataURL("image/png") ?? null,
+        sigLabelA: useRealNames ? `${trimmedRealNameA} (${profileA.name})` : profileA.name,
+        sigLabelB: useRealNames ? `${trimmedRealNameB} (${profileB.name})` : profileB.name,
+      });
 
-      const accent = [109, 40, 217] as [number, number, number];
-      const dark = [255, 255, 255] as [number, number, number];
-      const muted = [107, 114, 128] as [number, number, number];
-
-      // Background
-      doc.setFillColor(...dark);
-      doc.rect(0, 0, W, 297, "F");
-
-      // Title
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(20);
-      doc.setTextColor(...accent);
-      doc.text("KinkSync Overeenkomst", W / 2, y, { align: "center" });
-      y += 7;
-
-      // Subtitle
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...muted);
-      doc.text("kinksync.be", W / 2, y, { align: "center" });
-      y += 5;
-
-      doc.setFontSize(10);
-      doc.text(`${profileA.name} (${profileA.role}) & ${profileB.name} (${profileB.role})`, W / 2, y, { align: "center" });
-      y += 5;
-      doc.text(`Opgesteld op ${today}`, W / 2, y, { align: "center" });
-      y += 8;
-
-      // Divider
-      doc.setDrawColor(...accent);
-      doc.setLineWidth(0.4);
-      doc.line(margin, y, W - margin, y);
-      y += 10;
-
-      // Preamble — paginate line by line so long text can't overflow the page
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(8);
-      doc.setTextColor(...muted);
-      const pLines = doc.splitTextToSize(preamble, lineW) as string[];
-      for (const line of pLines) {
-        if (y > 272) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(...muted); }
-        doc.text(line, margin, y);
-        y += 4;
-      }
-      y += 10;
-
-      // Safeword & Nazorg section in PDF
-      const hasSignalData = (s: Signals) => SIGNAL_LEVELS.some((l) => s[l.key] !== DEFAULT_SIGNALS[l.key] && s[l.key].trim());
-      const hasSafewordData = hasSignalData(signalsA) || hasSignalData(signalsB) || aftercareA.length > 0 || aftercareB.length > 0;
-      if (hasSafewordData) {
-        if (y > 250) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(...accent);
-        doc.text("Signalen & Nazorg", margin, y);
-        y += 5;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(30, 27, 75);
-
-        for (const [signals, profile] of [[signalsA, profileA], [signalsB, profileB]] as const) {
-          for (const l of SIGNAL_LEVELS) {
-            const word = signals[l.key].trim() || DEFAULT_SIGNALS[l.key];
-            doc.text(`${l.meaning} (${profile.name}): "${word}"`, margin + 3, y); y += 4.5;
-          }
-        }
-        if (aftercareA.length) { doc.text(`Nazorg ${profileA.name}: ${aftercareA.join(", ")}`, margin + 3, y); y += 4.5; }
-        if (aftercareB.length) { doc.text(`Nazorg ${profileB.name}: ${aftercareB.join(", ")}`, margin + 3, y); y += 4.5; }
-        y += 10;
-      }
-
-      const newPage = () => {
-        doc.addPage();
-        doc.setFillColor(...dark);
-        doc.rect(0, 0, W, 297, "F");
-        y = 20;
-      };
-
-      const itemLabel = (item: ContractItem) => {
-        if (typeof item === "string") return item;
-        return `${(item as { text: string; tag: string }).text} (${(item as { text: string; tag: string }).tag})`;
-      };
-
-      const col2X = margin + 82;
-      const col3X = margin + 82 + 44;
-
-      const section = (title: string, items: ContractItem[], colour: [number, number, number]) => {
-        if (!items.length) return;
-
-        if (y > 258) { newPage(); }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(...colour);
-        doc.text(title, margin, y);
-        y += 2.5;
-        doc.setDrawColor(...colour);
-        doc.setLineWidth(0.25);
-        doc.line(margin, y, margin + lineW, y);
-        y += 4;
-
-        const isKinkRow = items.length > 0 && typeof items[0] === "object" && items[0] !== null && "name" in (items[0] as object);
-
-        if (isKinkRow) {
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...muted);
-          doc.text(profileA.name, col2X, y);
-          doc.text(profileB.name, col3X, y);
-          y += 4.5;
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(8.5);
-          for (const item of items as KinkDetailItem[]) {
-            const sA = item.statusA ? STATUS_NL[item.statusA] : "—";
-            const sB = item.statusB ? STATUS_NL[item.statusB] : "—";
-            const nameLines = doc.splitTextToSize(`• ${item.name}`, 78) as string[];
-            const rowH = nameLines.length * 4.2 + 1;
-            if (y + rowH > 272) {
-              newPage();
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(8.5);
-            }
-            doc.setTextColor(30, 27, 75);
-            doc.text(nameLines, margin, y);
-            doc.text(sA, col2X, y);
-            doc.text(sB, col3X, y);
-            y += rowH;
-          }
-        } else {
-          const colW = (lineW - 10) / 2;
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(8.5);
-          doc.setTextColor(30, 27, 75);
-          let i = 0;
-          while (i < items.length) {
-            const left = `• ${itemLabel(items[i])}`;
-            const right = items[i + 1] !== undefined ? `• ${itemLabel(items[i + 1])}` : null;
-            const lLines = doc.splitTextToSize(left, colW - 4) as string[];
-            const rLines = right ? doc.splitTextToSize(right, colW - 4) as string[] : [];
-            const rowH = Math.max(lLines.length, rLines.length) * 4.2 + 1;
-            if (y + rowH > 272) {
-              newPage();
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(8.5);
-              doc.setTextColor(30, 27, 75);
-            }
-            lLines.forEach((l, li) => doc.text(l, margin + 3, y + li * 4.2));
-            rLines.forEach((l, li) => doc.text(l, margin + colW + 10, y + li * 4.2));
-            y += rowH;
-            i += right !== null ? 2 : 1;
-          }
-        }
-        doc.setDrawColor(...muted);
-        doc.setLineWidth(0.2);
-        doc.line(margin, y, W - margin, y);
-        y += 10;
-      };
-
-      section("Gedeelde verlangens", [...shared, ...customShared], [249, 115, 22]);
-      section("Harde grenzen", hardLimits.map((h) => ({ text: h.name, tag: h.who })), [239, 68, 68]);
-      section("Zachte grenzen", softLimits, [16, 185, 129]);
-      section("Bespreking nodig", discuss, [56, 189, 248]);
-
-      // Safeword clause
-      if (y > 240) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(...accent);
-      doc.text("Algemene afspraken", margin, y);
-      y += 2.5;
-      doc.setDrawColor(...accent);
-      doc.setLineWidth(0.25);
-      doc.line(margin, y, margin + lineW, y);
-      y += 6;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(30, 27, 75);
-      const clauses = [
-        "Safeword stopt alles — altijd en zonder uitleg.",
-        "Aftercare is geen optie, maar een afspraak.",
-        "Dit contract kan op elk moment door beiden worden herzien.",
-        "Grenzen die hier niet staan, worden voor elke scène besproken.",
-        "Dit contract kan door beide partijen ten alle tijden verbroken worden zonder toestemming van de ander.",
-      ];
-      for (const c of clauses) {
-        doc.text(`• ${c}`, margin + 3, y);
-        y += 5.5;
-      }
-      y += 12;
-
-      // Signatures
-      if (y > 220) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setDrawColor(...accent);
-      doc.setLineWidth(0.4);
-      doc.line(margin, y, W - margin, y);
-      y += 6;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(...accent);
-      doc.text("Handtekeningen", margin, y);
-      y += 6;
-
-      const sigW = (lineW - 10) / 2;
-      const sigH = 30;
-
-      const sigDataA = canvasARef.current?.toDataURL("image/png") ?? null;
-      const sigDataB = canvasBRef.current?.toDataURL("image/png") ?? null;
-
-      doc.setDrawColor(...muted);
-      doc.setLineWidth(0.3);
-      doc.rect(margin, y, sigW, sigH);
-      doc.rect(margin + sigW + 10, y, sigW, sigH);
-
-      if (sigDataA) doc.addImage(sigDataA, "PNG", margin + 1, y + 1, sigW - 2, sigH - 2);
-      if (sigDataB) doc.addImage(sigDataB, "PNG", margin + sigW + 11, y + 1, sigW - 2, sigH - 2);
-
-      y += sigH + 8;
-      doc.setDrawColor(...muted);
-      doc.setLineWidth(0.2);
-      doc.line(margin, y - 4, W - margin, y - 4);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(...muted);
-      const sigLabelA = useRealNames ? `${trimmedRealNameA} (${profileA.name})` : profileA.name;
-      const sigLabelB = useRealNames ? `${trimmedRealNameB} (${profileB.name})` : profileB.name;
-      doc.text(sigLabelA, margin + sigW / 2, y, { align: "center" });
-      doc.text(sigLabelB, margin + sigW + 10 + sigW / 2, y, { align: "center" });
-      y += 4;
-      doc.text(today, margin + sigW / 2, y, { align: "center" });
-      doc.text(today, margin + sigW + 10 + sigW / 2, y, { align: "center" });
-      y += 14;
-
-      try { doc.save(`contract-${profileA.name}-${profileB.name}.pdf`); } catch { /* PDF-fout is niet fataal */ }
+      try { doc.save(filename); } catch { /* PDF-fout is niet fataal */ }
 
       saveContract({
         date: Date.now(),
@@ -587,13 +324,13 @@ function ContractPage() {
 
         {/* Safeword & Nazorg */}
         <div className="mb-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
             Safeword &amp; Nazorg
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Column A */}
             <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_A }}>
+              <div className="text-xs font-semibold" style={{ color: COLOUR_A }}>
                 {profileA.name}
               </div>
               <div className="flex flex-col gap-1.5">
@@ -636,7 +373,7 @@ function ContractPage() {
 
             {/* Column B */}
             <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: COLOUR_B }}>
+              <div className="text-xs font-semibold" style={{ color: COLOUR_B }}>
                 {profileB.name}
               </div>
               <div className="flex flex-col gap-1.5">
@@ -679,18 +416,18 @@ function ContractPage() {
           </div>
         </div>
 
-        <ContractSection title="Gedeelde verlangens" items={[...shared, ...customShared]} colour="var(--yes)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
+        <ContractSection title="Gedeelde verlangens" items={sharedAll} colour="var(--yes)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
+        <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
         <ContractSection
           title="Harde grenzen"
           items={hardLimits.map((h) => ({ text: h.name, tag: h.who }))}
           colour="var(--hard-no)"
         />
-        <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
         <ContractSection title="Bespreking nodig" items={discuss} colour="var(--willing)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
 
         {/* General clauses */}
         <div className="mt-6 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
+          <h3 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
             Algemene afspraken
           </h3>
           <ul className="space-y-1.5 text-sm" style={{ color: "var(--text2)" }}>
@@ -708,10 +445,10 @@ function ContractPage() {
         className="rounded-2xl p-6 mb-6 print:hidden"
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: "var(--accent)" }}>
-          Echte namen <span className="font-normal opacity-60 normal-case tracking-normal">(optioneel)</span>
+        <h2 className="text-sm mb-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
+          Echte namen <span style={{ opacity: 0.6, fontStyle: "normal" }}>(optioneel)</span>
         </h2>
-        <p className="text-xs mb-4" style={{ color: "var(--text2)" }}>
+        <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>
           Beide velden samen invullen of beide leeg laten. Bij invullen wordt het verbond formeler geformuleerd en verschijnen de echte namen naast de nicknames onder de handtekening.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -757,7 +494,7 @@ function ContractPage() {
         className="rounded-2xl p-6 mb-6"
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
+        <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
           Handtekeningen
         </h2>
         <div className="flex gap-4 flex-wrap">
@@ -790,7 +527,7 @@ function ContractPage() {
       {contracts.length > 0 && (
         <div className="mt-8 print:hidden">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+            <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
               Eerdere contracten
             </h2>
             <Link
@@ -798,7 +535,7 @@ function ContractPage() {
               className="focus-ring text-xs transition-colors inline-flex items-center gap-1"
               style={{ color: "var(--text2)" }}
             >
-              <TrendingUp size={12} aria-hidden="true" />
+              <TrendUp size={12} aria-hidden="true" />
               Bekijk grafiek
             </Link>
           </div>
@@ -822,7 +559,7 @@ function ContractPage() {
                     <button
                       onClick={() => { deleteContract(c.id); setPendingDeleteId(null); }}
                       className="focus-ring text-xs px-2 py-1 rounded-lg font-semibold"
-                      style={{ background: "#ef4444", color: "#fff" }}
+                      style={{ background: "var(--hard-no)", color: "var(--on-accent)" }}
                     >
                       Ja
                     </button>
@@ -851,7 +588,7 @@ function ContractPage() {
                       className="focus-ring p-2 rounded-lg"
                       style={{ color: "var(--text2)" }}
                     >
-                      <Trash2 size={15} aria-hidden="true" />
+                      <Trash size={15} aria-hidden="true" />
                     </button>
                   </div>
                 )}
@@ -898,7 +635,7 @@ function ContractPage() {
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
                 Waarom echte namen?
               </span>
               <button
@@ -1007,272 +744,6 @@ function ContractPage() {
   );
 }
 
-type KinkDetailItem = {
-  name: string;
-  statusA: KinkStatus | null; statusB: KinkStatus | null;
-  commentA?: string; commentB?: string;
-  desireA?: number | null; desireB?: number | null;
-};
-type ContractItem = string | { text: string; tag: string } | KinkDetailItem;
-
-function isKinkDetail(item: ContractItem): item is KinkDetailItem {
-  return typeof item === "object" && "statusA" in item;
-}
-
-function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB }: {
-  title: string;
-  items: ContractItem[];
-  colour: string;
-  nameA?: string;
-  nameB?: string;
-  colourA?: string;
-  colourB?: string;
-}) {
-  if (!items.length) return null;
-  const cA = colourA ?? "var(--accent)";
-  const cB = colourB ?? "var(--accent2)";
-  const nA = nameA?.split(" ")[0] ?? "A";
-  const nB = nameB?.split(" ")[0] ?? "B";
-
-  return (
-    <div className="mb-5">
-      <h3 className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: colour }}>
-        {title}
-      </h3>
-      {isKinkDetail(items[0]) ? (
-        <div className="space-y-2">
-          {(items as KinkDetailItem[]).map((item, i) => (
-            <div key={i} className="rounded-xl p-2.5 text-[13px]" style={{
-              background: `color-mix(in srgb, ${colour} 8%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${colour} 20%, transparent)`,
-            }}>
-              <div className="font-medium mb-1.5" style={{ color: "var(--text)" }}>{item.name}</div>
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col gap-0.5">
-                  {item.statusA
-                    ? <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
-                    : <span style={{ color: "var(--text2)", fontSize: "11px" }}>{nA}: —</span>
-                  }
-                </div>
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
-                <div className="flex flex-col gap-0.5 items-end">
-                  {item.statusB
-                    ? <span className="text-[11px] px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
-                    : <span style={{ color: "var(--text2)", fontSize: "11px" }}>—: {nB}</span>
-                  }
-                </div>
-              </div>
-              {(item.desireA != null || item.desireB != null || item.commentA || item.commentB) && (
-                <div className="mt-1.5 space-y-0.5" style={{ color: "var(--text2)" }}>
-                  {item.desireA != null && <div className="text-[11px]"><span className="font-medium" style={{ color: cA }}>{nA} verlangen:</span> {item.desireA}/5</div>}
-                  {item.desireB != null && <div className="text-[11px]"><span className="font-medium" style={{ color: cB }}>{nB} verlangen:</span> {item.desireB}/5</div>}
-                  {item.commentA && <div><span className="font-medium" style={{ color: cA }}>{nA}:</span> {item.commentA}</div>}
-                  {item.commentB && <div><span className="font-medium" style={{ color: cB }}>{nB}:</span> {item.commentB}</div>}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {(items as (string | { text: string; tag: string })[]).map((item, i) => (
-            <span key={i} className="text-xs px-2.5 py-1 rounded-full" style={{
-              background: `color-mix(in srgb, ${colour} 12%, transparent)`,
-              color: colour,
-              border: `1px solid color-mix(in srgb, ${colour} 30%, transparent)`,
-            }}>
-              {typeof item === "string" ? item : (
-                <>{item.text} <span style={{ opacity: 0.65 }}>{item.tag}</span></>
-              )}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Separate component so useDrawCanvas runs when the canvas actually mounts
-function DrawableCanvas({
-  canvasRef,
-  colour,
-  label,
-  sourceRef,
-}: {
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  colour: string;
-  label: string;
-  sourceRef: React.RefObject<HTMLCanvasElement | null>;
-}) {
-  useDrawCanvas(canvasRef);
-
-  useEffect(() => {
-    const src = sourceRef.current;
-    const dst = canvasRef.current;
-    if (!src || !dst || src.width === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    const ctx = dst.getContext("2d");
-    if (ctx) ctx.drawImage(src, 0, 0, dst.width / dpr, dst.height / dpr);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="w-full rounded-xl touch-none"
-      style={{
-        border: `1px solid ${colour}`,
-        background: "var(--surface2)",
-        cursor: "crosshair",
-        display: "block",
-        height: "220px",
-      }}
-      aria-label={`Handtekening voor ${label}`}
-    />
-  );
-}
-
-function SignaturePad({
-  label,
-  colour,
-  canvasRef,
-  onSignedChange,
-}: {
-  label: string;
-  colour: string;
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  onSignedChange?: (signed: boolean) => void;
-}) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const modalCanvasRef = useRef<HTMLCanvasElement>(null);
-
-  function closeModal() {
-    const src = modalCanvasRef.current;
-    const dst = canvasRef.current;
-    if (src && dst) {
-      dst.width = src.width;
-      dst.height = src.height;
-      dst.getContext("2d")!.drawImage(src, 0, 0);
-      onSignedChange?.(canvasHasInk(src));
-    }
-    setModalOpen(false);
-  }
-
-  function clear() {
-    const m = modalCanvasRef.current;
-    if (m) m.getContext("2d")!.clearRect(0, 0, m.width, m.height);
-    const c = canvasRef.current;
-    if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
-    onSignedChange?.(false);
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-2 flex-1 min-w-[140px]">
-      <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
-        {label}
-      </div>
-      {/* Clickable canvas — tap to open modal */}
-      <button
-        onClick={() => setModalOpen(true)}
-        className="focus-ring w-full rounded-xl transition-opacity hover:opacity-80 active:opacity-90 p-0 m-0 border-none"
-        style={{
-          border: `1px solid ${colour}`,
-          background: "var(--surface2)",
-          display: "block",
-          height: "80px",
-        }}
-        aria-label={`Handtekeningveld openen voor ${label}`}
-      >
-        <canvas
-          ref={canvasRef}
-          className="w-full rounded-xl"
-          style={{
-            display: "block",
-            height: "80px",
-            pointerEvents: "none",
-          }}
-          aria-hidden="true"
-        />
-      </button>
-      <div className="flex items-center gap-2 w-full">
-        <button
-          onClick={clear}
-          className="focus-ring flex-1 text-xs px-3 py-1 rounded-full border transition-colors"
-          style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-        >
-          Veld wissen
-        </button>
-      </div>
-      <div className="text-xs text-center" style={{ color: "var(--text2)" }}>
-        Teken hier met vinger of muis
-      </div>
-
-      {modalOpen && (
-        <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.75)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "1rem",
-            paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
-          }}
-          onClick={closeModal}
-        >
-          <div
-            style={{
-              background: "var(--surface)",
-              borderRadius: "1rem",
-              padding: "1.5rem",
-              width: "100%",
-              maxWidth: "480px",
-              border: `2px solid ${colour}`,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: colour }}>
-                {label}
-              </span>
-              <button
-                onClick={closeModal}
-                className="focus-ring p-1 rounded-full"
-                style={{ color: "var(--text2)" }}
-                aria-label="Sluiten"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <DrawableCanvas
-              canvasRef={modalCanvasRef}
-              colour={colour}
-              label={label}
-              sourceRef={canvasRef}
-            />
-            <p className="text-xs text-center mt-2" style={{ color: "var(--text2)" }}>
-              Teken hier met vinger of muis
-            </p>
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={clear}
-                className="focus-ring text-xs px-3 py-1.5 rounded-full border"
-                style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-              >
-                Wis
-              </button>
-              <button
-                onClick={closeModal}
-                className="focus-ring text-xs px-4 py-1.5 rounded-full font-semibold"
-                style={{ background: colour, color: "var(--on-accent)" }}
-              >
-                Klaar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function ContractSuspense() {
   return (

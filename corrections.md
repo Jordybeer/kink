@@ -6,6 +6,42 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-11 — A green suite that never ran the code: the stale-server mirage
+
+**What went wrong:** A full e2e run reported 178 passed while one of its tests (`ui-audit` DNA bar) *cannot* pass against dev's code — the asserted `aria-label` only exists on main. `playwright.config.ts` had `reuseExistingServer: true`, so the run almost certainly latched onto a stale dev server left on :3000 by an earlier session, and "verified" old code. Compounding it, the test's seed used v8-era kink ids that no longer exist, so its content assertions passed vacuously on an empty overview.
+
+**Rule:** A verification run must own its server. Run gate-keeping e2e with `CI=1` (config now sets `reuseExistingServer: !process.env.CI`) or confirm nothing is listening on the port first (`ss -ltnp | grep :3000`). And when a spec guards seeded content, assert the *count* ("5 beoordeeld"), never the mere presence of a word that also appears in the empty state.
+
+---
+
+## 2026-07-11 — PIN mid-onboarding summoned the lock screen, wizard woke up amnesiac
+
+**What went wrong:** Onboarding's PIN step called `setAppLockPin(hash)`, which flipped `appLockEnabled` in the store. `HomeContent`'s lock effect saw the flip, checked a `useRef` **snapshot** of `sessionStorage.app_unlocked` taken at mount (false on a fresh install), and set `lockState = "locked"`. The lock gate renders *before* the onboarding gate, so `<Onboarding>` unmounted, its local `step` state died, and after unlocking the wizard restarted at slide one. This bug had been fixed before and was reintroduced — the e3c5494 fix only covered re-navigation, and the Phase 17 monolith split preserved the stale-ref pattern.
+
+**Rule:** Enabling the app lock must never lock out the person who just enabled it. (1) Any flow that calls `setAppLockPin` while the user is present sets `sessionStorage.app_unlocked = "1"` *before* the store write. (2) The lock effect reads `sessionStorage` **live**, never a mount-time ref/snapshot — session flags raised mid-session must be honoured. (3) The regression test lives in `e2e/new-user.spec.ts` ("pin instellen gooit de wizard niet terug naar slide één") — it was proven red against the broken code; keep it green.
+
+---
+
+## 2026-07-10 — The watchdog was asleep: e2e specs rot silently
+
+**What was found:** Phase 30's "guard" (`new-user.spec.ts`) was 4/5 failing on dev *before any change* — the PIN step (added June 3) and the L-01 age-gate fix had changed the onboarding flow, and nobody re-ran the spec. It sat broken for five weeks while unit tests stayed green.
+
+**Rule:** When a user flow changes, run its e2e spec in the same session and fix it in the same commit. And before trusting any spec as a regression guard, run it against unchanged code first — a failing baseline means the spec, not your change, is the suspect.
+
+## 2026-07-09 — "Regression" reports need a git alibi before agreement
+
+**What nearly went wrong:** The owner reported compare-page badges "losing kink colors" as a regression. It pattern-matched perfectly to the evening's refactors (status labels had just been centralised in that exact file). Agreeing on vibes would have sent the session hunting a regression in commits that were innocent.
+
+**What the history showed:** `git show` on `StatusBadge` across `d2e8f69`, `629419b`, and the pre-June-16 revision proved the badges had *always* worn person colours — a standing design decision from the compare redesign, never a break. The critique was still right (fixed as Phase 27a); the framing was not.
+
+**Rule:** When anything is called a regression — by the owner, a test, or your own gut — trace the exact lines through git history *before* agreeing or acting. Answer with the alibi: "changed in X / never existed / broke in Y." A design flaw and a regression get different treatment: flaws get a design pass, regressions get a revert-or-fix against the last good commit.
+
+## 2026-07-09 — Backlog claims drift from the code they describe
+
+**What went wrong:** Phase 24b's ledger note said `hard_no` drifted between "Grens" (app) and "Harde grens" (contract PDF) — implying the contract was the outlier. The code said the opposite: six of eight surfaces (including the status explainer that *defines* the vocabulary) said "Harde grens"; the two newest triage components were the strays. The fix direction only came out right because the code was re-read at execution time.
+
+**Rule:** Backlog/plan entries are hypotheses, not facts. Before executing any phase written in an earlier session, re-verify its claims against the live code — especially claims about which side of an inconsistency is canonical.
+
 ## 2026-06-22 — Phase 10: ambient animation misfired
 
 **What went wrong:** Replaced the working `ks-shimmer` wordmark animation with a trailing cursor `_` pulsing at 1.8s, opacity 1 → 0.22. It read as a notification dot, not ambient motion. PR #219 was opened and then closed same evening.

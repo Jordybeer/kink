@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import type { Icon } from "@phosphor-icons/react";
 
 export default function EmptyState({
   icon: Icon,
@@ -8,7 +8,7 @@ export default function EmptyState({
   ctaHref,
   ctaLabel,
 }: {
-  icon: LucideIcon;
+  icon: Icon;
   title: string;
   message: string;
   ctaHref: string;

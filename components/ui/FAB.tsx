@@ -45,7 +45,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
                 transition={{ ...SPRING, delay }}
               >
                 <span
-                  className="px-3 py-[6px] rounded-[8px] text-[13px] font-medium"
+                  className="px-3 py-[6px] rounded-[8px] text-sm font-medium"
                   style={{
                     background: "var(--surface2)",
                     border: "1px solid var(--border)",
@@ -94,7 +94,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
                 background: "linear-gradient(135deg, var(--accent), var(--accent2))",
                 border: "none",
                 color: "white",
-                boxShadow: "0 8px 24px rgba(192,132,252,0.4)",
+                boxShadow: "0 8px 24px color-mix(in srgb, var(--accent) 40%, transparent)",
               }
         }
       >

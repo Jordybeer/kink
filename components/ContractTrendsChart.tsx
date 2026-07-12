@@ -257,7 +257,7 @@ export function ContractTrendsChart({ contracts }: Props) {
 
   return (
     <section
-      className="mb-4 rounded p-4 sm:p-5"
+      className="mb-4 rounded-xl p-4 sm:p-5"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -275,7 +275,7 @@ export function ContractTrendsChart({ contracts }: Props) {
           <p
             className="mt-0.5 italic"
             style={{
-              fontFamily: "var(--font-display), serif",
+              fontFamily: "var(--font-display, Georgia, serif)",
               fontSize: "0.95rem",
               color: "var(--text)",
               lineHeight: 1.2,
@@ -352,7 +352,7 @@ export function ContractTrendsChart({ contracts }: Props) {
 function Placeholder({ tokens }: { tokens: ResolvedTokens }) {
   return (
     <section
-      className="mb-4 rounded p-4 sm:p-5"
+      className="mb-4 rounded-xl p-4 sm:p-5"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -391,7 +391,7 @@ function Placeholder({ tokens }: { tokens: ResolvedTokens }) {
           <p
             className="italic"
             style={{
-              fontFamily: "var(--font-display), serif",
+              fontFamily: "var(--font-display, Georgia, serif)",
               fontSize: "1.1rem",
               color: "var(--text)",
               lineHeight: 1.2,

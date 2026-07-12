@@ -33,12 +33,12 @@ export default function Accordion({ trigger, icon, children, defaultOpen = false
           {icon && (
             <span
               className="p-2 rounded-[12px] flex items-center justify-center"
-              style={{ background: "rgba(192,132,252,0.15)", color: "var(--accent)" }}
+              style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}
             >
               {icon}
             </span>
           )}
-          <span className="text-[14px] font-medium">{trigger}</span>
+          <span className="text-sm font-medium">{trigger}</span>
         </span>
 
         <motion.span

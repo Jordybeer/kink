@@ -1,4 +1,5 @@
 import type { KinkEntry, KinkStatus, ProfileSnapshot } from "@/types";
+import { STATUS_LABEL, STATUS_ORDER } from "@/lib/statusLabels";
 
 export type CountKey = Exclude<KinkStatus, null>;
 
@@ -25,18 +26,50 @@ export interface ProfileTrendSeries {
   readonly cssVar: string;
 }
 
-export const PROFILE_TREND_SERIES: readonly ProfileTrendSeries[] = [
-  { key: "yes",     label: "Heel graag",  cssVar: "--yes" },
-  { key: "willing", label: "Ja",          cssVar: "--willing" },
-  { key: "maybe",   label: "Misschien",   cssVar: "--maybe" },
-  { key: "no",      label: "Voor hen",    cssVar: "--no" },
-  { key: "hard_no", label: "Harde grens", cssVar: "--hard-no" },
-] as const;
+const SERIES_CSS_VAR: Record<CountKey, string> = {
+  yes: "--yes", willing: "--willing", maybe: "--maybe", no: "--no", hard_no: "--hard-no",
+};
+
+export const PROFILE_TREND_SERIES: readonly ProfileTrendSeries[] = STATUS_ORDER.map((key) => ({
+  key,
+  label: STATUS_LABEL[key],
+  cssVar: SERIES_CSS_VAR[key],
+}));
 
 export interface ProfileTrendData {
   labels: string[];
   series: Record<CountKey, number[]>;
   ascending: ProfileSnapshot[];
+}
+
+// ── The confession between two moments ─────────────────────────────────────
+// The chart shows that the counts moved; this tells you which kinks did the
+// moving. Compared on effective status only — comments and curiosity are
+// private notes, not verdicts.
+
+export interface SnapshotShift {
+  kinkId: string;
+  from: CountKey | null; // null: had no verdict in the older moment
+  to: CountKey | null;   // null: verdict withdrawn since
+}
+
+export function diffSnapshotEntries(
+  older: Record<string, KinkEntry>,
+  newer: Record<string, KinkEntry>
+): SnapshotShift[] {
+  const ids = new Set([...Object.keys(older), ...Object.keys(newer)]);
+  const shifts: SnapshotShift[] = [];
+  for (const kinkId of ids) {
+    const from = older[kinkId] ? effectiveStatus(older[kinkId]) : null;
+    const to = newer[kinkId] ? effectiveStatus(newer[kinkId]) : null;
+    if (from !== to) shifts.push({ kinkId, from, to });
+  }
+  // Fresh verdicts first, then changes, then withdrawals — within each
+  // group the keenest destination leads.
+  const rank = (s: SnapshotShift) =>
+    (s.from === null ? 0 : s.to === null ? 2 : 1) * 10 +
+    (s.to ? STATUS_ORDER.indexOf(s.to) : STATUS_ORDER.length);
+  return shifts.sort((a, b) => rank(a) - rank(b) || a.kinkId.localeCompare(b.kinkId));
 }
 
 export function prepareProfileTrendData(snapshots: ProfileSnapshot[]): ProfileTrendData {

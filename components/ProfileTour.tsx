@@ -9,19 +9,19 @@ const STEPS = [
   {
     selector: '[data-tour="avatar"]',
     title: "Voeg een foto toe",
-    body: "Tap de avatar om een profielfoto toe te voegen — bijgesneden en lokaal opgeslagen.",
+    body: "Tik de avatar om een profielfoto toe te voegen — bijgesneden en lokaal opgeslagen.",
     pad: 8,
   },
   {
     selector: '[data-tour="info"]',
     title: "Info over elke kink",
-    body: "Tap ⓘ voor een beschrijving en veiligheidstips.",
+    body: "Tik ⓘ voor een beschrijving en veiligheidstips.",
     pad: 6,
   },
   {
     selector: '[data-tour="pills"]',
-    title: "Jouw status",
-    body: "Tap een pill om aan te geven hoe je over deze kink denkt — van Ja tot Harde grens.",
+    title: "Jouw oordeel",
+    body: "Tik een rij om aan te geven hoe je over deze kink denkt — van Heel graag tot Harde grens.",
     pad: 4,
   },
   {
@@ -29,6 +29,12 @@ const STEPS = [
     title: "Harde grens",
     body: "Staat apart van de rest — een harde grens is geen onderhandelingspositie.",
     pad: 4,
+  },
+  {
+    selector: '[data-tour="curious"]',
+    title: "Nieuwsgierig?",
+    body: "Los van je oordeel: markeer met de ster wat je wil verkennen. Een ster is geen ja.",
+    pad: 6,
   },
 ];
 

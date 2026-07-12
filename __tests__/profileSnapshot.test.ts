@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   PROFILE_TREND_SERIES,
   deriveCounts,
+  diffSnapshotEntries,
   prepareProfileTrendData,
 } from "@/lib/profileSnapshot";
 import type { KinkEntry, ProfileSnapshot } from "@/types";
@@ -83,5 +84,36 @@ describe("PROFILE_TREND_SERIES", () => {
       expect(s.cssVar.startsWith("--")).toBe(true);
       expect(s.label.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("diffSnapshotEntries", () => {
+  const e = (status: "yes" | "willing" | "maybe" | "no" | "hard_no" | null) =>
+    ({ status, comment: "" });
+
+  it("names exactly the kinks whose verdict moved", () => {
+    const older = { flogging: e("maybe"), caning: e("hard_no"), paddling: e("yes") };
+    const newer = { flogging: e("yes"), caning: e("hard_no"), paddling: e("yes") };
+    expect(diffSnapshotEntries(older, newer)).toEqual([
+      { kinkId: "flogging", from: "maybe", to: "yes" },
+    ]);
+  });
+
+  it("fresh verdicts lead, withdrawals trail, keenest destination first", () => {
+    const older = { a_old: e("yes"), b_changed: e("no") };
+    const newer = { b_changed: e("willing"), c_new: e("maybe"), d_new: e("yes") };
+    expect(diffSnapshotEntries(older, newer).map((s) => s.kinkId)).toEqual([
+      "d_new", "c_new", "b_changed", "a_old",
+    ]);
+  });
+
+  it("identical moments confess nothing", () => {
+    const same = { flogging: e("yes") };
+    expect(diffSnapshotEntries(same, { ...same })).toEqual([]);
+  });
+
+  it("a nulled status counts as withdrawn, not changed", () => {
+    const shifts = diffSnapshotEntries({ flogging: e("yes") }, { flogging: e(null) });
+    expect(shifts).toEqual([{ kinkId: "flogging", from: "yes", to: null }]);
   });
 });

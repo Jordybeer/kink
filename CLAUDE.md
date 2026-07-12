@@ -1,5 +1,12 @@
 # KinkList — Claude guidance
 
+## Regression is the cardinal sin (mandatory, overrides everything)
+Breaking something that already worked is the single worst outcome — worse than shipping nothing, worse than an ugly diff, worse than a slow fix. No feature, refactor, or polish pass is worth a regression.
+- Before touching working code, know exactly what currently works and preserve it. When in doubt, make changes **additive** (e.g. `lg:` overrides that leave mobile byte-identical) rather than rewriting.
+- Prove no regression before you call anything done: re-run the affected tests/audit and compare against the prior behaviour, don't just eyeball the new thing.
+- Mobile-first + the installed PWA are the primary surfaces — a desktop/tablet improvement that degrades either of those is a net loss, not a win.
+- If a change *might* regress and you can't prove it won't, stop and flag it rather than shipping on hope.
+
 ## Git (mandatory)
 - `dev` is the playroom — all work here. `main` only via PR.
 - Never add `Co-Authored-By` trailers. No AI credits, no Happy attribution — commits are yours alone.
@@ -12,7 +19,8 @@
 - Hotfixes to production: branch off `main`, PR to `main`, then merge back to `dev`.
 
 ## Worktree & branch naming (mandatory)
-Always use the `worktree` skill — both when spawning a new worktree and when shipping (test → push → PR to dev).
+Use the `worktree` skill for spawning worktrees and shipping (test → push → PR to dev).
+**Never auto-invoke it** — only call `/worktree` when the user explicitly asks. It freezes when auto-triggered.
 
 ## Parallel Claude sessions (mandatory)
 Two Claude accounts — **claude1** and **claude2** — work this repo simultaneously under separate logins. Both:
@@ -30,7 +38,8 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 - Each commit must pass `npm test` green before pushing.
 
 ## Frontend design
-Always use the `frontend-design` skill when building new UI, restyling components, or making visual/layout decisions.
+The `frontend-design` skill is available for UI/visual decisions.
+**Never auto-invoke it** — only call `/frontend-design` when the user explicitly asks. It freezes when auto-triggered.
 
 ## Tone (mandatory, entire repo)
 Playful, kinky, BDSM-themed throughout — commits, docs, comments, PRs.
@@ -64,9 +73,8 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - `e2e/` — Playwright tests
 - `e2e-offline/` — Playwright offline tests
 - `docs/` — internal documentation
-- `future.md` — Claude suggestions backlog (ask before writing)
 - `corrections.md` — mistake log (read at session start)
-- `planned-changes.md` — active sprint tasks (read + update when completing work)
+- `planned-changes.md` — the single backlog: active phases + suggestion pool + shipped ledger (read at session start, update when work lands; absorbed `future.md` on 2026-07-08)
 - `ideas.md` — raw ideas, read only
 
 ## Hard constraints
@@ -89,12 +97,11 @@ When something goes wrong mid-session (reverted PR, wrong approach, design regre
 Read `memory.md` at session start. Cross-session operational notes the user wants every Claude (claude1 + claude2) to carry. Append new notes here when the user says "remember this" or similar.
 
 ## Planning files
-- `future.md` — Claude suggestions only, ask before writing anything here
 - `ideas.md` — your raw ideas, Claude reads only, never modifies
-- `planned-changes.md` — active sprint, Claude reads and updates when completing tasks
+- `planned-changes.md` — the single backlog. **Read at session start** and begin with the phase marked NEXT UP unless told otherwise. Update when completing tasks. (`future.md` was merged in on 2026-07-08 and deleted.)
 
 ## Suggestions (ask first)
-After each task, ask if suggestions are welcome before writing anything to `future.md`.
+After each task, ask if suggestions are welcome before writing anything to the suggestion pool in `planned-changes.md`.
 
 ## Editing discipline (learned)
 - Read the full element before editing — not just the target line. Avoid duplicate props.

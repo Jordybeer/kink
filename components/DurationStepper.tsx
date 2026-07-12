@@ -52,7 +52,7 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
           type="button"
           onClick={() => nudge(-5)}
           aria-label="5 minuten minder"
-          className="focus-ring rounded text-xs font-medium border"
+          className="focus-ring rounded-lg text-xs font-medium border"
           style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           −5
@@ -69,7 +69,7 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
           type="button"
           onClick={() => nudge(5)}
           aria-label="5 minuten meer"
-          className="focus-ring rounded text-xs font-medium border"
+          className="focus-ring rounded-lg text-xs font-medium border"
           style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           +5

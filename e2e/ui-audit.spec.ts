@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+// 390 is the Pixel-ish default; 375 is the smallest phone the house dresses
+// for — every overflow guard runs at both so the corset never pinches.
+const MOBILE_VIEWPORTS = [
+  { width: 390, height: 844, label: "390px" },
+  { width: 375, height: 667, label: "375px" },
+] as const;
+
 test.describe("UI audit", () => {
 
   test("home page — no overflow on any axis, screenshot", async ({ page }) => {
@@ -40,32 +47,34 @@ test.describe("UI audit", () => {
     expect(xOverflow).toBe(false);
   });
 
-  test("mobile viewport — home page no overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 14
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    await page.screenshot({ path: "/tmp/pw-home-mobile.png", fullPage: true });
-    const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
-    expect(xOverflow).toBe(false);
-  });
+  for (const vp of MOBILE_VIEWPORTS) {
+    test(`mobile viewport ${vp.label} — home page no overflow`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      await page.screenshot({ path: `/tmp/pw-home-mobile-${vp.width}.png`, fullPage: true });
+      const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
+      expect(xOverflow).toBe(false);
+    });
 
-  test("mobile viewport — compare page no overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/compare");
-    await page.waitForLoadState("networkidle");
-    await page.screenshot({ path: "/tmp/pw-compare-mobile.png", fullPage: true });
-    const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
-    expect(xOverflow).toBe(false);
-  });
+    test(`mobile viewport ${vp.label} — compare page no overflow`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto("/compare");
+      await page.waitForLoadState("networkidle");
+      await page.screenshot({ path: `/tmp/pw-compare-mobile-${vp.width}.png`, fullPage: true });
+      const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
+      expect(xOverflow).toBe(false);
+    });
 
-  test("mobile viewport — contract page no overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/contract");
-    await page.waitForLoadState("networkidle");
-    await page.screenshot({ path: "/tmp/pw-contract-mobile.png", fullPage: true });
-    const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
-    expect(xOverflow).toBe(false);
-  });
+    test(`mobile viewport ${vp.label} — contract page no overflow`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto("/contract");
+      await page.waitForLoadState("networkidle");
+      await page.screenshot({ path: `/tmp/pw-contract-mobile-${vp.width}.png`, fullPage: true });
+      const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
+      expect(xOverflow).toBe(false);
+    });
+  }
 
   test("seed profile then visit profile page", async ({ page }) => {
     // Seed localStorage with a test profile
@@ -75,7 +84,7 @@ test.describe("UI audit", () => {
         id: "test-pw-001",
         name: "Playwright",
         role: "Switch",
-        experienceLevel: "gevorderd",
+        experienceLevel: "ervaren",
         customKinks: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -97,9 +106,9 @@ test.describe("UI audit", () => {
     await page.waitForLoadState("networkidle");
     await page.screenshot({ path: "/tmp/pw-profile.png", fullPage: true });
 
-    // Check key elements are visible
-    const heroVisible = await page.locator("text=Playwright").isVisible();
-    expect(heroVisible).toBe(true);
+    // Check key elements are visible — the name wears three collars now
+    // (nav pill, sr-only h1, hero h2), so aim at the hero heading precisely.
+    await expect(page.locator("h2").filter({ hasText: "Playwright" }).first()).toBeVisible();
 
     // Check Bewerken tab is visible in the profile hero area
     const bewerkenTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
@@ -127,31 +136,38 @@ test.describe("UI audit", () => {
         id: "test-pw-001",
         name: "Playwright",
         role: "Switch",
-        experienceLevel: "gevorderd",
+        experienceLevel: "ervaren",
         customKinks: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
         entries: {
-          "bdsm-general": { status: "yes", score: null, comment: "notitie hier" },
-          "bondage-rope": { status: "willing", score: null, comment: "" },
-          "impact-spanking": { status: "maybe", score: null, comment: "" },
-          "pain-biting": { status: "no", score: null, comment: "" },
-          "humiliation-general": { status: "hard_no", score: null, comment: "" },
+          // Live kink ids from lib/kinks.ts — the v8-era slugs rotted into
+          // ghosts and made this test pass on an empty overview for weeks.
+          spanking_hand: { status: "yes", score: null, comment: "notitie hier" },
+          spanking_implement: { status: "willing", score: null, comment: "" },
+          flogging: { status: "maybe", score: null, comment: "" },
+          caning: { status: "no", score: null, comment: "" },
+          cropping: { status: "hard_no", score: null, comment: "" },
         }
       };
-      const s = { state: { profiles: [profile] }, version: 8 };
+      const s = { state: { profiles: [profile] }, version: 15 };
       localStorage.setItem("kink-profiles", JSON.stringify(s));
     });
     await page.goto("/profile/test-pw-001");
     await page.waitForLoadState("networkidle");
 
-    // DNA bar should exist
-    const dnaBar = page.locator('[aria-label="Kink DNA verdeling"]');
-    expect(await dnaBar.count()).toBeGreaterThan(0);
+    // Overview should count the five rated kinks — not the vacuous
+    // "Nog niets beoordeeld." that also contains the word.
+    await expect(page.locator("text=5 beoordeeld").first()).toBeVisible();
 
-    // Overview section should show rated count
-    const ratedText = page.locator("text=beoordeeld");
-    expect(await ratedText.count()).toBeGreaterThan(0);
+    // The DNA bar left the hero in 5bd1c25 ("hero is identity, not
+    // statistics") — it now lives in the Bewerken tab's sticky header,
+    // and the tabs themselves are radios these days.
+    await page.getByRole("radio", { name: "Bewerken" }).click();
+    const dnaBar = page.locator('[aria-label^="Kink DNA:"]');
+    await expect(dnaBar.first()).toBeVisible();
+    const dnaLabel = await dnaBar.first().getAttribute("aria-label");
+    expect(dnaLabel).not.toContain("nog niets beoordeeld");
 
     // No ★ characters anywhere on page
     const pageText = await page.evaluate(() => document.body.innerText);

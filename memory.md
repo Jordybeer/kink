@@ -46,3 +46,49 @@ When adding "subtle ambient" motion to brand elements (wordmark, logo, status in
 - **Match the vocabulary of the surface.** A blinking terminal cursor next to an editorial Cormorant Garamond serif is a design-language clash. CLI/status motifs belong on technical or system surfaces — not pinned to the brand mark.
 
 Apply this rule before shipping any motion touch on the wordmark, logo, hero, or onboarding chrome.
+
+## Session 2026-06-29/30 — Type system overhaul + bdsmtest integration (DONE, dev pushed)
+
+### What shipped (all on dev, HEAD: 179f641)
+
+**bdsmtest integration** (shipped earlier in session):
+- `lib/parseBdsmtest.ts` — parses bdsmtest.org copy-paste output (`100% Dominant\n97% Sadist\n...`)
+- `components/BdsmtestScores.tsx` — horizontal bar chart, absolute widths (`${pct}%`), top 10, "Bekijk ↗" link, "+N meer"
+- Store: `setBdsmtestScores(id, scores)` action added
+- Profile page: paste textarea + "Verwerk resultaten" button in edit Sheet → parses → stores
+- Share encoding v2: `bs` key carries bdsmtestScores
+- BdsmtestScores renders between ProfileHero and tab bar, always visible when scores exist
+- DNA bar concept killed entirely — ProfileList and ProfileHero stripped
+
+**Type system** (phases 20 + 21 + deep sweep):
+- **Section headers** (h2/h3/p introducing content blocks): Cormorant italic, text-sm or text-base, `var(--text)` or `var(--accent)`
+- **Card eyebrow tags** (e.g. BdsmtestScores label): text-xs font-medium, no uppercase
+- **Form field labels**: text-xs, no uppercase
+- **Body/metadata copy floor**: text-xs (12px) minimum everywhere
+- **Chart axis labels** (CompatibilityTimeline, ProfileTrendsChart, ContractTrendsChart): kept text-xs uppercase tracking-widest intentionally
+- **Microbadge pills** (rounded-full/rounded border status chips): kept at native size
+- **font-mono log lines** (session diagnostics): kept at native size
+- **Overzicht category headers**: text-base Cormorant italic, `var(--text)` (full white) — was text-sm grey, had zero hierarchy vs kink rows
+
+Files changed in sweep: compare, contract, profile, scene, scenes, session, timeline pages + AftercareSheet, InfoSheet, KinkRow, CategorySection, TimePicker, BdsmtestScores, QRModal, ProfileList components.
+
+**Other changes**:
+- Home "Nieuw profiel" button: PlusCircle/X icons, better label
+- Home wordmark gap: mb-10 → mb-6
+- Compare empty state: "nog niets gewaardeerd" → "rate kinks om te vergelijken"
+- .gitignore: `.claude/worktrees/` and `screenshots/` excluded
+
+### PENDING next session: Visual check
+
+**Use this prompt at session start:**
+
+"Do a full visual audit of the app. Run `npm run dev`, open the browser, and check every major page: home, profile detail (overzicht + bewerken tabs), compare, contract, scene builder, scenes list, scene detail, session, timeline. For each page check: (1) are section headers clearly distinct from body text? (2) is any text illegibly small? (3) does the Cormorant italic treatment feel consistent — does it appear in the right places and not in wrong ones? (4) any layout breaks, overflow, or broken elements? Screenshot anything wrong and fix it. Pay special attention to: profile overzicht category headers vs kink row names, compare kink list section headers, contract page section structure, session live UI density."
+
+### planned-changes.md status after this session
+- Phase 20 ✓ DONE
+- Phase 21 ✓ DONE
+- Phase 22 ✓ DONE (earlier)
+- Phase 23 — Status colour user-test (defer, verification only, no code)
+- Phase B — Agreement Archive Data Model (deferred structural)
+- Phase 8 — External Imports (bdsmtest portion DONE; FetLife paste + dupe matching still open)
+- Phase 10 — Brand polish (deferred, do after Phase 20 settled)

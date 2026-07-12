@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 
 type ToastAction = { label: string; onClick: () => void };
@@ -58,12 +58,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             role="status"
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg max-w-sm w-[calc(100%-2rem)]"
             style={{
-              background: toast.variant === "success" ? "#10b981" : "var(--surface2)",
+              // success wears the house's willing-green with dark ink — the
+              // old white-on-emerald hexes only managed ~2.5:1
+              background: toast.variant === "success" ? "var(--willing)" : "var(--surface2)",
               border: "1px solid",
-              borderColor: toast.variant === "success" ? "#059669" : "color-mix(in srgb, var(--accent) 50%, transparent)",
+              borderColor: toast.variant === "success" ? "color-mix(in srgb, var(--willing) 60%, black)" : "color-mix(in srgb, var(--accent) 50%, transparent)",
             }}
           >
-            <span className="flex-1 text-sm" style={{ color: toast.variant === "success" ? "#fff" : "var(--text2)" }}>
+            <span className="flex-1 text-sm" style={{ color: toast.variant === "success" ? "var(--on-accent)" : "var(--text2)" }}>
               {toast.message}
             </span>
             {toast.action && (
@@ -73,7 +75,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   dismiss();
                 }}
                 className="focus-ring text-sm font-semibold flex-none px-3 py-1.5 rounded-lg"
-                style={{ background: toast.variant === "success" ? "#059669" : "var(--accent)", color: toast.variant === "success" ? "#fff" : "#000" }}
+                style={{ background: toast.variant === "success" ? "var(--on-accent)" : "var(--accent)", color: toast.variant === "success" ? "var(--willing)" : "var(--on-accent)" }}
               >
                 {toast.action.label}
               </button>
@@ -81,7 +83,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <button
               onClick={dismiss}
               className="focus-ring text-xs flex-none"
-              style={{ color: toast.variant === "success" ? "#fff" : "var(--text2)" }}
+              style={{ color: toast.variant === "success" ? "var(--on-accent)" : "var(--text2)" }}
               aria-label="Sluiten"
             >
               <X size={16} aria-hidden="true" />

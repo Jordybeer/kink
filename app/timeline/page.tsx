@@ -6,6 +6,7 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { CompatibilityTimeline } from "@/components/CompatibilityTimeline";
 import { ContractTrendsChart } from "@/components/ContractTrendsChart";
 import PageShell from "@/components/PageShell";
+import ProfileSelect from "@/components/ProfileSelect";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
@@ -41,7 +42,13 @@ function TimelinePage() {
   const bothSelected = !!profileA && !!profileB;
 
   return (
-    <PageShell width="2xl">
+    <PageShell width="2xl" className="lg:max-w-4xl">
+      {/* Masthead */}
+      <div className="mb-5">
+        <h1 className="text-2xl" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>Verloop</h1>
+        <p className="text-xs uppercase tracking-[0.22em] mt-1" style={{ color: "var(--text2)" }}>hoe jullie afspraken bewegen</p>
+      </div>
+
       {/* Profile selectors */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {(
@@ -51,42 +58,35 @@ function TimelinePage() {
           ] as const
         ).map(({ id, setId, label, colour }) => (
           <div key={label}>
-            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--text2)" }}>
+            <label className="block text-xs mb-1" style={{ color: colour }}>
               {label}
             </label>
-            <select
+            <ProfileSelect
+              profiles={profiles}
               value={id}
-              onChange={(e) => setId(e.target.value)}
-              className="focus-ring w-full rounded-lg px-2 py-2 text-sm focus:outline-none"
-              style={{ background: "var(--surface)", border: `1px solid ${colour}`, color: "var(--text)" }}
-            >
-              <option value="">— selecteer —</option>
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.role})
-                </option>
-              ))}
-            </select>
+              onChange={setId}
+              placeholder="— selecteer —"
+            />
           </div>
         ))}
       </div>
 
       {/* Content */}
       {!bothSelected ? (
-        <div className="rounded p-6 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="rounded-xl p-6 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
-            Selecteer twee profielen om hun contractgeschiedenis te bekijken.
+            Kies twee profielen om hun verloop te zien.
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded p-6 text-center flex flex-col gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <p className="text-sm font-medium">Nog geen contracten gevonden</p>
+        <div className="rounded-xl p-6 text-center flex flex-col gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <p className="text-sm font-medium">Nog geen contracten</p>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
-            De geschiedenis wordt gevuld zodra jullie een contract genereren. Maak er één aan en exporteer het als PDF — dat slaat een momentopname op.
+            Leg een moment vast met een contract — dan zie je hier hoe jullie afspraken zich ontwikkelen.
           </p>
           <Link
             href={`/contract?a=${aId}&b=${bId}`}
-            className="focus-ring mt-1 inline-block rounded px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
+            className="focus-ring mt-1 inline-block rounded-xl px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Maak contract
@@ -95,9 +95,9 @@ function TimelinePage() {
       ) : (
         <>
           <ContractTrendsChart contracts={filtered} />
-          <div className="rounded p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="rounded-xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
                 {profileA.name} &amp; {profileB.name}
               </h2>
               <span className="text-xs" style={{ color: "var(--text2)" }}>

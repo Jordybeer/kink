@@ -2,7 +2,7 @@
 import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeftRight, Clapperboard, FileText, ChevronDown, Lock } from "lucide-react";
+import { ArrowsLeftRight, FilmSlate, FileText, CaretDown, Lock } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkStatus, KinkEntry, Profile } from "@/types";
@@ -11,36 +11,35 @@ import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import DiscussedToggle from "@/components/DiscussedToggle";
-
-const STATUS_LABEL: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "Heel graag",
-  willing: "Ja",
-  maybe:   "Misschien",
-  no:      "Voor hen",
-  hard_no: "Harde grens",
-};
+import StatusGlyph from "@/components/StatusGlyph";
+import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
 
-function StatusBadge({ status, colour }: { status: KinkStatus; colour: string }) {
+// Verdicts wear their own colours — who said it is already told by the
+// column; what they said deserves the house language (dashed for a grens).
+function StatusBadge({ status }: { status: KinkStatus }) {
   if (!status) return <span className="text-xs" style={{ color: "var(--text2)" }}>—</span>;
+  const colour = STATUS_VAR[status];
   return (
     <span
-      className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap"
+      className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center gap-1"
       style={{
         color: colour,
         borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
         background: `color-mix(in srgb, ${colour} 15%, transparent)`,
+        borderStyle: status === "hard_no" ? "dashed" : "solid",
       }}
     >
+      <StatusGlyph status={status} />
       {STATUS_LABEL[status]}
     </span>
   );
 }
 
-function EntryBadge({ entry, colour }: { entry: KinkEntry; colour: string }) {
-  return <StatusBadge status={entry.status} colour={colour} />;
+function EntryBadge({ entry }: { entry: KinkEntry }) {
+  return <StatusBadge status={entry.status} />;
 }
 
 function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
@@ -58,7 +57,7 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
             : `${score} procent overlap`
         }
         style={{
-          fontFamily: 'var(--font-display, Georgia, "Times New Roman", serif)',
+          fontFamily: "var(--font-display, Georgia, serif)",
           fontStyle: "italic",
           fontWeight: 400,
           fontSize: "clamp(56px, 16vw, 80px)",
@@ -89,10 +88,10 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
         )}
       </div>
       <p
-        className="text-[10px] uppercase tracking-[0.22em] mt-1"
+        className="text-xs uppercase tracking-[0.22em] mt-1"
         style={{ color: "var(--text2)" }}
       >
-        {score === null ? "nog niets gewaardeerd" : "overlap"}
+        {score === null ? "rate kinks om te vergelijken" : "overlap"}
       </p>
       {total > 0 && (
         <div
@@ -151,7 +150,7 @@ function AlignmentBar({ match, discuss, soft, limit, onFilter }: {
     ) : null;
   return (
     <div
-      className="flex rounded overflow-hidden mb-4"
+      className="flex rounded-full overflow-hidden mb-4"
       style={{ height: 6, background: "var(--surface3)" }}
       role="img"
       aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${soft} zacht, ${limit} grenzen`}
@@ -195,7 +194,7 @@ function ProfileChip({
         {profile?.avatarDataUrl ? (
           <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <span style={{ color: profile ? "#000" : "var(--text2)" }}>
+          <span style={{ color: profile ? "var(--on-accent)" : "var(--text2)" }}>
             {profile ? profile.name[0].toUpperCase() : slot}
           </span>
         )}
@@ -205,13 +204,13 @@ function ProfileChip({
           {profile ? profile.name : "Kies profiel…"}
         </p>
         {profile && (
-          <p className="text-[10px] truncate leading-tight" style={{ color: colour }}>
+          <p className="text-xs truncate leading-tight" style={{ color: colour }}>
             {isPartner && <Lock size={9} className="inline mr-0.5" aria-hidden />}
             Profiel {slot}
           </p>
         )}
       </div>
-      <ChevronDown size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
+      <CaretDown size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
     </button>
   );
 }
@@ -266,7 +265,7 @@ function ProfileSelectorSheet({
           {p.avatarDataUrl ? (
             <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span style={{ color: isSelected ? "#000" : "var(--text2)" }}>{p.name[0].toUpperCase()}</span>
+            <span style={{ color: isSelected ? "var(--on-accent)" : "var(--text2)" }}>{p.name[0].toUpperCase()}</span>
           )}
         </div>
         <div className="flex-1 min-w-0 text-left">
@@ -291,12 +290,15 @@ function ProfileSelectorSheet({
   return (
     <Sheet open={open} onClose={onClose} aria-label={`Kies profiel ${slot}`}>
       <SheetContent>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: colour }}>
+        <p
+          className="text-sm mb-3"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+        >
           Profiel {slot}
         </p>
         {own.length > 0 && (
           <>
-            <p className="text-[10px] uppercase tracking-widest mb-1 px-1" style={{ color: "var(--text2)" }}>
+            <p className="text-xs uppercase tracking-widest mb-1 px-1" style={{ color: "var(--text2)" }}>
               Jouw profielen
             </p>
             {own.map(renderRow)}
@@ -304,7 +306,7 @@ function ProfileSelectorSheet({
         )}
         {partners.length > 0 && (
           <>
-            <p className="text-[10px] uppercase tracking-widest mt-3 mb-1 px-1" style={{ color: "var(--text2)" }}>
+            <p className="text-xs uppercase tracking-widest mt-3 mb-1 px-1" style={{ color: "var(--text2)" }}>
               Partners
             </p>
             {partners.map(renderRow)}
@@ -343,6 +345,8 @@ function ComparePage() {
   const [bId, setBId] = useState(cleanParam(searchParams.get("b")));
   const [filterMode, setFilterMode] = useState<"all" | "match" | "conflict" | "hardno">("all");
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
+  // Notes stay muzzled until summoned — 66 cards × two open textareas was 17k px of scroll.
+  const [openNotes, setOpenNotes] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
 
@@ -463,7 +467,7 @@ function ComparePage() {
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             aria-label="Wissel profielen"
           >
-            <ArrowLeftRight size={15} />
+            <ArrowsLeftRight size={15} />
           </button>
           <ProfileChip
             profile={profileB}
@@ -474,7 +478,7 @@ function ComparePage() {
           />
         </div>
         {samePairError && (
-          <p className="text-xs mt-2 px-1" style={{ color: "var(--conflict)" }}>
+          <p className="text-sm mt-2 px-1" style={{ color: "var(--conflict)" }}>
             Kies twee verschillende profielen om te vergelijken.
           </p>
         )}
@@ -494,7 +498,7 @@ function ComparePage() {
                 <button
                   key={cat}
                   onClick={() => scrollToCategory(cat)}
-                  className="focus-ring flex-none px-1.5 py-0.5 text-[10px] uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
+                  className="focus-ring flex-none px-1.5 py-0.5 text-xs uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
                   style={categoryPillStyle(rate)}
                 >
                   {catAbbrev(cat)}
@@ -531,7 +535,7 @@ function ComparePage() {
                   {labels[f]}
                   {badge !== null && badge > 0 && (
                     <span
-                      className="text-[10px] px-1 py-px rounded font-semibold tabular-nums"
+                      className="text-[11px] px-1 py-px rounded-full font-semibold tabular-nums"
                       style={{
                         background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`,
                         color: badgeColour,
@@ -571,7 +575,7 @@ function ComparePage() {
                 if (!kinks.length) return null;
                 return (
                   <section key={cat} id={`cat-${cat}`} className="mb-6 scroll-mt-32">
-                    <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                    <h2 className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
                       {cat}
                     </h2>
                     <div className="flex flex-col gap-2">
@@ -608,7 +612,7 @@ function ComparePage() {
                               <button
                                 onClick={() => toggleDiscussed(kink.id)}
                                 aria-label={isDiscussed ? `${kink.name} als niet besproken markeren` : `${kink.name} als besproken markeren`}
-                                className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                                className="text-[11px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-none"
                                 style={
                                   isDiscussed
                                     ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
@@ -619,7 +623,7 @@ function ComparePage() {
                               </button>
                             </div>
                             <div className="flex items-center gap-2 mb-1">
-                              <EntryBadge entry={eA} colour={COLOUR_A} />
+                              <EntryBadge entry={eA} />
                               <div
                                 className="flex-1 h-px"
                                 style={{
@@ -627,11 +631,16 @@ function ComparePage() {
                                   opacity: matched ? 0.6 : 0.25,
                                 }}
                               />
-                              <EntryBadge entry={eB} colour={COLOUR_B} />
+                              <EntryBadge entry={eB} />
                             </div>
                             {(() => {
                               const showReadOnlyA = profileA.isImported && !!eA.comment;
                               const showReadOnlyB = profileB.isImported && !!eB.comment;
+                              const canEdit = !profileA.isImported || !profileB.isImported;
+                              const notesOpen =
+                                openNotes.has(kink.id) ||
+                                (!profileA.isImported && !!eA.comment) ||
+                                (!profileB.isImported && !!eB.comment);
                               return (
                                 <>
                                   {(showReadOnlyA || showReadOnlyB) && (
@@ -650,6 +659,17 @@ function ComparePage() {
                                       )}
                                     </div>
                                   )}
+                                  {canEdit && !notesOpen && (
+                                    <button
+                                      onClick={() => setOpenNotes((s) => new Set(s).add(kink.id))}
+                                      aria-label={`Notitie toevoegen voor ${kink.name}`}
+                                      className="focus-ring mt-1 -mb-1 inline-flex items-center h-8 text-xs rounded-lg px-2 -ml-2 transition-colors"
+                                      style={{ color: "var(--text2)" }}
+                                    >
+                                      + Notitie
+                                    </button>
+                                  )}
+                                  {canEdit && notesOpen && (
                                   <div className="mt-2 space-y-1.5">
                                     {!profileA.isImported && (
                                       <textarea
@@ -684,6 +704,7 @@ function ComparePage() {
                                       />
                                     )}
                                   </div>
+                                  )}
                                 </>
                               );
                             })()}
@@ -749,14 +770,14 @@ function ComparePage() {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm font-medium flex-1 flex items-center gap-1.5">
                               {item.name}
-                              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
+                              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
                                 eigen
                               </span>
                             </span>
                             <button
                               onClick={() => toggleDiscussed(rowKey)}
                               aria-label={isDiscussed ? `${item.name} als niet besproken markeren` : `${item.name} als besproken markeren`}
-                              className="text-[10px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                              className="text-[11px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-none"
                               style={
                                 isDiscussed
                                   ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
@@ -767,7 +788,7 @@ function ComparePage() {
                             </button>
                           </div>
                           <div className="flex items-center gap-2">
-                            <EntryBadge entry={eA} colour={COLOUR_A} />
+                            <EntryBadge entry={eA} />
                             <div
                               className="flex-1 h-px"
                               style={{
@@ -775,8 +796,28 @@ function ComparePage() {
                                 opacity: matched ? 0.6 : 0.25,
                               }}
                             />
-                            <EntryBadge entry={eB} colour={COLOUR_B} />
+                            <EntryBadge entry={eB} />
                           </div>
+                          {(() => {
+                            const canEdit = (!profileA.isImported && !!item.aId) || (!profileB.isImported && !!item.bId);
+                            const notesOpen =
+                              openNotes.has(rowKey) ||
+                              (!profileA.isImported && !!item.aId && !!eA.comment) ||
+                              (!profileB.isImported && !!item.bId && !!eB.comment);
+                            if (canEdit && !notesOpen) {
+                              return (
+                                <button
+                                  onClick={() => setOpenNotes((s) => new Set(s).add(rowKey))}
+                                  aria-label={`Notitie toevoegen voor ${item.name}`}
+                                  className="focus-ring mt-1 -mb-1 inline-flex items-center h-8 text-xs rounded-lg px-2 -ml-2 transition-colors"
+                                  style={{ color: "var(--text2)" }}
+                                >
+                                  + Notitie
+                                </button>
+                              );
+                            }
+                            if (!canEdit) return null;
+                            return (
                           <div className="mt-2 space-y-1.5">
                             {!profileA.isImported && item.aId && (
                               <textarea
@@ -811,6 +852,8 @@ function ComparePage() {
                               />
                             )}
                           </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}
@@ -827,7 +870,7 @@ function ComparePage() {
                   className="focus-ring flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-medium transition-opacity hover:opacity-80"
                   style={{ borderColor: "var(--border)", color: "var(--text)" }}
                 >
-                  <Clapperboard size={14} aria-hidden="true" />
+                  <FilmSlate size={14} aria-hidden="true" />
                   Plan een scène
                 </Link>
                 <Link

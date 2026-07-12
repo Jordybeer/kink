@@ -74,7 +74,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
                 key={i}
                 role="menuitem"
                 onClick={() => { item.onClick?.(); onClose(); }}
-                className="w-full flex items-center justify-between px-4 py-[13px] text-[14px] font-medium text-left transition-colors duration-100 active:scale-[0.97]"
+                className="w-full flex items-center justify-between px-4 py-[13px] text-sm font-medium text-left transition-colors duration-100 active:scale-[0.97]"
                 style={{
                   color: item.danger ? "var(--hard-no)" : "var(--text)",
                   background: "transparent",

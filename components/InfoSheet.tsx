@@ -7,39 +7,41 @@ interface Props {
   onClose: () => void;
 }
 
-const LEVEL_BADGE: Record<1 | 2 | 3 | 4, { label: string; colorVar: string }> = {
-  1: { label: "Niveau 1", colorVar: "var(--yes)" },
-  2: { label: "Niveau 2", colorVar: "var(--willing)" },
-  3: { label: "Niveau 3", colorVar: "var(--maybe)" },
-  4: { label: "Niveau 4", colorVar: "var(--accent)" },
-};
-
 export default function InfoSheet({ kink, onClose }: Props) {
-  const badge = kink ? LEVEL_BADGE[kink.level] : null;
-
   return (
     <Sheet open={kink !== null} onClose={onClose} aria-label={kink?.name ?? "Kink informatie"}>
       <SheetContent>
-        {badge && (
-          <span
-            className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-3 border"
-            style={{
-              background: `color-mix(in srgb, ${badge.colorVar} 15%, transparent)`,
-              color: badge.colorVar,
-              borderColor: `color-mix(in srgb, ${badge.colorVar} 40%, transparent)`,
-            }}
-          >
-            {badge.label}
-          </span>
-        )}
-
-        <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>
+        <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>{kink?.category ?? ""}</p>
+        <h2
+          className="text-xl italic leading-tight mb-2"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+        >
           {kink?.name ?? ""}
         </h2>
 
-        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--text2)" }}>
-          {kink?.category ?? ""}
-        </p>
+        {/* Levels are depth markers, not verdicts — they wear neutral, never a
+            status colour. Intensity speaks through the filled dots. */}
+        {kink && (
+          <span
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full mb-4 border"
+            style={{ background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
+          >
+            <span className="inline-flex gap-0.5" aria-hidden="true">
+              {[1, 2, 3, 4].map((l) => (
+                <span
+                  key={l}
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{
+                    background: l <= kink.level ? "var(--text2)" : "transparent",
+                    border: "1px solid var(--text2)",
+                    opacity: l <= kink.level ? 1 : 0.4,
+                  }}
+                />
+              ))}
+            </span>
+            Niveau {kink.level}
+          </span>
+        )}
 
         <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text)" }}>
           {kink?.description ?? "Geen beschrijving beschikbaar."}
