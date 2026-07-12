@@ -395,7 +395,7 @@ export default function ProfilePage({ params }: Props) {
       </div>
 
       <h1 className="sr-only">{profile.name}</h1>
-      <div style={{ opacity: effectiveTab === "bewerken" ? 0.7 : 1, transition: "opacity 220ms ease" }}>
+      <div className="transition-opacity duration-200" style={{ opacity: effectiveTab === "bewerken" ? 0.7 : 1 }}>
         <ProfileHero
           profile={profile}
           onShare={isShared ? undefined : () => setShareOpen(true)}
