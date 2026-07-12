@@ -66,7 +66,10 @@ export default function RolePicker({ value, onChange }: Props) {
               </button>
             )}
           </div>
-          <div className="overflow-y-auto px-3 pb-8">
+          {/* flex-1 min-h-0 is what lets this list actually scroll inside the
+              capped drawer — without it the flex child refuses to shrink and
+              the bottom roles dangle off-screen, unreachable. */}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pb-8">
             {ROLE_GROUPS.map((g) => (
               <div key={g.label} className="mb-2">
                 <p className="text-xs uppercase tracking-widest px-2 mb-1 opacity-60" style={{ color: "var(--text2)" }}>

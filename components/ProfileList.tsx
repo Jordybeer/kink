@@ -255,7 +255,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                               <div className="flex-1 min-w-0">
                                 {/* Every name speaks the house serif — the portrait just speaks louder. */}
                                 <p
-                                  className={`${isPortrait ? "text-xl" : "text-base"} italic truncate leading-tight pr-[0.15em] pb-[0.15em] -mb-[0.15em]`}
+                                  className={`${isPortrait ? "text-xl" : "text-base"} italic truncate leading-tight serif-safe`}
                                   style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
                                 >
                                   {isMulti ? p.role : p.name}
@@ -329,7 +329,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                   Vergelijk
                 </p>
                 <p
-                  className="text-lg italic leading-tight truncate pr-[0.15em] pb-[0.15em] -mb-[0.15em]"
+                  className="text-lg italic leading-tight truncate serif-safe"
                   style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
                 >
                   {pairA?.name}

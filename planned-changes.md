@@ -56,6 +56,14 @@ First attempt reverted (PR #219 closed). Rules in `memory.md` and `corrections.m
 
 Unscoped ideas, grouped by theme. Promote to a phase before working on any of them. Pruned + verified against live code 2026-07-08: DNA-bar items dropped (the bar was executed in June), and these were confirmed already shipped — TopNav pill tap feedback (`MotionLink` + `TAP_SPRING`), status active glow (`.status-*` classes + glow keyframes), the 40px profile pencil (gone), vibe badge items (badge no longer exists), reduced-motion scroll guard (blur is static now; `useMotionSafe` gates motion).
 
+### Post-v6 re-rating leftovers (added 2026-07-12 late night — the ~8.7 → 9+ shortlist)
+In order of expected win, per the evening's re-rating against the July 11 audit:
+1. **Re-enable CI** — the `safe-word check` workflow is still manually disabled on GitHub (since ~06-21); one click by the owner, repo → Actions → Enable workflow. Everything else on this list is worth less while the watchdog sleeps.
+2. **Motion consolidation** — 15 inline `transition:` styles remain (Onboarding ×6, AppLock ×3, compare ×2, 4 strays); fold them into the shared motion vocabulary.
+3. **Compare-page extraction** — compare (937), session (890) and scene (828) are now the fattest pages; same copy-move `lib/` treatment that slimmed Contract 1372→754 and Profile 1133→784.
+4. **Last 3 bare radii** — the design-system sweep left three bare `rounded` classes standing.
+5. **Human device checklist** — the VoiceOver / reduced-motion on-device checks from the Nine-Tails checklist; no code, just hands and a phone.
+
 ### Nine-Tails afterglow (added 2026-07-12, from the sweep itself)
 - **e2e fixture rot guard**: `buildStore` still seeds persist `version: 8` — the migration wipes any seeded `scenes` (pre-v10 payloads get `scenes = []`). Bit the Phase 9 proof shots. Bump the fixture to v15 and teach `buildStore` extras to carry `scenes`/`contracts` so future specs don't rediscover this.
 - **TRAFFIC map deduped**: the green/amber/red label+colour map lives twice (`app/scenes/page.tsx` and `app/scenes/[id]/page.tsx`). One home in `lib/` next to the status vocabulary.
@@ -123,6 +131,18 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 ---
 
 ## Shipped — historical ledger (full detail preserved in git log)
+
+### Post-v6 polish night (dev, 2026-07-12 evening)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Uniform verdict pills on profile overview — `min-w-[5.5rem] text-center` so Nieuwsgierig stops jumping | `7a6261c` |
+| — | `.serif-safe` utility — italic serif clip protection on all four overhang sides (left swash included), replacing the ad-hoc right/bottom-only pads; TopNav left-aligned in both hub and focused mode (title next to back chevron, actions pinned right, PWA `ml-auto` guard) | `656bc84` |
+| — | Role drawer unstuck — `flex-1 min-h-0 overscroll-contain` lets the 24-role list actually scroll; verified with real touch swipes, bottom roles reachable | `35e8059` |
+| — | "Verken grenzen. Samen." restored as the permanent hero vow; house-state line whispers beneath | `a161ae4` |
+| — | Catalogue grows to 242 — 39 new temptations across ten categories (rimmen, primal, free use, keyholding, predicament bondage, glory hole, figging, deepthroat, trio…), each with house-style Dutch description + safety note; category listings now climb by intensity (stable level sort in both getters, hand order preserved within a level) | *(this commit)* |
+
+⚠ Found during the evening's audit: the `safe-word check` workflow is **manually disabled** on GitHub since ~2026-06-21 — no CI ran on any PR or push since, including the v6 release. Re-enable via repo → Actions → safe-word check → Enable workflow.
 
 ### Operation Nine-Tails — audit-to-≥9 oneshot (worktree-needleplay, 2026-07-12)
 

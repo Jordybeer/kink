@@ -52,6 +52,27 @@ describe("getKinksByCategoryAndLevel", () => {
   });
 });
 
+describe("intensity ordering (juli 2026 uitbreiding)", () => {
+  it("every category listing climbs from beginner to diepgaand", () => {
+    for (const cat of CATEGORIES) {
+      const levels = getKinksByCategoryAndLevel(cat, 4).map((k) => k.level);
+      const sorted = [...levels].sort((a, b) => a - b);
+      expect(levels).toEqual(sorted);
+    }
+  });
+
+  it("the new temptations joined the catalogue", () => {
+    const ids = new Set(KINKS.map((k) => k.id));
+    for (const id of [
+      "rimmen", "dirty_talk", "free_use", "keyholding", "predicament_bondage",
+      "primal_play", "glory_hole", "figging", "body_slapping", "trio_groepsseks",
+    ]) {
+      expect(ids.has(id), `missing kink: ${id}`).toBe(true);
+    }
+    expect(KINKS.length).toBeGreaterThanOrEqual(242);
+  });
+});
+
 describe("LEVEL_MAX", () => {
   it("maps all four experience levels", () => {
     expect(LEVEL_MAX.beginner).toBe(1);
