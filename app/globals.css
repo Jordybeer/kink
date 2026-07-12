@@ -435,6 +435,14 @@ select {
   .pwa-only { display: flex !important; }
 }
 
+/* Italic serif overhangs its box on every side — swashes left, tails right,
+   descenders below. Pad the clip box outward and pull the margins back in,
+   so truncate stops shaving glyphs while the layout stays byte-identical. */
+.serif-safe {
+  padding: 0.1em 0.15em 0.15em 0.12em;
+  margin: -0.1em -0.15em -0.15em -0.12em;
+}
+
 .ks-card {
   background: var(--surface);
   border: 1px solid var(--border);

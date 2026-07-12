@@ -58,9 +58,8 @@ export default function TopNav() {
     ];
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="max-w-2xl mx-auto px-3 h-14 grid grid-cols-[1fr_auto_1fr] items-center" aria-label="Hoofdnavigatie">
-          <div />
-          <div className="pwa-hidden flex items-center justify-center gap-0.5 sm:gap-1">
+        <nav className="max-w-2xl mx-auto px-3 h-14 flex items-center" aria-label="Hoofdnavigatie">
+          <div className="pwa-hidden flex items-center gap-0.5 sm:gap-1 -ml-1.5">
             {items.map(({ href, label, icon: Icon, forceActive }) => {
               const active = forceActive !== undefined ? forceActive : (path === href || path.startsWith(href + "/"));
               return (
@@ -79,7 +78,7 @@ export default function TopNav() {
               );
             })}
           </div>
-          <div className="flex items-center justify-end gap-2">
+          <div className="ml-auto flex items-center justify-end gap-2">
             <StatusDot />
             <button
               type="button"
@@ -106,25 +105,23 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className="max-w-2xl mx-auto px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center" aria-label="Hoofdnavigatie">
-        <div className="flex items-center">
-          <MotionLink
-            href={back}
-            whileTap={TAP_SPRING}
-            className="focus-ring -ml-1 flex items-center justify-center h-10 w-10 rounded-full"
-            style={{ color: "var(--text2)" }}
-            aria-label="Terug"
-          >
-            <CaretLeft size={18} />
-          </MotionLink>
-        </div>
+      <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
+        <MotionLink
+          href={back}
+          whileTap={TAP_SPRING}
+          className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
+          style={{ color: "var(--text2)" }}
+          aria-label="Terug"
+        >
+          <CaretLeft size={18} />
+        </MotionLink>
         <span
-          className="text-base italic truncate text-center px-2"
+          className="flex-1 min-w-0 text-base italic truncate serif-safe"
           style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
         >
           {title}
         </span>
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex-none flex items-center justify-end gap-2">
           {profileIdFromPath && (
             <Link
               href={`/compare?a=${profileIdFromPath}`}

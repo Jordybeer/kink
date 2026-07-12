@@ -85,7 +85,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
         {/* Identity */}
         <div className="flex-1 min-w-0">
           <h2
-            className="truncate"
+            className="truncate serif-safe"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
               fontStyle: "italic",
@@ -94,10 +94,6 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               lineHeight: 1.1,
               letterSpacing: "-0.01em",
               color: "var(--text)",
-              // Italic serif overhangs its box — pad the clip so tails survive the truncate.
-              paddingRight: "0.15em",
-              paddingBottom: "0.15em",
-              marginBottom: "-0.15em",
             }}
           >
             {profile.name}
