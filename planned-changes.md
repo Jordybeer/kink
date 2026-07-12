@@ -124,6 +124,17 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### Post-v6 polish night (dev, 2026-07-12 evening)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Uniform verdict pills on profile overview — `min-w-[5.5rem] text-center` so Nieuwsgierig stops jumping | `7a6261c` |
+| — | `.serif-safe` utility — italic serif clip protection on all four overhang sides (left swash included), replacing the ad-hoc right/bottom-only pads; TopNav left-aligned in both hub and focused mode (title next to back chevron, actions pinned right, PWA `ml-auto` guard) | `656bc84` |
+| — | Role drawer unstuck — `flex-1 min-h-0 overscroll-contain` lets the 24-role list actually scroll; verified with real touch swipes, bottom roles reachable | `35e8059` |
+| — | "Verken grenzen. Samen." restored as the permanent hero vow; house-state line whispers beneath | `a161ae4` |
+
+⚠ Found during the evening's audit: the `safe-word check` workflow is **manually disabled** on GitHub since ~2026-06-21 — no CI ran on any PR or push since, including the v6 release. Re-enable via repo → Actions → safe-word check → Enable workflow.
+
 ### Operation Nine-Tails — audit-to-≥9 oneshot (worktree-needleplay, 2026-07-12)
 
 One branch, eleven phases, every audit category flogged toward ≥9. Plan of record: `~/.claude/plans/make-a-giant-plan-parsed-barto.md`.
