@@ -13,7 +13,7 @@ const IOS_STEPS = [
   {
     icon: ShareNetwork,
     title: "Tap het deel-icoon",
-    body: "□↑ in de Safari-navigatiebalk onderin.",
+    body: "Het vierkant met de pijl omhoog, onderin de Safari-balk.",
   },
   {
     icon: PlusSquare,
