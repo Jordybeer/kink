@@ -1462,16 +1462,313 @@ export const KINKS: Kink[] = [
     level: 4,
     description: "Klysma als straf of controle-element. Intensief D/s-spel; let op buikpijn, overbelasting van darmen en retentietijd.",
   },
+
+  // ─── Anal & Penetration (verdieping) ───────────────────────────────────────
+  {
+    id: "rimmen",
+    name: "Rimmen",
+    category: "Anal & Penetration",
+    level: 2,
+    description: "Orale stimulatie van de anus, gevend of ontvangend. Intiem en intens gevoelig. Hygiëne vooraf en eventueel een beflapje verlagen de drempel en het risico.",
+  },
+  {
+    id: "dubbele_penetratie",
+    name: "Dubbele penetratie",
+    category: "Anal & Penetration",
+    level: 3,
+    description: "Gelijktijdige penetratie van twee openingen, met partners of speeltjes. Vraagt om ruime opwarming, veel glijmiddel en een rustig tempo. Communiceer doorlopend over comfort.",
+  },
+  {
+    id: "anale_training",
+    name: "Anale training (oprekken)",
+    category: "Anal & Penetration",
+    level: 3,
+    description: "Geleidelijk oprekken van de anus met oplopende maten, vaak over weken opgebouwd. Geduld is de techniek: nooit forceren, altijd glijmiddel, stop bij scherpe pijn.",
+  },
+  {
+    id: "deepthroat",
+    name: "Deepthroat / facefucking",
+    category: "Anal & Penetration",
+    level: 3,
+    description: "Diepe orale penetratie tot in de keel, van zelf gecontroleerd tot overgenomen tempo. Kokhalsreflex went met oefening. Een handsignaal als stopwoord is verplicht — praten gaat even niet.",
+  },
+  {
+    id: "sounding",
+    name: "Sounding (urethraal)",
+    category: "Anal & Penetration",
+    level: 4,
+    description: "Het inbrengen van gladde staafjes (sounds) in de plasbuis. Hooggevoelig randspel met reëel infectie- en beschadigingsrisico. Uitsluitend steriel materiaal, steriel glijmiddel en veel kennis.",
+  },
+
+  // ─── Power Exchange (verdieping) ────────────────────────────────────────────
+  {
+    id: "dirty_talk",
+    name: "Dirty talk",
+    category: "Power Exchange",
+    level: 1,
+    description: "Expliciete, opwindende taal tijdens het spel — van fluisteren tot bevelen. Bespreek vooraf welke woorden aanslaan en welke juist killing zijn.",
+  },
+  {
+    id: "titels_aanspreekvormen",
+    name: "Titels & aanspreekvormen",
+    category: "Power Exchange",
+    level: 1,
+    description: "Vaste titels zoals Sir, Meester, Meesteres of prinses als teken van de dynamiek. Klein ritueel, groot effect. Spreek af wanneer ze gelden — alleen in de scène of ook daarbuiten.",
+  },
+  {
+    id: "joi",
+    name: "JOI (masturbatie-instructies)",
+    category: "Power Exchange",
+    level: 2,
+    description: "De dominant dicteert precies hoe, wanneer en in welk tempo de partner zichzelf aanraakt. Controle zonder aanraking; werkt ook op afstand. Duidelijke instructies zijn het halve werk.",
+  },
+  {
+    id: "overstimulatie",
+    name: "Overstimulatie",
+    category: "Power Exchange",
+    level: 3,
+    description: "Doorgaan met stimuleren ná het orgasme, wanneer alles hypergevoelig is. Intens en snel overweldigend — spreek een duidelijk stopsignaal af en bouw de duur langzaam op.",
+  },
+  {
+    id: "geruineerd_orgasme",
+    name: "Geruïneerd orgasme",
+    category: "Power Exchange",
+    level: 3,
+    description: "De stimulatie stopt exact op het punt van klaarkomen, zodat het orgasme leegloopt zonder bevrediging. Frustrerend bij ontwerp; hoort bij orgasmecontrole en vraagt om goede timing.",
+  },
+  {
+    id: "keyholding",
+    name: "Keyholding (sleutelhouder)",
+    category: "Power Exchange",
+    level: 3,
+    description: "Eén partner beheert letterlijk de sleutel van het kuisheidsapparaat van de ander. Langdurige machtsdynamiek; maak afspraken over duur, hygiënepauzes en een noodsleutel.",
+  },
+  {
+    id: "free_use",
+    name: "Free use dynamiek",
+    category: "Power Exchange",
+    level: 4,
+    description: "Vooraf gegeven toestemming om de partner op afgesproken momenten seksueel te gebruiken zonder vraag vooraf. Vergt ijzersterke kaders, heldere grenzen en een altijd geldig stopwoord.",
+  },
+  {
+    id: "erotische_hypnose",
+    name: "Erotische hypnose",
+    category: "Power Exchange",
+    level: 4,
+    description: "Trance en suggestie als spel met controle en overgave. Diep psychologisch; werk alleen met wederzijds vertrouwen, bespreek suggesties vooraf en bouw altijd een wek-signaal in.",
+  },
+
+  // ─── Fluid & Bodily (verdieping) ────────────────────────────────────────────
+  {
+    id: "breeding_creampie",
+    name: "Breeding / creampie",
+    category: "Fluid & Bodily",
+    level: 2,
+    description: "Klaarkomen in de partner, al dan niet met een bevruchtingsfantasie. Bespreek anticonceptie en soa-status expliciet — de fantasie is vrij, de biologie niet.",
+  },
+  {
+    id: "snowballen",
+    name: "Snowballen",
+    category: "Fluid & Bodily",
+    level: 2,
+    description: "Sperma doorgeven met een kus na orale seks. Intiem vloeistofspel; soa-afspraken gelden hier net zo goed als bij andere uitwisseling.",
+  },
+  {
+    id: "lactatie",
+    name: "Lactatie / borstvoeding-spel",
+    category: "Fluid & Bodily",
+    level: 3,
+    description: "Erotisch spel rond borstvoeding of geïnduceerde lactatie, vaak verweven met verzorgende dynamieken. Inductie vergt maanden toewijding; bespreek wat het emotioneel betekent.",
+  },
+
+  // ─── Bondage (verdieping) ───────────────────────────────────────────────────
+  {
+    id: "sleepsack",
+    name: "Sleepsack",
+    category: "Bondage",
+    level: 3,
+    description: "Een lichaamszak van leer of latex die het hele lichaam omsluit. Totale bewegingsloosheid en zware sensorische inperking. Nooit alleen laten; let op temperatuur en ademruimte.",
+  },
+  {
+    id: "predicament_bondage",
+    name: "Predicament bondage",
+    category: "Bondage",
+    level: 4,
+    description: "Vastbinden in een houding waarin elke verlichting van de ene spanning een andere verergert — een duivels dilemma. Vereist ervaren rigging, korte sessies en scherp toezicht.",
+  },
+  {
+    id: "vacuumbed",
+    name: "Vacuümbed",
+    category: "Bondage",
+    level: 4,
+    description: "Tussen twee latexlagen vacuüm gezogen worden — volledige immobilisatie en sensatie over het hele lichaam. Ademhaling via buis of opening; nooit zonder continue supervisie.",
+  },
+
+  // ─── Role Play (verdieping) ─────────────────────────────────────────────────
+  {
+    id: "masseur_client",
+    name: "Masseur / cliënt",
+    category: "Role Play",
+    level: 1,
+    description: "Een massage die 'per ongeluk' steeds intiemer wordt. Laagdrempelig rollenspel met langzame opbouw en veel aanraking. Perfect als opwarmer voor meer.",
+  },
+  {
+    id: "sekswerker_client",
+    name: "Sekswerker / cliënt",
+    category: "Role Play",
+    level: 2,
+    description: "Rollenspel rond betaalde seks — onderhandeling, transactie en vervreemding als kink. Spreek vooraf af wat de 'dienst' inhoudt en waar het spel eindigt.",
+  },
+  {
+    id: "fantasy_monster",
+    name: "Fantasy / monster",
+    category: "Role Play",
+    level: 2,
+    description: "Rollenspel met niet-menselijke wezens — monsters, tentakels, mythische figuren. Pure verbeelding, vaak met speciaal speelgoed. Alles mag bestaan zolang beide spelers het script kennen.",
+  },
+  {
+    id: "primal_play",
+    name: "Primal (jagen & prooi)",
+    category: "Role Play",
+    level: 3,
+    description: "Instinctief spel zonder woorden — jagen, worstelen, grommen, bijten. De prooi vlucht, de jager vangt. Fysiek intens; spreek vooraf een duidelijk stopsignaal af dat ook mid-worsteling werkt.",
+  },
+  {
+    id: "somnofilie",
+    name: "Somnofilie (consensueel slaapspel)",
+    category: "Role Play",
+    level: 4,
+    description: "Gewekt worden met seksuele aanrakingen, of doen alsof je slaapt. Toestemming wordt hier vooraf gegeven, niet in het moment — leg de kaders vast wanneer beiden klaarwakker zijn.",
+  },
+
+  // ─── Uiterlijk & Kleding (verdieping) ───────────────────────────────────────
+  {
+    id: "body_writing",
+    name: "Body writing",
+    category: "Uiterlijk & Kleding",
+    level: 1,
+    description: "Woorden of tekens op het lichaam schrijven — namen, titels, vernederingen of bezitsclaims. Gebruik huidvriendelijke stiften; de tekst wast weg, het gevoel blijft.",
+  },
+  {
+    id: "maskers",
+    name: "Maskers",
+    category: "Uiterlijk & Kleding",
+    level: 2,
+    description: "Maskers voor anonimiteit, transformatie of esthetiek — van venetiaans tot leer. Wie zijn gezicht verliest, wint een rol. Let op zicht en ademruimte bij gesloten modellen.",
+  },
+  {
+    id: "sissificatie",
+    name: "Sissificatie / feminisatie",
+    category: "Uiterlijk & Kleding",
+    level: 3,
+    description: "Gedwongen of gewenste feminisering als machtsspel — kleding, make-up, gedrag en aanspreekvormen. Kan vernederend of juist bevrijdend bedoeld zijn; bespreek welke van de twee het is.",
+  },
+
+  // ─── Exhibition & Voyeurism (verdieping) ────────────────────────────────────
+  {
+    id: "spiegelspel",
+    name: "Spiegelspel",
+    category: "Exhibition & Voyeurism",
+    level: 1,
+    description: "Seks of spel voor de spiegel — jezelf en elkaar zien als voyeur én exhibitionist tegelijk. Laagdrempelig en thuis te doen; de blik went, de spanning niet.",
+  },
+  {
+    id: "remote_toy_publiek",
+    name: "Op afstand bestuurbaar speeltje (publiek)",
+    category: "Exhibition & Voyeurism",
+    level: 2,
+    description: "Een draagbaar speeltje dat de partner via een app bedient terwijl je samen buiten bent. Publieke spanning zonder publiek risico — kies stille speeltjes en discrete locaties.",
+  },
+  {
+    id: "filmen_prive",
+    name: "Filmen / eigen opnames",
+    category: "Exhibition & Voyeurism",
+    level: 3,
+    description: "Jezelf en elkaar filmen of fotograferen tijdens het spel, om terug te kijken of voor de spanning van de lens. Maak harde afspraken over opslag, bewaartermijn en verwijderen — beelden zijn voor altijd.",
+  },
+  {
+    id: "trio_groepsseks",
+    name: "Trio / groepsseks",
+    category: "Exhibition & Voyeurism",
+    level: 3,
+    description: "Seks met drie of meer — van trio tot groepsspel. Bekeken worden en kijken zit ingebakken. Bespreek vooraf grenzen per persoon, soa-afspraken en wat het voor de eigen relatie betekent.",
+  },
+  {
+    id: "glory_hole",
+    name: "Glory hole",
+    category: "Exhibition & Voyeurism",
+    level: 4,
+    description: "Anonieme seksuele handelingen door een opening in een wand. Anonimiteit als kink; de risico's zijn navenant. Soa-bescherming is niet onderhandelbaar, afspraken vooraf evenmin.",
+  },
+
+  // ─── Aanbidding & Worship (verdieping) ──────────────────────────────────────
+  {
+    id: "cock_worship",
+    name: "Cock worship",
+    category: "Aanbidding & Worship",
+    level: 2,
+    description: "Toegewijde, langdurige aanbidding van de penis — oraal, met handen, met woorden. Geen doelgerichte seks maar een ritueel van devotie en dominantie.",
+  },
+  {
+    id: "ass_worship",
+    name: "Ass worship",
+    category: "Aanbidding & Worship",
+    level: 2,
+    description: "Aanbidding van billen — kussen, likken, masseren, ertegen aanliggen, facesitting-licht. Vaak verweven met dominantie van degene die aanbeden wordt.",
+  },
+
+  // ─── Sensation Play (verdieping) ────────────────────────────────────────────
+  {
+    id: "voedselspel",
+    name: "Voedselspel / sploshing",
+    category: "Sensation Play",
+    level: 2,
+    description: "Spelen met voedsel op het lichaam — slagroom, chocolade, of volledig sploshing met natte, kliederige substanties. Leg handdoeken klaar en houd suiker weg bij slijmvliezen.",
+  },
+  {
+    id: "fear_play",
+    name: "Fear play",
+    category: "Sensation Play",
+    level: 3,
+    description: "Bewust angst opwekken als spel — dreiging, verrassing, duisternis, messen die nooit snijden. De adrenaline is echt, het gevaar niet. Aftercare is hier geen optie maar een vereiste.",
+  },
+  {
+    id: "figging",
+    name: "Figging (gember)",
+    category: "Sensation Play",
+    level: 3,
+    description: "Een geschilde gemberwortel anaal of vaginaal inbrengen voor een intense, brandende sensatie. Ouderwets straf-element; de branding piekt na minuten en is niet weg te spoelen — doseer klein.",
+  },
+  {
+    id: "ballbusting",
+    name: "Ballbusting / CBT-impact",
+    category: "Sensation Play",
+    level: 4,
+    description: "Slaan, tikken of drukken op de testikels als pijnspel. Klein doelwit, groot risico — begin extreem licht, vermijd torsie en stop direct bij misselijkheid of doffe napijn.",
+  },
+
+  // ─── Impact Play (verdieping) ───────────────────────────────────────────────
+  {
+    id: "body_slapping",
+    name: "Body slapping",
+    category: "Impact Play",
+    level: 2,
+    description: "Slaan met de vlakke hand op vlezige zones — dijen, billen, borst. Directer en intiemer dan speeltjes. Blijf weg van nieren, wervelkolom en gewrichten.",
+  },
 ];
 
 export const CATEGORIES = Array.from(new Set(KINKS.map((k) => k.category)));
 
+// Listings climb the ladder: beginner-kinks eerst, diepgaand als laatste. Stable
+// sort, dus binnen één niveau blijft de handgekozen volgorde staan.
 export function getKinksByCategory(category: string): Kink[] {
-  return KINKS.filter((k) => k.category === category);
+  return KINKS.filter((k) => k.category === category).sort((a, b) => a.level - b.level);
 }
 
 export function getKinksByCategoryAndLevel(category: string, maxLevel: number): Kink[] {
-  return KINKS.filter((k) => k.category === category && k.level <= maxLevel);
+  return KINKS.filter((k) => k.category === category && k.level <= maxLevel).sort(
+    (a, b) => a.level - b.level,
+  );
 }
 
 export const LEVEL_MAX: Record<string, number> = {
