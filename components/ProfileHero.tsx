@@ -87,7 +87,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           <h2
             className="truncate"
             style={{
-              fontFamily: "var(--font-display)",
+              fontFamily: "var(--font-display, Georgia, serif)",
               fontStyle: "italic",
               fontWeight: 600,
               fontSize: "2rem",

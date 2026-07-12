@@ -243,7 +243,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                                   </div>
                                   {p.id === pinnedProfileId && (
                                     <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "var(--accent)" }} aria-label="Mijn profiel">
-                                      <PushPin size={9} color="#000" />
+                                      <PushPin size={9} color="var(--on-accent)" />
                                     </div>
                                   )}
                                 </div>
@@ -326,7 +326,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                 </p>
                 <p
                   className="text-lg italic leading-tight truncate"
-                  style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "var(--text)" }}
+                  style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
                 >
                   {pairA?.name}
                   <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>

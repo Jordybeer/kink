@@ -911,7 +911,7 @@ function ContractPage() {
                     <button
                       onClick={() => { deleteContract(c.id); setPendingDeleteId(null); }}
                       className="focus-ring text-xs px-2 py-1 rounded-lg font-semibold"
-                      style={{ background: "#ef4444", color: "#fff" }}
+                      style={{ background: "var(--hard-no)", color: "var(--on-accent)" }}
                     >
                       Ja
                     </button>
@@ -1139,14 +1139,14 @@ function ContractSection({ title, items, colour, nameA, nameB, colourA, colourB 
               <div className="flex items-center gap-2">
                 <div className="flex flex-col gap-0.5">
                   {item.statusA
-                    ? <span className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
+                    ? <span className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
                     : <span style={{ color: "var(--text2)", fontSize: "11px" }}>{nA}: —</span>
                   }
                 </div>
                 <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
                 <div className="flex flex-col gap-0.5 items-end">
                   {item.statusB
-                    ? <span className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
+                    ? <span className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
                     : <span style={{ color: "var(--text2)", fontSize: "11px" }}>—: {nB}</span>
                   }
                 </div>

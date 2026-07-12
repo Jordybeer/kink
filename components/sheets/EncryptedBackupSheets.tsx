@@ -97,7 +97,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 />
                 <button type="button" onClick={() => setPwShow(v => !v)}
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
                   style={{ color: "var(--text2)" }}>
                   {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
@@ -114,7 +114,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 />
                 <button type="button" onClick={() => setPwShow(v => !v)}
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
                   style={{ color: "var(--text2)" }}>
                   {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
@@ -227,7 +227,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
             />
             <button type="button" onClick={() => setPwShow(v => !v)}
               aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+              className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
               style={{ color: "var(--text2)" }}>
               {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>

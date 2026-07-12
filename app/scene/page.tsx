@@ -456,7 +456,7 @@ function SceneItemRow({
               onClick={() => setDetailsOpen((o) => !o)}
               aria-label={detailsOpen ? "Details verbergen" : "Duur & notitie"}
               aria-expanded={detailsOpen}
-              className="text-xs ml-auto focus-ring rounded px-2"
+              className="text-xs ml-auto focus-ring rounded-lg px-2"
               style={{ minHeight: 44, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
             >
               {detailsOpen ? "Minder" : "Details"}
@@ -698,7 +698,7 @@ function ScenePage() {
               value={sceneTitle}
               onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
-              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded font-bold"
+              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded-lg font-bold"
               style={{ color: "var(--text)" }}
             />
             {profileA && profileB && (
@@ -778,7 +778,7 @@ function ScenePage() {
                   <rect x="8" y="22" width="24" height="4" rx="2" fill="var(--text2)"/>
                   <rect x="8" y="32" width="20" height="4" rx="2" fill="var(--text2)"/>
                   <circle cx="38" cy="34" r="8" fill="var(--accent)" opacity="0.7"/>
-                  <path d="M35 34h6M38 31v6" stroke="#000" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M35 34h6M38 31v6" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Lege setlist</p>

@@ -716,7 +716,7 @@ export default function ProfilePage({ params }: Props) {
                     <p
                       className="text-base mb-2 px-0.5"
                       style={{
-                        fontFamily: 'var(--font-display, Georgia, serif)',
+                        fontFamily: "var(--font-display, Georgia, serif)",
                         fontStyle: "italic",
                         fontWeight: 400,
                         color: "var(--text)",
@@ -754,7 +754,7 @@ export default function ProfilePage({ params }: Props) {
                                 </span>
                               )}
                               <span
-                                className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
+                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none"
                                 style={{
                                   color: STATUS_VAR[s],
                                   borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
@@ -796,7 +796,7 @@ export default function ProfilePage({ params }: Props) {
                 <div className="mb-4">
                   <p
                     className="text-sm mb-1.5 px-0.5"
-                    style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                    style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
                   >
                     Meer
                   </p>
@@ -829,7 +829,7 @@ export default function ProfilePage({ params }: Props) {
                               </span>
                             )}
                             <span
-                              className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
+                              className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none"
                               style={{
                                 color: STATUS_VAR[s],
                                 borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
@@ -853,7 +853,7 @@ export default function ProfilePage({ params }: Props) {
             <div className="mt-2 mb-4">
               <p
                 className="text-sm mb-1.5"
-                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
               >
                 Persoonlijke notitie
               </p>
@@ -883,7 +883,7 @@ export default function ProfilePage({ params }: Props) {
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
               <p
                 className="text-sm mb-2 px-0.5"
-                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
               >
                 Download dit profiel
               </p>

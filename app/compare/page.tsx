@@ -23,7 +23,7 @@ function StatusBadge({ status }: { status: KinkStatus }) {
   const colour = STATUS_VAR[status];
   return (
     <span
-      className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap"
+      className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap"
       style={{
         color: colour,
         borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
@@ -55,7 +55,7 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
             : `${score} procent overlap`
         }
         style={{
-          fontFamily: 'var(--font-display, Georgia, "Times New Roman", serif)',
+          fontFamily: "var(--font-display, Georgia, serif)",
           fontStyle: "italic",
           fontWeight: 400,
           fontSize: "clamp(56px, 16vw, 80px)",
@@ -148,7 +148,7 @@ function AlignmentBar({ match, discuss, soft, limit, onFilter }: {
     ) : null;
   return (
     <div
-      className="flex rounded overflow-hidden mb-4"
+      className="flex rounded-full overflow-hidden mb-4"
       style={{ height: 6, background: "var(--surface3)" }}
       role="img"
       aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${soft} zacht, ${limit} grenzen`}
@@ -192,7 +192,7 @@ function ProfileChip({
         {profile?.avatarDataUrl ? (
           <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <span style={{ color: profile ? "#000" : "var(--text2)" }}>
+          <span style={{ color: profile ? "var(--on-accent)" : "var(--text2)" }}>
             {profile ? profile.name[0].toUpperCase() : slot}
           </span>
         )}
@@ -263,7 +263,7 @@ function ProfileSelectorSheet({
           {p.avatarDataUrl ? (
             <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span style={{ color: isSelected ? "#000" : "var(--text2)" }}>{p.name[0].toUpperCase()}</span>
+            <span style={{ color: isSelected ? "var(--on-accent)" : "var(--text2)" }}>{p.name[0].toUpperCase()}</span>
           )}
         </div>
         <div className="flex-1 min-w-0 text-left">
@@ -533,7 +533,7 @@ function ComparePage() {
                   {labels[f]}
                   {badge !== null && badge > 0 && (
                     <span
-                      className="text-[11px] px-1 py-px rounded font-semibold tabular-nums"
+                      className="text-[11px] px-1 py-px rounded-full font-semibold tabular-nums"
                       style={{
                         background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`,
                         color: badgeColour,
@@ -610,7 +610,7 @@ function ComparePage() {
                               <button
                                 onClick={() => toggleDiscussed(kink.id)}
                                 aria-label={isDiscussed ? `${kink.name} als niet besproken markeren` : `${kink.name} als besproken markeren`}
-                                className="text-[11px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                                className="text-[11px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-none"
                                 style={
                                   isDiscussed
                                     ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
@@ -768,14 +768,14 @@ function ComparePage() {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm font-medium flex-1 flex items-center gap-1.5">
                               {item.name}
-                              <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
+                              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
                                 eigen
                               </span>
                             </span>
                             <button
                               onClick={() => toggleDiscussed(rowKey)}
                               aria-label={isDiscussed ? `${item.name} als niet besproken markeren` : `${item.name} als besproken markeren`}
-                              className="text-[11px] px-2 py-0.5 rounded border transition-colors whitespace-nowrap flex-none"
+                              className="text-[11px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-none"
                               style={
                                 isDiscussed
                                   ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }

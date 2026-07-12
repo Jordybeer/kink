@@ -819,7 +819,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                         <span className="text-xs font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
                       ) : (
                         <span
-                          className="text-[11px] px-1.5 py-0.5 rounded border flex-none"
+                          className="text-[11px] px-1.5 py-0.5 rounded-full border flex-none"
                           style={{
                             color: STATUS_VAR[remote[kink.id]!],
                             borderColor: `color-mix(in srgb, ${STATUS_VAR[remote[kink.id]!]} 35%, transparent)`,
@@ -859,7 +859,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                 background: "var(--surface)",
                 border: "1px solid var(--accent)",
                 color: "var(--accent)",
-                fontFamily: 'var(--font-display, Georgia, serif)',
+                fontFamily: "var(--font-display, Georgia, serif)",
                 fontStyle: "italic",
                 fontWeight: 400,
                 fontSize: "1.05rem",

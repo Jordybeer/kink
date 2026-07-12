@@ -408,7 +408,7 @@ function HomeContent() {
           <p
             className="text-center py-12"
             style={{
-              fontFamily: 'var(--font-display, Georgia, serif)',
+              fontFamily: "var(--font-display, Georgia, serif)",
               fontStyle: "italic",
               fontWeight: 400,
               fontSize: "1.25rem",

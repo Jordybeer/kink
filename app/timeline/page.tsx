@@ -73,20 +73,20 @@ function TimelinePage() {
 
       {/* Content */}
       {!bothSelected ? (
-        <div className="rounded p-6 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="rounded-xl p-6 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
             Selecteer twee profielen om hun contractgeschiedenis te bekijken.
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded p-6 text-center flex flex-col gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="rounded-xl p-6 text-center flex flex-col gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <p className="text-sm font-medium">Nog geen contracten gevonden</p>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
             De geschiedenis wordt gevuld zodra jullie een contract genereren. Maak er één aan en exporteer het als PDF — dat slaat een momentopname op.
           </p>
           <Link
             href={`/contract?a=${aId}&b=${bId}`}
-            className="focus-ring mt-1 inline-block rounded px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
+            className="focus-ring mt-1 inline-block rounded-xl px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Maak contract
@@ -95,7 +95,7 @@ function TimelinePage() {
       ) : (
         <>
           <ContractTrendsChart contracts={filtered} />
-          <div className="rounded p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="rounded-xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
                 {profileA.name} &amp; {profileB.name}
