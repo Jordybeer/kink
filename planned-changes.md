@@ -56,6 +56,13 @@ First attempt reverted (PR #219 closed). Rules in `memory.md` and `corrections.m
 
 Unscoped ideas, grouped by theme. Promote to a phase before working on any of them. Pruned + verified against live code 2026-07-08: DNA-bar items dropped (the bar was executed in June), and these were confirmed already shipped — TopNav pill tap feedback (`MotionLink` + `TAP_SPRING`), status active glow (`.status-*` classes + glow keyframes), the 40px profile pencil (gone), vibe badge items (badge no longer exists), reduced-motion scroll guard (blur is static now; `useMotionSafe` gates motion).
 
+### Nine-Tails afterglow (added 2026-07-12, from the sweep itself)
+- **e2e fixture rot guard**: `buildStore` still seeds persist `version: 8` — the migration wipes any seeded `scenes` (pre-v10 payloads get `scenes = []`). Bit the Phase 9 proof shots. Bump the fixture to v15 and teach `buildStore` extras to carry `scenes`/`contracts` so future specs don't rediscover this.
+- **TRAFFIC map deduped**: the green/amber/red label+colour map lives twice (`app/scenes/page.tsx` and `app/scenes/[id]/page.tsx`). One home in `lib/` next to the status vocabulary.
+- **ProfileSelect accent prop**: the old timeline selects wore their line colours on the border; the house dropdown lost that. An optional `accent` prop would restore the A/B colour echo without forking the component.
+- **CI e2e graduation**: the advisory job gets its first real runs on PR #248 — if it stays green there, flip `continue-on-error` off in a one-line follow-up.
+- **Rare-state e2e for the unswept two**: session "connected" and AppLock never appear in screenshot sweeps (need a live peer / PIN hash). A mocked-signaling fixture would close the last visual blind spots.
+
 ### Navigation polish (TopNav)
 - **Bottom-anchored variant for reach**: same pills, floating bottom-right on phones — the biggest open tradeoff from killing the bottom bar.
 - **Hide-on-scroll-down / reveal-on-scroll-up**: auto-tuck the header on long kink lists.
@@ -116,6 +123,26 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 ---
 
 ## Shipped — historical ledger (full detail preserved in git log)
+
+### Operation Nine-Tails — audit-to-≥9 oneshot (worktree-needleplay, 2026-07-12)
+
+One branch, eleven phases, every audit category flogged toward ≥9. Plan of record: `~/.claude/plans/make-a-giant-plan-parsed-barto.md`.
+
+| Phase | What landed | Commit |
+|-------|-------------|--------|
+| 1 | Guards first — token-contrast test, 375px corset in ui-audit, advisory CI e2e job | `f9dd462` |
+| 2 | Import hardening — v1 shares, QR payloads, backups & bdsmtest pastes all sanitized | `c418ea0` |
+| 3 | Auto-snapshots — Verloop feeds itself (24h + deep-equal skip, no schema change) | `f1d1569` |
+| 4 | Token sweep — radius tiers, hexes → tokens, one canonical font-display spelling + guard test | `cd4b2cc` |
+| 5 | Motion consolidation — ProfileSelect extracted, inline transitions → lib/motion | `080e63a` |
+| 6 | A11y — status glyphs (colour + icon + border), fieldset/legend, KinkEditSheet aria-live | `2aa798f` |
+| 7 | Contract extraction — lib/contractPdf + components/contract/, page 1372 → 754 | `3a9b978` |
+| 8 | Profile extraction — lib/profilePdf + StatusExplainerSheet + ProfileEditSheet, page 1133 → 784; Checkpoint 1 full e2e + offline green | `b6d61ca` + `e88b7a8` |
+| 9 | Scenes + Verloop identity — mastheads, Phosphor over emoji, ProfileSelect in timeline, inviting empty states | `ab65adb` |
+| 10 | Typography promotion — 13 genuine reading-copy sites text-xs → text-sm | `3e6b959` |
+| 11 | 375px sweep of rare states (scene detail ×3, aftercare, session, contract expanded, onboarding) — zero crushes found; CI e2e stays advisory (never ran pre-push); Checkpoint 2 full e2e + offline | ledger commit |
+
+Human half of the gate (in the PR body): iOS Safari PDF, device walkthrough, VoiceOver spot-check, reduced-motion check, legacy-import restore, CI e2e enforce/advisory decision.
 
 ### v5 (dev)
 

@@ -20,7 +20,7 @@ const ICON_CIRCLE: React.CSSProperties = {
   marginBottom: '2rem',
 };
 const TITLE: React.CSSProperties = {
-  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 500,
+  fontFamily: "var(--font-display, Georgia, serif)", fontStyle: 'italic', fontWeight: 500,
   fontSize: '1.875rem', color: 'var(--text)', marginBottom: '0.875rem', lineHeight: 1.2,
 };
 const BODY: React.CSSProperties = {
@@ -348,7 +348,7 @@ function Step3Consent() {
       <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Consent, altijd</motion.h2>
       <motion.p variants={childV} style={{
-        fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 500,
+        fontFamily: "var(--font-display, Georgia, serif)", fontStyle: 'italic', fontWeight: 500,
         fontSize: '1.25rem', lineHeight: 1.4, color: 'var(--text)', margin: '0 0 1rem',
       }}>
         Safewords zijn heilig.<br />Grenzen zijn wet.

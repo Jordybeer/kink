@@ -21,7 +21,9 @@ describe("saveProfileSnapshot", () => {
     expect(saved.counts.yes).toBe(1);
     expect(saved.counts.willing).toBe(1);
     expect(saved.customKinks.map((c) => c.name)).toContain("Eigen ding");
-    expect(useStore.getState().profileSnapshots).toHaveLength(1);
+    // two moments: the first setEntry auto-snapshots the day, then the manual save
+    expect(useStore.getState().profileSnapshots).toHaveLength(2);
+    expect(useStore.getState().profileSnapshots[0].id).toBe(saved.id);
   });
 
   it("caps snapshots at 30 per profile (FIFO)", () => {

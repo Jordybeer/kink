@@ -97,7 +97,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 />
                 <button type="button" onClick={() => setPwShow(v => !v)}
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
                   style={{ color: "var(--text2)" }}>
                   {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
@@ -114,7 +114,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 />
                 <button type="button" onClick={() => setPwShow(v => !v)}
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
                   style={{ color: "var(--text2)" }}>
                   {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
@@ -173,8 +173,19 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         onError("Ongeldig bestand — geen geldige profielen gevonden.");
         return;
       }
-      const incoming = parsed.profiles as Profile[];
-      const restoredContracts = Array.isArray(parsed.contracts) ? parsed.contracts as ContractSnapshot[] : [];
+      // Decrypted doesn't mean trustworthy — every element gets frisked and
+      // the fakes are dropped one by one instead of failing the whole restore.
+      const { sanitizeProfileFull, sanitizeContractSnapshot } = await import("@/lib/sanitizeProfile");
+      const incoming = parsed.profiles
+        .map((p) => sanitizeProfileFull(p))
+        .filter((p): p is Profile => p !== null);
+      const restoredContracts = (Array.isArray(parsed.contracts) ? parsed.contracts : [])
+        .map((c) => sanitizeContractSnapshot(c))
+        .filter((c): c is ContractSnapshot => c !== null);
+      if (!incoming.length && !restoredContracts.length) {
+        onError("Ongeldig bestand — geen geldige profielen gevonden.");
+        return;
+      }
       if (incoming.length) importProfiles(incoming.map(p => ({ ...p, isImported: true as const, origin: "shared" as const, lockedAt: p.lockedAt ?? Date.now() })));
       if (restoredContracts.length) restoreContracts(restoredContracts);
       onSuccess(`${incoming.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
@@ -216,7 +227,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
             />
             <button type="button" onClick={() => setPwShow(v => !v)}
               aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded p-0.5"
+              className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
               style={{ color: "var(--text2)" }}>
               {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>

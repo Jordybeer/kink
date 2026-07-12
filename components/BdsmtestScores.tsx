@@ -22,7 +22,7 @@ export default function BdsmtestScores({ scores, url }: Props) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring rounded text-xs"
+            className="focus-ring rounded-lg text-xs"
             style={{ color: "var(--accent)" }}
           >
             Bekijk ↗

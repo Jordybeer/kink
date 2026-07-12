@@ -686,7 +686,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               <div className="text-xs font-semibold truncate">
                 <span style={{ color: "var(--accent)" }}>{profile?.name}</span>
                 <span style={{ color: "var(--text2)" }}> vs </span>
-                <span style={{ color: "var(--text)" }}>{partnerName}</span><span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
+                <span style={{ color: "var(--text)" }}>{partnerName}</span><span className="transition-opacity duration-200" style={{ opacity: partnerActive ? 1 : 0, color: "var(--text2)" }}> is aan het invullen…</span>
               </div>
               <div className="text-xs mt-0.5 truncate" style={{ color: "var(--text2)" }}>
                 {profile?.role}{remoteProfile ? ` · ${remoteProfile.role}` : ""}
@@ -767,7 +767,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           <div className="ks-icon-pop animate-pulse text-4xl">🔒</div>
           <div className="text-base" style={{ color: "var(--text)" }}>
             <span>{partnerName}</span>
-            <span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
+            <span className="transition-opacity duration-200" style={{ opacity: partnerActive ? 1 : 0, color: "var(--text2)" }}> is aan het invullen…</span>
           </div>
           <div className="ks-dot-pulse flex gap-1">
             <span /><span /><span />
@@ -785,7 +785,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             <h2 className="text-3xl font-bold mb-1">{matchCount} matches</h2>
             <p className="text-sm" style={{ color: "var(--text2)" }}>
               {hardCount > 0 && `${hardCount} harde grens${hardCount !== 1 ? "en" : ""} · `}
-              {profile?.name} &amp; <span style={{ color: "var(--text)" }}>{partnerName}</span><span style={{ opacity: partnerActive ? 1 : 0, transition: "opacity 200ms ease", color: "var(--text2)" }}> is aan het invullen…</span>
+              {profile?.name} &amp; <span style={{ color: "var(--text)" }}>{partnerName}</span><span className="transition-opacity duration-200" style={{ opacity: partnerActive ? 1 : 0, color: "var(--text2)" }}> is aan het invullen…</span>
             </p>
           </div>
 
@@ -819,7 +819,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                         <span className="text-xs font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
                       ) : (
                         <span
-                          className="text-[11px] px-1.5 py-0.5 rounded border flex-none"
+                          className="text-[11px] px-1.5 py-0.5 rounded-full border flex-none"
                           style={{
                             color: STATUS_VAR[remote[kink.id]!],
                             borderColor: `color-mix(in srgb, ${STATUS_VAR[remote[kink.id]!]} 35%, transparent)`,
@@ -859,7 +859,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                 background: "var(--surface)",
                 border: "1px solid var(--accent)",
                 color: "var(--accent)",
-                fontFamily: 'var(--font-display, Georgia, serif)',
+                fontFamily: "var(--font-display, Georgia, serif)",
                 fontStyle: "italic",
                 fontWeight: 400,
                 fontSize: "1.05rem",

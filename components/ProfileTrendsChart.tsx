@@ -196,7 +196,7 @@ export function ProfileTrendsChart({ snapshots }: Props) {
 
   return (
     <section
-      className="mb-4 rounded p-4 sm:p-5"
+      className="mb-4 rounded-xl p-4 sm:p-5"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       aria-label="Verloop van dit profiel"
     >
@@ -207,7 +207,7 @@ export function ProfileTrendsChart({ snapshots }: Props) {
           </h3>
           <p
             className="mt-0.5 italic"
-            style={{ fontFamily: "var(--font-display), serif", fontSize: "0.95rem", color: "var(--text)", lineHeight: 1.2 }}
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontSize: "0.95rem", color: "var(--text)", lineHeight: 1.2 }}
           >
             Hoe dit profiel beweegt over tijd
           </p>
@@ -325,7 +325,7 @@ function ShiftLedger({ snapshots }: { snapshots: ProfileSnapshot[] }) {
 function Placeholder({ tokens }: { tokens: ResolvedTokens }) {
   return (
     <section
-      className="mb-4 rounded p-4 sm:p-5"
+      className="mb-4 rounded-xl p-4 sm:p-5"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       aria-label="Verloop nog niet beschikbaar"
     >
@@ -342,7 +342,7 @@ function Placeholder({ tokens }: { tokens: ResolvedTokens }) {
         <div className="relative text-center">
           <p
             className="italic"
-            style={{ fontFamily: "var(--font-display), serif", fontSize: "1.1rem", color: "var(--text)", lineHeight: 1.2 }}
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontSize: "1.1rem", color: "var(--text)", lineHeight: 1.2 }}
           >
             Eerst meer momenten.
           </p>

@@ -2,14 +2,12 @@
 import { use, useEffect, useRef, useState, useCallback } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategoryAndLevel, LEVEL_MAX } from "@/lib/kinks";
-import { ROLE_GROUPS, EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import CategorySection from "@/components/CategorySection";
 import SegmentedPill from "@/components/ui/SegmentedPill";
 import TriageDeck from "@/components/TriageDeck";
 import KinkListRow from "@/components/KinkListRow";
 import KinkEditSheet from "@/components/KinkEditSheet";
-import Sheet from "@/components/Sheet";
-import type { ExperienceLevel, Kink, KinkStatus } from "@/types";
+import type { Kink, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
@@ -21,22 +19,12 @@ import EmptyState from "@/components/EmptyState";
 import { getProfileType } from "@/lib/profileType";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import BdsmtestScores from "@/components/BdsmtestScores";
-import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
-import { hexToRgb, PDF_DARK_PAGE, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
+import StatusExplainerSheet from "@/components/sheets/StatusExplainerSheet";
+import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
+import { buildProfilePdf } from "@/lib/profilePdf";
 
 const ALL_CATS = [...CATEGORIES, "Meer"];
-
-// Longer-form vows behind each verdict — labels come from lib/statusLabels,
-// only the elaboration lives here.
-const STATUS_EXPLAINER: Record<NonNullable<KinkStatus>, string> = {
-  yes:     "Ik wil dit graag. Dit zoek ik actief op.",
-  willing: "Ik ben hier voor. Geen probleem mee.",
-  maybe:   "Onzeker. Hangt af van stemming, context, of met wie.",
-  no:      "Niet voor mij, maar ik wil dit mijn partner geven of ontvangen.",
-  hard_no: "Absolute limiet. Niet bespreekbaar.",
-};
-
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -45,7 +33,7 @@ interface Props {
 export default function ProfilePage({ params }: Props) {
   const t = useMotionSafe();
   const { id } = use(params);
-  const { profiles, setEntry, addCustomKink, removeCustomKink, renameProfile, setProfileAvatar, updatePrivateNote, setBdsmtestScores, profileTourComplete, completeProfileTour, pinnedProfileId, profileSnapshots, saveProfileSnapshot } = useStore();
+  const { profiles, setEntry, addCustomKink, removeCustomKink, setProfileAvatar, updatePrivateNote, profileTourComplete, completeProfileTour, pinnedProfileId, profileSnapshots, saveProfileSnapshot } = useStore();
   const _hasHydrated = useHasHydrated();
   const profile = profiles.find((p) => p.id === id);
 
@@ -59,15 +47,6 @@ export default function ProfilePage({ params }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [tourVisible, setTourVisible] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState("");
-  const [editLevel, setEditLevel] = useState<ExperienceLevel>("beginner");
-  const [editRelStatus, setEditRelStatus] = useState("");
-  const [editFetLife, setEditFetLife] = useState("");
-  const [editBdsmtestUrl, setEditBdsmtestUrl] = useState("");
-  const [editUrlError, setEditUrlError] = useState<string | null>(null);
-  const [bdsmPaste, setBdsmPaste] = useState("");
-  const [bdsmParseCount, setBdsmParseCount] = useState<number | null>(null);
   const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
@@ -120,35 +99,6 @@ export default function ProfilePage({ params }: Props) {
     const t = setTimeout(() => setTourVisible(true), 1500);
     return () => clearTimeout(t);
   }, [profileTourComplete, activeTab]);
-
-  function handleStartEdit() {
-    if (!profile) return;
-    setEditName(profile.name);
-    setEditRole(profile.role);
-    setEditLevel(profile.experienceLevel ?? "beginner");
-    setEditRelStatus(profile.relationshipStatus ?? "");
-    setEditFetLife(profile.fetLifeUsername ?? "");
-    setEditBdsmtestUrl(profile.bdsmtestUrl ?? "");
-    setEditUrlError(null);
-    setEditing(true);
-  }
-
-  function handleSaveEdit() {
-    if (!profile || !editName.trim()) return;
-    const fetLife = editFetLife.trim();
-    if (fetLife && (fetLife.includes("://") || fetLife.includes("<") || fetLife.includes(">"))) {
-      setEditUrlError("FetLife: vul alleen je gebruikersnaam in, geen URL.");
-      return;
-    }
-    const bdsmtest = editBdsmtestUrl.trim();
-    if (bdsmtest && !/^https?:\/\/(www\.)?bdsmtest\.org\//i.test(bdsmtest)) {
-      setEditUrlError("BDSMTest: URL moet beginnen met https://bdsmtest.org/");
-      return;
-    }
-    setEditUrlError(null);
-    renameProfile(profile.id, editName.trim(), editRole, editLevel, editRelStatus || undefined, fetLife || undefined, bdsmtest || undefined);
-    setEditing(false);
-  }
 
   if (!_hasHydrated) return <PageShell loading width="2xl" />;
 
@@ -234,121 +184,9 @@ export default function ProfilePage({ params }: Props) {
   }
 
   async function handlePDFExport() {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const { registerPdfFonts } = await import("@/lib/pdfFonts");
-    await registerPdfFonts(doc);
-    // The export introduces itself in the reader's title bar.
-    doc.setProperties({
-      title: `KinkSync Profiel — ${profile!.name}`,
-      creator: "KinkSync (kinksync.be)",
-    });
-    const W = 210;
-    const margin = 20;
-    const lineW = W - margin * 2;
-    let y = 20;
-
-    const accent = hexToRgb(PDF_DARK_PAGE.accent);
-    const dark = hexToRgb(PDF_DARK_PAGE.bg);
-    const muted = hexToRgb(PDF_DARK_PAGE.muted);
-    const light = hexToRgb(PDF_DARK_PAGE.light);
-
-    doc.setFillColor(...dark);
-    doc.rect(0, 0, W, 297, "F");
-    doc.setFont("display", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(...accent);
-    doc.text("KinkSync", W / 2, y, { align: "center" });
-    y += 5;
-    doc.setFontSize(8);
-    doc.setFont("body", "normal");
-    doc.setTextColor(...muted);
-    doc.text("kinksync.be", W / 2, y, { align: "center" });
-    y += 7;
-    doc.setFontSize(12);
-    doc.setFont("body", "bold");
-    doc.setTextColor(...light);
-    doc.text(`${profile!.name} — ${profile!.role}`, W / 2, y, { align: "center" });
-    y += 5;
-    doc.setFontSize(9);
-    doc.setFont("body", "normal");
-    doc.setTextColor(...muted);
-    doc.text(`${profile!.experienceLevel} · Gegenereerd op ${new Date().toLocaleDateString("nl-NL")}`, W / 2, y, { align: "center" });
-    y += 5;
-    doc.setDrawColor(...accent);
-    doc.setLineWidth(0.4);
-    doc.line(margin, y, W - margin, y);
-    y += 6;
-
-    const STATUS_COLORS_PDF = Object.fromEntries(
-      STATUS_ORDER.map((s) => [s, hexToRgb(PDF_STATUS_ON_DARK[s])])
-    ) as Record<string, [number, number, number]>;
-
-    for (const cat of CATEGORIES) {
-      const kinks = getKinksByCategoryAndLevel(cat, maxLevel);
-      const active = kinks.filter((k) => profile!.entries[k.id]?.status);
-      if (!active.length) continue;
-      if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("body", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(...accent);
-      doc.text(cat.toUpperCase(), margin, y);
-      y += 5;
-      for (const k of active) {
-        if (y > 265) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-        const e = profile!.entries[k.id];
-        const color = e.status ? STATUS_COLORS_PDF[e.status] : muted;
-        doc.setFont("body", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(...color);
-        const statusLabel = e.status ? `[${STATUS_LABEL[e.status]}]` : "";
-        const tags = (e.tags ?? []).length ? ` [${e.tags!.join(", ")}]` : "";
-        doc.text(`• ${k.name}`, margin + 2, y);
-        doc.setTextColor(...muted);
-        doc.text(`${statusLabel}${tags}`, margin + 2 + doc.getTextWidth(`• ${k.name}`) + 3, y);
-        y += 4.5;
-        if (e.comment) {
-          doc.setFont("body", "italic");
-          doc.setFontSize(8);
-          doc.setTextColor(...muted);
-          const commentLines = doc.splitTextToSize(`  ${e.comment}`, lineW - 5);
-          doc.text(commentLines, margin + 4, y);
-          y += commentLines.length * 4;
-        }
-      }
-      y += 3;
-    }
-
-    const customKinksList = profile!.customKinks ?? [];
-    const activeCustom = customKinksList.filter((ck) => profile!.entries[ck.id]?.status);
-    if (activeCustom.length) {
-      if (y > 260) { doc.addPage(); doc.setFillColor(...dark); doc.rect(0, 0, W, 297, "F"); y = 20; }
-      doc.setFont("body", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(...accent);
-      doc.text("MEER (EIGEN KINKS)", margin, y);
-      y += 5;
-      for (const ck of activeCustom) {
-        const e = profile!.entries[ck.id];
-        const color = e?.status ? STATUS_COLORS_PDF[e.status] : muted;
-        doc.setFont("body", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(...color);
-        const statusLabel = e?.status ? `[${STATUS_LABEL[e.status]}]` : "";
-        doc.text(`• ${ck.name}  ${statusLabel}`, margin + 2, y);
-        y += 4.5;
-      }
-    }
-
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFont("body", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(...muted);
-      doc.text(`${i} / ${pageCount}`, W - margin, 290, { align: "right" });
-    }
-    doc.save(`${profile!.name}-kinks.pdf`);
+    // The press lives in lib/profilePdf — the page only saves the file.
+    const { doc, filename } = await buildProfilePdf(profile!, maxLevel);
+    doc.save(filename);
   }
 
   function scrollToCategory(cat: string) {
@@ -395,11 +233,11 @@ export default function ProfilePage({ params }: Props) {
       </div>
 
       <h1 className="sr-only">{profile.name}</h1>
-      <div style={{ opacity: effectiveTab === "bewerken" ? 0.7 : 1, transition: "opacity 220ms ease" }}>
+      <div className="transition-opacity duration-200" style={{ opacity: effectiveTab === "bewerken" ? 0.7 : 1 }}>
         <ProfileHero
           profile={profile}
           onShare={isShared ? undefined : () => setShareOpen(true)}
-          onEdit={isShared ? undefined : handleStartEdit}
+          onEdit={isShared ? undefined : () => setEditing(true)}
           onAvatarChange={(dataUrl) => setProfileAvatar(profile.id, dataUrl)}
           onError={(msg) => {
             setErrorMessage(msg);
@@ -716,7 +554,7 @@ export default function ProfilePage({ params }: Props) {
                     <p
                       className="text-base mb-2 px-0.5"
                       style={{
-                        fontFamily: 'var(--font-display, Georgia, serif)',
+                        fontFamily: "var(--font-display, Georgia, serif)",
                         fontStyle: "italic",
                         fontWeight: 400,
                         color: "var(--text)",
@@ -754,7 +592,7 @@ export default function ProfilePage({ params }: Props) {
                                 </span>
                               )}
                               <span
-                                className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
+                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none"
                                 style={{
                                   color: STATUS_VAR[s],
                                   borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
@@ -796,7 +634,7 @@ export default function ProfilePage({ params }: Props) {
                 <div className="mb-4">
                   <p
                     className="text-sm mb-1.5 px-0.5"
-                    style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                    style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
                   >
                     Meer
                   </p>
@@ -829,7 +667,7 @@ export default function ProfilePage({ params }: Props) {
                               </span>
                             )}
                             <span
-                              className="text-xs px-1.5 py-0.5 rounded border whitespace-nowrap flex-none"
+                              className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none"
                               style={{
                                 color: STATUS_VAR[s],
                                 borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
@@ -853,7 +691,7 @@ export default function ProfilePage({ params }: Props) {
             <div className="mt-2 mb-4">
               <p
                 className="text-sm mb-1.5"
-                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
               >
                 Persoonlijke notitie
               </p>
@@ -865,7 +703,7 @@ export default function ProfilePage({ params }: Props) {
                 className="focus-ring w-full text-sm rounded-lg border px-3 py-2 placeholder-[color:var(--text2)] focus:outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
               />
-              <p className="text-xs mt-2 text-center" style={{ color: "var(--text2)" }}>
+              <p className="text-sm mt-2 text-center" style={{ color: "var(--text2)" }}>
                 🔒 Geïmporteerd profiel — delen is uitgeschakeld
               </p>
             </div>
@@ -883,7 +721,7 @@ export default function ProfilePage({ params }: Props) {
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
               <p
                 className="text-sm mb-2 px-0.5"
-                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
               >
                 Download dit profiel
               </p>
@@ -925,41 +763,7 @@ export default function ProfilePage({ params }: Props) {
       </AnimatePresence>
 
       {/* Status meaning explainer */}
-      <Sheet open={statusExplainerOpen} onClose={() => setStatusExplainerOpen(false)} aria-label="Uitleg keuzes">
-        <div
-          className="rounded-t-2xl p-6 max-h-[80dvh] overflow-y-auto"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
-        >
-          <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
-          <ul className="flex flex-col gap-3">
-            {STATUS_ORDER.map((s) => ({
-              s,
-              label: STATUS_LABEL[s],
-              desc: STATUS_EXPLAINER[s],
-            })).map(({ s, label, desc }) => (
-              <li key={label} className="flex gap-3">
-                <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: STATUS_VAR[s] }} aria-hidden="true" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{label}</p>
-                  <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>{desc}</p>
-                </div>
-              </li>
-            ))}
-            <li className="flex gap-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <Star size={12} weight="fill" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
-                <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>
-                  Los van je oordeel: markeer met de ster wat je wil verkennen. Kan naast elke keuze bestaan — een ster is geen ja.
-                </p>
-              </div>
-            </li>
-          </ul>
-          <p className="text-xs italic mt-4" style={{ color: "var(--text2)" }}>
-            Tip: tik nogmaals op een actieve knop om hem uit te zetten.
-          </p>
-        </div>
-      </Sheet>
+      <StatusExplainerSheet open={statusExplainerOpen} onClose={() => setStatusExplainerOpen(false)} />
 
       {/* Kink verdict — bottom sheet */}
       <KinkEditSheet
@@ -972,160 +776,7 @@ export default function ProfilePage({ params }: Props) {
       />
 
       {/* Edit form — bottom sheet */}
-      <Sheet open={editing && !isShared} onClose={() => setEditing(false)} aria-label="Profiel bewerken">
-        <div
-          className="rounded-t-2xl p-6 max-h-[90dvh] overflow-y-auto"
-          style={{
-            background: "var(--surface)",
-            borderTop: "1px solid var(--border-accent)",
-            borderLeft: "1px solid var(--border)",
-            borderRight: "1px solid var(--border)",
-          }}
-        >
-          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-          <h3 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
-            Profiel bijwerken
-          </h3>
-          <input
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            placeholder="Naam of alias…"
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-3 focus:outline-none placeholder-[color:var(--text2)]"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
-          <label className="text-xs mb-1.5 font-medium block" style={{ color: "var(--text2)" }}>Rol</label>
-          <select
-            value={editRole}
-            onChange={(e) => setEditRole(e.target.value)}
-            className="ks-select focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none"
-            style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          >
-            {ROLE_GROUPS.map((g) => (
-              <optgroup key={g.label} label={g.label}>
-                {g.roles.map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-            ))}
-          </select>
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
-          <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
-            {EXPERIENCE_LEVELS.map((l) => (
-              <button
-                key={l.value}
-                type="button"
-                onClick={() => setEditLevel(l.value)}
-                aria-pressed={editLevel === l.value}
-                className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
-                style={
-                  editLevel === l.value
-                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }
-                }
-              >
-                <span className="font-semibold">{l.label}</span>
-                <span className="text-xs opacity-70">{l.sub}</span>
-              </button>
-            ))}
-          </div>
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
-            Relatiestatus <span className="font-normal opacity-60">(optioneel)</span>
-          </p>
-          <div className="no-scrollbar flex gap-1.5 mb-4 overflow-x-auto pb-1" role="group" aria-label="Relatiestatus">
-            {RELATIONSHIP_STATUSES.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setEditRelStatus((rs) => (rs === s ? "" : s))}
-                aria-pressed={editRelStatus === s}
-                className="focus-ring flex-none px-3 py-1 rounded-full text-xs font-medium transition-colors border"
-                style={
-                  editRelStatus === s
-                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }
-                }
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
-            FetLife <span className="font-normal opacity-60">(optioneel)</span>
-          </p>
-          <input
-            value={editFetLife}
-            onChange={(e) => setEditFetLife(e.target.value)}
-            placeholder="Gebruikersnaam…"
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none placeholder-[color:var(--text2)]"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
-            BDSMTest <span className="font-normal opacity-60">(optioneel)</span>
-          </p>
-          <input
-            value={editBdsmtestUrl}
-            onChange={(e) => setEditBdsmtestUrl(e.target.value)}
-            placeholder="https://bdsmtest.org/r/…"
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm mb-4 focus:outline-none placeholder-[color:var(--text2)]"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
-          {editUrlError && (
-            <p className="text-xs mb-3 px-1" style={{ color: "var(--hard-no)" }}>{editUrlError}</p>
-          )}
-          <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>
-            BDSMTest resultaten <span className="font-normal opacity-60">(plak je resultaten)</span>
-          </p>
-          <textarea
-            value={bdsmPaste}
-            onChange={(e) => { setBdsmPaste(e.target.value); setBdsmParseCount(null); }}
-            placeholder={"== Results from bdsmtest.org ==\n100% Dominant\n97% Sadist\n…"}
-            rows={4}
-            className="focus-ring w-full rounded-lg px-3 py-2.5 text-xs mb-2 focus:outline-none placeholder-[color:var(--text2)] resize-none font-mono"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const scores = parseBdsmtestOutput(bdsmPaste);
-              if (scores.length > 0) {
-                setBdsmtestScores(profile.id, scores);
-                setBdsmParseCount(scores.length);
-                setBdsmPaste("");
-              }
-            }}
-            disabled={!bdsmPaste.trim()}
-            className="focus-ring w-full py-2 rounded-lg text-xs font-semibold mb-1 transition-opacity disabled:opacity-40"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          >
-            Verwerk resultaten
-          </button>
-          {bdsmParseCount !== null && (
-            <p className="text-xs mb-3 px-1" style={{ color: "var(--willing)" }}>
-              {bdsmParseCount} rollen ingeladen ✓
-            </p>
-          )}
-          {(profile.bdsmtestScores?.length ?? 0) > 0 && bdsmParseCount === null && (
-            <p className="text-xs mb-3 px-1" style={{ color: "var(--text2)" }}>
-              {profile.bdsmtestScores!.length} rollen opgeslagen · plak nieuwe tekst om te vervangen
-            </p>
-          )}
-          <div className="flex gap-2">
-            <button
-              onClick={handleSaveEdit}
-              disabled={!editName.trim()}
-              className="focus-ring flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-40"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-            >
-              Opslaan
-            </button>
-            <button
-              onClick={() => setEditing(false)}
-              className="focus-ring px-4 py-2.5 rounded-lg border text-sm"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
-          </div>
-        </div>
-      </Sheet>
+      <ProfileEditSheet open={editing && !isShared} profile={profile} onClose={() => setEditing(false)} />
 
       <QRModal profile={shareOpen && !isShared ? profile : null} onClose={() => setShareOpen(false)} />
     </main>

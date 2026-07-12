@@ -293,7 +293,7 @@ function HomeContent() {
             {parentCandidates.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
-                <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
+                <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
@@ -343,8 +343,9 @@ function HomeContent() {
               <RolePicker value={role} onChange={setRole} />
             </div>
 
-            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</p>
-            <div className="grid grid-cols-4 gap-1.5 mb-4" role="group" aria-label="Ervaringsniveau">
+            <fieldset className="mb-4 border-0 p-0 m-0">
+            <legend className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</legend>
+            <div className="grid grid-cols-4 gap-1.5">
               {EXPERIENCE_LEVELS.map((l) => (
                 <button
                   key={l.value}
@@ -361,9 +362,11 @@ function HomeContent() {
                 </button>
               ))}
             </div>
+            </fieldset>
 
-            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Relatiestatus <span className="font-normal opacity-60">(optioneel)</span></p>
-            <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Relatiestatus">
+            <fieldset className="mb-4 border-0 p-0 m-0">
+            <legend className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Relatiestatus <span className="font-normal opacity-60">(optioneel)</span></legend>
+            <div className="flex flex-wrap gap-1.5">
               {RELATIONSHIP_STATUSES.map((s) => (
                 <button
                   key={s}
@@ -379,6 +382,7 @@ function HomeContent() {
                 </button>
               ))}
             </div>
+            </fieldset>
 
             <button
               type="submit"
@@ -408,7 +412,7 @@ function HomeContent() {
           <p
             className="text-center py-12"
             style={{
-              fontFamily: 'var(--font-display, Georgia, serif)',
+              fontFamily: "var(--font-display, Georgia, serif)",
               fontStyle: "italic",
               fontWeight: 400,
               fontSize: "1.25rem",

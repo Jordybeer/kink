@@ -20,3 +20,25 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+
+  # The dungeon rehearsal — full Playwright walk-through of both stages
+  # (mobile + desktop). Advisory for now (continue-on-error): it watches,
+  # it reports, it doesn't yet hold the safeword. Flip to enforcing once
+  # it has proven itself green across a few PRs. Offline suite stays
+  # local-only — its production build is too heavy a rig for every push.
+  scene-rehearsal:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          CI: "1"
