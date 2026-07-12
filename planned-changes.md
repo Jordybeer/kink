@@ -117,6 +117,26 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### Operation Nine-Tails — audit-to-≥9 oneshot (worktree-needleplay, 2026-07-12)
+
+One branch, eleven phases, every audit category flogged toward ≥9. Plan of record: `~/.claude/plans/make-a-giant-plan-parsed-barto.md`.
+
+| Phase | What landed | Commit |
+|-------|-------------|--------|
+| 1 | Guards first — token-contrast test, 375px corset in ui-audit, advisory CI e2e job | `f9dd462` |
+| 2 | Import hardening — v1 shares, QR payloads, backups & bdsmtest pastes all sanitized | `c418ea0` |
+| 3 | Auto-snapshots — Verloop feeds itself (24h + deep-equal skip, no schema change) | `f1d1569` |
+| 4 | Token sweep — radius tiers, hexes → tokens, one canonical font-display spelling + guard test | `cd4b2cc` |
+| 5 | Motion consolidation — ProfileSelect extracted, inline transitions → lib/motion | `080e63a` |
+| 6 | A11y — status glyphs (colour + icon + border), fieldset/legend, KinkEditSheet aria-live | `2aa798f` |
+| 7 | Contract extraction — lib/contractPdf + components/contract/, page 1372 → 754 | `3a9b978` |
+| 8 | Profile extraction — lib/profilePdf + StatusExplainerSheet + ProfileEditSheet, page 1133 → 784; Checkpoint 1 full e2e + offline green | `b6d61ca` + `e88b7a8` |
+| 9 | Scenes + Verloop identity — mastheads, Phosphor over emoji, ProfileSelect in timeline, inviting empty states | `ab65adb` |
+| 10 | Typography promotion — 13 genuine reading-copy sites text-xs → text-sm | `3e6b959` |
+| 11 | 375px sweep of rare states (scene detail ×3, aftercare, session, contract expanded, onboarding) — zero crushes found; CI e2e stays advisory (never ran pre-push); Checkpoint 2 full e2e + offline | ledger commit |
+
+Human half of the gate (in the PR body): iOS Safari PDF, device walkthrough, VoiceOver spot-check, reduced-motion check, legacy-import restore, CI e2e enforce/advisory decision.
+
 ### v5 (dev)
 
 | Phase | Title | Landed |
