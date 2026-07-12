@@ -22,9 +22,12 @@ const ICON_CIRCLE: React.CSSProperties = {
 const TITLE: React.CSSProperties = {
   fontFamily: "var(--font-display, Georgia, serif)", fontStyle: 'italic', fontWeight: 500,
   fontSize: '1.875rem', color: 'var(--text)', marginBottom: '0.875rem', lineHeight: 1.2,
+  textWrap: 'balance',
 };
 const BODY: React.CSSProperties = {
   fontSize: '0.875rem', color: 'var(--text2)', lineHeight: 1.7, marginBottom: '2rem',
+  // No orphaned words shivering alone on the last line.
+  textWrap: 'pretty',
 };
 const CARD: React.CSSProperties = {
   background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
@@ -92,7 +95,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const advance = useCallback(() => setStep(s => s + 1), []);
 
   function passGate() {
-    if (skipRequested) onComplete();
+    // Skipping trims the tour, never the vows — the consent slide always gets its word.
+    if (skipRequested) setStep(3);
     else advance();
   }
 
@@ -178,6 +182,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </motion.div>
           </AnimatePresence>
 
+          {/* Scrim — scrolling step content fades out before it can grope the buttons */}
+          <div aria-hidden="true" style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, height: '11rem',
+            background: 'linear-gradient(to top, var(--bg) 55%, transparent)',
+            pointerEvents: 'none',
+          }} />
+
           {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
           <div style={ACTION_BAR}>
             <AnimatePresence mode="wait" initial={false}>
@@ -217,7 +228,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 )}
 
                 {step >= 2 && step <= 3 && (
-                  <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_GHOST}
+                  <motion.button whileTap={TAP_SPRING} onClick={step === 3 && skipRequested ? onComplete : advance} style={BTN_GHOST}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
                   >

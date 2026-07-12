@@ -92,6 +92,10 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
     await page.waitForTimeout(400);
+    // Skip trims the tour, never the vows — consent still stands between door and app
+    await expect(page.getByRole("heading", { name: /consent, altijd/i })).toBeVisible();
+    await page.getByRole("button", { name: /ga door/i }).click();
+    await page.waitForTimeout(400);
     await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
   });
 
@@ -105,10 +109,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   });
 
   test("nieuw profiel aanmaken direct na onboarding", async ({ page }) => {
-    // Fast-path via skip → age gate → home
+    // Fast-path via skip → age gate → consent → home
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
     await page.waitForTimeout(400);
     await page.getByRole("button", { name: /18\+/i }).click();
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(400);
 
     await page.getByPlaceholder(/naam of alias/i).fill("Testmeester");
