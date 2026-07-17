@@ -14,7 +14,7 @@ const BASE_PROFILE: Profile = {
   createdAt: 1716000000000,
   updatedAt: 1716000000000,
   entries: {
-    spanking_hand: { status: "yes", desire: 5, experienced: true, score: 4, comment: "fijn", tags: ["eerste keer"] },
+    spanking_hand: { status: "yes", desire: 5, experienced: true, score: 4, comment: "fijn", tags: ["eerste keer"], privateResponse: true },
     flogging: { status: "maybe", desire: 3, experienced: null, score: null, comment: "" },
   },
 };
@@ -26,7 +26,7 @@ describe("encodeProfile / decodeProfile", () => {
     const expected = {
       ...base,
       entries: {
-        spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["eerste keer"] },
+        spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["eerste keer"], privateResponse: true },
         flogging: { status: "maybe", desire: 3 },
       },
     };
@@ -62,6 +62,12 @@ describe("encodeProfile / decodeProfile", () => {
     expect(decoded.entries.flogging.desire).toBe(3);
     // null experienced is stripped from encoding; decodes as undefined (falsy)
     expect(decoded.entries.flogging.experienced).toBeFalsy();
+  });
+
+  it("round-trips the private response flag", () => {
+    const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
+    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
+    expect(decoded.entries.flogging.privateResponse).toBeUndefined();
   });
 
   it("round-trips a profile with special characters in name", () => {
@@ -114,6 +120,19 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
     expect(decoded.entries.spanking_implement.status).toBe("hard_no");
   });
 
+  it("round-trips private flags for house and custom kinks", () => {
+    const profile: Profile = {
+      ...BASE_PROFILE,
+      entries: {
+        ...BASE_PROFILE.entries,
+        custom_1: { status: "willing", comment: "", privateResponse: true },
+      },
+    };
+    const decoded = decodeProfileCompact(encodeProfileCompact(profile));
+    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
+    expect(decoded.entries.custom_1.privateResponse).toBe(true);
+  });
+
   it("drops desire and experienced to keep QR url short", () => {
     const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
     expect(decoded.entries.spanking_hand.desire).toBeNull();
@@ -159,12 +178,14 @@ describe("decodeAny", () => {
   it("decodes v1 profiles", () => {
     const decoded = decodeAny(encodeProfile(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
+    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
   });
 
   it("decodes v2 compact profiles", () => {
     const decoded = decodeAny(encodeProfileCompact(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
     expect(decoded.entries.spanking_hand.status).toBe("yes");
+    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
   });
 });
 
