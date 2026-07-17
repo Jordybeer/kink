@@ -10,6 +10,14 @@ export const MAX_KINK_ID_LEN = 64;
 export const MAX_KINK_NAME_LEN = 80;
 const MAX_AVATAR_LEN = 20_000;
 const AVATAR_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+const VALID_STATUSES = new Set<string>(["yes", "willing", "maybe", "no", "hard_no"]);
+
+export interface SessionResponse {
+  status: KinkStatus;
+  privateResponse?: boolean;
+}
+
+export type SessionResponses = Record<string, SessionResponse>;
 
 export function clamp(s: string, max: number): string {
   return s.trim().slice(0, max);
@@ -20,6 +28,41 @@ export function sanitizeAvatar(raw: unknown): string | undefined {
   if (raw.length > MAX_AVATAR_LEN) return undefined;
   if (!AVATAR_PREFIX_RE.test(raw)) return undefined;
   return raw;
+}
+
+export function sanitizeSessionResponses(raw: unknown): SessionResponses {
+  const out: SessionResponses = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [rawId, value] of Object.entries(raw as Record<string, unknown>)) {
+    const kinkId = clamp(rawId, MAX_KINK_ID_LEN);
+    if (!kinkId) continue;
+
+    // Legacy peers sent the status directly. Keep accepting that shape.
+    if (value === null || (typeof value === "string" && VALID_STATUSES.has(value))) {
+      if (value !== null) out[kinkId] = { status: value as KinkStatus };
+      continue;
+    }
+
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    const record = value as Record<string, unknown>;
+    const status = record.status === null
+      ? null
+      : typeof record.status === "string" && VALID_STATUSES.has(record.status)
+      ? record.status as KinkStatus
+      : null;
+    const privateResponse = record.privateResponse === true;
+    if (status !== null || privateResponse) {
+      out[kinkId] = {
+        status,
+        ...(privateResponse ? { privateResponse: true } : {}),
+      };
+    }
+  }
+  return out;
+}
+
+function responseStatus(value: KinkStatus | SessionResponse): KinkStatus {
+  return value && typeof value === "object" ? value.status : value;
 }
 
 export interface RemoteProfileLite {
@@ -54,10 +97,11 @@ function fingerprint16(input: string): string {
 export function synthesizePartnerId(
   name: string,
   role: string,
-  entries: Record<string, KinkStatus>,
+  entries: Record<string, KinkStatus | SessionResponse>,
 ): string {
   const sig = Object.entries(entries)
-    .filter(([, v]) => v != null)
+    .map(([id, value]) => [id, responseStatus(value)] as const)
+    .filter(([, status]) => status != null)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}:${v}`)
     .join("|");
@@ -98,16 +142,23 @@ export function sanitizeRemoteProfileFull(raw: unknown): RemoteProfileFull | nul
 export function buildPartnerProfile(
   full: RemoteProfileFull | null,
   lite: RemoteProfileLite,
-  remoteEntries: Record<string, KinkStatus>,
+  remoteEntries: Record<string, KinkStatus | SessionResponse>,
   now: number = Date.now(),
 ): Profile {
   const name = full?.name ?? clamp(lite.name, MAX_NAME_LEN);
   const role = full?.role ?? clamp(lite.role, MAX_ROLE_LEN);
   const id = full?.id ?? synthesizePartnerId(name, role, remoteEntries);
   const entries: Record<string, KinkEntry> = {};
-  for (const [kinkId, status] of Object.entries(remoteEntries)) {
-    if (status == null) continue;
-    entries[kinkId] = { status, comment: "" };
+  for (const [kinkId, value] of Object.entries(remoteEntries)) {
+    const response = value && typeof value === "object"
+      ? value
+      : { status: value as KinkStatus };
+    if (response.status == null && !response.privateResponse) continue;
+    entries[kinkId] = {
+      status: response.status,
+      comment: "",
+      ...(response.privateResponse ? { privateResponse: true } : {}),
+    };
   }
   return {
     id,
