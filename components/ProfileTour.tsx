@@ -25,6 +25,12 @@ const STEPS = [
     pad: 4,
   },
   {
+    selector: '[data-tour="pills"]',
+    title: "Hou een antwoord privé",
+    body: "Open een kink en tik op het oogje bij Privé. De kinknaam blijft zichtbaar; je oordeel en notitie blijven afgeschermd tot je ze bewust toont.",
+    pad: 4,
+  },
+  {
     selector: '[data-tour="hard-no"]',
     title: "Harde grens",
     body: "Staat apart van de rest — een harde grens is geen onderhandelingspositie.",
