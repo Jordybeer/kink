@@ -23,7 +23,7 @@ const HONEST_PROFILE: Profile = {
   createdAt: 1716000000000,
   updatedAt: 1716000000001,
   entries: {
-    spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"] },
+    spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true },
     flogging: { status: "maybe", desire: 3, comment: "" },
     custom_1: { status: "willing", comment: "" },
   },
@@ -39,11 +39,24 @@ describe("sanitizeProfileFull", () => {
     expect(clean!.experienceLevel).toBe("ervaren");
     expect(clean!.relationshipStatus).toBe("Gecollared");
     expect(clean!.entries.spanking_hand).toEqual({
-      status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"],
+      status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true,
     });
     expect(clean!.customKinks).toEqual([{ id: "custom_1", name: "Eigen ding" }]);
     expect(clean!.bdsmtestScores).toEqual([{ role: "Dominant", pct: 97 }]);
     expect(clean!.createdAt).toBe(1716000000000);
+  });
+
+  it("admits a private flag only when it is boolean", () => {
+    expect(sanitizeKinkEntry({ status: "yes", comment: "", privateResponse: true })?.privateResponse).toBe(true);
+    expect(sanitizeKinkEntry({ status: "yes", comment: "", privateResponse: "yes" })?.privateResponse).toBeUndefined();
+  });
+
+  it("keeps a privacy-only entry so the choice is not lost", () => {
+    expect(sanitizeKinkEntry({ status: null, comment: "", privateResponse: true })).toEqual({
+      status: null,
+      comment: "",
+      privateResponse: true,
+    });
   });
 
   it("rejects payloads without id or name", () => {
@@ -170,7 +183,7 @@ describe("decodeAny — v1 door now frisked", () => {
     expect(decoded.role).toBe("Domme");
     expect(decoded.relationshipStatus).toBe("Gecollared");
     expect(decoded.entries.spanking_hand).toEqual({
-      status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"],
+      status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true,
     });
     expect(decoded.entries.flogging).toEqual({ status: "maybe", desire: 3, comment: "" });
     expect(decoded.customKinks).toEqual([{ id: "custom_1", name: "Eigen ding" }]);
