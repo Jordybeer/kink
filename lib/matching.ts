@@ -4,9 +4,10 @@ import { KINKS } from "@/lib/kinks";
 export type MatchKind = "perfect" | "strong" | "soft" | "discuss" | "conflict" | "limit" | "none";
 export interface KinkMatch { score: number; kind: MatchKind; }
 
-const anyHard = (e: KinkEntry) => e.status === "hard_no";
+const isAvailable = (e: KinkEntry): boolean => e.privateResponse !== true;
+const anyHard = (e: KinkEntry) => isAvailable(e) && e.status === "hard_no";
 
-const hasRating = (e: KinkEntry): boolean => e.status != null;
+const hasRating = (e: KinkEntry): boolean => isAvailable(e) && e.status != null;
 
 export function kinkMatchScore(a: KinkEntry, b: KinkEntry): KinkMatch {
   if (anyHard(a) || anyHard(b)) return { score: 0, kind: "limit" };
