@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildPartnerProfile,
   sanitizeRemoteProfileFull,
+  sanitizeSessionResponses,
   synthesizePartnerId,
 } from "@/lib/sessionImport";
 import type { KinkStatus } from "@/types";
@@ -41,6 +42,41 @@ describe("synthesizePartnerId", () => {
     expect(synthesizePartnerId("Maya", "ontvangen", ENTRIES)).not.toBe(base);
     expect(synthesizePartnerId("Mira", "geven", ENTRIES)).not.toBe(base);
     expect(synthesizePartnerId("Mira", "ontvangen", { ...ENTRIES, flogging: "yes" })).not.toBe(base);
+  });
+
+  it("keeps the same fingerprint for legacy and structured responses", () => {
+    expect(synthesizePartnerId("Mira", "ontvangen", ENTRIES)).toBe(
+      synthesizePartnerId("Mira", "ontvangen", {
+        spanking_hand: { status: "yes", privateResponse: true },
+        flogging: { status: "maybe" },
+        needle_play: { status: "hard_no" },
+      })
+    );
+  });
+});
+
+describe("sanitizeSessionResponses", () => {
+  it("accepts both legacy statuses and structured private responses", () => {
+    expect(sanitizeSessionResponses({
+      spanking_hand: "yes",
+      flogging: { status: "maybe", privateResponse: true },
+      empty_private: { status: null, privateResponse: true },
+    })).toEqual({
+      spanking_hand: { status: "yes" },
+      flogging: { status: "maybe", privateResponse: true },
+      empty_private: { status: null, privateResponse: true },
+    });
+  });
+
+  it("drops malformed statuses and non-boolean privacy flags", () => {
+    expect(sanitizeSessionResponses({
+      bad: { status: "root", privateResponse: true },
+      also_bad: { status: null, privateResponse: "yes" },
+      fine: { status: "willing", privateResponse: "yes" },
+    })).toEqual({
+      bad: { status: null, privateResponse: true },
+      fine: { status: "willing" },
+    });
   });
 });
 
@@ -209,6 +245,17 @@ describe("buildPartnerProfile", () => {
     expect(partner.entries.spanking_hand).toEqual({ status: "yes", comment: "" });
     expect(partner.entries.needle_play).toEqual({ status: "hard_no", comment: "" });
     expect(partner.entries.wax_play).toBeUndefined();
+  });
+
+  it("preserves the private flag when importing the partner", () => {
+    const partner = buildPartnerProfile(null, { name: "Mira", role: "ontvangen" }, {
+      spanking_hand: { status: "yes", privateResponse: true },
+    }, NOW);
+    expect(partner.entries.spanking_hand).toEqual({
+      status: "yes",
+      comment: "",
+      privateResponse: true,
+    });
   });
 
   it("is idempotent under store dedupe for the same peer (fallback path)", () => {
