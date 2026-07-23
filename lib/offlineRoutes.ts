@@ -40,24 +40,51 @@ export async function warmOfflineRoutes(routes: readonly string[]): Promise<bool
     registration.waiting;
   if (!worker) return false;
 
-  const urlsToCache = [...new Set(routes)];
-  if (urlsToCache.length === 0) return true;
+  const uniqueRoutes = [...new Set(routes)];
+  if (uniqueRoutes.length === 0) return true;
+
+  // CACHE_URLS accepts Request constructor tuples. Cache both the full document
+  // used by cold browser/PWA launches and the RSC payload used by App Router taps.
+  const urlsToCache = uniqueRoutes.flatMap((url) => [
+    [url, { headers: { Accept: "text/html" } }],
+    [
+      url,
+      {
+        headers: {
+          RSC: "1",
+          "Next-Router-Prefetch": "1",
+          "Next-Url": url,
+        },
+      },
+    ],
+  ]);
 
   return new Promise<boolean>((resolve) => {
     const channel = new MessageChannel();
-    const timeout = window.setTimeout(() => resolve(false), 20_000);
+    let settled = false;
 
-    channel.port1.onmessage = () => {
+    const finish = (result: boolean) => {
+      if (settled) return;
+      settled = true;
       window.clearTimeout(timeout);
-      resolve(true);
+      channel.port1.close();
+      resolve(result);
     };
 
-    worker.postMessage(
-      {
-        type: "CACHE_URLS",
-        payload: { urlsToCache },
-      },
-      [channel.port2],
-    );
+    const timeout = window.setTimeout(() => finish(false), 20_000);
+    channel.port1.onmessage = () => finish(true);
+    channel.port1.onmessageerror = () => finish(false);
+
+    try {
+      worker.postMessage(
+        {
+          type: "CACHE_URLS",
+          payload: { urlsToCache },
+        },
+        [channel.port2],
+      );
+    } catch {
+      finish(false);
+    }
   });
 }
