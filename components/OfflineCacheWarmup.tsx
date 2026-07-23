@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { useHasHydrated, useStore } from "@/lib/store";
 import {
   buildOfflineWarmupRoutes,
@@ -13,7 +12,6 @@ function idsFromKey(key: string): string[] {
 }
 
 export default function OfflineCacheWarmup() {
-  const router = useRouter();
   const hydrated = useHasHydrated();
   const profileIdsKey = useStore((state) =>
     state.profiles.map((profile) => profile.id).join("\u001f"),
@@ -41,10 +39,6 @@ export default function OfflineCacheWarmup() {
       if (cancelled || inFlight || !navigator.onLine) return;
       inFlight = true;
 
-      // Next App Router navigations fetch RSC payloads even when every component
-      // bundle is already local. Prefetch them so taps stay inside the playroom.
-      for (const route of routes) router.prefetch(route);
-
       const cached = await warmOfflineRoutes(routes);
       if (!cancelled && cached) {
         document.documentElement.dataset.offlineCache = "ready";
@@ -63,7 +57,7 @@ export default function OfflineCacheWarmup() {
       window.removeEventListener("online", warm);
       navigator.serviceWorker?.removeEventListener("controllerchange", warm);
     };
-  }, [hydrated, router, routes]);
+  }, [hydrated, routes]);
 
   return null;
 }
