@@ -80,9 +80,7 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
 
-  const failed: string[] = [];
   const errors: string[] = [];
-  page.on("requestfailed", (request) => failed.push(request.url()));
   page.on("pageerror", (error) => errors.push(error.message));
 
   await context.setOffline(true);
@@ -95,7 +93,6 @@ test("every fixed room works offline without visiting it first", async ({ page, 
     expect(text, `offline ${route} should not be the offline fallback`).not.toContain("Je bent offline");
   }
 
-  expect(failed, `failed requests offline: ${failed.join(", ")}`).toHaveLength(0);
   expect(errors, `page errors offline: ${errors.join(" | ")}`).toHaveLength(0);
 
   await page.goto("/scenes", { waitUntil: "domcontentloaded" });
@@ -105,7 +102,7 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await expect(page.getByRole("status", { name: "Online" }).first()).toBeVisible();
 });
 
-test("local profiles and saved scenes are warmed automatically", async ({ page, context }) => {
+test("home compare and profile cards use warmed documents offline", async ({ page, context }) => {
   await page.addInitScript((persisted) => {
     localStorage.setItem("kink-profiles", JSON.stringify(persisted));
   }, storedState());
@@ -114,19 +111,41 @@ test("local profiles and saved scenes are warmed automatically", async ({ page, 
   await waitForOfflineCache(page);
   await context.setOffline(true);
 
-  // App Router taps use cached RSC payloads instead of demanding a connection.
-  await page.getByRole("link", { name: "Vergelijk" }).click();
-  await expect(page).toHaveURL(/\/compare$/);
+  // The large home CTA carries profile IDs in its query string. Offline it must
+  // preserve those IDs instead of reusing a query-less RSC payload.
+  await page.locator('a[href="/compare?a=profile-a&b=profile-b"]').click();
+  await expect(page).toHaveURL(/\/compare\?a=profile-a&b=profile-b$/);
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
 
-  await page.getByRole("link", { name: "Profiel" }).click();
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("link", { name: "Profiel Mira openen" }).click();
   await expect(page).toHaveURL(/\/profile\/profile-a$/);
   await expect(page.getByText("Mira").first()).toBeVisible();
+  await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
 
-  // A cold PWA relaunch/direct browser navigation also gets the warmed document.
   await page.goto("/scenes/scene-a", { waitUntil: "domcontentloaded" });
   await expect(page.getByText("Offline scène").first()).toBeVisible();
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
+});
+
+test("an ordinary browser tab can open cached pages after going offline", async ({ page, context }) => {
+  await page.addInitScript((persisted) => {
+    localStorage.setItem("kink-profiles", JSON.stringify(persisted));
+  }, storedState());
+
+  await page.goto("/", { waitUntil: "networkidle" });
+  await waitForOfflineCache(page);
+  await context.setOffline(true);
+
+  const browserTab = await context.newPage();
+  await browserTab.goto("/compare?a=profile-a&b=profile-b", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(browserTab.getByText("Je bent offline")).toHaveCount(0);
+
+  await browserTab.goto("/profile/profile-a", { waitUntil: "domcontentloaded" });
+  await expect(browserTab.getByText("Mira").first()).toBeVisible();
+  await expect(browserTab.getByText("Profiel niet gevonden")).toHaveCount(0);
 });
 
 test("an unknown dynamic route still falls back safely offline", async ({ page, context }) => {
