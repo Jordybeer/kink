@@ -43,20 +43,12 @@ export async function warmOfflineRoutes(routes: readonly string[]): Promise<bool
   const uniqueRoutes = [...new Set(routes)];
   if (uniqueRoutes.length === 0) return true;
 
-  // CACHE_URLS accepts Request constructor tuples. Cache both the full document
-  // used by cold browser/PWA launches and the RSC payload used by App Router taps.
-  const urlsToCache = uniqueRoutes.flatMap((url) => [
-    [url, { headers: { Accept: "text/html" } }],
-    [
-      url,
-      {
-        headers: {
-          RSC: "1",
-          "Next-Router-Prefetch": "1",
-          "Next-Url": url,
-        },
-      },
-    ],
+  // Warm real HTML documents only. Next RSC payloads depend on router-state and
+  // query headers; fabricating them creates cache entries that look valid but
+  // cannot complete a real navigation.
+  const urlsToCache = uniqueRoutes.map((url) => [
+    url,
+    { headers: { Accept: "text/html" } },
   ]);
 
   return new Promise<boolean>((resolve) => {
