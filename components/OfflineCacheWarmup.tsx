@@ -11,6 +11,16 @@ function idsFromKey(key: string): string[] {
   return key ? key.split("\u001f") : [];
 }
 
+function isPlainLeftClick(event: MouseEvent): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
+
 export default function OfflineCacheWarmup() {
   const hydrated = useHasHydrated();
   const profileIdsKey = useStore((state) =>
@@ -58,6 +68,33 @@ export default function OfflineCacheWarmup() {
       navigator.serviceWorker?.removeEventListener("controllerchange", warm);
     };
   }, [hydrated, routes]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const navigateFromCache = (event: MouseEvent) => {
+      if (navigator.onLine || event.defaultPrevented || !isPlainLeftClick(event)) return;
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin) return;
+      if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return;
+
+      // Next Link asks for an RSC payload whose router-state and query headers
+      // vary per click. Offline, use the warmed HTML document instead — this is
+      // equally reliable in an installed PWA and an ordinary browser tab.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.location.assign(url.href);
+    };
+
+    document.addEventListener("click", navigateFromCache, true);
+    return () => document.removeEventListener("click", navigateFromCache, true);
+  }, []);
 
   return null;
 }
