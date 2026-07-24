@@ -11,28 +11,6 @@ const THIRTY_DAYS = 30 * 24 * 60 * 60;
 
 const offlineRuntimeCaching = [
   {
-    // App Router taps request an RSC payload even though all page components are
-    // already local. Ignore query hashes so one warm response serves later taps.
-    matcher({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) {
-      return (
-        sameOrigin &&
-        request.headers.get("RSC") === "1" &&
-        !url.pathname.startsWith("/api/")
-      );
-    },
-    handler: new NetworkFirst({
-      cacheName: "kinksync-rsc",
-      matchOptions: { ignoreSearch: true },
-      plugins: [
-        new ExpirationPlugin({
-          maxEntries: 128,
-          maxAgeSeconds: THIRTY_DAYS,
-          maxAgeFrom: "last-used",
-        }),
-      ],
-    }),
-  },
-  {
     // CACHE_URLS warms these with Accept: text/html; real browser/PWA reloads
     // arrive as navigate requests. Both must land in the same cache.
     matcher({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) {
@@ -88,6 +66,13 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// The first hotfix preview fabricated RSC cache entries without the exact
+// router-state headers used by a real click. Remove that cache on activation so
+// no browser or installed PWA can keep serving those poisoned payloads.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete("kinksync-rsc"));
+});
 
 // Notify existing clients that a new version has installed.
 self.addEventListener("install", (event) => {
