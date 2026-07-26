@@ -1,7 +1,7 @@
 import {
   PROFILE_SHELL_ROUTE,
   SCENE_DETAIL_SHELL_ROUTE,
-} from "@/lib/localRoutes";
+} from "./localRoutes";
 
 export const STATIC_OFFLINE_ROUTES = [
   "/",
