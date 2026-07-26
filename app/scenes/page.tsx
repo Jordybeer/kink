@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
+import { sceneDetailHref } from "@/lib/localRoutes";
 import AftercareSheet from "@/components/AftercareSheet";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
@@ -95,7 +96,7 @@ function SceneCard({
         <div className="flex gap-2 mt-1">
           {scene.status === "completed" ? (
             <button
-              onClick={() => router.push(`/scenes/${scene.id}`)}
+              onClick={() => router.push(sceneDetailHref(scene.id))}
               className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
