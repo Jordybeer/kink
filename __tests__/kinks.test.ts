@@ -71,6 +71,16 @@ describe("intensity ordering (juli 2026 uitbreiding)", () => {
     }
     expect(KINKS.length).toBeGreaterThanOrEqual(242);
   });
+
+  it("straf corrigeert, rituelen trainen — the two new houses stand", () => {
+    expect(CATEGORIES).toContain("Straf & Correctie");
+    expect(CATEGORIES).toContain("Rituelen & Training");
+    // the umbrella entries moved into their new homes, ids intact
+    expect(KINKS.find((k) => k.id === "punishment")?.category).toBe("Straf & Correctie");
+    expect(KINKS.find((k) => k.id === "collaring")?.category).toBe("Rituelen & Training");
+    expect(getKinksByCategoryAndLevel("Straf & Correctie", 4).length).toBeGreaterThanOrEqual(15);
+    expect(getKinksByCategoryAndLevel("Rituelen & Training", 4).length).toBeGreaterThanOrEqual(16);
+  });
 });
 
 describe("LEVEL_MAX", () => {
