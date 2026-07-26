@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-26 — Een handmatig herbouwde package.json brak vóór de code begon
+
+**What went wrong:** Om Vitest tijdelijk vóór de Vercel-productiebuild te laten lopen, werd `package.json` via de contents-API volledig herschreven. Daarbij schoof `jsqr` onbedoeld van `^1.4.0` naar `^1.4.1`, terwijl `package-lock.json` onveranderd bleef. `npm ci` stopte daardoor onmiddellijk. Omdat de Vercel-status alleen “failure” toonde, leek de nieuwe local-first architectuur verdacht en volgden meerdere onnodige isolatiebuilds.
+
+**Rule:** Bij een tijdelijke scriptwijziging mag geen dependencyregel worden gereconstrueerd uit geheugen of een oudere fetch. Vergelijk `package.json` byte-voor-byte met de branchbasis, wijzig uitsluitend de bedoelde scriptregel en controleer vóór push dat `git diff -- package.json package-lock.json` geen dependency- of lockfileverschil bevat. Een build die vóór de normale compileduur faalt krijgt eerst een manifest/lockfile-alibi voordat architectuurcode wordt teruggedraaid.
+
+---
+
 ## 2026-07-23 — De offline-wachthond opende eerst zelf elke deur
 
 **What went wrong:** De productie-mode offline e2e bezocht vóór het uitschakelen van het netwerk iedere route online. Daarmee bewees hij alleen runtime-cache-na-eerste-bezoek, terwijl de bedoelde PWA-eigenschap was dat de hele lokale app na één online start beschikbaar blijft. De `/offline` fallback maakte de regressie vriendelijker zichtbaar, maar veranderde elke nog niet bezochte pagina in een feitelijke “verbind eerst”-poort.
