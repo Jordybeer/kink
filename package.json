@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "vitest run && next build --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -42,7 +42,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.6",
+    "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.7"
