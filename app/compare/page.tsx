@@ -4,43 +4,17 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowsLeftRight, FilmSlate, FileText, CaretDown, Lock } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { KINKS, CATEGORIES, getKinksByCategory } from "@/lib/kinks";
-import type { KinkStatus, KinkEntry, Profile } from "@/types";
+import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
+import type { KinkEntry, Profile } from "@/types";
 import { isKinkMatch, isHardLimit, isConflict, profileMatchScore } from "@/lib/matching";
 import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import DiscussedToggle from "@/components/DiscussedToggle";
-import StatusGlyph from "@/components/StatusGlyph";
-import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
+import CompareKinkRow from "@/components/CompareKinkRow";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
-
-// Verdicts wear their own colours — who said it is already told by the
-// column; what they said deserves the house language (dashed for a grens).
-function StatusBadge({ status }: { status: KinkStatus }) {
-  if (!status) return <span className="text-xs" style={{ color: "var(--text2)" }}>—</span>;
-  const colour = STATUS_VAR[status];
-  return (
-    <span
-      className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center gap-1"
-      style={{
-        color: colour,
-        borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
-        background: `color-mix(in srgb, ${colour} 15%, transparent)`,
-        borderStyle: status === "hard_no" ? "dashed" : "solid",
-      }}
-    >
-      <StatusGlyph status={status} />
-      {STATUS_LABEL[status]}
-    </span>
-  );
-}
-
-function EntryBadge({ entry }: { entry: KinkEntry }) {
-  return <StatusBadge status={entry.status} />;
-}
 
 function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
   const total = match + discuss + soft + limit;
@@ -345,8 +319,6 @@ function ComparePage() {
   const [bId, setBId] = useState(cleanParam(searchParams.get("b")));
   const [filterMode, setFilterMode] = useState<"all" | "match" | "conflict" | "hardno">("all");
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
-  // Notes stay muzzled until summoned — 66 cards × two open textareas was 17k px of scroll.
-  const [openNotes, setOpenNotes] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
 
@@ -419,8 +391,8 @@ function ComparePage() {
         for (const k of kinks) {
           const eA = profileA.entries[k.id] ?? { status: null, comment: "" };
           const eB = profileB.entries[k.id] ?? { status: null, comment: "" };
-          const hasA = eA.status;
-          const hasB = eB.status;
+          const hasA = eA.status && !eA.privateResponse;
+          const hasB = eB.status && !eB.privateResponse;
           if (hasA || hasB) {
             catRated++;
             if (isKinkMatch(eA, eB)) catMatches++;
@@ -438,20 +410,13 @@ function ComparePage() {
   const samePairError = aId && bId && aId === bId;
   const isPartnerA = profileA?.isImported || profileA?.origin === "shared";
   const isPartnerB = profileB?.isImported || profileB?.origin === "shared";
-
   const hasPair = !!profileA && !!profileB && !samePairError;
 
   return (
     <PageShell width="5xl">
-
-      {/* ── Sticky profile strip ──────────────────────────────────────── */}
       <div
         className="sticky z-10 pb-3 mb-3"
-        style={{
-          top: "var(--nav-h)",
-          background: "var(--bg)",
-          borderBottom: "1px solid var(--border)",
-        }}
+        style={{ top: "var(--nav-h)", background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
       >
         <div className="flex items-center gap-2 pt-3">
           <ProfileChip
@@ -484,13 +449,11 @@ function ComparePage() {
         )}
       </div>
 
-      {/* ── Score masthead + alignment ribbon + category nav + filter tabs ── */}
       {hasPair && (
         <>
           <ScoreMasthead match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
           <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} onFilter={setFilterMode} />
 
-          {/* Category heatmap strip */}
           <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 mb-4">
             {categoryScores
               .filter((c) => c.rate !== null)
@@ -506,11 +469,7 @@ function ComparePage() {
               ))}
           </div>
 
-          {/* Filter tabs row */}
-          <div
-            className="flex items-stretch mb-4 border-b"
-            style={{ borderColor: "var(--border)" }}
-          >
+          <div className="flex items-stretch mb-4 border-b" style={{ borderColor: "var(--border)" }}>
             {(["all", "match", "conflict", "hardno"] as const).map((f) => {
               const labels: Record<typeof f, string> = {
                 all: "Alles",
@@ -536,10 +495,7 @@ function ComparePage() {
                   {badge !== null && badge > 0 && (
                     <span
                       className="text-[11px] px-1 py-px rounded-full font-semibold tabular-nums"
-                      style={{
-                        background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`,
-                        color: badgeColour,
-                      }}
+                      style={{ background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`, color: badgeColour }}
                     >
                       {badge}
                     </span>
@@ -556,7 +512,6 @@ function ComparePage() {
         </>
       )}
 
-      {/* ── Kink list ─────────────────────────────────────────────────── */}
       <div>
         {!hasPair ? (
           <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
@@ -566,162 +521,48 @@ function ComparePage() {
           </p>
         ) : (
           <>
-            {(() => {
-              return CATEGORIES.map((cat) => {
-                const kinks = getKinksByCategory(cat).filter((k) => {
-                  if (hideDiscussed && discussed.has(k.id)) return false;
-                  return passesFilter(getEntry(profileA, k.id), getEntry(profileB, k.id));
-                });
-                if (!kinks.length) return null;
-                return (
-                  <section key={cat} id={`cat-${cat}`} className="mb-6 scroll-mt-32">
-                    <h2 className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
-                      {cat}
-                    </h2>
-                    <div className="flex flex-col gap-2">
-                      {kinks.map((kink) => {
-                        const eA = getEntry(profileA, kink.id);
-                        const eB = getEntry(profileB, kink.id);
-                        const matched = isKinkMatch(eA, eB);
-                        const hardLimit = isHardLimit(eA, eB);
-                        const conflict = !matched && !hardLimit && isConflict(eA, eB);
-                        const isDiscussed = discussed.has(kink.id);
-                        return (
-                          <div
-                            key={kink.id}
-                            className="rounded-xl px-3 py-2.5 transition-opacity"
-                            style={{
-                              background: "var(--surface)",
-                              border: "1px solid var(--border)",
-                              borderLeft: hardLimit
-                                ? "4px solid var(--hard-no)"
-                                : matched
-                                ? "4px solid var(--yes)"
-                                : conflict
-                                ? "4px solid var(--conflict)"
-                                : "4px solid transparent",
-                              opacity: isDiscussed ? 0.45 : 1,
-                            }}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-sm font-medium flex-1">
-                                {kink.name}
-                                {matched && <span className="sr-only"> — match</span>}
-                                {hardLimit && <span className="sr-only"> — harde grens</span>}
-                              </span>
-                              <button
-                                onClick={() => toggleDiscussed(kink.id)}
-                                aria-label={isDiscussed ? `${kink.name} als niet besproken markeren` : `${kink.name} als besproken markeren`}
-                                className="text-[11px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-none"
-                                style={
-                                  isDiscussed
-                                    ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
-                                    : { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" }
-                                }
-                              >
-                                {isDiscussed ? "✓ Besproken" : "Bespreken"}
-                              </button>
-                            </div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <EntryBadge entry={eA} />
-                              <div
-                                className="flex-1 h-px"
-                                style={{
-                                  background: "var(--border)",
-                                  opacity: matched ? 0.6 : 0.25,
-                                }}
-                              />
-                              <EntryBadge entry={eB} />
-                            </div>
-                            {(() => {
-                              const showReadOnlyA = profileA.isImported && !!eA.comment;
-                              const showReadOnlyB = profileB.isImported && !!eB.comment;
-                              const canEdit = !profileA.isImported || !profileB.isImported;
-                              const notesOpen =
-                                openNotes.has(kink.id) ||
-                                (!profileA.isImported && !!eA.comment) ||
-                                (!profileB.isImported && !!eB.comment);
-                              return (
-                                <>
-                                  {(showReadOnlyA || showReadOnlyB) && (
-                                    <div className="mt-1 text-xs space-y-0.5" style={{ color: "var(--text2)" }}>
-                                      {showReadOnlyA && (
-                                        <div>
-                                          <span className="font-medium" style={{ color: COLOUR_A }}>{profileA.name}:</span>{" "}
-                                          {eA.comment}
-                                        </div>
-                                      )}
-                                      {showReadOnlyB && (
-                                        <div>
-                                          <span className="font-medium" style={{ color: COLOUR_B }}>{profileB.name}:</span>{" "}
-                                          {eB.comment}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  {canEdit && !notesOpen && (
-                                    <button
-                                      onClick={() => setOpenNotes((s) => new Set(s).add(kink.id))}
-                                      aria-label={`Notitie toevoegen voor ${kink.name}`}
-                                      className="focus-ring mt-1 -mb-1 inline-flex items-center h-8 text-xs rounded-lg px-2 -ml-2 transition-colors"
-                                      style={{ color: "var(--text2)" }}
-                                    >
-                                      + Notitie
-                                    </button>
-                                  )}
-                                  {canEdit && notesOpen && (
-                                  <div className="mt-2 space-y-1.5">
-                                    {!profileA.isImported && (
-                                      <textarea
-                                        aria-label={`Notitie ${profileA.name}`}
-                                        placeholder={`Notitie ${profileA.name}…`}
-                                        value={eA.comment}
-                                        onChange={(e) => setEntry(profileA.id, kink.id, { comment: e.target.value })}
-                                        rows={1}
-                                        maxLength={200}
-                                        className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
-                                        style={{
-                                          background: "var(--surface2)",
-                                          border: `1px solid color-mix(in srgb, ${COLOUR_A} 30%, var(--border))`,
-                                          color: "var(--text)",
-                                        }}
-                                      />
-                                    )}
-                                    {!profileB.isImported && (
-                                      <textarea
-                                        aria-label={`Notitie ${profileB.name}`}
-                                        placeholder={`Notitie ${profileB.name}…`}
-                                        value={eB.comment}
-                                        onChange={(e) => setEntry(profileB.id, kink.id, { comment: e.target.value })}
-                                        rows={1}
-                                        maxLength={200}
-                                        className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
-                                        style={{
-                                          background: "var(--surface2)",
-                                          border: `1px solid color-mix(in srgb, ${COLOUR_B} 30%, var(--border))`,
-                                          color: "var(--text)",
-                                        }}
-                                      />
-                                    )}
-                                  </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
+            {CATEGORIES.map((cat) => {
+              const kinks = getKinksByCategory(cat).filter((k) => {
+                if (hideDiscussed && discussed.has(k.id)) return false;
+                return passesFilter(getEntry(profileA, k.id), getEntry(profileB, k.id));
               });
-            })()}
+              if (!kinks.length) return null;
+              return (
+                <section key={cat} id={`cat-${cat}`} className="mb-6 scroll-mt-32">
+                  <h2 className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
+                    {cat}
+                  </h2>
+                  <div className="flex flex-col gap-2">
+                    {kinks.map((kink) => {
+                      const eA = getEntry(profileA, kink.id);
+                      const eB = getEntry(profileB, kink.id);
+                      return (
+                        <CompareKinkRow
+                          key={kink.id}
+                          rowKey={kink.id}
+                          name={kink.name}
+                          entryA={eA}
+                          entryB={eB}
+                          profileA={profileA!}
+                          profileB={profileB!}
+                          colourA={COLOUR_A}
+                          colourB={COLOUR_B}
+                          isDiscussed={discussed.has(kink.id)}
+                          onToggleDiscussed={() => toggleDiscussed(kink.id)}
+                          onCommentA={!profileA!.isImported ? (comment) => setEntry(profileA!.id, kink.id, { comment }) : undefined}
+                          onCommentB={!profileB!.isImported ? (comment) => setEntry(profileB!.id, kink.id, { comment }) : undefined}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
 
-            {/* Custom kinks */}
             {(() => {
               const allCustom = [
-                ...(profileA.customKinks ?? []).map((k) => ({ ...k, side: "a" as const })),
-                ...(profileB.customKinks ?? []).map((k) => ({ ...k, side: "b" as const })),
+                ...(profileA!.customKinks ?? []).map((k) => ({ ...k, side: "a" as const })),
+                ...(profileB!.customKinks ?? []).map((k) => ({ ...k, side: "b" as const })),
               ];
               const merged = new Map<string, { name: string; aId?: string; bId?: string }>();
               for (const ck of allCustom) {
@@ -738,123 +579,35 @@ function ComparePage() {
                   <div className="flex flex-col gap-2">
                     {Array.from(merged.values()).map((item) => {
                       const eA = item.aId
-                        ? (profileA.entries[item.aId] ?? { status: null, comment: "" })
-                        : { status: null as KinkStatus, comment: "" };
+                        ? (profileA!.entries[item.aId] ?? { status: null, comment: "" })
+                        : { status: null, comment: "" };
                       const eB = item.bId
-                        ? (profileB.entries[item.bId] ?? { status: null, comment: "" })
-                        : { status: null as KinkStatus, comment: "" };
-                      const matched = isKinkMatch(eA, eB);
-                      const hardLimit = isHardLimit(eA, eB);
-                      const conflict = !matched && !hardLimit && isConflict(eA, eB);
+                        ? (profileB!.entries[item.bId] ?? { status: null, comment: "" })
+                        : { status: null, comment: "" };
                       const rowKey = item.name.trim().toLowerCase();
                       if (!passesFilter(eA, eB)) return null;
                       if (hideDiscussed && discussed.has(rowKey)) return null;
-                      const isDiscussed = discussed.has(rowKey);
                       return (
-                        <div
+                        <CompareKinkRow
                           key={rowKey}
-                          className="rounded-xl px-3 py-2.5 transition-opacity"
-                          style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            borderLeft: hardLimit
-                              ? "4px solid var(--hard-no)"
-                              : matched
-                              ? "4px solid var(--yes)"
-                              : conflict
-                              ? "4px solid var(--conflict)"
-                              : "4px solid transparent",
-                            opacity: isDiscussed ? 0.45 : 1,
-                          }}
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-medium flex-1 flex items-center gap-1.5">
-                              {item.name}
-                              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
-                                eigen
-                              </span>
-                            </span>
-                            <button
-                              onClick={() => toggleDiscussed(rowKey)}
-                              aria-label={isDiscussed ? `${item.name} als niet besproken markeren` : `${item.name} als besproken markeren`}
-                              className="text-[11px] px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-none"
-                              style={
-                                isDiscussed
-                                  ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
-                                  : { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" }
-                              }
-                            >
-                              {isDiscussed ? "✓ Besproken" : "Bespreken"}
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <EntryBadge entry={eA} />
-                            <div
-                              className="flex-1 h-px"
-                              style={{
-                                background: "var(--border)",
-                                opacity: matched ? 0.6 : 0.25,
-                              }}
-                            />
-                            <EntryBadge entry={eB} />
-                          </div>
-                          {(() => {
-                            const canEdit = (!profileA.isImported && !!item.aId) || (!profileB.isImported && !!item.bId);
-                            const notesOpen =
-                              openNotes.has(rowKey) ||
-                              (!profileA.isImported && !!item.aId && !!eA.comment) ||
-                              (!profileB.isImported && !!item.bId && !!eB.comment);
-                            if (canEdit && !notesOpen) {
-                              return (
-                                <button
-                                  onClick={() => setOpenNotes((s) => new Set(s).add(rowKey))}
-                                  aria-label={`Notitie toevoegen voor ${item.name}`}
-                                  className="focus-ring mt-1 -mb-1 inline-flex items-center h-8 text-xs rounded-lg px-2 -ml-2 transition-colors"
-                                  style={{ color: "var(--text2)" }}
-                                >
-                                  + Notitie
-                                </button>
-                              );
-                            }
-                            if (!canEdit) return null;
-                            return (
-                          <div className="mt-2 space-y-1.5">
-                            {!profileA.isImported && item.aId && (
-                              <textarea
-                                aria-label={`Notitie ${profileA.name}`}
-                                placeholder={`Notitie ${profileA.name}…`}
-                                value={eA.comment}
-                                onChange={(e) => setEntry(profileA.id, item.aId!, { comment: e.target.value })}
-                                rows={1}
-                                maxLength={200}
-                                className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
-                                style={{
-                                  background: "var(--surface2)",
-                                  border: `1px solid color-mix(in srgb, ${COLOUR_A} 30%, var(--border))`,
-                                  color: "var(--text)",
-                                }}
-                              />
-                            )}
-                            {!profileB.isImported && item.bId && (
-                              <textarea
-                                aria-label={`Notitie ${profileB.name}`}
-                                placeholder={`Notitie ${profileB.name}…`}
-                                value={eB.comment}
-                                onChange={(e) => setEntry(profileB.id, item.bId!, { comment: e.target.value })}
-                                rows={1}
-                                maxLength={200}
-                                className="focus-ring w-full text-xs rounded-lg px-2.5 py-1.5 resize-none focus:outline-none"
-                                style={{
-                                  background: "var(--surface2)",
-                                  border: `1px solid color-mix(in srgb, ${COLOUR_B} 30%, var(--border))`,
-                                  color: "var(--text)",
-                                }}
-                              />
-                            )}
-                          </div>
-                            );
-                          })()}
-                        </div>
+                          rowKey={rowKey}
+                          name={item.name}
+                          entryA={eA}
+                          entryB={eB}
+                          profileA={profileA!}
+                          profileB={profileB!}
+                          colourA={COLOUR_A}
+                          colourB={COLOUR_B}
+                          custom
+                          isDiscussed={discussed.has(rowKey)}
+                          onToggleDiscussed={() => toggleDiscussed(rowKey)}
+                          onCommentA={!profileA!.isImported && item.aId
+                            ? (comment) => setEntry(profileA!.id, item.aId!, { comment })
+                            : undefined}
+                          onCommentB={!profileB!.isImported && item.bId
+                            ? (comment) => setEntry(profileB!.id, item.bId!, { comment })
+                            : undefined}
+                        />
                       );
                     })}
                   </div>
@@ -862,7 +615,6 @@ function ComparePage() {
               );
             })()}
 
-            {/* ── Bottom actions ──────────────────────────────────────── */}
             <div className="pt-2 pb-2 flex flex-col gap-2">
               <div className="flex gap-2">
                 <Link
@@ -896,7 +648,6 @@ function ComparePage() {
         )}
       </div>
 
-      {/* ── Profile selector sheets ──────────────────────────────────── */}
       <ProfileSelectorSheet
         open={selectorOpen === "a"}
         onClose={() => setSelectorOpen(null)}
@@ -917,7 +668,6 @@ function ComparePage() {
         pinnedProfileId={pinnedProfileId}
         onSelect={setBId}
       />
-
     </PageShell>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { Star } from "@phosphor-icons/react";
+import { Eye, EyeSlash, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import { STATUS_LABEL } from "@/lib/statusLabels";
 import Sheet, { SheetContent } from "./Sheet";
@@ -15,12 +15,13 @@ interface Props {
   onStatusChange: (s: KinkStatus) => void;
   onTagsChange: (tags: string[]) => void;
   onCuriousChange: (v: boolean) => void;
+  onPrivateChange: (v: boolean) => void;
 }
 
-// Reopen a verdict: same five rows as the deck, plus vlaggen en nieuwsgierig.
+// Reopen a verdict: same five rows as the deck, plus vlaggen, nieuwsgierig en privé.
 export default function KinkEditSheet({
   kink, entry, onClose,
-  onStatusChange, onTagsChange, onCuriousChange,
+  onStatusChange, onTagsChange, onCuriousChange, onPrivateChange,
 }: Props) {
   const tags = entry.tags ?? [];
 
@@ -47,12 +48,14 @@ export default function KinkEditSheet({
             announces; the edit sheet was silent until now. */}
         <div aria-live="polite" className="sr-only">
           {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
+          {entry.privateResponse ? " Antwoord is privé." : ""}
         </div>
 
         <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
 
         <div className="flex items-center gap-1.5 mt-4 flex-wrap">
           <button
+            type="button"
             onClick={() => onCuriousChange(!entry.curious)}
             aria-pressed={!!entry.curious}
             className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1"
@@ -65,10 +68,29 @@ export default function KinkEditSheet({
             <Star size={11} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
             Nieuwsgierig
           </button>
+          <button
+            type="button"
+            data-tour="private"
+            onClick={() => onPrivateChange(!entry.privateResponse)}
+            aria-pressed={!!entry.privateResponse}
+            aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
+            className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1"
+            style={
+              entry.privateResponse
+                ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
+                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
+            }
+          >
+            {entry.privateResponse
+              ? <EyeSlash size={12} weight="bold" aria-hidden="true" />
+              : <Eye size={12} aria-hidden="true" />}
+            Privé
+          </button>
           {TAGS.map((tag) => {
             const active = tags.includes(tag);
             return (
               <button
+                type="button"
                 key={tag}
                 onClick={() => toggleTag(tag)}
                 aria-pressed={active}

@@ -57,6 +57,7 @@ export function sanitizeKinkEntry(raw: unknown): KinkEntry | null {
   if (desire !== undefined) entry.desire = Math.min(5, Math.max(0, Math.round(desire)));
   if (typeof r.experienced === "boolean") entry.experienced = r.experienced;
   if (typeof r.curious === "boolean") entry.curious = r.curious;
+  if (typeof r.privateResponse === "boolean") entry.privateResponse = r.privateResponse;
   const used = asFiniteNumber(r.usedInScene);
   if (used !== undefined) entry.usedInScene = Math.max(0, Math.round(used));
   if (Array.isArray(r.tags)) {
@@ -69,7 +70,7 @@ export function sanitizeKinkEntry(raw: unknown): KinkEntry | null {
   }
   // A frisked entry that carries nothing is not worth keeping.
   if (entry.status === null && !entry.comment && entry.desire == null
-    && entry.experienced == null && !entry.curious && !entry.tags) return null;
+    && entry.experienced == null && !entry.curious && !entry.privateResponse && !entry.tags) return null;
   return entry;
 }
 

@@ -11,7 +11,7 @@ import type { Kink, KinkStatus } from "@/types";
 import QRModal from "@/components/QRModal";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileTour from "@/components/ProfileTour";
-import { CaretDown, CaretRight, FileArrowDown, FileText, Info, ChatCircle, Star, UserMinus } from "@phosphor-icons/react";
+import { CaretDown, CaretRight, Eye, EyeSlash, FileArrowDown, FileText, Info, ChatCircle, Star, UserMinus } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
@@ -20,6 +20,7 @@ import { getProfileType } from "@/lib/profileType";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import BdsmtestScores from "@/components/BdsmtestScores";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
+import { privateResponseKey, profileExportResponse } from "@/lib/privateResponses";
 import StatusExplainerSheet from "@/components/sheets/StatusExplainerSheet";
 import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
 import { buildProfilePdf } from "@/lib/profilePdf";
@@ -52,6 +53,8 @@ export default function ProfilePage({ params }: Props) {
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
   const [meerOpen, setMeerOpen] = useState(true);
   const [showSaved, setShowSaved] = useState(false);
+  const [includePrivateExports, setIncludePrivateExports] = useState(false);
+  const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
   const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const tabInitialized = useRef(false);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -62,6 +65,11 @@ export default function ProfilePage({ params }: Props) {
     if (el) sectionRefs.current.set(cat, el);
     else sectionRefs.current.delete(cat);
   }, []);
+
+  useEffect(() => {
+    setRevealedPrivateResponses(new Set());
+    setIncludePrivateExports(false);
+  }, [id]);
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -131,8 +139,18 @@ export default function ProfilePage({ params }: Props) {
     markSaved();
   }
 
+  function revealPrivateResponse(kinkId: string) {
+    const key = privateResponseKey(profile!.id, kinkId);
+    setRevealedPrivateResponses((current) => new Set(current).add(key));
+  }
+
+  function isPrivateResponseRevealed(kinkId: string) {
+    return revealedPrivateResponses.has(privateResponseKey(profile!.id, kinkId));
+  }
+
   const visibleKinks = CATEGORIES.flatMap((cat) => getKinksByCategoryAndLevel(cat, maxLevel));
   const totalRated = visibleKinks.filter((k) => profile.entries[k.id]?.status).length;
+  const hasPrivateResponses = Object.values(profile.entries).some((entry) => entry.status && entry.privateResponse);
 
   const dnaSegments = STATUS_ORDER
     .map((s) => ({
@@ -158,9 +176,14 @@ export default function ProfilePage({ params }: Props) {
       if (!active.length) continue;
       lines.push(`## ${cat}`);
       for (const k of active) {
-        const e = profile!.entries[k.id];
-        const comment = e.comment ? ` — ${e.comment}` : "";
-        lines.push(`- [${e.status?.toUpperCase()}] ${k.name}${comment}`);
+        const response = profileExportResponse(profile!.entries[k.id], includePrivateExports);
+        const tags = response.tags.length ? ` [${response.tags.join(", ")}]` : "";
+        if (response.kind === "private") {
+          lines.push(`- [PRIVÉ] ${k.name}${tags}`);
+        } else {
+          const comment = response.comment ? ` — ${response.comment}` : "";
+          lines.push(`- [${response.status?.toUpperCase()}] ${k.name}${tags}${comment}`);
+        }
       }
       lines.push("");
     }
@@ -169,8 +192,14 @@ export default function ProfilePage({ params }: Props) {
       for (const ck of profile!.customKinks) {
         const e = profile!.entries[ck.id];
         if (!e?.status) continue;
-        const comment = e.comment ? ` — ${e.comment}` : "";
-        lines.push(`- [${e.status?.toUpperCase()}] ${ck.name}${comment}`);
+        const response = profileExportResponse(e, includePrivateExports);
+        const tags = response.tags.length ? ` [${response.tags.join(", ")}]` : "";
+        if (response.kind === "private") {
+          lines.push(`- [PRIVÉ] ${ck.name}${tags}`);
+        } else {
+          const comment = response.comment ? ` — ${response.comment}` : "";
+          lines.push(`- [${response.status?.toUpperCase()}] ${ck.name}${tags}${comment}`);
+        }
       }
       lines.push("");
     }
@@ -185,7 +214,9 @@ export default function ProfilePage({ params }: Props) {
 
   async function handlePDFExport() {
     // The press lives in lib/profilePdf — the page only saves the file.
-    const { doc, filename } = await buildProfilePdf(profile!, maxLevel);
+    const { doc, filename } = await buildProfilePdf(profile!, maxLevel, {
+      includePrivateResponses: includePrivateExports,
+    });
     doc.save(filename);
   }
 
@@ -433,7 +464,8 @@ export default function ProfilePage({ params }: Props) {
                   {meerOpen && (
                     <div className="flex flex-col pl-1 mb-2">
                       {customKinks.map((ck) => {
-                        const ckStatus = profile.entries[ck.id]?.status ?? null;
+                        const ckEntry = profile.entries[ck.id] ?? { status: null, comment: "" };
+                        const ckStatus = ckEntry.status ?? null;
                         const ckBorderColor = ckStatus ? STATUS_VAR[ckStatus] : "transparent";
                         return (
                           <div
@@ -443,6 +475,18 @@ export default function ProfilePage({ params }: Props) {
                           >
                             <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
                               <span className="flex-1 text-sm font-medium">{ck.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => { setEntry(profile.id, ck.id, { privateResponse: !ckEntry.privateResponse }); markSaved(); }}
+                                aria-pressed={!!ckEntry.privateResponse}
+                                aria-label={ckEntry.privateResponse ? `${ck.name} niet langer privé maken` : `${ck.name} privé maken`}
+                                className="focus-ring w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                                style={{ color: ckEntry.privateResponse ? "var(--accent)" : "var(--text2)", border: "1px solid var(--border)" }}
+                              >
+                                {ckEntry.privateResponse
+                                  ? <EyeSlash size={13} weight="bold" aria-hidden="true" />
+                                  : <Eye size={13} aria-hidden="true" />}
+                              </button>
                               <button
                                 onClick={() => removeCustomKink(profile.id, ck.id)}
                                 aria-label={`${ck.name} verwijderen`}
@@ -566,6 +610,7 @@ export default function ProfilePage({ params }: Props) {
                       {ratedKinks.map((kink) => {
                         const entry = profile.entries[kink.id];
                         const s = entry.status!;
+                        const concealed = entry.privateResponse && !isPrivateResponseRevealed(kink.id);
                         return (
                           <div
                             key={kink.id}
@@ -573,7 +618,7 @@ export default function ProfilePage({ params }: Props) {
                             style={{
                               background: "var(--surface)",
                               border: "1px solid var(--border)",
-                              borderLeft: `4px solid ${STATUS_VAR[s]}`,
+                              borderLeft: concealed ? "4px solid transparent" : `4px solid ${STATUS_VAR[s]}`,
                             }}
                           >
                             <div className="flex items-center gap-2">
@@ -591,18 +636,31 @@ export default function ProfilePage({ params }: Props) {
                                   Nieuwsgierig
                                 </span>
                               )}
-                              <span
-                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] text-center"
-                                style={{
-                                  color: STATUS_VAR[s],
-                                  borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
-                                  background: `color-mix(in srgb, ${STATUS_VAR[s]} 15%, transparent)`,
-                                }}
-                              >
-                                {STATUS_LABEL[s]}
-                              </span>
+                              {concealed ? (
+                                <button
+                                  type="button"
+                                  onClick={() => revealPrivateResponse(kink.id)}
+                                  aria-label={`Privéantwoord voor ${kink.name} tonen`}
+                                  className="focus-ring text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] inline-flex items-center justify-center gap-1 transition-opacity"
+                                  style={{ color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
+                                >
+                                  <EyeSlash size={10} aria-hidden="true" />
+                                  Privé
+                                </button>
+                              ) : (
+                                <span
+                                  className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] text-center"
+                                  style={{
+                                    color: STATUS_VAR[s],
+                                    borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
+                                    background: `color-mix(in srgb, ${STATUS_VAR[s]} 15%, transparent)`,
+                                  }}
+                                >
+                                  {STATUS_LABEL[s]}
+                                </span>
+                              )}
                             </div>
-                            {showOverviewComments && entry.comment && (
+                            {!concealed && showOverviewComments && entry.comment && (
                               <p className="text-xs mt-1 truncate" style={{ color: "var(--text2)" }}>
                                 {entry.comment}
                               </p>
@@ -640,7 +698,9 @@ export default function ProfilePage({ params }: Props) {
                   </p>
                   <div className="flex flex-col gap-1.5">
                     {ratedCustomKinks.map((ck) => {
-                      const s = profile.entries[ck.id].status!;
+                      const entry = profile.entries[ck.id];
+                      const s = entry.status!;
+                      const concealed = entry.privateResponse && !isPrivateResponseRevealed(ck.id);
                       return (
                         <div
                           key={ck.id}
@@ -648,12 +708,12 @@ export default function ProfilePage({ params }: Props) {
                           style={{
                             background: "var(--surface)",
                             border: "1px solid var(--border)",
-                            borderLeft: `4px solid ${STATUS_VAR[s]}`,
+                            borderLeft: concealed ? "4px solid transparent" : `4px solid ${STATUS_VAR[s]}`,
                           }}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm flex-1">{ck.name}</span>
-                            {profile.entries[ck.id].curious && (
+                            {entry.curious && (
                               <span
                                 className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none inline-flex items-center gap-1"
                                 style={{
@@ -666,17 +726,35 @@ export default function ProfilePage({ params }: Props) {
                                 Nieuwsgierig
                               </span>
                             )}
-                            <span
-                              className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] text-center"
-                              style={{
-                                color: STATUS_VAR[s],
-                                borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
-                                background: `color-mix(in srgb, ${STATUS_VAR[s]} 15%, transparent)`,
-                              }}
-                            >
-                              {STATUS_LABEL[s]}
-                            </span>
+                            {concealed ? (
+                              <button
+                                type="button"
+                                onClick={() => revealPrivateResponse(ck.id)}
+                                aria-label={`Privéantwoord voor ${ck.name} tonen`}
+                                className="focus-ring text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] inline-flex items-center justify-center gap-1"
+                                style={{ color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
+                              >
+                                <EyeSlash size={10} aria-hidden="true" />
+                                Privé
+                              </button>
+                            ) : (
+                              <span
+                                className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-none min-w-[5.5rem] text-center"
+                                style={{
+                                  color: STATUS_VAR[s],
+                                  borderColor: `color-mix(in srgb, ${STATUS_VAR[s]} 35%, transparent)`,
+                                  background: `color-mix(in srgb, ${STATUS_VAR[s]} 15%, transparent)`,
+                                }}
+                              >
+                                {STATUS_LABEL[s]}
+                              </span>
+                            )}
                           </div>
+                          {!concealed && showOverviewComments && entry.comment && (
+                            <p className="text-xs mt-1 truncate" style={{ color: "var(--text2)" }}>
+                              {entry.comment}
+                            </p>
+                          )}
                         </div>
                       );
                     })}
@@ -725,6 +803,19 @@ export default function ProfilePage({ params }: Props) {
               >
                 Download dit profiel
               </p>
+              {hasPrivateResponses && (
+                <label
+                  className="flex items-center gap-2 mb-2 px-0.5 text-xs"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={includePrivateExports}
+                    onChange={(event) => setIncludePrivateExports(event.target.checked)}
+                  />
+                  Privé antwoorden meenemen
+                </label>
+              )}
               <div className="flex gap-2">
                 <button
                   onClick={handleExport}
@@ -745,6 +836,11 @@ export default function ProfilePage({ params }: Props) {
                   PDF
                 </button>
               </div>
+              {hasPrivateResponses && !includePrivateExports && (
+                <p className="text-xs mt-2" style={{ color: "var(--text2)" }}>
+                  Privé antwoorden worden geredigeerd; hun status en notitie komen niet in het bestand.
+                </p>
+              )}
             </div>
           )}
 
@@ -773,6 +869,7 @@ export default function ProfilePage({ params }: Props) {
         onStatusChange={(s) => { if (editKink) handleStatus(editKink.id, s); }}
         onTagsChange={(tags) => { if (editKink) { setEntry(profile.id, editKink.id, { tags }); markSaved(); } }}
         onCuriousChange={(v) => { if (editKink) { setEntry(profile.id, editKink.id, { curious: v }); markSaved(); } }}
+        onPrivateChange={(v) => { if (editKink) { setEntry(profile.id, editKink.id, { privateResponse: v }); markSaved(); } }}
       />
 
       {/* Edit form — bottom sheet */}

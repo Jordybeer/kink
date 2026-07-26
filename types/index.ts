@@ -24,6 +24,8 @@ export interface KinkEntry {
   tags?: string[];
   usedInScene?: number;
   curious?: boolean;
+  /** Verbergt het persoonlijke antwoord standaard; de kinknaam blijft zichtbaar. */
+  privateResponse?: boolean;
 }
 
 export interface SceneItem {

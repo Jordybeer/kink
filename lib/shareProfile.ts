@@ -7,11 +7,12 @@ import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN
 
 function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
-  if (entry.status != null)        out.status = entry.status;
-  if (entry.desire != null)        out.desire = entry.desire;
-  if (entry.experienced != null)   out.experienced = entry.experienced;
-  if (entry.comment)               out.comment = entry.comment;
-  if (entry.tags?.length)          out.tags = entry.tags;
+  if (entry.status != null)             out.status = entry.status;
+  if (entry.desire != null)             out.desire = entry.desire;
+  if (entry.experienced != null)        out.experienced = entry.experienced;
+  if (entry.comment)                    out.comment = entry.comment;
+  if (entry.tags?.length)               out.tags = entry.tags;
+  if (entry.privateResponse === true)   out.privateResponse = true;
   // score is deprecated — never encoded
   return Object.keys(out).length > 0 ? out : null;
 }
@@ -55,12 +56,16 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     const st = profile.entries[k.id]?.status;
     return (st ? S_ENC[st] : undefined) ?? " ";
   }).join("");
+  const p = KINKS.map(k => profile.entries[k.id]?.privateResponse ? "1" : " ").join("");
 
   const ck = (profile.customKinks ?? []).map(c => {
     const e = profile.entries[c.id];
     const sc = (e?.status ? S_ENC[e.status] : undefined) ?? " ";
     return [c.id, c.name, sc];
   });
+  const pk = (profile.customKinks ?? [])
+    .filter(c => profile.entries[c.id]?.privateResponse)
+    .map(c => c.id);
 
   const payload: Record<string, unknown> = {
     v: 2,
@@ -72,9 +77,11 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     ua: profile.updatedAt,
     s,
   };
+  if (p.includes("1")) payload.p = p;
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
+  if (pk.length) payload.pk = pk;
   if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
 
   return toBase64Url(JSON.stringify(payload));
@@ -95,11 +102,21 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     }
     const desire = p.d?.[i] !== "0" && p.d?.[i] ? parseInt(p.d[i]) : null;
     const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
-    if (status !== null || desire !== null || experienced !== null) {
-      entries[KINKS[i].id] = { status, desire, experienced, comment: "" };
+    const privateResponse = p.p?.[i] === "1";
+    if (status !== null || desire !== null || experienced !== null || privateResponse) {
+      entries[KINKS[i].id] = {
+        status,
+        desire,
+        experienced,
+        comment: "",
+        ...(privateResponse ? { privateResponse: true } : {}),
+      };
     }
   }
 
+  const privateCustomIds = new Set(
+    (Array.isArray(p.pk) ? p.pk : []).filter((id: unknown): id is string => typeof id === "string")
+  );
   const customKinks: CustomKink[] = [];
   for (const row of (Array.isArray(p.ck) ? p.ck : [])) {
     if (customKinks.length >= MAX_CUSTOM_KINKS) break;
@@ -114,8 +131,15 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     const desire = typeof desireNum === "number" && Number.isFinite(desireNum) && desireNum
       ? Math.min(5, Math.max(0, Math.round(desireNum))) : null;
     const experienced = exp === true ? true : exp === false ? false : null;
-    if (status !== null || desire !== null || experienced !== null) {
-      entries[cleanId] = { status, desire, experienced, comment: "" };
+    const privateResponse = privateCustomIds.has(cleanId);
+    if (status !== null || desire !== null || experienced !== null || privateResponse) {
+      entries[cleanId] = {
+        status,
+        desire,
+        experienced,
+        comment: "",
+        ...(privateResponse ? { privateResponse: true } : {}),
+      };
     }
   }
 
