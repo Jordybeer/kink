@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-23 — De offline-wachthond opende eerst zelf elke deur
+
+**What went wrong:** De productie-mode offline e2e bezocht vóór het uitschakelen van het netwerk iedere route online. Daarmee bewees hij alleen runtime-cache-na-eerste-bezoek, terwijl de bedoelde PWA-eigenschap was dat de hele lokale app na één online start beschikbaar blijft. De `/offline` fallback maakte de regressie vriendelijker zichtbaar, maar veranderde elke nog niet bezochte pagina in een feitelijke “verbind eerst”-poort.
+
+**Rule:** Een offline-first regressietest mag online alleen de startpagina openen. Daarna moeten alle vaste routes, opgeslagen profielroutes, opgeslagen scèneroutes en App Router-tabnavigatie offline werken. Alleen werkelijk onbekende dynamische routes mogen naar de offline fallback vallen.
+
+---
+
 ## 2026-07-11 — A green suite that never ran the code: the stale-server mirage
 
 **What went wrong:** A full e2e run reported 178 passed while one of its tests (`ui-audit` DNA bar) *cannot* pass against dev's code — the asserted `aria-label` only exists on main. `playwright.config.ts` had `reuseExistingServer: true`, so the run almost certainly latched onto a stale dev server left on :3000 by an earlier session, and "verified" old code. Compounding it, the test's seed used v8-era kink ids that no longer exist, so its content assertions passed vacuously on an empty overview.
