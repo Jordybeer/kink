@@ -4,7 +4,9 @@ import {
   findSingleAddedId,
   hasPersistedProfile,
   profileHref,
+  profileIdFromLocation,
   sceneDetailHref,
+  sceneIdFromLocation,
   waitForPersistedProfile,
 } from "@/lib/localRoutes";
 
@@ -14,6 +16,34 @@ describe("local-first routes", () => {
     expect(sceneDetailHref("scene a/b")).toBe(
       "/scenes/view?id=scene%20a%2Fb",
     );
+  });
+
+  it("reads ids from both fixed query shells and legacy path doors", () => {
+    expect(
+      profileIdFromLocation(
+        "/profile",
+        new URLSearchParams("id=profile-query"),
+      ),
+    ).toBe("profile-query");
+    expect(
+      profileIdFromLocation(
+        "/profile/profile%20legacy",
+        new URLSearchParams(),
+      ),
+    ).toBe("profile legacy");
+
+    expect(
+      sceneIdFromLocation(
+        "/scenes/view",
+        new URLSearchParams("id=scene-query"),
+      ),
+    ).toBe("scene-query");
+    expect(
+      sceneIdFromLocation(
+        "/scenes/scene%20legacy",
+        new URLSearchParams(),
+      ),
+    ).toBe("scene legacy");
   });
 
   it("collars legacy dynamic urls without dropping query or hash state", () => {
