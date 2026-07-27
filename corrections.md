@@ -82,7 +82,7 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ## 2026-06-20 — Chart denominator double-counted soft limits
 
-**What went wrong:** `app/compare/page.tsx` manually computed `discussCount` by absorbing `counts.soft` into it. `ContractTrendsChart` then added `soft` again in its denominator (`match + discuss + soft + hard`), double-counting soft limits and deflating `verbond %` voor every contract saved after the change.
+**What went wrong:** `app/compare/page.tsx` manually computed `discussCount` by absorbing `counts.soft` into it. `ContractTrendsChart` then added `soft` again in its denominator (`match + discuss + soft + hard`), double-counting soft limits and deflating `verbond %` for every contract saved after the change.
 
 **Rule:** Keep four disjoint buckets: `matchCount`, `softLimitCount`, `discussCount`, `hardLimitCount`. Never collapse `soft` into `discuss`. The chart's denominator sums all four — they must be mutually exclusive.
 
