@@ -8,9 +8,9 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ## 2026-07-27 — De vaste profieldeur droeg de buildtijd-ID naar binnen
 
-**What went wrong:** De nieuwe `/profile?id=<id>`-shell las `searchParams` in een server page en gaf daaruit een Promise aan het client-profielscherm. De service worker cachet één statisch `/profile`-document met `ignoreSearch`; dat document was tijdens build/warming zonder `id` gerenderd. Bij een echte offline Safari-navigatie bleef de zichtbare URL wel `?id=…` bevatten, maar de gehydrateerde component ontving de ingebakken lege buildtijd-ID en toonde “Profiel niet gevonden”. Unit-, TypeScript- en buildpoorten konden dit niet zien; alleen de fysieke toestelpoort legde het bloot.
+**What went wrong:** De nieuwe `/profile?id=<id>`-shell las `searchParams` in een server page en gaf daaruit een Promise aan het client-profielscherm. De service worker cachet één statisch `/profile`-document met `ignoreSearch`; dat document was tijdens build/warming zonder `id` gerenderd. Bij een echte offline Safari-navigatie bleef de zichtbare URL wel `?id=…` bevatten, maar de gehydrateerde component ontving de ingebakken lege buildtijd-ID en toonde “Profiel niet gevonden”. Tegelijk kon de harde documentnavigatie plaatsvinden zodra React het nieuwe profiel zag, vóór Zustand persist het profiel aantoonbaar naar `localStorage` had geschreven. Beide fouten leiden op toestel tot hetzelfde scherm. Unit-, TypeScript- en buildpoorten konden dit niet zien; alleen de fysieke toestelpoort legde het bloot.
 
-**Rule:** Een query-shell waarvan één gecachet HTML-document meerdere lokale records bedient, moet de record-ID client-side uit de actuele `window.location`/`useSearchParams()` lezen. Geef nooit server-gerenderde `searchParams` door als recordidentiteit wanneer de documentcache querystrings negeert. De koude offline e2e moet de pagina na netwerkknip én reload openen; zonder uitvoerbare browserbinary blijft de PR draft tot een echt toestel dit bewijst.
+**Rule:** Een query-shell waarvan één gecachet HTML-document meerdere lokale records bedient, moet de record-ID client-side uit de actuele `window.location`/`useSearchParams()` lezen. Geef nooit server-gerenderde `searchParams` door als recordidentiteit wanneer de documentcache querystrings negeert. Voor een harde navigatie na een lokale create moet bovendien eerst worden bewezen dat precies die nieuwe ID in de persisted store staat. De koude offline e2e moet de pagina na netwerkknip én reload openen; zonder uitvoerbare browserbinary blijft de PR draft tot een echt toestel dit bewijst.
 
 ---
 
@@ -82,7 +82,7 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ## 2026-06-20 — Chart denominator double-counted soft limits
 
-**What went wrong:** `app/compare/page.tsx` manually computed `discussCount` by absorbing `counts.soft` into it. `ContractTrendsChart` then added `soft` again in its denominator (`match + discuss + soft + hard`), double-counting soft limits and deflating `verbond %` for every contract saved after the change.
+**What went wrong:** `app/compare/page.tsx` manually computed `discussCount` by absorbing `counts.soft` into it. `ContractTrendsChart` then added `soft` again in its denominator (`match + discuss + soft + hard`), double-counting soft limits and deflating `verbond %` voor every contract saved after the change.
 
 **Rule:** Keep four disjoint buckets: `matchCount`, `softLimitCount`, `discussCount`, `hardLimitCount`. Never collapse `soft` into `discuss`. The chart's denominator sums all four — they must be mutually exclusive.
 
