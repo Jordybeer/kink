@@ -90,7 +90,7 @@ export async function waitForPersistedProfile(
 
   do {
     if (hasPersistedProfile(storage, profileId)) return true;
-    await new Promise<void>((resolve) => window.setTimeout(resolve, pollIntervalMs));
+    await new Promise<void>((resolve) => globalThis.setTimeout(resolve, pollIntervalMs));
   } while (Date.now() < deadline);
 
   return hasPersistedProfile(storage, profileId);
