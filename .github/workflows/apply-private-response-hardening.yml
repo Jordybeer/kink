@@ -1,0 +1,51 @@
+name: Apply private response hardening
+
+on:
+  push:
+    branches:
+      - feature/private-response-hardening
+    paths:
+      - scripts/apply-private-response-hardening.py
+      - .github/workflows/apply-private-response-hardening.yml
+
+permissions:
+  contents: write
+
+jobs:
+  transform-test-and-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout the stacked branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/private-response-hardening
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply assertion-guarded transformations
+        run: python3 scripts/apply-private-response-hardening.py
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run the full unit suite
+        run: npm test
+
+      - name: Build Next and Serwist for production
+        run: npm run build
+
+      - name: Commit only the proven source changes
+        run: |
+          git config user.name "Jordybeer"
+          git config user.email "19562111+Jordybeer@users.noreply.github.com"
+          git add components/profile/ProfileScreen.tsx components/ProfileTour.tsx components/CompareKinkRow.tsx app/session/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Laat privéantwoorden pas op uitnodiging spreken"
+          git push origin HEAD:feature/private-response-hardening
