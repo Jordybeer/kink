@@ -1,5 +1,16 @@
 export const PROFILE_SHELL_ROUTE = "/profile";
 export const SCENE_DETAIL_SHELL_ROUTE = "/scenes/view";
+const PERSISTED_STORE_KEY = "kink-profiles";
+
+interface StorageReader {
+  getItem(key: string): string | null;
+}
+
+interface PersistenceWaitOptions {
+  storage?: StorageReader | null;
+  timeoutMs?: number;
+  pollIntervalMs?: number;
+}
 
 function safeDecode(segment: string): string {
   try {
@@ -43,4 +54,44 @@ export function findSingleAddedId(
   const previous = new Set(previousIds);
   const added = currentIds.filter((id) => !previous.has(id));
   return added.length === 1 ? added[0] : null;
+}
+
+export function hasPersistedProfile(
+  storage: StorageReader,
+  profileId: string,
+): boolean {
+  try {
+    const raw = storage.getItem(PERSISTED_STORE_KEY);
+    if (!raw) return false;
+
+    const persisted = JSON.parse(raw) as {
+      state?: { profiles?: Array<{ id?: unknown }> };
+    };
+
+    return persisted.state?.profiles?.some(
+      (profile) => profile.id === profileId,
+    ) === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function waitForPersistedProfile(
+  profileId: string,
+  options: PersistenceWaitOptions = {},
+): Promise<boolean> {
+  const storage = options.storage ??
+    (typeof window !== "undefined" ? window.localStorage : null);
+  if (!storage) return false;
+
+  const timeoutMs = options.timeoutMs ?? 2_000;
+  const pollIntervalMs = options.pollIntervalMs ?? 16;
+  const deadline = Date.now() + timeoutMs;
+
+  do {
+    if (hasPersistedProfile(storage, profileId)) return true;
+    await new Promise<void>((resolve) => window.setTimeout(resolve, pollIntervalMs));
+  } while (Date.now() < deadline);
+
+  return hasPersistedProfile(storage, profileId);
 }
