@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-27 — De vaste profieldeur droeg de buildtijd-ID naar binnen
+
+**What went wrong:** De nieuwe `/profile?id=<id>`-shell las `searchParams` in een server page en gaf daaruit een Promise aan het client-profielscherm. De service worker cachet één statisch `/profile`-document met `ignoreSearch`; dat document was tijdens build/warming zonder `id` gerenderd. Bij een echte offline Safari-navigatie bleef de zichtbare URL wel `?id=…` bevatten, maar de gehydrateerde component ontving de ingebakken lege buildtijd-ID en toonde “Profiel niet gevonden”. Unit-, TypeScript- en buildpoorten konden dit niet zien; alleen de fysieke toestelpoort legde het bloot.
+
+**Rule:** Een query-shell waarvan één gecachet HTML-document meerdere lokale records bedient, moet de record-ID client-side uit de actuele `window.location`/`useSearchParams()` lezen. Geef nooit server-gerenderde `searchParams` door als recordidentiteit wanneer de documentcache querystrings negeert. De koude offline e2e moet de pagina na netwerkknip én reload openen; zonder uitvoerbare browserbinary blijft de PR draft tot een echt toestel dit bewijst.
+
+---
+
 ## 2026-07-26 — Een handmatig herbouwde package.json brak vóór de code begon
 
 **What went wrong:** Om Vitest tijdelijk vóór de Vercel-productiebuild te laten lopen, werd `package.json` via de contents-API volledig herschreven. Daarbij schoof `jsqr` onbedoeld van `^1.4.0` naar `^1.4.1`, terwijl `package-lock.json` onveranderd bleef. `npm ci` stopte daardoor onmiddellijk. Omdat de Vercel-status alleen “failure” toonde, leek de nieuwe local-first architectuur verdacht en volgden meerdere onnodige isolatiebuilds.
