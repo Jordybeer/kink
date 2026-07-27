@@ -1,6 +1,10 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
 import { ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
+import {
+  PROFILE_SHELL_ROUTE,
+  SCENE_DETAIL_SHELL_ROUTE,
+} from "../lib/localRoutes";
 import { STATIC_OFFLINE_ROUTES } from "../lib/offlineRoutes";
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -8,6 +12,10 @@ declare const self: ServiceWorkerGlobalScope & {
 };
 
 const THIRTY_DAYS = 30 * 24 * 60 * 60;
+
+function isDocumentRequest(request: Request): boolean {
+  return request.mode === "navigate" || request.destination === "document";
+}
 
 const offlineRuntimeCaching = [
   {
@@ -35,12 +43,33 @@ const offlineRuntimeCaching = [
   },
 ];
 
+const dynamicShellFallbacks = [
+  {
+    url: PROFILE_SHELL_ROUTE,
+    matcher({ request }: { request: Request }) {
+      return (
+        isDocumentRequest(request) &&
+        /^\/profile\/[^/]+$/.test(new URL(request.url).pathname)
+      );
+    },
+  },
+  {
+    url: SCENE_DETAIL_SHELL_ROUTE,
+    matcher({ request }: { request: Request }) {
+      const pathname = new URL(request.url).pathname;
+      return (
+        isDocumentRequest(request) &&
+        /^\/scenes\/[^/]+$/.test(pathname) &&
+        pathname !== SCENE_DETAIL_SHELL_ROUTE
+      );
+    },
+  },
+];
+
 const staticRouteFallbacks = STATIC_OFFLINE_ROUTES.map((url) => ({
   url,
   matcher({ request }: { request: Request }) {
-    const isDocument =
-      request.mode === "navigate" || request.destination === "document";
-    return isDocument && new URL(request.url).pathname === url;
+    return isDocumentRequest(request) && new URL(request.url).pathname === url;
   },
 }));
 
@@ -52,13 +81,12 @@ const serwist = new Serwist({
   runtimeCaching: [...offlineRuntimeCaching, ...defaultCache],
   fallbacks: {
     entries: [
+      ...dynamicShellFallbacks,
       ...staticRouteFallbacks,
       {
         url: "/offline",
         matcher({ request }) {
-          return (
-            request.mode === "navigate" || request.destination === "document"
-          );
+          return isDocumentRequest(request);
         },
       },
     ],
