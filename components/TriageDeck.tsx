@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Info, Star } from "@phosphor-icons/react";
+import { Eye, EyeSlash, Info, Star } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import StatusOptionRows from "./StatusOptionRows";
@@ -14,6 +14,7 @@ interface Props {
   focusCategory?: string | null;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange: (kinkId: string, v: boolean) => void;
+  onPrivateChange: (kinkId: string, v: boolean) => void;
 }
 
 // One desire at a time. Unrated kinks queue up; a verdict lands, the card
@@ -21,7 +22,7 @@ interface Props {
 // store never hears about hesitation.
 export default function TriageDeck({
   kinks, entries, focusCategory,
-  onStatusChange, onCuriousChange,
+  onStatusChange, onCuriousChange, onPrivateChange,
 }: Props) {
   const t = useMotionSafe();
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
@@ -57,6 +58,7 @@ export default function TriageDeck({
     ? queue.filter((k) => k.category === current.category).length
     : 0;
   const totalDone = kinks.filter((k) => entries[k.id]?.status != null).length;
+  const currentEntry = current ? entries[current.id] : undefined;
 
   return (
     <div aria-live="polite">
@@ -74,24 +76,39 @@ export default function TriageDeck({
               border: "1px solid var(--border-accent)",
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <p className="flex-1 text-xs truncate" style={{ color: "var(--text2)" }}>
                 {current.category} · <span className="tabular-nums">nog {remainingInCat}</span>
               </p>
               <button
                 data-tour="curious"
-                onClick={() => onCuriousChange(current.id, !entries[current.id]?.curious)}
-                aria-pressed={!!entries[current.id]?.curious}
-                aria-label={entries[current.id]?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}
+                onClick={() => onCuriousChange(current.id, !currentEntry?.curious)}
+                aria-pressed={!!currentEntry?.curious}
+                aria-label={currentEntry?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}
                 className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1 flex-none"
                 style={
-                  entries[current.id]?.curious
+                  currentEntry?.curious
                     ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
                     : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
                 }
               >
-                <Star size={11} weight={entries[current.id]?.curious ? "fill" : "regular"} aria-hidden="true" />
+                <Star size={11} weight={currentEntry?.curious ? "fill" : "regular"} aria-hidden="true" />
                 Nieuwsgierig
+              </button>
+              <button
+                type="button"
+                data-tour="private"
+                onClick={() => onPrivateChange(current.id, !currentEntry?.privateResponse)}
+                aria-pressed={!!currentEntry?.privateResponse}
+                aria-label={currentEntry?.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
+                className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg border transition-colors flex-none"
+                style={currentEntry?.privateResponse
+                  ? { color: "var(--accent)", borderColor: "var(--accent)", background: "color-mix(in srgb, var(--accent) 12%, transparent)" }
+                  : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
+              >
+                {currentEntry?.privateResponse
+                  ? <EyeSlash size={14} weight="bold" aria-hidden="true" />
+                  : <Eye size={14} aria-hidden="true" />}
               </button>
               <button
                 data-tour="info"
@@ -120,7 +137,7 @@ export default function TriageDeck({
             {!current.description && <div className="mb-3" />}
 
             <StatusOptionRows
-              current={entries[current.id]?.status ?? null}
+              current={currentEntry?.status ?? null}
               onSelect={(s) => handleSelect(current, s)}
             />
 
