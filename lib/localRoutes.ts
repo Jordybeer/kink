@@ -6,6 +6,10 @@ interface StorageReader {
   getItem(key: string): string | null;
 }
 
+interface SearchParamsReader {
+  get(name: string): string | null;
+}
+
 interface PersistenceWaitOptions {
   storage?: StorageReader | null;
   timeoutMs?: number;
@@ -26,6 +30,30 @@ export function profileHref(id: string): string {
 
 export function sceneDetailHref(id: string): string {
   return `${SCENE_DETAIL_SHELL_ROUTE}?id=${encodeURIComponent(id)}`;
+}
+
+export function profileIdFromLocation(
+  pathname: string,
+  searchParams: SearchParamsReader,
+): string {
+  const queryId = searchParams.get("id");
+  if (queryId) return queryId;
+
+  const legacyMatch = /^\/profile\/([^/]+)$/.exec(pathname);
+  return legacyMatch ? safeDecode(legacyMatch[1]) : "";
+}
+
+export function sceneIdFromLocation(
+  pathname: string,
+  searchParams: SearchParamsReader,
+): string {
+  const queryId = searchParams.get("id");
+  if (queryId) return queryId;
+
+  const legacyMatch = /^\/scenes\/([^/]+)$/.exec(pathname);
+  return legacyMatch && legacyMatch[1] !== "view"
+    ? safeDecode(legacyMatch[1])
+    : "";
 }
 
 export function canonicalizeLocalUrl(input: URL): URL {
