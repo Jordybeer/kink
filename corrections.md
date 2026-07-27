@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-27 — De klik kende de nieuwe kamer, de oude voordeur niet
+
+**What went wrong:** De local-first PR canonicaliseerde oude `/profile/<id>`- en `/scenes/<id>`-links alleen wanneer een klik binnen een reeds geladen app werd onderschept. Het profielaanmaakformulier gebruikte bovendien nog rechtstreeks `router.push('/profile/<id>')`. Een koude Safari/PWA-documentnavigatie naar zo'n nieuw, nooit gewarmd ID passeert geen kliklistener en vroeg de service worker om een document dat niet in de cache bestond. iOS toonde daarom “This page couldn’t load”, ondanks dat de lokale data en de vaste shell beschikbaar waren.
+
+**Rule:** Backward compatibility voor documentroutes hoort in de service worker, niet alleen in een DOM-clickhandler. Iedere legacy dynamische profiel- of scèneroute moet bij netwerkfalen de vaste geprecachete shell krijgen; die shell leest het ID client-side uit óf de querystring óf het actuele pathname. De offline-e2e moet records pas na de netwerkknip toevoegen en vervolgens hun oude URL rechtstreeks openen, zodat per-ID warming de test niet vals groen kan maken.
+
+---
+
 ## 2026-07-27 — De vaste profieldeur droeg de buildtijd-ID naar binnen
 
 **What went wrong:** De nieuwe `/profile?id=<id>`-shell las `searchParams` in een server page en gaf daaruit een Promise aan het client-profielscherm. De service worker cachet één statisch `/profile`-document met `ignoreSearch`; dat document was tijdens build/warming zonder `id` gerenderd. Bij een echte offline Safari-navigatie bleef de zichtbare URL wel `?id=…` bevatten, maar de gehydrateerde component ontving de ingebakken lege buildtijd-ID en toonde “Profiel niet gevonden”. Tegelijk kon de harde documentnavigatie plaatsvinden zodra React het nieuwe profiel zag, vóór Zustand persist het profiel aantoonbaar naar `localStorage` had geschreven. Beide fouten leiden op toestel tot hetzelfde scherm. Unit-, TypeScript- en buildpoorten konden dit niet zien; alleen de fysieke toestelpoort legde het bloot.
