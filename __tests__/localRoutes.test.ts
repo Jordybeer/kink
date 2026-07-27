@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   canonicalizeLocalUrl,
   findSingleAddedId,
+  hasPersistedProfile,
   profileHref,
   sceneDetailHref,
+  waitForPersistedProfile,
 } from "@/lib/localRoutes";
 
 describe("local-first routes", () => {
@@ -46,5 +48,47 @@ describe("local-first routes", () => {
     expect(findSingleAddedId(["a", "b"], ["a", "b", "c"])).toBe("c");
     expect(findSingleAddedId(["a"], ["a", "b", "c"])).toBeNull();
     expect(findSingleAddedId(["a"], ["a"])).toBeNull();
+  });
+
+  it("recognises only the exact profile id in the persisted store", () => {
+    const storage = {
+      getItem: () => JSON.stringify({
+        state: { profiles: [{ id: "profile-a" }, { id: "profile-b" }] },
+        version: 15,
+      }),
+    };
+
+    expect(hasPersistedProfile(storage, "profile-b")).toBe(true);
+    expect(hasPersistedProfile(storage, "profile-c")).toBe(false);
+  });
+
+  it("waits for a delayed Zustand persist write before allowing navigation", async () => {
+    let raw = JSON.stringify({ state: { profiles: [] }, version: 15 });
+    const storage = { getItem: () => raw };
+
+    globalThis.setTimeout(() => {
+      raw = JSON.stringify({
+        state: { profiles: [{ id: "new-offline-profile" }] },
+        version: 15,
+      });
+    }, 5);
+
+    await expect(waitForPersistedProfile("new-offline-profile", {
+      storage,
+      timeoutMs: 100,
+      pollIntervalMs: 1,
+    })).resolves.toBe(true);
+  });
+
+  it("does not navigate when persistence never contains the newborn id", async () => {
+    const storage = {
+      getItem: () => JSON.stringify({ state: { profiles: [] }, version: 15 }),
+    };
+
+    await expect(waitForPersistedProfile("missing", {
+      storage,
+      timeoutMs: 5,
+      pollIntervalMs: 1,
+    })).resolves.toBe(false);
   });
 });
