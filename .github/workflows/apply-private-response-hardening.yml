@@ -1,6 +1,16 @@
 name: Apply private response hardening
 
 on:
+  pull_request:
+    branches:
+      - feature/local-first-shells
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - scripts/apply-private-response-hardening.py
+      - .github/workflows/apply-private-response-hardening.yml
   push:
     branches:
       - feature/private-response-hardening
