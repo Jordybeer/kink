@@ -40,7 +40,8 @@ describe("profile text export", () => {
       generatedAt: new Date("2026-07-28T00:00:00Z"),
     });
 
-    expect(text).toContain("Hand spanking");
+    expect(text).toContain("Spanking (hand)");
+    expect(text).toContain("zichtbare notitie");
     expect(text).toContain("Zichtbaar eigen ding");
     expect(text).not.toContain("Flogging");
     expect(text).not.toContain("geheime notitie");
