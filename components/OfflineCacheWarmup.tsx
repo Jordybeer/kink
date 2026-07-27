@@ -10,6 +10,7 @@ import {
   canonicalizeLocalUrl,
   findSingleAddedId,
   profileHref,
+  waitForPersistedProfile,
 } from "@/lib/localRoutes";
 
 function idsFromKey(key: string): string[] {
@@ -79,9 +80,10 @@ export default function OfflineCacheWarmup() {
   }, [hydrated, routes]);
 
   // The create form still calls router.push(`/profile/${id}`). While offline,
-  // remember the ids that existed at submit time and move the one newborn
-  // profile through the precached query shell before that RSC transition can
-  // strand it behind an uncached dynamic document.
+  // remember the ids that existed at submit time. Zustand updates React state
+  // before its persist middleware is guaranteed to have finished localStorage;
+  // a hard document navigation before that write completes hydrates an empty
+  // shell. Wait until the exact newborn id is visibly persisted first.
   useLayoutEffect(() => {
     const baseline = profileCreateBaseline.current;
     if (!hydrated || !baseline || navigator.onLine) return;
@@ -90,7 +92,10 @@ export default function OfflineCacheWarmup() {
     if (!addedId) return;
 
     profileCreateBaseline.current = null;
-    window.location.assign(profileHref(addedId));
+    void waitForPersistedProfile(addedId).then((persisted) => {
+      if (!persisted || navigator.onLine) return;
+      window.location.assign(profileHref(addedId));
+    });
   }, [hydrated, profileIds]);
 
   useEffect(() => {
