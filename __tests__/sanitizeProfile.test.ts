@@ -178,7 +178,7 @@ describe("sanitizeContractSnapshot", () => {
 
 describe("decodeAny — v1 door now frisked", () => {
   it("round-trips an honest v1 share without losing a single field", () => {
-    const decoded = decodeAny(encodeProfile(HONEST_PROFILE));
+    const decoded = decodeAny(encodeProfile(HONEST_PROFILE, { includePrivateResponses: true }));
     expect(decoded.name).toBe("Val");
     expect(decoded.role).toBe("Domme");
     expect(decoded.relationshipStatus).toBe("Gecollared");

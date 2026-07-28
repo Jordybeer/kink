@@ -18,6 +18,7 @@ import {
   type SessionResponses,
 } from "@/lib/sessionImport";
 import SessionImportAction from "@/components/SessionImportAction";
+import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
 function iceServersSummary(servers: RTCIceServer[]): string {
@@ -446,6 +447,14 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
     setPrivacyRevealedIds(current => new Set(current).add(kinkId));
   }
 
+  function concealPrivate(kinkId: string) {
+    setPrivacyRevealedIds(current => {
+      const next = new Set(current);
+      next.delete(kinkId);
+      return next;
+    });
+  }
+
   useEffect(() => {
     if (phase === "done_local" && partnerDone) setPhase("revealed");
   }, [phase, partnerDone]);
@@ -573,7 +582,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
   for (const id of allIds) {
     const mine = local[id];
     const theirs = remote[id];
-    if (mine?.privateResponse || theirs?.privateResponse) continue;
+    if (theirs?.privateResponse && !privacyRevealedIds.has(id)) continue;
     const myStatus = statusOf(mine);
     const theirStatus = statusOf(theirs);
     if (myStatus === "hard_no" || theirStatus === "hard_no") { hardCount++; continue; }
@@ -768,7 +777,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             {CATEGORIES.map(cat => {
               const kinks = getKinksByCategory(cat);
               const myCount = kinks.filter(kink => statusOf(local[kink.id])).length;
-              const theirCount = kinks.filter(kink => statusOf(remote[kink.id])).length;
+              const theirCount = kinks.filter(kink => statusOf(remote[kink.id]) && remote[kink.id]?.privateResponse !== true).length;
               const isOpen = openCats.has(cat);
               return (
                 <div key={cat} className="mb-2">
@@ -911,30 +920,24 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                       }}
                     >
                       <span className="text-sm font-medium flex-1">{kink.name}</span>
-                      {privateConcealed ? (
-                        <button
-                          type="button"
-                          onClick={() => revealPrivate(kink.id)}
-                          aria-label={`Privéantwoord van ${partnerName} voor ${kink.name} tonen`}
-                          className="focus-ring text-[11px] px-1.5 py-0.5 rounded-full border flex-none inline-flex items-center gap-1"
-                          style={{ color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
-                        >
-                          <EyeSlash size={9} aria-hidden="true" />
-                          Privé
-                        </button>
+                      {remoteResponse.privateResponse ? (
+                        <PrivateResponseStatus
+                          status={remoteStatus}
+                          privateResponse
+                          concealed={!!privateConcealed}
+                          subject={`${partnerName} bij ${kink.name}`}
+                          onReveal={() => revealPrivate(kink.id)}
+                          onConceal={() => concealPrivate(kink.id)}
+                          compact
+                        />
                       ) : rowMatch ? (
                         <span className="text-xs font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
                       ) : (
-                        <span
-                          className="text-[11px] px-1.5 py-0.5 rounded-full border flex-none"
-                          style={{
-                            color: STATUS_VAR[remoteStatus],
-                            borderColor: `color-mix(in srgb, ${STATUS_VAR[remoteStatus]} 35%, transparent)`,
-                            background: `color-mix(in srgb, ${STATUS_VAR[remoteStatus]} 15%, transparent)`,
-                          }}
-                        >
-                          {STATUS_LABEL[remoteStatus]}
-                        </span>
+                        <PrivateResponseStatus
+                          status={remoteStatus}
+                          subject={`${partnerName} bij ${kink.name}`}
+                          compact
+                        />
                       )}
                     </div>
                   );

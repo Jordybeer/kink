@@ -1,59 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EyeSlash } from "@phosphor-icons/react";
-import type { KinkEntry, KinkStatus, Profile } from "@/types";
+import type { KinkEntry, Profile } from "@/types";
 import { comparableEntry } from "@/lib/privateResponses";
 import { isConflict, isHardLimit, isKinkMatch } from "@/lib/matching";
-import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
-import StatusGlyph from "@/components/StatusGlyph";
+import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
-
-function StatusBadge({
-  entry,
-  concealed,
-  onReveal,
-  label,
-}: {
-  entry: KinkEntry;
-  concealed: boolean;
-  onReveal: () => void;
-  label: string;
-}) {
-  if (concealed) {
-    return (
-      <button
-        type="button"
-        onClick={onReveal}
-        aria-label={`Privéantwoord van ${label} tonen`}
-        className="focus-ring text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center gap-1"
-        style={{ color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
-      >
-        <EyeSlash size={10} aria-hidden="true" />
-        Privé
-      </button>
-    );
-  }
-
-  const status: KinkStatus = entry.status;
-  if (!status) return <span className="text-xs" style={{ color: "var(--text2)" }}>—</span>;
-  const colour = STATUS_VAR[status];
-  return (
-    <span
-      className="text-xs px-1.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center gap-1"
-      style={{
-        color: colour,
-        borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
-        background: `color-mix(in srgb, ${colour} 15%, transparent)`,
-        borderStyle: status === "hard_no" ? "dashed" : "solid",
-      }}
-    >
-      <StatusGlyph status={status} />
-      {STATUS_LABEL[status]}
-    </span>
-  );
-}
 
 interface Props {
   rowKey: string;
@@ -156,12 +109,28 @@ export default function CompareKinkRow({
       </div>
 
       <div className="flex items-center gap-2 mb-1">
-        <StatusBadge entry={entryA} concealed={concealedA} onReveal={() => setRevealedA(true)} label={profileA.name} />
+        <PrivateResponseStatus
+          status={entryA.status}
+          privateResponse={entryA.privateResponse === true}
+          concealed={concealedA}
+          subject={`${profileA.name} bij ${name}`}
+          onReveal={() => setRevealedA(true)}
+          onConceal={() => setRevealedA(false)}
+          compact
+        />
         <div
           className="flex-1 h-px"
           style={{ background: "var(--border)", opacity: matched ? 0.6 : 0.25 }}
         />
-        <StatusBadge entry={entryB} concealed={concealedB} onReveal={() => setRevealedB(true)} label={profileB.name} />
+        <PrivateResponseStatus
+          status={entryB.status}
+          privateResponse={entryB.privateResponse === true}
+          concealed={concealedB}
+          subject={`${profileB.name} bij ${name}`}
+          onReveal={() => setRevealedB(true)}
+          onConceal={() => setRevealedB(false)}
+          compact
+        />
       </div>
 
       {(showReadOnlyA || showReadOnlyB) && (

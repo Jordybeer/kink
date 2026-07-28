@@ -29,20 +29,17 @@ describe("private responses", () => {
     expect(visibleStatus(PRIVATE_ENTRY, true)).toBe("yes");
   });
 
-  it("removes every sensitive field before matching", () => {
+  it("removes every answer-derived field before matching", () => {
     expect(comparableEntry(PRIVATE_ENTRY)).toEqual({
       status: null,
       comment: "",
-      curious: true,
-      tags: ["vraag eerst"],
       privateResponse: true,
     });
   });
 
-  it("never puts the underlying answer in a safe export model", () => {
+  it("omits a concealed answer from a safe export model", () => {
     expect(profileExportResponse(PRIVATE_ENTRY)).toEqual({
-      kind: "private",
-      tags: ["vraag eerst"],
+      kind: "omitted",
     });
   });
 
