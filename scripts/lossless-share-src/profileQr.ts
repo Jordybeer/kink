@@ -65,13 +65,11 @@ export function buildProfileQrSet(origin: string, payload: string): ProfileQrSet
 }
 
 export function parseProfileQrPart(value: string): ProfileQrPart | null {
-  const pieces = value.split(".");
-  if (pieces.length !== 5) return null;
-  const [transferId, indexRaw, totalRaw, checksum, chunk] = pieces;
+  const match = value.match(/^([a-z0-9]{8,40})\.(\d{1,2})\.(\d{1,2})\.([a-z0-9]{7})\.([\s\S]+)$/i);
+  if (!match) return null;
+  const [, transferId, indexRaw, totalRaw, checksum, chunk] = match;
   const index = Number(indexRaw);
   const total = Number(totalRaw);
-  if (!/^[a-z0-9]{8,40}$/i.test(transferId)) return null;
-  if (!/^[a-z0-9]{7}$/i.test(checksum)) return null;
   if (!Number.isInteger(index) || !Number.isInteger(total) || total < 2 || total > 64) return null;
   if (index < 1 || index > total || !chunk) return null;
   return { transferId, index, total, checksum, chunk };
