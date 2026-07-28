@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-28 — Een redundant icoon maakte de informatie niet redundant
+
+**What went wrong:** De opdracht was om het redundante info-icoon op de kinkkaart te vervangen door het privé-oogje. Dat werd te breed geïnterpreteerd als toestemming om ook de achterliggende `InfoSheet` uit de flow te verwijderen. De trigger was redundant; de inhoud bleef waardevol.
+
+**Rule:** Wanneer een affordance wordt vervangen, behandel trigger en bestemming als twee aparte beslissingen. Verwijder alleen het expliciet genoemde icoon of bedieningselement. Behoud de achterliggende informatie of actie en geef die een nieuwe, semantische ingang — hier: tikken op kinknaam of beschrijving — tenzij de eigenaar ook expliciet vraagt de inhoud te schrappen.
+
+---
+
 ## 2026-07-27 — De klik kende de nieuwe kamer, de oude voordeur niet
 
 **What went wrong:** De local-first PR canonicaliseerde oude `/profile/<id>`- en `/scenes/<id>`-links alleen wanneer een klik binnen een reeds geladen app werd onderschept. Het profielaanmaakformulier gebruikte bovendien nog rechtstreeks `router.push('/profile/<id>')`. Een koude Safari/PWA-documentnavigatie naar zo'n nieuw, nooit gewarmd ID passeert geen kliklistener en vroeg de service worker om een document dat niet in de cache bestond. iOS toonde daarom “This page couldn’t load”, ondanks dat de lokale data en de vaste shell beschikbaar waren.

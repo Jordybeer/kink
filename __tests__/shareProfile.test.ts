@@ -14,19 +14,17 @@ const BASE_PROFILE: Profile = {
   createdAt: 1716000000000,
   updatedAt: 1716000000000,
   entries: {
-    spanking_hand: { status: "yes", desire: 5, experienced: true, score: 4, comment: "fijn", tags: ["eerste keer"], privateResponse: true },
+    spanking_hand: { status: "yes", desire: 5, experienced: true, score: 4, comment: "fijn", tags: ["eerste keer"], curious: true, privateResponse: true },
     flogging: { status: "maybe", desire: 3, experienced: null, score: null, comment: "" },
   },
 };
 
 describe("encodeProfile / decodeProfile", () => {
-  it("round-trips a full profile without data loss (avatar + FL stripped by default)", () => {
+  it("round-trips a safe profile share (avatar, FL and private answers stripped by default)", () => {
     const { avatarDataUrl: _av, fetLifeUsername: _fl, ...base } = BASE_PROFILE;
-    // score is deprecated and not encoded; null fields are stripped from entries
     const expected = {
       ...base,
       entries: {
-        spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["eerste keer"], privateResponse: true },
         flogging: { status: "maybe", desire: 3 },
       },
     };
@@ -55,19 +53,42 @@ describe("encodeProfile / decodeProfile", () => {
     expect(encoded.length).toBeGreaterThan(0);
   });
 
-  it("round-trips desire and experienced fields", () => {
+  it("round-trips visible desire and experienced fields", () => {
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand.desire).toBe(5);
-    expect(decoded.entries.spanking_hand.experienced).toBe(true);
+    expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.flogging.desire).toBe(3);
-    // null experienced is stripped from encoding; decodes as undefined (falsy)
     expect(decoded.entries.flogging.experienced).toBeFalsy();
   });
 
-  it("round-trips the private response flag", () => {
+  it("omits every field of a private house kink by default", () => {
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
-    expect(decoded.entries.flogging.privateResponse).toBeUndefined();
+    expect(decoded.entries.spanking_hand).toBeUndefined();
+  });
+
+  it("includes a private answer only after explicit share opt-in", () => {
+    const decoded = decodeProfile(encodeProfile(BASE_PROFILE, { includePrivateResponses: true }));
+    expect(decoded.entries.spanking_hand).toEqual({
+      status: "yes",
+      desire: 5,
+      experienced: true,
+      comment: "fijn",
+      tags: ["eerste keer"],
+      curious: true,
+      privateResponse: true,
+    });
+  });
+
+  it("omits a private custom kink name and answer by default", () => {
+    const profile: Profile = {
+      ...BASE_PROFILE,
+      entries: {
+        ...BASE_PROFILE.entries,
+        custom_1: { status: "willing", comment: "geheim", privateResponse: true },
+      },
+    };
+    const decoded = decodeProfile(encodeProfile(profile));
+    expect(decoded.customKinks).toEqual([]);
+    expect(decoded.entries.custom_1).toBeUndefined();
   });
 
   it("round-trips a profile with special characters in name", () => {
@@ -85,10 +106,9 @@ describe("encodeProfile / decodeProfile", () => {
     const { relationshipStatus: _rs, avatarDataUrl: _av, fetLifeUsername: _fl, ...rest } = BASE_PROFILE;
     const profile = rest as Profile;
     const decoded = decodeProfile(encodeProfile(profile));
-    // score is deprecated and stripped; null fields are omitted from encoding
     expect(decoded.name).toBe(profile.name);
     expect(decoded.relationshipStatus).toBeUndefined();
-    expect(decoded.entries.spanking_hand.status).toBe("yes");
+    expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.flogging.status).toBe("maybe");
   });
 });
@@ -101,15 +121,15 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
     expect(decoded.experienceLevel).toBe("gevorderd");
   });
 
-  it("round-trips all six status values", () => {
+  it("round-trips all five visible status values", () => {
     const profile: Profile = {
       ...BASE_PROFILE,
       entries: {
-        spanking_hand:     { status: "yes",     desire: null, experienced: null, score: null, comment: "" },
-        flogging:          { status: "willing",  desire: null, experienced: null, score: null, comment: "" },
-        caning:            { status: "maybe",    desire: null, experienced: null, score: null, comment: "" },
-        cropping:          { status: "no",       desire: null, experienced: null, score: null, comment: "" },
-        spanking_implement:{ status: "hard_no",  desire: null, experienced: null, score: null, comment: "" },
+        spanking_hand:      { status: "yes",     desire: null, experienced: null, score: null, comment: "" },
+        flogging:           { status: "willing", desire: null, experienced: null, score: null, comment: "" },
+        caning:             { status: "maybe",   desire: null, experienced: null, score: null, comment: "" },
+        cropping:           { status: "no",      desire: null, experienced: null, score: null, comment: "" },
+        spanking_implement: { status: "hard_no", desire: null, experienced: null, score: null, comment: "" },
       },
     };
     const decoded = decodeProfileCompact(encodeProfileCompact(profile));
@@ -120,7 +140,7 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
     expect(decoded.entries.spanking_implement.status).toBe("hard_no");
   });
 
-  it("round-trips private flags for house and custom kinks", () => {
+  it("omits private house and custom kinks from a normal QR", () => {
     const profile: Profile = {
       ...BASE_PROFILE,
       entries: {
@@ -129,27 +149,49 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
       },
     };
     const decoded = decodeProfileCompact(encodeProfileCompact(profile));
+    expect(decoded.entries.spanking_hand).toBeUndefined();
+    expect(decoded.entries.custom_1).toBeUndefined();
+    expect(decoded.customKinks).toEqual([]);
+  });
+
+  it("round-trips private flags only after explicit QR opt-in", () => {
+    const profile: Profile = {
+      ...BASE_PROFILE,
+      entries: {
+        ...BASE_PROFILE.entries,
+        custom_1: { status: "willing", comment: "", privateResponse: true },
+      },
+    };
+    const decoded = decodeProfileCompact(encodeProfileCompact(profile, { includePrivateResponses: true }));
     expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
     expect(decoded.entries.custom_1.privateResponse).toBe(true);
+    expect(decoded.customKinks[0].name).toBe("Eigen ding");
   });
 
   it("drops desire and experienced to keep QR url short", () => {
     const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand.desire).toBeNull();
-    expect(decoded.entries.spanking_hand.experienced).toBeNull();
+    expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.flogging.desire).toBeNull();
   });
 
-  it("strips comments and tags (text doesn't travel via QR)", () => {
+  it("strips comments and tags from visible QR answers", () => {
     const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand.comment).toBe("");
-    expect(decoded.entries.spanking_hand.tags).toBeUndefined();
+    expect(decoded.entries.flogging.comment).toBe("");
+    expect(decoded.entries.flogging.tags).toBeUndefined();
   });
 
-  it("round-trips custom kinks with status", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
+  it("round-trips visible custom kinks with status", () => {
+    const profile: Profile = {
+      ...BASE_PROFILE,
+      entries: {
+        ...BASE_PROFILE.entries,
+        custom_1: { status: "willing", comment: "" },
+      },
+    };
+    const decoded = decodeProfileCompact(encodeProfileCompact(profile));
     expect(decoded.customKinks).toHaveLength(1);
     expect(decoded.customKinks[0].name).toBe("Eigen ding");
+    expect(decoded.entries.custom_1.status).toBe("willing");
   });
 
   it("marks decoded profile as imported", () => {
@@ -175,28 +217,26 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
 });
 
 describe("decodeAny", () => {
-  it("decodes v1 profiles", () => {
+  it("decodes safe v1 profiles without private answers", () => {
     const decoded = decodeAny(encodeProfile(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
-    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
+    expect(decoded.entries.spanking_hand).toBeUndefined();
   });
 
-  it("decodes v2 compact profiles", () => {
+  it("decodes safe v2 compact profiles without private answers", () => {
     const decoded = decodeAny(encodeProfileCompact(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
-    expect(decoded.entries.spanking_hand.status).toBe("yes");
-    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
+    expect(decoded.entries.spanking_hand).toBeUndefined();
+    expect(decoded.entries.flogging.status).toBe("maybe");
   });
 });
 
 describe("legacy give/receive backward compat", () => {
   it("v2: collapses legacy sg/sr into status (worst-of logic)", () => {
-    // Simulate a legacy QR payload that encoded sg="yes" sr="no" with no s field
     const legacyPayload = { v: 2, id: "x", n: "n", r: "r", e: "beginner", ca: 0, ua: 0,
       s: " ".repeat(100), sg: "y" + " ".repeat(99), sr: "n" + " ".repeat(99) };
     const encoded = btoa(JSON.stringify(legacyPayload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const decoded = decodeProfileCompact(encoded);
-    // worst-of "yes"+"no" → "no" (order: hard_no, no, maybe, willing, yes)
     expect(decoded.entries[Object.keys(decoded.entries)[0]]?.status).toBe("no");
   });
 

@@ -18,14 +18,17 @@ export function visibleStatus(entry: KinkEntry | undefined, revealed = false): K
   return isResponseVisible(entry, revealed) ? (entry?.status ?? null) : null;
 }
 
+/**
+ * Returns the only safe comparison shape for a concealed answer. The kink name
+ * lives outside KinkEntry and may stay visible; every answer-derived field stays
+ * behind the curtain until the viewer deliberately reveals it.
+ */
 export function comparableEntry(entry: KinkEntry | undefined, revealed = false): KinkEntry {
   if (!entry) return { status: null, comment: "" };
   if (isResponseVisible(entry, revealed)) return entry;
   return {
     status: null,
     comment: "",
-    curious: entry.curious,
-    tags: entry.tags,
     privateResponse: true,
   };
 }
@@ -38,22 +41,25 @@ export type ProfileExportResponse =
       tags: string[];
     }
   | {
-      kind: "private";
-      tags: string[];
+      kind: "omitted";
     };
 
+/**
+ * Profile shares and downloads are disclosure boundaries, not merely alternate
+ * views. A concealed answer is omitted completely unless the owner explicitly
+ * opts in for that export operation.
+ */
 export function profileExportResponse(
   entry: KinkEntry,
   includePrivateResponses = false,
 ): ProfileExportResponse {
-  const tags = entry.tags ?? [];
   if (entry.privateResponse && !includePrivateResponses) {
-    return { kind: "private", tags };
+    return { kind: "omitted" };
   }
   return {
     kind: "visible",
     status: entry.status,
     comment: entry.comment,
-    tags,
+    tags: entry.tags ?? [],
   };
 }

@@ -3,33 +3,52 @@ import { KINKS } from "@/lib/kinks";
 import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/sessionImport";
 
+interface ShareProfileOptions {
+  includeFetLife?: boolean;
+  includePrivateResponses?: boolean;
+}
+
 // ── v1 encoding (full JSON, used for copy-link) ──────────────────────────────
 
-function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
+function compactEntry(
+  entry: KinkEntry,
+  includePrivateResponses = false,
+): Record<string, unknown> | null {
+  if (entry.privateResponse === true && !includePrivateResponses) return null;
+
   const out: Record<string, unknown> = {};
   if (entry.status != null)             out.status = entry.status;
   if (entry.desire != null)             out.desire = entry.desire;
   if (entry.experienced != null)        out.experienced = entry.experienced;
   if (entry.comment)                    out.comment = entry.comment;
   if (entry.tags?.length)               out.tags = entry.tags;
+  if (entry.curious === true)           out.curious = true;
   if (entry.privateResponse === true)   out.privateResponse = true;
   // score is deprecated — never encoded
   return Object.keys(out).length > 0 ? out : null;
 }
 
-export function encodeProfile(profile: Profile, opts?: { includeFetLife?: boolean }): string {
+export function encodeProfile(profile: Profile, opts?: ShareProfileOptions): string {
   // privateNote is called private for a reason — it never rides a share link.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { avatarDataUrl, fetLifeUsername, privateNote, ...rest } = profile;
+  const includePrivateResponses = opts?.includePrivateResponses === true;
 
   const compactedEntries: Record<string, unknown> = {};
   for (const [id, entry] of Object.entries(rest.entries)) {
-    const compact = compactEntry(entry);
+    const compact = compactEntry(entry, includePrivateResponses);
     if (compact) compactedEntries[id] = compact;
   }
 
+  const customKinks = (rest.customKinks ?? []).filter(
+    (kink) => includePrivateResponses || rest.entries[kink.id]?.privateResponse !== true,
+  );
+  const base = opts?.includeFetLife && fetLifeUsername
+    ? { ...rest, fetLifeUsername }
+    : rest;
   const payload = {
-    ...(opts?.includeFetLife && fetLifeUsername ? { ...rest, fetLifeUsername } : rest),
+    ...base,
+    customKinks,
     entries: compactedEntries,
   };
 
@@ -50,22 +69,35 @@ const S_DEC: Record<string, KinkStatus> = {
   y: "yes", g: "willing", c: "maybe", m: "maybe", n: "no", H: "hard_no",
 };
 
-export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?: boolean }): string {
+export function encodeProfileCompact(profile: Profile, opts?: ShareProfileOptions): string {
+  const includePrivateResponses = opts?.includePrivateResponses === true;
+  const mayShare = (entry: KinkEntry | undefined) =>
+    includePrivateResponses || entry?.privateResponse !== true;
+
   // One char per kink in KINKS order — status only (desire/experienced omitted to keep QR scannable)
   const s = KINKS.map(k => {
-    const st = profile.entries[k.id]?.status;
-    return (st ? S_ENC[st] : undefined) ?? " ";
+    const entry = profile.entries[k.id];
+    if (!mayShare(entry)) return " ";
+    const status = entry?.status;
+    return (status ? S_ENC[status] : undefined) ?? " ";
   }).join("");
-  const p = KINKS.map(k => profile.entries[k.id]?.privateResponse ? "1" : " ").join("");
+  const p = includePrivateResponses
+    ? KINKS.map(k => profile.entries[k.id]?.privateResponse ? "1" : " ").join("")
+    : "";
 
-  const ck = (profile.customKinks ?? []).map(c => {
-    const e = profile.entries[c.id];
-    const sc = (e?.status ? S_ENC[e.status] : undefined) ?? " ";
-    return [c.id, c.name, sc];
+  const shareableCustomKinks = (profile.customKinks ?? []).filter(
+    (custom) => mayShare(profile.entries[custom.id]),
+  );
+  const ck = shareableCustomKinks.map(c => {
+    const entry = profile.entries[c.id];
+    const statusCode = (entry?.status ? S_ENC[entry.status] : undefined) ?? " ";
+    return [c.id, c.name, statusCode];
   });
-  const pk = (profile.customKinks ?? [])
-    .filter(c => profile.entries[c.id]?.privateResponse)
-    .map(c => c.id);
+  const pk = includePrivateResponses
+    ? shareableCustomKinks
+        .filter(c => profile.entries[c.id]?.privateResponse)
+        .map(c => c.id)
+    : [];
 
   const payload: Record<string, unknown> = {
     v: 2,
