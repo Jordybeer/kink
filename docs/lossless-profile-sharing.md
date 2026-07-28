@@ -4,13 +4,14 @@
 
 v3 shares every field that is intentionally partner-facing:
 
-- profile identity, role, experience and relationship status;
+- profile identity, immutable profile code, role, experience and relationship status;
 - status, desire, experience, comment, tags and curious flag;
 - public custom kinks;
 - BDSMtest URL and scores;
 - FetLife username only after explicit opt-in.
 
-The avatar, private note, local scene-use counters, imported/locked metadata and every
+The profile code is a stable lineage and duplicate-detection marker, not cryptographic
+proof of identity. The avatar, private note, local scene-use counters, imported/locked metadata and every
 `privateResponse` are excluded. A private custom kink is excluded including its name.
 The v3 codec has no private-response opt-in: this boundary is enforced in the serializer.
 

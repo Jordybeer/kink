@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import type { Profile } from "@/types";
 import { encodeProfileV3 } from "@/lib/profileShareV3";
 import { buildProfileQrSet } from "@/lib/profileQr";
+import { getProfileVerificationCode } from "@/lib/profileVerification";
 import Sheet, { SheetContent } from "./Sheet";
 
 interface Props {
@@ -85,15 +86,19 @@ export default function QRModal({ profile, onClose }: Props) {
   }
 
   const multi = qrValues.length > 1;
+  const verificationCode = profile ? getProfileVerificationCode(profile) : null;
 
   return (
     <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
       <SheetContent>
         <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
         {profile && (
-          <p className="text-sm text-center mb-3" style={{ color: "var(--accent)" }}>
-            {profile.name}
-          </p>
+          <div className="text-center mb-3">
+            <p className="text-sm" style={{ color: "var(--accent)" }}>{profile.name}</p>
+            <p className="text-[11px] mt-1" style={{ color: "var(--text2)" }}>
+              Profielcode <span className="font-mono tracking-wide">{verificationCode}</span>
+            </p>
+          </div>
         )}
 
         {multi && (

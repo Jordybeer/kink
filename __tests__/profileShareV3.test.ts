@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Profile } from "@/types";
 import { encodeProfile } from "@/lib/shareProfile";
+import { deriveProfileVerificationCode } from "@/lib/profileVerification";
 import {
   decodeProfileV3,
   decodeSharedProfile,
@@ -11,6 +12,7 @@ import {
 
 const profile: Profile = {
   id: "profile-1",
+  verificationCode: "KS-7H3P-9Q2M-A4BC",
   name: "Alex",
   role: "Switch",
   relationshipStatus: "Open relatie",
@@ -82,6 +84,7 @@ describe("lossless profile share v3", () => {
     const decoded = await decodeSharedProfile(encoded);
 
     expect(decoded.name).toBe(profile.name);
+    expect(decoded.verificationCode).toBe(profile.verificationCode);
     expect(decoded.role).toBe(profile.role);
     expect(decoded.relationshipStatus).toBe(profile.relationshipStatus);
     expect(decoded.fetLifeUsername).toBe(profile.fetLifeUsername);
@@ -123,10 +126,12 @@ describe("lossless profile share v3", () => {
     await expect(decodeProfileV3(encoded)).rejects.toThrow("Profielcode is te groot");
   });
 
-  it("still decodes legacy v1 links", async () => {
-    const legacy = encodeProfile(profile, { includeFetLife: true });
+  it("still decodes legacy v1 links and deterministically backfills their code", async () => {
+    const { verificationCode: _verificationCode, ...withoutCode } = profile;
+    const legacy = encodeProfile(withoutCode as Profile, { includeFetLife: true });
     const decoded = await decodeSharedProfile(legacy);
     expect(decoded.name).toBe("Alex");
     expect(decoded.entries.rope.status).toBe("yes");
+    expect(decoded.verificationCode).toBe(deriveProfileVerificationCode(profile.id));
   });
 });

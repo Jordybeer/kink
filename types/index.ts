@@ -102,6 +102,8 @@ export interface BdsmtestScore {
 
 export interface Profile {
   id: string;
+  /** Immutable, human-readable lineage marker shared with the profile. */
+  verificationCode?: string;
   name: string;
   role: string;
   relationshipStatus?: string;

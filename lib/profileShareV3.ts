@@ -1,6 +1,7 @@
 import type { Profile, KinkEntry } from "@/types";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { decodeAny } from "@/lib/shareProfile";
+import { getProfileVerificationCode } from "@/lib/profileVerification";
 
 export interface ProfileShareV3Options {
   includeFetLife?: boolean;
@@ -27,6 +28,7 @@ interface ProfilePayloadV3 {
   l: Profile["experienceLevel"];
   c: number;
   u: number;
+  vc?: string;
   rs?: string;
   fl?: string;
   bu?: string;
@@ -90,6 +92,7 @@ function compactProfile(profile: Profile, opts?: ProfileShareV3Options): Profile
     l: profile.experienceLevel,
     c: profile.createdAt,
     u: profile.updatedAt,
+    vc: getProfileVerificationCode(profile),
   };
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
@@ -121,6 +124,7 @@ function expandProfile(payload: unknown): Profile {
 
   const raw = {
     id: p.i,
+    verificationCode: p.vc,
     name: p.n,
     role: p.r,
     experienceLevel: p.l,

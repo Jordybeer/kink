@@ -2,6 +2,7 @@ import type { Profile, KinkEntry, KinkStatus, CustomKink } from "@/types";
 import { KINKS } from "@/lib/kinks";
 import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/sessionImport";
+import { deriveProfileVerificationCode, getProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
 
 interface ShareProfileOptions {
   includeFetLife?: boolean;
@@ -102,6 +103,7 @@ export function encodeProfileCompact(profile: Profile, opts?: ShareProfileOption
   const payload: Record<string, unknown> = {
     v: 2,
     id: profile.id,
+    vc: getProfileVerificationCode(profile),
     n: profile.name,
     r: profile.role,
     e: profile.experienceLevel,
@@ -187,6 +189,8 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
 
   return {
     id,
+    verificationCode: normalizeProfileVerificationCode(p.vc)
+      ?? deriveProfileVerificationCode(id),
     name,
     role: typeof p.r === "string" ? clamp(p.r, MAX_ROLE_LEN) : "",
     experienceLevel: typeof p.e === "string" && (VALID_LEVELS as readonly string[]).includes(p.e)
