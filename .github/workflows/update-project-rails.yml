@@ -1,6 +1,13 @@
 name: Update project rails
 
 on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - synchronize
+    paths:
+      - .github/workflows/update-project-rails.yml
   push:
     branches:
       - feature/private-response-hardening
@@ -80,6 +87,6 @@ jobs:
           set -euo pipefail
           git config user.name "Jordybeer"
           git config user.email "19562111+Jordybeer@users.noreply.github.com"
-          git add planned-changes.md corrections.md .github/workflows/update-project-rails.yml
+          git add -A planned-changes.md corrections.md .github/workflows/update-project-rails.yml
           git commit -m "Schrijf local-first en InfoSheetlessen in het leerboek"
           git push origin HEAD:feature/private-response-hardening
