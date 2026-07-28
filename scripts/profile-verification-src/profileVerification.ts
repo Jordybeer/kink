@@ -36,17 +36,25 @@ export function generateProfileVerificationCode(randomBytes?: Uint8Array): strin
   return formatProfileCodeBody(body);
 }
 
-export function deriveProfileVerificationCode(profileId: string): string {
-  let hash = 0xcbf29ce484222325n;
+function hashProfileId(profileId: string, seed: number): number {
+  let hash = seed >>> 0;
   for (let index = 0; index < profileId.length; index++) {
-    hash ^= BigInt(profileId.charCodeAt(index));
-    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
+    hash ^= profileId.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
   }
-  let value = hash;
+  return hash;
+}
+
+export function deriveProfileVerificationCode(profileId: string): string {
+  let left = hashProfileId(profileId, 0x811c9dc5);
+  let right = hashProfileId(profileId, 0x9e3779b9);
   let body = "";
   for (let index = 0; index < PROFILE_CODE_BODY_LENGTH; index++) {
-    body += PROFILE_CODE_ALPHABET[Number(value & 31n)];
-    value >>= 5n;
+    left = Math.imul(left ^ (left >>> 15), 0x85ebca6b) >>> 0;
+    right = Math.imul(right ^ (right >>> 13), 0xc2b2ae35) >>> 0;
+    body += PROFILE_CODE_ALPHABET[(left ^ right ^ index) & 31];
+    left = (left + 0x6d2b79f5) >>> 0;
+    right = (right + 0x1b873593) >>> 0;
   }
   return formatProfileCodeBody(body);
 }
