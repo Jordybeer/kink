@@ -23,6 +23,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastRawRef = useRef<{ value: string; at: number } | null>(null);
+  const assemblyRef = useRef<ProfileQrAssembly | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [partError, setPartError] = useState<string | null>(null);
   const [assembly, setAssembly] = useState<ProfileQrAssembly | null>(null);
@@ -40,6 +41,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     setPasteInput("");
     setPasteError(null);
     lastRawRef.current = null;
+    assemblyRef.current = null;
 
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" } })
@@ -82,16 +84,18 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
       return "complete";
     }
     if (parsed.kind === "profilePart") {
-      const collected = addProfileQrPart(assembly, parsed.part);
+      const collected = addProfileQrPart(assemblyRef.current, parsed.part);
       if (collected.status === "error") {
         setPartError(collected.message);
         return "progress";
       }
       if (collected.status === "complete") {
+        assemblyRef.current = null;
         stopCamera();
         void onResult(collected.payload);
         return "complete";
       }
+      assemblyRef.current = collected.assembly;
       setPartError(null);
       setAssembly(collected.assembly);
       return "progress";
@@ -134,6 +138,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     setPasteInput("");
     setPasteError(null);
     setAssembly(null);
+    assemblyRef.current = null;
     onClose();
   }
 
