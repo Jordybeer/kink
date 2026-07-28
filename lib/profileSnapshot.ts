@@ -56,8 +56,12 @@ export function diffSnapshotEntries(
   const ids = new Set([...Object.keys(older), ...Object.keys(newer)]);
   const shifts: SnapshotShift[] = [];
   for (const kinkId of ids) {
-    const from = older[kinkId] ? effectiveStatus(older[kinkId]) : null;
-    const to = newer[kinkId] ? effectiveStatus(newer[kinkId]) : null;
+    const olderEntry = older[kinkId];
+    const newerEntry = newer[kinkId];
+    // A privacy transition may never confess either the former or current verdict.
+    if (olderEntry?.privateResponse === true || newerEntry?.privateResponse === true) continue;
+    const from = olderEntry ? effectiveStatus(olderEntry) : null;
+    const to = newerEntry ? effectiveStatus(newerEntry) : null;
     if (from !== to) shifts.push({ kinkId, from, to });
   }
   const rank = (shift: SnapshotShift) =>
@@ -67,9 +71,19 @@ export function diffSnapshotEntries(
 }
 
 export function prepareProfileTrendData(snapshots: ProfileSnapshot[]): ProfileTrendData {
-  const ascending = [...snapshots]
-    .sort((a, b) => a.date - b.date)
-    .map((snapshot) => ({ ...snapshot, counts: deriveCounts(snapshot.entries) }));
+  const sorted = [...snapshots].sort((a, b) => a.date - b.date);
+  const latest = sorted[sorted.length - 1];
+  const currentlyPrivate = new Set(
+    Object.entries(latest?.entries ?? {})
+      .filter(([, entry]) => entry.privateResponse === true)
+      .map(([kinkId]) => kinkId),
+  );
+  const ascending = sorted.map((snapshot) => {
+    const visibleEntries = Object.fromEntries(
+      Object.entries(snapshot.entries).filter(([kinkId]) => !currentlyPrivate.has(kinkId)),
+    );
+    return { ...snapshot, counts: deriveCounts(visibleEntries) };
+  });
   const fmt = (ms: number) => new Date(ms).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
   const series: Record<CountKey, number[]> = {
     yes: [], willing: [], maybe: [], no: [], hard_no: [],

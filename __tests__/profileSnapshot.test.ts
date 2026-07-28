@@ -80,6 +80,16 @@ describe("prepareProfileTrendData", () => {
     expect(out.ascending[0].counts.hard_no).toBe(0);
   });
 
+  it("redacts a currently hidden kink from its complete historical trend", () => {
+    const older = snap(100, { yes: 1 });
+    older.entries = { secret: { status: "yes", comment: "" } };
+    const latest = snap(200, { hard_no: 1 });
+    latest.entries = { secret: { status: "hard_no", comment: "", privateResponse: true } };
+    const out = prepareProfileTrendData([older, latest]);
+    expect(out.series.yes).toEqual([0, 0]);
+    expect(out.series.hard_no).toEqual([0, 0]);
+  });
+
   it("returns one label per snapshot", () => {
     const out = prepareProfileTrendData([snap(100, {}), snap(200, {}), snap(300, {})]);
     expect(out.labels).toHaveLength(3);
@@ -145,6 +155,12 @@ describe("diffSnapshotEntries", () => {
   it("never reveals a hidden status in the shift ledger", () => {
     const older = { secret: { status: "maybe" as const, comment: "", privateResponse: true } };
     const newer = { secret: { status: "yes" as const, comment: "", privateResponse: true } };
+    expect(diffSnapshotEntries(older, newer)).toEqual([]);
+  });
+
+  it("does not reveal the former status when a public kink becomes hidden", () => {
+    const older = { secret: { status: "yes" as const, comment: "" } };
+    const newer = { secret: { status: "hard_no" as const, comment: "", privateResponse: true } };
     expect(diffSnapshotEntries(older, newer)).toEqual([]);
   });
 });
