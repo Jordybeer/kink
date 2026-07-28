@@ -90,6 +90,19 @@ describe("prepareProfileTrendData", () => {
     expect(out.series.hard_no).toEqual([0, 0]);
   });
 
+  it("uses the live profile privacy state even before another moment is saved", () => {
+    const older = snap(100, { yes: 1 });
+    older.entries = { secret: { status: "yes", comment: "" } };
+    const latest = snap(200, { yes: 1 });
+    latest.entries = { secret: { status: "yes", comment: "" } };
+    const currentEntries = {
+      secret: { status: "hard_no" as const, comment: "", privateResponse: true },
+    };
+    const out = prepareProfileTrendData([older, latest], currentEntries);
+    expect(out.series.yes).toEqual([0, 0]);
+    expect(out.ascending.every((snapshot) => snapshot.entries.secret === undefined)).toBe(true);
+  });
+
   it("returns one label per snapshot", () => {
     const out = prepareProfileTrendData([snap(100, {}), snap(200, {}), snap(300, {})]);
     expect(out.labels).toHaveLength(3);

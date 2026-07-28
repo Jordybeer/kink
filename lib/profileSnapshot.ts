@@ -70,11 +70,15 @@ export function diffSnapshotEntries(
   return shifts.sort((a, b) => rank(a) - rank(b) || a.kinkId.localeCompare(b.kinkId));
 }
 
-export function prepareProfileTrendData(snapshots: ProfileSnapshot[]): ProfileTrendData {
+export function prepareProfileTrendData(
+  snapshots: ProfileSnapshot[],
+  currentEntries?: Record<string, KinkEntry>,
+): ProfileTrendData {
   const sorted = [...snapshots].sort((a, b) => a.date - b.date);
   const latest = sorted[sorted.length - 1];
+  const privacySource = currentEntries ?? latest?.entries ?? {};
   const currentlyPrivate = new Set(
-    Object.entries(latest?.entries ?? {})
+    Object.entries(privacySource)
       .filter(([, entry]) => entry.privateResponse === true)
       .map(([kinkId]) => kinkId),
   );
@@ -82,7 +86,7 @@ export function prepareProfileTrendData(snapshots: ProfileSnapshot[]): ProfileTr
     const visibleEntries = Object.fromEntries(
       Object.entries(snapshot.entries).filter(([kinkId]) => !currentlyPrivate.has(kinkId)),
     );
-    return { ...snapshot, counts: deriveCounts(visibleEntries) };
+    return { ...snapshot, entries: visibleEntries, counts: deriveCounts(visibleEntries) };
   });
   const fmt = (ms: number) => new Date(ms).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
   const series: Record<CountKey, number[]> = {

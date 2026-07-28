@@ -12,8 +12,10 @@ interface Props {
 }
 
 export default function QRModal({ profile, onClose }: Props) {
-  const [qrDataUrls, setQrDataUrls] = useState<string[]>([]);
+  const [qrValues, setQrValues] = useState<string[]>([]);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrIndex, setQrIndex] = useState(0);
+  const [qrTooLarge, setQrTooLarge] = useState(false);
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
@@ -25,8 +27,10 @@ export default function QRModal({ profile, onClose }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    setQrDataUrls([]);
+    setQrValues([]);
+    setQrDataUrl(null);
     setQrIndex(0);
+    setQrTooLarge(false);
     setCopied(false);
     setGenerationError(null);
     if (!profile) {
@@ -38,20 +42,10 @@ export default function QRModal({ profile, onClose }: Props) {
       try {
         const payload = await encodeProfileV3(profile, { includeFetLife });
         const share = buildProfileQrSet(window.location.origin, payload);
-        const css = getComputedStyle(document.documentElement);
-        const dark = css.getPropertyValue("--accent").trim() || "#D946AF";
-        const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
-        const images = await Promise.all(share.qrValues.map((value) =>
-          QRCode.toDataURL(value, {
-            width: 280,
-            margin: 2,
-            errorCorrectionLevel: "L",
-            color: { dark, light },
-          })
-        ));
         if (cancelled) return;
         setUrl(share.shareUrl);
-        setQrDataUrls(images);
+        setQrValues(share.qrValues);
+        setQrTooLarge(share.qrTooLarge);
       } catch {
         if (!cancelled) setGenerationError("Deelcode kon niet worden opgebouwd.");
       }
@@ -60,6 +54,29 @@ export default function QRModal({ profile, onClose }: Props) {
     return () => { cancelled = true; };
   }, [profile, includeFetLife]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setQrDataUrl(null);
+    const value = qrValues[qrIndex];
+    if (!value) return;
+
+    const css = getComputedStyle(document.documentElement);
+    const dark = css.getPropertyValue("--accent").trim() || "#D946AF";
+    const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
+    QRCode.toDataURL(value, {
+      width: 280,
+      margin: 2,
+      errorCorrectionLevel: "L",
+      color: { dark, light },
+    }).then((image) => {
+      if (!cancelled) setQrDataUrl(image);
+    }).catch(() => {
+      if (!cancelled) setGenerationError("QR-code kon niet worden opgebouwd.");
+    });
+
+    return () => { cancelled = true; };
+  }, [qrValues, qrIndex]);
+
   function handleCopy() {
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -67,7 +84,7 @@ export default function QRModal({ profile, onClose }: Props) {
     });
   }
 
-  const multi = qrDataUrls.length > 1;
+  const multi = qrValues.length > 1;
 
   return (
     <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
@@ -81,16 +98,24 @@ export default function QRModal({ profile, onClose }: Props) {
 
         {multi && (
           <p className="text-xs text-center font-semibold mb-1" style={{ color: "var(--text)" }}>
-            QR {qrIndex + 1} van {qrDataUrls.length}
+            QR {qrIndex + 1} van {qrValues.length}
           </p>
         )}
 
-        {qrDataUrls[qrIndex] ? (
+        {qrTooLarge ? (
+          <div
+            className="mx-auto my-3 rounded-xl flex items-center justify-center text-sm text-center px-6"
+            style={{ width: 280, height: 180, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+            role="status"
+          >
+            Dit profiel bevat te veel tekst voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
+          </div>
+        ) : qrDataUrl ? (
           <img
-            src={qrDataUrls[qrIndex]}
+            src={qrDataUrl}
             width={280}
             height={280}
-            alt={multi ? `Profiel QR-code ${qrIndex + 1} van ${qrDataUrls.length}` : "QR-code voor profielimport"}
+            alt={multi ? `Profiel QR-code ${qrIndex + 1} van ${qrValues.length}` : "QR-code voor profielimport"}
             className="mx-auto rounded-xl my-3"
           />
         ) : (
@@ -116,8 +141,8 @@ export default function QRModal({ profile, onClose }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => setQrIndex((index) => Math.min(qrDataUrls.length - 1, index + 1))}
-              disabled={qrIndex === qrDataUrls.length - 1}
+              onClick={() => setQrIndex((index) => Math.min(qrValues.length - 1, index + 1))}
+              disabled={qrIndex === qrValues.length - 1}
               className="focus-ring flex-1 py-2 rounded-lg border text-xs disabled:opacity-35"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
@@ -131,7 +156,7 @@ export default function QRModal({ profile, onClose }: Props) {
         </p>
         {multi && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
-            Scan alle {qrDataUrls.length} codes in KinkSync. Dubbele scans zijn geen probleem.
+            Scan alle {qrValues.length} codes in KinkSync. Dubbele scans zijn geen probleem.
           </p>
         )}
 

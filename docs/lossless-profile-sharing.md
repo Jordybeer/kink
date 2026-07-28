@@ -28,4 +28,6 @@ readable.
 A short payload uses one QR. Longer payloads are split into 680-character chunks.
 Each QR carries transfer id, part number, total and whole-payload checksum. Parts may
 arrive out of order; duplicates are ignored. Import begins only after every part is
-present and the checksum matches.
+present and the checksum matches. The modal renders only the currently visible QR,
+not the full set in memory. Profiles requiring more than 64 reliable QR parts keep
+the complete lossless link but deliberately fall back to link sharing.

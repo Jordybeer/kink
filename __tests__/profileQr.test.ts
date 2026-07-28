@@ -3,6 +3,8 @@ import {
   addProfileQrPart,
   buildProfileQrSet,
   parseProfileQrPart,
+  PROFILE_QR_CHUNK_SIZE,
+  PROFILE_QR_MAX_PARTS,
   type ProfileQrAssembly,
 } from "@/lib/profileQr";
 import { parseSharePaste } from "@/lib/parseSharePaste";
@@ -36,6 +38,14 @@ describe("profile QR splitting", () => {
       }
     }
     throw new Error("multipart payload did not complete");
+  });
+
+  it("keeps the complete link when a profile is too large for a practical QR set", () => {
+    const payload = "3r." + "x".repeat(PROFILE_QR_CHUNK_SIZE * (PROFILE_QR_MAX_PARTS + 1));
+    const set = buildProfileQrSet("https://kink.example", payload);
+    expect(set.qrTooLarge).toBe(true);
+    expect(set.qrValues).toEqual([]);
+    expect(parseSharePaste(set.shareUrl)).toEqual({ kind: "profile", encoded: payload });
   });
 
   it("rejects malformed part headers", () => {

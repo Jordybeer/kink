@@ -1,5 +1,6 @@
 export const PROFILE_QR_SINGLE_LIMIT = 900;
 export const PROFILE_QR_CHUNK_SIZE = 680;
+export const PROFILE_QR_MAX_PARTS = 64;
 
 export interface ProfileQrPart {
   transferId: string;
@@ -20,6 +21,7 @@ export interface ProfileQrSet {
   shareUrl: string;
   qrValues: string[];
   transferId: string | null;
+  qrTooLarge: boolean;
 }
 
 export type ProfileQrCollectResult =
@@ -47,7 +49,7 @@ export function checksumProfilePayload(payload: string): string {
 export function buildProfileQrSet(origin: string, payload: string): ProfileQrSet {
   const shareUrl = profileShareUrl(origin, payload);
   if (shareUrl.length <= PROFILE_QR_SINGLE_LIMIT) {
-    return { shareUrl, qrValues: [shareUrl], transferId: null };
+    return { shareUrl, qrValues: [shareUrl], transferId: null, qrTooLarge: false };
   }
 
   const checksum = checksumProfilePayload(payload);
@@ -57,11 +59,14 @@ export function buildProfileQrSet(origin: string, payload: string): ProfileQrSet
     chunks.push(payload.slice(offset, offset + PROFILE_QR_CHUNK_SIZE));
   }
   const total = chunks.length;
+  if (total > PROFILE_QR_MAX_PARTS) {
+    return { shareUrl, qrValues: [], transferId: null, qrTooLarge: true };
+  }
   const base = cleanOrigin(origin);
   const qrValues = chunks.map(
     (chunk, idx) => `${base}/#p3m=${transferId}.${idx + 1}.${total}.${checksum}.${chunk}`,
   );
-  return { shareUrl, qrValues, transferId };
+  return { shareUrl, qrValues, transferId, qrTooLarge: false };
 }
 
 export function parseProfileQrPart(value: string): ProfileQrPart | null {
