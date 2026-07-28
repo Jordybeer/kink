@@ -104,7 +104,7 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 - **Playwright CI integration**: run the visual audit in CI.
 - **Bundle size audit**: `@next/bundle-analyzer` pass.
 - **Custom kink persistence race**: rapid add-then-navigate may drop the write in the persist debounce.
-- **Offline support**: PWA manifest exists but no service-worker caching strategy.
+- ~~**Offline support**: PWA manifest exists but no service-worker caching strategy.~~ → shipped via PR #263 and completed for newly created local profile/scene routes in PR #266 (see ledger).
 
 ### Accessibility
 - **Keyboard navigation in accordions**: verify focus can't land inside closed CategorySections.
@@ -131,6 +131,12 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 ---
 
 ## Shipped — historical ledger (full detail preserved in git log)
+
+### Local-first offline rooms (dev, 2026-07-28)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | New profiles and scenes created after the network cut now open through fixed precacheable shells; legacy `/profile/<id>` and `/scenes/<id>` doors fall back in the service worker; exact-ID persistence wait and cold-route guards cover the iOS failures found on device | `59890b1` / PR #266 |
 
 ### Post-v6 polish night (dev, 2026-07-12 evening)
 
