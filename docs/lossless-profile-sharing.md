@@ -12,12 +12,14 @@ v3 shares every field that is intentionally partner-facing:
 
 The avatar, private note, local scene-use counters, imported/locked metadata and every
 `privateResponse` are excluded. A private custom kink is excluded including its name.
+The v3 codec has no private-response opt-in: this boundary is enforced in the serializer.
 
 ## Transport
 
 The compact JSON wire shape is compressed with the browser-native Deflate stream and
 base64url encoded. Browsers without CompressionStream fall back to raw compact v3;
-both representations decode losslessly.
+both representations decode losslessly. Encoded input is capped before base64 decoding,
+and Deflate output is read incrementally with a 4 MB hard ceiling before JSON parsing.
 
 The copied link carries one complete payload in the URL fragment (`#p3=`), so the
 payload does not enter normal server query logs. Existing `?p=` v1/v2 links remain

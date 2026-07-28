@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { Profile } from "@/types";
 import { encodeProfile } from "@/lib/shareProfile";
 import {
+  decodeProfileV3,
   decodeSharedProfile,
   encodeProfileV3,
   isProfileV3,
+  MAX_PROFILE_SHARE_INFLATED_BYTES,
 } from "@/lib/profileShareV3";
 
 const profile: Profile = {
@@ -57,6 +59,22 @@ const profile: Profile = {
   },
 };
 
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function compressRawJson(json: string): Promise<string> {
+  const bytes = new TextEncoder().encode(json);
+  const input = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const stream = new Blob([input]).stream().pipeThrough(new CompressionStream("deflate"));
+  const compressed = new Uint8Array(await new Response(stream).arrayBuffer());
+  return "3d." + bytesToBase64Url(compressed);
+}
+
 describe("lossless profile share v3", () => {
   it("round-trips every shareable field and excludes private/local-only data", async () => {
     const encoded = await encodeProfileV3(profile, { includeFetLife: true });
@@ -79,10 +97,30 @@ describe("lossless profile share v3", () => {
     expect(decoded.isImported).toBe(true);
   });
 
+  it("cannot export private answers even when an untyped caller asks for them", async () => {
+    const opts = {
+      includeFetLife: true,
+      includePrivateResponses: true,
+    } as Parameters<typeof encodeProfileV3>[1];
+    const encoded = await encodeProfileV3(profile, opts);
+    const decoded = await decodeSharedProfile(encoded);
+    expect(decoded.entries.hidden).toBeUndefined();
+    expect(decoded.entries["custom-private"]).toBeUndefined();
+    expect(decoded.customKinks.some((kink) => kink.id === "custom-private")).toBe(false);
+  });
+
   it("keeps FetLife opt-in", async () => {
     const encoded = await encodeProfileV3(profile);
     const decoded = await decodeSharedProfile(encoded);
     expect(decoded.fetLifeUsername).toBeUndefined();
+  });
+
+  it("rejects a compressed profile before inflation exceeds the mobile memory boundary", async () => {
+    const encoded = await compressRawJson(JSON.stringify({
+      v: 3,
+      padding: "x".repeat(MAX_PROFILE_SHARE_INFLATED_BYTES + 1),
+    }));
+    await expect(decodeProfileV3(encoded)).rejects.toThrow("Profielcode is te groot");
   });
 
   it("still decodes legacy v1 links", async () => {

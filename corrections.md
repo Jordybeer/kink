@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-28 — Twee schrijvende workflowtriggers botsten op dezelfde branch
+
+**What went wrong:** Een tijdelijke transform-workflow luisterde tegelijk naar `push` en `pull_request synchronize`. Eén stagingcommit startte daardoor twee identieke schrijvers. Beide doorliepen tests en build; de eerste pushte de bewezen productcommit, de tweede werd terecht als non-fast-forward geweigerd.
+
+**Rule:** Een workflow die naar zijn eigen featurebranch schrijft krijgt exact één triggerpad. Gebruik voor een open same-repo PR uitsluitend `pull_request: synchronize`, of uitsluitend `push`, maar nooit beide. Een afgewezen tweede push is geen codefout: controleer eerst of de andere run dezelfde bewezen commit al heeft geland.
+
+---
+
 ## 2026-07-28 — Een QR-header mag de payload niet als scheidingsteken behandelen
 
 **What went wrong:** De eerste multi-QR-parser gebruikte `split(".")` voor de volledige tekenreeks en verwachtte exact vijf delen. De v3-payload begint zelf met `3r.` of `3d.`, waardoor de eerste QR een extra punt bevatte en als ongeldig werd afgewezen. De regressietest stopte de productcommit vóór de build.

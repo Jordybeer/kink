@@ -86,6 +86,7 @@ function HomeContent() {
 
   // QR / share import
   const [scanOpen, setScanOpen] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [importDone, setImportDone] = useState(false);
 
@@ -287,7 +288,7 @@ function HomeContent() {
               <>
                 <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
                 <button
-                  onClick={() => setScanOpen(true)}
+                  onClick={() => { setScanError(null); setScanOpen(true); }}
                   className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
                   style={{ color: "var(--text2)" }}
                 >
@@ -527,13 +528,32 @@ function HomeContent() {
           onResult={async (p) => {
             try {
               setImportPreview(await decodeSharedProfile(p));
+              setScanError(null);
             } catch {
-              setImportError("Profielcode is ongeldig of beschadigd.");
+              setScanError("Profielcode is ongeldig of beschadigd.");
             }
             setScanOpen(false);
           }}
           onClose={() => setScanOpen(false)}
         />
+      )}
+
+      {scanError && (
+        <div
+          role="alert"
+          className="fixed top-[calc(var(--nav-h)+12px)] left-4 right-4 z-[300] mx-auto max-w-md rounded-xl px-4 py-3 flex items-center gap-3 shadow-lg ks-fade-in"
+          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
+        >
+          <span className="text-sm flex-1">{scanError}</span>
+          <button
+            type="button"
+            onClick={() => setScanError(null)}
+            aria-label="Sluit foutmelding"
+            className="focus-ring p-1 rounded-lg flex-none"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       )}
 
       {/* Import profile sheet */}

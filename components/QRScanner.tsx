@@ -64,12 +64,12 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     streamRef.current = null;
   }
 
-  function dispatchPayload(raw: string): DispatchResult {
+  function dispatchPayload(raw: string, dedupeCameraFrames = true): DispatchResult {
     const now = Date.now();
-    if (lastRawRef.current?.value === raw && now - lastRawRef.current.at < 900) {
+    if (dedupeCameraFrames && lastRawRef.current?.value === raw && now - lastRawRef.current.at < 900) {
       return "progress";
     }
-    lastRawRef.current = { value: raw, at: now };
+    if (dedupeCameraFrames) lastRawRef.current = { value: raw, at: now };
     const parsed = parseSharePaste(raw);
 
     if (parsed.kind === "session") {
@@ -125,7 +125,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
 
   function handlePasteSubmit() {
     setPasteError(null);
-    const outcome = dispatchPayload(pasteInput);
+    const outcome = dispatchPayload(pasteInput, false);
     if (outcome === "invalid") {
       setPasteError("Geen geldige link of code gevonden.");
       return;
@@ -230,7 +230,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
                 : "Richt de camera op de QR-code van je partner."}
             </p>
             <button
-              onClick={() => { stopCamera(); setPasteMode(true); }}
+              onClick={() => { stopCamera(); setPartError(null); setPasteMode(true); }}
               className="focus-ring block mx-auto mb-3 text-xs underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
