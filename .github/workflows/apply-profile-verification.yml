@@ -1,11 +1,15 @@
 name: Apply profile verification code
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/lossless-multi-qr-share
+      - dev
+    types:
+      - synchronize
     paths:
       - .github/workflows/apply-profile-verification.yml
+      - scripts/apply-profile-verification.py
+      - scripts/profile-verification-src/**
 
 permissions:
   contents: write
