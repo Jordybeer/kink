@@ -1,0 +1,58 @@
+name: Apply lossless review fixes
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - synchronize
+    paths:
+      - .github/workflows/apply-lossless-review.yml
+      - scripts/apply-lossless-review.py
+      - scripts/lossless-review-src/**
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-build-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/lossless-multi-qr-share
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply assertion-guarded review fixes
+        run: |
+          python3 scripts/apply-lossless-review.py
+          git diff --check
+          test ! -e scripts/lossless-review-src
+          test ! -e scripts/apply-lossless-review.py
+          test ! -e .github/workflows/apply-lossless-review.yml
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run full unit suite
+        run: npm test
+
+      - name: Build Next, TypeScript and Serwist
+        run: npm run build
+
+      - name: Commit proven review fixes
+        run: |
+          git config user.name "Jordybeer"
+          git config user.email "19562111+Jordybeer@users.noreply.github.com"
+          git add -A
+          git commit -m "Hou profielcodes veilig achter hun grenzen"
+          git push origin HEAD:feature/lossless-multi-qr-share
