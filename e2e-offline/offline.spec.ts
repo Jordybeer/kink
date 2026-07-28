@@ -6,8 +6,10 @@ import { test, expect } from "@playwright/test";
 
 const STATIC_ROUTES = [
   "/",
+  "/profile",
   "/scene",
   "/scenes",
+  "/scenes/view",
   "/compare",
   "/contract",
   "/timeline",
@@ -74,6 +76,12 @@ function storedState() {
   };
 }
 
+async function seedStore(page: import("@playwright/test").Page) {
+  await page.addInitScript((persisted) => {
+    localStorage.setItem("kink-profiles", JSON.stringify(persisted));
+  }, storedState());
+}
+
 test("every fixed room works offline without visiting it first", async ({ page, context }) => {
   // Only the home page is visited online. The install + automatic warmup must
   // prepare every other fixed route without a manual page-by-page ritual.
@@ -102,11 +110,8 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await expect(page.getByRole("status", { name: "Online" }).first()).toBeVisible();
 });
 
-test("home compare and profile cards use warmed documents offline", async ({ page, context }) => {
-  await page.addInitScript((persisted) => {
-    localStorage.setItem("kink-profiles", JSON.stringify(persisted));
-  }, storedState());
-
+test("legacy cards fold into the fixed profile and scene shells offline", async ({ page, context }) => {
+  await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
   await context.setOffline(true);
@@ -119,20 +124,70 @@ test("home compare and profile cards use warmed documents offline", async ({ pag
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.getByRole("link", { name: "Profiel Mira openen" }).click();
-  await expect(page).toHaveURL(/\/profile\/profile-a$/);
+  await expect(page).toHaveURL(/\/profile\?id=profile-a$/);
   await expect(page.getByText("Mira").first()).toBeVisible();
   await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
 
-  await page.goto("/scenes/scene-a", { waitUntil: "domcontentloaded" });
+  await page.goto("/scenes/view?id=scene-a", { waitUntil: "domcontentloaded" });
   await expect(page.getByText("Offline scène").first()).toBeVisible();
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
 });
 
-test("an ordinary browser tab can open cached pages after going offline", async ({ page, context }) => {
-  await page.addInitScript((persisted) => {
-    localStorage.setItem("kink-profiles", JSON.stringify(persisted));
-  }, storedState());
+test("a profile born after the network cut opens and reloads immediately", async ({ page, context }) => {
+  await seedStore(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await waitForOfflineCache(page);
+  await context.setOffline(true);
 
+  await page.getByRole("button", { name: "Nieuw profiel" }).click();
+  await page.getByPlaceholder("Naam of alias…").fill("Nova offline");
+  await page.getByRole("button", { name: "Sla jezelf vast" }).click();
+
+  await expect(page).toHaveURL(/\/profile\?id=[^&]+$/);
+  await expect(page.getByText("Nova offline").first()).toBeVisible();
+  await expect(page.getByText("Je bent offline")).toHaveCount(0);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByText("Nova offline").first()).toBeVisible();
+  await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
+});
+
+test("a scene born after the network cut opens in a new browser tab", async ({ page, context }) => {
+  await seedStore(page);
+  await page.goto("/", { waitUntil: "networkidle" });
+  await waitForOfflineCache(page);
+  await context.setOffline(true);
+
+  await page.evaluate(() => {
+    const raw = localStorage.getItem("kink-profiles");
+    if (!raw) throw new Error("seeded store missing");
+    const persisted = JSON.parse(raw);
+    const now = Date.now();
+    persisted.state.scenes.push({
+      id: "scene-born-offline",
+      title: "Pas offline geboren",
+      profileAId: "profile-a",
+      profileBId: "profile-b",
+      profileAName: "Mira",
+      profileBName: "Noor",
+      items: [],
+      status: "completed",
+      createdAt: now,
+      updatedAt: now,
+    });
+    localStorage.setItem("kink-profiles", JSON.stringify(persisted));
+  });
+
+  const browserTab = await context.newPage();
+  await browserTab.goto("/scenes/view?id=scene-born-offline", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(browserTab.getByText("Pas offline geboren").first()).toBeVisible();
+  await expect(browserTab.getByText("Je bent offline")).toHaveCount(0);
+});
+
+test("an ordinary browser tab can open cached pages after going offline", async ({ page, context }) => {
+  await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
   await context.setOffline(true);
@@ -143,12 +198,16 @@ test("an ordinary browser tab can open cached pages after going offline", async 
   });
   await expect(browserTab.getByText("Je bent offline")).toHaveCount(0);
 
-  await browserTab.goto("/profile/profile-a", { waitUntil: "domcontentloaded" });
+  await browserTab.goto("/profile?id=profile-a", { waitUntil: "domcontentloaded" });
   await expect(browserTab.getByText("Mira").first()).toBeVisible();
   await expect(browserTab.getByText("Profiel niet gevonden")).toHaveCount(0);
+
+  // Old bookmarks remain supported while known local records are still warmed.
+  await browserTab.goto("/profile/profile-a", { waitUntil: "domcontentloaded" });
+  await expect(browserTab.getByText("Mira").first()).toBeVisible();
 });
 
-test("an unknown dynamic route still falls back safely offline", async ({ page, context }) => {
+test("an unknown dynamic legacy route still falls back safely offline", async ({ page, context }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
 

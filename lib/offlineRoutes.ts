@@ -1,9 +1,16 @@
+import {
+  PROFILE_SHELL_ROUTE,
+  SCENE_DETAIL_SHELL_ROUTE,
+} from "./localRoutes";
+
 export const STATIC_OFFLINE_ROUTES = [
   "/",
+  PROFILE_SHELL_ROUTE,
   "/compare",
   "/contract",
   "/scene",
   "/scenes",
+  SCENE_DETAIL_SHELL_ROUTE,
   "/session",
   "/timeline",
 ] as const;
