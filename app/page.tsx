@@ -14,7 +14,8 @@ import AppLock from "@/components/AppLock";
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
 import dynamic from "next/dynamic";
-import { decodeAny } from "@/lib/shareProfile";
+import { decodeSharedProfile } from "@/lib/profileShareV3";
+import { parseSharePaste } from "@/lib/parseSharePaste";
 import { eligibleParentProfiles } from "@/lib/subprofile";
 import ProfileList from "@/components/ProfileList";
 import SettingsSheet from "@/components/sheets/SettingsSheet";
@@ -109,9 +110,23 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    const p = searchParams.get("p");
-    if (!p) return;
-    try { setImportPreview(decodeAny(p)); } catch { /* ongeldige parameter */ }
+    let cancelled = false;
+    async function readShareLocation() {
+      const parsed = parseSharePaste(window.location.href);
+      if (parsed.kind !== "profile") return;
+      try {
+        const decoded = await decodeSharedProfile(parsed.encoded);
+        if (!cancelled) setImportPreview(decoded);
+      } catch {
+        // Ongeldige of beschadigde deelcode blijft buiten de store.
+      }
+    }
+    void readShareLocation();
+    window.addEventListener("hashchange", readShareLocation);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("hashchange", readShareLocation);
+    };
   }, [searchParams]);
 
   useEffect(() => {
@@ -509,8 +524,12 @@ function HomeContent() {
       {scanOpen && (
         <QRScanner
           open={scanOpen}
-          onResult={(p) => {
-            try { setImportPreview(decodeAny(p)); } catch { /* ongeldige QR */ }
+          onResult={async (p) => {
+            try {
+              setImportPreview(await decodeSharedProfile(p));
+            } catch {
+              setImportError("Profielcode is ongeldig of beschadigd.");
+            }
             setScanOpen(false);
           }}
           onClose={() => setScanOpen(false)}
