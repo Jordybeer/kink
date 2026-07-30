@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "python automation/signed-consent/08_harden_existing.py && git reset --hard HEAD && npx next build --webpack",
+    "build": "python -c \"from pathlib import Path; p=Path('automation/signed-consent/08_harden_existing.py').read_text(); exec(p.split('# ── Store:')[0])\" && git reset --hard HEAD && npx next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
