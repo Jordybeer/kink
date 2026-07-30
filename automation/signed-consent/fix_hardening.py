@@ -42,4 +42,12 @@ for before, after in map_fixes.items():
         raise RuntimeError(f"Expected one consent map anchor for {before!r}, found {text.count(before)}")
     text = text.replace(before, after, 1)
 
+for required, optional in {
+    "  profileACapturedAt: number;": "  profileACapturedAt?: number;",
+    "  profileBCapturedAt: number;": "  profileBCapturedAt?: number;",
+}.items():
+    if text.count(required) != 1:
+        raise RuntimeError(f"Expected one agreement field anchor for {required!r}, found {text.count(required)}")
+    text = text.replace(required, optional, 1)
+
 path.write_text(text, encoding="utf-8")
