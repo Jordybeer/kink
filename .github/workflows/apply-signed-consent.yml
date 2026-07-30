@@ -1,0 +1,83 @@
+name: consent seal gate
+
+on:
+  push:
+    branches:
+      - automation/signed-consent-ledger
+    paths:
+      - .github/workflows/apply-signed-consent.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: signed-consent-transform
+  cancel-in-progress: false
+
+jobs:
+  prove-and-land:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Open the feature worktree
+        uses: actions/checkout@v4
+        with:
+          ref: feature/signed-consent-ledger
+          fetch-depth: 0
+
+      - name: Fetch the sealed instructions
+        run: |
+          git fetch origin automation/signed-consent-ledger:refs/remotes/origin/automation/signed-consent-ledger
+          mkdir -p /tmp/signed-consent
+          for script in 01_alias_crypto 02_ledger 03_core_patches 04_core_tests 05_ui 06_scene_component 07_scene_patches_tests; do
+            git show "origin/automation/signed-consent-ledger:automation/signed-consent/${script}.py" > "/tmp/signed-consent/${script}.py"
+          done
+
+      - name: Weave the signed consent ledger
+        run: |
+          python /tmp/signed-consent/01_alias_crypto.py
+          python /tmp/signed-consent/02_ledger.py
+          python /tmp/signed-consent/03_core_patches.py
+          python /tmp/signed-consent/04_core_tests.py
+          python /tmp/signed-consent/05_ui.py
+          python /tmp/signed-consent/06_scene_component.py
+          python /tmp/signed-consent/07_scene_patches_tests.py
+
+      - name: Install the house
+        run: npm ci
+
+      - name: Test every boundary
+        run: npm test
+
+      - name: Build the locked room
+        run: npm run build
+
+      - name: Collar the proven feature
+        run: |
+          git config user.name "Jordybeer"
+          git config user.email "19562111+Jordybeer@users.noreply.github.com"
+          git add \
+            types/index.ts \
+            lib/profileAlias.ts \
+            lib/consentCrypto.ts \
+            lib/consentLedger.ts \
+            lib/sanitizeProfile.ts \
+            lib/profileShareV3.ts \
+            lib/store.ts \
+            components/ConsentTrustSheet.tsx \
+            components/ConsentLedgerPanel.tsx \
+            components/ProfileHero.tsx \
+            components/QRModal.tsx \
+            components/scenes/SceneDetailScreen.tsx \
+            components/sheets/EncryptedBackupSheets.tsx \
+            app/page.tsx \
+            app/scene/page.tsx \
+            __tests__/consentCrypto.test.ts \
+            __tests__/consentLedger.test.ts \
+            __tests__/storeConsent.test.ts
+          if git diff --cached --quiet; then
+            echo "No product changes to commit."
+            exit 0
+          fi
+          git commit -m "Verzegel profielen en leg toestemming onveranderlijk vast"
+          git push origin HEAD:feature/signed-consent-ledger
