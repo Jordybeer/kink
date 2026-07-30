@@ -36,6 +36,28 @@ jobs:
         run: |
           cat scripts/.signed-consent-* | base64 --decode | gzip --decompress > /tmp/apply-signed-consent.py
           python /tmp/apply-signed-consent.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('lib/consentProof.ts')
+          text = path.read_text()
+          old = '''function base64UrlToBytes(value: string): Uint8Array {
+            const padded = value.replace(/-/g, "+").replace(/_/g, "/")
+              + "=".repeat((4 - (value.length % 4)) % 4);
+            const binary = atob(padded);
+            return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+          }'''
+          new = '''function base64UrlToBytes(value: string): ArrayBuffer {
+            const padded = value.replace(/-/g, "+").replace(/_/g, "/")
+              + "=".repeat((4 - (value.length % 4)) % 4);
+            const binary = atob(padded);
+            const bytes = new Uint8Array(binary.length);
+            for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+            return bytes.buffer;
+          }'''
+          if text.count(old) != 1:
+              raise SystemExit('base64 buffer patch anchor mismatch')
+          path.write_text(text.replace(old, new, 1))
+          PY
 
       - name: Run full unit suite
         run: npm test
