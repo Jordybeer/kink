@@ -31,4 +31,15 @@ if store_text.count(old_custom_guard) != 2:
 store_path.write_text(store_text.replace(old_custom_guard, new_custom_guard), encoding="utf-8")'''
 if text.count(old) != 1:
     raise RuntimeError(f"Expected one duplicated custom-kink transformer block, found {text.count(old)}")
-path.write_text(text.replace(old, new, 1), encoding="utf-8")
+text = text.replace(old, new, 1)
+
+map_fixes = {
+    "const originals = new Map([": "const originals = new Map<string, ConsentSnapshot>([",
+    "const latestProof = new Map([": "const latestProof = new Map<string, ProfileConsentProof>([",
+}
+for before, after in map_fixes.items():
+    if text.count(before) != 1:
+        raise RuntimeError(f"Expected one consent map anchor for {before!r}, found {text.count(before)}")
+    text = text.replace(before, after, 1)
+
+path.write_text(text, encoding="utf-8")
