@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "python automation/signed-consent/08_harden_existing.py && vitest run && next build --webpack",
+    "build": "bash automation/signed-consent/probe.sh",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
