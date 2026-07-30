@@ -14,7 +14,9 @@ import AppLock from "@/components/AppLock";
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
 import dynamic from "next/dynamic";
-import { decodeAny } from "@/lib/shareProfile";
+import { decodeSharedProfile } from "@/lib/profileShareV3";
+import { parseSharePaste } from "@/lib/parseSharePaste";
+import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
 import { eligibleParentProfiles } from "@/lib/subprofile";
 import ProfileList from "@/components/ProfileList";
 import SettingsSheet from "@/components/sheets/SettingsSheet";
@@ -85,8 +87,10 @@ function HomeContent() {
 
   // QR / share import
   const [scanOpen, setScanOpen] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [importDone, setImportDone] = useState(false);
+  const importIdentity = importPreview ? classifyProfileImport(profiles, importPreview) : null;
 
   useEffect(() => {
     // Read the flag live, never a mount-time snapshot — onboarding raises it
@@ -109,9 +113,23 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    const p = searchParams.get("p");
-    if (!p) return;
-    try { setImportPreview(decodeAny(p)); } catch { /* ongeldige parameter */ }
+    let cancelled = false;
+    async function readShareLocation() {
+      const parsed = parseSharePaste(window.location.href);
+      if (parsed.kind !== "profile") return;
+      try {
+        const decoded = await decodeSharedProfile(parsed.encoded);
+        if (!cancelled) setImportPreview(decoded);
+      } catch {
+        // Ongeldige of beschadigde deelcode blijft buiten de store.
+      }
+    }
+    void readShareLocation();
+    window.addEventListener("hashchange", readShareLocation);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("hashchange", readShareLocation);
+    };
   }, [searchParams]);
 
   useEffect(() => {
@@ -272,7 +290,7 @@ function HomeContent() {
               <>
                 <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
                 <button
-                  onClick={() => setScanOpen(true)}
+                  onClick={() => { setScanError(null); setScanOpen(true); }}
                   className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
                   style={{ color: "var(--text2)" }}
                 >
@@ -509,12 +527,35 @@ function HomeContent() {
       {scanOpen && (
         <QRScanner
           open={scanOpen}
-          onResult={(p) => {
-            try { setImportPreview(decodeAny(p)); } catch { /* ongeldige QR */ }
+          onResult={async (p) => {
+            try {
+              setImportPreview(await decodeSharedProfile(p));
+              setScanError(null);
+            } catch {
+              setScanError("Profielcode is ongeldig of beschadigd.");
+            }
             setScanOpen(false);
           }}
           onClose={() => setScanOpen(false)}
         />
+      )}
+
+      {scanError && (
+        <div
+          role="alert"
+          className="fixed top-[calc(var(--nav-h)+12px)] left-4 right-4 z-[300] mx-auto max-w-md rounded-xl px-4 py-3 flex items-center gap-3 shadow-lg ks-fade-in"
+          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
+        >
+          <span className="text-sm flex-1">{scanError}</span>
+          <button
+            type="button"
+            onClick={() => setScanError(null)}
+            aria-label="Sluit foutmelding"
+            className="focus-ring p-1 rounded-lg flex-none"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       )}
 
       {/* Import profile sheet */}
@@ -544,7 +585,20 @@ function HomeContent() {
               <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
                 {Object.values(importPreview.entries).filter((e) => e.status).length} kinks beoordeeld
               </div>
+              <div className="text-[11px] mt-1" style={{ color: "var(--text2)" }}>
+                Profielcode <span className="font-mono tracking-wide">{getProfileVerificationCode(importPreview)}</span>
+              </div>
             </div>
+          </div>
+        )}
+        {importIdentity?.kind === "same-code" && (
+          <div className="rounded-xl px-3 py-2.5 mb-4 text-xs" style={{ background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)", color: "var(--text2)" }}>
+            Dezelfde profielcode staat al bij <strong style={{ color: "var(--text)" }}>{importIdentity.profile.name}</strong>. Dit is hetzelfde profiel, niet een nieuwe kopie.
+          </div>
+        )}
+        {importIdentity?.kind === "same-name-role" && (
+          <div className="rounded-xl px-3 py-2.5 mb-4 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+            Zelfde naam en rol, maar een andere profielcode. Importeer dit alleen wanneer het bewust een apart profiel is.
           </div>
         )}
         <div className="flex flex-col gap-3">
@@ -552,11 +606,19 @@ function HomeContent() {
             <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
               ✓ Profiel geïmporteerd!
             </p>
+          ) : importIdentity?.kind === "same-code" ? (
+            <button
+              onClick={() => { setImportPreview(null); router.push(`/profile/${importIdentity.profile.id}`); }}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            >
+              Open bestaand profiel
+            </button>
           ) : (
             <button
               onClick={() => {
                 if (!importPreview) return;
-                importProfiles([{ ...importPreview, isImported: true, origin: "shared", lockedAt: Date.now() }]);
+                importProfiles([{ ...importPreview, verificationCode: getProfileVerificationCode(importPreview), isImported: true, origin: "shared", lockedAt: Date.now() }]);
                 setImportDone(true);
                 router.replace("/");
                 setTimeout(() => { setImportPreview(null); setImportDone(false); }, 1500);
@@ -564,7 +626,7 @@ function HomeContent() {
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              Importeer profiel
+              {importIdentity?.kind === "same-name-role" ? "Importeer als apart profiel" : "Importeer profiel"}
             </button>
           )}
           <button

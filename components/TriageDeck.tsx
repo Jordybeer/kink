@@ -99,15 +99,16 @@ export default function TriageDeck({
                 data-tour="private"
                 onClick={() => onPrivateChange(current.id, !currentEntry?.privateResponse)}
                 aria-pressed={!!currentEntry?.privateResponse}
-                aria-label={currentEntry?.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
-                className="focus-ring w-9 h-9 flex items-center justify-center rounded-lg border transition-colors flex-none"
+                aria-label={currentEntry?.privateResponse ? "Antwoord niet langer verbergen" : "Antwoord verbergen"}
+                className="focus-ring px-2.5 min-h-9 inline-flex items-center justify-center gap-1 rounded-lg border transition-colors flex-none text-xs"
                 style={currentEntry?.privateResponse
                   ? { color: "var(--accent)", borderColor: "var(--accent)", background: "color-mix(in srgb, var(--accent) 12%, transparent)" }
                   : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
               >
                 {currentEntry?.privateResponse
-                  ? <EyeSlash size={14} weight="bold" aria-hidden="true" />
-                  : <Eye size={14} aria-hidden="true" />}
+                  ? <EyeSlash size={13} weight="bold" aria-hidden="true" />
+                  : <Eye size={13} aria-hidden="true" />}
+                <span>{currentEntry?.privateResponse ? "Verborgen" : "Verberg"}</span>
               </button>
             </div>
 

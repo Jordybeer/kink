@@ -26,8 +26,8 @@ const STEPS = [
   },
   {
     selector: '[data-tour="private"]',
-    title: "Hou je antwoord privé",
-    body: "Tik het oogje naast de ster, voor of na je keuze. Alleen de kinknaam blijft zichtbaar; je oordeel, nieuwsgierigheid, tags en notitie blijven verborgen tot je ze bewust onthult.",
+    title: "Verberg je antwoord",
+    body: "Tik ‘Verberg’ naast de ster, voor of na je keuze. De knop wordt ‘Verborgen’: alleen de kinknaam blijft zichtbaar; oordeel, nieuwsgierigheid, tags en notitie blijven dicht tot je ze bewust onthult.",
     pad: 6,
   },
 ];

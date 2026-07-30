@@ -725,6 +725,7 @@ export default function ProfilePage({ params }: Props) {
             <ProfileSnapshotPanel
               profileId={profile.id}
               snapshots={profileSnapshots}
+              currentEntries={profile.entries}
               onSave={saveProfileSnapshot}
             />
           )}

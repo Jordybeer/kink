@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
+import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 
 const SNAPSHOT_CAP_PER_PROFILE = 30;
 
@@ -120,6 +121,7 @@ export const useStore = create<State>()(
             ...s.profiles,
             {
               id,
+              verificationCode: generateProfileVerificationCode(),
               name,
               role,
               experienceLevel,
@@ -349,7 +351,15 @@ export const useStore = create<State>()(
       importProfiles(incoming) {
         set((s) => {
           const existingIds = new Set(s.profiles.map((p) => p.id));
-          const novel = incoming.filter((p) => !existingIds.has(p.id));
+          const existingCodes = new Set(s.profiles.map(getProfileVerificationCode));
+          const novel: Profile[] = [];
+          for (const profile of incoming) {
+            const verificationCode = getProfileVerificationCode(profile);
+            if (existingIds.has(profile.id) || existingCodes.has(verificationCode)) continue;
+            novel.push({ ...profile, verificationCode });
+            existingIds.add(profile.id);
+            existingCodes.add(verificationCode);
+          }
           return novel.length === 0 ? s : { profiles: [...s.profiles, ...novel] };
         });
       },
@@ -401,7 +411,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 15,
+      version: 16,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -494,6 +504,12 @@ export const useStore = create<State>()(
                 return [id, { ...rest, status }];
               })
             ),
+          }));
+        }
+        if (version < 16 && state.profiles) {
+          state.profiles = state.profiles.map((profile) => ({
+            ...profile,
+            verificationCode: getProfileVerificationCode(profile),
           }));
         }
         return state;

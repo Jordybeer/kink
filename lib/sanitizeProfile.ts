@@ -8,6 +8,10 @@ import type {
   Profile,
 } from "@/types";
 import {
+  deriveProfileVerificationCode,
+  normalizeProfileVerificationCode,
+} from "@/lib/profileVerification";
+import {
   clamp,
   MAX_CUSTOM_KINKS,
   MAX_ID_LEN,
@@ -127,6 +131,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
 
   const profile: Profile = {
     id,
+    verificationCode: normalizeProfileVerificationCode(r.verificationCode)
+      ?? deriveProfileVerificationCode(id),
     name,
     role: typeof r.role === "string" ? clamp(r.role, MAX_ROLE_LEN) : "",
     experienceLevel: typeof r.experienceLevel === "string"
