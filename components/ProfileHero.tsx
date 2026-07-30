@@ -6,7 +6,7 @@ import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
-import { getProfileVerificationCode } from "@/lib/profileVerification";
+import ProfileTrust from "@/components/ProfileTrust";
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -23,7 +23,6 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
   const expLevel = profile.experienceLevel ?? "beginner";
   const initial = profile.name.charAt(0).toUpperCase();
-  const verificationCode = getProfileVerificationCode(profile);
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -107,13 +106,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             {profile.relationshipStatus && <><span aria-hidden="true">·</span><span>{profile.relationshipStatus}</span></>}
             {profileType === "partner" && <Lock size={10} aria-hidden="true" style={{ flexShrink: 0 }} />}
           </p>
-          <span
-            className="inline-flex mt-1.5 text-[11px] px-2 py-0.5 rounded-full font-medium"
-            style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-            title="Helpt hetzelfde profiel en mogelijke duplicaten herkennen; dit is geen identiteitsbewijs."
-          >
-            Profielcode&nbsp;<span className="font-mono tracking-wide">{verificationCode}</span>
-          </span>
+          <ProfileTrust profile={profile} />
           {profileType === "partner" && profile.lockedAt && (
             <span
               className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full"

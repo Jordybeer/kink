@@ -53,6 +53,30 @@ describe("profile verification codes", () => {
     if (match.kind === "same-code") expect(match.profile.id).toBe(existing.id);
   });
 
+  it("accepts only a chained update from the same signing source", () => {
+    const firstProof = {
+      schema: 1 as const,
+      algorithm: "ECDSA-P256-SHA256" as const,
+      keyId: "key-a",
+      publicKeyJwk: { kty: "EC", crv: "P-256", x: "x", y: "y" },
+      version: 1,
+      signedAt: 1,
+      payloadHash: "payload-1",
+      signature: "sig-1",
+      proofHash: "proof-1",
+    };
+    const existing = makeProfile({ origin: "shared", isImported: true, consentProof: firstProof });
+    const incoming = makeProfile({
+      id: "profile-copy",
+      consentProof: { ...firstProof, version: 2, previousProofHash: "proof-1", proofHash: "proof-2" },
+    });
+    expect(classifyProfileImport([existing], incoming).kind).toBe("signed-update");
+    expect(classifyProfileImport([existing], {
+      ...incoming,
+      consentProof: { ...incoming.consentProof!, keyId: "key-b" },
+    }).kind).toBe("source-conflict");
+  });
+
   it("warns on equal name and role when the code differs", () => {
     const existing = makeProfile();
     const incoming = makeProfile({

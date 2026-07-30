@@ -1,7 +1,8 @@
-import type { Profile, KinkEntry } from "@/types";
+import type { Profile, KinkEntry, ProfileConsentProof } from "@/types";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { decodeAny } from "@/lib/shareProfile";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
+import { verifyProfileConsent } from "@/lib/consentProof";
 
 export interface ProfileShareV3Options {
   includeFetLife?: boolean;
@@ -35,6 +36,7 @@ interface ProfilePayloadV3 {
   bs?: Profile["bdsmtestScores"];
   k?: [string, string][];
   e?: EntryRow[];
+  cp?: ProfileConsentProof;
 }
 
 const STATUS_ENC: Record<NonNullable<KinkEntry["status"]>, string> = {
@@ -100,6 +102,7 @@ function compactProfile(profile: Profile, opts?: ProfileShareV3Options): Profile
   if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
   if (customKinks.length) payload.k = customKinks;
   if (entries.length) payload.e = entries;
+  if (profile.consentProof) payload.cp = profile.consentProof;
   return payload;
 }
 
@@ -139,11 +142,12 @@ function expandProfile(payload: unknown): Profile {
         Array.isArray(row) && typeof row[0] === "string" && typeof row[1] === "string")
       .map(([id, name]) => ({ id, name })),
     entries,
+    consentProof: p.cp,
   };
 
   const clean = sanitizeProfileFull(raw);
   if (!clean) throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
-  return { ...clean, isImported: true };
+  return { ...clean, isImported: true, origin: "shared", lockedAt: Date.now() };
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
@@ -235,7 +239,14 @@ export async function decodeProfileV3(encoded: string): Promise<Profile> {
     throw new Error("Profielcode is te groot");
   }
   const decoded = compressed ? await decompressBytesBounded(bytes) : bytes;
-  return expandProfile(JSON.parse(new TextDecoder().decode(decoded)));
+  const profile = expandProfile(JSON.parse(new TextDecoder().decode(decoded)));
+  if (profile.consentProof) {
+    const verification = await verifyProfileConsent(profile);
+    if (verification.status !== "valid") {
+      throw new Error(verification.status === "invalid" ? verification.reason : "Profiel mist bronbevestiging");
+    }
+  }
+  return profile;
 }
 
 export async function decodeSharedProfile(encoded: string): Promise<Profile> {

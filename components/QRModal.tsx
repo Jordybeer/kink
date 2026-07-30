@@ -4,7 +4,8 @@ import QRCode from "qrcode";
 import type { Profile } from "@/types";
 import { encodeProfileV3 } from "@/lib/profileShareV3";
 import { buildProfileQrSet } from "@/lib/profileQr";
-import { getProfileVerificationCode } from "@/lib/profileVerification";
+import { profileConsentAlias } from "@/lib/consentProof";
+import { useStore } from "@/lib/store";
 import Sheet, { SheetContent } from "./Sheet";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function QRModal({ profile, onClose }: Props) {
+  const sealProfileConsent = useStore((state) => state.sealProfileConsent);
   const [qrValues, setQrValues] = useState<string[]>([]);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrIndex, setQrIndex] = useState(0);
@@ -41,7 +43,11 @@ export default function QRModal({ profile, onClose }: Props) {
 
     void (async () => {
       try {
-        const payload = await encodeProfileV3(profile, { includeFetLife });
+        const prepared = profile.origin === "shared" || profile.isImported
+          ? profile
+          : await sealProfileConsent(profile.id);
+        if (!prepared) throw new Error("Profiel kon niet worden bevestigd");
+        const payload = await encodeProfileV3(prepared, { includeFetLife });
         const share = buildProfileQrSet(window.location.origin, payload);
         if (cancelled) return;
         setUrl(share.shareUrl);
@@ -53,7 +59,7 @@ export default function QRModal({ profile, onClose }: Props) {
     })();
 
     return () => { cancelled = true; };
-  }, [profile, includeFetLife]);
+  }, [profile, includeFetLife, sealProfileConsent]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,7 +92,7 @@ export default function QRModal({ profile, onClose }: Props) {
   }
 
   const multi = qrValues.length > 1;
-  const verificationCode = profile ? getProfileVerificationCode(profile) : null;
+  const readableAlias = profile ? profileConsentAlias(profile) : null;
 
   return (
     <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
@@ -95,8 +101,8 @@ export default function QRModal({ profile, onClose }: Props) {
         {profile && (
           <div className="text-center mb-3">
             <p className="text-sm" style={{ color: "var(--accent)" }}>{profile.name}</p>
-            <p className="text-[11px] mt-1" style={{ color: "var(--text2)" }}>
-              Profielcode <span className="font-mono tracking-wide">{verificationCode}</span>
+            <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>
+              Bron bevestigd · {readableAlias}
             </p>
           </div>
         )}
@@ -157,7 +163,7 @@ export default function QRModal({ profile, onClose }: Props) {
         )}
 
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
-          Deelt alle niet-verborgen profielgegevens zonder dataverlies.
+          Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze versie wordt door jouw eigendomssleutel bevestigd.
         </p>
         {multi && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>

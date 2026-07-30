@@ -1,0 +1,131 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import type { Profile, SceneRecord } from "@/types";
+import { consentEventLabel, sceneMatchesConsentAgreement, verifyConsentLedger } from "@/lib/consentProof";
+import { useStore } from "@/lib/store";
+
+export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRecord; profiles: Profile[] }) {
+  const { lockSceneConsent, appendSceneConsentEvent } = useStore();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [ledgerValid, setLedgerValid] = useState<boolean | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState("");
+  const [note, setNote] = useState("");
+  const events = scene.consentLedger ?? [];
+  const agreementMatches = scene.consentSnapshots ? sceneMatchesConsentAgreement(scene) : null;
+  const ownProfiles = useMemo(() => [scene.profileAId, scene.profileBId]
+    .map((id) => profiles.find((profile) => profile.id === id))
+    .filter((profile): profile is Profile => !!profile && profile.origin !== "shared" && !profile.isImported), [profiles, scene.profileAId, scene.profileBId]);
+
+  useEffect(() => {
+    if (!selectedProfileId && ownProfiles[0]) setSelectedProfileId(ownProfiles[0].id);
+  }, [ownProfiles, selectedProfileId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!events.length) { setLedgerValid(null); return; }
+    void verifyConsentLedger(events).then((valid) => { if (!cancelled) setLedgerValid(valid); });
+    return () => { cancelled = true; };
+  }, [events]);
+
+  async function lockNow() {
+    setBusy(true); setMessage(null);
+    const result = await lockSceneConsent(scene.id);
+    setMessage(result.message);
+    setBusy(false);
+  }
+
+  async function append(type: "changed" | "withdrawn") {
+    if (!selectedProfileId) return;
+    setBusy(true); setMessage(null);
+    const result = await appendSceneConsentEvent(scene.id, selectedProfileId, type, note.trim() || undefined);
+    setMessage(result.message);
+    if (result.ok) setNote("");
+    setBusy(false);
+  }
+
+  return (
+    <section className="mb-6">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <h2 className="text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>
+          Bevestigde toestemming
+        </h2>
+        {events.length > 0 && (
+          <span className="text-xs" style={{ color: ledgerValid === false || agreementMatches === false ? "var(--hard-no)" : ledgerValid ? "var(--yes)" : "var(--text2)" }}>
+            {ledgerValid === false ? "Controle mislukt" : agreementMatches === false ? "Scène gewijzigd" : ledgerValid ? "Log klopt" : "Controleren…"}
+          </span>
+        )}
+      </div>
+
+      <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: `1px solid ${ledgerValid === false ? "var(--hard-no)" : "var(--border)"}` }}>
+        {!scene.consentSnapshots ? (
+          <>
+            <p className="text-sm mb-3" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
+              Leg vast welke antwoorden nu gelden. KinkSync bewaart daarna precies deze versies; latere wijzigingen worden toegevoegd en overschrijven het verleden niet.
+            </p>
+            <button onClick={lockNow} disabled={busy} className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+              {busy ? "Bevestigen…" : "Afspraken nu vastzetten"}
+            </button>
+          </>
+        ) : (
+          <>
+            {agreementMatches === false && (
+              <div role="alert" className="rounded-lg px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--text2)" }}>
+                <strong style={{ color: "var(--hard-no)" }}>Deze scène wijkt af van de vastgezette versie.</strong> Gebruik de huidige inhoud niet als bevestigde afspraak; de oorspronkelijke versie blijft in het log bewaard.
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {[scene.consentSnapshots.profileA, scene.consentSnapshots.profileB].map((snapshot) => (
+                <div key={snapshot.profileId} className="rounded-lg px-3 py-2" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                  <p className="text-xs font-semibold truncate">{snapshot.profileName}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--yes)" }}>Bron bevestigd · v{snapshot.proof.version}</p>
+                  <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>{snapshot.alias}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2 mb-4">
+              {events.map((event) => (
+                <div key={event.id} className="flex gap-3 text-xs">
+                  <span className="flex-none" style={{ color: event.type === "withdrawn" ? "var(--hard-no)" : "var(--accent)" }}>●</span>
+                  <div className="min-w-0">
+                    <p style={{ color: "var(--text)" }}>{consentEventLabel(event.type)}{event.profileName ? ` · ${event.profileName}` : ""}</p>
+                    <p style={{ color: "var(--text2)" }}>{new Date(event.createdAt).toLocaleString("nl-NL")}{event.note ? ` — ${event.note}` : ""}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {ownProfiles.length > 0 && (
+              <div className="rounded-lg p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>Nieuwe wijziging wordt toegevoegd aan het log. Een eerdere bevestiging blijft staan.</p>
+                {ownProfiles.length > 1 && (
+                  <select value={selectedProfileId} onChange={(event) => setSelectedProfileId(event.target.value)} className="w-full rounded-lg px-3 py-2 text-sm mb-2" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                    {ownProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+                  </select>
+                )}
+                <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Wat veranderde? (optioneel)" className="w-full rounded-lg px-3 py-2 text-sm mb-2" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }} />
+                <div className="flex gap-2">
+                  <button onClick={() => append("changed")} disabled={busy} className="focus-ring flex-1 py-2 rounded-lg text-xs font-semibold border disabled:opacity-50" style={{ borderColor: "var(--border-accent)", color: "var(--accent)" }}>Wijziging bevestigen</button>
+                  <button onClick={() => append("withdrawn")} disabled={busy} className="focus-ring flex-1 py-2 rounded-lg text-xs font-semibold border disabled:opacity-50" style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}>Toestemming intrekken</button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {message && <p role="status" className="text-xs mt-3" style={{ color: message.startsWith("✓") ? "var(--yes)" : "var(--text2)" }}>{message}</p>}
+
+        <details className="mt-4">
+          <summary className="text-xs cursor-pointer focus-ring rounded" style={{ color: "var(--accent)" }}>Hoe beschermt dit jullie afspraken?</summary>
+          <div className="text-xs mt-2 flex flex-col gap-2" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
+            <p>Elke profieleigenaar heeft een eigendomssleutel die alleen in diens eigen KinkSync en versleutelde backup zit. Daarmee krijgt een bevestigde versie een controleerbare digitale verzegeling.</p>
+            <p>Wanneer een scène wordt vastgezet, bewaart KinkSync exact welke profielversies, activiteiten, intensiteiten, notities en safeword toen golden. Een wijziging of intrekking komt later als een nieuwe regel erbij; oude afspraken worden niet stilletjes herschreven.</p>
+            <p>Dit beschermt opgeslagen gegevens tegen ongemerkte manipulatie. Het vervangt geen gesprek: toestemming kan altijd mondeling of non-verbaal worden ingetrokken en dan moet de activiteit meteen stoppen.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+  );
+}

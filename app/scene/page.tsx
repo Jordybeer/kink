@@ -224,6 +224,7 @@ function intensityColor(v: SceneItem["intensity"]) {
 
 interface SceneItemRowProps {
   item: SceneItem;
+  locked?: boolean;
   index: number;
   totalItems: number;
   onUpdate: (id: string, patch: Partial<SceneItem>) => void;
@@ -233,7 +234,7 @@ interface SceneItemRowProps {
 }
 
 function SceneItemRow({
-  item, index, totalItems,
+  item, locked = false, index, totalItems,
   onUpdate, onDelete, onMoveUp, onMoveDown,
 }: SceneItemRowProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -242,10 +243,12 @@ function SceneItemRow({
   return (
     <div
       className="scene-item-reorder flex items-stretch rounded-xl mb-2 overflow-hidden ks-slide-up"
+      aria-disabled={locked}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
         animationDelay: `${index * 35}ms`,
+        ...(locked ? { pointerEvents: "none" as const } : {}),
       }}
     >
       <div
@@ -392,7 +395,7 @@ function KinkChip({
 function ScenePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { profiles, scenes, contracts, saveScene } = useStore();
+  const { profiles, scenes, contracts, saveScene, lockSceneConsent } = useStore();
   const _hasHydrated = useHasHydrated();
 
   const sceneIdParam = searchParams.get("id");
@@ -473,7 +476,12 @@ function ScenePage() {
     setSaved(false); setSavedStatus(null);
   }
 
-  function handleSave(status: "draft" | "planned") {
+  async function handleSave(status: "draft" | "planned") {
+    const existingScene = sceneId ? scenes.find((candidate) => candidate.id === sceneId) : undefined;
+    if (existingScene?.consentLockedAt) {
+      setSaveError("Deze afspraken zijn vastgezet. Maak een nieuwe scène voor een gewijzigde setlist.");
+      return;
+    }
     if (!profileA || !profileB) {
       setSaveError("Kies twee profielen voordat je deze scène vastlegt.");
       return;
@@ -497,6 +505,10 @@ function ScenePage() {
     setSaved(true);
     setSavedStatus(status);
     router.replace(`/scene?id=${id}`);
+    if (status === "planned") {
+      const result = await lockSceneConsent(id);
+      if (!result.ok) setSaveError(`Scène opgeslagen, maar toestemming is nog niet bevestigd: ${result.message}`);
+    }
   }
 
   async function handleExport() {
@@ -523,6 +535,7 @@ function ScenePage() {
 
   const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) : null;
   const isCompleted = currentScene?.status === "completed";
+  const isConsentLocked = !!currentScene?.consentLockedAt;
   const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
@@ -572,6 +585,7 @@ function ScenePage() {
               type="text"
               value={sceneTitle}
               onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
+              disabled={isConsentLocked}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
               className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded-lg font-bold"
               style={{ color: "var(--text)" }}
@@ -591,10 +605,11 @@ function ScenePage() {
             type="date"
             value={sceneDate}
             onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
+            disabled={isConsentLocked}
             className="focus:outline-none focus-ring rounded-lg px-2 flex-1"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark", maxWidth: 180 }}
           />
-          <TimePicker value={sceneTime} onChange={(v) => { setSceneTime(v); setSaved(false); }} />
+          <TimePicker value={sceneTime} onChange={(v) => { if (!isConsentLocked) { setSceneTime(v); setSaved(false); } }} />
         </div>
 
         {/* Profile hint */}
@@ -612,14 +627,21 @@ function ScenePage() {
             type="text"
             value={safeword}
             onChange={(e) => { setSafeword(e.target.value); setSaved(false); }}
+            disabled={isConsentLocked}
             placeholder="bijv. rood"
             className="flex-1 rounded-lg px-3 focus:outline-none focus-ring"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14, height: 40 }}
           />
         </div>
 
+        {isConsentLocked && (
+          <div className="rounded-xl px-3 py-2.5 mb-4 text-xs" style={{ background: "color-mix(in srgb, var(--yes) 8%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 30%, var(--border))", color: "var(--text2)" }}>
+            Deze setlist is vastgezet. Activiteiten, intensiteiten en safeword kunnen hier niet meer stilletjes worden aangepast.
+          </div>
+        )}
+
         {/* + Kinks trigger (replaces manual input in scroll area) */}
-        {hasKinks && !isCompleted && (
+        {hasKinks && !isCompleted && !isConsentLocked && (
           <button
             onClick={() => setDrawerOpen(true)}
             className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl mb-4 focus-ring"
@@ -665,6 +687,7 @@ function ScenePage() {
                 <SceneItemRow
                   key={item.id}
                   item={item}
+                  locked={isConsentLocked}
                   index={i}
                   totalItems={items.length}
                   onUpdate={handleUpdate}
@@ -695,7 +718,7 @@ function ScenePage() {
         <div className="max-w-2xl mx-auto flex flex-wrap gap-2">
 
           {/* Manual add — hidden when completed */}
-          {!isCompleted && (
+          {!isCompleted && !isConsentLocked && (
             <div className="flex gap-2 w-full sm:w-auto sm:flex-1">
               <input
                 type="text"
@@ -728,7 +751,7 @@ function ScenePage() {
             PDF
           </button>
 
-          {!isCompleted && (
+          {!isCompleted && !isConsentLocked && (
             <>
               <button
                 onClick={() => handleSave("draft")}

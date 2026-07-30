@@ -248,3 +248,9 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 - 2026-07-09: dead Unix socket named `cloud` in the repo root crashes Turbopack's CSS scan ("No such device or address", os error 6) — check `ss -xl` for listeners, then `rm` it. A stale 7-day dev server holding :3000 with HTTP 500 blocks Playwright's `reuseExistingServer` — kill and let it respawn.
 - 2026-07-11: session handoff, clean state — dev tree clean at `6e0b903`, 227 tests + build green. The contract-PDF arc (signature spacing, unified four-section table, choice-ladder ordering, comment bullets, column discipline + comment breathing room) is **complete**; a fresh session should not re-touch `app/contract/page.tsx` PDF code and should start at Phase 31. Visual PDF checks use the standalone jsPDF-repro + `pdftoppm` pattern (import `jspdf/dist/jspdf.node.min.js` by absolute path in a scratchpad `.mjs`).
 - 2026-07-09: ephemeral screenshot pattern — drop a throwaway spec in `e2e/` using `seedAndGo` + `pinnedProfileId`, run `--project=desktop`, delete the spec; keeps visual proof without polluting the suite.
+
+### Signed consent ledger (dev, 2026-07-30)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Lokale P-256 eigendomssleutels, ondertekende profielversies, broncontrole bij import, correcte ownership-backuprestore, leesbare drie-woordenbron en append-only toestemmingssnapshots per scène | PR pending |

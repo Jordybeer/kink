@@ -1,9 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useState, useEffect } from "react";
-import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry } from "@/types";
+import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
+import {
+  createConsentLedgerEvent,
+  createConsentSnapshot,
+  generateProfileOwnerKey,
+  hashProfileConsent,
+  projectSceneConsentAgreement,
+  signProfileConsent,
+  verifyProfileConsent,
+} from "@/lib/consentProof";
 
 const SNAPSHOT_CAP_PER_PROFILE = 30;
 
@@ -18,6 +27,7 @@ interface State {
   contracts: ContractSnapshot[];
   profileSnapshots: ProfileSnapshot[];
   scenes: SceneRecord[];
+  profileOwnerKeys: ProfileOwnerKey[];
   onboardingComplete: boolean;
   profileTourComplete: boolean;
   installPromptDismissed: boolean;
@@ -51,6 +61,10 @@ interface State {
   completeProfileTour: () => void;
   resetProfileTour: () => void;
   importProfiles: (incoming: Profile[]) => void;
+  restoreBackupProfiles: (incoming: Profile[], ownerKeys: ProfileOwnerKey[]) => void;
+  sealProfileConsent: (profileId: string) => Promise<Profile | null>;
+  lockSceneConsent: (sceneId: string) => Promise<{ ok: boolean; message: string }>;
+  appendSceneConsentEvent: (sceneId: string, profileId: string, type: Exclude<ConsentLedgerEventType, "locked">, note?: string) => Promise<{ ok: boolean; message: string }>;
   dismissInstallPrompt: () => void;
   setTheme: (t: Theme) => void;
   appLockEnabled: boolean;
@@ -95,6 +109,7 @@ export const useStore = create<State>()(
       contracts: [],
       profileSnapshots: [],
       scenes: [],
+      profileOwnerKeys: [],
       onboardingComplete: false,
       profileTourComplete: false,
       installPromptDismissed: false,
@@ -142,6 +157,7 @@ export const useStore = create<State>()(
           profiles: s.profiles.filter((p) => p.id !== id),
           pinnedProfileId: s.pinnedProfileId === id ? null : s.pinnedProfileId,
           profileSnapshots: s.profileSnapshots.filter((snap) => snap.profileId !== id),
+          profileOwnerKeys: s.profileOwnerKeys.filter((key) => key.profileId !== id),
         }));
       },
 
@@ -350,18 +366,153 @@ export const useStore = create<State>()(
 
       importProfiles(incoming) {
         set((s) => {
-          const existingIds = new Set(s.profiles.map((p) => p.id));
-          const existingCodes = new Set(s.profiles.map(getProfileVerificationCode));
-          const novel: Profile[] = [];
-          for (const profile of incoming) {
-            const verificationCode = getProfileVerificationCode(profile);
-            if (existingIds.has(profile.id) || existingCodes.has(verificationCode)) continue;
-            novel.push({ ...profile, verificationCode });
-            existingIds.add(profile.id);
-            existingCodes.add(verificationCode);
+          const profiles = [...s.profiles];
+          for (const raw of incoming) {
+            const verificationCode = getProfileVerificationCode(raw);
+            const profile = { ...raw, verificationCode, origin: "shared" as const, isImported: true, lockedAt: raw.lockedAt ?? Date.now() };
+            const index = profiles.findIndex((candidate) => candidate.id === profile.id || getProfileVerificationCode(candidate) === verificationCode);
+            if (index < 0) {
+              profiles.push(profile);
+              continue;
+            }
+            const existing = profiles[index];
+            const current = existing.consentProof;
+            const next = profile.consentProof;
+            const shared = existing.origin === "shared" || existing.isImported === true;
+            const accepted = shared && next && (!current || (
+              next.keyId === current.keyId
+              && next.version > current.version
+              && next.previousProofHash === current.proofHash
+            ));
+            if (!accepted) continue;
+            profiles[index] = {
+              ...profile,
+              id: existing.id,
+              privateNote: existing.privateNote,
+              avatarDataUrl: existing.avatarDataUrl,
+              lockedAt: Date.now(),
+            };
           }
-          return novel.length === 0 ? s : { profiles: [...s.profiles, ...novel] };
+          return { profiles };
         });
+      },
+
+      restoreBackupProfiles(incoming, ownerKeys) {
+        set((s) => {
+          const profiles = [...s.profiles];
+          const ownedIds = new Set(ownerKeys.map((key) => key.profileId));
+          for (const profile of incoming) {
+            const index = profiles.findIndex((candidate) =>
+              candidate.id === profile.id || getProfileVerificationCode(candidate) === getProfileVerificationCode(profile));
+            if (index < 0) {
+              profiles.push(profile);
+              continue;
+            }
+            const existing = profiles[index];
+            const incomingOwned = profile.origin === "own" && ownedIds.has(profile.id);
+            const existingShared = existing.origin === "shared" || existing.isImported === true;
+            if (incomingOwned && existingShared) profiles[index] = profile;
+          }
+          const keys = [...s.profileOwnerKeys];
+          for (const key of ownerKeys) {
+            const index = keys.findIndex((candidate) => candidate.profileId === key.profileId);
+            if (index >= 0) keys[index] = key; else keys.push(key);
+          }
+          return { profiles, profileOwnerKeys: keys };
+        });
+      },
+
+      async sealProfileConsent(profileId) {
+        let profile = get().profiles.find((candidate) => candidate.id === profileId);
+        if (!profile || profile.origin === "shared" || profile.isImported === true) return null;
+        let ownerKey = get().profileOwnerKeys.find((key) => key.profileId === profileId);
+        if (ownerKey && profile.consentProof?.keyId === ownerKey.keyId) {
+          const verification = await verifyProfileConsent(profile);
+          if (verification.status === "valid") return profile;
+        }
+        ownerKey = ownerKey ?? await generateProfileOwnerKey(profileId);
+        let signed = await signProfileConsent(profile, ownerKey);
+        const latest = get().profiles.find((candidate) => candidate.id === profileId);
+        if (!latest) return null;
+        if (await hashProfileConsent(latest) !== signed.proof.payloadHash) {
+          profile = latest;
+          signed = await signProfileConsent(profile, ownerKey);
+        }
+        const sealed = { ...profile, consentProof: signed.proof };
+        set((s) => ({
+          profiles: s.profiles.map((candidate) => candidate.id === profileId ? sealed : candidate),
+          profileOwnerKeys: [signed.ownerKey, ...s.profileOwnerKeys.filter((key) => key.profileId !== profileId)],
+        }));
+        return sealed;
+      },
+
+      async lockSceneConsent(sceneId) {
+        const scene = get().scenes.find((candidate) => candidate.id === sceneId);
+        if (!scene) return { ok: false, message: "Scène niet gevonden." };
+        if (scene.consentSnapshots) return { ok: true, message: "✓ Deze afspraken waren al vastgezet." };
+        const ids = [scene.profileAId, scene.profileBId];
+        for (const profileId of ids) {
+          const profile = get().profiles.find((candidate) => candidate.id === profileId);
+          if (!profile) return { ok: false, message: "Een profiel ontbreekt." };
+          if (profile.origin === "shared" || profile.isImported === true) {
+            const verification = await verifyProfileConsent(profile);
+            if (verification.status !== "valid") {
+              return { ok: false, message: `${profile.name} heeft nog geen geldige bronbevestiging. Laat het profiel opnieuw delen vanaf het eigen toestel.` };
+            }
+          } else if (!await get().sealProfileConsent(profileId)) {
+            return { ok: false, message: `${profile.name} kon niet worden bevestigd.` };
+          }
+        }
+        const [profileA, profileB] = ids.map((profileId) => get().profiles.find((profile) => profile.id === profileId));
+        if (!profileA || !profileB) return { ok: false, message: "Een profiel ontbreekt." };
+        const [snapshotA, snapshotB] = await Promise.all([createConsentSnapshot(profileA), createConsentSnapshot(profileB)]);
+        if (!snapshotA || !snapshotB) return { ok: false, message: "De bron van één profiel kon niet worden bevestigd." };
+        const lockedAt = Date.now();
+        const snapshots = { profileA: snapshotA, profileB: snapshotB };
+        const agreement = projectSceneConsentAgreement(scene, snapshots);
+        const localOwnerKey = get().profileOwnerKeys.find((key) =>
+          key.profileId === profileA.id || key.profileId === profileB.id);
+        const event = await createConsentLedgerEvent({
+          id: uid(), sceneId, type: "locked", createdAt: lockedAt, agreement,
+          note: "De profielversies en scène-afspraken bij de start zijn vastgezet.",
+        }, localOwnerKey);
+        set((s) => ({ scenes: s.scenes.map((candidate) => candidate.id === sceneId && !candidate.consentSnapshots ? {
+          ...candidate,
+          consentLockedAt: lockedAt,
+          consentSnapshots: snapshots,
+          consentAgreement: agreement,
+          consentLedger: [event],
+          updatedAt: Date.now(),
+        } : candidate) }));
+        return { ok: true, message: "✓ Afspraken en bronnen zijn vastgezet." };
+      },
+
+      async appendSceneConsentEvent(sceneId, profileId, type, note) {
+        const scene = get().scenes.find((candidate) => candidate.id === sceneId);
+        if (!scene?.consentSnapshots) return { ok: false, message: "Zet eerst de oorspronkelijke afspraken vast." };
+        if (profileId !== scene.profileAId && profileId !== scene.profileBId) return { ok: false, message: "Dit profiel hoort niet bij de scène." };
+        const profile = get().profiles.find((candidate) => candidate.id === profileId);
+        if (!profile) return { ok: false, message: "Profiel niet gevonden." };
+        if (profile.origin === "shared" || profile.isImported === true) {
+          return { ok: false, message: `Alleen ${profile.name} kan deze wijziging op het eigen toestel bevestigen.` };
+        }
+        const sealed = await get().sealProfileConsent(profileId);
+        if (!sealed) return { ok: false, message: "De wijziging kon niet worden bevestigd." };
+        const ownerKey = get().profileOwnerKeys.find((key) => key.profileId === profileId);
+        if (!ownerKey) return { ok: false, message: "De eigendomssleutel ontbreekt." };
+        const snapshot = type === "changed" ? await createConsentSnapshot(sealed) : undefined;
+        const previousEventHash = scene.consentLedger?.at(-1)?.eventHash;
+        const event = await createConsentLedgerEvent({
+          id: uid(), sceneId, type, profileId, profileName: profile.name,
+          createdAt: Date.now(), ...(note ? { note } : {}), ...(snapshot ? { snapshot } : {}),
+          ...(previousEventHash ? { previousEventHash } : {}),
+        }, ownerKey);
+        set((s) => ({ scenes: s.scenes.map((candidate) => candidate.id === sceneId ? {
+          ...candidate,
+          consentLedger: [...(candidate.consentLedger ?? []), event],
+          updatedAt: Date.now(),
+        } : candidate) }));
+        return { ok: true, message: type === "withdrawn" ? "✓ Intrekking is toegevoegd; eerdere afspraken bleven ongewijzigd." : "✓ Nieuwe toestemmingsversie is toegevoegd." };
       },
 
       dismissInstallPrompt() {
@@ -400,6 +551,7 @@ export const useStore = create<State>()(
         contracts: state.contracts,
         profileSnapshots: state.profileSnapshots,
         scenes: state.scenes,
+        profileOwnerKeys: state.profileOwnerKeys,
         onboardingComplete: state.onboardingComplete,
         profileTourComplete: state.profileTourComplete,
         installPromptDismissed: state.installPromptDismissed,
@@ -411,13 +563,14 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 16,
+      version: 17,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
           contracts?: ContractSnapshot[];
           profileSnapshots?: ProfileSnapshot[];
           scenes?: SceneRecord[];
+          profileOwnerKeys?: ProfileOwnerKey[];
           onboardingComplete?: boolean;
           profileTourComplete?: boolean;
           installPromptDismissed?: boolean;
@@ -511,6 +664,9 @@ export const useStore = create<State>()(
             ...profile,
             verificationCode: getProfileVerificationCode(profile),
           }));
+        }
+        if (version < 17) {
+          state.profileOwnerKeys = [];
         }
         return state;
       },

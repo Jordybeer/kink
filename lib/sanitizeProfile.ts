@@ -11,6 +11,7 @@ import {
   deriveProfileVerificationCode,
   normalizeProfileVerificationCode,
 } from "@/lib/profileVerification";
+import { sanitizeProfileConsentProof } from "@/lib/consentProof";
 import {
   clamp,
   MAX_CUSTOM_KINKS,
@@ -165,6 +166,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
   if (r.origin === "own" || r.origin === "shared") profile.origin = r.origin;
   const lockedAt = asFiniteNumber(r.lockedAt);
   if (lockedAt !== undefined) profile.lockedAt = lockedAt;
+  const consentProof = sanitizeProfileConsentProof(r.consentProof);
+  if (consentProof) profile.consentProof = consentProof;
 
   return profile;
 }
