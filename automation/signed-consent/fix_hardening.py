@@ -2,7 +2,7 @@ from pathlib import Path
 
 path = Path("automation/signed-consent/08_harden_existing.py")
 text = path.read_text(encoding="utf-8")
-old = '''replace_once('lib/store.ts', '''            p.id !== profileId
+old = """replace_once('lib/store.ts', '''            p.id !== profileId
               ? p
               : {
 ''', '''            p.id !== profileId || isSharedProfile(p)
@@ -15,7 +15,7 @@ replace_once('lib/store.ts', '''            p.id !== profileId
 ''', '''            p.id !== profileId || isSharedProfile(p)
               ? p
               : {
-''')'''
+''')"""
 new = '''store_path = ROOT / "lib/store.ts"
 store_text = store_path.read_text(encoding="utf-8")
 old_custom_guard = """            p.id !== profileId
