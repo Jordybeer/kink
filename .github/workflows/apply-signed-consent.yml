@@ -1,4 +1,4 @@
-name: consent seal gate
+name: signed consent hardening gate
 
 on:
   push:
@@ -9,75 +9,99 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+  issues: write
 
 concurrency:
-  group: signed-consent-transform
+  group: signed-consent-hardening
   cancel-in-progress: false
 
 jobs:
   prove-and-land:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Open the feature worktree
+      - name: Open the current feature branch
         uses: actions/checkout@v4
         with:
           ref: feature/signed-consent-ledger
           fetch-depth: 0
 
-      - name: Fetch the sealed instructions
+      - name: Fetch the hardening instructions
         run: |
           git fetch origin automation/signed-consent-ledger:refs/remotes/origin/automation/signed-consent-ledger
-          mkdir -p /tmp/signed-consent
-          for script in 01_alias_crypto 02_ledger 03_core_patches 04_core_tests 05_ui 06_scene_component 07_scene_patches_tests; do
-            git show "origin/automation/signed-consent-ledger:automation/signed-consent/${script}.py" > "/tmp/signed-consent/${script}.py"
-          done
+          git show origin/automation/signed-consent-ledger:automation/signed-consent/08_harden_existing.py > /tmp/harden.py
 
-      - name: Weave the signed consent ledger
+      - name: Apply the authorised hardening pass
+        run: python /tmp/harden.py
+
+      - name: Install, test and build
+        shell: bash
         run: |
-          python /tmp/signed-consent/01_alias_crypto.py
-          python /tmp/signed-consent/02_ledger.py
-          python /tmp/signed-consent/03_core_patches.py
-          python /tmp/signed-consent/04_core_tests.py
-          python /tmp/signed-consent/05_ui.py
-          python /tmp/signed-consent/06_scene_component.py
-          python /tmp/signed-consent/07_scene_patches_tests.py
+          set +e
+          npm ci 2>&1 | tee /tmp/npm-ci.log
+          install_status=${PIPESTATUS[0]}
+          if [ "$install_status" -eq 0 ]; then
+            npm test 2>&1 | tee /tmp/tests.log
+            test_status=${PIPESTATUS[0]}
+          else
+            test_status=99
+          fi
+          if [ "$install_status" -eq 0 ] && [ "$test_status" -eq 0 ]; then
+            npm run build 2>&1 | tee /tmp/build.log
+            build_status=${PIPESTATUS[0]}
+          else
+            build_status=99
+          fi
 
-      - name: Install the house
-        run: npm ci
+          if [ "$install_status" -ne 0 ] || [ "$test_status" -ne 0 ] || [ "$build_status" -ne 0 ]; then
+            {
+              echo '## ❌ Signed-consent hardening gate failed'
+              echo
+              echo "Install: $install_status · Tests: $test_status · Build: $build_status"
+              echo
+              echo '<details><summary>Laatste uitvoer</summary>'
+              echo
+              echo '```text'
+              tail -n 30 /tmp/npm-ci.log 2>/dev/null
+              tail -n 70 /tmp/tests.log 2>/dev/null
+              tail -n 70 /tmp/build.log 2>/dev/null
+              echo '```'
+              echo '</details>'
+            } > /tmp/pr-comment.md
+            gh pr comment 270 --repo Jordybeer/kink --body-file /tmp/pr-comment.md
+            exit 1
+          fi
 
-      - name: Test every boundary
-        run: npm test
-
-      - name: Build the locked room
-        run: npm run build
-
-      - name: Collar the proven feature
+      - name: Collar the proven product changes
         run: |
           git config user.name "Jordybeer"
           git config user.email "19562111+Jordybeer@users.noreply.github.com"
           git add \
             types/index.ts \
-            lib/profileAlias.ts \
-            lib/consentCrypto.ts \
-            lib/consentLedger.ts \
-            lib/sanitizeProfile.ts \
-            lib/profileShareV3.ts \
+            lib/consentProof.ts \
             lib/store.ts \
-            components/ConsentTrustSheet.tsx \
+            lib/backupRestore.ts \
+            components/ProfileTrust.tsx \
             components/ConsentLedgerPanel.tsx \
-            components/ProfileHero.tsx \
-            components/QRModal.tsx \
-            components/scenes/SceneDetailScreen.tsx \
             components/sheets/EncryptedBackupSheets.tsx \
             app/page.tsx \
-            app/scene/page.tsx \
-            __tests__/consentCrypto.test.ts \
-            __tests__/consentLedger.test.ts \
-            __tests__/storeConsent.test.ts
-          if git diff --cached --quiet; then
-            echo "No product changes to commit."
-            exit 0
-          fi
-          git commit -m "Verzegel profielen en leg toestemming onveranderlijk vast"
+            docs/signed-consent.md \
+            planned-changes.md \
+            __tests__/consentProof.test.ts \
+            __tests__/consentStore.test.ts \
+            __tests__/backupRestore.test.ts
+          git commit -m "Laat alleen bevoegde sleutels toestemming verzegelen"
           git push origin HEAD:feature/signed-consent-ledger
+          {
+            echo '## ✅ Signed-consent hardening gate passed'
+            echo
+            echo '- volledige Vitest-suite groen;'
+            echo '- Next-productiebuild en TypeScript groen;'
+            echo '- deelnemerautorisatie, store-locks en backup-eigenaarschap aangescherpt.'
+            echo
+            echo "Productcommit: $(git rev-parse HEAD)"
+          } > /tmp/pr-comment.md
+          gh pr comment 270 --repo Jordybeer/kink --body-file /tmp/pr-comment.md
