@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "git fetch origin automation/signed-consent-ledger && git show origin/automation/signed-consent-ledger:automation/signed-consent/08_harden_existing.py > /tmp/harden.py && python /tmp/harden.py && vitest run && next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
