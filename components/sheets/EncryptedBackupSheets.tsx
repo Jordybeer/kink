@@ -30,7 +30,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   function handleClose() { reset(); onClose(); }
 
   async function handleExport() {
-    if (loading) return; // one export at a time — no double-dipping while the crypto works
+    if (loading) return;
     if (pw.length < 8) { setPwError("Wachtwoord moet minstens 8 tekens zijn."); return; }
     if (pw !== pwConfirm) { setPwError("Wachtwoorden komen niet overeen."); return; }
     setLoading(true);
@@ -66,7 +66,8 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               <h2 className="text-base font-bold">Backup versleutelen</h2>
               <div className="rounded-xl p-4 text-sm flex flex-col gap-3" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen — informatie die niemand anders mag zien.</p>
-                <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Zonder encryptie kan iedereen die het bestand vindt alles lezen.</p>
+                <p>De versleutelde backup bevat ook de private eigendomssleutels van je profielen. Wie zowel dit bestand als het wachtwoord bezit, kan nieuwe profielversies ondertekenen alsof die van jouw lokale profielbron komen.</p>
+                <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
               </div>
               <button onClick={() => setStep(1)}
@@ -164,29 +165,43 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
     setLoading(true);
     setPwError(null);
     try {
-      const { decryptBackup } = await import("@/lib/crypto");
-      const plain = await decryptBackup(data, pw);
-      const parsed = JSON.parse(plain) as Record<string, unknown>;
-      handleClose();
+      let parsed: Record<string, unknown>;
+      try {
+        const { decryptBackup } = await import("@/lib/crypto");
+        const plain = await decryptBackup(data, pw);
+        parsed = JSON.parse(plain) as Record<string, unknown>;
+      } catch {
+        setPwError("Verkeerd wachtwoord of beschadigd versleuteld bestand.");
+        return;
+      }
 
-      if (!parsed.profiles || !Array.isArray(parsed.profiles)) {
-        onError("Ongeldig bestand — geen geldige profielen gevonden.");
+      if (!Array.isArray(parsed.profiles)) {
+        handleClose();
+        onError("Ongeldig backupbestand — geen profielen gevonden.");
         return;
       }
-      // Ontsleuteld is nog niet automatisch betrouwbaar: profielen, contracten
-      // en eigendomssleutels worden stuk voor stuk gecontroleerd.
+
       const { prepareBackupRestore } = await import("@/lib/backupRestore");
-      const prepared = await prepareBackupRestore(parsed);
-      if (!prepared.profiles.length && !prepared.contracts.length) {
-        onError("Ongeldig bestand — geen geldige profielen gevonden.");
+      let prepared;
+      try {
+        prepared = await prepareBackupRestore(parsed);
+      } catch {
+        handleClose();
+        onError("Het bestand kon worden ontsleuteld, maar bevat geen geldige KinkSync-backup.");
         return;
       }
+
+      if (!prepared.profiles.length && !prepared.contracts.length) {
+        handleClose();
+        onError("De backup bevat geen geldige profielen of contracten om te herstellen.");
+        return;
+      }
+
       if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
       else importProfiles(prepared.profiles);
       if (prepared.contracts.length) restoreContracts(prepared.contracts);
-      onSuccess(`${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`);
-    } catch {
-      setPwError("Verkeerd wachtwoord — probeer opnieuw.");
+      handleClose();
+      onSuccess(`Backup verwerkt: ${prepared.profiles.length} geldig(e) profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en).`);
     } finally {
       setLoading(false);
     }
