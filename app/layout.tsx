@@ -9,6 +9,7 @@ import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import AmbientGlow from "@/components/ui/AmbientGlow";
 import OfflineCacheWarmup from "@/components/OfflineCacheWarmup";
+import StoreSecurityGuards from "@/components/StoreSecurityGuards";
 
 /* Body voice — Instrument Sans: tall x-height, warm grotesque, reads clean at 12px on a phone */
 const instrumentSans = Instrument_Sans({
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col antialiased">
+        <StoreSecurityGuards />
         <AmbientGlow />
         <ThemeProvider />
         <OfflineCacheWarmup />
