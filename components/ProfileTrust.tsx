@@ -37,29 +37,33 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
       : ownDirty
         ? "var(--accent)"
         : "var(--text2)";
+  const alias = profileConsentAlias(profile);
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="focus-ring inline-flex items-center gap-1.5 mt-1.5 text-xs rounded-lg py-1"
+        className="focus-ring inline-flex max-w-full min-w-0 items-center gap-1.5 mt-1.5 text-xs rounded-lg py-1"
         style={{ color }}
       >
         {importedInvalid
-          ? <WarningCircle size={13} weight="fill" aria-hidden="true" />
+          ? <WarningCircle size={13} weight="fill" aria-hidden="true" className="shrink-0" />
           : valid
-            ? <ShieldCheck size={13} weight="fill" aria-hidden="true" />
+            ? <ShieldCheck size={13} weight="fill" aria-hidden="true" className="shrink-0" />
             : ownDirty
-              ? <ArrowsClockwise size={13} aria-hidden="true" />
+              ? <ArrowsClockwise size={13} aria-hidden="true" className="shrink-0" />
               : null}
-        <span>{label}</span>
-        <span aria-hidden="true" style={{ opacity: 0.45 }}>·</span>
-        <span className="truncate" style={{ maxWidth: 180 }}>{profileConsentAlias(profile)}</span>
+        <span className="shrink-0 whitespace-nowrap">{label}</span>
+        <span className="shrink-0" aria-hidden="true" style={{ opacity: 0.45 }}>·</span>
+        <span className="min-w-0 truncate" title={alias}>{alias}</span>
       </button>
 
-      <Sheet open={open} onClose={() => setOpen(false)} aria-label="Bron en toestemming">
-        <SheetContent>
+      <Sheet open={open} onClose={() => setOpen(false)} scrollable aria-label="Bron en toestemming">
+        <SheetContent
+          showHandle={false}
+          className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-6"
+        >
           <h2 className="text-lg font-bold mb-2">Bron en toestemming</h2>
           <p className="text-sm mb-4" style={{ color: "var(--text2)", lineHeight: 1.65 }}>
             KinkSync kan een versie van dit profiel digitaal verzegelen. Alleen het toestel met de eigendomssleutel kan daarna een geldige nieuwe versie maken. Zo valt op wanneer gedeelde antwoorden achteraf zijn aangepast.
@@ -67,7 +71,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
 
           <div className="rounded-xl p-4 mb-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <p className="text-xs mb-1" style={{ color: "var(--text2)" }}>Leesbare profielnaam</p>
-            <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{profileConsentAlias(profile)}</p>
+            <p className="text-sm font-semibold break-words" style={{ color: "var(--text)" }}>{alias}</p>
             <p className="text-xs mt-3 mb-1" style={{ color: "var(--text2)" }}>Technische profielcode</p>
             <p className="text-xs font-mono break-all" style={{ color: "var(--text2)" }}>{getProfileVerificationCode(profile)}</p>
           </div>

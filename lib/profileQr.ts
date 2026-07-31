@@ -1,6 +1,8 @@
 export const PROFILE_QR_SINGLE_LIMIT = 900;
 export const PROFILE_QR_CHUNK_SIZE = 680;
 export const PROFILE_QR_MAX_PARTS = 64;
+export const PROFILE_QR_AUTO_INTERVAL_MS = 550;
+export const PROFILE_QR_SLOW_INTERVAL_MS = 900;
 
 export interface ProfileQrPart {
   transferId: string;
@@ -44,6 +46,12 @@ export function checksumProfilePayload(payload: string): string {
     hash = Math.imul(hash, 0x01000193);
   }
   return (hash >>> 0).toString(36).padStart(7, "0");
+}
+
+export function nextProfileQrIndex(current: number, total: number): number {
+  if (!Number.isInteger(total) || total <= 1) return 0;
+  const safeCurrent = Number.isFinite(current) ? Math.trunc(current) : 0;
+  return ((safeCurrent % total) + total + 1) % total;
 }
 
 export function buildProfileQrSet(origin: string, payload: string): ProfileQrSet {
