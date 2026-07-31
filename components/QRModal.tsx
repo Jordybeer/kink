@@ -156,7 +156,10 @@ export default function QRModal({ profile, onClose }: Props) {
 
   return (
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
-      <SheetContent className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4">
+      <SheetContent
+        showHandle={false}
+        className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4"
+      >
         <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
         {profile && (
           <div className="text-center mb-3">
