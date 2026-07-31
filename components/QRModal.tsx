@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
 import { encodeProfileV3 } from "@/lib/profileShareV3";
-import { buildProfileQrSet } from "@/lib/profileQr";
+import {
+  buildProfileQrSet,
+  nextProfileQrIndex,
+  PROFILE_QR_AUTO_INTERVAL_MS,
+  PROFILE_QR_SLOW_INTERVAL_MS,
+} from "@/lib/profileQr";
 import { profileConsentAlias } from "@/lib/consentProof";
 import { useStore } from "@/lib/store";
 import Sheet, { SheetContent } from "./Sheet";
@@ -17,9 +22,12 @@ export default function QRModal({ profile, onClose }: Props) {
   const sealProfileConsent = useStore((state) => state.sealProfileConsent);
   const [preparedProfile, setPreparedProfile] = useState<Profile | null>(null);
   const [qrValues, setQrValues] = useState<string[]>([]);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrDataUrls, setQrDataUrls] = useState<string[]>([]);
   const [qrIndex, setQrIndex] = useState(0);
   const [qrTooLarge, setQrTooLarge] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(false);
+  const [slowMode, setSlowMode] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
@@ -30,12 +38,29 @@ export default function QRModal({ profile, onClose }: Props) {
   }, [profile?.id]);
 
   useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const applyPreference = () => {
+      setReducedMotion(query.matches);
+      if (query.matches) setAutoAdvance(false);
+    };
+    applyPreference();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", applyPreference);
+      return () => query.removeEventListener("change", applyPreference);
+    }
+    query.addListener(applyPreference);
+    return () => query.removeListener(applyPreference);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     setPreparedProfile(null);
     setQrValues([]);
-    setQrDataUrl(null);
+    setQrDataUrls([]);
     setQrIndex(0);
     setQrTooLarge(false);
+    setAutoAdvance(false);
+    setSlowMode(false);
     setCopied(false);
     setGenerationError(null);
     if (!profile) {
@@ -71,26 +96,40 @@ export default function QRModal({ profile, onClose }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    setQrDataUrl(null);
-    const value = qrValues[qrIndex];
-    if (!value) return;
+    setQrDataUrls([]);
+    setQrIndex(0);
+    setAutoAdvance(false);
+    if (!qrValues.length) return;
 
     const css = getComputedStyle(document.documentElement);
     const dark = css.getPropertyValue("--accent").trim() || "#D946AF";
     const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
-    QRCode.toDataURL(value, {
+
+    Promise.all(qrValues.map((value) => QRCode.toDataURL(value, {
       width: 280,
       margin: 2,
       errorCorrectionLevel: "L",
       color: { dark, light },
-    }).then((image) => {
-      if (!cancelled) setQrDataUrl(image);
+    }))).then((images) => {
+      if (cancelled) return;
+      setQrDataUrls(images);
+      if (images.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setAutoAdvance(true);
+      }
     }).catch(() => {
       if (!cancelled) setGenerationError("QR-code kon niet worden opgebouwd.");
     });
 
     return () => { cancelled = true; };
-  }, [qrValues, qrIndex]);
+  }, [qrValues]);
+
+  useEffect(() => {
+    if (!autoAdvance || qrValues.length < 2 || qrDataUrls.length !== qrValues.length) return;
+    const interval = window.setInterval(() => {
+      setQrIndex((index) => nextProfileQrIndex(index, qrValues.length));
+    }, slowMode ? PROFILE_QR_SLOW_INTERVAL_MS : PROFILE_QR_AUTO_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [autoAdvance, slowMode, qrValues.length, qrDataUrls.length]);
 
   function handleCopy() {
     navigator.clipboard.writeText(url).then(() => {
@@ -99,7 +138,18 @@ export default function QRModal({ profile, onClose }: Props) {
     });
   }
 
+  function showPrevious() {
+    setAutoAdvance(false);
+    setQrIndex((index) => (index <= 0 ? qrValues.length - 1 : index - 1));
+  }
+
+  function showNext() {
+    setAutoAdvance(false);
+    setQrIndex((index) => nextProfileQrIndex(index, qrValues.length));
+  }
+
   const multi = qrValues.length > 1;
+  const qrDataUrl = qrDataUrls[qrIndex] ?? null;
   const readableAlias = preparedProfile?.consentProof
     ? profileConsentAlias(preparedProfile)
     : null;
@@ -121,7 +171,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
         {multi && (
           <p className="text-xs text-center font-semibold mb-1" style={{ color: "var(--text)" }}>
-            QR {qrIndex + 1} van {qrValues.length}
+            QR {qrIndex + 1} van {qrValues.length} · {autoAdvance ? "automatisch" : "gepauzeerd"}
           </p>
         )}
 
@@ -147,31 +197,59 @@ export default function QRModal({ profile, onClose }: Props) {
             style={{ width: 280, height: 280, background: "var(--surface2)", color: "var(--text2)" }}
             aria-label="QR-code laden…"
           >
-            {generationError ?? "Volledig profiel inpakken…"}
+            {generationError ?? (multi ? "QR-reeks voorbereiden…" : "Volledig profiel inpakken…")}
           </div>
         )}
 
         {multi && (
-          <div className="flex gap-2 mb-3">
-            <button
-              type="button"
-              onClick={() => setQrIndex((index) => Math.max(0, index - 1))}
-              disabled={qrIndex === 0}
-              className="focus-ring flex-1 py-2 rounded-lg border text-xs disabled:opacity-35"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              ← Vorige
-            </button>
-            <button
-              type="button"
-              onClick={() => setQrIndex((index) => Math.min(qrValues.length - 1, index + 1))}
-              disabled={qrIndex === qrValues.length - 1}
-              className="focus-ring flex-1 py-2 rounded-lg border text-xs disabled:opacity-35"
-              style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              Volgende →
-            </button>
-          </div>
+          <>
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setAutoAdvance((active) => !active)}
+                disabled={qrDataUrls.length !== qrValues.length}
+                className="focus-ring flex-1 py-2 rounded-lg border text-xs font-semibold disabled:opacity-35"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                {autoAdvance ? "Pauzeer" : "Start automatisch"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlowMode((slow) => !slow)}
+                className="focus-ring flex-1 py-2 rounded-lg border text-xs"
+                style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+              >
+                {slowMode ? "Normale snelheid" : "Langzamer"}
+              </button>
+            </div>
+
+            {!autoAdvance && (
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={showPrevious}
+                  className="focus-ring flex-1 py-2 rounded-lg border text-xs"
+                  style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                >
+                  ← Vorige
+                </button>
+                <button
+                  type="button"
+                  onClick={showNext}
+                  className="focus-ring flex-1 py-2 rounded-lg border text-xs"
+                  style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                >
+                  Volgende →
+                </button>
+              </div>
+            )}
+
+            {reducedMotion && !autoAdvance && (
+              <p className="text-xs text-center mb-3" style={{ color: "var(--text2)" }}>
+                Automatisch wisselen staat standaard uit volgens de bewegingsinstelling van dit toestel.
+              </p>
+            )}
+          </>
         )}
 
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
@@ -179,7 +257,9 @@ export default function QRModal({ profile, onClose }: Props) {
         </p>
         {multi && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
-            Scan alle {qrValues.length} codes in KinkSync. Dubbele scans zijn geen probleem.
+            {autoAdvance
+              ? "Houd beide toestellen stil. De codes wisselen automatisch; dubbele scans zijn geen probleem."
+              : `Start automatisch of toon de ${qrValues.length} delen handmatig. Volgorde maakt niet uit.`}
           </p>
         )}
 
