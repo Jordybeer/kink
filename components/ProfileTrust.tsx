@@ -144,7 +144,11 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
             </span>
           </div>
 
-          {valid ? (
+          {checking ? (
+            <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+              De bron en opgeslagen profielinhoud worden gecontroleerd…
+            </div>
+          ) : valid ? (
             <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 35%, var(--border))", color: "var(--text2)" }}>
               <strong style={{ color: "var(--yes)" }}>Bron bevestigd.</strong> Deze antwoorden passen bij versie {profile.consentProof?.version} en zijn sinds die bevestiging niet gewijzigd.
             </div>
