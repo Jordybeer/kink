@@ -376,10 +376,7 @@ export async function createConsentLedgerEvent(
   input: Omit<ConsentLedgerEvent, "signature" | "eventHash" | "publicKeyJwk" | "keyId">,
   ownerKey?: ProfileOwnerKey,
 ): Promise<ConsentLedgerEvent> {
-  if (!ownerKey) {
-    const eventHash = await sha256Base64Url(ledgerBody(input));
-    return { ...input, eventHash };
-  }
+  if (!ownerKey) throw new Error("Een deelnemende eigendomssleutel is verplicht");
   if (!await verifyProfileOwnerKey(ownerKey)) throw new Error("De eigendomssleutel is beschadigd");
   const privateKey = await subtle().importKey(
     "jwk", ownerKey.privateKeyJwk, { name: "ECDSA", namedCurve: CURVE }, false, ["sign"],
@@ -399,9 +396,7 @@ export async function createConsentLedgerEvent(
 export async function verifyConsentLedgerEvent(event: ConsentLedgerEvent): Promise<boolean> {
   try {
     const { eventHash, signature, publicKeyJwk, keyId, ...body } = event;
-    if (!signature || !publicKeyJwk || !keyId) {
-      return event.type === "locked" && await sha256Base64Url(canonicalJson(body)) === eventHash;
-    }
+    if (!signature || !publicKeyJwk || !keyId) return false;
     if (await keyIdForPublicKey(publicKeyJwk) !== keyId) return false;
     const expectedHash = await sha256Base64Url(canonicalJson({ ...body, keyId, publicKeyJwk, signature }));
     if (expectedHash !== eventHash) return false;

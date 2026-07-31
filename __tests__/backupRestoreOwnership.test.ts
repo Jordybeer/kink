@@ -68,6 +68,21 @@ describe("encrypted backup ownership", () => {
     expect(restored.profiles[0].origin).toBe("shared");
   });
 
+  it("rejects a different keyId even when the profileId is identical", async () => {
+    const original = profile();
+    const ownerKey = await generateProfileOwnerKey(original.id);
+    const signed = await signProfileConsent(original, ownerKey);
+    const sameIdWrongKey = await generateProfileOwnerKey(original.id);
+
+    const restored = await prepareBackupRestore({
+      source: "backup",
+      profiles: [{ ...original, consentProof: signed.proof }],
+      profileOwnerKeys: [sameIdWrongKey],
+    });
+    expect(restored.profiles[0].origin).toBe("shared");
+    expect(restored.ownerKeys).toEqual([]);
+  });
+
   it("drops a signed profile whose answers were changed after signing", async () => {
     const original = profile({ origin: "shared", isImported: true });
     const key = await generateProfileOwnerKey(original.id);

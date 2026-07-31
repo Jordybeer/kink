@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Profile } from "@/types";
+import type { ConsentLedgerEvent, Profile } from "@/types";
 import {
   createConsentLedgerEvent,
   createConsentSnapshot,
@@ -9,6 +9,7 @@ import {
   sceneMatchesConsentAgreement,
   signProfileConsent,
   verifyConsentLedger,
+  verifyConsentLedgerEvent,
   verifyProfileConsent,
 } from "@/lib/consentProof";
 
@@ -99,9 +100,11 @@ describe("signed consent", () => {
       id: "event-1",
       sceneId: "scene-1",
       type: "locked",
+      profileId: original.id,
+      profileName: original.name,
       createdAt: 10,
       snapshot: snapshot!,
-    });
+    }, signed.ownerKey);
     const withdrawn = await createConsentLedgerEvent({
       id: "event-2",
       sceneId: "scene-1",
@@ -114,5 +117,16 @@ describe("signed consent", () => {
     }, signed.ownerKey);
     expect(await verifyConsentLedger([locked, withdrawn])).toBe(true);
     expect(await verifyConsentLedger([locked, { ...withdrawn, note: "doorgaan" }])).toBe(false);
+  });
+
+  it("rejects an unsigned locked event", async () => {
+    const unsigned = {
+      id: "unsigned",
+      sceneId: "scene-1",
+      type: "locked",
+      createdAt: 1,
+      eventHash: "hash-zonder-handtekening",
+    } as ConsentLedgerEvent;
+    expect(await verifyConsentLedgerEvent(unsigned)).toBe(false);
   });
 });

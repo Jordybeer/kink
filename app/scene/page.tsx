@@ -1,12 +1,12 @@
 "use client";
-import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
-import type { Profile, SceneItem, ContractSnapshot } from "@/types";
+import type { Profile, SceneItem, SceneRecord, ContractSnapshot } from "@/types";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
@@ -238,6 +238,7 @@ function SceneItemRow({
   onUpdate, onDelete, onMoveUp, onMoveDown,
 }: SceneItemRowProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const visibleDetails = locked || detailsOpen;
   const color = intensityColor(item.intensity);
 
   return (
@@ -248,7 +249,6 @@ function SceneItemRow({
         background: "var(--surface)",
         border: "1px solid var(--border)",
         animationDelay: `${index * 35}ms`,
-        ...(locked ? { pointerEvents: "none" as const } : {}),
       }}
     >
       <div
@@ -281,7 +281,7 @@ function SceneItemRow({
           <div className="flex gap-0.5">
             <button
               onClick={() => onMoveUp(index)}
-              disabled={index === 0}
+              disabled={locked || index === 0}
               aria-label="Naar boven verplaatsen"
               className="focus-ring rounded-lg disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
@@ -290,7 +290,7 @@ function SceneItemRow({
             </button>
             <button
               onClick={() => onMoveDown(index)}
-              disabled={index === totalItems - 1}
+              disabled={locked || index === totalItems - 1}
               aria-label="Naar beneden verplaatsen"
               className="focus-ring rounded-lg disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
@@ -299,8 +299,9 @@ function SceneItemRow({
             </button>
             <button
               onClick={() => onDelete(item.id)}
+              disabled={locked}
               aria-label={`${item.name} verwijderen`}
-              className="focus-ring rounded-lg flex-none"
+              className="focus-ring rounded-lg flex-none disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -311,49 +312,55 @@ function SceneItemRow({
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap mb-1">
-            {(["zacht", "midden", "intens"] as const).map((v) => {
-              const active = item.intensity === v;
-              const c = intensityColor(v);
-              return (
-                <button
-                  key={v}
-                  onClick={() => onUpdate(item.id, { intensity: v })}
-                  aria-pressed={active}
-                  className="text-xs px-3 rounded-full border focus-ring transition-colors"
-                  style={{
-                    minHeight: 44,
-                    background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
-                    borderColor: active ? c : "var(--border)",
-                    color: active ? c : "var(--text2)",
-                  }}
-                >
-                  {v === "zacht" ? "Zacht" : v === "midden" ? "Midden" : "Intens"}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => setDetailsOpen((o) => !o)}
-              aria-label={detailsOpen ? "Details verbergen" : "Duur & notitie"}
-              aria-expanded={detailsOpen}
-              className="text-xs ml-auto focus-ring rounded-lg px-2"
-              style={{ minHeight: 44, color: detailsOpen ? "var(--accent)" : "var(--text2)" }}
-            >
-              {detailsOpen ? "Minder" : "Details"}
-            </button>
-          </div>
+          {(["zacht", "midden", "intens"] as const).map((v) => {
+            const active = item.intensity === v;
+            const c = intensityColor(v);
+            return (
+              <button
+                key={v}
+                onClick={() => onUpdate(item.id, { intensity: v })}
+                disabled={locked}
+                aria-pressed={active}
+                className="text-xs px-3 rounded-full border focus-ring transition-colors disabled:opacity-60"
+                style={{
+                  minHeight: 44,
+                  background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
+                  borderColor: active ? c : "var(--border)",
+                  color: active ? c : "var(--text2)",
+                }}
+              >
+                {v === "zacht" ? "Zacht" : v === "midden" ? "Midden" : "Intens"}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setDetailsOpen((o) => !o)}
+            aria-label={visibleDetails ? "Details verbergen" : "Duur & notitie"}
+            aria-expanded={visibleDetails}
+            className="text-xs ml-auto focus-ring rounded-lg px-2"
+            style={{ minHeight: 44, color: visibleDetails ? "var(--accent)" : "var(--text2)" }}
+          >
+            {visibleDetails ? "Minder" : "Details"}
+          </button>
+        </div>
 
-        <div className={`accordion-content ${detailsOpen ? "open" : ""}`}>
+        <div className={`accordion-content ${visibleDetails ? "open" : ""}`}>
           <div className="accordion-inner space-y-2 pt-2">
             <div className="flex items-start gap-2">
               <label className="text-xs flex-none pt-1" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
-              <DurationStepper value={item.duration} onChange={(v) => onUpdate(item.id, { duration: v })} />
+              <DurationStepper
+                value={item.duration}
+                disabled={locked}
+                onChange={(v) => onUpdate(item.id, { duration: v })}
+              />
             </div>
             <textarea
               rows={2}
               value={item.note}
+              readOnly={locked}
               onChange={(e) => onUpdate(item.id, { note: e.target.value })}
               placeholder="Notitie…"
-              className="w-full rounded-lg px-3 py-2 focus:outline-none resize-none focus-ring"
+              className="w-full rounded-lg px-3 py-2 focus:outline-none resize-none focus-ring read-only:opacity-70"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}
             />
           </div>
@@ -414,21 +421,28 @@ function ScenePage() {
   const [safeword, setSafeword] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const resolvedAId = sceneId ? (scenes.find((s) => s.id === sceneId)?.profileAId ?? aId) : aId;
-  const resolvedBId = sceneId ? (scenes.find((s) => s.id === sceneId)?.profileBId ?? bId) : bId;
+  const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) ?? null : null;
+  const isConsentLocked = !!(
+    currentScene?.consentLockedAt
+    || currentScene?.consentSnapshots
+    || currentScene?.consentAgreement
+  );
+  const resolvedAId = currentScene?.profileAId ?? aId;
+  const resolvedBId = currentScene?.profileBId ?? bId;
   const profileA: Profile | undefined = profiles.find((p) => p.id === resolvedAId);
   const profileB: Profile | undefined = profiles.find((p) => p.id === resolvedBId);
 
-  // Load existing scene
+  // Load existing scene. A sealed agreement is the display source of truth.
   useEffect(() => {
     if (!_hasHydrated || !sceneIdParam) return;
     const scene = scenes.find((s) => s.id === sceneIdParam);
     if (!scene) return;
-    setItems(scene.items);
-    setSceneDate(scene.plannedDate ?? "");
-    setSceneTime(scene.plannedTime ?? "");
-    setSceneTitle(scene.title);
-    setSafeword(scene.safeword ?? "");
+    const source = scene.consentAgreement ?? scene;
+    setItems(source.items);
+    setSceneDate(source.plannedDate ?? "");
+    setSceneTime(source.plannedTime ?? "");
+    setSceneTitle(source.title);
+    setSafeword(source.safeword ?? "");
     setSaved(true);
   }, [_hasHydrated, sceneIdParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -442,33 +456,38 @@ function ScenePage() {
   }, [_hasHydrated, resolvedAId, resolvedBId, contracts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
+    if (isConsentLocked) return;
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
     setSaved(false); setSavedStatus(null);
-  }, []);
+  }, [isConsentLocked]);
 
   const handleDelete = useCallback((id: string) => {
+    if (isConsentLocked) return;
     setItems((prev) => prev.filter((it) => it.id !== id));
     setSaved(false); setSavedStatus(null);
-  }, []);
+  }, [isConsentLocked]);
 
   const handleMoveUp = useCallback((i: number) => {
+    if (isConsentLocked) return;
     setItems((prev) => moveUp(prev, i));
     setSaved(false); setSavedStatus(null);
-  }, []);
+  }, [isConsentLocked]);
 
   const handleMoveDown = useCallback((i: number) => {
+    if (isConsentLocked) return;
     setItems((prev) => moveDown(prev, i));
     setSaved(false); setSavedStatus(null);
-  }, []);
-
+  }, [isConsentLocked]);
 
   function addFromKink(kinkName: string, kinkId: string) {
+    if (isConsentLocked) return;
     const tags = [...new Set([...(profileA?.entries[kinkId]?.tags ?? []), ...(profileB?.entries[kinkId]?.tags ?? [])])];
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true, tags }]);
     setSaved(false); setSavedStatus(null);
   }
 
   function addManualItem() {
+    if (isConsentLocked) return;
     const name = newItemName.trim();
     if (!name) return;
     setItems((prev) => [...prev, { id: uid(), name, intensity: "midden", duration: "", note: "", fromKink: false }]);
@@ -478,7 +497,7 @@ function ScenePage() {
 
   async function handleSave(status: "draft" | "planned") {
     const existingScene = sceneId ? scenes.find((candidate) => candidate.id === sceneId) : undefined;
-    if (existingScene?.consentLockedAt) {
+    if (existingScene?.consentLockedAt || existingScene?.consentSnapshots || existingScene?.consentAgreement) {
       setSaveError("Deze afspraken zijn vastgezet. Maak een nieuwe scène voor een gewijzigde setlist.");
       return;
     }
@@ -512,8 +531,8 @@ function ScenePage() {
   }
 
   async function handleExport() {
-    const { exportScenePdf } = await import("@/lib/scenePdf");
-    const scene = {
+    const { exportConsentBoundScenePdf } = await import("@/lib/sceneConsentExport");
+    const draft: SceneRecord = {
       id: sceneId ?? "draft",
       title: sceneTitle.trim(),
       profileAId: profileA?.id ?? "",
@@ -524,18 +543,19 @@ function ScenePage() {
       plannedDate: sceneDate || undefined,
       plannedTime: sceneTime || undefined,
       safeword: safeword.trim() || undefined,
-      status: "draft" as const,
+      status: "draft",
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    await exportScenePdf(scene, { profileA, profileB });
+    await exportConsentBoundScenePdf(
+      isConsentLocked && currentScene ? currentScene : draft,
+      { profileA, profileB },
+    );
   }
 
   if (!_hasHydrated) return <PageShell loading width="2xl" flush />;
 
-  const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) : null;
   const isCompleted = currentScene?.status === "completed";
-  const isConsentLocked = !!currentScene?.consentLockedAt;
   const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
@@ -584,7 +604,7 @@ function ScenePage() {
             <input
               type="text"
               value={sceneTitle}
-              onChange={(e) => { setSceneTitle(e.target.value); setSaved(false); }}
+              onChange={(e) => { if (!isConsentLocked) { setSceneTitle(e.target.value); setSaved(false); } }}
               disabled={isConsentLocked}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
               className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded-lg font-bold"
@@ -604,12 +624,16 @@ function ScenePage() {
           <input
             type="date"
             value={sceneDate}
-            onChange={(e) => { setSceneDate(e.target.value); setSaved(false); }}
+            onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             className="focus:outline-none focus-ring rounded-lg px-2 flex-1"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark", maxWidth: 180 }}
           />
-          <TimePicker value={sceneTime} onChange={(v) => { if (!isConsentLocked) { setSceneTime(v); setSaved(false); } }} />
+          <TimePicker
+            value={sceneTime}
+            disabled={isConsentLocked}
+            onChange={(v) => { if (!isConsentLocked) { setSceneTime(v); setSaved(false); } }}
+          />
         </div>
 
         {/* Profile hint */}
@@ -626,7 +650,7 @@ function ScenePage() {
           <input
             type="text"
             value={safeword}
-            onChange={(e) => { setSafeword(e.target.value); setSaved(false); }}
+            onChange={(e) => { if (!isConsentLocked) { setSafeword(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             placeholder="bijv. rood"
             className="flex-1 rounded-lg px-3 focus:outline-none focus-ring"
@@ -663,7 +687,6 @@ function ScenePage() {
         <div className="mb-4">
           <SceneArcBar items={items} />
         </div>
-
 
         {/* Items list */}
         <div className="flex-1">

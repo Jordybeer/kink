@@ -197,11 +197,31 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         return;
       }
 
-      if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
-      else importProfiles(prepared.profiles);
-      if (prepared.contracts.length) restoreContracts(prepared.contracts);
+      const knownContractIds = new Set(useStore.getState().contracts.map((contract) => contract.id));
+      const contractsAdded = prepared.contracts.filter((contract) => !knownContractIds.has(contract.id)).length;
+      let message: string;
+
+      if (prepared.source === "backup") {
+        const result = restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
+        if (prepared.contracts.length) restoreContracts(prepared.contracts);
+        const profileChanges = result.added + result.updated;
+        const keyChanges = result.ownerKeysAdded + result.ownerKeysUpdated;
+
+        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0) {
+          message = result.conflicts > 0
+            ? `Backup gecontroleerd: niets overschreven; ${result.conflicts} bronconflict(en) veilig overgeslagen.`
+            : "Backup gecontroleerd: de bestaande gegevens waren al even nieuw of nieuwer.";
+        } else {
+          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s) en ${contractsAdded} contract(en) toegevoegd of bijgewerkt.`;
+        }
+      } else {
+        importProfiles(prepared.profiles);
+        if (prepared.contracts.length) restoreContracts(prepared.contracts);
+        message = `Import verwerkt: ${prepared.profiles.length} geldig(e) gedeeld(e) profiel(en) en ${contractsAdded} nieuw(e) contract(en).`;
+      }
+
       handleClose();
-      onSuccess(`Backup verwerkt: ${prepared.profiles.length} geldig(e) profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en).`);
+      onSuccess(message);
     } finally {
       setLoading(false);
     }
