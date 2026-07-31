@@ -44,9 +44,9 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
             <ShieldWarning size={28} weight="duotone" className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
-            <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Gedeelde profielen controleren…</p>
+            <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Gedeelde profielkopieën controleren…</p>
             <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
-              KinkSync controleert of de opgeslagen antwoorden nog bij hun bevestigde bron horen.
+              KinkSync controleert of de opgeslagen antwoorden nog overeenkomen met hun eerder bevestigde versie.
             </p>
           </div>
         </div>
@@ -65,9 +65,9 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
           <ShieldWarning size={20} weight="fill" aria-hidden="true" style={{ color: "var(--hard-no)", flexShrink: 0 }} />
           <p className="text-xs flex-1" style={{ color: "var(--text2)" }}>
             <strong style={{ color: "var(--text)" }}>
-              {quarantinedProfiles.length} profiel{quarantinedProfiles.length === 1 ? "" : "en"} geblokkeerd.
+              {quarantinedProfiles.length} profielkopie{quarantinedProfiles.length === 1 ? "" : "ën"} {quarantinedProfiles.length === 1 ? "moet" : "moeten"} opnieuw worden bevestigd.
             </strong>{" "}
-            Niet gebruikt voor vergelijken, sessies of scènes.
+            Tot dan niet gebruikt voor vergelijken, sessies of nieuwe scènes.
           </p>
           <Link
             href="/quarantine"
