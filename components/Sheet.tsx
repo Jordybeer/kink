@@ -21,10 +21,11 @@ interface Props {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  scrollable?: boolean;
   "aria-label"?: string;
 }
 
-export default function Sheet({ open, onClose, children, "aria-label": ariaLabel }: Props) {
+export default function Sheet({ open, onClose, children, scrollable = false, "aria-label": ariaLabel }: Props) {
   const t = useMotionSafe();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
@@ -58,15 +59,23 @@ export default function Sheet({ open, onClose, children, "aria-label": ariaLabel
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 151, y, touchAction: "none" }}
+            style={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 151,
+              y,
+              touchAction: scrollable ? "pan-y" : "none",
+            }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%", transition: t.sheetExit }}
             transition={t.sheet}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0.05, bottom: 0.3 }}
-            onDragEnd={(_, info) => {
+            drag={scrollable ? false : "y"}
+            dragConstraints={scrollable ? undefined : { top: 0 }}
+            dragElastic={scrollable ? false : { top: 0.05, bottom: 0.3 }}
+            onDragEnd={scrollable ? undefined : (_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 500) onClose();
             }}
           >
