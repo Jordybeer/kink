@@ -1,6 +1,7 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
@@ -40,7 +41,12 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
   const sheetRef = useRef<HTMLDivElement | null>(null);
-  useFocusTrap(sheetRef, open);
+  const [mounted, setMounted] = useState(false);
+  useFocusTrap(sheetRef, open && mounted);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +55,9 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -93,6 +101,7 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
