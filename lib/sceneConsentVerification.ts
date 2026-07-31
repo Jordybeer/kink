@@ -97,6 +97,7 @@ export async function verifySceneConsentRecord(
   const signedBy = new Set<string>();
   let previousEventHash: string | undefined;
   let laterEventsStarted = false;
+  let lockedEventSeen = false;
 
   for (const event of events) {
     if (event.sceneId !== scene.id) {
@@ -110,19 +111,24 @@ export async function verifySceneConsentRecord(
     }
 
     if (event.type === "locked") {
-      if (laterEventsStarted) {
+      if (laterEventsStarted || lockedEventSeen) {
         return { status: "invalid", reason: "Een latere logregel probeert de startafspraak te vervangen." };
       }
+      lockedEventSeen = true;
       if (!event.agreement || canonicalJson(event.agreement) !== canonicalJson(agreement)) {
         return { status: "invalid", reason: "De ondertekende scène-afspraak komt niet overeen." };
       }
-
-      const signer = [...participants.entries()].find(([, snapshot]) =>
-        sameSigningSource(event.keyId, event.publicKeyJwk, snapshot.proof));
-      if (!signer) {
-        return { status: "invalid", reason: "De startafspraak is niet door een deelnemend profiel ondertekend." };
+      if (!event.profileId) {
+        return { status: "invalid", reason: "De startafspraak vermeldt niet welk profiel ze vastzette." };
       }
-      signedBy.add(signer[0]);
+      const signer = participants.get(event.profileId);
+      if (!signer || !sameSigningSource(event.keyId, event.publicKeyJwk, signer.proof)) {
+        return { status: "invalid", reason: "De startafspraak is niet door het vermelde deelnemende profiel ondertekend." };
+      }
+      if (event.profileName && event.profileName !== signer.profileName) {
+        return { status: "invalid", reason: "De naam bij de ondertekenaar is gewijzigd." };
+      }
+      signedBy.add(event.profileId);
     } else {
       laterEventsStarted = true;
       if (!event.profileId) {
@@ -134,6 +140,9 @@ export async function verifySceneConsentRecord(
       }
       if (!sameSigningSource(event.keyId, event.publicKeyJwk, participant.proof)) {
         return { status: "invalid", reason: "Een logregel is met een andere bron ondertekend." };
+      }
+      if (event.profileName && event.profileName !== participant.profileName) {
+        return { status: "invalid", reason: "De naam bij een logregel is gewijzigd." };
       }
       if (event.agreement) {
         return { status: "invalid", reason: "Een latere logregel probeert de oorspronkelijke afspraak te overschrijven." };
@@ -163,7 +172,7 @@ export async function verifySceneConsentRecord(
     previousEventHash = event.eventHash;
   }
 
-  if (!signedBy.size) {
+  if (!lockedEventSeen || !signedBy.size) {
     return { status: "invalid", reason: "Geen deelnemend profiel heeft de startafspraak ondertekend." };
   }
 
