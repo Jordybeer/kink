@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Profile, SceneRecord } from "@/types";
 import { useStore } from "@/lib/store";
 import { generateProfileOwnerKey, signProfileConsent } from "@/lib/consentProof";
+import { installStoreSecurityGuards } from "@/components/StoreSecurityGuards";
 
 function sharedProfile(overrides: Partial<Profile> = {}): Profile {
   return {
@@ -25,6 +26,7 @@ function sharedProfile(overrides: Partial<Profile> = {}): Profile {
 
 beforeEach(() => {
   useStore.setState(useStore.getInitialState());
+  installStoreSecurityGuards();
 });
 
 describe("shared profile store locks", () => {
