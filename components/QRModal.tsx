@@ -156,7 +156,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
   return (
     <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
-      <SheetContent>
+      <SheetContent className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4">
         <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
         {profile && (
           <div className="text-center mb-3">
@@ -171,7 +171,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
         {multi && (
           <p className="text-xs text-center font-semibold mb-1" style={{ color: "var(--text)" }}>
-            QR {qrIndex + 1} van {qrValues.length} · {autoAdvance ? "automatisch" : "gepauzeerd"}
+            {autoAdvance ? "Automatisch" : "Gepauzeerd"} · QR {qrIndex + 1} van {qrValues.length}
           </p>
         )}
 
@@ -203,25 +203,24 @@ export default function QRModal({ profile, onClose }: Props) {
 
         {multi && (
           <>
-            <div className="flex gap-2 mb-2">
-              <button
-                type="button"
-                onClick={() => setAutoAdvance((active) => !active)}
-                disabled={qrDataUrls.length !== qrValues.length}
-                className="focus-ring flex-1 py-2 rounded-lg border text-xs font-semibold disabled:opacity-35"
-                style={{ borderColor: "var(--border)", color: "var(--text)" }}
-              >
-                {autoAdvance ? "Pauzeer" : "Start automatisch"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSlowMode((slow) => !slow)}
-                className="focus-ring flex-1 py-2 rounded-lg border text-xs"
-                style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-              >
-                {slowMode ? "Normale snelheid" : "Langzamer"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setAutoAdvance((active) => !active)}
+              disabled={qrDataUrls.length !== qrValues.length}
+              className="focus-ring w-full py-2.5 rounded-xl border text-sm font-semibold disabled:opacity-35"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+            >
+              {autoAdvance ? "Pauzeer" : "Hervat"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSlowMode((slow) => !slow)}
+              className="focus-ring block mx-auto px-3 py-2 text-xs underline-offset-2 hover:underline"
+              style={{ color: "var(--text2)" }}
+            >
+              Snelheid: {slowMode ? "rustig" : "normaal"}
+            </button>
 
             {!autoAdvance && (
               <div className="flex gap-2 mb-3">
@@ -259,7 +258,7 @@ export default function QRModal({ profile, onClose }: Props) {
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
             {autoAdvance
               ? "Houd beide toestellen stil. De codes wisselen automatisch; dubbele scans zijn geen probleem."
-              : `Start automatisch of toon de ${qrValues.length} delen handmatig. Volgorde maakt niet uit.`}
+              : `Hervat automatisch wisselen of toon de ${qrValues.length} delen handmatig. Volgorde maakt niet uit.`}
           </p>
         )}
 
