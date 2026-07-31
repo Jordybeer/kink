@@ -35,7 +35,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
       );
 
       if (!sameIdentity || !sameSource || !validVersion) {
-        setError("Deze deelcode hoort niet bij dezelfde bevestigde profielbron. De geblokkeerde kopie blijft veilig apart staan.");
+        setError("Deze deelcode hoort niet bij dezelfde bevestigde profielbron. De huidige profielkopie blijft apart staan en wordt niet gebruikt.");
         return;
       }
 
@@ -51,10 +51,10 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
         profile.id === current.id
         && getProfileVerificationCode(profile) === getProfileVerificationCode(current));
       if (!restored) {
-        setError("De nieuwe profielversie kon niet worden bevestigd. Laat de eigenaar het profiel opnieuw delen vanaf het eigen toestel.");
+        setError("Deze nieuwe profielversie kon niet worden bevestigd. Laat de eigenaar het profiel opnieuw delen vanaf het eigen toestel.");
       }
     } catch {
-      setError("De profielcode is ongeldig, beschadigd of niet door de verwachte bron bevestigd.");
+      setError("Deze profielcode is ongeldig of beschadigd, of hoort niet bij de verwachte profielbron.");
     } finally {
       setScannerOpen(false);
     }
@@ -85,10 +85,10 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
 
       <div className="mt-4">
         <p className="text-sm font-semibold" style={{ color: "var(--hard-no)" }}>
-          Dit profiel kan niet meer worden vertrouwd
+          Deze profielkopie moet opnieuw worden bevestigd
         </p>
         <p className="text-sm mt-1" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
-          De opgeslagen gegevens komen niet meer overeen met de versie die door deze profielbron werd bevestigd. Het profiel wordt niet gebruikt voor vergelijken, sessies of nieuwe scènes. Bestaande vastgezette afspraken blijven behouden.
+          De opgeslagen profielkopie komt niet meer overeen met de versie die deze profielbron eerder bevestigde. Dat kan komen door beschadigde of gewijzigde lokale opslag en zegt niets over de persoon achter het profiel. Tot de eigenaar het profiel opnieuw deelt, gebruikt KinkSync deze kopie niet voor vergelijken, sessies of nieuwe scènes. Bestaande vastgezette afspraken blijven behouden.
         </p>
       </div>
 
@@ -106,7 +106,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
           style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           <Camera size={17} aria-hidden="true" />
-          Profiel opnieuw importeren
+          Opnieuw bevestigen via QR
         </button>
 
         {confirmDelete ? (
@@ -136,7 +136,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
             <Trash size={15} aria-hidden="true" />
-            Geblokkeerde kopie verwijderen
+            Opgeslagen kopie verwijderen
           </button>
         )}
       </div>
