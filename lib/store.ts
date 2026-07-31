@@ -5,6 +5,7 @@ import {
   installStoreSecurity,
   type BackupRestoreResult,
 } from "@/lib/storeSecurity";
+import { installBackupRestoreSecurity } from "@/lib/storeBackupRestoreSecurity";
 
 type CoreState = ReturnType<typeof coreUseStore.getState>;
 export type StoreState = Omit<CoreState, "restoreBackupProfiles"> & {
@@ -18,6 +19,7 @@ type SafeStoreHook = UseBoundStore<StoreApi<StoreState>>
   & Pick<typeof coreUseStore, "persist">;
 
 installStoreSecurity(coreUseStore);
+installBackupRestoreSecurity(coreUseStore);
 
 // Tests and explicit resets must restore the guarded actions, not the raw core.
 const guardedInitialState = coreUseStore.getState();
