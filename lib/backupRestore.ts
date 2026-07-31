@@ -1,6 +1,10 @@
 import type { ContractSnapshot, Profile, ProfileOwnerKey } from "@/types";
 import { sanitizeContractSnapshot, sanitizeProfileFull } from "@/lib/sanitizeProfile";
-import { sanitizeProfileOwnerKey, verifyProfileOwnerKey } from "@/lib/consentProof";
+import {
+  sanitizeProfileOwnerKey,
+  verifyProfileConsent,
+  verifyProfileOwnerKey,
+} from "@/lib/consentProof";
 
 export interface PreparedBackupRestore {
   source: "backup" | "shared";
@@ -13,33 +17,72 @@ export async function prepareBackupRestore(raw: unknown): Promise<PreparedBackup
   if (!raw || typeof raw !== "object") throw new Error("Ongeldig bestand");
   const parsed = raw as Record<string, unknown>;
   if (!Array.isArray(parsed.profiles)) throw new Error("Geen geldige profielen gevonden");
+
   const source = parsed.source === "backup" ? "backup" : "shared";
-  const profiles = parsed.profiles
+  const sanitizedProfiles = parsed.profiles
     .map((profile) => sanitizeProfileFull(profile))
     .filter((profile): profile is Profile => profile !== null);
   const contracts = (Array.isArray(parsed.contracts) ? parsed.contracts : [])
     .map((contract) => sanitizeContractSnapshot(contract))
     .filter((contract): contract is ContractSnapshot => contract !== null);
-  const ownerKeys: ProfileOwnerKey[] = [];
+
+  const profilesById = new Map(sanitizedProfiles.map((profile) => [profile.id, profile]));
+  const keyByProfile = new Map<string, ProfileOwnerKey>();
+
   for (const rawKey of Array.isArray(parsed.profileOwnerKeys) ? parsed.profileOwnerKeys : []) {
     const key = sanitizeProfileOwnerKey(rawKey);
-    if (key && await verifyProfileOwnerKey(key)) ownerKeys.push(key);
+    const profile = key ? profilesById.get(key.profileId) : undefined;
+    if (!key || !profile || !await verifyProfileOwnerKey(key)) continue;
+    if (profile.consentProof && profile.consentProof.keyId !== key.keyId) continue;
+    keyByProfile.set(key.profileId, key);
   }
-  const ownedIds = new Set(ownerKeys.map((key) => key.profileId));
+
+  const profiles: Profile[] = [];
+  for (const profile of sanitizedProfiles) {
+    const wasShared = profile.origin === "shared" || profile.isImported === true;
+    const key = keyByProfile.get(profile.id);
+    const verification = profile.consentProof
+      ? await verifyProfileConsent(profile)
+      : { status: "unsigned" as const };
+
+    if (source !== "backup") {
+      if (verification.status === "invalid") continue;
+      profiles.push({
+        ...profile,
+        origin: "shared",
+        isImported: true,
+        lockedAt: profile.lockedAt ?? Date.now(),
+      });
+      continue;
+    }
+
+    if (key) {
+      const { lockedAt: _lockedAt, ...rest } = profile;
+      profiles.push({ ...rest, origin: "own", isImported: false });
+      continue;
+    }
+
+    // Backups van vóór bronbevestiging bevatten terecht nog geen sleutel.
+    if (!wasShared && !profile.consentProof) {
+      const { lockedAt: _lockedAt, ...rest } = profile;
+      profiles.push({ ...rest, origin: "own", isImported: false });
+      continue;
+    }
+
+    // Een ondertekend profiel zonder de passende private sleutel is geen eigendom.
+    if (verification.status === "invalid") continue;
+    profiles.push({
+      ...profile,
+      origin: "shared",
+      isImported: true,
+      lockedAt: profile.lockedAt ?? Date.now(),
+    });
+  }
+
   return {
     source,
-    ownerKeys,
+    profiles,
     contracts,
-    profiles: profiles.map((profile) => {
-      if (source !== "backup") {
-        return { ...profile, origin: "shared", isImported: true, lockedAt: profile.lockedAt ?? Date.now() };
-      }
-      const shared = profile.origin === "shared" || profile.isImported === true;
-      if (ownedIds.has(profile.id) || !shared) {
-        const { lockedAt: _lockedAt, ...rest } = profile;
-        return { ...rest, origin: "own", isImported: false };
-      }
-      return { ...profile, origin: "shared", isImported: true, lockedAt: profile.lockedAt ?? Date.now() };
-    }),
+    ownerKeys: [...keyByProfile.values()],
   };
 }
