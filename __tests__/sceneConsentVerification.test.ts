@@ -70,6 +70,8 @@ async function fixture() {
     id: "event-1",
     sceneId: scene.id,
     type: "locked",
+    profileId: a.profile.id,
+    profileName: a.profile.name,
     createdAt: 10,
     agreement,
     note: "start",
@@ -102,12 +104,35 @@ describe("scene consent source verification", () => {
       id: "forged",
       sceneId: scene.id,
       type: "locked",
+      profileId: "stranger",
+      profileName: "Stranger",
       createdAt: 10,
       agreement: scene.consentAgreement,
       note: "start",
     }, stranger);
 
     const result = await verifySceneConsentRecord({ ...scene, consentLedger: [forged] });
+    expect(result.status).toBe("invalid");
+  });
+
+  it("rejects a second locked event even when it uses the same valid agreement", async () => {
+    const { a, scene } = await fixture();
+    const first = scene.consentLedger![0];
+    const duplicate = await createConsentLedgerEvent({
+      id: "event-2",
+      sceneId: scene.id,
+      type: "locked",
+      profileId: a.profile.id,
+      profileName: a.profile.name,
+      createdAt: 11,
+      agreement: scene.consentAgreement,
+      previousEventHash: first.eventHash,
+    }, a.key);
+
+    const result = await verifySceneConsentRecord({
+      ...scene,
+      consentLedger: [first, duplicate],
+    });
     expect(result.status).toBe("invalid");
   });
 
