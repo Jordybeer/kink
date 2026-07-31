@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { ArrowSquareOut, CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareFat, Trash } from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
@@ -144,26 +144,26 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 flex-none">
+        <div className="flex items-center gap-2 flex-none">
           {onShare && (
             <button
+              type="button"
               onClick={onShare}
               aria-label="Profiel delen"
-              title="Delen"
-              className="ks-icon-pop focus-ring flex items-center justify-center rounded-full transition-colors"
+              className="ks-icon-pop focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors"
               style={{
-                minWidth: 44,
-                minHeight: 44,
                 color: "var(--accent)",
                 background: "color-mix(in srgb, var(--accent) 10%, transparent)",
                 border: "1px solid var(--border-accent)",
               }}
             >
-              <ShareNetwork size={18} aria-hidden="true" />
+              <ShareFat size={16} weight="bold" aria-hidden="true" />
+              <span>Delen</span>
             </button>
           )}
           {onEdit && (
             <button
+              type="button"
               onClick={onEdit}
               aria-label="Profiel bewerken"
               title="Bewerken"
@@ -176,7 +176,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 border: "1px solid var(--border)",
               }}
             >
-              <PencilSimple size={16} />
+              <PencilSimple size={16} aria-hidden="true" />
             </button>
           )}
         </div>
