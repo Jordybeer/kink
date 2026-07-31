@@ -9,13 +9,13 @@ import { useHasHydrated, useStore } from "@/lib/store";
 export default function ImportedProfileIntegrityGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hydrated = useHasHydrated();
-  const profiles = useStore((state) => state.profiles);
-  const quarantinedProfiles = useStore((state) => state.quarantinedProfiles);
-  const status = useStore((state) => state.profileIntegrityStatus);
+  const profiles = useStore((state) => state.profiles ?? []);
+  const quarantinedProfiles = useStore((state) => state.quarantinedProfiles ?? []);
+  const status = useStore((state) => state.profileIntegrityStatus ?? "idle");
   const verifyImportedProfiles = useStore((state) => state.verifyImportedProfiles);
 
   useEffect(() => {
-    if (!hydrated || status !== "idle") return;
+    if (!hydrated || status !== "idle" || typeof verifyImportedProfiles !== "function") return;
     void verifyImportedProfiles();
   }, [hydrated, status, verifyImportedProfiles]);
 

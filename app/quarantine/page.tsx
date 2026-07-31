@@ -8,7 +8,7 @@ import { useHasHydrated, useStore } from "@/lib/store";
 
 export default function QuarantinePage() {
   const hydrated = useHasHydrated();
-  const records = useStore((state) => state.quarantinedProfiles);
+  const records = useStore((state) => state.quarantinedProfiles ?? []);
 
   if (!hydrated) return <PageShell loading width="2xl" />;
 
