@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Profile, SceneRecord } from "@/types";
 import { useStore } from "@/lib/store";
-import { generateProfileOwnerKey, signProfileConsent } from "@/lib/consentProof";
+import {
+  generateProfileOwnerKey,
+  signProfileConsent,
+  verifyProfileConsent,
+} from "@/lib/consentProof";
+import { verifySceneConsentRecord } from "@/lib/sceneConsentVerification";
 import { installStoreSecurityGuards } from "@/components/StoreSecurityGuards";
 
 function sharedProfile(overrides: Partial<Profile> = {}): Profile {
@@ -21,6 +26,34 @@ function sharedProfile(overrides: Partial<Profile> = {}): Profile {
     isImported: true,
     lockedAt: 2,
     ...overrides,
+  };
+}
+
+function ownProfile(id: string, name: string, code: string, updatedAt = 2): Profile {
+  return sharedProfile({
+    id,
+    name,
+    verificationCode: code,
+    updatedAt,
+    origin: "own",
+    isImported: false,
+    lockedAt: undefined,
+  });
+}
+
+function sceneFor(a: Profile, b: Profile, id = "scene-own"): SceneRecord {
+  return {
+    id,
+    title: "Rope",
+    profileAId: a.id,
+    profileBId: b.id,
+    profileAName: a.name,
+    profileBName: b.name,
+    items: [{ id: "one", name: "Rope", intensity: "midden", duration: "10 min", note: "rustig", fromKink: false }],
+    safeword: "rood",
+    status: "planned",
+    createdAt: 1,
+    updatedAt: 1,
   };
 }
 
@@ -96,31 +129,79 @@ describe("shared profile store locks", () => {
   });
 
   it("cannot claim an exact scene agreement when neither owner key is local", async () => {
-    const aRaw = sharedProfile({ id: "a", name: "A", verificationCode: "KS-7H3P-9Q2M-A4BC", origin: "own", isImported: false });
-    const bRaw = sharedProfile({ id: "b", name: "B", verificationCode: "KS-8J4R-5T6V-W7XY", origin: "own", isImported: false });
+    const aRaw = ownProfile("a", "A", "KS-7H3P-9Q2M-A4BC");
+    const bRaw = ownProfile("b", "B", "KS-8J4R-5T6V-W7XY");
     const aKey = await generateProfileOwnerKey(aRaw.id);
     const bKey = await generateProfileOwnerKey(bRaw.id);
     const aSigned = await signProfileConsent(aRaw, aKey);
     const bSigned = await signProfileConsent(bRaw, bKey);
     const a = { ...aRaw, consentProof: aSigned.proof, origin: "shared" as const, isImported: true };
     const b = { ...bRaw, consentProof: bSigned.proof, origin: "shared" as const, isImported: true };
-    const scene: SceneRecord = {
-      id: "shared-only-scene",
-      title: "Shared only",
-      profileAId: a.id,
-      profileBId: b.id,
-      profileAName: a.name,
-      profileBName: b.name,
-      items: [{ id: "one", name: "Rope", intensity: "midden", duration: "10 min", note: "", fromKink: false }],
-      status: "planned",
-      createdAt: 1,
-      updatedAt: 1,
-    };
+    const scene = sceneFor(a, b, "shared-only-scene");
     useStore.setState({ profiles: [a, b], scenes: [scene], profileOwnerKeys: [] });
 
     const result = await useStore.getState().lockSceneConsent(scene.id);
     expect(result.ok).toBe(false);
     expect(result.message).toContain("eigen toestel");
     expect(useStore.getState().scenes[0].consentSnapshots).toBeUndefined();
+  });
+
+  it("restores a newer own backup over an existing own profile but never downgrades it", async () => {
+    const existing = ownProfile("owner", "Old local", "KS-7H3P-9Q2M-A4BC", 10);
+    const newer = ownProfile("owner", "From newer backup", "KS-7H3P-9Q2M-A4BC", 20);
+    const older = ownProfile("owner", "From older backup", "KS-7H3P-9Q2M-A4BC", 5);
+    const key = await generateProfileOwnerKey(existing.id);
+    useStore.setState({ profiles: [existing] });
+
+    useStore.getState().restoreBackupProfiles([newer], [key]);
+    expect(useStore.getState().profiles[0].name).toBe("From newer backup");
+
+    useStore.getState().restoreBackupProfiles([older], [key]);
+    expect(useStore.getState().profiles[0].name).toBe("From newer backup");
+  });
+
+  it("serializes simultaneous seals and keeps one stable owner key", async () => {
+    const profile = ownProfile("owner", "Owner", "KS-7H3P-9Q2M-A4BC");
+    useStore.setState({ profiles: [profile] });
+
+    const [first, second] = await Promise.all([
+      useStore.getState().sealProfileConsent(profile.id),
+      useStore.getState().sealProfileConsent(profile.id),
+    ]);
+
+    expect(first?.consentProof?.keyId).toBe(second?.consentProof?.keyId);
+    expect(useStore.getState().profileOwnerKeys).toHaveLength(1);
+    expect((await verifyProfileConsent(useStore.getState().profiles[0])).status).toBe("valid");
+  });
+
+  it("uses profile A deterministically when both local profiles can lock the scene", async () => {
+    const a = ownProfile("a", "A", "KS-7H3P-9Q2M-A4BC");
+    const b = ownProfile("b", "B", "KS-8J4R-5T6V-W7XY");
+    const scene = sceneFor(a, b);
+    useStore.setState({ profiles: [a, b], scenes: [scene] });
+
+    const result = await useStore.getState().lockSceneConsent(scene.id);
+    const locked = useStore.getState().scenes[0];
+
+    expect(result.ok).toBe(true);
+    expect(locked.consentLedger?.[0].profileId).toBe(a.id);
+    expect((await verifySceneConsentRecord(locked)).status).toBe("valid");
+  });
+
+  it("coalesces rapid duplicate appends without forking the ledger", async () => {
+    const a = ownProfile("a", "A", "KS-7H3P-9Q2M-A4BC");
+    const b = ownProfile("b", "B", "KS-8J4R-5T6V-W7XY");
+    const scene = sceneFor(a, b, "append-scene");
+    useStore.setState({ profiles: [a, b], scenes: [scene] });
+    expect((await useStore.getState().lockSceneConsent(scene.id)).ok).toBe(true);
+
+    await Promise.all([
+      useStore.getState().appendSceneConsentEvent(scene.id, a.id, "withdrawn", "stop"),
+      useStore.getState().appendSceneConsentEvent(scene.id, a.id, "withdrawn", "stop"),
+    ]);
+
+    const updated = useStore.getState().scenes[0];
+    expect(updated.consentLedger).toHaveLength(2);
+    expect((await verifySceneConsentRecord(updated)).status).toBe("valid");
   });
 });
