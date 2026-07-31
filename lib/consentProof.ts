@@ -330,7 +330,8 @@ export function profileConsentAlias(profile: Pick<Profile, "id" | "verificationC
   const a = fnv1a32(source, 0x811c9dc5);
   const b = fnv1a32(source.split("").reverse().join(""), 0x9e3779b9);
   const c = fnv1a32(`${source}:kinksync`, 0x85ebca6b);
-  return [a, b, c].map((value) => FINGERPRINT_WORDS[value % FINGERPRINT_WORDS.length]).join("-");
+  const d = fnv1a32(`kinksync:${source}`, 0xc2b2ae35);
+  return [a, b, c, d].map((value) => FINGERPRINT_WORDS[value % FINGERPRINT_WORDS.length]).join("-");
 }
 
 export function projectSceneConsentAgreement(
