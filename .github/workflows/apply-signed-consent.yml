@@ -105,3 +105,5 @@ jobs:
             echo "Productcommit: $(git rev-parse HEAD)"
           } > /tmp/pr-comment.md
           gh pr comment 270 --repo Jordybeer/kink --body-file /tmp/pr-comment.md
+
+# rerun: 2026-07-31T08:55+02:00
