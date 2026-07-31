@@ -4,14 +4,24 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
-/** Standardized sheet content wrapper: surface bg, border, rounded top, drag handle. */
-export function SheetContent({ children, className = "px-6 pb-6 pt-4" }: { children: ReactNode; className?: string }) {
+/** Standardized sheet content wrapper: surface bg, border, rounded top, optional drag handle. */
+export function SheetContent({
+  children,
+  className = "px-6 pb-6 pt-4",
+  showHandle = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  showHandle?: boolean;
+}) {
   return (
     <div
       className={`rounded-t-2xl ${className}`}
       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none" }}
     >
-      <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: "var(--border)" }} aria-hidden="true" />
+      {showHandle && (
+        <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: "var(--border)" }} aria-hidden="true" />
+      )}
       {children}
     </div>
   );
@@ -66,7 +76,7 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
               right: 0,
               zIndex: 151,
               y,
-              touchAction: scrollable ? "pan-y" : "none",
+              touchAction: scrollable ? "auto" : "none",
             }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
