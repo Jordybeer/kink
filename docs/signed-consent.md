@@ -9,7 +9,7 @@ KinkSync gebruikt lokale ECDSA P-256-handtekeningen via Web Crypto. Er is geen a
 - De publieke sleutel, versie, vorige proof-hash, inhoudshash en handtekening reizen mee met het gedeelde profiel.
 - Een ontvanger controleert de handtekening vóór een ondertekend profiel wordt geïmporteerd.
 - Een bestaande bron accepteert alleen een opvolgende versie met dezelfde sleutel en een geldige verwijzing naar de vorige proof.
-- De drie-woordennaam is een leesbaar label. De profielcode en cryptografische sleutel blijven de technische identiteit.
+- De vier-woordennaam is een leesbaar label. De profielcode en cryptografische sleutel blijven de technische identiteit.
 
 ## Wat niet wordt beweerd
 
