@@ -36,18 +36,28 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
 
   async function lockNow() {
     setBusy(true); setMessage(null);
-    const result = await lockSceneConsent(scene.id);
-    setMessage(result.message);
-    setBusy(false);
+    try {
+      const result = await lockSceneConsent(scene.id);
+      setMessage(result.message);
+    } catch {
+      setMessage("De afspraken konden niet worden vastgezet. Probeer opnieuw.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function append(type: "changed" | "withdrawn") {
     if (!selectedProfileId) return;
     setBusy(true); setMessage(null);
-    const result = await appendSceneConsentEvent(scene.id, selectedProfileId, type, note.trim() || undefined);
-    setMessage(result.message);
-    if (result.ok) setNote("");
-    setBusy(false);
+    try {
+      const result = await appendSceneConsentEvent(scene.id, selectedProfileId, type, note.trim() || undefined);
+      setMessage(result.message);
+      if (result.ok) setNote("");
+    } catch {
+      setMessage("De wijziging kon niet worden toegevoegd. Probeer opnieuw.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const valid = verification?.status === "valid";
