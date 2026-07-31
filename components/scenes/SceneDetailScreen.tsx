@@ -10,6 +10,7 @@ import AftercareSheet from "@/components/AftercareSheet";
 import EmptyState from "@/components/EmptyState";
 import PageShell from "@/components/PageShell";
 import SafewordRibbon from "@/components/SafewordRibbon";
+import ConsentLedgerPanel from "@/components/ConsentLedgerPanel";
 
 const TRAFFIC = {
   green: { label: "Geweldig", color: "var(--yes)" },
@@ -28,7 +29,7 @@ function intensityColor(v: "zacht" | "midden" | "intens") {
 export default function SceneDetailScreen({ id }: { id: string }) {
   const router = useRouter();
   const hasHydrated = useHasHydrated();
-  const { scenes, completeScene, updateAftercare, deleteScene } = useStore();
+  const { scenes, profiles, completeScene, updateAftercare, deleteScene } = useStore();
   const [showAftercare, setShowAftercare] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -108,6 +109,8 @@ export default function SceneDetailScreen({ id }: { id: string }) {
       </p>
 
       <SafewordRibbon safeword={scene.safeword} />
+
+      <ConsentLedgerPanel scene={scene} profiles={profiles} />
 
       {/* Aftercare block */}
       {aftercare && traffic ? (
@@ -377,7 +380,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             className="focus-ring rounded-lg px-2 py-1"
             style={{ color: "var(--accent)" }}
           >
-            Bewerken
+            {scene.consentLockedAt ? "Bekijk afspraken" : "Bewerken"}
           </Link>
           {!confirmDelete ? (
             <button

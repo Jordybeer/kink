@@ -72,6 +72,8 @@ function normalizeIdentityText(value: string): string {
 
 export type ProfileImportIdentity =
   | { kind: "same-code"; profile: Profile; code: string }
+  | { kind: "signed-update"; profile: Profile; code: string }
+  | { kind: "source-conflict"; profile: Profile; code: string }
   | { kind: "same-name-role"; profile: Profile; code: string }
   | { kind: "new"; code: string };
 
@@ -83,7 +85,22 @@ export function classifyProfileImport(
   const sameCode = existingProfiles.find(
     (profile) => getProfileVerificationCode(profile) === code,
   );
-  if (sameCode) return { kind: "same-code", profile: sameCode, code };
+  if (sameCode) {
+    const current = sameCode.consentProof;
+    const next = incoming.consentProof;
+    if (current && next && current.keyId !== next.keyId) {
+      return { kind: "source-conflict", profile: sameCode, code };
+    }
+    const shared = sameCode.origin === "shared" || sameCode.isImported === true;
+    if (shared && next && (!current || (
+      next.keyId === current.keyId
+      && next.version > current.version
+      && next.previousProofHash === current.proofHash
+    ))) {
+      return { kind: "signed-update", profile: sameCode, code };
+    }
+    return { kind: "same-code", profile: sameCode, code };
+  }
 
   const incomingName = normalizeIdentityText(incoming.name);
   const incomingRole = normalizeIdentityText(incoming.role);

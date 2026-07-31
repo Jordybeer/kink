@@ -49,6 +49,93 @@ export interface AftercareEntry {
   completedAt: number;
 }
 
+export type ConsentProofAlgorithm = "ECDSA-P256-SHA256";
+
+export interface ProfileConsentPayload {
+  schema: 1;
+  profileId: string;
+  verificationCode: string;
+  name: string;
+  role: string;
+  experienceLevel: ExperienceLevel;
+  relationshipStatus?: string;
+  bdsmtestUrl?: string;
+  bdsmtestScores?: BdsmtestScore[];
+  customKinks: CustomKink[];
+  entries: Record<string, KinkEntry>;
+}
+
+export interface ProfileConsentProof {
+  schema: 1;
+  algorithm: ConsentProofAlgorithm;
+  keyId: string;
+  publicKeyJwk: JsonWebKey;
+  version: number;
+  signedAt: number;
+  previousProofHash?: string;
+  payloadHash: string;
+  signature: string;
+  proofHash: string;
+}
+
+export interface ProfileOwnerKey {
+  profileId: string;
+  keyId: string;
+  publicKeyJwk: JsonWebKey;
+  privateKeyJwk: JsonWebKey;
+  createdAt: number;
+  version: number;
+  lastProofHash?: string;
+}
+
+export interface ConsentSnapshot {
+  profileId: string;
+  profileName: string;
+  verificationCode: string;
+  alias: string;
+  capturedAt: number;
+  payload: ProfileConsentPayload;
+  proof: ProfileConsentProof;
+}
+
+export type ConsentLedgerEventType = "locked" | "changed" | "withdrawn";
+
+export interface ConsentLedgerEvent {
+  id: string;
+  sceneId: string;
+  type: ConsentLedgerEventType;
+  createdAt: number;
+  profileId?: string;
+  profileName?: string;
+  note?: string;
+  snapshot?: ConsentSnapshot;
+  agreement?: SceneConsentAgreement;
+  previousEventHash?: string;
+  keyId?: string;
+  publicKeyJwk?: JsonWebKey;
+  signature?: string;
+  eventHash: string;
+}
+
+export interface SceneConsentSnapshots {
+  profileA: ConsentSnapshot;
+  profileB: ConsentSnapshot;
+}
+
+export interface SceneConsentAgreement {
+  schema: 1;
+  sceneId: string;
+  title: string;
+  profileAId: string;
+  profileBId: string;
+  profileAProofHash: string;
+  profileBProofHash: string;
+  plannedDate?: string;
+  plannedTime?: string;
+  safeword?: string;
+  items: SceneItem[];
+}
+
 export interface SceneRecord {
   id: string;
   title: string;
@@ -64,6 +151,10 @@ export interface SceneRecord {
   createdAt: number;
   updatedAt: number;
   aftercare?: AftercareEntry;
+  consentLockedAt?: number;
+  consentSnapshots?: SceneConsentSnapshots;
+  consentAgreement?: SceneConsentAgreement;
+  consentLedger?: ConsentLedgerEvent[];
 }
 
 export interface ProfileSnapshot {
@@ -102,8 +193,10 @@ export interface BdsmtestScore {
 
 export interface Profile {
   id: string;
-  /** Immutable, human-readable lineage marker shared with the profile. */
+  /** Immutable technical lineage marker shared with the profile. */
   verificationCode?: string;
+  /** Digital seal over the current shareable consent data. */
+  consentProof?: ProfileConsentProof;
   name: string;
   role: string;
   relationshipStatus?: string;
