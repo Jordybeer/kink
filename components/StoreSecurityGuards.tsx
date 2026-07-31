@@ -82,6 +82,10 @@ export function installStoreSecurityGuards(): void {
   installedAgainst = guardedRename;
 }
 
+// Install as soon as the client bundle evaluates, before the first possible
+// user interaction. The effect below re-checks after hydration/HMR.
+if (typeof window !== "undefined") installStoreSecurityGuards();
+
 export default function StoreSecurityGuards() {
   useEffect(() => {
     installStoreSecurityGuards();
