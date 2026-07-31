@@ -114,7 +114,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 type="button"
                 onClick={onShare}
                 aria-label="Profiel delen"
-                className="ks-icon-pop focus-ring mt-2 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors"
+                className="ks-icon-pop focus-ring mt-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors"
                 style={{
                   color: "var(--accent)",
                   background: "color-mix(in srgb, var(--accent) 10%, transparent)",
