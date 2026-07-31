@@ -65,7 +65,7 @@ describe("signed consent", () => {
 
   it("uses a readable stable alias without replacing the technical identity", () => {
     const alias = profileConsentAlias(profile());
-    expect(alias.split("-")).toHaveLength(3);
+    expect(alias.split("-")).toHaveLength(4);
     expect(profileConsentAlias(profile())).toBe(alias);
     expect(alias).not.toContain("KS-");
   });
