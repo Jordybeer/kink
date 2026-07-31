@@ -15,6 +15,7 @@ interface Props {
 
 export default function QRModal({ profile, onClose }: Props) {
   const sealProfileConsent = useStore((state) => state.sealProfileConsent);
+  const [preparedProfile, setPreparedProfile] = useState<Profile | null>(null);
   const [qrValues, setQrValues] = useState<string[]>([]);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrIndex, setQrIndex] = useState(0);
@@ -30,6 +31,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    setPreparedProfile(null);
     setQrValues([]);
     setQrDataUrl(null);
     setQrIndex(0);
@@ -43,23 +45,29 @@ export default function QRModal({ profile, onClose }: Props) {
 
     void (async () => {
       try {
-        const prepared = profile.origin === "shared" || profile.isImported
+        const ready = profile.origin === "shared" || profile.isImported
           ? profile
           : await sealProfileConsent(profile.id);
-        if (!prepared) throw new Error("Profiel kon niet worden bevestigd");
-        const payload = await encodeProfileV3(prepared, { includeFetLife });
+        if (!ready) throw new Error("Profiel kon niet worden bevestigd");
+        const payload = await encodeProfileV3(ready, { includeFetLife });
         const share = buildProfileQrSet(window.location.origin, payload);
         if (cancelled) return;
+        setPreparedProfile(ready);
         setUrl(share.shareUrl);
         setQrValues(share.qrValues);
         setQrTooLarge(share.qrTooLarge);
       } catch {
-        if (!cancelled) setGenerationError("Deelcode kon niet worden opgebouwd.");
+        if (!cancelled) {
+          setPreparedProfile(null);
+          setGenerationError("Deelcode kon niet worden opgebouwd.");
+        }
       }
     })();
 
     return () => { cancelled = true; };
-  }, [profile, includeFetLife, sealProfileConsent]);
+    // updatedAt changes for shareable profile edits. A proof-only store update
+    // deliberately does not restart generation after sealing this same version.
+  }, [profile?.id, profile?.updatedAt, profile?.origin, profile?.isImported, includeFetLife, sealProfileConsent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
@@ -92,7 +100,9 @@ export default function QRModal({ profile, onClose }: Props) {
   }
 
   const multi = qrValues.length > 1;
-  const readableAlias = profile ? profileConsentAlias(profile) : null;
+  const readableAlias = preparedProfile?.consentProof
+    ? profileConsentAlias(preparedProfile)
+    : null;
 
   return (
     <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
@@ -101,9 +111,11 @@ export default function QRModal({ profile, onClose }: Props) {
         {profile && (
           <div className="text-center mb-3">
             <p className="text-sm" style={{ color: "var(--accent)" }}>{profile.name}</p>
-            <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>
-              Bron bevestigd · {readableAlias}
-            </p>
+            {readableAlias && (
+              <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>
+                Bron bevestigd · {readableAlias}
+              </p>
+            )}
           </div>
         )}
 
