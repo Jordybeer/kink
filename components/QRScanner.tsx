@@ -164,7 +164,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
         </h2>
         {assembly && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
-            Deel ontvangen. Toon nu een andere QR uit dezelfde set.
+            Deel ontvangen. Houd de camera gericht; volgende delen worden automatisch verzameld.
           </p>
         )}
 
@@ -226,7 +226,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             )}
             <p className="text-xs text-center mb-2" style={{ color: "var(--text2)" }}>
               {assembly
-                ? "Scan elk genummerd deel. Volgorde maakt niet uit."
+                ? "Blijf richten. Bij handmatig wisselen mag de volgorde verschillen."
                 : "Richt de camera op de QR-code van je partner."}
             </p>
             <button
