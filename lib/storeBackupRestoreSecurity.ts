@@ -22,8 +22,11 @@ function sameTechnicalIdentity(existing: Profile, incoming: Profile): boolean {
     && getProfileVerificationCode(existing) === getProfileVerificationCode(incoming);
 }
 
-function keyMatchesProfile(key: ProfileOwnerKey | undefined, profile: Profile): boolean {
-  if (!key || key.profileId !== profile.id) return false;
+function keyMatchesProfile(
+  key: ProfileOwnerKey | undefined,
+  profile: Profile | undefined,
+): boolean {
+  if (!key || !profile || key.profileId !== profile.id) return false;
   return !profile.consentProof || profile.consentProof.keyId === key.keyId;
 }
 
