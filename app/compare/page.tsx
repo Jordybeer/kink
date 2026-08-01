@@ -6,7 +6,15 @@ import { ArrowsLeftRight, FilmSlate, FileText, CaretDown, Lock } from "@phosphor
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkEntry, Profile } from "@/types";
-import { isKinkMatch, isHardLimit, isConflict, profileMatchScore } from "@/lib/matching";
+import {
+  hasRating,
+  isKinkMatch,
+  isHardLimit,
+  isConflict,
+  kinkMatchScore,
+  MAX_KINK_MATCH_SCORE,
+  profileMatchScore,
+} from "@/lib/matching";
 import type { MatchKind } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import Sheet, { SheetContent } from "@/components/Sheet";
@@ -16,19 +24,52 @@ import CompareKinkRow from "@/components/CompareKinkRow";
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
 
-function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss: number; soft: number; limit: number }) {
+function compatibilityVerdict(score: number | null): string | null {
+  if (score === null) return null;
+  if (score >= 85) return "Sterke compatibiliteit";
+  if (score >= 70) return "Goede basis";
+  if (score >= 55) return "Gemengde compatibiliteit";
+  if (score >= 40) return "Veel te bespreken";
+  return "Grote verschillen";
+}
+
+function ScoreMasthead({
+  score,
+  compared,
+  match,
+  discuss,
+  soft,
+  limit,
+  unscoredLimits,
+}: {
+  score: number | null;
+  compared: number;
+  match: number;
+  discuss: number;
+  soft: number;
+  limit: number;
+  unscoredLimits: number;
+}) {
   const total = match + discuss + soft + limit;
-  const score = total > 0 ? Math.round((match / total) * 100) : null;
+  const verdict = compatibilityVerdict(score);
   const verdictColor =
-    score === null ? "var(--text2)" : score >= 70 ? "var(--yes)" : "var(--text)";
+    score === null
+      ? "var(--text2)"
+      : score >= 75
+        ? "var(--yes)"
+        : score >= 55
+          ? "var(--maybe)"
+          : score < 40
+            ? "var(--conflict)"
+            : "var(--text)";
 
   return (
     <div className="text-center mb-4 mt-1">
       <div
         aria-label={
           score === null
-            ? "Nog niets vergeleken"
-            : `${score} procent overlap`
+            ? "Nog geen gezamenlijk beoordeelde kinks"
+            : `${score} procent kinkcompatibiliteit op basis van ${compared} samen beoordeelde kinks`
         }
         style={{
           fontFamily: "var(--font-display, Georgia, serif)",
@@ -65,8 +106,25 @@ function ScoreMasthead({ match, discuss, soft, limit }: { match: number; discuss
         className="text-xs uppercase tracking-[0.22em] mt-1"
         style={{ color: "var(--text2)" }}
       >
-        {score === null ? "rate kinks om te vergelijken" : "overlap"}
+        {score === null ? "beoordeel allebei minstens één kink" : "compatibiliteit"}
       </p>
+      {verdict && (
+        <p className="text-sm font-semibold mt-2" style={{ color: verdictColor }}>
+          {verdict}
+        </p>
+      )}
+      {score !== null && (
+        <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
+          Gebaseerd op {compared} {compared === 1 ? "samen beoordeelde kink" : "samen beoordeelde kinks"}.
+        </p>
+      )}
+      {unscoredLimits > 0 && (
+        <p className="text-xs mt-2 mx-auto max-w-md" style={{ color: "var(--hard-no)" }}>
+          {unscoredLimits === 1
+            ? "1 grens staat wel in de vergelijking, maar telt niet mee omdat de andere persoon die kink nog niet beoordeelde."
+            : `${unscoredLimits} grenzen staan wel in de vergelijking, maar tellen niet mee omdat de andere persoon die kinks nog niet beoordeelde.`}
+        </p>
+      )}
       {total > 0 && (
         <div
           className="flex justify-center flex-wrap gap-x-3 gap-y-1 text-xs mt-2"
@@ -334,9 +392,15 @@ function ComparePage() {
     });
   }, []);
 
-  const { counts } = profileA && profileB
+  const matchResult = profileA && profileB
     ? profileMatchScore(profileA, profileB)
-    : { counts: {} as Record<MatchKind, number> };
+    : {
+        overall: 0,
+        counts: {} as Record<MatchKind, number>,
+        comparedTotal: 0,
+        unscoredLimits: 0,
+      };
+  const { counts } = matchResult;
   const matchCount     = (counts.perfect ?? 0) + (counts.strong ?? 0);
   const softLimitCount = counts.soft ?? 0;
   const hardLimitCount = counts.limit ?? 0;
@@ -387,18 +451,19 @@ function ComparePage() {
   const categoryScores = profileA && profileB
     ? CATEGORIES.map((cat) => {
         const kinks = getKinksByCategory(cat);
-        let catMatches = 0, catRated = 0;
+        let scoreSum = 0;
+        let compared = 0;
         for (const k of kinks) {
           const eA = profileA.entries[k.id] ?? { status: null, comment: "" };
           const eB = profileB.entries[k.id] ?? { status: null, comment: "" };
-          const hasA = eA.status && !eA.privateResponse;
-          const hasB = eB.status && !eB.privateResponse;
-          if (hasA || hasB) {
-            catRated++;
-            if (isKinkMatch(eA, eB)) catMatches++;
-          }
+          if (!hasRating(eA) || !hasRating(eB)) continue;
+          scoreSum += kinkMatchScore(eA, eB).score;
+          compared++;
         }
-        return { cat, rate: catRated > 0 ? catMatches / catRated : null };
+        return {
+          cat,
+          rate: compared > 0 ? scoreSum / (compared * MAX_KINK_MATCH_SCORE) : null,
+        };
       })
     : [];
 
@@ -451,7 +516,15 @@ function ComparePage() {
 
       {hasPair && (
         <>
-          <ScoreMasthead match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
+          <ScoreMasthead
+            score={matchResult.comparedTotal > 0 ? matchResult.overall : null}
+            compared={matchResult.comparedTotal}
+            match={matchCount}
+            discuss={discussCount}
+            soft={softLimitCount}
+            limit={hardLimitCount}
+            unscoredLimits={matchResult.unscoredLimits}
+          />
           <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} onFilter={setFilterMode} />
 
           <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 mb-4">

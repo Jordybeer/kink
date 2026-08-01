@@ -68,6 +68,10 @@ describe("kinkMatchScore — rubric rows", () => {
     expect(kinkMatchScore(e({ status: "hard_no" }), e({ status: "yes" }))).toEqual({ score: 0, kind: "limit" });
   });
 
+  it("one-sided hard_no stays visible as a limit", () => {
+    expect(kinkMatchScore(e({ status: "hard_no" }), e())).toEqual({ score: 0, kind: "limit" });
+  });
+
   it("unrated A, rated B → none (0)", () => {
     expect(kinkMatchScore(e(), e({ status: "yes" }))).toEqual({ score: 0, kind: "none" });
   });
@@ -113,6 +117,68 @@ describe("profileMatchScore", () => {
     const { counts } = profileMatchScore(a, b);
     expect(counts.perfect).toBeGreaterThanOrEqual(1);
     expect(counts.limit).toBeGreaterThanOrEqual(1);
+  });
+
+  it("normalizes a perfect joint rating to 100%", () => {
+    const a = makeProfile({ [k0.id]: { status: "yes" } });
+    const b = makeProfile({ [k0.id]: { status: "yes" } });
+    const result = profileMatchScore(a, b);
+    expect(result.overall).toBe(100);
+    expect(result.comparedTotal).toBe(1);
+  });
+
+  it("uses weighted compatibility instead of direct-match share", () => {
+    const a = makeProfile({
+      [k0.id]: { status: "yes" },
+      [k1.id]: { status: "willing" },
+    });
+    const b = makeProfile({
+      [k0.id]: { status: "yes" },
+      [k1.id]: { status: "willing" },
+    });
+    const result = profileMatchScore(a, b);
+    expect(result.comparedTotal).toBe(2);
+    expect(result.overall).toBe(84);
+  });
+
+  it("keeps an unknown hard limit visible without lowering compatibility", () => {
+    const a = makeProfile({
+      [k0.id]: { status: "yes" },
+      [k1.id]: { status: "hard_no" },
+    });
+    const b = makeProfile({ [k0.id]: { status: "yes" } });
+    const result = profileMatchScore(a, b);
+    expect(result.counts.limit).toBe(1);
+    expect(result.unscoredLimits).toBe(1);
+    expect(result.comparedTotal).toBe(1);
+    expect(result.overall).toBe(100);
+  });
+
+  it("lets a jointly rated hard limit lower compatibility", () => {
+    const a = makeProfile({
+      [k0.id]: { status: "yes" },
+      [k1.id]: { status: "hard_no" },
+    });
+    const b = makeProfile({
+      [k0.id]: { status: "yes" },
+      [k1.id]: { status: "yes" },
+    });
+    const result = profileMatchScore(a, b);
+    expect(result.unscoredLimits).toBe(0);
+    expect(result.comparedTotal).toBe(2);
+    expect(result.overall).toBe(50);
+  });
+
+  it("ignores ordinary one-sided answers in the percentage", () => {
+    const a = makeProfile({
+      [k0.id]: { status: "yes" },
+      [k1.id]: { status: "yes" },
+    });
+    const b = makeProfile({ [k0.id]: { status: "yes" } });
+    const result = profileMatchScore(a, b);
+    expect(result.comparedTotal).toBe(1);
+    expect(result.overall).toBe(100);
+    expect(result.counts.none).toBe(KINKS.length - 1);
   });
 
   it("soft is distinct from discuss — willing+willing is soft, maybe+no is discuss", () => {
