@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
-import { encodeProfileV3 } from "@/lib/profileShareV3";
+import { encodeProfileShareTransport } from "@/lib/profileShareV3";
 import {
-  buildProfileQrSet,
+  buildProfileQrBundleSet,
   nextProfileQrIndex,
   PROFILE_QR_AUTO_INTERVAL_MS,
   PROFILE_QR_SLOW_INTERVAL_MS,
+  type ProfileQrFrame,
 } from "@/lib/profileQr";
 import { profileConsentAlias } from "@/lib/consentProof";
 import { useStore } from "@/lib/store";
@@ -22,6 +23,7 @@ export default function QRModal({ profile, onClose }: Props) {
   const sealProfileConsent = useStore((state) => state.sealProfileConsent);
   const [preparedProfile, setPreparedProfile] = useState<Profile | null>(null);
   const [qrValues, setQrValues] = useState<string[]>([]);
+  const [qrFrames, setQrFrames] = useState<ProfileQrFrame[]>([]);
   const [qrDataUrls, setQrDataUrls] = useState<string[]>([]);
   const [qrIndex, setQrIndex] = useState(0);
   const [qrTooLarge, setQrTooLarge] = useState(false);
@@ -31,11 +33,14 @@ export default function QRModal({ profile, onClose }: Props) {
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
+  const [includeAvatar, setIncludeAvatar] = useState(false);
+  const [avatarSkipped, setAvatarSkipped] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
   useEffect(() => {
     setIncludeFetLife(false);
-  }, [profile?.id]);
+    setIncludeAvatar(!!profile?.avatarDataUrl);
+  }, [profile?.id, profile?.avatarDataUrl]);
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -56,12 +61,14 @@ export default function QRModal({ profile, onClose }: Props) {
     let cancelled = false;
     setPreparedProfile(null);
     setQrValues([]);
+    setQrFrames([]);
     setQrDataUrls([]);
     setQrIndex(0);
     setQrTooLarge(false);
     setAutoAdvance(false);
     setSlowMode(false);
     setCopied(false);
+    setAvatarSkipped(false);
     setGenerationError(null);
     if (!profile) {
       setUrl("");
@@ -74,12 +81,22 @@ export default function QRModal({ profile, onClose }: Props) {
           ? profile
           : await sealProfileConsent(profile.id);
         if (!ready) throw new Error("Profiel kon niet worden bevestigd");
-        const payload = await encodeProfileV3(ready, { includeFetLife });
-        const share = buildProfileQrSet(window.location.origin, payload);
+        const transport = await encodeProfileShareTransport(ready, {
+          includeFetLife,
+          includeAvatar,
+        });
+        const share = buildProfileQrBundleSet(
+          window.location.origin,
+          transport.profilePayload,
+          transport.encoded,
+          transport.avatarPayload,
+        );
         if (cancelled) return;
         setPreparedProfile(ready);
+        setAvatarSkipped(includeAvatar && !!ready.avatarDataUrl && !transport.avatarPayload);
         setUrl(share.shareUrl);
         setQrValues(share.qrValues);
+        setQrFrames(share.frames);
         setQrTooLarge(share.qrTooLarge);
       } catch {
         if (!cancelled) {
@@ -92,7 +109,16 @@ export default function QRModal({ profile, onClose }: Props) {
     return () => { cancelled = true; };
     // updatedAt changes for shareable profile edits. A proof-only store update
     // deliberately does not restart generation after sealing this same version.
-  }, [profile?.id, profile?.updatedAt, profile?.origin, profile?.isImported, includeFetLife, sealProfileConsent]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    profile?.id,
+    profile?.updatedAt,
+    profile?.origin,
+    profile?.isImported,
+    profile?.avatarDataUrl,
+    includeFetLife,
+    includeAvatar,
+    sealProfileConsent,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
@@ -150,9 +176,11 @@ export default function QRModal({ profile, onClose }: Props) {
 
   const multi = qrValues.length > 1;
   const qrDataUrl = qrDataUrls[qrIndex] ?? null;
+  const currentFrame = qrFrames[qrIndex] ?? null;
   const readableAlias = preparedProfile?.consentProof
     ? profileConsentAlias(preparedProfile)
     : null;
+  const sharingAvatar = !!preparedProfile?.avatarDataUrl && includeAvatar && !avatarSkipped;
 
   return (
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
@@ -172,9 +200,9 @@ export default function QRModal({ profile, onClose }: Props) {
           </div>
         )}
 
-        {multi && (
+        {multi && currentFrame && (
           <p className="text-xs text-center font-semibold mb-1" style={{ color: "var(--text)" }}>
-            {autoAdvance ? "Automatisch" : "Gepauzeerd"} · QR {qrIndex + 1} van {qrValues.length}
+            {autoAdvance ? "Automatisch" : "Gepauzeerd"} · {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
           </p>
         )}
 
@@ -184,14 +212,16 @@ export default function QRModal({ profile, onClose }: Props) {
             style={{ width: 280, height: 180, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
             role="status"
           >
-            Dit profiel bevat te veel tekst voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
+            Dit profiel bevat te veel gegevens voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
           </div>
         ) : qrDataUrl ? (
           <img
             src={qrDataUrl}
             width={280}
             height={280}
-            alt={multi ? `Profiel QR-code ${qrIndex + 1} van ${qrValues.length}` : "QR-code voor profielimport"}
+            alt={currentFrame
+              ? `${currentFrame.phase === "avatar" ? "Profielfoto" : "Profiel"} QR-code ${currentFrame.index} van ${currentFrame.total}`
+              : "QR-code voor profielimport"}
             className="mx-auto rounded-xl my-3"
           />
         ) : (
@@ -255,13 +285,47 @@ export default function QRModal({ profile, onClose }: Props) {
         )}
 
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
-          Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze versie wordt door jouw eigendomssleutel bevestigd.
+          Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze profielversie wordt door jouw eigendomssleutel bevestigd.
         </p>
+        {sharingAvatar && (
+          <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>
+            De profielfoto volgt na het profiel als aparte gecontroleerde QR-fase.
+          </p>
+        )}
         {multi && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
             {autoAdvance
               ? "Houd beide toestellen stil. De codes wisselen automatisch; dubbele scans zijn geen probleem."
               : `Hervat automatisch wisselen of toon de ${qrValues.length} delen handmatig. Volgorde maakt niet uit.`}
+          </p>
+        )}
+
+        {profile?.avatarDataUrl && (
+          <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer select-none">
+            <span
+              className="w-4 h-4 rounded border flex items-center justify-center transition-colors flex-none"
+              style={includeAvatar
+                ? { background: "var(--accent)", borderColor: "var(--accent)" }
+                : { borderColor: "var(--border)" }}
+              aria-hidden="true"
+            >
+              {includeAvatar && <span className="text-[8px] font-bold text-black">✓</span>}
+            </span>
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={includeAvatar}
+              onChange={(e) => setIncludeAvatar(e.target.checked)}
+            />
+            <span style={{ color: "var(--text2)" }}>
+              Profielfoto meesturen <span className="text-xs opacity-60">(standaard aan)</span>
+            </span>
+          </label>
+        )}
+
+        {avatarSkipped && (
+          <p className="text-xs mb-3" style={{ color: "var(--hard-no)" }} role="alert">
+            De huidige profielfoto is te groot of heeft een ongeldig formaat en wordt daarom niet meegestuurd.
           </p>
         )}
 
@@ -303,7 +367,9 @@ export default function QRModal({ profile, onClose }: Props) {
         </button>
 
         <p className="text-xs text-center mt-1 mb-4" style={{ color: "var(--text2)" }}>
-          Verborgen antwoorden, avatar en persoonlijke notitie blijven uitsluitend op dit toestel.
+          {sharingAvatar
+            ? "Verborgen antwoorden en persoonlijke notitie blijven uitsluitend op dit toestel. De profielfoto wordt meegestuurd."
+            : "Verborgen antwoorden, profielfoto en persoonlijke notitie blijven uitsluitend op dit toestel."}
         </p>
 
         <button
