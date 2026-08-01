@@ -146,7 +146,9 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           void onResult(encoded);
           return "complete";
         } catch {
-          setPartError("De ontvangen profielfoto is ongeldig of beschadigd.");
+          bundleAssemblyRef.current = null;
+          setBundleProgress(null);
+          setPartError("De ontvangen profieloverdracht is ongeldig, beschadigd of te groot. Start de scan opnieuw.");
           return "progress";
         }
       }
