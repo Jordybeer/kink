@@ -3,9 +3,18 @@ import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { decodeAny } from "@/lib/shareProfile";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import { verifyProfileConsent } from "@/lib/consentProof";
+import { sanitizeAvatar } from "@/lib/sessionImport";
+import { checksumProfilePayload } from "@/lib/profileQr";
 
 export interface ProfileShareV3Options {
   includeFetLife?: boolean;
+  includeAvatar?: boolean;
+}
+
+export interface ProfileShareTransport {
+  encoded: string;
+  profilePayload: string;
+  avatarPayload?: string;
 }
 
 export const MAX_PROFILE_SHARE_INFLATED_BYTES = 4_000_000;
@@ -39,6 +48,13 @@ interface ProfilePayloadV3 {
   cp?: ProfileConsentProof;
 }
 
+interface ProfileShareBundleV4 {
+  v: 4;
+  p: string;
+  a: string;
+  h: string;
+}
+
 const STATUS_ENC: Record<NonNullable<KinkEntry["status"]>, string> = {
   yes: "y",
   willing: "w",
@@ -57,6 +73,7 @@ const STATUS_DEC: Record<string, NonNullable<KinkEntry["status"]>> = {
 
 const PREFIX_DEFLATE = "3d.";
 const PREFIX_RAW = "3r.";
+const PREFIX_BUNDLE = "4r.";
 
 function compactProfile(profile: Profile, opts?: ProfileShareV3Options): ProfilePayloadV3 {
   const mayShare = (entry: KinkEntry | undefined) => entry?.privateResponse !== true;
@@ -208,6 +225,10 @@ export function isProfileV3(encoded: string): boolean {
   return encoded.startsWith(PREFIX_DEFLATE) || encoded.startsWith(PREFIX_RAW);
 }
 
+export function isProfileShareBundle(encoded: string): boolean {
+  return encoded.startsWith(PREFIX_BUNDLE);
+}
+
 export async function encodeProfileV3(
   profile: Profile,
   opts?: ProfileShareV3Options,
@@ -225,6 +246,40 @@ export async function encodeProfileV3(
     // Raw v3 remains lossless on browsers without CompressionStream.
   }
   return PREFIX_RAW + bytesToBase64Url(raw);
+}
+
+export function encodeProfileShareBundle(profilePayload: string, avatarPayload: string): string {
+  const avatar = sanitizeAvatar(avatarPayload);
+  if (!avatar) throw new Error("Profielfoto is ongeldig of te groot");
+  if (!profilePayload || profilePayload.length > MAX_PROFILE_SHARE_ENCODED_CHARS) {
+    throw new Error("Profielcode is te groot");
+  }
+  const bundle: ProfileShareBundleV4 = {
+    v: 4,
+    p: profilePayload,
+    a: avatar,
+    h: checksumProfilePayload(avatar),
+  };
+  const raw = new TextEncoder().encode(JSON.stringify(bundle));
+  const encoded = PREFIX_BUNDLE + bytesToBase64Url(raw);
+  if (encoded.length > MAX_PROFILE_SHARE_ENCODED_CHARS) {
+    throw new Error("Profielbundel is te groot");
+  }
+  return encoded;
+}
+
+export async function encodeProfileShareTransport(
+  profile: Profile,
+  opts?: ProfileShareV3Options,
+): Promise<ProfileShareTransport> {
+  const profilePayload = await encodeProfileV3(profile, opts);
+  const avatarPayload = opts?.includeAvatar ? sanitizeAvatar(profile.avatarDataUrl) : undefined;
+  if (!avatarPayload) return { encoded: profilePayload, profilePayload };
+  return {
+    encoded: encodeProfileShareBundle(profilePayload, avatarPayload),
+    profilePayload,
+    avatarPayload,
+  };
 }
 
 export async function decodeProfileV3(encoded: string): Promise<Profile> {
@@ -249,6 +304,26 @@ export async function decodeProfileV3(encoded: string): Promise<Profile> {
   return profile;
 }
 
+async function decodeProfileShareBundle(encoded: string): Promise<Profile> {
+  if (encoded.length > MAX_PROFILE_SHARE_ENCODED_CHARS) {
+    throw new Error("Profielbundel is te groot");
+  }
+  const decoded = JSON.parse(new TextDecoder().decode(base64UrlToBytes(encoded.slice(PREFIX_BUNDLE.length)))) as Partial<ProfileShareBundleV4>;
+  if (decoded.v !== 4 || typeof decoded.p !== "string"
+    || typeof decoded.a !== "string" || typeof decoded.h !== "string") {
+    throw new Error("Ongeldige profielbundel");
+  }
+  const avatarDataUrl = sanitizeAvatar(decoded.a);
+  if (!avatarDataUrl || checksumProfilePayload(avatarDataUrl) !== decoded.h) {
+    throw new Error("Profielfoto is beschadigd");
+  }
+  const profile = isProfileV3(decoded.p)
+    ? await decodeProfileV3(decoded.p)
+    : decodeAny(decoded.p);
+  return { ...profile, avatarDataUrl };
+}
+
 export async function decodeSharedProfile(encoded: string): Promise<Profile> {
+  if (isProfileShareBundle(encoded)) return decodeProfileShareBundle(encoded);
   return isProfileV3(encoded) ? decodeProfileV3(encoded) : decodeAny(encoded);
 }
