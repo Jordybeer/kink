@@ -1,9 +1,15 @@
-import { parseProfileQrPart, type ProfileQrPart } from "@/lib/profileQr";
+import {
+  parseProfileQrBundlePart,
+  parseProfileQrPart,
+  type ProfileQrBundlePart,
+  type ProfileQrPart,
+} from "@/lib/profileQr";
 
 export type ParsedShare =
   | { kind: "session"; code: string }
   | { kind: "profile"; encoded: string }
   | { kind: "profilePart"; part: ProfileQrPart }
+  | { kind: "profileBundlePart"; part: ProfileQrBundlePart }
   | { kind: "invalid" };
 
 const SESSION_TOKEN_RE = /^KINKSYNC:([A-Z2-9]{6})$/;
@@ -18,6 +24,11 @@ function parseHash(hash: string): ParsedShare | null {
   if (p3m) {
     const part = parseProfileQrPart(p3m);
     return part ? { kind: "profilePart", part } : { kind: "invalid" };
+  }
+  const p3b = params.get("p3b");
+  if (p3b) {
+    const part = parseProfileQrBundlePart(p3b);
+    return part ? { kind: "profileBundlePart", part } : { kind: "invalid" };
   }
   return null;
 }
@@ -46,13 +57,18 @@ export function parseSharePaste(raw: string): ParsedShare {
   const hashOnly = input.startsWith("#") ? parseHash(input) : null;
   if (hashOnly) return hashOnly;
 
-  if (input.startsWith("3d.") || input.startsWith("3r.")) {
+  if (input.startsWith("3d.") || input.startsWith("3r.") || input.startsWith("4r.")) {
     return { kind: "profile", encoded: input };
   }
 
   if (input.startsWith("p3m=")) {
     const part = parseProfileQrPart(input.slice(4));
     return part ? { kind: "profilePart", part } : { kind: "invalid" };
+  }
+
+  if (input.startsWith("p3b=")) {
+    const part = parseProfileQrBundlePart(input.slice(4));
+    return part ? { kind: "profileBundlePart", part } : { kind: "invalid" };
   }
 
   if (SESSION_CODE_RE.test(input)) return { kind: "session", code: input };
