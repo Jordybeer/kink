@@ -34,13 +34,22 @@ export default function QRModal({ profile, onClose }: Props) {
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
   const [includeAvatar, setIncludeAvatar] = useState(false);
+  const [settledPreferenceKey, setSettledPreferenceKey] = useState<string | null>(null);
   const [avatarSkipped, setAvatarSkipped] = useState(false);
+  const [avatarLinkOnly, setAvatarLinkOnly] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+
+  const ownsProfile = !!profile && profile.origin !== "shared" && profile.isImported !== true;
+  const canShareAvatar = ownsProfile && !!profile?.avatarDataUrl;
+  const preferenceKey = profile
+    ? `${profile.id}:${profile.avatarDataUrl ? "avatar" : "none"}:${ownsProfile ? "own" : "shared"}`
+    : null;
 
   useEffect(() => {
     setIncludeFetLife(false);
-    setIncludeAvatar(!!profile?.avatarDataUrl);
-  }, [profile?.id, profile?.avatarDataUrl]);
+    setIncludeAvatar(canShareAvatar);
+    setSettledPreferenceKey(preferenceKey);
+  }, [preferenceKey, canShareAvatar]);
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -69,11 +78,13 @@ export default function QRModal({ profile, onClose }: Props) {
     setSlowMode(false);
     setCopied(false);
     setAvatarSkipped(false);
+    setAvatarLinkOnly(false);
     setGenerationError(null);
     if (!profile) {
       setUrl("");
       return;
     }
+    if (settledPreferenceKey !== preferenceKey) return;
 
     void (async () => {
       try {
@@ -81,19 +92,39 @@ export default function QRModal({ profile, onClose }: Props) {
           ? profile
           : await sealProfileConsent(profile.id);
         if (!ready) throw new Error("Profiel kon niet worden bevestigd");
+
+        const avatarOwnerKey = includeAvatar
+          ? useStore.getState().profileOwnerKeys.find((key) => key.profileId === ready.id)
+          : undefined;
         const transport = await encodeProfileShareTransport(ready, {
           includeFetLife,
           includeAvatar,
+          avatarOwnerKey,
         });
-        const share = buildProfileQrBundleSet(
+        let share = buildProfileQrBundleSet(
           window.location.origin,
           transport.profilePayload,
           transport.encoded,
           transport.avatarPayload,
         );
+        let linkOnly = false;
+
+        if (transport.avatarPayload && share.qrTooLarge) {
+          const profileOnly = buildProfileQrBundleSet(
+            window.location.origin,
+            transport.profilePayload,
+            transport.profilePayload,
+          );
+          if (!profileOnly.qrTooLarge) {
+            share = { ...profileOnly, shareUrl: share.shareUrl };
+            linkOnly = true;
+          }
+        }
+
         if (cancelled) return;
         setPreparedProfile(ready);
         setAvatarSkipped(includeAvatar && !!ready.avatarDataUrl && !transport.avatarPayload);
+        setAvatarLinkOnly(linkOnly);
         setUrl(share.shareUrl);
         setQrValues(share.qrValues);
         setQrFrames(share.frames);
@@ -117,6 +148,8 @@ export default function QRModal({ profile, onClose }: Props) {
     profile?.avatarDataUrl,
     includeFetLife,
     includeAvatar,
+    preferenceKey,
+    settledPreferenceKey,
     sealProfileConsent,
   ]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -180,7 +213,8 @@ export default function QRModal({ profile, onClose }: Props) {
   const readableAlias = preparedProfile?.consentProof
     ? profileConsentAlias(preparedProfile)
     : null;
-  const sharingAvatar = !!preparedProfile?.avatarDataUrl && includeAvatar && !avatarSkipped;
+  const avatarIncluded = !!preparedProfile?.avatarDataUrl && includeAvatar && !avatarSkipped;
+  const avatarInQrSequence = avatarIncluded && !avatarLinkOnly;
 
   return (
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
@@ -287,9 +321,14 @@ export default function QRModal({ profile, onClose }: Props) {
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
           Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze profielversie wordt door jouw eigendomssleutel bevestigd.
         </p>
-        {sharingAvatar && (
+        {avatarInQrSequence && (
           <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>
-            De profielfoto volgt na het profiel als aparte gecontroleerde QR-fase.
+            De profielfoto volgt na het profiel en is met dezelfde eigendomssleutel bevestigd.
+          </p>
+        )}
+        {avatarLinkOnly && (
+          <p className="text-xs text-center mb-2" style={{ color: "var(--maybe)" }} role="status">
+            De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.
           </p>
         )}
         {multi && (
@@ -300,7 +339,7 @@ export default function QRModal({ profile, onClose }: Props) {
           </p>
         )}
 
-        {profile?.avatarDataUrl && (
+        {canShareAvatar && (
           <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer select-none">
             <span
               className="w-4 h-4 rounded border flex items-center justify-center transition-colors flex-none"
@@ -325,7 +364,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
         {avatarSkipped && (
           <p className="text-xs mb-3" style={{ color: "var(--hard-no)" }} role="alert">
-            De huidige profielfoto is te groot of heeft een ongeldig formaat en wordt daarom niet meegestuurd.
+            De profielfoto kon niet veilig worden voorbereid of met de eigendomssleutel worden bevestigd en wordt daarom niet meegestuurd.
           </p>
         )}
 
@@ -367,7 +406,7 @@ export default function QRModal({ profile, onClose }: Props) {
         </button>
 
         <p className="text-xs text-center mt-1 mb-4" style={{ color: "var(--text2)" }}>
-          {sharingAvatar
+          {avatarIncluded
             ? "Verborgen antwoorden en persoonlijke notitie blijven uitsluitend op dit toestel. De profielfoto wordt meegestuurd."
             : "Verborgen antwoorden, profielfoto en persoonlijke notitie blijven uitsluitend op dit toestel."}
         </p>
