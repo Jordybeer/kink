@@ -8,6 +8,11 @@ import type {
   Profile,
 } from "@/types";
 import {
+  deriveProfileVerificationCode,
+  normalizeProfileVerificationCode,
+} from "@/lib/profileVerification";
+import { sanitizeProfileConsentProof } from "@/lib/consentProof";
+import {
   clamp,
   MAX_CUSTOM_KINKS,
   MAX_ID_LEN,
@@ -57,6 +62,7 @@ export function sanitizeKinkEntry(raw: unknown): KinkEntry | null {
   if (desire !== undefined) entry.desire = Math.min(5, Math.max(0, Math.round(desire)));
   if (typeof r.experienced === "boolean") entry.experienced = r.experienced;
   if (typeof r.curious === "boolean") entry.curious = r.curious;
+  if (typeof r.privateResponse === "boolean") entry.privateResponse = r.privateResponse;
   const used = asFiniteNumber(r.usedInScene);
   if (used !== undefined) entry.usedInScene = Math.max(0, Math.round(used));
   if (Array.isArray(r.tags)) {
@@ -69,7 +75,7 @@ export function sanitizeKinkEntry(raw: unknown): KinkEntry | null {
   }
   // A frisked entry that carries nothing is not worth keeping.
   if (entry.status === null && !entry.comment && entry.desire == null
-    && entry.experienced == null && !entry.curious && !entry.tags) return null;
+    && entry.experienced == null && !entry.curious && !entry.privateResponse && !entry.tags) return null;
   return entry;
 }
 
@@ -126,6 +132,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
 
   const profile: Profile = {
     id,
+    verificationCode: normalizeProfileVerificationCode(r.verificationCode)
+      ?? deriveProfileVerificationCode(id),
     name,
     role: typeof r.role === "string" ? clamp(r.role, MAX_ROLE_LEN) : "",
     experienceLevel: typeof r.experienceLevel === "string"
@@ -158,6 +166,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
   if (r.origin === "own" || r.origin === "shared") profile.origin = r.origin;
   const lockedAt = asFiniteNumber(r.lockedAt);
   if (lockedAt !== undefined) profile.lockedAt = lockedAt;
+  const consentProof = sanitizeProfileConsentProof(r.consentProof);
+  if (consentProof) profile.consentProof = consentProof;
 
   return profile;
 }

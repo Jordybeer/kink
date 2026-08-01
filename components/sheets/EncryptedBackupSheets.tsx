@@ -5,7 +5,6 @@ import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import type { EncryptedBackup } from "@/lib/crypto";
-import type { Profile, ContractSnapshot } from "@/types";
 
 // ─── Export sheet ─────────────────────────────────────────────────────────────
 
@@ -16,7 +15,7 @@ interface ExportSheetProps {
 
 export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   const t = useMotionSafe();
-  const { profiles, contracts } = useStore();
+  const { profiles, contracts, profileOwnerKeys } = useStore();
   const [step, setStep] = useState(0);
   const [pw, setPw] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
@@ -31,12 +30,12 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   function handleClose() { reset(); onClose(); }
 
   async function handleExport() {
-    if (loading) return; // one export at a time — no double-dipping while the crypto works
+    if (loading) return;
     if (pw.length < 8) { setPwError("Wachtwoord moet minstens 8 tekens zijn."); return; }
     if (pw !== pwConfirm) { setPwError("Wachtwoorden komen niet overeen."); return; }
     setLoading(true);
     try {
-      const plain = JSON.stringify({ version: 1, source: "backup", profiles, contracts });
+      const plain = JSON.stringify({ version: 2, source: "backup", profiles, contracts, profileOwnerKeys });
       const { encryptBackup } = await import("@/lib/crypto");
       const encrypted = await encryptBackup(plain, pw);
       const blob = new Blob([JSON.stringify(encrypted)], { type: "application/json" });
@@ -67,7 +66,8 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               <h2 className="text-base font-bold">Backup versleutelen</h2>
               <div className="rounded-xl p-4 text-sm flex flex-col gap-3" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen — informatie die niemand anders mag zien.</p>
-                <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Zonder encryptie kan iedereen die het bestand vindt alles lezen.</p>
+                <p>De versleutelde backup bevat ook de private eigendomssleutels van je profielen. Wie zowel dit bestand als het wachtwoord bezit, kan nieuwe profielversies ondertekenen alsof die van jouw lokale profielbron komen.</p>
+                <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
               </div>
               <button onClick={() => setStep(1)}
@@ -149,7 +149,7 @@ interface ImportSheetProps {
 
 export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }: ImportSheetProps) {
   const t = useMotionSafe();
-  const { importProfiles, restoreContracts } = useStore();
+  const { importProfiles, restoreBackupProfiles, restoreContracts } = useStore();
   const [pw, setPw] = useState("");
   const [pwShow, setPwShow] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
@@ -165,33 +165,63 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
     setLoading(true);
     setPwError(null);
     try {
-      const { decryptBackup } = await import("@/lib/crypto");
-      const plain = await decryptBackup(data, pw);
-      const parsed = JSON.parse(plain) as Record<string, unknown>;
-      handleClose();
+      let parsed: Record<string, unknown>;
+      try {
+        const { decryptBackup } = await import("@/lib/crypto");
+        const plain = await decryptBackup(data, pw);
+        parsed = JSON.parse(plain) as Record<string, unknown>;
+      } catch {
+        setPwError("Verkeerd wachtwoord of beschadigd versleuteld bestand.");
+        return;
+      }
 
-      if (!parsed.profiles || !Array.isArray(parsed.profiles)) {
-        onError("Ongeldig bestand — geen geldige profielen gevonden.");
+      if (!Array.isArray(parsed.profiles)) {
+        handleClose();
+        onError("Ongeldig backupbestand — geen profielen gevonden.");
         return;
       }
-      // Decrypted doesn't mean trustworthy — every element gets frisked and
-      // the fakes are dropped one by one instead of failing the whole restore.
-      const { sanitizeProfileFull, sanitizeContractSnapshot } = await import("@/lib/sanitizeProfile");
-      const incoming = parsed.profiles
-        .map((p) => sanitizeProfileFull(p))
-        .filter((p): p is Profile => p !== null);
-      const restoredContracts = (Array.isArray(parsed.contracts) ? parsed.contracts : [])
-        .map((c) => sanitizeContractSnapshot(c))
-        .filter((c): c is ContractSnapshot => c !== null);
-      if (!incoming.length && !restoredContracts.length) {
-        onError("Ongeldig bestand — geen geldige profielen gevonden.");
+
+      const { prepareBackupRestore } = await import("@/lib/backupRestore");
+      let prepared;
+      try {
+        prepared = await prepareBackupRestore(parsed);
+      } catch {
+        handleClose();
+        onError("Het bestand kon worden ontsleuteld, maar bevat geen geldige KinkSync-backup.");
         return;
       }
-      if (incoming.length) importProfiles(incoming.map(p => ({ ...p, isImported: true as const, origin: "shared" as const, lockedAt: p.lockedAt ?? Date.now() })));
-      if (restoredContracts.length) restoreContracts(restoredContracts);
-      onSuccess(`${incoming.length} profiel(en) en ${restoredContracts.length} contract(en) hersteld.`);
-    } catch {
-      setPwError("Verkeerd wachtwoord — probeer opnieuw.");
+
+      if (!prepared.profiles.length && !prepared.contracts.length) {
+        handleClose();
+        onError("De backup bevat geen geldige profielen of contracten om te herstellen.");
+        return;
+      }
+
+      const knownContractIds = new Set(useStore.getState().contracts.map((contract) => contract.id));
+      const contractsAdded = prepared.contracts.filter((contract) => !knownContractIds.has(contract.id)).length;
+      let message: string;
+
+      if (prepared.source === "backup") {
+        const result = restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
+        if (prepared.contracts.length) restoreContracts(prepared.contracts);
+        const profileChanges = result.added + result.updated;
+        const keyChanges = result.ownerKeysAdded + result.ownerKeysUpdated;
+
+        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0) {
+          message = result.conflicts > 0
+            ? `Backup gecontroleerd: niets overschreven; ${result.conflicts} bronconflict(en) veilig overgeslagen.`
+            : "Backup gecontroleerd: de bestaande gegevens waren al even nieuw of nieuwer.";
+        } else {
+          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s) en ${contractsAdded} contract(en) toegevoegd of bijgewerkt.`;
+        }
+      } else {
+        importProfiles(prepared.profiles);
+        if (prepared.contracts.length) restoreContracts(prepared.contracts);
+        message = `Import verwerkt: ${prepared.profiles.length} geldig(e) gedeeld(e) profiel(en) en ${contractsAdded} nieuw(e) contract(en).`;
+      }
+
+      handleClose();
+      onSuccess(message);
     } finally {
       setLoading(false);
     }

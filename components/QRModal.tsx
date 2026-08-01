@@ -2,7 +2,15 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
-import { encodeProfileCompact } from "@/lib/shareProfile";
+import { encodeProfileV3 } from "@/lib/profileShareV3";
+import {
+  buildProfileQrSet,
+  nextProfileQrIndex,
+  PROFILE_QR_AUTO_INTERVAL_MS,
+  PROFILE_QR_SLOW_INTERVAL_MS,
+} from "@/lib/profileQr";
+import { profileConsentAlias } from "@/lib/consentProof";
+import { useStore } from "@/lib/store";
 import Sheet, { SheetContent } from "./Sheet";
 
 interface Props {
@@ -10,36 +18,118 @@ interface Props {
   onClose: () => void;
 }
 
-// encodes one Profile per QR; subprofiles are exported individually
 export default function QRModal({ profile, onClose }: Props) {
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const sealProfileConsent = useStore((state) => state.sealProfileConsent);
+  const [preparedProfile, setPreparedProfile] = useState<Profile | null>(null);
+  const [qrValues, setQrValues] = useState<string[]>([]);
+  const [qrDataUrls, setQrDataUrls] = useState<string[]>([]);
+  const [qrIndex, setQrIndex] = useState(0);
+  const [qrTooLarge, setQrTooLarge] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(false);
+  const [slowMode, setSlowMode] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   useEffect(() => {
     setIncludeFetLife(false);
   }, [profile?.id]);
 
   useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const applyPreference = () => {
+      setReducedMotion(query.matches);
+      if (query.matches) setAutoAdvance(false);
+    };
+    applyPreference();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", applyPreference);
+      return () => query.removeEventListener("change", applyPreference);
+    }
+    query.addListener(applyPreference);
+    return () => query.removeListener(applyPreference);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreparedProfile(null);
+    setQrValues([]);
+    setQrDataUrls([]);
+    setQrIndex(0);
+    setQrTooLarge(false);
+    setAutoAdvance(false);
+    setSlowMode(false);
+    setCopied(false);
+    setGenerationError(null);
     if (!profile) {
-      setQrDataUrl(null);
-      setCopied(false);
+      setUrl("");
       return;
     }
-    setQrDataUrl(null);
-    const qrUrl = window.location.origin + "/?p=" + encodeProfileCompact(profile, { includeFetLife });
-    setUrl(qrUrl);
+
+    void (async () => {
+      try {
+        const ready = profile.origin === "shared" || profile.isImported
+          ? profile
+          : await sealProfileConsent(profile.id);
+        if (!ready) throw new Error("Profiel kon niet worden bevestigd");
+        const payload = await encodeProfileV3(ready, { includeFetLife });
+        const share = buildProfileQrSet(window.location.origin, payload);
+        if (cancelled) return;
+        setPreparedProfile(ready);
+        setUrl(share.shareUrl);
+        setQrValues(share.qrValues);
+        setQrTooLarge(share.qrTooLarge);
+      } catch {
+        if (!cancelled) {
+          setPreparedProfile(null);
+          setGenerationError("Deelcode kon niet worden opgebouwd.");
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // updatedAt changes for shareable profile edits. A proof-only store update
+    // deliberately does not restart generation after sealing this same version.
+  }, [profile?.id, profile?.updatedAt, profile?.origin, profile?.isImported, includeFetLife, sealProfileConsent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let cancelled = false;
+    setQrDataUrls([]);
+    setQrIndex(0);
+    setAutoAdvance(false);
+    if (!qrValues.length) return;
+
     const css = getComputedStyle(document.documentElement);
     const dark = css.getPropertyValue("--accent").trim() || "#D946AF";
     const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
-    QRCode.toDataURL(qrUrl, {
+
+    Promise.all(qrValues.map((value) => QRCode.toDataURL(value, {
       width: 280,
       margin: 2,
       errorCorrectionLevel: "L",
       color: { dark, light },
-    }).then(setQrDataUrl);
-  }, [profile, includeFetLife]);
+    }))).then((images) => {
+      if (cancelled) return;
+      setQrDataUrls(images);
+      if (images.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setAutoAdvance(true);
+      }
+    }).catch(() => {
+      if (!cancelled) setGenerationError("QR-code kon niet worden opgebouwd.");
+    });
+
+    return () => { cancelled = true; };
+  }, [qrValues]);
+
+  useEffect(() => {
+    if (!autoAdvance || qrValues.length < 2 || qrDataUrls.length !== qrValues.length) return;
+    const interval = window.setInterval(() => {
+      setQrIndex((index) => nextProfileQrIndex(index, qrValues.length));
+    }, slowMode ? PROFILE_QR_SLOW_INTERVAL_MS : PROFILE_QR_AUTO_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [autoAdvance, slowMode, qrValues.length, qrDataUrls.length]);
 
   function handleCopy() {
     navigator.clipboard.writeText(url).then(() => {
@@ -48,36 +138,132 @@ export default function QRModal({ profile, onClose }: Props) {
     });
   }
 
-  return (
-    <Sheet open={profile !== null} onClose={onClose} aria-label="Profiel delen">
-      <SheetContent>
+  function showPrevious() {
+    setAutoAdvance(false);
+    setQrIndex((index) => (index <= 0 ? qrValues.length - 1 : index - 1));
+  }
 
+  function showNext() {
+    setAutoAdvance(false);
+    setQrIndex((index) => nextProfileQrIndex(index, qrValues.length));
+  }
+
+  const multi = qrValues.length > 1;
+  const qrDataUrl = qrDataUrls[qrIndex] ?? null;
+  const readableAlias = preparedProfile?.consentProof
+    ? profileConsentAlias(preparedProfile)
+    : null;
+
+  return (
+    <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
+      <SheetContent
+        showHandle={false}
+        className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4"
+      >
         <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
         {profile && (
-          <p className="text-sm text-center mb-4" style={{ color: "var(--accent)" }}>
-            {profile.name}
+          <div className="text-center mb-3">
+            <p className="text-sm" style={{ color: "var(--accent)" }}>{profile.name}</p>
+            {readableAlias && (
+              <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>
+                Bron bevestigd · {readableAlias}
+              </p>
+            )}
+          </div>
+        )}
+
+        {multi && (
+          <p className="text-xs text-center font-semibold mb-1" style={{ color: "var(--text)" }}>
+            {autoAdvance ? "Automatisch" : "Gepauzeerd"} · QR {qrIndex + 1} van {qrValues.length}
           </p>
         )}
 
-        {qrDataUrl ? (
+        {qrTooLarge ? (
+          <div
+            className="mx-auto my-3 rounded-xl flex items-center justify-center text-sm text-center px-6"
+            style={{ width: 280, height: 180, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+            role="status"
+          >
+            Dit profiel bevat te veel tekst voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
+          </div>
+        ) : qrDataUrl ? (
           <img
             src={qrDataUrl}
             width={280}
             height={280}
-            alt="QR-code voor profielimport"
-            className="mx-auto rounded-xl my-4"
+            alt={multi ? `Profiel QR-code ${qrIndex + 1} van ${qrValues.length}` : "QR-code voor profielimport"}
+            className="mx-auto rounded-xl my-3"
           />
         ) : (
           <div
-            className="mx-auto my-4 rounded-xl animate-pulse"
-            style={{ width: 280, height: 280, background: "var(--surface2)" }}
+            className="mx-auto my-3 rounded-xl animate-pulse flex items-center justify-center text-xs text-center px-6"
+            style={{ width: 280, height: 280, background: "var(--surface2)", color: "var(--text2)" }}
             aria-label="QR-code laden…"
-          />
+          >
+            {generationError ?? (multi ? "QR-reeks voorbereiden…" : "Volledig profiel inpakken…")}
+          </div>
+        )}
+
+        {multi && (
+          <>
+            <button
+              type="button"
+              onClick={() => setAutoAdvance((active) => !active)}
+              disabled={qrDataUrls.length !== qrValues.length}
+              className="focus-ring w-full py-2.5 rounded-xl border text-sm font-semibold disabled:opacity-35"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+            >
+              {autoAdvance ? "Pauzeer" : "Hervat"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSlowMode((slow) => !slow)}
+              className="focus-ring block mx-auto px-3 py-2 text-xs underline-offset-2 hover:underline"
+              style={{ color: "var(--text2)" }}
+            >
+              Snelheid: {slowMode ? "rustig" : "normaal"}
+            </button>
+
+            {!autoAdvance && (
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={showPrevious}
+                  className="focus-ring flex-1 py-2 rounded-lg border text-xs"
+                  style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                >
+                  ← Vorige
+                </button>
+                <button
+                  type="button"
+                  onClick={showNext}
+                  className="focus-ring flex-1 py-2 rounded-lg border text-xs"
+                  style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                >
+                  Volgende →
+                </button>
+              </div>
+            )}
+
+            {reducedMotion && !autoAdvance && (
+              <p className="text-xs text-center mb-3" style={{ color: "var(--text2)" }}>
+                Automatisch wisselen staat standaard uit volgens de bewegingsinstelling van dit toestel.
+              </p>
+            )}
+          </>
         )}
 
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
-          Deelt statussen — notities en wensen blijven privé.
+          Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze versie wordt door jouw eigendomssleutel bevestigd.
         </p>
+        {multi && (
+          <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
+            {autoAdvance
+              ? "Houd beide toestellen stil. De codes wisselen automatisch; dubbele scans zijn geen probleem."
+              : `Hervat automatisch wisselen of toon de ${qrValues.length} delen handmatig. Volgorde maakt niet uit.`}
+          </p>
+        )}
 
         {profile?.fetLifeUsername && (
           <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer select-none">
@@ -105,18 +291,19 @@ export default function QRModal({ profile, onClose }: Props) {
 
         <button
           onClick={handleCopy}
-          className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors mb-3"
+          disabled={!url}
+          className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors mb-3 disabled:opacity-40"
           style={
             copied
               ? { borderColor: "var(--yes)", color: "var(--yes)" }
               : { borderColor: "var(--border)", color: "var(--text)" }
           }
         >
-          {copied ? "✓ Gekopieerd!" : "⎘ Kopieer link"}
+          {copied ? "✓ Gekopieerd!" : "⎘ Kopieer volledige link"}
         </button>
 
         <p className="text-xs text-center mt-1 mb-4" style={{ color: "var(--text2)" }}>
-          Laat je partner deze QR-code scannen of stuur de link. Zij importeren jouw profiel in hun app.
+          Verborgen antwoorden, avatar en persoonlijke notitie blijven uitsluitend op dit toestel.
         </p>
 
         <button

@@ -2,15 +2,16 @@
 import { useState } from "react";
 import { Camera } from "@phosphor-icons/react";
 import { ProfileTrendsChart } from "@/components/ProfileTrendsChart";
-import type { ProfileSnapshot } from "@/types";
+import type { KinkEntry, ProfileSnapshot } from "@/types";
 
 interface Props {
   profileId: string;
   snapshots: ProfileSnapshot[];
+  currentEntries: Record<string, KinkEntry>;
   onSave: (profileId: string) => unknown;
 }
 
-export default function ProfileSnapshotPanel({ profileId, snapshots, onSave }: Props) {
+export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntries, onSave }: Props) {
   const [snapshotSaved, setSnapshotSaved] = useState(false);
   const mine = snapshots.filter((snap) => snap.profileId === profileId);
 
@@ -23,7 +24,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, onSave }: P
 
   return (
     <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-      <ProfileTrendsChart snapshots={mine} />
+      <ProfileTrendsChart snapshots={mine} currentEntries={currentEntries} />
       {snapshotSaved ? (
         <p className="text-sm text-center py-3 font-semibold" style={{ color: "var(--accent)" }}>
           ✓ Moment opgeslagen

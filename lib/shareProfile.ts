@@ -2,33 +2,54 @@ import type { Profile, KinkEntry, KinkStatus, CustomKink } from "@/types";
 import { KINKS } from "@/lib/kinks";
 import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/sessionImport";
+import { deriveProfileVerificationCode, getProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
+
+interface ShareProfileOptions {
+  includeFetLife?: boolean;
+  includePrivateResponses?: boolean;
+}
 
 // ── v1 encoding (full JSON, used for copy-link) ──────────────────────────────
 
-function compactEntry(entry: KinkEntry): Record<string, unknown> | null {
+function compactEntry(
+  entry: KinkEntry,
+  includePrivateResponses = false,
+): Record<string, unknown> | null {
+  if (entry.privateResponse === true && !includePrivateResponses) return null;
+
   const out: Record<string, unknown> = {};
-  if (entry.status != null)        out.status = entry.status;
-  if (entry.desire != null)        out.desire = entry.desire;
-  if (entry.experienced != null)   out.experienced = entry.experienced;
-  if (entry.comment)               out.comment = entry.comment;
-  if (entry.tags?.length)          out.tags = entry.tags;
+  if (entry.status != null)             out.status = entry.status;
+  if (entry.desire != null)             out.desire = entry.desire;
+  if (entry.experienced != null)        out.experienced = entry.experienced;
+  if (entry.comment)                    out.comment = entry.comment;
+  if (entry.tags?.length)               out.tags = entry.tags;
+  if (entry.curious === true)           out.curious = true;
+  if (entry.privateResponse === true)   out.privateResponse = true;
   // score is deprecated — never encoded
   return Object.keys(out).length > 0 ? out : null;
 }
 
-export function encodeProfile(profile: Profile, opts?: { includeFetLife?: boolean }): string {
+export function encodeProfile(profile: Profile, opts?: ShareProfileOptions): string {
   // privateNote is called private for a reason — it never rides a share link.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { avatarDataUrl, fetLifeUsername, privateNote, ...rest } = profile;
+  const includePrivateResponses = opts?.includePrivateResponses === true;
 
   const compactedEntries: Record<string, unknown> = {};
   for (const [id, entry] of Object.entries(rest.entries)) {
-    const compact = compactEntry(entry);
+    const compact = compactEntry(entry, includePrivateResponses);
     if (compact) compactedEntries[id] = compact;
   }
 
+  const customKinks = (rest.customKinks ?? []).filter(
+    (kink) => includePrivateResponses || rest.entries[kink.id]?.privateResponse !== true,
+  );
+  const base = opts?.includeFetLife && fetLifeUsername
+    ? { ...rest, fetLifeUsername }
+    : rest;
   const payload = {
-    ...(opts?.includeFetLife && fetLifeUsername ? { ...rest, fetLifeUsername } : rest),
+    ...base,
+    customKinks,
     entries: compactedEntries,
   };
 
@@ -49,22 +70,40 @@ const S_DEC: Record<string, KinkStatus> = {
   y: "yes", g: "willing", c: "maybe", m: "maybe", n: "no", H: "hard_no",
 };
 
-export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?: boolean }): string {
+export function encodeProfileCompact(profile: Profile, opts?: ShareProfileOptions): string {
+  const includePrivateResponses = opts?.includePrivateResponses === true;
+  const mayShare = (entry: KinkEntry | undefined) =>
+    includePrivateResponses || entry?.privateResponse !== true;
+
   // One char per kink in KINKS order — status only (desire/experienced omitted to keep QR scannable)
   const s = KINKS.map(k => {
-    const st = profile.entries[k.id]?.status;
-    return (st ? S_ENC[st] : undefined) ?? " ";
+    const entry = profile.entries[k.id];
+    if (!mayShare(entry)) return " ";
+    const status = entry?.status;
+    return (status ? S_ENC[status] : undefined) ?? " ";
   }).join("");
+  const p = includePrivateResponses
+    ? KINKS.map(k => profile.entries[k.id]?.privateResponse ? "1" : " ").join("")
+    : "";
 
-  const ck = (profile.customKinks ?? []).map(c => {
-    const e = profile.entries[c.id];
-    const sc = (e?.status ? S_ENC[e.status] : undefined) ?? " ";
-    return [c.id, c.name, sc];
+  const shareableCustomKinks = (profile.customKinks ?? []).filter(
+    (custom) => mayShare(profile.entries[custom.id]),
+  );
+  const ck = shareableCustomKinks.map(c => {
+    const entry = profile.entries[c.id];
+    const statusCode = (entry?.status ? S_ENC[entry.status] : undefined) ?? " ";
+    return [c.id, c.name, statusCode];
   });
+  const pk = includePrivateResponses
+    ? shareableCustomKinks
+        .filter(c => profile.entries[c.id]?.privateResponse)
+        .map(c => c.id)
+    : [];
 
   const payload: Record<string, unknown> = {
     v: 2,
     id: profile.id,
+    vc: getProfileVerificationCode(profile),
     n: profile.name,
     r: profile.role,
     e: profile.experienceLevel,
@@ -72,9 +111,11 @@ export function encodeProfileCompact(profile: Profile, opts?: { includeFetLife?:
     ua: profile.updatedAt,
     s,
   };
+  if (p.includes("1")) payload.p = p;
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
   if (ck.length) payload.ck = ck;
+  if (pk.length) payload.pk = pk;
   if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
 
   return toBase64Url(JSON.stringify(payload));
@@ -95,11 +136,21 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     }
     const desire = p.d?.[i] !== "0" && p.d?.[i] ? parseInt(p.d[i]) : null;
     const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
-    if (status !== null || desire !== null || experienced !== null) {
-      entries[KINKS[i].id] = { status, desire, experienced, comment: "" };
+    const privateResponse = p.p?.[i] === "1";
+    if (status !== null || desire !== null || experienced !== null || privateResponse) {
+      entries[KINKS[i].id] = {
+        status,
+        desire,
+        experienced,
+        comment: "",
+        ...(privateResponse ? { privateResponse: true } : {}),
+      };
     }
   }
 
+  const privateCustomIds = new Set(
+    (Array.isArray(p.pk) ? p.pk : []).filter((id: unknown): id is string => typeof id === "string")
+  );
   const customKinks: CustomKink[] = [];
   for (const row of (Array.isArray(p.ck) ? p.ck : [])) {
     if (customKinks.length >= MAX_CUSTOM_KINKS) break;
@@ -114,8 +165,15 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     const desire = typeof desireNum === "number" && Number.isFinite(desireNum) && desireNum
       ? Math.min(5, Math.max(0, Math.round(desireNum))) : null;
     const experienced = exp === true ? true : exp === false ? false : null;
-    if (status !== null || desire !== null || experienced !== null) {
-      entries[cleanId] = { status, desire, experienced, comment: "" };
+    const privateResponse = privateCustomIds.has(cleanId);
+    if (status !== null || desire !== null || experienced !== null || privateResponse) {
+      entries[cleanId] = {
+        status,
+        desire,
+        experienced,
+        comment: "",
+        ...(privateResponse ? { privateResponse: true } : {}),
+      };
     }
   }
 
@@ -131,6 +189,8 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
 
   return {
     id,
+    verificationCode: normalizeProfileVerificationCode(p.vc)
+      ?? deriveProfileVerificationCode(id),
     name,
     role: typeof p.r === "string" ? clamp(p.r, MAX_ROLE_LEN) : "",
     experienceLevel: typeof p.e === "string" && (VALID_LEVELS as readonly string[]).includes(p.e)

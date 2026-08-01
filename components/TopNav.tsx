@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Anchor, CaretLeft, FilmSlate, GearSix, User, Lightning } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
@@ -23,6 +23,36 @@ export default function TopNav() {
   const scenes = useStore((s) => s.scenes);
   const onboardingComplete = useStore((s) => s.onboardingComplete);
   const appLockEnabled = useStore((s) => s.appLockEnabled);
+  const [savedVisible, setSavedVisible] = useState(false);
+  const previousProfilesRef = useRef(profiles);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveFeedbackArmedRef = useRef(false);
+  const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");
+
+  useEffect(() => {
+    if (!hydrated) {
+      saveFeedbackArmedRef.current = false;
+      previousProfilesRef.current = profiles;
+      return;
+    }
+    if (!saveFeedbackArmedRef.current) {
+      saveFeedbackArmedRef.current = true;
+      previousProfilesRef.current = profiles;
+      return;
+    }
+
+    const changed = previousProfilesRef.current !== profiles;
+    previousProfilesRef.current = profiles;
+    if (!changed || !saveFeedbackRoute) return;
+
+    setSavedVisible(true);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => setSavedVisible(false), 1800);
+  }, [hydrated, profiles, saveFeedbackRoute]);
+
+  useEffect(() => () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+  }, []);
 
   // Immersive flows keep the stage to themselves.
   if (path === "/scene" || path === "/session") return null;
@@ -105,7 +135,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
+      <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
         <MotionLink
           href={back}
           whileTap={TAP_SPRING}
@@ -116,11 +146,21 @@ export default function TopNav() {
           <CaretLeft size={18} />
         </MotionLink>
         <span
-          className="flex-1 min-w-0 text-base italic truncate serif-safe"
-          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+          className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)", opacity: savedVisible && saveFeedbackRoute ? 0 : 1 }}
         >
           {title}
         </span>
+        {saveFeedbackRoute && (
+          <span
+            role="status"
+            aria-live="polite"
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap transition-opacity"
+            style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
+          >
+            Opgeslagen ✓
+          </span>
+        )}
         <div className="flex-none flex items-center justify-end gap-2">
           {profileIdFromPath && (
             <Link
@@ -191,6 +231,7 @@ function focusedRoute(
   path: string,
   dyn: { profileName?: string; sceneTitle?: string },
 ): { title: string; back: string } {
+  if (path === "/profile") return { title: "Profiel", back: "/" };
   if (path.startsWith("/profile/")) return { title: dyn.profileName ?? "Profiel", back: "/" };
   if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
   if (path === "/scenes") return { title: "Scènes", back: "/" };

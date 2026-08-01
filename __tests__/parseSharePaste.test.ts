@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseSharePaste } from "@/lib/parseSharePaste";
+import { buildProfileQrSet } from "@/lib/profileQr";
 
 describe("parseSharePaste", () => {
   it("accepts the raw KINKSYNC session token", () => {
@@ -20,9 +21,19 @@ describe("parseSharePaste", () => {
       .toEqual({ kind: "invalid" });
   });
 
-  it("extracts ?p=PAYLOAD from a share URL", () => {
+  it("extracts legacy ?p=PAYLOAD from a share URL", () => {
     expect(parseSharePaste("https://kink.example/?p=eyJ2IjoyfQ"))
       .toEqual({ kind: "profile", encoded: "eyJ2IjoyfQ" });
+  });
+
+  it("extracts lossless v3 from the URL fragment", () => {
+    expect(parseSharePaste("https://kink.example/#p3=3r.example"))
+      .toEqual({ kind: "profile", encoded: "3r.example" });
+  });
+
+  it("recognises multipart profile QR fragments", () => {
+    const set = buildProfileQrSet("https://kink.example", "3r." + "x".repeat(2000));
+    expect(parseSharePaste(set.qrValues[0]).kind).toBe("profilePart");
   });
 
   it("accepts a bare 6-char session code", () => {
@@ -34,12 +45,16 @@ describe("parseSharePaste", () => {
     expect(parseSharePaste(payload)).toEqual({ kind: "profile", encoded: payload });
   });
 
+  it("accepts a bare v3 payload", () => {
+    expect(parseSharePaste("3r.example")).toEqual({ kind: "profile", encoded: "3r.example" });
+  });
+
   it("rejects empty input", () => {
     expect(parseSharePaste("")).toEqual({ kind: "invalid" });
     expect(parseSharePaste("   ")).toEqual({ kind: "invalid" });
   });
 
-  it("rejects foreign URLs without join or p", () => {
+  it("rejects foreign URLs without join or profile payload", () => {
     expect(parseSharePaste("https://example.com/foo"))
       .toEqual({ kind: "invalid" });
   });

@@ -5,9 +5,10 @@ import { formatTime, parseTime } from "@/lib/timeUtils";
 interface TimePickerProps {
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export default function TimePicker({ value, onChange }: TimePickerProps) {
+export default function TimePicker({ value, onChange, disabled = false }: TimePickerProps) {
   const parsed = parseTime(value);
   const [open, setOpen] = useState(false);
   const [hour, setHour] = useState(parsed?.hour ?? 20);
@@ -20,6 +21,10 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
   }, [value]);
 
   useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
+
+  useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("keydown", handler);
@@ -27,6 +32,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
   }, [open]);
 
   function confirm() {
+    if (disabled) return;
     onChange(formatTime(hour, minute));
     setOpen(false);
     buttonRef.current?.focus();
@@ -37,9 +43,10 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
       <button
         ref={buttonRef}
         type="button"
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         aria-label="Tijd kiezen"
-        className="focus-ring rounded-lg px-2 tabular-nums"
+        className="focus-ring rounded-lg px-2 tabular-nums disabled:opacity-50"
         style={{
           background: "var(--surface2)",
           border: "1px solid var(--border)",
@@ -52,7 +59,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
         {value || "--:--"}
       </button>
 
-      {open && (
+      {open && !disabled && (
         <>
           <div
             className="fixed inset-0 z-40"

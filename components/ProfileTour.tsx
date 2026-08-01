@@ -13,27 +13,21 @@ const STEPS = [
     pad: 8,
   },
   {
-    selector: '[data-tour="info"]',
-    title: "Info over elke kink",
-    body: "Tik ⓘ voor een beschrijving en veiligheidstips.",
-    pad: 6,
-  },
-  {
     selector: '[data-tour="pills"]',
     title: "Jouw oordeel",
     body: "Tik een rij om aan te geven hoe je over deze kink denkt — van Heel graag tot Harde grens.",
     pad: 4,
   },
   {
-    selector: '[data-tour="hard-no"]',
-    title: "Harde grens",
-    body: "Staat apart van de rest — een harde grens is geen onderhandelingspositie.",
-    pad: 4,
-  },
-  {
     selector: '[data-tour="curious"]',
     title: "Nieuwsgierig?",
     body: "Los van je oordeel: markeer met de ster wat je wil verkennen. Een ster is geen ja.",
+    pad: 6,
+  },
+  {
+    selector: '[data-tour="private"]',
+    title: "Verberg je antwoord",
+    body: "Tik ‘Verberg’ naast de ster, voor of na je keuze. De knop wordt ‘Verborgen’: alleen de kinknaam blijft zichtbaar; oordeel, nieuwsgierigheid, tags en notitie blijven dicht tot je ze bewust onthult.",
     pad: 6,
   },
 ];

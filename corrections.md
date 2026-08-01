@@ -6,6 +6,54 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-07-28 — Twee schrijvende workflowtriggers botsten op dezelfde branch
+
+**What went wrong:** Een tijdelijke transform-workflow luisterde tegelijk naar `push` en `pull_request synchronize`. Eén stagingcommit startte daardoor twee identieke schrijvers. Beide doorliepen tests en build; de eerste pushte de bewezen productcommit, de tweede werd terecht als non-fast-forward geweigerd.
+
+**Rule:** Een workflow die naar zijn eigen featurebranch schrijft krijgt exact één triggerpad. Gebruik voor een open same-repo PR uitsluitend `pull_request: synchronize`, of uitsluitend `push`, maar nooit beide. Een afgewezen tweede push is geen codefout: controleer eerst of de andere run dezelfde bewezen commit al heeft geland.
+
+---
+
+## 2026-07-28 — Een QR-header mag de payload niet als scheidingsteken behandelen
+
+**What went wrong:** De eerste multi-QR-parser gebruikte `split(".")` voor de volledige tekenreeks en verwachtte exact vijf delen. De v3-payload begint zelf met `3r.` of `3d.`, waardoor de eerste QR een extra punt bevatte en als ongeldig werd afgewezen. De regressietest stopte de productcommit vóór de build.
+
+**Rule:** Parse een transportheader begrensd en behandel alles na het laatste vaste headerveld als opaque payload. Gebruik geen onbeperkte `split()` wanneer dezelfde delimiter legaal in de payload kan voorkomen. Test altijd het eerste én laatste chunk met echte formaatprefixen, plus uit-volgorde en dubbele delen.
+
+---
+
+## 2026-07-28 — Een redundant icoon maakte de informatie niet redundant
+
+**What went wrong:** De opdracht was om het redundante info-icoon op de kinkkaart te vervangen door het privé-oogje. Dat werd te breed geïnterpreteerd als toestemming om ook de achterliggende `InfoSheet` uit de flow te verwijderen. De trigger was redundant; de inhoud bleef waardevol.
+
+**Rule:** Wanneer een affordance wordt vervangen, behandel trigger en bestemming als twee aparte beslissingen. Verwijder alleen het expliciet genoemde icoon of bedieningselement. Behoud de achterliggende informatie of actie en geef die een nieuwe, semantische ingang — hier: tikken op kinknaam of beschrijving — tenzij de eigenaar ook expliciet vraagt de inhoud te schrappen.
+
+---
+
+## 2026-07-27 — De klik kende de nieuwe kamer, de oude voordeur niet
+
+**What went wrong:** De local-first PR canonicaliseerde oude `/profile/<id>`- en `/scenes/<id>`-links alleen wanneer een klik binnen een reeds geladen app werd onderschept. Het profielaanmaakformulier gebruikte bovendien nog rechtstreeks `router.push('/profile/<id>')`. Een koude Safari/PWA-documentnavigatie naar zo'n nieuw, nooit gewarmd ID passeert geen kliklistener en vroeg de service worker om een document dat niet in de cache bestond. iOS toonde daarom “This page couldn’t load”, ondanks dat de lokale data en de vaste shell beschikbaar waren.
+
+**Rule:** Backward compatibility voor documentroutes hoort in de service worker, niet alleen in een DOM-clickhandler. Iedere legacy dynamische profiel- of scèneroute moet bij netwerkfalen de vaste geprecachete shell krijgen; die shell leest het ID client-side uit óf de querystring óf het actuele pathname. De offline-e2e moet records pas na de netwerkknip toevoegen en vervolgens hun oude URL rechtstreeks openen, zodat per-ID warming de test niet vals groen kan maken.
+
+---
+
+## 2026-07-27 — De vaste profieldeur droeg de buildtijd-ID naar binnen
+
+**What went wrong:** De nieuwe `/profile?id=<id>`-shell las `searchParams` in een server page en gaf daaruit een Promise aan het client-profielscherm. De service worker cachet één statisch `/profile`-document met `ignoreSearch`; dat document was tijdens build/warming zonder `id` gerenderd. Bij een echte offline Safari-navigatie bleef de zichtbare URL wel `?id=…` bevatten, maar de gehydrateerde component ontving de ingebakken lege buildtijd-ID en toonde “Profiel niet gevonden”. Tegelijk kon de harde documentnavigatie plaatsvinden zodra React het nieuwe profiel zag, vóór Zustand persist het profiel aantoonbaar naar `localStorage` had geschreven. Beide fouten leiden op toestel tot hetzelfde scherm. Unit-, TypeScript- en buildpoorten konden dit niet zien; alleen de fysieke toestelpoort legde het bloot.
+
+**Rule:** Een query-shell waarvan één gecachet HTML-document meerdere lokale records bedient, moet de record-ID client-side uit de actuele `window.location`/`useSearchParams()` lezen. Geef nooit server-gerenderde `searchParams` door als recordidentiteit wanneer de documentcache querystrings negeert. Voor een harde navigatie na een lokale create moet bovendien eerst worden bewezen dat precies die nieuwe ID in de persisted store staat. De koude offline e2e moet de pagina na netwerkknip én reload openen; zonder uitvoerbare browserbinary blijft de PR draft tot een echt toestel dit bewijst.
+
+---
+
+## 2026-07-26 — Een handmatig herbouwde package.json brak vóór de code begon
+
+**What went wrong:** Om Vitest tijdelijk vóór de Vercel-productiebuild te laten lopen, werd `package.json` via de contents-API volledig herschreven. Daarbij schoof `jsqr` onbedoeld van `^1.4.0` naar `^1.4.1`, terwijl `package-lock.json` onveranderd bleef. `npm ci` stopte daardoor onmiddellijk. Omdat de Vercel-status alleen “failure” toonde, leek de nieuwe local-first architectuur verdacht en volgden meerdere onnodige isolatiebuilds.
+
+**Rule:** Bij een tijdelijke scriptwijziging mag geen dependencyregel worden gereconstrueerd uit geheugen of een oudere fetch. Vergelijk `package.json` byte-voor-byte met de branchbasis, wijzig uitsluitend de bedoelde scriptregel en controleer vóór push dat `git diff -- package.json package-lock.json` geen dependency- of lockfileverschil bevat. Een build die vóór de normale compileduur faalt krijgt eerst een manifest/lockfile-alibi voordat architectuurcode wordt teruggedraaid.
+
+---
+
 ## 2026-07-23 — De offline-wachthond opende eerst zelf elke deur
 
 **What went wrong:** De productie-mode offline e2e bezocht vóór het uitschakelen van het netwerk iedere route online. Daarmee bewees hij alleen runtime-cache-na-eerste-bezoek, terwijl de bedoelde PWA-eigenschap was dat de hele lokale app na één online start beschikbaar blijft. De `/offline` fallback maakte de regressie vriendelijker zichtbaar, maar veranderde elke nog niet bezochte pagina in een feitelijke “verbind eerst”-poort.

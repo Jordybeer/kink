@@ -5,11 +5,12 @@ import { parseDurationMinutes, formatDurationMinutes } from "@/lib/timeUtils";
 interface DurationStepperProps {
   value: string;
   onChange: (v: string) => void;
+  disabled?: boolean;
 }
 
 const PRESETS = [15, 30, 60];
 
-export default function DurationStepper({ value, onChange }: DurationStepperProps) {
+export default function DurationStepper({ value, onChange, disabled = false }: DurationStepperProps) {
   const parsed = parseDurationMinutes(value);
   const [interacted, setInteracted] = useState(false);
 
@@ -18,11 +19,13 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
   const currentMinutes = parsed;
 
   function set(m: number) {
+    if (disabled) return;
     setInteracted(true);
     onChange(formatDurationMinutes(m));
   }
 
   function nudge(delta: number) {
+    if (disabled) return;
     setInteracted(true);
     const base = parsed ?? 30;
     const next = Math.max(5, base + delta);
@@ -35,9 +38,10 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
         <button
           key={p}
           type="button"
+          disabled={disabled}
           onClick={() => set(p)}
           aria-pressed={currentMinutes === p && !showRaw}
-          className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border"
+          className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border disabled:opacity-50"
           style={
             currentMinutes === p && !showRaw
               ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
@@ -50,9 +54,10 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
       <div className="flex items-center gap-1">
         <button
           type="button"
+          disabled={disabled}
           onClick={() => nudge(-5)}
           aria-label="5 minuten minder"
-          className="focus-ring rounded-lg text-xs font-medium border"
+          className="focus-ring rounded-lg text-xs font-medium border disabled:opacity-50"
           style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           −5
@@ -67,9 +72,10 @@ export default function DurationStepper({ value, onChange }: DurationStepperProp
         )}
         <button
           type="button"
+          disabled={disabled}
           onClick={() => nudge(5)}
           aria-label="5 minuten meer"
-          className="focus-ring rounded-lg text-xs font-medium border"
+          className="focus-ring rounded-lg text-xs font-medium border disabled:opacity-50"
           style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           +5

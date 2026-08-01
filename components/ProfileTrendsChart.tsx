@@ -13,7 +13,7 @@ import {
   type ChartOptions,
   type ChartData,
 } from "chart.js";
-import type { ProfileSnapshot } from "@/types";
+import type { KinkEntry, ProfileSnapshot } from "@/types";
 import {
   PROFILE_TREND_SERIES,
   diffSnapshotEntries,
@@ -71,9 +71,10 @@ const FALLBACK_TOKENS: ResolvedTokens = {
 
 interface Props {
   snapshots: ProfileSnapshot[];
+  currentEntries: Record<string, KinkEntry>;
 }
 
-export function ProfileTrendsChart({ snapshots }: Props) {
+export function ProfileTrendsChart({ snapshots, currentEntries }: Props) {
   const [hidden, setHidden] = useState<Record<CountKey, boolean>>({
     yes: false, willing: false, maybe: false, no: false, hard_no: false,
   });
@@ -95,7 +96,10 @@ export function ProfileTrendsChart({ snapshots }: Props) {
     });
   }, []);
 
-  const prep = useMemo(() => prepareProfileTrendData(snapshots), [snapshots]);
+  const prep = useMemo(
+    () => prepareProfileTrendData(snapshots, currentEntries),
+    [snapshots, currentEntries],
+  );
 
   if (snapshots.length < 2) {
     return <Placeholder tokens={tokens} />;

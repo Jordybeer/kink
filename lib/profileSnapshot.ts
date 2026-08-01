@@ -10,13 +10,14 @@ const ZERO_COUNTS: ProfileSnapshot["counts"] = {
 export function deriveCounts(entries: Record<string, KinkEntry>): ProfileSnapshot["counts"] {
   const counts = { ...ZERO_COUNTS };
   for (const entry of Object.values(entries)) {
-    const s = effectiveStatus(entry);
-    if (s) counts[s]++;
+    const status = effectiveStatus(entry);
+    if (status) counts[status]++;
   }
   return counts;
 }
 
 function effectiveStatus(entry: KinkEntry): CountKey | null {
+  if (entry.privateResponse === true) return null;
   return (entry.status ?? null) as CountKey | null;
 }
 
@@ -42,15 +43,10 @@ export interface ProfileTrendData {
   ascending: ProfileSnapshot[];
 }
 
-// ── The confession between two moments ─────────────────────────────────────
-// The chart shows that the counts moved; this tells you which kinks did the
-// moving. Compared on effective status only — comments and curiosity are
-// private notes, not verdicts.
-
 export interface SnapshotShift {
   kinkId: string;
-  from: CountKey | null; // null: had no verdict in the older moment
-  to: CountKey | null;   // null: verdict withdrawn since
+  from: CountKey | null;
+  to: CountKey | null;
 }
 
 export function diffSnapshotEntries(
@@ -60,30 +56,48 @@ export function diffSnapshotEntries(
   const ids = new Set([...Object.keys(older), ...Object.keys(newer)]);
   const shifts: SnapshotShift[] = [];
   for (const kinkId of ids) {
-    const from = older[kinkId] ? effectiveStatus(older[kinkId]) : null;
-    const to = newer[kinkId] ? effectiveStatus(newer[kinkId]) : null;
+    const olderEntry = older[kinkId];
+    const newerEntry = newer[kinkId];
+    // A privacy transition may never confess either the former or current verdict.
+    if (olderEntry?.privateResponse === true || newerEntry?.privateResponse === true) continue;
+    const from = olderEntry ? effectiveStatus(olderEntry) : null;
+    const to = newerEntry ? effectiveStatus(newerEntry) : null;
     if (from !== to) shifts.push({ kinkId, from, to });
   }
-  // Fresh verdicts first, then changes, then withdrawals — within each
-  // group the keenest destination leads.
-  const rank = (s: SnapshotShift) =>
-    (s.from === null ? 0 : s.to === null ? 2 : 1) * 10 +
-    (s.to ? STATUS_ORDER.indexOf(s.to) : STATUS_ORDER.length);
+  const rank = (shift: SnapshotShift) =>
+    (shift.from === null ? 0 : shift.to === null ? 2 : 1) * 10 +
+    (shift.to ? STATUS_ORDER.indexOf(shift.to) : STATUS_ORDER.length);
   return shifts.sort((a, b) => rank(a) - rank(b) || a.kinkId.localeCompare(b.kinkId));
 }
 
-export function prepareProfileTrendData(snapshots: ProfileSnapshot[]): ProfileTrendData {
-  const ascending = [...snapshots].sort((a, b) => a.date - b.date);
+export function prepareProfileTrendData(
+  snapshots: ProfileSnapshot[],
+  currentEntries?: Record<string, KinkEntry>,
+): ProfileTrendData {
+  const sorted = [...snapshots].sort((a, b) => a.date - b.date);
+  const latest = sorted[sorted.length - 1];
+  const privacySource = currentEntries ?? latest?.entries ?? {};
+  const currentlyPrivate = new Set(
+    Object.entries(privacySource)
+      .filter(([, entry]) => entry.privateResponse === true)
+      .map(([kinkId]) => kinkId),
+  );
+  const ascending = sorted.map((snapshot) => {
+    const visibleEntries = Object.fromEntries(
+      Object.entries(snapshot.entries).filter(([kinkId]) => !currentlyPrivate.has(kinkId)),
+    );
+    return { ...snapshot, entries: visibleEntries, counts: deriveCounts(visibleEntries) };
+  });
   const fmt = (ms: number) => new Date(ms).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
   const series: Record<CountKey, number[]> = {
     yes: [], willing: [], maybe: [], no: [], hard_no: [],
   };
-  for (const snap of ascending) {
-    series.yes.push(snap.counts.yes);
-    series.willing.push(snap.counts.willing);
-    series.maybe.push(snap.counts.maybe);
-    series.no.push(snap.counts.no);
-    series.hard_no.push(snap.counts.hard_no);
+  for (const snapshot of ascending) {
+    series.yes.push(snapshot.counts.yes);
+    series.willing.push(snapshot.counts.willing);
+    series.maybe.push(snapshot.counts.maybe);
+    series.no.push(snapshot.counts.no);
+    series.hard_no.push(snapshot.counts.hard_no);
   }
-  return { labels: ascending.map((s) => fmt(s.date)), series, ascending };
+  return { labels: ascending.map((snapshot) => fmt(snapshot.date)), series, ascending };
 }

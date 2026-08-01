@@ -4,19 +4,29 @@ import jsQR from "jsqr";
 import Sheet from "./Sheet";
 import { useRouter } from "next/navigation";
 import { parseSharePaste } from "@/lib/parseSharePaste";
+import {
+  addProfileQrPart,
+  type ProfileQrAssembly,
+} from "@/lib/profileQr";
 
 interface Props {
   open: boolean;
-  onResult: (encoded: string) => void;
+  onResult: (encoded: string) => void | Promise<void>;
   onClose: () => void;
 }
+
+type DispatchResult = "complete" | "progress" | "invalid";
 
 export default function QRScanner({ open, onResult, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
+  const lastRawRef = useRef<{ value: string; at: number } | null>(null);
+  const assemblyRef = useRef<ProfileQrAssembly | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [partError, setPartError] = useState<string | null>(null);
+  const [assembly, setAssembly] = useState<ProfileQrAssembly | null>(null);
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteInput, setPasteInput] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
@@ -25,9 +35,13 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setPartError(null);
+    setAssembly(null);
     setPasteMode(false);
     setPasteInput("");
     setPasteError(null);
+    lastRawRef.current = null;
+    assemblyRef.current = null;
 
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" } })
@@ -46,24 +60,47 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
 
   function stopCamera() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
   }
 
-  function dispatchPayload(raw: string): boolean {
+  function dispatchPayload(raw: string, dedupeCameraFrames = true): DispatchResult {
+    const now = Date.now();
+    if (dedupeCameraFrames && lastRawRef.current?.value === raw && now - lastRawRef.current.at < 900) {
+      return "progress";
+    }
+    if (dedupeCameraFrames) lastRawRef.current = { value: raw, at: now };
     const parsed = parseSharePaste(raw);
+
     if (parsed.kind === "session") {
       stopCamera();
       onClose();
       router.push(`/session?join=${parsed.code}`);
-      return true;
+      return "complete";
     }
     if (parsed.kind === "profile") {
       stopCamera();
-      onResult(parsed.encoded);
-      return true;
+      void onResult(parsed.encoded);
+      return "complete";
     }
-    return false;
+    if (parsed.kind === "profilePart") {
+      const collected = addProfileQrPart(assemblyRef.current, parsed.part);
+      if (collected.status === "error") {
+        setPartError(collected.message);
+        return "progress";
+      }
+      if (collected.status === "complete") {
+        assemblyRef.current = null;
+        stopCamera();
+        void onResult(collected.payload);
+        return "complete";
+      }
+      assemblyRef.current = collected.assembly;
+      setPartError(null);
+      setAssembly(collected.assembly);
+      return "progress";
+    }
+    return "invalid";
   }
 
   function scan() {
@@ -82,25 +119,31 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     ctx.drawImage(video, 0, 0);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const result = jsQR(imageData.data, imageData.width, imageData.height);
-    if (result?.data && dispatchPayload(result.data)) return;
+    if (result?.data && dispatchPayload(result.data) === "complete") return;
     rafRef.current = requestAnimationFrame(scan);
   }
 
   function handlePasteSubmit() {
     setPasteError(null);
-    if (!dispatchPayload(pasteInput)) {
-      setPasteError("Geen geldige link of code gevonden. Plak de volledige link of de 6-letterige code.");
+    const outcome = dispatchPayload(pasteInput, false);
+    if (outcome === "invalid") {
+      setPasteError("Geen geldige link of code gevonden.");
+      return;
     }
+    if (outcome === "progress") setPasteInput("");
   }
 
   function handleClose() {
     stopCamera();
     setPasteInput("");
     setPasteError(null);
+    setAssembly(null);
+    assemblyRef.current = null;
     onClose();
   }
 
   const showPaste = pasteMode || !!error;
+  const received = assembly ? Object.keys(assembly.parts).length : 0;
 
   return (
     <Sheet open={open} onClose={handleClose} aria-label="QR-code scannen">
@@ -114,9 +157,16 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
         }}
       >
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-        <h2 className="text-lg font-bold text-center mb-4">
-          {showPaste ? "Plak link of code" : "Scan QR-code"}
+        <h2 className="text-lg font-bold text-center mb-2">
+          {assembly
+            ? `Scan verder — ${received} van ${assembly.total}`
+            : showPaste ? "Plak link of code" : "Scan QR-code"}
         </h2>
+        {assembly && (
+          <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
+            Deel ontvangen. Houd de camera gericht; volgende delen worden automatisch verzameld.
+          </p>
+        )}
 
         {showPaste ? (
           <div>
@@ -124,7 +174,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               <p className="text-sm mb-3 text-center" style={{ color: "var(--text2)" }}>{error}</p>
             )}
             <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
-              Plak hier de link of code van je partner.
+              Plak hier de link, code of één deel van een multi-QR.
             </p>
             <textarea
               value={pasteInput}
@@ -135,8 +185,8 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
               autoFocus
             />
-            {pasteError && (
-              <p className="text-xs mb-3" style={{ color: "var(--hard-no)" }}>{pasteError}</p>
+            {(pasteError || partError) && (
+              <p className="text-xs mb-3" style={{ color: "var(--hard-no)" }}>{pasteError ?? partError}</p>
             )}
             <button
               onClick={handlePasteSubmit}
@@ -144,7 +194,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               className="focus-ring w-full py-2.5 rounded-xl text-sm font-bold mb-2 disabled:opacity-40 transition-opacity"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              Importeer
+              {assembly ? "Voeg QR-deel toe" : "Importeer"}
             </button>
             <button
               onClick={handleClose}
@@ -164,7 +214,6 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
                 playsInline
                 muted
               />
-              {/* Corner brackets overlay */}
               <div className="absolute inset-0 pointer-events-none">
                 {([["top-4 left-4", "border-t-2 border-l-2"], ["top-4 right-4", "border-t-2 border-r-2"], ["bottom-4 left-4", "border-b-2 border-l-2"], ["bottom-4 right-4", "border-b-2 border-r-2"]] as [string, string][]).map(([pos, border]) => (
                   <div key={pos} className={`absolute ${pos} w-7 h-7 ${border} rounded-sm`} style={{ borderColor: "var(--accent)" }} />
@@ -172,11 +221,16 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
+            {partError && (
+              <p className="text-xs text-center mb-2" style={{ color: "var(--hard-no)" }}>{partError}</p>
+            )}
             <p className="text-xs text-center mb-2" style={{ color: "var(--text2)" }}>
-              Richt de camera op de QR-code van je partner.
+              {assembly
+                ? "Blijf richten. Bij handmatig wisselen mag de volgorde verschillen."
+                : "Richt de camera op de QR-code van je partner."}
             </p>
             <button
-              onClick={() => { stopCamera(); setPasteMode(true); }}
+              onClick={() => { stopCamera(); setPartError(null); setPasteMode(true); }}
               className="focus-ring block mx-auto mb-3 text-xs underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
