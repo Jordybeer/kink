@@ -5,6 +5,7 @@ import { getProfileVerificationCode } from "@/lib/profileVerification";
 import { verifyProfileConsent } from "@/lib/consentProof";
 import { sanitizeAvatar } from "@/lib/sessionImport";
 import { checksumProfilePayload } from "@/lib/profileQr";
+import { prepareAvatarForShare } from "@/lib/imageUtils";
 
 export interface ProfileShareV3Options {
   includeFetLife?: boolean;
@@ -273,7 +274,12 @@ export async function encodeProfileShareTransport(
   opts?: ProfileShareV3Options,
 ): Promise<ProfileShareTransport> {
   const profilePayload = await encodeProfileV3(profile, opts);
-  const avatarPayload = opts?.includeAvatar ? sanitizeAvatar(profile.avatarDataUrl) : undefined;
+  let avatarPayload: string | undefined;
+  if (opts?.includeAvatar && profile.avatarDataUrl) {
+    avatarPayload = typeof document !== "undefined" && typeof Image !== "undefined"
+      ? await prepareAvatarForShare(profile.avatarDataUrl) ?? sanitizeAvatar(profile.avatarDataUrl)
+      : sanitizeAvatar(profile.avatarDataUrl);
+  }
   if (!avatarPayload) return { encoded: profilePayload, profilePayload };
   return {
     encoded: encodeProfileShareBundle(profilePayload, avatarPayload),
