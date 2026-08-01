@@ -2,6 +2,7 @@
 import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Cormorant_Garamond } from "next/font/google";
 import { ArrowsLeftRight, FilmSlate, FileText, CaretDown, Lock } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
@@ -23,6 +24,11 @@ import CompareKinkRow from "@/components/CompareKinkRow";
 
 const COLOUR_A = "var(--accent)";
 const COLOUR_B = "var(--accent2)";
+const scoreTypeface = Cormorant_Garamond({
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["400"],
+});
 
 function compatibilityVerdict(score: number | null): string | null {
   if (score === null) return null;
@@ -35,20 +41,16 @@ function compatibilityVerdict(score: number | null): string | null {
 
 function ScoreMasthead({
   score,
-  compared,
   match,
   discuss,
   soft,
   limit,
-  unscoredLimits,
 }: {
   score: number | null;
-  compared: number;
   match: number;
   discuss: number;
   soft: number;
   limit: number;
-  unscoredLimits: number;
 }) {
   const total = match + discuss + soft + limit;
   const verdict = compatibilityVerdict(score);
@@ -66,13 +68,13 @@ function ScoreMasthead({
   return (
     <div className="text-center mb-4 mt-1">
       <div
+        className={scoreTypeface.className}
         aria-label={
           score === null
             ? "Nog geen gezamenlijk beoordeelde kinks"
-            : `${score} procent kinkcompatibiliteit op basis van ${compared} samen beoordeelde kinks`
+            : `${score} procent kinkcompatibiliteit`
         }
         style={{
-          fontFamily: "var(--font-display, Georgia, serif)",
           fontStyle: "italic",
           fontWeight: 400,
           fontSize: "clamp(56px, 16vw, 80px)",
@@ -111,18 +113,6 @@ function ScoreMasthead({
       {verdict && (
         <p className="text-sm font-semibold mt-2" style={{ color: verdictColor }}>
           {verdict}
-        </p>
-      )}
-      {score !== null && (
-        <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
-          Gebaseerd op {compared} {compared === 1 ? "samen beoordeelde kink" : "samen beoordeelde kinks"}.
-        </p>
-      )}
-      {unscoredLimits > 0 && (
-        <p className="text-xs mt-2 mx-auto max-w-md" style={{ color: "var(--hard-no)" }}>
-          {unscoredLimits === 1
-            ? "1 grens staat wel in de vergelijking, maar telt niet mee omdat de andere persoon die kink nog niet beoordeelde."
-            : `${unscoredLimits} grenzen staan wel in de vergelijking, maar tellen niet mee omdat de andere persoon die kinks nog niet beoordeelde.`}
         </p>
       )}
       {total > 0 && (
@@ -518,12 +508,10 @@ function ComparePage() {
         <>
           <ScoreMasthead
             score={matchResult.comparedTotal > 0 ? matchResult.overall : null}
-            compared={matchResult.comparedTotal}
             match={matchCount}
             discuss={discussCount}
             soft={softLimitCount}
             limit={hardLimitCount}
-            unscoredLimits={matchResult.unscoredLimits}
           />
           <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} onFilter={setFilterMode} />
 
