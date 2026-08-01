@@ -1,27 +1,67 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
+import { X } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
+
+const SheetCloseContext = createContext<(() => void) | null>(null);
 
 /** Standardized sheet content wrapper: surface bg, border, rounded top, optional drag handle. */
 export function SheetContent({
   children,
   className = "px-6 pb-6 pt-4",
   showHandle = true,
+  showClose = showHandle,
 }: {
   children: ReactNode;
   className?: string;
   showHandle?: boolean;
+  showClose?: boolean;
 }) {
+  const onClose = useContext(SheetCloseContext);
+  const showUtilityRow = showHandle || (showClose && onClose);
+
   return (
     <div
       className={`rounded-t-2xl ${className}`}
       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none" }}
     >
-      {showHandle && (
-        <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: "var(--border)" }} aria-hidden="true" />
+      {showUtilityRow && (
+        <div className="relative h-11 mb-2">
+          {showHandle && (
+            <div
+              className="absolute left-1/2 top-3 h-1 w-10 -translate-x-1/2 rounded-full"
+              style={{ background: "var(--border)" }}
+              aria-hidden="true"
+            />
+          )}
+          {showClose && onClose && (
+            <button
+              type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={onClose}
+              aria-label="Sluit venster"
+              className="focus-ring absolute right-0 top-0 inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+              style={{
+                background: "var(--surface2)",
+                border: "1px solid var(--border)",
+                color: "var(--text2)",
+              }}
+            >
+              <X size={15} weight="bold" aria-hidden="true" />
+              Sluiten
+            </button>
+          )}
+        </div>
       )}
       {children}
     </div>
@@ -97,7 +137,9 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
               if (info.offset.y > 80 || info.velocity.y > 500) onClose();
             }}
           >
-            {children}
+            <SheetCloseContext.Provider value={onClose}>
+              {children}
+            </SheetCloseContext.Provider>
           </motion.div>
         </>
       )}

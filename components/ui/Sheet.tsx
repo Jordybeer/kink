@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { X } from "@phosphor-icons/react";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.38 } as const;
@@ -71,12 +72,28 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
               className="rounded-t-[28px] px-4 pb-10 pt-3"
               style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
             >
-              {/* Handle */}
-              <div
-                className="w-12 h-[5px] rounded-full mx-auto mb-5"
-                style={{ background: "var(--surface3)" }}
-                aria-hidden="true"
-              />
+              <div className="relative h-11 mb-2">
+                <div
+                  className="absolute left-1/2 top-3 h-[5px] w-12 -translate-x-1/2 rounded-full"
+                  style={{ background: "var(--surface3)" }}
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={onClose}
+                  aria-label="Sluit venster"
+                  className="focus-ring absolute right-0 top-0 inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                  style={{
+                    background: "var(--surface2)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text2)",
+                  }}
+                >
+                  <X size={15} weight="bold" aria-hidden="true" />
+                  Sluiten
+                </button>
+              </div>
 
               {title && (
                 <h2 className="text-lg font-bold mb-4 px-1">{title}</h2>

@@ -1,13 +1,11 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, PlusCircle, X } from "@phosphor-icons/react";
+import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
 import Sheet from "@/components/ui/Sheet";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
-import RolePicker from "@/components/RolePicker";
-import type { ExperienceLevel, Profile } from "@/types";
+import type { Profile } from "@/types";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import AppLock from "@/components/AppLock";
@@ -20,6 +18,7 @@ import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profile
 import { profileConsentAlias } from "@/lib/consentProof";
 import { eligibleParentProfiles } from "@/lib/subprofile";
 import ProfileList from "@/components/ProfileList";
+import ProfileCreateSheet, { type ProfileCreateInput } from "@/components/ProfileCreateSheet";
 import SettingsSheet from "@/components/sheets/SettingsSheet";
 import PinFlowSheet from "@/components/sheets/PinFlowSheet";
 import DestroyAllSheet from "@/components/sheets/DestroyAllSheet";
@@ -65,13 +64,7 @@ function HomeContent() {
   // App lock
   const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
 
-  // Profile create form
-  const [name, setName] = useState("");
-  const [nameError, setNameError] = useState<string | null>(null);
-  const [role, setRole] = useState("");
-  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("beginner");
-  const [relationshipStatus, setRelationshipStatus] = useState("");
-  const [parentName, setParentName] = useState<string | null>(null);
+  // Profile creation
   const [formOpen, setFormOpen] = useState(false);
 
   // Sheet orchestration
@@ -149,21 +142,23 @@ function HomeContent() {
     dismissInstallPrompt();
   }
 
-  // Returns whether the profile was actually born — the form only closes on obedience.
-  function handleCreate(e: React.FormEvent): boolean {
-    e.preventDefault();
-    if (!name.trim()) return false;
-    if (parentName === null) {
+  function handleCreate(input: ProfileCreateInput): string | null {
+    if (input.parentName === null) {
       const duplicate = profiles.some(
-        (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
+        (profile) => profile.name.trim().toLowerCase() === input.name.trim().toLowerCase(),
       );
-      if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return false; }
+      if (duplicate) return "Er bestaat al een profiel met deze naam.";
     }
-    setNameError(null);
-    const id = createProfile(name.trim(), role, experienceLevel, relationshipStatus || undefined);
-    setName(""); setRelationshipStatus(""); setParentName(null);
+
+    const id = createProfile(
+      input.name,
+      input.role,
+      input.experienceLevel,
+      input.relationshipStatus,
+    );
+    setFormOpen(false);
     router.push(`/profile/${id}`);
-    return true;
+    return null;
   }
 
   function promptDelete(id: string) {
@@ -235,9 +230,8 @@ function HomeContent() {
   if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
 
   const parentCandidates = eligibleParentProfiles(profiles, pinnedProfileId);
-  const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
+  const deleteTargetProfile = profiles.find((profile) => profile.id === deleteTarget);
 
-  // The hero speaks to the state of the house, not into the void.
   const tagline =
     profiles.length === 1 ? "Eén profiel staat klaar. Nodig je partner uit."
     : profiles.length === 2 ? "Twee profielen. Eén gesprek."
@@ -247,11 +241,9 @@ function HomeContent() {
   return (
     <>
       <PageShell width="2xl" className="lg:max-w-4xl">
-        {/* Hero */}
         <div className="mb-6 pt-3 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>
           <div className="ks-gradient-rule mx-auto my-4" />
-          {/* The vow stays on the door; the house-state whisper sits beneath it. */}
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
             Verken grenzen. Samen.
           </p>
@@ -262,188 +254,130 @@ function HomeContent() {
           )}
         </div>
 
-        {/* The salon: profiles take the stage first, admin waits by the door */}
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
-        {/* Quiet footer actions — the staff entrance */}
-        {profiles.length > 0 && (
-          <div className="flex items-center justify-center gap-2 mt-6 mb-4">
+        {profiles.length > 0 ? (
+          <div className={`grid ${importPreview ? "grid-cols-1" : "grid-cols-2"} gap-2 mt-6 mb-5`}>
             <button
-              onClick={() => setFormOpen((v) => !v)}
-              className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
-              style={{ color: formOpen ? "var(--text2)" : "var(--accent)" }}
+              type="button"
+              onClick={() => setFormOpen(true)}
+              className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
+              style={{
+                background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+                border: "1px solid var(--border-accent)",
+              }}
             >
-              {formOpen
-                ? <X size={16} aria-hidden="true" />
-                : <PlusCircle size={16} aria-hidden="true" />}
-              {formOpen ? "Annuleer" : "Nieuw profiel"}
+              <span
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              >
+                <UserPlus size={19} weight="bold" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">Nieuw profiel</span>
+                <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                  Persoon of extra rol
+                </span>
+              </span>
+              <ArrowRight size={15} className="flex-none" style={{ color: "var(--accent)" }} />
             </button>
+
             {!importPreview && (
-              <>
-                <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
-                <button
-                  onClick={() => { setScanError(null); setScanOpen(true); }}
-                  className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
-                  style={{ color: "var(--text2)" }}
+              <button
+                type="button"
+                onClick={() => { setScanError(null); setScanOpen(true); }}
+                className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+              >
+                <span
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
+                  style={{ background: "var(--surface3)", color: "var(--text2)" }}
                 >
-                  <Camera size={16} aria-hidden="true" />
-                  Scan QR
-                </button>
-              </>
+                  <Camera size={19} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">Scan profiel</span>
+                  <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                    Voeg je partner toe
+                  </span>
+                </span>
+                <ArrowRight size={15} className="flex-none" style={{ color: "var(--text2)" }} />
+              </button>
             )}
           </div>
-        )}
-
-        {(profiles.length === 0 || formOpen) && (
-          <form
-            onSubmit={(e) => { if (handleCreate(e)) setFormOpen(false); }}
-            className="relative overflow-hidden rounded-xl p-5 mb-8"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+        ) : (
+          <section
+            className="relative overflow-hidden rounded-[26px] p-5 mb-5"
+            style={{
+              background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+              border: "1px solid var(--border-accent)",
+              boxShadow: "0 18px 60px color-mix(in srgb, var(--accent) 10%, transparent)",
+            }}
           >
-            {/* The toggle above already announces "Nieuw profiel" — only title
-                the form when it stands alone (first-run, no toggle). */}
-            {profiles.length === 0 && (
-              <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
-                Nieuw profiel
-              </h2>
-            )}
-
-            {parentCandidates.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
-                <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => { setParentName(null); setName(""); }}
-                    aria-pressed={parentName === null}
-                    className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                    style={parentName === null
-                      ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                      : { color: "var(--text2)", borderColor: "var(--border)" }}
-                  >
-                    Nieuw persoon
-                  </button>
-                  {parentCandidates.map((candidate) => (
-                    <button
-                      key={candidate}
-                      type="button"
-                      onClick={() => { setParentName(candidate); setName(candidate); }}
-                      aria-pressed={parentName === candidate}
-                      className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                      style={parentName === candidate
-                        ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                        : { color: "var(--text2)", borderColor: "var(--border)" }}
-                    >
-                      {candidate}
-                    </button>
-                  ))}
-                </div>
+            <div
+              className="absolute -right-14 -top-14 w-36 h-36 rounded-full blur-3xl pointer-events-none"
+              style={{ background: "color-mix(in srgb, var(--accent) 24%, transparent)" }}
+              aria-hidden="true"
+            />
+            <div className="relative">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              >
+                <UserPlus size={23} weight="duotone" />
               </div>
-            )}
+              <p className="text-xs uppercase tracking-[0.2em] mb-1.5" style={{ color: "var(--accent)" }}>
+                Jouw startpunt
+              </p>
+              <h2
+                className="text-3xl leading-tight mb-2"
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
+              >
+                Maak je eerste profiel
+              </h2>
+              <p className="text-sm leading-relaxed mb-5 max-w-md" style={{ color: "var(--text2)" }}>
+                Leg eerst je naam, rol en ervaring vast. Je antwoorden, foto en grenzen volgen daarna in je eigen tempo.
+              </p>
 
-            <div className="mb-3">
-              <input
-                value={name}
-                onChange={(e) => { setName(e.target.value); setNameError(null); }}
-                placeholder="Naam of alias…"
-                className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-[color:var(--text2)]"
-                style={{ background: "var(--surface2)", border: `1px solid ${nameError ? "var(--hard-no)" : "var(--border)"}`, color: "var(--text)" }}
-              />
-              {nameError && <p className="text-xs mt-1" style={{ color: "var(--hard-no)" }}>{nameError}</p>}
-              {parentName && (
-                <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>Wordt gegroepeerd onder &ldquo;{parentName}&rdquo;</p>
+              <button
+                type="button"
+                onClick={() => setFormOpen(true)}
+                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-bold transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              >
+                Begin met jouw profiel
+                <ArrowRight size={16} weight="bold" />
+              </button>
+
+              {!importPreview && (
+                <button
+                  type="button"
+                  onClick={() => { setScanError(null); setScanOpen(true); }}
+                  className="focus-ring w-full min-h-11 mt-2 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+                  style={{ color: "var(--text2)", border: "1px solid var(--border)", background: "var(--surface)" }}
+                >
+                  <Camera size={16} />
+                  Scan het profiel van je partner
+                </button>
               )}
             </div>
-
-            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
-            <div className="mb-4">
-              <RolePicker value={role} onChange={setRole} />
-            </div>
-
-            <fieldset className="mb-4 border-0 p-0 m-0">
-            <legend className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</legend>
-            <div className="grid grid-cols-4 gap-1.5">
-              {EXPERIENCE_LEVELS.map((l) => (
-                <button
-                  key={l.value}
-                  type="button"
-                  onClick={() => setExperienceLevel(l.value)}
-                  aria-pressed={experienceLevel === l.value}
-                  className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
-                  style={experienceLevel === l.value
-                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }}
-                >
-                  <span className="font-semibold">{l.label}</span>
-                  <span className="text-xs opacity-70">{l.sub}</span>
-                </button>
-              ))}
-            </div>
-            </fieldset>
-
-            <fieldset className="mb-4 border-0 p-0 m-0">
-            <legend className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Relatiestatus <span className="font-normal opacity-60">(optioneel)</span></legend>
-            <div className="flex flex-wrap gap-1.5">
-              {RELATIONSHIP_STATUSES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setRelationshipStatus((rs) => (rs === s ? "" : s))}
-                  aria-pressed={relationshipStatus === s}
-                  className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                  style={relationshipStatus === s
-                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-            </fieldset>
-
-            <button
-              type="submit"
-              className="focus-ring w-full py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-            >
-              Sla jezelf vast
-            </button>
-          </form>
-        )}
-
-        {/* First-run keeps the full-width invitation to scan */}
-        {profiles.length === 0 && !importPreview && (
-          <button
-            onClick={() => setScanOpen(true)}
-            className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <Camera size={16} aria-hidden="true" style={{ color: "var(--accent)", flexShrink: 0 }} />
-            <span className="flex-1 text-sm font-medium" style={{ color: "var(--text)" }}>
-              Scan QR — importeer profiel van partner
-            </span>
-          </button>
+          </section>
         )}
 
         {profiles.length === 0 && (
-          <p
-            className="text-center py-12"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-              fontSize: "1.25rem",
-              lineHeight: 1.35,
-              color: "var(--text2)",
-            }}
-          >
-            Wie ben jij in de speelkamer?
+          <p className="text-xs text-center px-4 mb-8" style={{ color: "var(--text2)" }}>
+            Je kunt later altijd extra rollen of partnerprofielen toevoegen.
           </p>
         )}
       </PageShell>
 
-      {/* Settings sheet */}
+      <ProfileCreateSheet
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        parentCandidates={parentCandidates}
+        onCreate={handleCreate}
+      />
+
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -456,35 +390,30 @@ function HomeContent() {
         importSuccess={importSuccess}
       />
 
-      {/* PIN flow */}
       <PinFlowSheet
         open={pinFlowOpen}
         initialStep={pinFlowStep}
         onClose={() => setPinFlowOpen(false)}
       />
 
-      {/* Destroy all */}
       <DestroyAllSheet
         open={destroyOpen}
         onClose={() => setDestroyOpen(false)}
       />
 
-      {/* Encrypted export */}
       <EncryptedExportSheet
         open={exportOpen}
         onClose={() => setExportOpen(false)}
       />
 
-      {/* Encrypted import */}
       <EncryptedImportSheet
         open={importPwOpen}
         data={pendingEncrypted}
         onClose={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
-        onSuccess={(msg) => setImportSuccess(msg)}
-        onError={(msg) => setImportError(msg)}
+        onSuccess={(message) => setImportSuccess(message)}
+        onError={(message) => setImportError(message)}
       />
 
-      {/* Delete profile sheet */}
       <Sheet
         open={deleteSheetOpen}
         onClose={() => { setDeleteSheetOpen(false); setTimeout(() => setDeleteTarget(null), 300); }}
@@ -515,13 +444,12 @@ function HomeContent() {
         </div>
       </Sheet>
 
-      {/* QR scanner */}
       {scanOpen && (
         <QRScanner
           open={scanOpen}
-          onResult={async (p) => {
+          onResult={async (payload) => {
             try {
-              setImportPreview(await decodeSharedProfile(p));
+              setImportPreview(await decodeSharedProfile(payload));
               setScanError(null);
             } catch {
               setScanError("Profielcode is ongeldig of beschadigd.");
@@ -550,7 +478,6 @@ function HomeContent() {
         </div>
       )}
 
-      {/* Import profile sheet */}
       <Sheet open={!!importPreview} onClose={() => setImportPreview(null)} title="Profiel importeren?" aria-label="Profiel importeren">
         {importPreview && (
           <div
@@ -575,7 +502,7 @@ function HomeContent() {
                 </span>
               </div>
               <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
-                {Object.values(importPreview.entries).filter((e) => e.status).length} kinks beoordeeld
+                {Object.values(importPreview.entries).filter((entry) => entry.status).length} kinks beoordeeld
               </div>
               <div className="text-xs mt-1" style={{ color: importPreview.consentProof ? "var(--yes)" : "var(--text2)" }}>
                 {importPreview.consentProof ? "Bron bevestigd" : "Niet ondertekend"} · {profileConsentAlias(importPreview)}
@@ -641,7 +568,6 @@ function HomeContent() {
         </div>
       </Sheet>
 
-      {/* PWA install guide */}
       {_hasHydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
         <PwaInstallGuide
           isIos={isIos}

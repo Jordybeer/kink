@@ -1,5 +1,5 @@
 "use client";
-import Sheet from "@/components/Sheet";
+import Sheet, { SheetContent } from "@/components/Sheet";
 import { Star } from "@phosphor-icons/react";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { KinkStatus } from "@/types";
@@ -21,11 +21,8 @@ interface StatusExplainerSheetProps {
 
 export default function StatusExplainerSheet({ open, onClose }: StatusExplainerSheetProps) {
   return (
-    <Sheet open={open} onClose={onClose} aria-label="Uitleg keuzes">
-      <div
-        className="rounded-t-2xl p-6 max-h-[80dvh] overflow-y-auto"
-        style={{ background: "var(--surface)", borderTop: "1px solid var(--border-accent)" }}
-      >
+    <Sheet open={open} onClose={onClose} scrollable aria-label="Uitleg keuzes">
+      <SheetContent className="max-h-[80dvh] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3">
         <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
         <ul className="flex flex-col gap-3">
           {STATUS_ORDER.map((s) => ({
@@ -54,7 +51,7 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
         <p className="text-sm italic mt-4" style={{ color: "var(--text2)" }}>
           Tip: tik nogmaals op een actieve knop om hem uit te zetten.
         </p>
-      </div>
+      </SheetContent>
     </Sheet>
   );
 }
