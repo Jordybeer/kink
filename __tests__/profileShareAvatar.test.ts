@@ -5,6 +5,11 @@ import {
   encodeProfileShareTransport,
   isProfileShareBundle,
 } from "@/lib/profileShareV3";
+import {
+  generateProfileOwnerKey,
+  signProfileConsent,
+} from "@/lib/consentProof";
+import { checksumProfilePayload } from "@/lib/profileQr";
 
 const AVATAR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQmcAAAAASUVORK5CYII=";
 
@@ -26,6 +31,16 @@ function profile(): Profile {
   };
 }
 
+async function signedProfile() {
+  const original = profile();
+  const ownerKey = await generateProfileOwnerKey(original.id);
+  const signed = await signProfileConsent(original, ownerKey);
+  return {
+    profile: { ...original, consentProof: signed.proof },
+    ownerKey: signed.ownerKey,
+  };
+}
+
 function decodeBase64Url(value: string): string {
   const padded = value.replace(/-/g, "+").replace(/_/g, "/")
     + "=".repeat((4 - (value.length % 4)) % 4);
@@ -40,9 +55,13 @@ function encodeBase64Url(value: string): string {
 }
 
 describe("shared profile avatar bundle", () => {
-  it("includes the avatar by default when requested and restores it on decode", async () => {
-    const transport = await encodeProfileShareTransport(profile(), { includeAvatar: true });
-    expect(transport.avatarPayload).toBe(AVATAR);
+  it("restores an avatar signed by the same owner key as the profile", async () => {
+    const signed = await signedProfile();
+    const transport = await encodeProfileShareTransport(signed.profile, {
+      includeAvatar: true,
+      avatarOwnerKey: signed.ownerKey,
+    });
+    expect(transport.avatarPayload).toMatch(/^a1\./);
     expect(isProfileShareBundle(transport.encoded)).toBe(true);
 
     const decoded = await decodeSharedProfile(transport.encoded);
@@ -50,8 +69,12 @@ describe("shared profile avatar bundle", () => {
     expect(decoded.name).toBe("Avatar Test");
   });
 
-  it("keeps the old profile-only format when photo sharing is disabled", async () => {
-    const transport = await encodeProfileShareTransport(profile(), { includeAvatar: false });
+  it("keeps the profile-only format when photo sharing is disabled", async () => {
+    const signed = await signedProfile();
+    const transport = await encodeProfileShareTransport(signed.profile, {
+      includeAvatar: false,
+      avatarOwnerKey: signed.ownerKey,
+    });
     expect(transport.avatarPayload).toBeUndefined();
     expect(isProfileShareBundle(transport.encoded)).toBe(false);
 
@@ -59,16 +82,48 @@ describe("shared profile avatar bundle", () => {
     expect(decoded.avatarDataUrl).toBeUndefined();
   });
 
-  it("rejects a photo changed after the bundle checksum was created", async () => {
-    const transport = await encodeProfileShareTransport(profile(), { includeAvatar: true });
-    const parsed = JSON.parse(decodeBase64Url(transport.encoded.slice(3))) as {
+  it("does not emit an unsigned avatar when the owner key is unavailable", async () => {
+    const signed = await signedProfile();
+    const transport = await encodeProfileShareTransport(signed.profile, {
+      includeAvatar: true,
+    });
+    expect(transport.avatarPayload).toBeUndefined();
+    expect(isProfileShareBundle(transport.encoded)).toBe(false);
+  });
+
+  it("rejects an owner key that belongs to another profile", async () => {
+    const signed = await signedProfile();
+    const wrongKey = await generateProfileOwnerKey("another-profile");
+    await expect(encodeProfileShareTransport(signed.profile, {
+      includeAvatar: true,
+      avatarOwnerKey: wrongKey,
+    })).rejects.toThrow("eigendomssleutel");
+  });
+
+  it("rejects a substituted photo even when the transport checksum is recomputed", async () => {
+    const signed = await signedProfile();
+    const transport = await encodeProfileShareTransport(signed.profile, {
+      includeAvatar: true,
+      avatarOwnerKey: signed.ownerKey,
+    });
+    const outer = JSON.parse(decodeBase64Url(transport.encoded.slice(3))) as {
       v: number;
       p: string;
-      a: string;
+      x: string;
       h: string;
     };
-    parsed.a = parsed.a.replace("iVBOR", "jVBOR");
-    const tampered = "4r." + encodeBase64Url(JSON.stringify(parsed));
-    await expect(decodeSharedProfile(tampered)).rejects.toThrow("Profielfoto is beschadigd");
+    const avatarEnvelope = JSON.parse(decodeBase64Url(outer.x.slice(3))) as {
+      v: number;
+      a: string;
+      ap: Record<string, unknown>;
+    };
+    avatarEnvelope.a = avatarEnvelope.a.replace("iVBOR", "jVBOR");
+    outer.x = "a1." + encodeBase64Url(JSON.stringify(avatarEnvelope));
+    outer.h = checksumProfilePayload(outer.x);
+    const tampered = "4r." + encodeBase64Url(JSON.stringify(outer));
+
+    await expect(decodeSharedProfile(tampered)).rejects.toThrow(
+      "De profielfoto hoort niet bij dit bevestigde profiel",
+    );
   });
 });
