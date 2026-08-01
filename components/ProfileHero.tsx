@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { ArrowSquareOut, CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareFat, Trash } from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
@@ -106,7 +106,27 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             {profile.relationshipStatus && <><span aria-hidden="true">·</span><span>{profile.relationshipStatus}</span></>}
             {profileType === "partner" && <Lock size={10} aria-hidden="true" style={{ flexShrink: 0 }} />}
           </p>
-          <ProfileTrust profile={profile} />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <ProfileTrust profile={profile} />
+            {onShare && (
+              <button
+                type="button"
+                onClick={onShare}
+                aria-label="Profiel delen"
+                className="ks-icon-pop focus-ring mt-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors"
+                style={{
+                  color: "var(--accent)",
+                  background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                  border: "1px solid var(--border-accent)",
+                }}
+              >
+                <ShareFat size={14} weight="bold" aria-hidden="true" />
+                <span>Delen</span>
+              </button>
+            )}
+          </div>
+
           {profileType === "partner" && profile.lockedAt && (
             <span
               className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full"
@@ -143,43 +163,25 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 flex-none">
-          {onShare && (
-            <button
-              onClick={onShare}
-              aria-label="Profiel delen"
-              title="Delen"
-              className="ks-icon-pop focus-ring flex items-center justify-center rounded-full transition-colors"
-              style={{
-                minWidth: 44,
-                minHeight: 44,
-                color: "var(--accent)",
-                background: "color-mix(in srgb, var(--accent) 10%, transparent)",
-                border: "1px solid var(--border-accent)",
-              }}
-            >
-              <ShareNetwork size={18} aria-hidden="true" />
-            </button>
-          )}
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              aria-label="Profiel bewerken"
-              title="Bewerken"
-              className="ks-icon-pop focus-ring flex items-center justify-center rounded-full transition-colors"
-              style={{
-                minWidth: 44,
-                minHeight: 44,
-                color: "var(--text2)",
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <PencilSimple size={16} />
-            </button>
-          )}
-        </div>
+        {/* Edit stays icon-only: the pencil is already universally recognizable. */}
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label="Profiel bewerken"
+            title="Bewerken"
+            className="ks-icon-pop focus-ring flex flex-none items-center justify-center rounded-full transition-colors"
+            style={{
+              minWidth: 44,
+              minHeight: 44,
+              color: "var(--text2)",
+              background: "var(--surface2)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <PencilSimple size={16} aria-hidden="true" />
+          </button>
+        )}
       </div>
     </section>
   );

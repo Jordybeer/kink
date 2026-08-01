@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowsClockwise, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
+import { ArrowsClockwise, Check, CopySimple, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 import type { Profile } from "@/types";
 import { profileConsentAlias, verifyProfileConsent, type ConsentVerification } from "@/lib/consentProof";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
@@ -10,42 +10,84 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 export default function ProfileTrust({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false);
   const [verification, setVerification] = useState<ConsentVerification>({ status: "unsigned" });
+  const [checking, setChecking] = useState(true);
+  const [copied, setCopied] = useState(false);
   const shared = profile.origin === "shared" || (!profile.origin && profile.isImported === true);
 
   useEffect(() => {
     let cancelled = false;
+    setChecking(true);
     void verifyProfileConsent(profile).then((result) => {
-      if (!cancelled) setVerification(result);
+      if (!cancelled) {
+        setVerification(result);
+        setChecking(false);
+      }
     });
     return () => { cancelled = true; };
   }, [profile]);
 
-  const valid = verification.status === "valid";
-  const importedInvalid = shared && verification.status === "invalid";
-  const ownDirty = !shared && verification.status === "invalid";
-  const label = importedInvalid
-    ? "Bron klopt niet"
-    : ownDirty
-      ? "Nieuwe wijzigingen"
-      : shared
-        ? valid ? "Bron bevestigd" : "Geïmporteerd"
-        : valid ? `Versie ${profile.consentProof?.version} bevestigd` : "Eigen profiel";
-  const color = importedInvalid
-    ? "var(--hard-no)"
-    : valid
-      ? "var(--yes)"
+  const valid = !checking && verification.status === "valid";
+  const importedInvalid = !checking && shared && verification.status === "invalid";
+  const ownDirty = !checking && !shared && verification.status === "invalid";
+  const label = checking
+    ? "Bron controleren…"
+    : importedInvalid
+      ? "Opnieuw bevestigen"
       : ownDirty
-        ? "var(--accent)"
-        : "var(--text2)";
+        ? "Nieuwe wijzigingen"
+        : valid
+          ? "Bron bevestigd"
+          : shared
+            ? "Niet geverifieerd"
+            : "Eigen profiel";
+  const color = checking
+    ? "var(--text2)"
+    : importedInvalid
+      ? "var(--hard-no)"
+      : valid
+        ? "var(--yes)"
+        : ownDirty
+          ? "var(--accent)"
+          : "var(--text2)";
+  const background = checking
+    ? "var(--surface2)"
+    : importedInvalid
+      ? "color-mix(in srgb, var(--hard-no) 9%, var(--surface2))"
+      : valid
+        ? "color-mix(in srgb, var(--yes) 9%, var(--surface2))"
+        : ownDirty
+          ? "color-mix(in srgb, var(--accent) 9%, var(--surface2))"
+          : "var(--surface2)";
+  const borderColor = importedInvalid
+    ? "color-mix(in srgb, var(--hard-no) 45%, var(--border))"
+    : valid
+      ? "color-mix(in srgb, var(--yes) 35%, var(--border))"
+      : ownDirty
+        ? "var(--border-accent)"
+        : "var(--border)";
   const alias = profileConsentAlias(profile);
+  const verificationCode = getProfileVerificationCode(profile);
+
+  async function copyProof() {
+    try {
+      await navigator.clipboard.writeText(
+        `Leesbare broncode: ${alias}\nTechnische profielcode: ${verificationCode}`,
+      );
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="focus-ring inline-flex max-w-full min-w-0 items-center gap-1.5 mt-1.5 text-xs rounded-lg py-1"
-        style={{ color }}
+        aria-label={`${label}. Bekijk bron en toestemming`}
+        className="focus-ring mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold"
+        style={{ color, background, borderColor }}
       >
         {importedInvalid
           ? <WarningCircle size={13} weight="fill" aria-hidden="true" className="shrink-0" />
@@ -54,9 +96,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
             : ownDirty
               ? <ArrowsClockwise size={13} aria-hidden="true" className="shrink-0" />
               : null}
-        <span className="shrink-0 whitespace-nowrap">{label}</span>
-        <span className="shrink-0" aria-hidden="true" style={{ opacity: 0.45 }}>·</span>
-        <span className="min-w-0 truncate" title={alias}>{alias}</span>
+        <span className="truncate">{label}</span>
       </button>
 
       <Sheet open={open} onClose={() => setOpen(false)} scrollable aria-label="Bron en toestemming">
@@ -70,19 +110,51 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
           </p>
 
           <div className="rounded-xl p-4 mb-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-            <p className="text-xs mb-1" style={{ color: "var(--text2)" }}>Leesbare profielnaam</p>
-            <p className="text-sm font-semibold break-words" style={{ color: "var(--text)" }}>{alias}</p>
-            <p className="text-xs mt-3 mb-1" style={{ color: "var(--text2)" }}>Technische profielcode</p>
-            <p className="text-xs font-mono break-all" style={{ color: "var(--text2)" }}>{getProfileVerificationCode(profile)}</p>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Profielbewijs</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                  Gebruik dit om dezelfde profielbron op twee toestellen te herkennen.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={copyProof}
+                className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium"
+                style={{
+                  borderColor: copied ? "var(--yes)" : "var(--border)",
+                  color: copied ? "var(--yes)" : "var(--text2)",
+                }}
+              >
+                {copied
+                  ? <Check size={13} weight="bold" aria-hidden="true" />
+                  : <CopySimple size={13} aria-hidden="true" />}
+                {copied ? "Gekopieerd" : "Kopieer"}
+              </button>
+            </div>
+
+            <div className="border-t pt-3" style={{ borderColor: "var(--border)" }}>
+              <p className="text-xs mb-1" style={{ color: "var(--text2)" }}>Leesbare broncode</p>
+              <p className="text-sm font-semibold break-words" style={{ color: "var(--text)" }}>{alias}</p>
+              <p className="text-xs mt-3 mb-1" style={{ color: "var(--text2)" }}>Technische profielcode</p>
+              <p className="text-xs font-mono break-all" style={{ color: "var(--text2)" }}>{verificationCode}</p>
+            </div>
+            <span className="sr-only" aria-live="polite">
+              {copied ? "Profielbewijs gekopieerd" : ""}
+            </span>
           </div>
 
-          {valid ? (
+          {checking ? (
+            <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+              De bron en opgeslagen profielinhoud worden gecontroleerd…
+            </div>
+          ) : valid ? (
             <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 35%, var(--border))", color: "var(--text2)" }}>
               <strong style={{ color: "var(--yes)" }}>Bron bevestigd.</strong> Deze antwoorden passen bij versie {profile.consentProof?.version} en zijn sinds die bevestiging niet gewijzigd.
             </div>
           ) : importedInvalid ? (
             <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--text2)" }}>
-              <strong style={{ color: "var(--hard-no)" }}>Niet vertrouwen als bevestigde toestemming.</strong> {verification.reason}
+              <strong style={{ color: "var(--hard-no)" }}>Deze profielkopie moet opnieuw worden bevestigd.</strong> {verification.reason}
             </div>
           ) : ownDirty ? (
             <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))", border: "1px solid var(--border-accent)", color: "var(--text2)" }}>
