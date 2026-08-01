@@ -5,9 +5,12 @@ import Sheet from "./Sheet";
 import { useRouter } from "next/navigation";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import {
+  addProfileQrBundlePart,
   addProfileQrPart,
   type ProfileQrAssembly,
+  type ProfileQrBundleAssembly,
 } from "@/lib/profileQr";
+import { encodeProfileShareBundle } from "@/lib/profileShareV3";
 
 interface Props {
   open: boolean;
@@ -17,6 +20,15 @@ interface Props {
 
 type DispatchResult = "complete" | "progress" | "invalid";
 
+interface BundleProgress {
+  profileReceived: number;
+  profileTotal: number;
+  profileComplete: boolean;
+  avatarReceived: number;
+  avatarTotal: number;
+  avatarComplete: boolean;
+}
+
 export default function QRScanner({ open, onResult, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,9 +36,11 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   const rafRef = useRef<number | null>(null);
   const lastRawRef = useRef<{ value: string; at: number } | null>(null);
   const assemblyRef = useRef<ProfileQrAssembly | null>(null);
+  const bundleAssemblyRef = useRef<ProfileQrBundleAssembly | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [partError, setPartError] = useState<string | null>(null);
   const [assembly, setAssembly] = useState<ProfileQrAssembly | null>(null);
+  const [bundleProgress, setBundleProgress] = useState<BundleProgress | null>(null);
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteInput, setPasteInput] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
@@ -37,11 +51,13 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     setError(null);
     setPartError(null);
     setAssembly(null);
+    setBundleProgress(null);
     setPasteMode(false);
     setPasteInput("");
     setPasteError(null);
     lastRawRef.current = null;
     assemblyRef.current = null;
+    bundleAssemblyRef.current = null;
 
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" } })
@@ -84,6 +100,10 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
       return "complete";
     }
     if (parsed.kind === "profilePart") {
+      if (bundleAssemblyRef.current) {
+        setPartError("Deze QR hoort niet bij de profieloverdracht die al bezig is.");
+        return "progress";
+      }
       const collected = addProfileQrPart(assemblyRef.current, parsed.part);
       if (collected.status === "error") {
         setPartError(collected.message);
@@ -98,6 +118,50 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
       assemblyRef.current = collected.assembly;
       setPartError(null);
       setAssembly(collected.assembly);
+      return "progress";
+    }
+    if (parsed.kind === "profileBundlePart") {
+      if (assemblyRef.current) {
+        setPartError("Deze QR hoort niet bij de profieloverdracht die al bezig is.");
+        return "progress";
+      }
+      const collected = addProfileQrBundlePart(bundleAssemblyRef.current, parsed.part);
+      if (collected.status === "error") {
+        setPartError(collected.message);
+        return "progress";
+      }
+      if (collected.status === "complete") {
+        try {
+          const encoded = encodeProfileShareBundle(collected.profilePayload, collected.avatarPayload);
+          bundleAssemblyRef.current = null;
+          setBundleProgress({
+            profileReceived: 1,
+            profileTotal: 1,
+            profileComplete: true,
+            avatarReceived: 1,
+            avatarTotal: 1,
+            avatarComplete: true,
+          });
+          stopCamera();
+          void onResult(encoded);
+          return "complete";
+        } catch {
+          bundleAssemblyRef.current = null;
+          setBundleProgress(null);
+          setPartError("De ontvangen profieloverdracht is ongeldig, beschadigd of te groot. Start de scan opnieuw.");
+          return "progress";
+        }
+      }
+      bundleAssemblyRef.current = collected.assembly;
+      setPartError(null);
+      setBundleProgress({
+        profileReceived: collected.profileReceived,
+        profileTotal: collected.profileTotal,
+        profileComplete: collected.profileComplete,
+        avatarReceived: collected.avatarReceived,
+        avatarTotal: collected.avatarTotal,
+        avatarComplete: collected.avatarComplete,
+      });
       return "progress";
     }
     return "invalid";
@@ -138,12 +202,20 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     setPasteInput("");
     setPasteError(null);
     setAssembly(null);
+    setBundleProgress(null);
     assemblyRef.current = null;
+    bundleAssemblyRef.current = null;
     onClose();
   }
 
   const showPaste = pasteMode || !!error;
   const received = assembly ? Object.keys(assembly.parts).length : 0;
+  const profilePercent = bundleProgress?.profileTotal
+    ? Math.round((bundleProgress.profileReceived / bundleProgress.profileTotal) * 100)
+    : 0;
+  const avatarPercent = bundleProgress?.avatarTotal
+    ? Math.round((bundleProgress.avatarReceived / bundleProgress.avatarTotal) * 100)
+    : 0;
 
   return (
     <Sheet open={open} onClose={handleClose} aria-label="QR-code scannen">
@@ -158,11 +230,47 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
       >
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
         <h2 className="text-lg font-bold text-center mb-2">
-          {assembly
-            ? `Scan verder — ${received} van ${assembly.total}`
-            : showPaste ? "Plak link of code" : "Scan QR-code"}
+          {bundleProgress
+            ? bundleProgress.profileComplete
+              ? "Profiel ontvangen"
+              : `Profiel scannen — ${bundleProgress.profileReceived} van ${bundleProgress.profileTotal || "…"}`
+            : assembly
+              ? `Scan verder — ${received} van ${assembly.total}`
+              : showPaste ? "Plak link of code" : "Scan QR-code"}
         </h2>
-        {assembly && (
+
+        {bundleProgress && (
+          <div
+            className="rounded-xl px-3 py-3 mb-3"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+            role="status"
+            aria-live="polite"
+          >
+            <p className="text-sm font-semibold" style={{ color: bundleProgress.profileComplete ? "var(--yes)" : "var(--accent)" }}>
+              {bundleProgress.profileComplete
+                ? "✓ Profiel ontvangen"
+                : `↓ Profiel… ${profilePercent}%`}
+            </p>
+            <p className="text-sm mt-1" style={{ color: bundleProgress.profileComplete ? "var(--accent)" : "var(--text2)" }}>
+              {bundleProgress.profileComplete
+                ? bundleProgress.avatarComplete
+                  ? "✓ Profielfoto ontvangen"
+                  : `↓ Profielfoto… ${avatarPercent}%`
+                : "De profielfoto volgt automatisch zodra het profiel compleet is."}
+            </p>
+            <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "var(--surface3)" }}>
+              <div
+                className="h-full rounded-full transition-[width] duration-300"
+                style={{
+                  width: `${bundleProgress.profileComplete ? avatarPercent : profilePercent}%`,
+                  background: bundleProgress.profileComplete ? "var(--accent)" : "var(--yes)",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {assembly && !bundleProgress && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
             Deel ontvangen. Houd de camera gericht; volgende delen worden automatisch verzameld.
           </p>
@@ -194,7 +302,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               className="focus-ring w-full py-2.5 rounded-xl text-sm font-bold mb-2 disabled:opacity-40 transition-opacity"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              {assembly ? "Voeg QR-deel toe" : "Importeer"}
+              {assembly || bundleProgress ? "Voeg QR-deel toe" : "Importeer"}
             </button>
             <button
               onClick={handleClose}
@@ -225,9 +333,13 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               <p className="text-xs text-center mb-2" style={{ color: "var(--hard-no)" }}>{partError}</p>
             )}
             <p className="text-xs text-center mb-2" style={{ color: "var(--text2)" }}>
-              {assembly
-                ? "Blijf richten. Bij handmatig wisselen mag de volgorde verschillen."
-                : "Richt de camera op de QR-code van je partner."}
+              {bundleProgress
+                ? bundleProgress.profileComplete
+                  ? "Blijf richten. De profielfoto wordt nu automatisch verzameld."
+                  : "Blijf richten. Profiel en foto worden in vaste fasen verzameld."
+                : assembly
+                  ? "Blijf richten. Bij handmatig wisselen mag de volgorde verschillen."
+                  : "Richt de camera op de QR-code van je partner."}
             </p>
             <button
               onClick={() => { stopCamera(); setPartError(null); setPasteMode(true); }}
