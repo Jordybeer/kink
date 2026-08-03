@@ -1,14 +1,7 @@
-import { test } from "@playwright/test";
+import { devices, test } from "@playwright/test";
 import { seedAndGo, PROFILE_ALEX } from "./fixtures";
 
-const PROFILE_WITH_AVATAR: typeof PROFILE_ALEX = {
-  ...PROFILE_ALEX,
-  avatarDataUrl: undefined,
-  fetLifeUsername: "Alex_Dom",
-  bdsmtestUrl: "https://bdsmtest.org/r/example",
-};
-
-test.use({ ...require("@playwright/test").devices["Pixel 7"] });
+test.use({ ...devices["Pixel 7"] });
 
 test("profile hero — mobile overview tab", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);

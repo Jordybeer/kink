@@ -1,12 +1,28 @@
 "use client";
-import { Eye, EyeSlash, Star } from "@phosphor-icons/react";
+import { Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import { STATUS_LABEL } from "@/lib/statusLabels";
 import Sheet, { SheetContent } from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
 import ClampText from "./ui/ClampText";
 
-const TAGS = ["eerste keer", "alleen privé", "scène specifiek", "vraag eerst"] as const;
+const AGREEMENTS = [
+  {
+    value: "vraag eerst",
+    label: "Eerst vragen",
+    description: "Niet aannemen op basis van dit profiel; vraag het opnieuw in de situatie zelf.",
+  },
+  {
+    value: "eerste keer",
+    label: "Eerste keer",
+    description: "Hier is nog geen of weinig praktijkervaring mee.",
+  },
+] as const;
+
+const CONTEXT_TAGS = [
+  { value: "alleen privé", label: "Alleen in privésfeer" },
+  { value: "scène specifiek", label: "Alleen voor afgesproken scène" },
+] as const;
 
 interface Props {
   kink: Kink | null;
@@ -18,20 +34,24 @@ interface Props {
   onPrivateChange: (v: boolean) => void;
 }
 
-// Reopen a verdict: same five rows as the deck, plus vlaggen, nieuwsgierig en privé.
 export default function KinkEditSheet({
-  kink, entry, onClose,
-  onStatusChange, onTagsChange, onCuriousChange, onPrivateChange,
+  kink,
+  entry,
+  onClose,
+  onStatusChange,
+  onTagsChange,
+  onCuriousChange,
+  onPrivateChange,
 }: Props) {
   const tags = entry.tags ?? [];
 
   function toggleTag(tag: string) {
-    onTagsChange(tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag]);
+    onTagsChange(tags.includes(tag) ? tags.filter((candidate) => candidate !== tag) : [...tags, tag]);
   }
 
   return (
-    <Sheet open={kink !== null} onClose={onClose} aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}>
-      <SheetContent>
+    <Sheet open={kink !== null} onClose={onClose} scrollable aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}>
+      <SheetContent className="max-h-[88dvh] overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
         <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>{kink?.category}</p>
         <h2
           className="text-xl leading-tight mb-1"
@@ -44,8 +64,6 @@ export default function KinkEditSheet({
         )}
         {!kink?.description && <div className="mb-3" />}
 
-        {/* Screen readers hear the verdict change — the deck already
-            announces; the edit sheet was silent until now. */}
         <div aria-live="polite" className="sr-only">
           {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
           {entry.privateResponse ? " Antwoord is privé." : ""}
@@ -53,59 +71,112 @@ export default function KinkEditSheet({
 
         <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
 
-        <div className="flex items-center gap-1.5 mt-4 flex-wrap">
-          <button
-            type="button"
-            onClick={() => onCuriousChange(!entry.curious)}
-            aria-pressed={!!entry.curious}
-            className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1"
-            style={
-              entry.curious
+        <section className="mt-5">
+          <div className="flex items-center gap-2 mb-2">
+            <WarningCircle size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
+            <h3 className="text-sm font-semibold">Afspraken</h3>
+          </div>
+          <div className="grid gap-2">
+            {AGREEMENTS.map((agreement) => {
+              const active = tags.includes(agreement.value);
+              return (
+                <button
+                  type="button"
+                  key={agreement.value}
+                  onClick={() => toggleTag(agreement.value)}
+                  aria-pressed={active}
+                  className="focus-ring min-h-[62px] rounded-xl px-3 py-2.5 flex items-center gap-3 text-left"
+                  style={active
+                    ? {
+                        background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
+                        border: "1px solid var(--accent)",
+                      }
+                    : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-none"
+                    style={{
+                      background: active ? "var(--accent)" : "transparent",
+                      border: active ? "none" : "1px solid var(--border)",
+                      color: active ? "var(--on-accent)" : "transparent",
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">{agreement.label}</span>
+                    <span className="block text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                      {agreement.description}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mt-5">
+          <h3 className="text-sm font-semibold mb-2">Zichtbaarheid & context</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onCuriousChange(!entry.curious)}
+              aria-pressed={!!entry.curious}
+              className="focus-ring rounded-full border transition-colors text-xs px-3 min-h-10 inline-flex items-center gap-1.5"
+              style={entry.curious
                 ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
-                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
-            }
-          >
-            <Star size={11} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
-            Nieuwsgierig
-          </button>
-          <button
-            type="button"
-            data-tour="private"
-            onClick={() => onPrivateChange(!entry.privateResponse)}
-            aria-pressed={!!entry.privateResponse}
-            aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
-            className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1"
-            style={
-              entry.privateResponse
+                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              <Star size={12} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
+              Nieuwsgierig
+            </button>
+            <button
+              type="button"
+              data-tour="private"
+              onClick={() => onPrivateChange(!entry.privateResponse)}
+              aria-pressed={!!entry.privateResponse}
+              aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
+              className="focus-ring rounded-full border transition-colors text-xs px-3 min-h-10 inline-flex items-center gap-1.5"
+              style={entry.privateResponse
                 ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
-                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }
-            }
-          >
-            {entry.privateResponse
-              ? <EyeSlash size={12} weight="bold" aria-hidden="true" />
-              : <Eye size={12} aria-hidden="true" />}
-            Privé
-          </button>
-          {TAGS.map((tag) => {
-            const active = tags.includes(tag);
-            return (
-              <button
-                type="button"
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                aria-pressed={active}
-                className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9"
-                style={{
-                  background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
-                  borderColor: active ? "var(--accent)" : "var(--border)",
-                  color: active ? "var(--accent)" : "var(--text2)",
-                }}
-              >
-                {tag}
-              </button>
-            );
-          })}
-        </div>
+                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
+            >
+              {entry.privateResponse
+                ? <EyeSlash size={13} weight="bold" aria-hidden="true" />
+                : <Eye size={13} aria-hidden="true" />}
+              Privé antwoord
+            </button>
+            {CONTEXT_TAGS.map((tag) => {
+              const active = tags.includes(tag.value);
+              return (
+                <button
+                  type="button"
+                  key={tag.value}
+                  onClick={() => toggleTag(tag.value)}
+                  aria-pressed={active}
+                  className="focus-ring rounded-full border transition-colors text-xs px-3 min-h-10"
+                  style={{
+                    background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
+                    borderColor: active ? "var(--accent)" : "var(--border)",
+                    color: active ? "var(--accent)" : "var(--text2)",
+                  }}
+                >
+                  {tag.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="focus-ring w-full min-h-12 rounded-xl mt-6 text-sm font-semibold"
+          style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
+        >
+          Klaar
+        </button>
       </SheetContent>
     </Sheet>
   );
