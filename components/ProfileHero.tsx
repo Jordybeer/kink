@@ -1,7 +1,17 @@
 "use client";
+
 import { useRef, useState } from "react";
-import { ArrowSquareOut, CameraPlus, Lock, PencilSimple, ArrowsClockwise, ShareNetwork, Trash } from "@phosphor-icons/react";
+import {
+  ArrowSquareOut,
+  ArrowsClockwise,
+  CameraPlus,
+  Lock,
+  PencilSimple,
+  ShareNetwork,
+  Trash,
+} from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
+import FetLifeMark from "@/components/brand/FetLifeMark";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
@@ -39,7 +49,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   }
 
   return (
-    <section className="ks-fade-in mx-4 px-3 pt-3 pb-3.5">
+    <section className="ks-fade-in mx-4 px-3 pb-2.5 pt-3">
       <div className="flex items-start gap-3">
         <div className="relative flex-none">
           <ContextMenu
@@ -47,10 +57,23 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             onClose={() => setMenuOpen(false)}
             align="left"
             items={profile.avatarDataUrl ? [
-              { label: "Foto bijwerken", icon: <ArrowsClockwise size={14} aria-hidden="true" />, onClick: () => fileInputRef.current?.click() },
-              { label: "Foto verwijderen", icon: <Trash size={14} aria-hidden="true" />, danger: true, onClick: () => onAvatarChange?.(undefined) },
+              {
+                label: "Foto bijwerken",
+                icon: <ArrowsClockwise size={14} weight="regular" aria-hidden="true" />,
+                onClick: () => fileInputRef.current?.click(),
+              },
+              {
+                label: "Foto verwijderen",
+                icon: <Trash size={14} weight="regular" aria-hidden="true" />,
+                danger: true,
+                onClick: () => onAvatarChange?.(undefined),
+              },
             ] : [
-              { label: "Upload foto", icon: <CameraPlus size={14} aria-hidden="true" />, onClick: () => fileInputRef.current?.click() },
+              {
+                label: "Upload foto",
+                icon: <CameraPlus size={14} weight="regular" aria-hidden="true" />,
+                onClick: () => fileInputRef.current?.click(),
+              },
             ]}
           >
             <button
@@ -103,7 +126,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             {profile.role && <span aria-hidden="true">·</span>}
             <span>{expLevel}</span>
             {profile.relationshipStatus && <><span aria-hidden="true">·</span><span>{profile.relationshipStatus}</span></>}
-            {profileType === "partner" && <Lock size={10} aria-hidden="true" className="shrink-0" />}
+            {profileType === "partner" && <Lock size={10} weight="regular" aria-hidden="true" className="shrink-0" />}
           </p>
         </div>
 
@@ -113,82 +136,68 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             onClick={onEdit}
             aria-label="Profiel bewerken"
             title="Bewerken"
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl transition-opacity active:opacity-70"
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl transition-colors active:opacity-70"
             style={{ color: "var(--text2)", background: "transparent", border: "none" }}
           >
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-9 items-center justify-center rounded-[10px]"
-              style={{ background: "color-mix(in srgb, var(--surface2) 82%, transparent)" }}
-            >
-              <PencilSimple size={15} aria-hidden="true" />
-            </span>
+            <PencilSimple size={16} weight="regular" aria-hidden="true" />
           </button>
         )}
       </div>
 
-      <div className="mt-2.5 flex flex-col gap-1.5 min-[520px]:flex-row min-[520px]:items-center min-[520px]:gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1" aria-label="Profielinformatie">
-          <ProfileTrust profile={profile} />
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie en acties">
+        <ProfileTrust profile={profile} />
 
-          {profileType === "partner" && profile.lockedAt && (
-            <span className="inline-flex min-h-7 items-center text-[11px]" style={{ color: "var(--text2)" }}>
-              Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
+        {profileType === "partner" && profile.lockedAt && (
+          <span
+            className="inline-flex min-h-8 items-center rounded-full px-2.5 text-[11px] font-normal"
+            style={{
+              color: "var(--text2)",
+              background: "var(--surface2)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
+          </span>
+        )}
+
+        {hasActions && <span className="hidden min-[420px]:block min-[420px]:flex-1" aria-hidden="true" />}
+
+        {onShare && (
+          <button
+            type="button"
+            onClick={onShare}
+            aria-label="Profiel delen"
+            className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-normal transition-opacity active:opacity-65"
+            style={{ color: "var(--text2)", background: "transparent", border: "none" }}
+          >
+            <ShareNetwork size={17} weight="regular" aria-hidden="true" />
+            <span>Delen</span>
+          </button>
+        )}
+
+        {profile.fetLifeUsername && (
+          <a
+            href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
+            className="profile-fetlife-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-[12.5px] font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+            style={{
+              color: "var(--text)",
+              background: "var(--surface2)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className="profile-fetlife-mark flex h-6 w-6 flex-none items-center justify-center rounded-full"
+              style={{ color: "var(--text)", background: "var(--surface3)" }}
+            >
+              <FetLifeMark className="h-[15px] w-[15px]" />
             </span>
-          )}
-        </div>
-
-        {hasActions && (
-          <div className="flex min-w-0 flex-wrap items-center gap-2.5 min-[520px]:ml-auto min-[520px]:flex-nowrap" aria-label="Profielacties">
-            {onShare && (
-              <button
-                type="button"
-                onClick={onShare}
-                aria-label="Profiel delen"
-                className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1.5 text-[13px] font-medium transition-opacity active:opacity-70"
-                style={{ color: "var(--text)", background: "transparent", border: "none" }}
-              >
-                <ShareNetwork size={16} style={{ color: "var(--accent)" }} aria-hidden="true" />
-                <span>Delen</span>
-              </button>
-            )}
-
-            {profile.fetLifeUsername && (
-              <a
-                href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-                className="profile-fetlife-link focus-ring group inline-flex min-h-11 items-center gap-2 rounded-xl px-0.5 pr-1.5 text-[13px] font-medium underline-offset-4 transition-opacity hover:underline focus-visible:underline active:opacity-70"
-                style={{ color: "var(--text)" }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="profile-fetlife-circle flex h-8 w-8 flex-none items-center justify-center rounded-full transition-colors"
-                  style={{
-                    color: "var(--accent)",
-                    background: "var(--surface2)",
-                    border: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
-                  }}
-                >
-                  <svg
-                    data-brand-icon="fetlife"
-                    viewBox="0 0 24 24"
-                    width="17"
-                    height="17"
-                    preserveAspectRatio="xMidYMid meet"
-                    aria-hidden="true"
-                    focusable="false"
-                    className="block max-h-[60%] max-w-[60%]"
-                  >
-                    <path fill="currentColor" d="M7 4h10v3H10v3.5h6v3h-6V20H7V4Z" />
-                  </svg>
-                </span>
-                <span>FetLife</span>
-                <ArrowSquareOut size={12} style={{ color: "var(--text2)" }} aria-hidden="true" />
-              </a>
-            )}
-          </div>
+            <span>FetLife</span>
+            <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
+          </a>
         )}
       </div>
 
@@ -201,10 +210,14 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
       )}
 
       <style jsx>{`
-        .profile-fetlife-link:hover .profile-fetlife-circle,
-        .profile-fetlife-link:focus-visible .profile-fetlife-circle,
-        .profile-fetlife-link:active .profile-fetlife-circle {
-          background: color-mix(in srgb, var(--accent) 9%, var(--surface2));
+        .profile-fetlife-link:hover,
+        .profile-fetlife-link:focus-visible {
+          border-color: color-mix(in srgb, var(--text2) 45%, var(--border));
+        }
+
+        .profile-fetlife-link:hover .profile-fetlife-mark,
+        .profile-fetlife-link:focus-visible .profile-fetlife-mark {
+          background: color-mix(in srgb, var(--text2) 14%, var(--surface3));
         }
       `}</style>
     </section>
