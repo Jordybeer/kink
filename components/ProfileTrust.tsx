@@ -40,15 +40,23 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
           : shared
             ? "Niet geverifieerd"
             : "Eigen profiel";
-  const color = checking
-    ? "var(--text2)"
-    : importedInvalid
-      ? "var(--hard-no)"
-      : valid
-        ? "var(--yes)"
-        : ownDirty
-          ? "color-mix(in srgb, var(--accent) 72%, var(--text2))"
-          : "var(--text2)";
+  const color = importedInvalid
+    ? "var(--hard-no)"
+    : valid
+      ? "var(--willing)"
+      : ownDirty
+        ? "var(--text)"
+        : "var(--text2)";
+  const background = importedInvalid
+    ? "color-mix(in srgb, var(--hard-no) 8%, var(--surface2))"
+    : valid
+      ? "color-mix(in srgb, var(--willing) 7%, var(--surface2))"
+      : "var(--surface2)";
+  const borderColor = importedInvalid
+    ? "color-mix(in srgb, var(--hard-no) 30%, var(--border))"
+    : valid
+      ? "color-mix(in srgb, var(--willing) 24%, var(--border))"
+      : "var(--border)";
   const alias = profileConsentAlias(profile);
   const verificationCode = getProfileVerificationCode(profile);
 
@@ -70,17 +78,17 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${label}. Bekijk bron en toestemming`}
-        className="focus-ring inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-md px-0.5 text-[12px] font-medium transition-opacity active:opacity-65"
-        style={{ color, background: "transparent", border: "none" }}
+        className="focus-ring inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full px-2.5 text-[12px] font-normal transition-colors active:opacity-70"
+        style={{ color, background, border: `1px solid ${borderColor}` }}
       >
         {checking
-          ? <ArrowsClockwise size={12} aria-hidden="true" className="shrink-0 animate-spin motion-reduce:animate-none" />
+          ? <ArrowsClockwise size={12.5} weight="regular" aria-hidden="true" className="shrink-0 animate-spin motion-reduce:animate-none" />
           : importedInvalid
-            ? <WarningCircle size={12} weight="fill" aria-hidden="true" className="shrink-0" />
+            ? <WarningCircle size={12.5} weight="fill" aria-hidden="true" className="shrink-0" />
             : valid
-              ? <ShieldCheck size={12} weight="fill" aria-hidden="true" className="shrink-0" />
+              ? <ShieldCheck size={12.5} weight="fill" aria-hidden="true" className="shrink-0" />
               : ownDirty
-                ? <ArrowsClockwise size={12} aria-hidden="true" className="shrink-0" />
+                ? <ArrowsClockwise size={12.5} weight="regular" aria-hidden="true" className="shrink-0" style={{ color: "var(--text2)" }} />
                 : null}
         <span className="truncate">{label}</span>
       </button>
@@ -108,13 +116,13 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
                 onClick={copyProof}
                 className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium"
                 style={{
-                  borderColor: copied ? "var(--yes)" : "var(--border)",
-                  color: copied ? "var(--yes)" : "var(--text2)",
+                  borderColor: copied ? "var(--willing)" : "var(--border)",
+                  color: copied ? "var(--willing)" : "var(--text2)",
                 }}
               >
                 {copied
-                  ? <Check size={13} weight="bold" aria-hidden="true" />
-                  : <CopySimple size={13} aria-hidden="true" />}
+                  ? <Check size={13} weight="regular" aria-hidden="true" />
+                  : <CopySimple size={13} weight="regular" aria-hidden="true" />}
                 {copied ? "Gekopieerd" : "Kopieer"}
               </button>
             </div>
@@ -135,16 +143,16 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
               De bron en opgeslagen profielinhoud worden gecontroleerd…
             </div>
           ) : valid ? (
-            <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 35%, var(--border))", color: "var(--text2)" }}>
-              <strong style={{ color: "var(--yes)" }}>Bron bevestigd.</strong> Deze antwoorden passen bij versie {profile.consentProof?.version} en zijn sinds die bevestiging niet gewijzigd.
+            <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "color-mix(in srgb, var(--willing) 8%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--willing) 28%, var(--border))", color: "var(--text2)" }}>
+              <strong style={{ color: "var(--willing)" }}>Bron bevestigd.</strong> Deze antwoorden passen bij versie {profile.consentProof?.version} en zijn sinds die bevestiging niet gewijzigd.
             </div>
           ) : importedInvalid ? (
             <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--text2)" }}>
               <strong style={{ color: "var(--hard-no)" }}>Deze profielkopie moet opnieuw worden bevestigd.</strong> {verification.reason}
             </div>
           ) : ownDirty ? (
-            <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))", border: "1px solid var(--border-accent)", color: "var(--text2)" }}>
-              <strong style={{ color: "var(--accent)" }}>Je hebt nieuwe wijzigingen.</strong> Dat is normaal op je eigen profiel. Wanneer je opnieuw deelt of een scène vastzet, maakt KinkSync hiervan een nieuwe bevestigde versie.
+            <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+              <strong style={{ color: "var(--text)" }}>Je hebt nieuwe wijzigingen.</strong> Dat is normaal op je eigen profiel. Wanneer je opnieuw deelt of een scène vastzet, maakt KinkSync hiervan een nieuwe bevestigde versie.
             </div>
           ) : (
             <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
