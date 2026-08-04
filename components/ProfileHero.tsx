@@ -84,7 +84,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
   return (
     <>
-      <section className="ks-fade-in mx-4 px-3 pb-2.5 pt-3">
+      <section
+        className="ks-fade-in relative mx-4 px-3 pb-2.5 pt-3"
+        style={{ zIndex: menuOpen ? 30 : undefined }}
+      >
         <div className="flex items-start gap-3">
           <div className="relative flex-none">
             <ContextMenu
