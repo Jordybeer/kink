@@ -270,7 +270,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
             {loading ? "Ontsleutelen…" : "Backup herstellen"}
           </button>
           <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
-            Annuleer
+            <ArrowLeft size={14} aria-hidden="true" /> Annuleer
           </button>
         </motion.div>
       </motion.div>
