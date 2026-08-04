@@ -23,7 +23,6 @@ const RAW_SVG_EXCEPTIONS = new Set([
   "components/brand/FetLifeMark.tsx",
 ]);
 
-const ALLOWED_BRAND_MARKS = new Set(["fetlife"]);
 const DISALLOWED_ICON_IMPORT = /(lucide|react-icons|heroicons|fontawesome|iconify|icons8|material-icons|@mui\/icons-material)/i;
 const EMOJI = /\p{Extended_Pictographic}/u;
 const CONTROL_GLYPH = /[←→↑↓↗↘↖↙✕✖✔✓]/u;
@@ -100,17 +99,12 @@ function hasAccessibleSvgTag(node, sourceFile) {
   return role === "img" && Boolean(label);
 }
 
-function isAllowedBrandMark(node, sourceFile) {
-  const brand = literalAttributeValue(attribute(node, "data-brand-icon", sourceFile));
-  return typeof brand === "string" && ALLOWED_BRAND_MARKS.has(brand);
-}
-
-function interactiveAncestor(node) {
+function interactiveAncestor(node, interactiveTags) {
   let current = node.parent;
   while (current) {
     if (ts.isJsxElement(current)) {
       const tag = jsxTagName(current.openingElement);
-      if (tag === "button" || tag === "a") return current;
+      if (interactiveTags.has(tag)) return current;
     }
     current = current.parent;
   }
@@ -137,18 +131,45 @@ function inspectFile(filePath) {
     ts.ScriptKind.TSX,
   );
   const phosphorNames = new Set();
+  const interactiveTags = new Set(["button", "a"]);
   let phosphorNamespace;
 
   for (const statement of sourceFile.statements) {
     if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
     const moduleName = statement.moduleSpecifier.text;
+    const clause = statement.importClause;
 
     if (DISALLOWED_ICON_IMPORT.test(moduleName)) {
       report(sourceFile, statement, `gebruik geen andere iconbibliotheek dan @phosphor-icons/react (${moduleName}).`);
     }
 
+    if (moduleName === "next/link") {
+      if (clause?.name) interactiveTags.add(clause.name.text);
+      if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+        for (const element of clause.namedBindings.elements) {
+          const importedName = element.propertyName?.text ?? element.name.text;
+          if (importedName === "default" || importedName === "Link") {
+            interactiveTags.add(element.name.text);
+          }
+        }
+      }
+    }
+
+    if (moduleName === "framer-motion" && clause?.namedBindings) {
+      if (ts.isNamespaceImport(clause.namedBindings)) {
+        interactiveTags.add(`${clause.namedBindings.name.text}.motion.button`);
+        interactiveTags.add(`${clause.namedBindings.name.text}.m.button`);
+      } else {
+        for (const element of clause.namedBindings.elements) {
+          const importedName = element.propertyName?.text ?? element.name.text;
+          if (importedName === "motion" || importedName === "m") {
+            interactiveTags.add(`${element.name.text}.button`);
+          }
+        }
+      }
+    }
+
     if (moduleName !== "@phosphor-icons/react") continue;
-    const clause = statement.importClause;
     if (!clause?.namedBindings) continue;
     if (ts.isNamespaceImport(clause.namedBindings)) {
       phosphorNamespace = clause.namedBindings.name.text;
@@ -164,8 +185,7 @@ function inspectFile(filePath) {
 
       if (tag === "svg") {
         const file = relative(filePath);
-        const allowed = RAW_SVG_EXCEPTIONS.has(file) || isAllowedBrandMark(node, sourceFile);
-        if (!allowed) {
+        if (!RAW_SVG_EXCEPTIONS.has(file)) {
           report(sourceFile, node, "vervang inline SVG-UI-iconen door een semantisch passend Phosphor-icoon.");
         } else if (!hasAccessibleSvgTag(node, sourceFile)) {
           report(sourceFile, node, "tag toegestane merk-/visualisatie-SVG als aria-hidden of als role=img met aria-label.");
@@ -183,7 +203,7 @@ function inspectFile(filePath) {
     if (text && EMOJI.test(text)) {
       report(sourceFile, node, "gebruik voor UI-betekenis een Phosphor-icoon in plaats van emoji.");
     }
-    if (text && CONTROL_GLYPH.test(text) && interactiveAncestor(node)) {
+    if (text && CONTROL_GLYPH.test(text) && interactiveAncestor(node, interactiveTags)) {
       report(sourceFile, node, "gebruik in interactieve controls een Phosphor-icoon in plaats van een Unicode-pijl/check/kruis.");
     }
 
@@ -198,7 +218,7 @@ for (const file of collectFiles(ROOT)) inspectFile(file);
 if (failures.length) {
   console.error(`\nIcon audit failed with ${failures.length} issue${failures.length === 1 ? "" : "s"}:\n`);
   for (const failure of failures) console.error(`- ${failure}`);
-  console.error("\nPolicy: Phosphor for generic UI icons; raw SVG only for explicitly tagged brand marks/data visualisations.\n");
+  console.error("\nPolicy: Phosphor for generic UI icons; raw SVG only through the explicit file allowlist.\n");
   process.exit(1);
 }
 
