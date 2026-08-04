@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowSquareOut, CaretRight } from "@phosphor-icons/react";
 import type { BdsmtestScore } from "@/types";
-import Sheet from "@/components/ui/Sheet";
+import Sheet, { SheetContent } from "@/components/Sheet";
 
 const PREVIEW_COUNT = 3;
 
@@ -80,32 +80,41 @@ export default function BdsmtestScores({ scores, url }: Props) {
         <ScoreRows scores={preview} compact />
       </section>
 
-      <Sheet open={open} onClose={() => setOpen(false)} title="BDSMTest-resultaten" aria-label="Alle BDSMTest-resultaten">
-        <div className="max-h-[65dvh] overflow-y-auto overscroll-contain px-1 pb-2">
-          {url && (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="focus-ring mb-4 inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold"
-              style={{ color: "var(--accent)", borderColor: "var(--border-accent)" }}
-            >
-              Origineel resultaat openen
-              <ArrowSquareOut size={12} aria-hidden="true" />
-            </a>
-          )}
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        scrollable
+        aria-label="Alle BDSMTest-resultaten"
+      >
+        <SheetContent className="max-h-[80dvh] overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
+          <h2 className="mb-4 px-1 text-lg font-bold">BDSMTest-resultaten</h2>
 
-          <ScoreRows scores={scores} />
-        </div>
+          <div className="px-1 pb-2">
+            {url && (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="focus-ring mb-4 inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold"
+                style={{ color: "var(--accent)", borderColor: "var(--border-accent)" }}
+              >
+                Origineel resultaat openen
+                <ArrowSquareOut size={12} aria-hidden="true" />
+              </a>
+            )}
 
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="focus-ring mt-4 w-full rounded-xl border py-2.5 text-sm font-medium"
-          style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-        >
-          Sluit
-        </button>
+            <ScoreRows scores={scores} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="focus-ring mt-4 w-full rounded-xl border py-2.5 text-sm font-medium"
+            style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+          >
+            Sluit
+          </button>
+        </SheetContent>
       </Sheet>
     </>
   );
