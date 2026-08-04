@@ -36,7 +36,6 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
   const expLevel = profile.experienceLevel ?? "beginner";
   const initial = profile.name.charAt(0).toUpperCase();
-  const hasActions = Boolean(onShare || profile.fetLifeUsername);
   const avatarMenuItems = profile.avatarDataUrl
     ? [
         {
@@ -185,21 +184,6 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             </span>
           )}
 
-          {hasActions && <span className="hidden min-[420px]:block min-[420px]:flex-1" aria-hidden="true" />}
-
-          {onShare && (
-            <button
-              type="button"
-              onClick={onShare}
-              aria-label="Profiel delen"
-              className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-normal transition-opacity active:opacity-65"
-              style={{ color: "var(--text2)", background: "transparent", border: "none" }}
-            >
-              <ShareNetwork size={17} weight="regular" aria-hidden="true" />
-              <span>Delen</span>
-            </button>
-          )}
-
           {profile.fetLifeUsername && (
             <a
               href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
@@ -216,13 +200,26 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               <span
                 aria-hidden="true"
                 className="profile-fetlife-mark flex h-6 w-6 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--text)", background: "var(--surface3)" }}
+                style={{ color: "#fff", background: "#c62838", border: "1px solid #000" }}
               >
                 <FetLifeMark className="h-[15px] w-[15px]" />
               </span>
               <span>FetLife</span>
               <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
             </a>
+          )}
+
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              aria-label="Profiel delen"
+              className="focus-ring ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-normal transition-opacity active:opacity-65"
+              style={{ color: "var(--text2)", background: "transparent", border: "none" }}
+            >
+              <ShareNetwork size={17} weight="regular" aria-hidden="true" />
+              <span>Delen</span>
+            </button>
           )}
         </div>
 
@@ -238,11 +235,6 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           .profile-fetlife-link:hover,
           .profile-fetlife-link:focus-visible {
             border-color: color-mix(in srgb, var(--text2) 45%, var(--border));
-          }
-
-          .profile-fetlife-link:hover .profile-fetlife-mark,
-          .profile-fetlife-link:focus-visible .profile-fetlife-mark {
-            background: color-mix(in srgb, var(--text2) 14%, var(--surface3));
           }
         `}</style>
       </section>
