@@ -12,7 +12,7 @@ import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
-import { CaretUp, CaretDown } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 
 function uid() {
@@ -100,11 +100,7 @@ function ContractGate({
               justifyContent: "center",
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="4" y="11" width="16" height="11" rx="2" stroke="var(--accent)" strokeWidth="1.8"/>
-              <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
-              <circle cx="12" cy="16" r="1.5" fill="var(--accent)"/>
-            </svg>
+            <LockKey size={22} weight="duotone" aria-hidden="true" style={{ color: "var(--accent)" }} />
           </div>
         </div>
 
@@ -151,10 +147,10 @@ function ContractGate({
         {existingContract ? (
           <button
             onClick={() => router.push(`/scene?a=${selectedA}&b=${selectedB}`)}
-            className="w-full py-3 rounded-xl text-sm font-bold focus-ring mb-3"
+            className="w-full py-3 rounded-xl text-sm font-bold focus-ring mb-3 inline-flex items-center justify-center gap-1.5"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
-            Ga naar scène →
+            Ga naar scène <ArrowRight size={15} aria-hidden="true" />
           </button>
         ) : (
           <button
@@ -304,9 +300,7 @@ function SceneItemRow({
               className="focus-ring rounded-lg flex-none disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -388,9 +382,7 @@ function KinkChip({
       }}
     >
       {!added && (
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-          <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
+        <Plus size={12} aria-hidden="true" />
       )}
       {name}
     </button>
@@ -674,12 +666,11 @@ function ScenePage() {
               border: "1px solid var(--border-accent)",
             }}
           >
-            <span className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
-              + Kinks toevoegen
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--accent)" }}>
+              <Plus size={15} aria-hidden="true" />
+              Kinks toevoegen
             </span>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ color: "var(--accent)", opacity: 0.7 }}>
-              <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <CaretRight size={14} aria-hidden="true" style={{ color: "var(--accent)", opacity: 0.7 }} />
           </button>
         )}
 
@@ -693,13 +684,7 @@ function ScenePage() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center py-16 select-none ks-fade-in">
               <div className="mb-4" style={{ opacity: 0.35 }}>
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                  <rect x="8" y="12" width="32" height="4" rx="2" fill="var(--text2)"/>
-                  <rect x="8" y="22" width="24" height="4" rx="2" fill="var(--text2)"/>
-                  <rect x="8" y="32" width="20" height="4" rx="2" fill="var(--text2)"/>
-                  <circle cx="38" cy="34" r="8" fill="var(--accent)" opacity="0.7"/>
-                  <path d="M35 34h6M38 31v6" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                <ListPlus size={48} weight="duotone" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Lege setlist</p>
               <p className="text-sm" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
@@ -758,7 +743,7 @@ function ScenePage() {
                 className="rounded-xl font-bold focus-ring flex-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 44, height: 44, fontSize: 20 }}
               >
-                +
+                <Plus size={20} aria-hidden="true" />
               </button>
             </div>
           )}
@@ -779,18 +764,18 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none inline-flex items-center justify-center gap-1"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                {savedStatus === "draft" ? "Concept ✓" : "Opslaan"}
+                {savedStatus === "draft" ? <><Check size={13} aria-hidden="true" /> Concept</> : "Opslaan"}
               </button>
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none inline-flex items-center justify-center gap-1"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                {savedStatus === "planned" ? "Gepland ✓" : "Plannen"}
+                {savedStatus === "planned" ? <><Check size={13} aria-hidden="true" /> Gepland</> : "Plannen"}
               </button>
             </>
           )}
@@ -821,9 +806,7 @@ function ScenePage() {
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
               aria-label="Sluiten"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
 

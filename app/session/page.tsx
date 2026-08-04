@@ -3,7 +3,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import Link from "next/link";
-import { Broadcast, Eye, EyeSlash, Key, Lock } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Broadcast, Check, Eye, EyeSlash, Heart, Key, Lock, SpinnerGap } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { CustomKink, ExperienceLevel, KinkStatus, Profile } from "@/types";
@@ -25,14 +25,14 @@ function iceServersSummary(servers: RTCIceServer[]): string {
   const urls = servers.map(s => String(s.urls));
   const turn = urls.filter(u => u.startsWith("turn:")).length;
   const stun = urls.filter(u => u.startsWith("stun:")).length;
-  return `${servers.length} servers — ${turn} TURN, ${stun} STUN${turn === 0 ? " ⚠ GEEN TURN" : ""}`;
+  return `${servers.length} servers — ${turn} TURN, ${stun} STUN${turn === 0 ? " — GEEN TURN" : ""}`;
 }
 
 function iceCandSummary(types: string[]): string {
   const counts: Record<string, number> = {};
   for (const t of types) counts[t] = (counts[t] ?? 0) + 1;
   const parts = Object.entries(counts).map(([t, n]) => `${n}× ${t}`).join(", ") || "geen";
-  return `${types.length} kandidaten (${parts})${counts.relay ? " ✓ relay aanwezig" : " ⚠ GEEN relay — cross-netwerk zal falen"}`;
+  return `${types.length} kandidaten (${parts})${counts.relay ? " — relay aanwezig" : " — GEEN relay; cross-netwerk zal falen"}`;
 }
 
 const PILLS = STATUS_ORDER.map((s) => ({ s, label: STATUS_LABEL[s] }));
@@ -591,7 +591,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
   const spinner = (msg: string) => (
     <div className="text-center py-16">
-      <div className="animate-pulse text-4xl mb-4">🔮</div>
+      <SpinnerGap size={36} className="mx-auto mb-4 animate-spin" aria-hidden="true" style={{ color: "var(--accent)" }} />
       <p className="text-sm" style={{ color: "var(--text2)" }}>{msg}</p>
       {gatheringElapsed >= 5 && (
         <p className="text-xs mt-2" style={{ color: "var(--text2)", opacity: 0.6 }}>
@@ -641,7 +641,8 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           className="focus-ring text-sm min-h-[44px] px-3 inline-flex items-center"
           style={{ color: "var(--text2)" }}
         >
-          ← Terug
+          <ArrowLeft size={15} aria-hidden="true" className="mr-1" />
+          Terug
         </button>
         <h1 className="text-xl font-bold flex-1 text-center" style={{ color: "var(--accent)" }}>Live sessie</h1>
         <div className="w-16" />
@@ -685,12 +686,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             Start een live sessie — jij genereert een code, je partner typt die in. Verbinding loopt via een beveiligde relay en daarna direct apparaat-tot-apparaat.
           </p>
           {profilePicker()}
-          {accentBtn("Sessie starten →", handleStartHost, !profile)}
+          {accentBtn("Sessie starten", handleStartHost, !profile)}
           {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
           {debugLog.length > 0 && (
             <div className="mt-3 rounded-xl p-3 text-left" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
               {debugLog.map((line, index) => (
-                <p key={index} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("⚠") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
+                <p key={index} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("GEEN") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
               ))}
             </div>
           )}
@@ -719,7 +720,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           {debugLog.length > 0 && (
             <div className="mt-3 rounded-xl p-3 text-left" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
               {debugLog.map((line, index) => (
-                <p key={index} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("⚠") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
+                <p key={index} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("GEEN") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
               ))}
             </div>
           )}
@@ -742,12 +743,12 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             className="focus-ring w-full rounded-lg px-3 py-2.5 text-center text-2xl font-mono font-bold mb-4 tracking-widest focus:outline-none"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--accent)" }}
           />
-          {accentBtn("Verbinden →", handleStartGuest, !profile || codeInput.length !== 6)}
+          {accentBtn("Verbinden", handleStartGuest, !profile || codeInput.length !== 6)}
           {error && <p className="text-xs mt-3" style={{ color: "var(--hard-no)" }}>{error}</p>}
           {debugLog.length > 0 && (
             <div className="mt-3 rounded-xl p-3 text-left" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
               {debugLog.map((line, index) => (
-                <p key={index} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("⚠") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
+                <p key={index} className="font-mono text-[10px] leading-5 break-all" style={{ color: line.includes("GEEN") ? "var(--maybe)" : "var(--text2)" }}>{line}</p>
               ))}
             </div>
           )}
@@ -856,7 +857,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
             <button onClick={handleDone}
               className="focus-ring w-full max-w-lg mx-auto block py-3 rounded-xl text-sm font-bold"
               style={{ background: "var(--surface)", border: "2px solid var(--accent)", color: "var(--accent)" }}>
-              🔒 Sluit af &amp; onthul matches
+              <span className="inline-flex items-center justify-center gap-1.5"><Lock size={16} aria-hidden="true" />Sluit af &amp; onthul matches</span>
             </button>
           </div>
         </div>
@@ -864,7 +865,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
       {phase === "done_local" && !partnerDone && (
         <div className="ks-fade-in flex flex-col items-center justify-center gap-4 text-center" style={{ minHeight: "60vh" }}>
-          <div className="ks-icon-pop animate-pulse text-4xl">🔒</div>
+          <Lock size={36} className="ks-icon-pop animate-pulse" aria-hidden="true" style={{ color: "var(--accent)" }} />
           <div className="text-base" style={{ color: "var(--text)" }}>
             <span>{partnerName}</span>
             <span className="transition-opacity duration-200" style={{ opacity: partnerActive ? 1 : 0, color: "var(--text2)" }}> is aan het invullen…</span>
@@ -881,7 +882,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
       {phase === "revealed" && (
         <div>
           <div className="text-center mb-8">
-            <div className="text-5xl mb-3">🖤</div>
+            <Heart size={48} weight="fill" className="mx-auto mb-3" aria-hidden="true" style={{ color: "var(--accent)" }} />
             <h2 className="text-3xl font-bold mb-1">{matchCount} matches</h2>
             <p className="text-sm" style={{ color: "var(--text2)" }}>
               {hardCount > 0 && `${hardCount} harde grens${hardCount !== 1 ? "en" : ""} · `}
@@ -931,7 +932,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                           compact
                         />
                       ) : rowMatch ? (
-                        <span className="text-xs font-bold" style={{ color: "var(--yes)" }}>✓ Match</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: "var(--yes)" }}><Check size={12} aria-hidden="true" />Match</span>
                       ) : (
                         <PrivateResponseStatus
                           status={remoteStatus}
@@ -948,7 +949,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
 
           {showZeroState && (
             <div className="ks-fade-in text-center my-6 p-8 rounded-xl" style={{ background: "var(--surface)", boxShadow: "0 4px 12px var(--scrim)" }}>
-              <div className="ks-icon-pop text-4xl mb-3">🖤</div>
+              <Heart size={36} weight="fill" className="ks-icon-pop mx-auto mb-3" aria-hidden="true" style={{ color: "var(--accent)" }} />
               <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Geen zichtbare matches — en dat is oké.</h3>
               <p className="text-sm mx-auto" style={{ color: "var(--text2)", maxWidth: "36ch" }}>
                 Privéantwoorden tellen pas mee nadat je ze bewust opent.
@@ -959,9 +960,9 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
           <div className="flex flex-col gap-2 mb-3">
             <SessionImportAction status={importDone} onImport={handleImportPartner} />
             <Link href={`/compare?a=${profileId}`}
-              className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
+              className="focus-ring flex w-full items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-bold text-center transition-opacity hover:opacity-90"
               style={{ background: "var(--surface)", border: "1px solid var(--accent)", color: "var(--accent)" }}>
-              Vergelijk uitgebreid →
+              Vergelijk uitgebreid <ArrowRight size={15} aria-hidden="true" />
             </Link>
             <Link href={`/contract?a=${profileId}`}
               className="focus-ring block w-full py-3 rounded-xl text-center transition-opacity hover:opacity-90"

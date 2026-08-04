@@ -43,7 +43,7 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
             className="w-full max-w-sm rounded-2xl p-5 text-center shadow-xl"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <ShieldWarning size={28} weight="duotone" className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
+            <ShieldWarning aria-hidden="true" size={28} weight="duotone" className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
             <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Gedeelde profielkopieën controleren…</p>
             <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
               KinkSync controleert of de opgeslagen antwoorden nog overeenkomen met hun eerder bevestigde versie.

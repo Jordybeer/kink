@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run icons:check",
     "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:offline": "playwright test -c playwright.offline.config.ts",
-    "lint": "eslint ."
+    "icons:check": "node scripts/check-icons.mjs",
+    "lint": "npm run icons:check && eslint ."
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

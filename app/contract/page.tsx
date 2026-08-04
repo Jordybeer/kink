@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { X, TrendUp, Trash } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretUp, Heart, Trash, TrendUp, X } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -315,10 +315,10 @@ function ContractPage() {
           </p>
           <button
             onClick={() => setPreambleOpen((v) => !v)}
-            className="focus-ring text-xs mt-2 transition-colors py-2 px-3 inline-block"
+            className="focus-ring text-xs mt-2 transition-colors py-2 px-3 inline-flex items-center gap-1"
             style={{ color: "var(--accent)" }}
           >
-            {preambleOpen ? "Minder ↑" : "Lees meer ↓"}
+            {preambleOpen ? (<>Minder <CaretUp size={13} aria-hidden="true" /></>) : (<>Lees meer <CaretDown size={13} aria-hidden="true" /></>)}
           </button>
         </div>
 
@@ -485,7 +485,7 @@ function ContractPage() {
           className="focus-ring text-xs mt-3 inline-flex items-center gap-1 transition-colors min-h-[36px]"
           style={{ color: "var(--accent)" }}
         >
-          Waarom een echte naam toevoegen? →
+          Waarom een echte naam toevoegen? <ArrowRight size={13} aria-hidden="true" />
         </button>
       </div>
 
@@ -644,7 +644,7 @@ function ContractPage() {
                 style={{ color: "var(--text2)" }}
                 aria-label="Sluiten"
               >
-                <X size={18} />
+                <X aria-hidden="true" size={18} />
               </button>
             </div>
             <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text)" }}>
@@ -712,7 +712,7 @@ function ContractPage() {
                   fontSize: "1.875rem",
                 }}
               >
-                🖤
+                <Heart size={30} weight="fill" aria-hidden="true" style={{ color: "var(--accent)" }} />
               </div>
               <p
                 style={{

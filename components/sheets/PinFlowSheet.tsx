@@ -1,4 +1,5 @@
 "use client";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
@@ -71,11 +72,11 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
                 Stel een PIN in om de app te beveiligen. Je hebt deze nodig bij elke herstart.
               </p>
               <button onClick={() => setStep(1)}
-                className="w-full py-3 rounded-xl text-sm font-semibold"
+                className="w-full py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
-                PIN instellen →
+                PIN instellen <ArrowRight size={14} aria-hidden="true" />
               </button>
-              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
+              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
                 Annuleer
               </button>
             </motion.div>
@@ -109,8 +110,8 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                 PIN opslaan
               </button>
-              <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
-                ← Terug
+              <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
+                <ArrowLeft size={14} aria-hidden="true" /> Terug
               </button>
             </motion.div>
           )}
@@ -129,7 +130,7 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
                 style={{ background: "var(--hard-no)", color: "var(--on-accent)" }}>
                 Ja, verwijder PIN
               </button>
-              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
+              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
                 Annuleer
               </button>
             </motion.div>

@@ -1,5 +1,4 @@
 "use client";
-import { useRef, useLayoutEffect, useState } from "react";
 
 interface Segment<T extends string> {
   value: T;
@@ -13,59 +12,36 @@ interface Props<T extends string> {
 }
 
 export default function SegmentedPill<T extends string>({ segments, value, onChange }: Props<T>) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const activeIdx = segments.findIndex((s) => s.value === value);
-    const btn = btnRefs.current[activeIdx];
-    const wrap = wrapRef.current;
-    if (!btn || !wrap) return;
-
-    const wr = wrap.getBoundingClientRect();
-    const br = btn.getBoundingClientRect();
-    setIndicator({ left: br.left - wr.left, width: br.width });
-  }, [value, segments]);
-
   return (
     <div
-      ref={wrapRef}
-      className="flex relative p-1.5 rounded-full"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      role="group"
+      className="flex border-b"
+      style={{ borderColor: "var(--border)" }}
+      role="tablist"
+      aria-label="Profielweergave"
     >
-      {/* Sliding gradient indicator — inline style required for dynamic position */}
-      {indicator && (
-        <span
-          aria-hidden="true"
-          className="absolute top-1 bottom-1 rounded-full pointer-events-none z-0"
-          style={{
-            left: indicator.left,
-            width: indicator.width,
-            background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-            transition: "left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
-        />
-      )}
-
-      {segments.map((seg, i) => {
-        const active = seg.value === value;
+      {segments.map((segment) => {
+        const active = segment.value === value;
         return (
           <button
-            key={seg.value}
-            ref={(el) => { btnRefs.current[i] = el; }}
-            onClick={() => onChange(seg.value)}
-            role="radio"
-            aria-checked={active}
-            className="relative z-[1] flex-1 py-3 px-4 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.97]"
-            style={{
-              background: "transparent",
-              border: "none",
-              color: active ? "white" : "var(--text2)",
-            }}
+            key={segment.value}
+            type="button"
+            onClick={() => onChange(segment.value)}
+            role="tab"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-sm font-medium transition-colors duration-150"
+            style={{ color: active ? "var(--text)" : "var(--text2)" }}
           >
-            {seg.label}
+            {segment.label}
+            <span
+              aria-hidden="true"
+              className="absolute bottom-[-1px] left-5 right-5 h-0.5 rounded-full transition-[opacity,transform] duration-150"
+              style={{
+                background: "var(--accent)",
+                opacity: active ? 1 : 0,
+                transform: active ? "scaleX(1)" : "scaleX(0.55)",
+              }}
+            />
           </button>
         );
       })}

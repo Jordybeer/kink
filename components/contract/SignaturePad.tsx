@@ -203,7 +203,7 @@ export default function SignaturePad({
                 style={{ color: "var(--text2)" }}
                 aria-label="Sluiten"
               >
-                <X size={18} />
+                <X aria-hidden="true" size={18} />
               </button>
             </div>
             <DrawableCanvas

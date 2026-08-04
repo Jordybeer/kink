@@ -1,29 +1,28 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
-import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
-import Sheet from "@/components/ui/Sheet";
-import Link from "next/link";
+
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useStore, useHasHydrated } from "@/lib/store";
+import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
 import type { Profile } from "@/types";
+import type { EncryptedBackup } from "@/lib/crypto";
+import { useStore, useHasHydrated } from "@/lib/store";
+import { decodeSharedProfile } from "@/lib/profileShareV3";
+import { parseSharePaste } from "@/lib/parseSharePaste";
+import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
+import { profileConsentAlias } from "@/lib/consentProof";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import AppLock from "@/components/AppLock";
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
-import dynamic from "next/dynamic";
-import { decodeSharedProfile } from "@/lib/profileShareV3";
-import { parseSharePaste } from "@/lib/parseSharePaste";
-import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
-import { profileConsentAlias } from "@/lib/consentProof";
-import { eligibleParentProfiles } from "@/lib/subprofile";
 import ProfileList from "@/components/ProfileList";
-import ProfileCreateSheet, { type ProfileCreateInput } from "@/components/ProfileCreateSheet";
+import ProfileCreateSheet from "@/components/ProfileCreateSheet";
 import SettingsSheet from "@/components/sheets/SettingsSheet";
 import PinFlowSheet from "@/components/sheets/PinFlowSheet";
 import DestroyAllSheet from "@/components/sheets/DestroyAllSheet";
 import { EncryptedExportSheet, EncryptedImportSheet } from "@/components/sheets/EncryptedBackupSheets";
-import type { EncryptedBackup } from "@/lib/crypto";
+import Sheet from "@/components/ui/Sheet";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 
@@ -37,7 +36,6 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const {
     profiles,
-    createProfile,
     deleteProfile,
     importProfiles,
     restoreBackupProfiles,
@@ -46,28 +44,20 @@ function HomeContent() {
     completeOnboarding,
     installPromptDismissed,
     dismissInstallPrompt,
-    pinnedProfileId,
-    resetProfileTour,
     appLockEnabled,
     appLockPin,
     biometricEnabled,
     biometricCredentialId,
   } = useStore();
-  const _hasHydrated = useHasHydrated();
+  const hydrated = useHasHydrated();
 
-  // PWA install
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   const [hasNativePrompt, setHasNativePrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-
-  // App lock
   const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
 
-  // Profile creation
   const [formOpen, setFormOpen] = useState(false);
-
-  // Sheet orchestration
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -80,7 +70,6 @@ function HomeContent() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
-  // QR / share import
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
@@ -88,19 +77,19 @@ function HomeContent() {
   const importIdentity = importPreview ? classifyProfileImport(profiles, importPreview) : null;
 
   useEffect(() => {
-    // Read the flag live, never a mount-time snapshot — onboarding raises it
-    // mid-session the moment a PIN is chosen, and a stale read here yanks the
-    // wizard back to slide one (corrections.md 2026-07-11).
-    if (_hasHydrated && appLockEnabled && sessionStorage.getItem("app_unlocked") !== "1") setLockState("locked");
-  }, [_hasHydrated, appLockEnabled]);
+    if (hydrated && appLockEnabled && sessionStorage.getItem("app_unlocked") !== "1") {
+      setLockState("locked");
+    }
+  }, [hydrated, appLockEnabled]);
 
   useEffect(() => {
-    const ua = navigator.userAgent;
-    setIsIos(/iPhone|iPad|iPod/.test(ua) && !/Chrome/.test(ua));
+    const userAgent = navigator.userAgent;
+    setIsIos(/iPhone|iPad|iPod/.test(userAgent) && !/Chrome/.test(userAgent));
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
-    const handler = (e: Event) => {
-      e.preventDefault();
-      deferredPrompt.current = e as BeforeInstallPromptEvent;
+
+    const handler = (event: Event) => {
+      event.preventDefault();
+      deferredPrompt.current = event as BeforeInstallPromptEvent;
       setHasNativePrompt(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
@@ -109,6 +98,7 @@ function HomeContent() {
 
   useEffect(() => {
     let cancelled = false;
+
     async function readShareLocation() {
       const parsed = parseSharePaste(window.location.href);
       if (parsed.kind !== "profile") return;
@@ -116,9 +106,10 @@ function HomeContent() {
         const decoded = await decodeSharedProfile(parsed.encoded);
         if (!cancelled) setImportPreview(decoded);
       } catch {
-        // Ongeldige of beschadigde deelcode blijft buiten de store.
+        // Beschadigde of ongeldige deelcodes komen niet in de store.
       }
     }
+
     void readShareLocation();
     window.addEventListener("hashchange", readShareLocation);
     return () => {
@@ -142,34 +133,19 @@ function HomeContent() {
     dismissInstallPrompt();
   }
 
-  function handleCreate(input: ProfileCreateInput): string | null {
-    if (input.parentName === null) {
-      const duplicate = profiles.some(
-        (profile) => profile.name.trim().toLowerCase() === input.name.trim().toLowerCase(),
-      );
-      if (duplicate) return "Er bestaat al een profiel met deze naam.";
-    }
-
-    const id = createProfile(
-      input.name,
-      input.role,
-      input.experienceLevel,
-      input.relationshipStatus,
-    );
-    setFormOpen(false);
-    router.push(`/profile/${id}`);
-    return null;
-  }
-
   function promptDelete(id: string) {
     setDeleteTarget(id);
     setDeleteSheetOpen(true);
   }
 
+  function closeDeleteSheet() {
+    setDeleteSheetOpen(false);
+    window.setTimeout(() => setDeleteTarget(null), 300);
+  }
+
   function confirmDelete() {
     if (deleteTarget) deleteProfile(deleteTarget);
-    setDeleteSheetOpen(false);
-    setTimeout(() => setDeleteTarget(null), 300);
+    closeDeleteSheet();
   }
 
   async function restoreFromParsed(parsed: Record<string, unknown>) {
@@ -183,21 +159,24 @@ function HomeContent() {
       if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
       else importProfiles(prepared.profiles);
       if (prepared.contracts.length) restoreContracts(prepared.contracts);
-      setImportSuccess(`${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`);
+      setImportSuccess(
+        `${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`,
+      );
     } catch {
       setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
     }
   }
 
-  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
     setImportError(null);
     setImportSuccess(null);
-    const file = e.target.files?.[0];
+    const file = event.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = async (ev) => {
+    reader.onload = async (loadEvent) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string);
+        const parsed = JSON.parse(loadEvent.target?.result as string);
         if (parsed.encrypted === true) {
           setPendingEncrypted(parsed as EncryptedBackup);
           setImportPwOpen(true);
@@ -209,10 +188,10 @@ function HomeContent() {
       }
     };
     reader.readAsText(file);
-    e.target.value = "";
+    event.target.value = "";
   }
 
-  if (!_hasHydrated) return <PageShell loading width="2xl" />;
+  if (!hydrated) return <PageShell loading width="2xl" />;
 
   if (appLockEnabled && lockState === "locked") {
     return (
@@ -229,14 +208,14 @@ function HomeContent() {
 
   if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
 
-  const parentCandidates = eligibleParentProfiles(profiles, pinnedProfileId);
   const deleteTargetProfile = profiles.find((profile) => profile.id === deleteTarget);
-
-  const tagline =
-    profiles.length === 1 ? "Eén profiel staat klaar. Nodig je partner uit."
-    : profiles.length === 2 ? "Twee profielen. Eén gesprek."
-    : profiles.length > 2 ? "Alle stemmen aan tafel. Eén gesprek."
-    : "Verken grenzen. Samen.";
+  const tagline = profiles.length === 1
+    ? "Eén profiel staat klaar. Nodig je partner uit."
+    : profiles.length === 2
+      ? "Twee profielen. Eén gesprek."
+      : profiles.length > 2
+        ? "Alle stemmen aan tafel. Eén gesprek."
+        : "Verken grenzen. Samen.";
 
   return (
     <>
@@ -271,21 +250,24 @@ function HomeContent() {
                 className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
-                <UserPlus size={19} weight="bold" />
+                <UserPlus size={19} weight="bold" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">Nieuw profiel</span>
                 <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                  Persoon of extra rol
+                  Perspectief en startlijst
                 </span>
               </span>
-              <ArrowRight size={15} className="flex-none" style={{ color: "var(--accent)" }} />
+              <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
             </button>
 
             {!importPreview && (
               <button
                 type="button"
-                onClick={() => { setScanError(null); setScanOpen(true); }}
+                onClick={() => {
+                  setScanError(null);
+                  setScanOpen(true);
+                }}
                 className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
               >
@@ -293,7 +275,7 @@ function HomeContent() {
                   className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
                   style={{ background: "var(--surface3)", color: "var(--text2)" }}
                 >
-                  <Camera size={19} />
+                  <Camera size={19} aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold">Scan profiel</span>
@@ -301,7 +283,7 @@ function HomeContent() {
                     Voeg je partner toe
                   </span>
                 </span>
-                <ArrowRight size={15} className="flex-none" style={{ color: "var(--text2)" }} />
+                <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
               </button>
             )}
           </div>
@@ -324,7 +306,7 @@ function HomeContent() {
                 className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
-                <UserPlus size={23} weight="duotone" />
+                <UserPlus size={23} weight="duotone" aria-hidden="true" />
               </div>
               <p className="text-xs uppercase tracking-[0.2em] mb-1.5" style={{ color: "var(--accent)" }}>
                 Jouw startpunt
@@ -336,7 +318,7 @@ function HomeContent() {
                 Maak je eerste profiel
               </h2>
               <p className="text-sm leading-relaxed mb-5 max-w-md" style={{ color: "var(--text2)" }}>
-                Leg eerst je naam, rol en ervaring vast. Je antwoorden, foto en grenzen volgen daarna in je eigen tempo.
+                Kies je naam, perspectief, interesses en gewenste lijstomvang. Je antwoorden en foto volgen daarna in je eigen tempo.
               </p>
 
               <button
@@ -346,17 +328,20 @@ function HomeContent() {
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Begin met jouw profiel
-                <ArrowRight size={16} weight="bold" />
+                <ArrowRight size={16} weight="bold" aria-hidden="true" />
               </button>
 
               {!importPreview && (
                 <button
                   type="button"
-                  onClick={() => { setScanError(null); setScanOpen(true); }}
+                  onClick={() => {
+                    setScanError(null);
+                    setScanOpen(true);
+                  }}
                   className="focus-ring w-full min-h-11 mt-2 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
                   style={{ color: "var(--text2)", border: "1px solid var(--border)", background: "var(--surface)" }}
                 >
-                  <Camera size={16} />
+                  <Camera size={16} aria-hidden="true" />
                   Scan het profiel van je partner
                 </button>
               )}
@@ -366,7 +351,7 @@ function HomeContent() {
 
         {profiles.length === 0 && (
           <p className="text-xs text-center px-4 mb-8" style={{ color: "var(--text2)" }}>
-            Je kunt later altijd extra rollen of partnerprofielen toevoegen.
+            Je kunt later altijd een extra perspectief of partnerprofiel toevoegen.
           </p>
         )}
       </PageShell>
@@ -374,17 +359,20 @@ function HomeContent() {
       <ProfileCreateSheet
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        parentCandidates={parentCandidates}
-        onCreate={handleCreate}
       />
 
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        onOpenPinFlow={(step = 0) => { setPinFlowStep(step); setPinFlowOpen(true); }}
+        onOpenPinFlow={(step = 0) => {
+          setPinFlowStep(step);
+          setPinFlowOpen(true);
+        }}
         onOpenDestroy={() => setDestroyOpen(true)}
-        onResetTour={resetProfileTour}
-        onExportBackup={() => { setSettingsOpen(false); setExportOpen(true); }}
+        onExportBackup={() => {
+          setSettingsOpen(false);
+          setExportOpen(true);
+        }}
         onImportFile={handleImportFile}
         importError={importError}
         importSuccess={importSuccess}
@@ -409,25 +397,28 @@ function HomeContent() {
       <EncryptedImportSheet
         open={importPwOpen}
         data={pendingEncrypted}
-        onClose={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
+        onClose={() => {
+          setImportPwOpen(false);
+          setPendingEncrypted(null);
+        }}
         onSuccess={(message) => setImportSuccess(message)}
         onError={(message) => setImportError(message)}
       />
 
       <Sheet
         open={deleteSheetOpen}
-        onClose={() => { setDeleteSheetOpen(false); setTimeout(() => setDeleteTarget(null), 300); }}
+        onClose={closeDeleteSheet}
         title="Profiel verwijderen?"
         aria-label="Profiel verwijderen"
       >
         {deleteTargetProfile && (
           <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
-            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist.
-            Dit kan niet ongedaan worden gemaakt.
+            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist. Dit kan niet ongedaan worden gemaakt.
           </p>
         )}
         <div className="flex flex-col gap-3">
           <button
+            type="button"
             onClick={confirmDelete}
             className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
@@ -435,7 +426,8 @@ function HomeContent() {
             Verwijder voor altijd
           </button>
           <button
-            onClick={() => { setDeleteSheetOpen(false); setTimeout(() => setDeleteTarget(null), 300); }}
+            type="button"
+            onClick={closeDeleteSheet}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
@@ -478,7 +470,12 @@ function HomeContent() {
         </div>
       )}
 
-      <Sheet open={!!importPreview} onClose={() => setImportPreview(null)} title="Profiel importeren?" aria-label="Profiel importeren">
+      <Sheet
+        open={!!importPreview}
+        onClose={() => setImportPreview(null)}
+        title="Profiel importeren?"
+        aria-label="Profiel importeren"
+      >
         {importPreview && (
           <div
             className="rounded-xl p-4 mb-5 flex items-center gap-3"
@@ -510,6 +507,7 @@ function HomeContent() {
             </div>
           </div>
         )}
+
         {importIdentity?.kind === "same-code" && (
           <div className="rounded-xl px-3 py-2.5 mb-4 text-xs" style={{ background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)", color: "var(--text2)" }}>
             Dezelfde profielcode staat al bij <strong style={{ color: "var(--text)" }}>{importIdentity.profile.name}</strong>. Dit is hetzelfde profiel, niet een nieuwe kopie.
@@ -530,14 +528,19 @@ function HomeContent() {
             Zelfde naam en rol, maar een andere profielcode. Importeer dit alleen wanneer het bewust een apart profiel is.
           </div>
         )}
+
         <div className="flex flex-col gap-3">
           {importDone ? (
             <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
-              ✓ Profiel geïmporteerd!
+              Profiel geïmporteerd
             </p>
           ) : importIdentity?.kind === "same-code" || importIdentity?.kind === "source-conflict" ? (
             <button
-              onClick={() => { setImportPreview(null); router.push(`/profile/${importIdentity.profile.id}`); }}
+              type="button"
+              onClick={() => {
+                setImportPreview(null);
+                router.push(`/profile/${importIdentity.profile.id}`);
+              }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
@@ -545,21 +548,39 @@ function HomeContent() {
             </button>
           ) : (
             <button
+              type="button"
               onClick={() => {
                 if (!importPreview) return;
-                importProfiles([{ ...importPreview, verificationCode: getProfileVerificationCode(importPreview), isImported: true, origin: "shared", lockedAt: Date.now() }]);
+                importProfiles([{
+                  ...importPreview,
+                  verificationCode: getProfileVerificationCode(importPreview),
+                  isImported: true,
+                  origin: "shared",
+                  lockedAt: Date.now(),
+                }]);
                 setImportDone(true);
                 router.replace("/");
-                setTimeout(() => { setImportPreview(null); setImportDone(false); }, 1500);
+                window.setTimeout(() => {
+                  setImportPreview(null);
+                  setImportDone(false);
+                }, 1500);
               }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              {importIdentity?.kind === "signed-update" ? "Bevestigde update importeren" : importIdentity?.kind === "same-name-role" ? "Importeer als apart profiel" : "Importeer profiel"}
+              {importIdentity?.kind === "signed-update"
+                ? "Bevestigde update importeren"
+                : importIdentity?.kind === "same-name-role"
+                  ? "Importeer als apart profiel"
+                  : "Importeer profiel"}
             </button>
           )}
           <button
-            onClick={() => { setImportPreview(null); router.replace("/"); }}
+            type="button"
+            onClick={() => {
+              setImportPreview(null);
+              router.replace("/");
+            }}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
@@ -568,7 +589,7 @@ function HomeContent() {
         </div>
       </Sheet>
 
-      {_hasHydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
+      {hydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
         <PwaInstallGuide
           isIos={isIos}
           onInstall={handleInstall}

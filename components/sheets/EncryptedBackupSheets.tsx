@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Eye, EyeSlash } from "@phosphor-icons/react";
+import { ArrowLeft, DownloadSimple, Eye, EyeSlash, Warning } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import type { EncryptedBackup } from "@/lib/crypto";
@@ -68,15 +68,15 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen — informatie die niemand anders mag zien.</p>
                 <p>De versleutelde backup bevat ook de private eigendomssleutels van je profielen. Wie zowel dit bestand als het wachtwoord bezit, kan nieuwe profielversies ondertekenen alsof die van jouw lokale profielbron komen.</p>
                 <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
-                <p className="font-semibold" style={{ color: "var(--hard-no)" }}>⚠ Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</p>
+                <p className="font-semibold flex items-start gap-1.5" style={{ color: "var(--hard-no)" }}><Warning size={16} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" /><span>Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</span></p>
               </div>
               <button onClick={() => setStep(1)}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                 Doorgaan
               </button>
-              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
-                ← Terug
+              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
+                <ArrowLeft size={14} aria-hidden="true" /> Terug
               </button>
             </motion.div>
           ) : (
@@ -100,7 +100,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
                   style={{ color: "var(--text2)" }}>
-                  {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
+                  {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
                 </button>
               </div>
               <div className="relative">
@@ -117,17 +117,17 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
                   style={{ color: "var(--text2)" }}>
-                  {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
+                  {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
                 </button>
               </div>
               {pwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
               <button onClick={handleExport} disabled={loading}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
-                {loading ? "Versleutelen…" : "⬇ Versleuteld exporteren"}
+                {loading ? "Versleutelen…" : <span className="inline-flex items-center justify-center gap-1.5"><DownloadSimple size={15} aria-hidden="true" />Versleuteld exporteren</span>}
               </button>
-              <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
-                ← Terug
+              <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
+                <ArrowLeft size={14} aria-hidden="true" /> Terug
               </button>
             </motion.div>
           )}
@@ -260,7 +260,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
               aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
               className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
               style={{ color: "var(--text2)" }}>
-              {pwShow ? <EyeSlash size={16} /> : <Eye size={16} />}
+              {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
             </button>
           </div>
           {pwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
@@ -269,7 +269,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
             {loading ? "Ontsleutelen…" : "Backup herstellen"}
           </button>
-          <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm" style={{ color: "var(--text2)" }}>
+          <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
             Annuleer
           </button>
         </motion.div>

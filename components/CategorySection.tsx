@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { ArrowUp, CaretDown, CaretRight } from "@phosphor-icons/react";
 import type { Kink, KinkEntry } from "@/types";
 import KinkListRow from "./KinkListRow";
 
@@ -56,7 +56,7 @@ export default function CategorySection({
           className="focus-ring flex-1 flex items-center gap-2 px-3 py-2.5 text-left min-w-0"
         >
           <span className="text-[var(--accent)] flex-none">
-            {open ? <CaretDown size={16} /> : <CaretRight size={16} />}
+            {open ? <CaretDown aria-hidden="true" size={16} /> : <CaretRight aria-hidden="true" size={16} />}
           </span>
           <span
             className="text-base flex-1 text-left truncate"
@@ -159,7 +159,7 @@ export default function CategorySection({
                 <span className="flex-1 text-xs font-medium">
                   Nog <span className="tabular-nums">{unratedCount}</span> te beoordelen
                 </span>
-                <span aria-hidden="true" className="text-xs">↑ verder in de stapel</span>
+                <span className="inline-flex items-center gap-1 text-xs"><ArrowUp size={12} aria-hidden="true" />verder in de stapel</span>
               </button>
             )}
           </div>

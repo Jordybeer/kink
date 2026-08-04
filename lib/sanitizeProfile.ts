@@ -6,6 +6,10 @@ import type {
   KinkEntry,
   KinkStatus,
   Profile,
+  ProfilePerspective,
+  QuestionnaireInterest,
+  QuestionnairePreset,
+  QuestionnaireSetup,
 } from "@/types";
 import {
   deriveProfileVerificationCode,
@@ -24,22 +28,25 @@ import {
   VALID_LEVELS,
 } from "@/lib/sessionImport";
 
-// The full-profile bouncer. lib/sessionImport frisks the live-session wire
-// format; this module gives the same treatment to the two doors that used to
-// wave anything through on a TypeScript cast — v1 share-URLs and decrypted
-// backups. Everything gets patted down: unknown fields dropped, strings
-// clamped, enums enforced, collections capped. Malformed elements are turned
-// away one by one; the rest of the payload still gets in.
-
 const VALID_STATUSES: readonly NonNullable<KinkStatus>[] = ["yes", "willing", "maybe", "no", "hard_no"];
+const VALID_PERSPECTIVES: readonly ProfilePerspective[] = ["dominant", "submissive"];
+const VALID_PRESETS: readonly QuestionnairePreset[] = ["quick", "balanced", "full"];
+const VALID_INTERESTS: readonly QuestionnaireInterest[] = [
+  "power",
+  "impact",
+  "bondage",
+  "sensation",
+  "humiliation",
+  "sexual_social",
+];
 
 const MAX_COMMENT_LEN = 2_000;
 const MAX_TAGS = 20;
 const MAX_TAG_LEN = 60;
-const MAX_ENTRIES = 400; // ~180 house kinks + 100 custom, with slack
+const MAX_ENTRIES = 400;
 const MAX_BDSMTEST_ROWS = 50;
 const MAX_BDSMTEST_ROLE_LEN = 64;
-const MAX_FREE_TEXT_LEN = 200; // relationshipStatus / fetLife / bdsmtestUrl
+const MAX_FREE_TEXT_LEN = 200;
 
 function asFiniteNumber(raw: unknown): number | undefined {
   return typeof raw === "number" && Number.isFinite(raw) ? raw : undefined;
@@ -67,13 +74,12 @@ export function sanitizeKinkEntry(raw: unknown): KinkEntry | null {
   if (used !== undefined) entry.usedInScene = Math.max(0, Math.round(used));
   if (Array.isArray(r.tags)) {
     const tags = r.tags
-      .filter((t): t is string => typeof t === "string")
-      .map((t) => clamp(t, MAX_TAG_LEN))
+      .filter((tag): tag is string => typeof tag === "string")
+      .map((tag) => clamp(tag, MAX_TAG_LEN))
       .filter(Boolean)
       .slice(0, MAX_TAGS);
     if (tags.length) entry.tags = tags;
   }
-  // A frisked entry that carries nothing is not worth keeping.
   if (entry.status === null && !entry.comment && entry.desire == null
     && entry.experienced == null && !entry.curious && !entry.privateResponse && !entry.tags) return null;
   return entry;
@@ -86,11 +92,11 @@ export function sanitizeBdsmtestScores(raw: unknown): BdsmtestScore[] | undefine
     if (rows.length >= MAX_BDSMTEST_ROWS) break;
     if (!item || typeof item !== "object") continue;
     const { role, pct } = item as Record<string, unknown>;
-    const n = asFiniteNumber(pct);
-    if (typeof role !== "string" || n === undefined) continue;
+    const value = asFiniteNumber(pct);
+    if (typeof role !== "string" || value === undefined) continue;
     const cleanRole = clamp(role, MAX_BDSMTEST_ROLE_LEN);
     if (!cleanRole) continue;
-    rows.push({ role: cleanRole, pct: Math.min(100, Math.max(0, Math.round(n))) });
+    rows.push({ role: cleanRole, pct: Math.min(100, Math.max(0, Math.round(value))) });
   }
   return rows.length ? rows : undefined;
 }
@@ -98,18 +104,42 @@ export function sanitizeBdsmtestScores(raw: unknown): BdsmtestScore[] | undefine
 function sanitizeCustomKinks(raw: unknown): CustomKink[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter((c): c is { id: string; name: string } =>
-      !!c && typeof c === "object" && typeof (c as { id?: unknown }).id === "string"
-      && typeof (c as { name?: unknown }).name === "string")
-    .map((c) => ({ id: clamp(c.id, MAX_KINK_ID_LEN), name: clamp(c.name, MAX_KINK_NAME_LEN) }))
-    .filter((c) => c.id && c.name)
+    .filter((candidate): candidate is { id: string; name: string } =>
+      !!candidate
+      && typeof candidate === "object"
+      && typeof (candidate as { id?: unknown }).id === "string"
+      && typeof (candidate as { name?: unknown }).name === "string")
+    .map((candidate) => ({
+      id: clamp(candidate.id, MAX_KINK_ID_LEN),
+      name: clamp(candidate.name, MAX_KINK_NAME_LEN),
+    }))
+    .filter((candidate) => candidate.id && candidate.name)
     .slice(0, MAX_CUSTOM_KINKS);
 }
 
+function sanitizeQuestionnaireSetup(raw: unknown): QuestionnaireSetup | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const record = raw as Record<string, unknown>;
+  if (record.version !== 1) return undefined;
+  if (typeof record.preset !== "string" || !(VALID_PRESETS as readonly string[]).includes(record.preset)) {
+    return undefined;
+  }
+  const interests = Array.isArray(record.interests)
+    ? [...new Set(record.interests.filter(
+        (interest): interest is QuestionnaireInterest =>
+          typeof interest === "string" && (VALID_INTERESTS as readonly string[]).includes(interest),
+      ))]
+    : [];
+  return {
+    preset: record.preset as QuestionnairePreset,
+    interests,
+    version: 1,
+  };
+}
+
 /**
- * Full Profile sanitizer for untrusted JSON (v1 share-URLs, backup files).
- * Returns null when the payload can't even produce an id + name; otherwise
- * a Profile built exclusively from validated fields.
+ * Full Profile sanitizer for untrusted JSON. Local perspective fields are only
+ * restored for own profiles; shared payloads cannot inject a local group.
  */
 export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Profile | null {
   if (!raw || typeof raw !== "object") return null;
@@ -158,8 +188,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
   if (typeof r.privateNote === "string" && r.privateNote.trim()) {
     profile.privateNote = clamp(r.privateNote, MAX_COMMENT_LEN);
   }
-  const bs = sanitizeBdsmtestScores(r.bdsmtestScores);
-  if (bs) profile.bdsmtestScores = bs;
+  const bdsmtestScores = sanitizeBdsmtestScores(r.bdsmtestScores);
+  if (bdsmtestScores) profile.bdsmtestScores = bdsmtestScores;
   const avatar = sanitizeAvatar(r.avatarDataUrl);
   if (avatar) profile.avatarDataUrl = avatar;
   if (typeof r.isImported === "boolean") profile.isImported = r.isImported;
@@ -169,10 +199,25 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
   const consentProof = sanitizeProfileConsentProof(r.consentProof);
   if (consentProof) profile.consentProof = consentProof;
 
+  const isOwnBackupProfile = profile.origin === "own" && profile.isImported !== true;
+  if (isOwnBackupProfile) {
+    if (typeof r.legacyRole === "string" && r.legacyRole.trim()) {
+      profile.legacyRole = clamp(r.legacyRole, MAX_ROLE_LEN);
+    }
+    if (typeof r.personGroupId === "string") {
+      const personGroupId = clamp(r.personGroupId, MAX_ID_LEN);
+      if (personGroupId) profile.personGroupId = personGroupId;
+    }
+    if (typeof r.perspective === "string" && (VALID_PERSPECTIVES as readonly string[]).includes(r.perspective)) {
+      profile.perspective = r.perspective as ProfilePerspective;
+    }
+    const questionnaireSetup = sanitizeQuestionnaireSetup(r.questionnaireSetup);
+    if (questionnaireSetup) profile.questionnaireSetup = questionnaireSetup;
+  }
+
   return profile;
 }
 
-/** ContractSnapshot bouncer for backup restores — element-wise, drop the fakes. */
 export function sanitizeContractSnapshot(raw: unknown): ContractSnapshot | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -181,7 +226,7 @@ export function sanitizeContractSnapshot(raw: unknown): ContractSnapshot | null 
   const profileAName = clamp(r.profileAName, MAX_NAME_LEN);
   const profileBName = clamp(r.profileBName, MAX_NAME_LEN);
   if (!id || !profileAName || !profileBName) return null;
-  const count = (v: unknown) => Math.max(0, Math.round(asFiniteNumber(v) ?? 0));
+  const count = (value: unknown) => Math.max(0, Math.round(asFiniteNumber(value) ?? 0));
   const snapshot: ContractSnapshot = {
     id,
     date: asFiniteNumber(r.date) ?? Date.now(),

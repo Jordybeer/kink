@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { X } from "@phosphor-icons/react";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.38 } as const;
@@ -30,7 +29,7 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -72,27 +71,11 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
               className="rounded-t-[28px] px-4 pb-10 pt-3"
               style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
             >
-              <div className="relative h-11 mb-2">
+              <div className="h-7 mb-1" aria-hidden="true">
                 <div
-                  className="absolute left-1/2 top-3 h-[5px] w-12 -translate-x-1/2 rounded-full"
+                  className="h-[5px] w-12 mx-auto mt-2 rounded-full"
                   style={{ background: "var(--surface3)" }}
-                  aria-hidden="true"
                 />
-                <button
-                  type="button"
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onClick={onClose}
-                  aria-label="Sluit venster"
-                  className="focus-ring absolute right-0 top-0 inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-                  style={{
-                    background: "var(--surface2)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text2)",
-                  }}
-                >
-                  <X size={15} weight="bold" aria-hidden="true" />
-                  Sluiten
-                </button>
               </div>
 
               {title && (
@@ -107,8 +90,6 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
     </AnimatePresence>
   );
 }
-
-/* ── Convenience sub-components ── */
 
 interface SheetOptionProps {
   value: string;
