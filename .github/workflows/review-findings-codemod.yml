@@ -1,0 +1,133 @@
+name: collar reviewed icon controls
+
+on:
+  push:
+    branches: [polygamy]
+    paths:
+      - .github/workflows/review-findings-codemod.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: polygamy
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26
+      - name: Replace audited Unicode controls
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function replaceOnce(file, from, to) {
+            const source = fs.readFileSync(file, 'utf8');
+            const first = source.indexOf(from);
+            if (first === -1) throw new Error(`Missing expected snippet in ${file}: ${JSON.stringify(from)}`);
+            if (source.indexOf(from, first + from.length) !== -1) {
+              throw new Error(`Expected one snippet in ${file}, found multiple: ${JSON.stringify(from)}`);
+            }
+            fs.writeFileSync(file, source.replace(from, to));
+          }
+
+          replaceOnce(
+            'app/contract/page.tsx',
+            '          ← Terug\n',
+            '          <ArrowRight size={16} className="mr-1 rotate-180" aria-hidden="true" />\n          Terug\n',
+          );
+
+          replaceOnce(
+            'app/scene/page.tsx',
+            '            href={backHref}\n            className=',
+            '            href={backHref}\n            aria-label="Terug"\n            className=',
+          );
+          replaceOnce(
+            'app/scene/page.tsx',
+            '            ←\n',
+            '            <ArrowRight size={16} className="rotate-180" aria-hidden="true" />\n',
+          );
+          replaceOnce(
+            'app/scene/page.tsx',
+            '<Link href="/compare" style={{ color: "var(--accent)" }}>→ Profielen kiezen via Vergelijk</Link>',
+            '<Link href="/compare" className="inline-flex items-center gap-1" style={{ color: "var(--accent)" }}><ArrowRight size={13} aria-hidden="true" />Profielen kiezen via Vergelijk</Link>',
+          );
+
+          replaceOnce(
+            'app/session/page.tsx',
+            'className="focus-ring block w-full py-3 rounded-xl text-center transition-opacity hover:opacity-90"',
+            'className="focus-ring inline-flex w-full items-center justify-center gap-1.5 py-3 rounded-xl text-center transition-opacity hover:opacity-90"',
+          );
+          replaceOnce(
+            'app/session/page.tsx',
+            '              Maak een contract →\n',
+            '              Maak een contract <ArrowRight size={15} aria-hidden="true" />\n',
+          );
+          replaceOnce(
+            'app/session/page.tsx',
+            'className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center"',
+            'className="focus-ring inline-flex w-full items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-bold text-center"',
+          );
+          replaceOnce(
+            'app/session/page.tsx',
+            '            ← Terug naar home\n',
+            '            <ArrowLeft size={15} aria-hidden="true" /> Terug naar home\n',
+          );
+
+          replaceOnce(
+            'components/CompatibilityTimeline.tsx',
+            'import Link from "next/link";\n',
+            'import Link from "next/link";\nimport { ArrowRight } from "@phosphor-icons/react";\n',
+          );
+          replaceOnce(
+            'components/CompatibilityTimeline.tsx',
+            'className="focus-ring text-xs transition-colors"',
+            'className="focus-ring inline-flex items-center gap-1 text-xs transition-colors"',
+          );
+          replaceOnce(
+            'components/CompatibilityTimeline.tsx',
+            '                  Bekijk →\n',
+            '                  Bekijk <ArrowRight size={12} aria-hidden="true" />\n',
+          );
+
+          replaceOnce(
+            'components/Onboarding.tsx',
+            'import { PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from \'@phosphor-icons/react\';\n',
+            'import { ArrowLeft, ArrowRight, PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from \'@phosphor-icons/react\';\n',
+          );
+          replaceOnce(
+            'components/Onboarding.tsx',
+            "                    {step === 3 ? 'Ga door →' : 'Volgende →'}\n",
+            "                    <span className=\"inline-flex items-center justify-center gap-1.5\">\n                      {step === 3 ? 'Ga door' : 'Volgende'}\n                      <ArrowRight size={14} aria-hidden=\"true\" />\n                    </span>\n",
+          );
+          replaceOnce(
+            'components/Onboarding.tsx',
+            '                    ← Terug\n',
+            '                    <ArrowLeft size={14} aria-hidden="true" /> Terug\n',
+          );
+
+          replaceOnce(
+            'components/ProfileTour.tsx',
+            'import { motion, AnimatePresence } from "framer-motion";\n',
+            'import { motion, AnimatePresence } from "framer-motion";\nimport { ArrowRight } from "@phosphor-icons/react";\n',
+          );
+          replaceOnce(
+            'components/ProfileTour.tsx',
+            '              {isLast ? "Aan de slag" : "Volgende →"}\n',
+            '              {isLast ? "Aan de slag" : <span className="inline-flex items-center gap-1">Volgende <ArrowRight size={14} aria-hidden="true" /></span>}\n',
+          );
+          NODE
+      - name: Remove the temporary collaring workflow
+        run: rm .github/workflows/review-findings-codemod.yml
+      - name: Commit proven replacements
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Vervang betrapte Unicode-controls door Phosphor"
+          git push origin HEAD:polygamy
