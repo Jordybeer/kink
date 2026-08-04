@@ -1,5 +1,8 @@
 "use client";
 
+import { useId } from "react";
+import { motion } from "framer-motion";
+
 interface Segment<T extends string> {
   value: T;
   label: string;
@@ -12,6 +15,8 @@ interface Props<T extends string> {
 }
 
 export default function SegmentedPill<T extends string>({ segments, value, onChange }: Props<T>) {
+  const indicatorId = useId();
+
   return (
     <div
       className="flex border-b"
@@ -36,15 +41,15 @@ export default function SegmentedPill<T extends string>({ segments, value, onCha
             }}
           >
             {segment.label}
-            <span
-              aria-hidden="true"
-              className="absolute bottom-[-1px] left-7 right-7 h-0.5 rounded-full transition-[opacity,transform] duration-150"
-              style={{
-                background: "color-mix(in srgb, var(--text) 72%, transparent)",
-                opacity: active ? 1 : 0,
-                transform: active ? "scaleX(1)" : "scaleX(0.65)",
-              }}
-            />
+            {active && (
+              <motion.span
+                layoutId={`segmented-indicator-${indicatorId}`}
+                aria-hidden="true"
+                className="absolute bottom-[-1px] left-5 right-5 h-0.5 rounded-full"
+                style={{ background: "var(--accent)" }}
+                transition={{ type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.2 }}
+              />
+            )}
           </button>
         );
       })}
