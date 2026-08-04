@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
@@ -14,6 +14,14 @@ const MAX_TARGET_ATTEMPTS = 40;
 const DIALOG_MARGIN = 12;
 const DIALOG_GAP = 12;
 const MIN_SIDE_SPACE = 120;
+const FOCUSABLE_SELECTOR = [
+  "button:not([disabled])",
+  "a[href]",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
 
 const STEPS = [
   {
@@ -56,9 +64,37 @@ export default function ProfileTour({ onComplete }: Props) {
   const [viewport, setViewport] = useState({ width: 390, height: 844 });
   const [dialogHeight, setDialogHeight] = useState(190);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const focusRestoredRef = useRef(false);
   const t = useMotionSafe();
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
+
+  const restorePreviousFocus = useCallback(() => {
+    if (focusRestoredRef.current) return;
+    focusRestoredRef.current = true;
+    const previous = previouslyFocusedRef.current;
+    if (previous?.isConnected) previous.focus();
+  }, []);
+
+  const finishTour = useCallback(() => {
+    onComplete();
+    requestAnimationFrame(restorePreviousFocus);
+  }, [onComplete, restorePreviousFocus]);
+
+  const focusPrimaryAction = useCallback((node: HTMLButtonElement | null) => {
+    if (!node) return;
+    requestAnimationFrame(() => {
+      if (node.isConnected) node.focus();
+    });
+  }, []);
+
+  useEffect(() => {
+    focusRestoredRef.current = false;
+    const active = document.activeElement;
+    previouslyFocusedRef.current = active instanceof HTMLElement ? active : null;
+    return restorePreviousFocus;
+  }, [restorePreviousFocus]);
 
   useEffect(() => {
     setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -67,22 +103,27 @@ export default function ProfileTour({ onComplete }: Props) {
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
     let attempts = 0;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function abandonMissingStep() {
       if (cancelled) return;
-      if (step >= STEPS.length - 1) onComplete();
+      if (step >= STEPS.length - 1) finishTour();
       else setStep((currentStep) => Math.min(currentStep + 1, STEPS.length - 1));
     }
 
     function retry(callback: () => void) {
+      if (cancelled || retryTimer) return;
       attempts += 1;
       if (attempts >= MAX_TARGET_ATTEMPTS) {
         abandonMissingStep();
         return;
       }
-      timer = setTimeout(callback, 50);
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        callback();
+      }, 50);
     }
 
     function measure() {
@@ -92,6 +133,7 @@ export default function ProfileTour({ onComplete }: Props) {
         retry(measure);
         return;
       }
+      attempts = 0;
       const bounds = element.getBoundingClientRect();
       setRect({
         top: bounds.top,
@@ -152,18 +194,50 @@ export default function ProfileTour({ onComplete }: Props) {
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
+      if (retryTimer) clearTimeout(retryTimer);
       window.removeEventListener("scroll", remeasure);
       window.removeEventListener("resize", remeasure);
     };
-  }, [current, onComplete, step]);
+  }, [current, finishTour, step]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onComplete();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        finishTour();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+        .filter((element) => element.getAttribute("aria-hidden") !== "true");
+
+      if (!focusable.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const focusIsInside = active instanceof Node && dialog.contains(active);
+
+      if (event.shiftKey && (!focusIsInside || active === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (!focusIsInside || active === last)) {
+        event.preventDefault();
+        first.focus();
+      }
     }
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onComplete]);
+  }, [finishTour]);
 
   const placement = useMemo(() => {
     if (!rect) return null;
@@ -226,7 +300,7 @@ export default function ProfileTour({ onComplete }: Props) {
   const spotHeight = rect.height + current.pad * 2;
 
   function advance() {
-    if (isLast) onComplete();
+    if (isLast) finishTour();
     else setStep((currentStep) => currentStep + 1);
   }
 
@@ -240,7 +314,7 @@ export default function ProfileTour({ onComplete }: Props) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={t.fast}
-        onClick={onComplete}
+        onClick={finishTour}
       />
 
       <motion.div
@@ -272,6 +346,7 @@ export default function ProfileTour({ onComplete }: Props) {
           aria-modal="true"
           aria-labelledby="tour-title"
           aria-describedby="tour-body"
+          tabIndex={-1}
           style={{
             position: "fixed",
             zIndex: 402,
@@ -307,6 +382,7 @@ export default function ProfileTour({ onComplete }: Props) {
 
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <motion.button
+              ref={focusPrimaryAction}
               onClick={advance}
               whileTap={TAP_SPRING}
               style={{
@@ -324,7 +400,7 @@ export default function ProfileTour({ onComplete }: Props) {
               {isLast ? "Aan de slag" : "Volgende →"}
             </motion.button>
             <motion.button
-              onClick={onComplete}
+              onClick={finishTour}
               whileTap={TAP_SPRING}
               style={{
                 background: "transparent",
