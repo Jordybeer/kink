@@ -965,7 +965,7 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
               Vergelijk uitgebreid <ArrowRight size={15} aria-hidden="true" />
             </Link>
             <Link href={`/contract?a=${profileId}`}
-              className="focus-ring block w-full py-3 rounded-xl text-center transition-opacity hover:opacity-90"
+              className="focus-ring inline-flex w-full items-center justify-center gap-1.5 py-3 rounded-xl text-center transition-opacity hover:opacity-90"
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--accent)",
@@ -975,13 +975,13 @@ function HostGuestSession({ joinParam }: { joinParam: string | null }) {
                 fontWeight: 400,
                 fontSize: "1.05rem",
               }}>
-              Maak een contract →
+              Maak een contract <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </div>
           <Link href="/"
-            className="focus-ring block w-full py-3 rounded-xl text-sm font-bold text-center"
+            className="focus-ring inline-flex w-full items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-bold text-center"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
-            ← Terug naar home
+            <ArrowLeft size={15} aria-hidden="true" /> Terug naar home
           </Link>
         </div>
       )}

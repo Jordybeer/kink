@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight } from "@phosphor-icons/react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface TourRect {
@@ -397,7 +398,7 @@ export default function ProfileTour({ onComplete }: Props) {
                 cursor: "pointer",
               }}
             >
-              {isLast ? "Aan de slag" : "Volgende →"}
+              {isLast ? "Aan de slag" : <span className="inline-flex items-center gap-1">Volgende <ArrowRight size={14} aria-hidden="true" /></span>}
             </motion.button>
             <motion.button
               onClick={finishTour}

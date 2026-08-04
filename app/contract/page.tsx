@@ -279,7 +279,8 @@ function ContractPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
         <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-          ← Terug
+          <ArrowRight size={16} className="mr-1 rotate-180" aria-hidden="true" />
+          Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">Teken het contract</h1>
       </div>

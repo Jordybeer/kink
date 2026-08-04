@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from '@phosphor-icons/react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -232,7 +232,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
                   >
-                    {step === 3 ? 'Ga door →' : 'Volgende →'}
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      {step === 3 ? 'Ga door' : 'Volgende'}
+                      <ArrowRight size={14} aria-hidden="true" />
+                    </span>
                   </motion.button>
                 )}
 
@@ -248,7 +251,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => { setPin1([]); setPin2([]); setLockSub("intro"); }}
                     style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
                   >
-                    ← Terug
+                    <ArrowLeft size={14} aria-hidden="true" /> Terug
                   </motion.button>
                 )}
 

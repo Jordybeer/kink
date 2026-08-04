@@ -587,10 +587,11 @@ function ScenePage() {
         <div className="flex items-center gap-2 mb-3">
           <Link
             href={backHref}
+            aria-label="Terug"
             className="focus-ring rounded-lg flex-none"
             style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", color: "var(--text2)", fontSize: 13 }}
           >
-            ←
+            <ArrowRight size={16} className="rotate-180" aria-hidden="true" />
           </Link>
           <div className="flex-1 min-w-0">
             <input
@@ -632,7 +633,7 @@ function ScenePage() {
         {!profileA && !profileB && !sceneIdParam && (
           <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties — of voeg items handmatig toe.</p>
-            <Link href="/compare" style={{ color: "var(--accent)" }}>→ Profielen kiezen via Vergelijk</Link>
+            <Link href="/compare" className="inline-flex items-center gap-1" style={{ color: "var(--accent)" }}><ArrowRight size={13} aria-hidden="true" />Profielen kiezen via Vergelijk</Link>
           </div>
         )}
 
