@@ -29,17 +29,20 @@ export default function SegmentedPill<T extends string>({ segments, value, onCha
             role="tab"
             aria-selected={active}
             tabIndex={active ? 0 : -1}
-            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-sm font-medium transition-colors duration-150"
-            style={{ color: active ? "var(--text)" : "var(--text2)" }}
+            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-[13px] transition-colors duration-150"
+            style={{
+              color: active ? "var(--text)" : "var(--text2)",
+              fontWeight: active ? 500 : 400,
+            }}
           >
             {segment.label}
             <span
               aria-hidden="true"
-              className="absolute bottom-[-1px] left-5 right-5 h-0.5 rounded-full transition-[opacity,transform] duration-150"
+              className="absolute bottom-[-1px] left-7 right-7 h-0.5 rounded-full transition-[opacity,transform] duration-150"
               style={{
-                background: "var(--accent)",
+                background: "color-mix(in srgb, var(--text) 72%, transparent)",
                 opacity: active ? 1 : 0,
-                transform: active ? "scaleX(1)" : "scaleX(0.55)",
+                transform: active ? "scaleX(1)" : "scaleX(0.65)",
               }}
             />
           </button>
