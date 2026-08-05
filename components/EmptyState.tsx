@@ -11,8 +11,8 @@ export default function EmptyState({
   icon: Icon;
   title: string;
   message: string;
-  ctaHref: string;
-  ctaLabel: string;
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   return (
     <div className="flex flex-col items-center text-center gap-5 py-16 px-4">
@@ -30,9 +30,11 @@ export default function EmptyState({
           {message}
         </p>
       </div>
-      <Link href={ctaHref} className="btn-accent focus-ring" style={{ minWidth: 200 }}>
-        {ctaLabel}
-      </Link>
+      {ctaHref && ctaLabel && (
+        <Link href={ctaHref} className="btn-accent focus-ring" style={{ minWidth: 200 }}>
+          {ctaLabel}
+        </Link>
+      )}
     </div>
   );
 }

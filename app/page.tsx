@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
@@ -231,6 +232,14 @@ function HomeContent() {
               {tagline}
             </p>
           )}
+          <Link
+            href="/about"
+            className="focus-ring mt-2 inline-flex min-h-10 items-center gap-1 px-2 text-xs font-semibold"
+            style={{ color: "var(--accent)" }}
+          >
+            Ontdek hoe KinkSync werkt
+            <ArrowRight size={13} aria-hidden="true" />
+          </Link>
         </div>
 
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Lightning, FilmSlate, Anchor, User } from "@phosphor-icons/react";
+import { Lightning, FilmSlate, User } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 
 export default function BottomNav() {
@@ -19,7 +19,6 @@ export default function BottomNav() {
   const items = [
     { href: "/compare", label: "Vergelijk",  icon: Lightning         },
     { href: "/scenes",  label: "Scènes",     icon: FilmSlate },
-    { href: "/session", label: "Live",       icon: Anchor       },
     { href: profileHref, label: "Profiel",   icon: User         },
   ] as const;
 

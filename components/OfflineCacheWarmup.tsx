@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useHasHydrated, useStore } from "@/lib/store";
+import { useContractStore } from "@/lib/contractStore";
 import {
   buildOfflineWarmupRoutes,
   warmOfflineRoutes,
@@ -35,6 +36,11 @@ export default function OfflineCacheWarmup() {
   const sceneIdsKey = useStore((state) =>
     state.scenes.map((scene) => scene.id).join("\u001f"),
   );
+  const contractRoutesKey = useContractStore((state) => state.series.flatMap((series) => [
+    `/contracts/${encodeURIComponent(series.id)}`,
+    `/contracts/${encodeURIComponent(series.id)}/history`,
+    ...series.versions.map((version) => `/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`),
+  ]).join("\u001f"));
   const profileIds = useMemo(() => idsFromKey(profileIdsKey), [profileIdsKey]);
   const latestProfileIds = useRef(profileIds);
   const profileCreateBaseline = useRef<string[] | null>(null);
@@ -45,8 +51,9 @@ export default function OfflineCacheWarmup() {
       buildOfflineWarmupRoutes(
         profileIds,
         idsFromKey(sceneIdsKey),
+        idsFromKey(contractRoutesKey),
       ),
-    [profileIds, sceneIdsKey],
+    [profileIds, sceneIdsKey, contractRoutesKey],
   );
 
   useEffect(() => {

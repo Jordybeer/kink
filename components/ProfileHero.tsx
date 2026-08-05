@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import {
   ArrowSquareOut,
   ArrowsClockwise,
   ArrowsOutSimple,
   CameraPlus,
+  FileText,
   Lock,
   PencilSimple,
   ShareNetwork,
@@ -19,6 +21,9 @@ import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
 import ProfileTrust from "@/components/ProfileTrust";
+import { useStore } from "@/lib/store";
+import { useContractStore } from "@/lib/contractStore";
+import { countCurrentContractsForProfile } from "@/lib/contractLifecycle";
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -33,6 +38,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const allProfiles = useStore((state) => state.profiles);
+  const contractSeries = useContractStore((state) => state.series);
+  const contractCount = countCurrentContractsForProfile(contractSeries, profile, allProfiles);
+  const contractPersonId = profile.personGroupId ?? profile.id;
 
   const expLevel = profile.experienceLevel ?? "beginner";
   const initial = profile.name.charAt(0).toUpperCase();
@@ -185,6 +194,22 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             >
               Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
             </span>
+          )}
+
+          {profileType === "partner" && contractCount > 0 && (
+            <Link
+              href={`/contracts?person=${encodeURIComponent(contractPersonId)}`}
+              aria-label={`${contractCount} ${contractCount === 1 ? "contract" : "contracten"} met ${profile.name}`}
+              className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-normal"
+              style={{
+                color: "var(--text2)",
+                background: "var(--surface2)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <FileText size={13} weight="regular" aria-hidden="true" />
+              Contracten · {contractCount}
+            </Link>
           )}
 
           {profile.fetLifeUsername && (

@@ -7,6 +7,9 @@ import {
 describe("offline route warming", () => {
   it("includes every fixed room without requiring a prior visit", () => {
     expect(buildOfflineWarmupRoutes([], [])).toEqual(STATIC_OFFLINE_ROUTES);
+    expect(STATIC_OFFLINE_ROUTES).toContain("/contracts");
+    expect(STATIC_OFFLINE_ROUTES).toContain("/about");
+    expect(STATIC_OFFLINE_ROUTES).not.toContain("/session");
   });
 
   it("adds every local profile and saved scene", () => {

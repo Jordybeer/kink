@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, DownloadSimple, Eye, EyeSlash, Warning } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
+import { useContractStore } from "@/lib/contractStore";
 import type { EncryptedBackup } from "@/lib/crypto";
 
 // ─── Export sheet ─────────────────────────────────────────────────────────────
@@ -16,6 +17,7 @@ interface ExportSheetProps {
 export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   const t = useMotionSafe();
   const { profiles, contracts, profileOwnerKeys } = useStore();
+  const contractSeries = useContractStore((state) => state.series);
   const [step, setStep] = useState(0);
   const [pw, setPw] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
@@ -35,7 +37,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
     if (pw !== pwConfirm) { setPwError("Wachtwoorden komen niet overeen."); return; }
     setLoading(true);
     try {
-      const plain = JSON.stringify({ version: 2, source: "backup", profiles, contracts, profileOwnerKeys });
+      const plain = JSON.stringify({ version: 3, source: "backup", profiles, contracts, contractSeries, profileOwnerKeys });
       const { encryptBackup } = await import("@/lib/crypto");
       const encrypted = await encryptBackup(plain, pw);
       const blob = new Blob([JSON.stringify(encrypted)], { type: "application/json" });
@@ -150,6 +152,7 @@ interface ImportSheetProps {
 export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }: ImportSheetProps) {
   const t = useMotionSafe();
   const { importProfiles, restoreBackupProfiles, restoreContracts } = useStore();
+  const restoreContractSeries = useContractStore((state) => state.restoreSeries);
   const [pw, setPw] = useState("");
   const [pwShow, setPwShow] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
@@ -191,7 +194,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         return;
       }
 
-      if (!prepared.profiles.length && !prepared.contracts.length) {
+      if (!prepared.profiles.length && !prepared.contracts.length && !prepared.contractSeries.length) {
         handleClose();
         onError("De backup bevat geen geldige profielen of contracten om te herstellen.");
         return;
@@ -204,15 +207,17 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
       if (prepared.source === "backup") {
         const result = restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
         if (prepared.contracts.length) restoreContracts(prepared.contracts);
+        const seriesResult = restoreContractSeries(prepared.contractSeries);
         const profileChanges = result.added + result.updated;
         const keyChanges = result.ownerKeysAdded + result.ownerKeysUpdated;
+        const seriesChanges = seriesResult.added + seriesResult.updated;
 
-        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0) {
+        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0 && seriesChanges === 0) {
           message = result.conflicts > 0
             ? `Backup gecontroleerd: niets overschreven; ${result.conflicts} bronconflict(en) veilig overgeslagen.`
             : "Backup gecontroleerd: de bestaande gegevens waren al even nieuw of nieuwer.";
         } else {
-          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s) en ${contractsAdded} contract(en) toegevoegd of bijgewerkt.`;
+          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s), ${contractsAdded} oud(e) contract(en) en ${seriesChanges} contractreeks(en) toegevoegd of bijgewerkt.`;
         }
       } else {
         importProfiles(prepared.profiles);

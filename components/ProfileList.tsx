@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Anchor,
   CaretRight,
   FileText,
   FilmSlate,
@@ -228,9 +227,9 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             </Link>
           ) : null}
           {[
+            { href: "/contracts", label: "Contracten", icon: FileText },
             { href: "/scene", label: "Nieuwe scène", icon: FilmSlate },
             { href: "/scenes", label: "Scènes", icon: FilmSlate },
-            { href: "/session", label: "Live sessie", icon: Anchor },
           ].map(({ href, label, icon: Icon }) => (
             <Link
               key={href}

@@ -6,14 +6,11 @@ import {
 } from "@/lib/profileQr";
 
 export type ParsedShare =
-  | { kind: "session"; code: string }
   | { kind: "profile"; encoded: string }
   | { kind: "profilePart"; part: ProfileQrPart }
   | { kind: "profileBundlePart"; part: ProfileQrBundlePart }
   | { kind: "invalid" };
 
-const SESSION_TOKEN_RE = /^KINKSYNC:([A-Z2-9]{6})$/;
-const SESSION_CODE_RE = /^[A-Z2-9]{6}$/;
 const BASE64URL_RE = /^[A-Za-z0-9+/=_-]+$/;
 
 function parseHash(hash: string): ParsedShare | null {
@@ -37,21 +34,14 @@ export function parseSharePaste(raw: string): ParsedShare {
   const input = raw.trim();
   if (!input) return { kind: "invalid" };
 
-  const tokenMatch = input.match(SESSION_TOKEN_RE);
-  if (tokenMatch) return { kind: "session", code: tokenMatch[1] };
-
   try {
     const url = new URL(input);
-    const join = url.searchParams.get("join");
-    if (join && SESSION_CODE_RE.test(join)) {
-      return { kind: "session", code: join };
-    }
     const p = url.searchParams.get("p");
     if (p) return { kind: "profile", encoded: p };
     const fromHash = parseHash(url.hash);
     if (fromHash) return fromHash;
   } catch {
-    // Not a URL — keep going.
+    // Not a URL. Continue with the compact profile formats.
   }
 
   const hashOnly = input.startsWith("#") ? parseHash(input) : null;
@@ -70,8 +60,6 @@ export function parseSharePaste(raw: string): ParsedShare {
     const part = parseProfileQrBundlePart(input.slice(4));
     return part ? { kind: "profileBundlePart", part } : { kind: "invalid" };
   }
-
-  if (SESSION_CODE_RE.test(input)) return { kind: "session", code: input };
 
   if (input.length >= 24 && BASE64URL_RE.test(input)) {
     return { kind: "profile", encoded: input };

@@ -9,6 +9,8 @@ import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit, kinkMatchScore } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import ContractSection from "@/components/contract/ContractSection";
+import ContractSigningSheet from "@/components/contract/ContractSigningSheet";
+import { contractParticipantFromProfile, type ContractVersionContent } from "@/lib/contractLifecycle";
 import SignaturePad from "@/components/contract/SignaturePad";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +32,7 @@ function ContractPage() {
   const [generating, setGenerating] = useState(false);
   const [ceremony, setCeremony] = useState(false);
   const [preambleOpen, setPreambleOpen] = useState(false);
+  const [signingOpen, setSigningOpen] = useState(false);
   const { showToast } = useToast();
 
   // Safeword & aftercare state
@@ -178,28 +181,11 @@ function ContractPage() {
   });
 
   function handleConfirm() {
-    if (!profileA || !profileB) return;
-    if (!signedA || !signedB) {
-      showToast({ message: "Beide partijen moeten tekenen voordat dit verbond gebonden is." });
-      return;
-    }
     if ((trimmedRealNameA.length > 0) !== (trimmedRealNameB.length > 0)) {
       showToast({ message: "Vul de echte naam van beide partijen in, of laat ze beide leeg." });
       return;
     }
-    saveContract({
-      date: Date.now(),
-      profileAId: aId,
-      profileBId: bId,
-      profileAName: profileA.name,
-      profileBName: profileB.name,
-      matchCount: shared.length + customShared.length,
-      hardLimitCount: hardLimits.length,
-      softLimitCount: softLimits.length,
-      discussCount: discuss.length,
-      safeword: signalsA.black || signalsB.black || undefined,
-    });
-    showToast({ message: "Contract bevestigd — dit verbond is aangegaan!", variant: "success" });
+    setSigningOpen(true);
   }
 
   async function handleGeneratePDF() {
@@ -272,6 +258,24 @@ function ContractPage() {
       prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
     );
   }
+
+  const contractVersionContent: ContractVersionContent = {
+    schema: 1,
+    profileA: contractParticipantFromProfile(profileA),
+    profileB: contractParticipantFromProfile(profileB),
+    preamble,
+    createdAt: Date.now(),
+    ...(useRealNames ? { realNameA: trimmedRealNameA, realNameB: trimmedRealNameB } : {}),
+    signalsA: { green: signalsA.green, amber: signalsA.yellow, red: signalsA.red, black: signalsA.black },
+    signalsB: { green: signalsB.green, amber: signalsB.yellow, red: signalsB.red, black: signalsB.black },
+    aftercareA: [...aftercareA],
+    aftercareB: [...aftercareB],
+    shared: sharedAll.map((item) => ({ ...item })),
+    softLimits: softLimits.map((item) => ({ ...item })),
+    hardLimits: hardLimits.map((item) => ({ ...item })),
+    hardLimitDetails: hardLimitDetails.map((item) => ({ ...item })),
+    discuss: discuss.map((item) => ({ ...item })),
+  };
 
   return (
     <>
@@ -496,7 +500,7 @@ function ContractPage() {
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
-          Handtekeningen
+          Handgeschreven handtekeningen (optioneel voor PDF)
         </h2>
         <div className="flex gap-4 flex-wrap">
           <SignaturePad label={profileA.name} colour={COLOUR_A} canvasRef={canvasARef} onSignedChange={setSignedA} />
@@ -520,7 +524,7 @@ function ContractPage() {
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent2)", color: "var(--on-accent)" }}
         >
-          Contract bevestigen
+          Contract bewaren of tekenen
         </button>
       </div>
 
@@ -599,6 +603,13 @@ function ContractPage() {
         </div>
       )}
     </PageShell>
+    <ContractSigningSheet
+      open={signingOpen}
+      onClose={() => setSigningOpen(false)}
+      profileA={profileA}
+      profileB={profileB}
+      content={contractVersionContent}
+    />
     <AnimatePresence>
       {whyOpen && (
         <motion.div

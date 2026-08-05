@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import Sheet from "./Sheet";
-import { useRouter } from "next/navigation";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import {
   addProfileQrBundlePart,
@@ -44,7 +43,6 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteInput, setPasteInput] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
@@ -88,12 +86,6 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     if (dedupeCameraFrames) lastRawRef.current = { value: raw, at: now };
     const parsed = parseSharePaste(raw);
 
-    if (parsed.kind === "session") {
-      stopCamera();
-      onClose();
-      router.push(`/session?join=${parsed.code}`);
-      return "complete";
-    }
     if (parsed.kind === "profile") {
       stopCamera();
       void onResult(parsed.encoded);
@@ -288,7 +280,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               value={pasteInput}
               onChange={(e) => setPasteInput(e.target.value)}
               rows={3}
-              placeholder="https://… of KINKSYNC:ABC234"
+              placeholder="https://… of profielcode"
               className="focus-ring w-full text-sm rounded-lg border px-3 py-2 mb-2 placeholder-[color:var(--text2)] focus:outline-none"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
               autoFocus
