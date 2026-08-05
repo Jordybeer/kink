@@ -30,6 +30,10 @@ export interface MunchPunchDecryptedResponse {
   replayHash: string;
 }
 
+function ownedBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = "";
   for (let index = 0; index < bytes.length; index += 0x8000) {
@@ -43,15 +47,15 @@ function base64UrlToBytes(value: string): ArrayBuffer {
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  return ownedBuffer(bytes);
 }
 
 function randomToken(length = 12): string {
   return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(length)));
 }
 
-function aadFor(join: Pick<MunchPunchJoinEnvelope, "r" | "e" | "p">): Uint8Array {
-  return TEXT_ENCODER.encode(`${RESPONSE_PREFIX}${join.r}:${join.e}:${join.p.join(",")}`);
+function aadFor(join: Pick<MunchPunchJoinEnvelope, "r" | "e" | "p">): ArrayBuffer {
+  return ownedBuffer(TEXT_ENCODER.encode(`${RESPONSE_PREFIX}${join.r}:${join.e}:${join.p.join(",")}`));
 }
 
 function parseJsonBase64<T>(encoded: string): T {
@@ -175,7 +179,7 @@ export async function encryptMunchPunchResponse(
     ["encrypt"],
   );
   const guestPublicKey = new Uint8Array(await crypto.subtle.exportKey("raw", guestPair.publicKey));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ivBytes = crypto.getRandomValues(new Uint8Array(12));
   const payload: MunchPunchPlainResponse = {
     v: 1,
     r: join.r,
@@ -185,15 +189,15 @@ export async function encryptMunchPunchResponse(
     n: randomToken(12),
   };
   const ciphertext = new Uint8Array(await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, additionalData: aadFor(join) },
+    { name: "AES-GCM", iv: ownedBuffer(ivBytes), additionalData: aadFor(join) },
     key,
-    TEXT_ENCODER.encode(JSON.stringify(payload)),
+    ownedBuffer(TEXT_ENCODER.encode(JSON.stringify(payload))),
   ));
-  return `${RESPONSE_PREFIX}${join.r}.${bytesToBase64Url(guestPublicKey)}.${bytesToBase64Url(iv)}.${bytesToBase64Url(ciphertext)}`;
+  return `${RESPONSE_PREFIX}${join.r}.${bytesToBase64Url(guestPublicKey)}.${bytesToBase64Url(ivBytes)}.${bytesToBase64Url(ciphertext)}`;
 }
 
 export async function hashMunchPunchResponse(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", TEXT_ENCODER.encode(value.trim()));
+  const digest = await crypto.subtle.digest("SHA-256", ownedBuffer(TEXT_ENCODER.encode(value.trim())));
   return bytesToBase64Url(new Uint8Array(digest));
 }
 
