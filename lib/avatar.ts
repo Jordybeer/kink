@@ -4,8 +4,8 @@
 // keeps the circle from reading as a flat sticker.
 
 const AVATAR_DUOTONES: readonly (readonly [string, string])[] = [
-  ["#d946af", "#7c3aed"], // magenta → violet — the house pair
-  ["#e0447c", "#a61e85"], // rose → deep magenta
+  ["#e45aab", "#7c3aed"], // warm berry → violet — the house pair
+  ["#e0447c", "#af1d73"], // rose → deep berry
   ["#f97316", "#e0447c"], // ember → rose
   ["#7c3aed", "#2563eb"], // violet → indigo
   ["#0ea5e9", "#7c3aed"], // sky → violet
