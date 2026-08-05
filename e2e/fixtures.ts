@@ -41,16 +41,16 @@ export const PROFILE_SAM: Profile = {
   entries: {
     // Matches with Alex
     spanking_hand:        { status: "yes",     score: null, comment: "" },
-    blindfold:            { status: "yes",     score: null, comment: "Vertrouwen opbouwen" },
-    collar_leash:         { status: "yes",     score: null, comment: "Droom hiervan" },
-    praise_kink:          { status: "yes",     score: null, comment: "" },
-    rope_bondage:         { status: "willing", score: null, comment: "" },
+    blindfold:             { status: "yes",     score: null, comment: "Vertrouwen opbouwen" },
+    collar_leash:          { status: "yes",     score: null, comment: "Droom hiervan" },
+    praise_kink:           { status: "yes",     score: null, comment: "" },
+    rope_bondage:          { status: "willing", score: null, comment: "" },
     // Soft conflict
-    flogging:             { status: "maybe",   score: null, comment: "Nog nooit geprobeerd" },
+    flogging:              { status: "maybe",   score: null, comment: "Nog nooit geprobeerd" },
     // Hard limit — Alex has "no", Sam has "hard_no" → triggers harde grenzen section
     humiliation_verbal:   { status: "hard_no", score: null, comment: "Absoluut niet" },
     // Discussion
-    wax_play:             { status: "maybe",   score: null, comment: "" },
+    wax_play:              { status: "maybe",   score: null, comment: "" },
     dominance_submission: { status: "yes",     score: null, comment: "" },
   },
 };
@@ -71,7 +71,7 @@ export function buildStore(profiles: Profile[], extras: Partial<{
       theme: extras.theme ?? "midnight",
       pinnedProfileId: extras.pinnedProfileId ?? null,
     },
-    version: 8,
+    version: 17,
   };
 }
 
