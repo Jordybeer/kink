@@ -32,6 +32,15 @@ test("profile tabs support roving keyboard focus", async ({ page }) => {
   const overview = page.getByRole("tab", { name: "Overzicht" });
   const edit = page.getByRole("tab", { name: "Bewerken" });
 
+  try {
+    await expect(overview).toBeVisible({ timeout: 5_000 });
+  } catch (error) {
+    console.log("TAB_DIAGNOSTIC_URL", page.url());
+    console.log("TAB_DIAGNOSTIC_BODY", await page.locator("body").innerText());
+    console.log("TAB_DIAGNOSTIC_STORE", await page.evaluate(() => localStorage.getItem("kink-profiles")));
+    throw error;
+  }
+
   await overview.focus();
   await page.keyboard.press("ArrowLeft");
   await expect(edit).toBeFocused();
