@@ -172,11 +172,11 @@ async function shot(browser, name, fn, { fullPage = false } = {}) {
     await page.waitForTimeout(700);
   });
 
-  // 11. Session (live)
-  await shot(browser, "11-session", async (page) => {
-    await page.goto(`${BASE}/session`);
+  // 11. How KinkSync works
+  await shot(browser, "11-about", async (page) => {
+    await page.goto(`${BASE}/about`);
     await page.waitForTimeout(600);
-  });
+  }, { fullPage: true });
 
   // 12. Timeline
   await shot(browser, "12-timeline", async (page) => {

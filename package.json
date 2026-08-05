@@ -21,7 +21,6 @@
     "chart.js": "^4.5.1",
     "framer-motion": "^12.40.0",
     "html2canvas": "^1.4.1",
-    "ioredis": "^5.11.0",
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",
     "next": "16.2.6",

@@ -29,7 +29,7 @@ for (const [url, name] of [
   ['http://localhost:3000/compare?a=p1&b=p2', 'compare'],
   ['http://localhost:3000/contract?a=p1&b=p2', 'contract'],
   ['http://localhost:3000/scene', 'scene'],
-  ['http://localhost:3000/session', 'session'],
+  ['http://localhost:3000/about', 'about'],
 ]) {
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);

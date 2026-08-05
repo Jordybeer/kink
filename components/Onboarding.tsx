@@ -337,15 +337,15 @@ function Step2Data() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Jouw data verlaat dit apparaat nooit</motion.h2>
+      <motion.h2 variants={childV} style={TITLE}>Jouw gegevens blijven onder jouw controle</motion.h2>
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
         <motion.div variants={childV} style={CARD}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>De app</div>
-          Geen account, geen server, geen tracking. Eenmaal op je beginscherm werkt de app volledig offline.
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Lokaal bewaard</div>
+          Profielen, antwoorden en contracten worden op jouw toestel opgeslagen. Na installatie en cachevoorbereiding werkt de kern offline.
         </motion.div>
         <motion.div variants={childV} style={CARD}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Live sessie</div>
-          End-to-end versleuteld — ook wij kunnen niet meelezen. Je kinks en naam verlaten je toestel nooit.
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Bewust gedeeld</div>
+          Een ander toestel ontvangt alleen wat jij doelbewust via een QR-code of bestand overdraagt.
         </motion.div>
         <motion.div variants={childV} style={CARD}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Back-up</div>

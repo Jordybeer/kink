@@ -13,7 +13,7 @@ import {
   verifyProfileConsent,
   verifyProfileOwnerKey,
 } from "@/lib/consentProof";
-import { sanitizeAvatar } from "@/lib/sessionImport";
+import { sanitizeAvatar } from "@/lib/profileSanitizePrimitives";
 import { checksumProfilePayload } from "@/lib/profileQr";
 import { prepareAvatarForShare } from "@/lib/imageUtils";
 

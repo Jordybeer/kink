@@ -47,7 +47,7 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
-  if (path === "/scene" || path === "/session") return null;
+  if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
   if (
     hydrated
@@ -183,6 +183,11 @@ function focusedRoute(
   if (path === "/scenes") return { title: "Scènes", back: "/" };
   if (path === "/compare") return { title: "Vergelijk", back: "/" };
   if (path === "/timeline") return { title: "Geschiedenis", back: "/" };
+  if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
+  if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
+  if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
+  if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
+  if (path === "/contracts") return { title: "Contracten", back: "/" };
   if (path === "/contract") return { title: "Contract", back: "/compare" };
   return { title: "KinkSync", back: "/" };
 }

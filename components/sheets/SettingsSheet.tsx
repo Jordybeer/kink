@@ -1,11 +1,14 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  CaretRight,
   Database,
   DownloadSimple,
   Fingerprint,
   Key,
   LockKey,
+  ShieldCheck,
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
@@ -200,6 +203,27 @@ export default function SettingsSheet({
           )}
           {bioError && <p className="text-xs mt-2" role="alert" style={{ color: "var(--hard-no)" }}>{bioError}</p>}
         </section>
+
+        <Link
+          href="/about"
+          onClick={onClose}
+          className="focus-ring min-h-12 rounded-2xl px-3.5 flex items-center gap-3 text-left"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+        >
+          <span
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-none"
+            style={{ background: "var(--surface3)", color: "var(--accent)" }}
+          >
+            <ShieldCheck size={18} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Hoe KinkSync werkt</span>
+            <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+              Privacy, verificatie en lokale opslag
+            </span>
+          </span>
+          <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
+        </Link>
 
         <button
           type="button"

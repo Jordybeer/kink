@@ -1,7 +1,7 @@
 import type { Profile, KinkEntry, KinkStatus, CustomKink } from "@/types";
 import { KINKS } from "@/lib/kinks";
 import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
-import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/sessionImport";
+import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/profileSanitizePrimitives";
 import { deriveProfileVerificationCode, getProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
 
 interface ShareProfileOptions {

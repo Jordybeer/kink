@@ -26,7 +26,7 @@ import {
   MAX_ROLE_LEN,
   sanitizeAvatar,
   VALID_LEVELS,
-} from "@/lib/sessionImport";
+} from "@/lib/profileSanitizePrimitives";
 
 const VALID_STATUSES: readonly NonNullable<KinkStatus>[] = ["yes", "willing", "maybe", "no", "hard_no"];
 const VALID_PERSPECTIVES: readonly ProfilePerspective[] = ["dominant", "submissive"];
