@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Instrument_Sans } from "next/font/google";
 import "./globals.css";
+import "./midnight-palette.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#D946AF",
+  themeColor: "#E45AAB",
   width: "device-width",
   initialScale: 1,
 };
