@@ -1,6 +1,9 @@
 import type { Page } from "@playwright/test";
 import type { Profile } from "@/types";
 
+const STORE_KEY = "kink-profiles";
+const SEED_GUARD = "kinksync-e2e-store-seeded";
+
 // Realistic test profiles with entries covering all match types
 export const PROFILE_ALEX: Profile = {
   id: "pw-alex-001",
@@ -75,20 +78,30 @@ export function buildStore(profiles: Profile[], extras: Partial<{
   };
 }
 
+async function installStoreSeed(
+  page: Page,
+  profiles: Profile[],
+  extras?: Parameters<typeof buildStore>[1],
+) {
+  const serialized = JSON.stringify(buildStore(profiles, extras));
+  await page.addInitScript(
+    ({ storeKey, seedGuard, value }) => {
+      if (sessionStorage.getItem(seedGuard) === "1") return;
+      localStorage.setItem(storeKey, value);
+      sessionStorage.setItem(seedGuard, "1");
+    },
+    { storeKey: STORE_KEY, seedGuard: SEED_GUARD, value: serialized },
+  );
+}
+
 export async function seedProfiles(page: Page, profiles: Profile[], extras?: Parameters<typeof buildStore>[1]) {
+  await installStoreSeed(page, profiles, extras);
   await page.goto("/");
-  await page.evaluate((store) => {
-    localStorage.setItem("kink-profiles", JSON.stringify(store));
-  }, buildStore(profiles, extras));
-  await page.reload();
   await page.waitForLoadState("networkidle");
 }
 
 export async function seedAndGo(page: Page, url: string, profiles: Profile[], extras?: Parameters<typeof buildStore>[1]) {
-  await page.goto("/");
-  await page.evaluate((store) => {
-    localStorage.setItem("kink-profiles", JSON.stringify(store));
-  }, buildStore(profiles, extras));
+  await installStoreSeed(page, profiles, extras);
   await page.goto(url);
   await page.waitForLoadState("networkidle");
 }
