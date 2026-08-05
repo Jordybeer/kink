@@ -64,7 +64,7 @@ export default function ProfileSelect({
           style={{ flexShrink: 0, display: "inline-flex", color: "var(--text2)" }}
           aria-hidden="true"
         >
-          <CaretDown size={12} weight="bold" />
+          <CaretDown aria-hidden="true" size={12} weight="bold" />
         </motion.span>
       </button>
 

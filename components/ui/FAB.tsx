@@ -1,5 +1,6 @@
 "use client";
 import { useState, type ReactNode } from "react";
+import { Plus } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.25 } as const;
@@ -12,19 +13,12 @@ export interface FABItem {
 
 interface Props {
   items: FABItem[];
-  /** Icon shown in the main button when closed (defaults to a + cross) */
+  /** Icon shown in the main button when closed (defaults to Plus). */
   icon?: ReactNode;
   "aria-label"?: string;
 }
 
-const PlusIcon = () => (
-  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actions" }: Props) {
+export default function FAB({ items, icon, "aria-label": ariaLabel = "Acties openen" }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -98,7 +92,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
               }
         }
       >
-        {icon ?? <PlusIcon />}
+        {icon ?? <Plus size={24} aria-hidden="true" />}
       </motion.button>
     </div>
   );

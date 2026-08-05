@@ -1,5 +1,7 @@
 "use client";
-import { useRef, useLayoutEffect, useState } from "react";
+
+import { useId, useRef, type KeyboardEvent } from "react";
+import { motion } from "framer-motion";
 
 interface Segment<T extends string> {
   value: T;
@@ -13,59 +15,76 @@ interface Props<T extends string> {
 }
 
 export default function SegmentedPill<T extends string>({ segments, value, onChange }: Props<T>) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const indicatorId = useId();
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  useLayoutEffect(() => {
-    const activeIdx = segments.findIndex((s) => s.value === value);
-    const btn = btnRefs.current[activeIdx];
-    const wrap = wrapRef.current;
-    if (!btn || !wrap) return;
+  function selectAndFocus(index: number) {
+    const segment = segments[index];
+    if (!segment) return;
+    onChange(segment.value);
+    tabRefs.current[index]?.focus();
+  }
 
-    const wr = wrap.getBoundingClientRect();
-    const br = btn.getBoundingClientRect();
-    setIndicator({ left: br.left - wr.left, width: br.width });
-  }, [value, segments]);
+  function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    if (!segments.length) return;
+
+    let nextIndex: number;
+    switch (event.key) {
+      case "ArrowLeft":
+        nextIndex = (index - 1 + segments.length) % segments.length;
+        break;
+      case "ArrowRight":
+        nextIndex = (index + 1) % segments.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = segments.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    selectAndFocus(nextIndex);
+  }
 
   return (
     <div
-      ref={wrapRef}
-      className="flex relative p-1.5 rounded-full"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      role="group"
+      className="flex border-b"
+      style={{ borderColor: "var(--border)" }}
+      role="tablist"
+      aria-label="Profielweergave"
     >
-      {/* Sliding gradient indicator — inline style required for dynamic position */}
-      {indicator && (
-        <span
-          aria-hidden="true"
-          className="absolute top-1 bottom-1 rounded-full pointer-events-none z-0"
-          style={{
-            left: indicator.left,
-            width: indicator.width,
-            background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-            transition: "left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
-        />
-      )}
-
-      {segments.map((seg, i) => {
-        const active = seg.value === value;
+      {segments.map((segment, index) => {
+        const active = segment.value === value;
         return (
           <button
-            key={seg.value}
-            ref={(el) => { btnRefs.current[i] = el; }}
-            onClick={() => onChange(seg.value)}
-            role="radio"
-            aria-checked={active}
-            className="relative z-[1] flex-1 py-3 px-4 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.97]"
+            key={segment.value}
+            ref={(node) => { tabRefs.current[index] = node; }}
+            type="button"
+            onClick={() => onChange(segment.value)}
+            onKeyDown={(event) => handleKeyDown(event, index)}
+            role="tab"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-[13px] transition-colors duration-150"
             style={{
-              background: "transparent",
-              border: "none",
-              color: active ? "white" : "var(--text2)",
+              color: active ? "var(--text)" : "var(--text2)",
+              fontWeight: active ? 500 : 400,
             }}
           >
-            {seg.label}
+            {segment.label}
+            {active && (
+              <motion.span
+                layoutId={`segmented-indicator-${indicatorId}`}
+                aria-hidden="true"
+                className="absolute bottom-[-1px] left-5 right-5 h-0.5 rounded-full"
+                style={{ background: "var(--accent)" }}
+                transition={{ type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.2 }}
+              />
+            )}
           </button>
         );
       })}

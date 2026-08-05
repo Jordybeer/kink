@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld
+
+**What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.
+
+**Rule:** Titel, body, base en reviewstatus van een PR worden uitsluitend via de pull-request-API gewijzigd. Gebruik `create_file`/`update_file` alleen wanneer het bedoelde eindresultaat werkelijk een repositorybestand is; controleer vóór iedere write dat resource-type en toolnaam overeenkomen.
+
+---
+
 ## 2026-07-28 — Twee schrijvende workflowtriggers botsten op dezelfde branch
 
 **What went wrong:** Een tijdelijke transform-workflow luisterde tegelijk naar `push` en `pull_request synchronize`. Eén stagingcommit startte daardoor twee identieke schrijvers. Beide doorliepen tests en build; de eerste pushte de bewezen productcommit, de tweede werd terecht als non-fast-forward geweigerd.
@@ -133,3 +141,11 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 **What went wrong:** When computing the next alphabetical kink word for a new worktree, only remote branches on `origin` were checked. A local branch (`worktree-inversion`) was missed, causing a letter collision.
 
 **Rule:** Always check both local and remote branches: `git branch -a | grep worktree-`. Never rely on `remotes/origin/` alone.
+
+## 2026-08-05 — De zojuist vastgelegde API-grens werd meteen opnieuw gebroken
+
+**What went wrong:** Meteen na het documenteren van de scheiding tussen PR-metadata en repositorybestanden werd opnieuw `update_file` gebruikt terwijl `update_pull_request` nodig was. Daardoor werd `CLAUDE.md` tijdelijk ingekort. Het bestand is direct volledig hersteld en heeft opnieuw exact zijn oorspronkelijke blob-SHA.
+
+**Rule:** Na een toolverwisseling geen volgende write op routine uitvoeren. Pauzeer, benoem het gewenste resource-type hardop, controleer de volledige toolnaam en argumenten, en voer pas dan exact één mutatie uit. Voor PR-titel of PR-body is de enige toegestane writer `update_pull_request`.
+
+---

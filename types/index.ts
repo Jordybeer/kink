@@ -2,6 +2,22 @@ export type KinkStatus = "yes" | "willing" | "maybe" | "no" | "hard_no" | null;
 
 export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand";
 
+export type ProfilePerspective = "dominant" | "submissive";
+export type QuestionnairePreset = "quick" | "balanced" | "full";
+export type QuestionnaireInterest =
+  | "power"
+  | "impact"
+  | "bondage"
+  | "sensation"
+  | "humiliation"
+  | "sexual_social";
+
+export interface QuestionnaireSetup {
+  preset: QuestionnairePreset;
+  interests: QuestionnaireInterest[];
+  version: 1;
+}
+
 export interface CustomKink {
   id: string;
   name: string;
@@ -199,6 +215,14 @@ export interface Profile {
   consentProof?: ProfileConsentProof;
   name: string;
   role: string;
+  /** Specialist role that existed before a primary perspective was chosen. */
+  legacyRole?: string;
+  /** Local grouping for two perspectives belonging to the same person. */
+  personGroupId?: string;
+  /** Primary perspective represented by this answer set. */
+  perspective?: ProfilePerspective;
+  /** Local start selection; omitted on legacy profiles to preserve old behavior. */
+  questionnaireSetup?: QuestionnaireSetup;
   relationshipStatus?: string;
   fetLifeUsername?: string;
   bdsmtestUrl?: string;

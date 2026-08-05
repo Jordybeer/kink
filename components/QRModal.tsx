@@ -1,4 +1,5 @@
 "use client";
+import { ArrowLeft, ArrowRight, Check, CopySimple } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
@@ -297,7 +298,7 @@ export default function QRModal({ profile, onClose }: Props) {
                   className="focus-ring flex-1 py-2 rounded-lg border text-xs"
                   style={{ borderColor: "var(--border)", color: "var(--text2)" }}
                 >
-                  ← Vorige
+                  <ArrowLeft size={13} aria-hidden="true" /> Vorige
                 </button>
                 <button
                   type="button"
@@ -305,7 +306,7 @@ export default function QRModal({ profile, onClose }: Props) {
                   className="focus-ring flex-1 py-2 rounded-lg border text-xs"
                   style={{ borderColor: "var(--border)", color: "var(--text2)" }}
                 >
-                  Volgende →
+                  Volgende <ArrowRight size={13} aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -348,7 +349,7 @@ export default function QRModal({ profile, onClose }: Props) {
                 : { borderColor: "var(--border)" }}
               aria-hidden="true"
             >
-              {includeAvatar && <span className="text-[8px] font-bold text-black">✓</span>}
+              {includeAvatar && <Check size={10} weight="bold" aria-hidden="true" />}
             </span>
             <input
               type="checkbox"
@@ -377,7 +378,7 @@ export default function QRModal({ profile, onClose }: Props) {
                 : { borderColor: "var(--border)" }}
               aria-hidden="true"
             >
-              {includeFetLife && <span className="text-[8px] font-bold text-black">✓</span>}
+              {includeFetLife && <Check size={10} weight="bold" aria-hidden="true" />}
             </span>
             <input
               type="checkbox"
@@ -402,7 +403,7 @@ export default function QRModal({ profile, onClose }: Props) {
               : { borderColor: "var(--border)", color: "var(--text)" }
           }
         >
-          {copied ? "✓ Gekopieerd!" : "⎘ Kopieer volledige link"}
+          {copied ? <span className="inline-flex items-center justify-center gap-1.5"><Check size={14} weight="bold" aria-hidden="true" />Gekopieerd!</span> : <span className="inline-flex items-center justify-center gap-1.5"><CopySimple size={14} aria-hidden="true" />Kopieer volledige link</span>}
         </button>
 
         <p className="text-xs text-center mt-1 mb-4" style={{ color: "var(--text2)" }}>

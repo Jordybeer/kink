@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from '@phosphor-icons/react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -148,7 +148,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t.fast}
           style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}
         >
-          <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartBreak size={36} /></div>
+          <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartBreak aria-hidden="true" size={36} /></div>
           <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
           <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
         </motion.div>
@@ -232,7 +232,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
                   >
-                    {step === 3 ? 'Ga door →' : 'Volgende →'}
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      {step === 3 ? 'Ga door' : 'Volgende'}
+                      <ArrowRight size={14} aria-hidden="true" />
+                    </span>
                   </motion.button>
                 )}
 
@@ -248,7 +251,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => { setPin1([]); setPin2([]); setLockSub("intro"); }}
                     style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
                   >
-                    ← Terug
+                    <ArrowLeft size={14} aria-hidden="true" /> Terug
                   </motion.button>
                 )}
 
@@ -320,7 +323,7 @@ function Step0Welcome() {
 function Step1Gate() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldWarning size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldWarning aria-hidden="true" size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Voor volwassenen</motion.h2>
       <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
@@ -333,7 +336,7 @@ function Step1Gate() {
 function Step2Data() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck aria-hidden="true" size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Jouw data verlaat dit apparaat nooit</motion.h2>
       <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
         <motion.div variants={childV} style={CARD}>
@@ -356,7 +359,7 @@ function Step2Data() {
 function Step3Consent() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart aria-hidden="true" size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Consent, altijd</motion.h2>
       <motion.p variants={childV} style={{
         fontFamily: "var(--font-display, Georgia, serif)", fontStyle: 'italic', fontWeight: 500,
@@ -374,7 +377,7 @@ function Step3Consent() {
 function StepLockIntro({ bioAvailable }: { bioAvailable: boolean }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock aria-hidden="true" size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Vergrendel de app</motion.h2>
       <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.</p>
@@ -435,7 +438,7 @@ function StepPin({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: 
 function StepBio({ bioError }: { bioError: string | null }) {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint aria-hidden="true" size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>PIN ingesteld!</motion.h2>
       <motion.p variants={childV} style={{ ...BODY, textAlign: 'center' }}>
         Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
@@ -450,7 +453,7 @@ function StepBio({ bioError }: { bioError: string | null }) {
 function StepFinale() {
   return (
     <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenNib size={48} /></motion.div>
+      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenNib aria-hidden="true" size={48} /></motion.div>
       <motion.h2 variants={childV} style={TITLE}>Het speelveld is van jou</motion.h2>
       <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <p style={{ margin: 0 }}>Begin met je eigen profiel — kinks, grenzen, verlangens.</p>

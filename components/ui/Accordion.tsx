@@ -1,5 +1,6 @@
 "use client";
 import { useState, useId, type ReactNode } from "react";
+import { CaretDown } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.35 } as const;
@@ -48,9 +49,7 @@ export default function Accordion({ trigger, icon, children, defaultOpen = false
           style={{ color: "var(--text2)" }}
           aria-hidden="true"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <CaretDown size={16} weight="bold" aria-hidden="true" />
         </motion.span>
       </button>
 

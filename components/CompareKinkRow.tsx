@@ -1,4 +1,5 @@
 "use client";
+import { Check } from "@phosphor-icons/react";
 
 import { useEffect, useState } from "react";
 import type { KinkEntry, Profile } from "@/types";
@@ -104,7 +105,7 @@ export default function CompareKinkRow({
               : { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" }
           }
         >
-          {isDiscussed ? "✓ Besproken" : "Bespreken"}
+          {isDiscussed ? <span className="inline-flex items-center gap-1"><Check size={11} aria-hidden="true" />Besproken</span> : "Bespreken"}
         </button>
       </div>
 

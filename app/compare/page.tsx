@@ -3,7 +3,7 @@ import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowsLeftRight, FilmSlate, FileText, CaretDown, Lock } from "@phosphor-icons/react";
+import { ArrowUp, ArrowsLeftRight, CaretDown, FileText, FilmSlate, Lock } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import type { KinkEntry, Profile } from "@/types";
@@ -232,7 +232,7 @@ function ProfileChip({
           </p>
         )}
       </div>
-      <CaretDown size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
+      <CaretDown aria-hidden="true" size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
     </button>
   );
 }
@@ -303,7 +303,7 @@ function ProfileSelectorSheet({
           <span className="text-xs font-bold shrink-0" style={{ color: colour }}>{slot}</span>
         )}
         {isPartner && !isSelected && !isOther && (
-          <Lock size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
+          <Lock aria-hidden="true" size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
         )}
       </button>
     );
@@ -487,7 +487,7 @@ function ComparePage() {
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             aria-label="Wissel profielen"
           >
-            <ArrowsLeftRight size={15} />
+            <ArrowsLeftRight aria-hidden="true" size={15} />
           </button>
           <ProfileChip
             profile={profileB}
@@ -701,7 +701,8 @@ function ComparePage() {
                   className="focus-ring text-xs px-4 py-2 rounded-full border transition-colors"
                   style={{ color: "var(--text2)", borderColor: "var(--border)" }}
                 >
-                  ↑ Terug naar boven
+                  <ArrowUp size={14} aria-hidden="true" />
+                  Terug naar boven
                 </button>
               </div>
             </div>

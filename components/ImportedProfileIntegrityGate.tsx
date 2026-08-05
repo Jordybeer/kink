@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { ShieldWarning } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
 
+const EMPTY_LIST: never[] = [];
+
 export default function ImportedProfileIntegrityGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hydrated = useHasHydrated();
-  const profiles = useStore((state) => state.profiles ?? []);
-  const quarantinedProfiles = useStore((state) => state.quarantinedProfiles ?? []);
+  const profiles = useStore((state) => state.profiles ?? EMPTY_LIST);
+  const quarantinedProfiles = useStore((state) => state.quarantinedProfiles ?? EMPTY_LIST);
   const status = useStore((state) => state.profileIntegrityStatus ?? "idle");
   const verifyImportedProfiles = useStore((state) => state.verifyImportedProfiles);
 
@@ -43,7 +45,7 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
             className="w-full max-w-sm rounded-2xl p-5 text-center shadow-xl"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <ShieldWarning size={28} weight="duotone" className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
+            <ShieldWarning aria-hidden="true" size={28} weight="duotone" className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
             <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Gedeelde profielkopieën controleren…</p>
             <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
               KinkSync controleert of de opgeslagen antwoorden nog overeenkomen met hun eerder bevestigde versie.

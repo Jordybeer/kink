@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShareNetwork, PlusSquare, Check, WifiSlash, DeviceMobile, Lightning } from "@phosphor-icons/react";
+import { Check, CheckCircle, DeviceMobile, Lightning, PlusSquare, ShareNetwork, WifiSlash } from "@phosphor-icons/react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 
 interface Props {
@@ -193,7 +193,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
               letterSpacing: "-0.01em",
             }}
           >
-            {isIos ? "Klaar 🖤" : "Zet op startscherm"}
+            {isIos ? <span className="inline-flex items-center justify-center gap-1.5"><CheckCircle size={17} weight="fill" aria-hidden="true" />Klaar</span> : "Zet op startscherm"}
           </motion.button>
 
           <button
