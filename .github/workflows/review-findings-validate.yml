@@ -26,7 +26,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - name: Prove roving tab focus on the mobile-first surface
+      - name: Prove roving tab focus with the current persisted schema
         run: npx playwright test e2e/profile-mobile-audit.spec.ts --grep "roving keyboard focus" --project=mobile
         env:
           CI: "1"
