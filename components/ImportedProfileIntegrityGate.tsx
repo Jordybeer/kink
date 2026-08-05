@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { ShieldWarning } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
 
+const EMPTY_LIST: never[] = [];
+
 export default function ImportedProfileIntegrityGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hydrated = useHasHydrated();
-  const profiles = useStore((state) => state.profiles ?? []);
-  const quarantinedProfiles = useStore((state) => state.quarantinedProfiles ?? []);
+  const profiles = useStore((state) => state.profiles ?? EMPTY_LIST);
+  const quarantinedProfiles = useStore((state) => state.quarantinedProfiles ?? EMPTY_LIST);
   const status = useStore((state) => state.profileIntegrityStatus ?? "idle");
   const verifyImportedProfiles = useStore((state) => state.verifyImportedProfiles);
 
