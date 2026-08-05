@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld
+
+**What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.
+
+**Rule:** Titel, body, base en reviewstatus van een PR worden uitsluitend via de pull-request-API gewijzigd. Gebruik `create_file`/`update_file` alleen wanneer het bedoelde eindresultaat werkelijk een repositorybestand is; controleer vóór iedere write dat resource-type en toolnaam overeenkomen.
+
+---
+
 ## 2026-07-28 — Twee schrijvende workflowtriggers botsten op dezelfde branch
 
 **What went wrong:** Een tijdelijke transform-workflow luisterde tegelijk naar `push` en `pull_request synchronize`. Eén stagingcommit startte daardoor twee identieke schrijvers. Beide doorliepen tests en build; de eerste pushte de bewezen productcommit, de tweede werd terecht als non-fast-forward geweigerd.
