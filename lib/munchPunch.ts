@@ -80,7 +80,7 @@ export function createMunchPunchRoom(input: {
 }
 
 export function roomStatusAt(room: MunchPunchRoom, now: number): MunchPunchRoomStatus {
-  if ((room.status === "draft" || room.status === "open") && now >= room.expiresAt) return "expired";
+  if (room.status !== "expired" && now >= room.expiresAt) return "expired";
   return room.status;
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MUNCH_PUNCH_MAX_RESPONSES,
+  cleanupMunchPunchRooms,
   closeMunchPunchRoom,
   createMunchPunchRoom,
   openMunchPunchRoom,
@@ -34,8 +35,10 @@ describe("Munch Punch room privacy model", () => {
     });
     expect(draft.status).toBe("draft");
     expect(openMunchPunchRoom(draft, NOW + 1).status).toBe("open");
-    expect(closeMunchPunchRoom(openMunchPunchRoom(draft, NOW + 1), NOW + 2).status).toBe("closed");
+    const closed = closeMunchPunchRoom(openMunchPunchRoom(draft, NOW + 1), NOW + 2);
+    expect(closed.status).toBe("closed");
     expect(roomStatusAt(draft, NOW + 60_000)).toBe("expired");
+    expect(roomStatusAt(closed, NOW + 60_000)).toBe("expired");
     expect(JSON.stringify(draft)).not.toMatch(/profile|participant|verification|owner/i);
   });
 
@@ -97,5 +100,12 @@ describe("Munch Punch room privacy model", () => {
     const overflow = recordMunchPunchResponse(current, [1, 1], "hash-overflow", NOW + 40);
     expect(overflow.status).toBe("full");
     expect(overflow.room.responseCount).toBe(MUNCH_PUNCH_MAX_RESPONSES);
+  });
+
+  it("expires closed rooms and removes them after the cleanup grace", () => {
+    const closed = closeMunchPunchRoom(room(), NOW + 10);
+    expect(cleanupMunchPunchRooms([closed], closed.expiresAt)).toHaveLength(1);
+    expect(cleanupMunchPunchRooms([closed], closed.expiresAt)[0]?.status).toBe("expired");
+    expect(cleanupMunchPunchRooms([closed], closed.expiresAt + 24 * 60 * 60 * 1000)).toEqual([]);
   });
 });
