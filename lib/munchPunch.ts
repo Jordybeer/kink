@@ -167,13 +167,22 @@ export function visibleMunchPunchResults(room: MunchPunchRoom): MunchPunchPrompt
         merged: false,
       });
     });
-    let hiddenCount = 0;
+
+    if (smallTotal > 0 && smallTotal < MUNCH_PUNCH_SMALL_CELL_THRESHOLD) {
+      // Complementary suppression prevents deriving a one- or two-person cell
+      // by subtracting visible buckets from the public response count.
+      return {
+        promptId,
+        question: prompt.question,
+        buckets: [],
+        hiddenCount: room.responseCount,
+      };
+    }
+
     if (smallTotal >= MUNCH_PUNCH_SMALL_CELL_THRESHOLD) {
       buckets.push({ key: `${promptId}:other`, label: "Overige antwoorden", count: smallTotal, merged: true });
-    } else {
-      hiddenCount = smallTotal;
     }
-    return { promptId, question: prompt.question, buckets, hiddenCount };
+    return { promptId, question: prompt.question, buckets, hiddenCount: 0 };
   });
 }
 

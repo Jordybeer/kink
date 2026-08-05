@@ -66,7 +66,7 @@ describe("Munch Punch room privacy model", () => {
     expect(resultsUnlocked(current)).toBe(true);
   });
 
-  it("suppresses cells below three and merges them only when the pool is large enough", () => {
+  it("merges small cells only when their combined bucket reaches three", () => {
     let current = room();
     const answers = [
       [0, 0], [0, 0], [0, 0],
@@ -82,14 +82,16 @@ describe("Munch Punch room privacy model", () => {
       expect.objectContaining({ label: "Overige antwoorden", count: 3, merged: true }),
     ]);
     expect(social?.hiddenCount).toBe(0);
+  });
 
-    let hidden = room();
+  it("uses complementary suppression when subtraction would expose one or two people", () => {
+    let current = room();
     [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1]].forEach((value, index) => {
-      hidden = recordMunchPunchResponse(hidden, value, `other-${index}`, NOW + index + 1).room;
+      current = recordMunchPunchResponse(current, value, `other-${index}`, NOW + index + 1).room;
     });
-    const hiddenSocial = visibleMunchPunchResults(hidden).find((result) => result.promptId === "social");
-    expect(hiddenSocial?.buckets).toHaveLength(1);
-    expect(hiddenSocial?.hiddenCount).toBe(2);
+    const hiddenSocial = visibleMunchPunchResults(current).find((result) => result.promptId === "social");
+    expect(hiddenSocial?.buckets).toEqual([]);
+    expect(hiddenSocial?.hiddenCount).toBe(5);
   });
 
   it("caps a room at thirty accepted responses", () => {
