@@ -26,14 +26,14 @@ De private roomsleutel leeft uitsluitend in `sessionStorage` en wordt bij sluite
 
 ## QR-capaciteit
 
-Realistische proef met acht prompts, een roomtitel, P-256 raw public keys, een 12-byte IV, AES-GCM-tag en een willekeurige response-nonce:
+De uiteindelijke codepaden zijn uitgevoerd met acht prompts, een roomtitel, echte P-256-sleutelparen, een 12-byte IV, AES-GCM-tag en een willekeurige response-nonce. Daarna zijn de volledige tekenreeksen met foutcorrectie M als QR gemeten:
 
 | Payload | Lengte | QR-versie bij foutcorrectie M | Modules |
 | --- | ---: | ---: | ---: |
-| Join-link | 305 tekens | 13 | 69 × 69 |
-| Versleutelde response | 250 tekens | 11 | 61 × 61 |
+| Join-link | 371 tekens | 15 | 77 × 77 |
+| Versleutelde response | 376 tekens | 15 | 77 × 77 |
 
-Beide passen comfortabel in één QR. Compressie en multi-QR zijn voor v1 daarom onnodig en zouden extra parser- en herstelrisico toevoegen.
+Beide passen in één QR. Compressie en multi-QR zijn voor v1 daarom onnodig en zouden extra parser- en herstelrisico toevoegen. De eerdere ruwe envelopschatting was te optimistisch omdat die niet de volledige URL-prefix en authentieke ciphertext-overhead meenam; bovenstaande waarden komen uit een echte encryptie-roundtrip.
 
 ## Conflicten en grenzen
 
