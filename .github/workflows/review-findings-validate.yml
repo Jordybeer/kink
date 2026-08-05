@@ -23,7 +23,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Print the missing tab context
+      - name: Prove the pre-hydration seed and roving focus
         run: npx playwright test e2e/profile-mobile-audit.spec.ts --grep "roving keyboard focus" --project=mobile --retries=0
         env:
           CI: "1"
