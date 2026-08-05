@@ -18,24 +18,20 @@ jobs:
           ref: polygamy
       - name: Record the tool-boundary rule
         run: |
-          python3 <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
-
           path = Path("corrections.md")
           text = path.read_text()
           marker = "---\n\n"
-          entry = """## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld
-
-**What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.
-
-**Rule:** Titel, body, base en reviewstatus van een PR worden uitsluitend via de pull-request-API gewijzigd. Gebruik `create_file`/`update_file` alleen wanneer het bedoelde eindresultaat werkelijk een repositorybestand is; controleer vóór iedere write dat resource-type en toolnaam overeenkomen.
-
----
-
-"""
-          if entry.splitlines()[0] not in text:
-              text = text.replace(marker, marker + entry, 1)
-              path.write_text(text)
+          heading = "## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld"
+          entry = (
+              heading + "\n\n"
+              "**What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.\n\n"
+              "**Rule:** Titel, body, base en reviewstatus van een PR worden uitsluitend via de pull-request-API gewijzigd. Gebruik `create_file`/`update_file` alleen wanneer het bedoelde eindresultaat werkelijk een repositorybestand is; controleer vóór iedere write dat resource-type en toolnaam overeenkomen.\n\n"
+              "---\n\n"
+          )
+          if heading not in text:
+              path.write_text(text.replace(marker, marker + entry, 1))
           PY
       - run: rm .github/workflows/append-metadata-correction.yml
       - name: Commit the lesson and clean the writer
