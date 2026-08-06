@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Instrument_Sans } from "next/font/google";
 import "./globals.css";
-import "./midnight-palette.css";
 import "./design-role-tokens.css";
 import InstallPromptBridge from "@/components/InstallPromptBridge";
 import TopNav from "@/components/TopNav";
@@ -13,13 +12,11 @@ import AmbientGlow from "@/components/ui/AmbientGlow";
 import OfflineCacheWarmup from "@/components/OfflineCacheWarmup";
 import ImportedProfileIntegrityGate from "@/components/ImportedProfileIntegrityGate";
 
-/* Body voice — Instrument Sans: tall x-height, warm grotesque, reads clean at 12px on a phone */
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   style: ["normal", "italic"],
 });
-/* Display voice — Fraunces: editorial serif with teeth; optical sizing keeps small italics legible. */
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
@@ -51,7 +48,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="nl" className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}>
       <head>
-        {/* Capture beforeinstallprompt before hydration; the bridge consumes it later. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__installPrompt=e;});`,
