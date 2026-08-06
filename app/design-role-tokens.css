@@ -1,0 +1,12 @@
+:root {
+  --action-primary: var(--accent);
+  --identity-a: var(--accent);
+  --identity-b: var(--accent2);
+  --focus: var(--accent);
+  --accent-text: #E45AAB;
+  --accent2-text: #E06A91;
+  --hard-no-text: #F25555;
+  --decorative-glow: var(--accent-glow);
+  --profile-subnav-h: 3.5rem;
+  --compare-subnav-h: 4.75rem;
+}
