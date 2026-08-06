@@ -70,13 +70,13 @@ export default function ContractQrDisplay({
       )}
 
       <div
-        className="mx-auto my-4 flex h-[280px] w-[280px] items-center justify-center overflow-hidden rounded-xl p-1"
+        className="mx-auto my-4 flex h-[282px] w-[282px] items-center justify-center overflow-hidden rounded-xl"
         style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}
       >
         {image ? (
           // QR pixels must remain unoptimised and exact.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} width={280} height={280} alt={`Contract QR ${index + 1} van ${frames.length}`} />
+          <img className="h-[280px] w-[280px] shrink-0" src={image} width={280} height={280} alt={`Contract QR ${index + 1} van ${frames.length}`} />
         ) : error ? (
           <span className="px-5 text-center text-sm" style={{ color: "var(--hard-no-text)" }}>{error}</span>
         ) : (
