@@ -45,6 +45,11 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
       streamRef.current = null;
     }
 
+    function failCamera(message: string) {
+      setCameraError(message);
+      stopCamera();
+    }
+
     async function handleRaw(raw: string) {
       processingRef.current = true;
       blockedValueRef.current = raw;
@@ -71,10 +76,20 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
         canvas.height = video.videoHeight;
       }
       const context = canvas.getContext("2d", { willReadFrequently: true });
-      if (!context) return;
-      context.drawImage(video, 0, 0);
-      const image = context.getImageData(0, 0, canvas.width, canvas.height);
-      const result = jsQR(image.data, image.width, image.height);
+      if (!context) {
+        failCamera("Deze browser kan geen beeldframes lezen. Plak de responsecode hieronder.");
+        return;
+      }
+
+      let result: ReturnType<typeof jsQR>;
+      try {
+        context.drawImage(video, 0, 0);
+        const image = context.getImageData(0, 0, canvas.width, canvas.height);
+        result = jsQR(image.data, image.width, image.height);
+      } catch {
+        failCamera("De camera kon geen leesbaar beeld leveren. Plak de responsecode hieronder.");
+        return;
+      }
 
       if (!result?.data) {
         blankFramesRef.current += 1;
@@ -102,10 +117,10 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
         if (!videoRef.current) return;
         videoRef.current.srcObject = stream;
         void videoRef.current.play().then(scan).catch(() => {
-          setCameraError("De camera kon niet worden gestart. Plak de responsecode hieronder.");
+          failCamera("De camera kon niet worden gestart. Plak de responsecode hieronder.");
         });
       })
-      .catch(() => setCameraError("Cameratoegang is geweigerd of niet beschikbaar."));
+      .catch(() => setCameraError("Cameratoegang is geweigerd of niet beschikbaar. Plak de responsecode hieronder."));
 
     return () => {
       cancelled = true;
@@ -144,8 +159,8 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
   const feedbackColor = feedback?.status === "accepted"
     ? "var(--yes)"
     : feedback?.status === "replay"
-      ? "var(--accent)"
-      : "var(--hard-no)";
+      ? "var(--accent-text)"
+      : "var(--hard-no-text)";
 
   return (
     <Sheet open={open} onClose={handleClose} scrollable aria-label="Munch Punch-responses scannen">
@@ -158,7 +173,10 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
         {showPaste ? (
           <div>
             {cameraError && (
-              <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>{cameraError}</p>
+              <p role="alert" className="mb-3 flex items-start gap-2 rounded-xl p-3 text-xs leading-relaxed" style={{ color: "var(--hard-no-text)", background: "var(--surface2)", border: "1px solid var(--hard-no)" }}>
+                <WarningCircle size={17} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" />
+                <span>{cameraError}</span>
+              </p>
             )}
             <label htmlFor="munch-punch-response" className="mb-2 block text-xs font-semibold">
               Versleutelde responsecode
@@ -177,7 +195,7 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
               onClick={() => void submitPaste()}
               disabled={!pasteInput.trim()}
               className="focus-ring mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-40"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
             >
               <ClipboardText size={17} aria-hidden="true" />
               Response verwerken
@@ -198,7 +216,7 @@ export default function MunchPunchScanner({ open, onClose, onResult }: MunchPunc
           <>
             <div className="relative aspect-square overflow-hidden rounded-2xl" style={{ background: "var(--bg)" }}>
               <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
-              <div className="pointer-events-none absolute inset-5 rounded-2xl" style={{ border: "2px solid var(--accent)" }} />
+              <div className="pointer-events-none absolute inset-5 rounded-2xl" style={{ border: "2px solid var(--focus)" }} />
             </div>
             <canvas ref={canvasRef} className="hidden" />
             <p className="mt-3 text-center text-xs" style={{ color: "var(--text2)" }}>
