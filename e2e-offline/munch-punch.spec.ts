@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ viewport: { width: 375, height: 667 } });
+
 async function waitForOfflineCache(page: import("@playwright/test").Page) {
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 20_000 });
@@ -26,6 +28,7 @@ test("Munch Punch host and guest shells work after the network disappears", asyn
   expect(joinUrl).toContain("/munch-punch/join#KSMJ1:");
 
   const guest = await context.newPage();
+  await guest.setViewportSize({ width: 375, height: 667 });
   await guest.goto(joinUrl!, { waitUntil: "domcontentloaded" });
   await expect(guest.getByText("Je bent offline")).toHaveCount(0);
   await expect(guest.getByText("Vraag 1 van 8")).toBeVisible();
