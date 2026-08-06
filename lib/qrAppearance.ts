@@ -1,5 +1,3 @@
-import type QRCode from "qrcode";
-
 export const QR_COLOURS = {
   dark: "#17121AFF",
   light: "#FFFFFFFF",
@@ -8,11 +6,11 @@ export const QR_COLOURS = {
 export function qrRenderOptions(
   width: number,
   errorCorrectionLevel: "L" | "M" | "Q" | "H",
-): QRCode.QRCodeToDataURLOptions {
+) {
   return {
     width,
     margin: 2,
     errorCorrectionLevel,
     color: QR_COLOURS,
-  };
+  } as const;
 }
