@@ -1,4 +1,10 @@
 :root {
+  /* One fixed KinkSync house palette. */
+  --border-accent: rgba(228, 90, 171, 0.24);
+  --accent: #E45AAB;
+  --accent-glow: rgba(228, 90, 171, 0.14);
+
+  /* Semantic roles may evolve without changing the underlying house hue. */
   --action-primary: var(--accent);
   --identity-a: var(--accent);
   --identity-b: var(--accent2);
@@ -7,6 +13,8 @@
   --accent2-text: #E06A91;
   --hard-no-text: #F25555;
   --decorative-glow: var(--accent-glow);
+
+  /* Shared sticky stacks. */
   --profile-subnav-h: 3.5rem;
   --compare-subnav-h: 4.75rem;
 }
