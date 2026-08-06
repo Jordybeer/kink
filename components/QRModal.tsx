@@ -226,7 +226,7 @@ export default function QRModal({ profile, onClose }: Props) {
             Dit profiel bevat te veel gegevens voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
           </div>
         ) : qrDataUrl ? (
-          <div className="mx-auto my-3 w-[280px] h-[280px] rounded-xl overflow-hidden p-1" style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}>
+          <div className="mx-auto my-3 flex h-[282px] w-[282px] items-center justify-center overflow-hidden rounded-xl" style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}>
             <img
               src={qrDataUrl}
               width={280}
@@ -234,7 +234,7 @@ export default function QRModal({ profile, onClose }: Props) {
               alt={currentFrame
                 ? `${currentFrame.phase === "avatar" ? "Profielfoto" : "Profiel"} QR-code ${currentFrame.index} van ${currentFrame.total}`
                 : "QR-code voor profielimport"}
-              className="h-full w-full"
+              className="h-[280px] w-[280px] shrink-0"
             />
           </div>
         ) : (
@@ -273,7 +273,7 @@ export default function QRModal({ profile, onClose }: Props) {
         )}
 
         {canShareAvatar && (
-          <label className="flex min-h-11 items-center gap-2 text-sm mb-2 cursor-pointer select-none">
+          <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--bg)] -mx-2 flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm mb-2">
             <span className="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-none" style={includeAvatar ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
               {includeAvatar && <Check size={11} weight="bold" aria-hidden="true" />}
             </span>
@@ -285,7 +285,7 @@ export default function QRModal({ profile, onClose }: Props) {
         {avatarSkipped && <p className="text-xs mb-3" style={{ color: "var(--hard-no-text)" }} role="alert">De profielfoto kon niet veilig worden voorbereid of met de eigendomssleutel worden bevestigd en wordt daarom niet meegestuurd.</p>}
 
         {profile?.fetLifeUsername && (
-          <label className="flex min-h-11 items-center gap-2 text-sm mb-2 cursor-pointer select-none">
+          <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--bg)] -mx-2 flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm mb-2">
             <span className="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-none" style={includeFetLife ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
               {includeFetLife && <Check size={11} weight="bold" aria-hidden="true" />}
             </span>
