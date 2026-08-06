@@ -2,17 +2,22 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { hexToRgb } from "@/lib/pdfPalette";
 
-const css = [
-  readFileSync(new URL("../app/globals.css", import.meta.url), "utf8"),
-  readFileSync(new URL("../app/design-role-tokens.css", import.meta.url), "utf8"),
-].join("\n");
+const globalsCss = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+const roleCss = readFileSync(new URL("../app/design-role-tokens.css", import.meta.url), "utf8");
 
-const TOKENS: Record<string, string> = {};
-for (const block of css.matchAll(/:root\s*\{([\s\S]*?)\}/g)) {
-  for (const match of block[1].matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\b/g)) {
-    TOKENS[`--${match[1]}`] = match[2].toLowerCase();
+function rootHexTokens(source: string): Record<string, string> {
+  const rootBlock = source.match(/^:root\s*\{([\s\S]*?)\}/m)?.[1] ?? "";
+  const tokens: Record<string, string> = {};
+  for (const match of rootBlock.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\b/g)) {
+    tokens[`--${match[1]}`] = match[2].toLowerCase();
   }
+  return tokens;
 }
+
+const TOKENS = {
+  ...rootHexTokens(globalsCss),
+  ...rootHexTokens(roleCss),
+};
 
 function luminance(hex: string): number {
   const lin = hexToRgb(hex).map((value) => {
@@ -40,7 +45,7 @@ function assertPair(foreground: string, background: string, minimum: number) {
 }
 
 describe("tokenContrast — the fixed dark room holds its ratios", () => {
-  it("parses the fixed house palette and semantic text roles", () => {
+  it("parses the base wardrobe and semantic text roles", () => {
     for (const token of [
       ...SURFACES,
       ...STATUS_TOKENS,
