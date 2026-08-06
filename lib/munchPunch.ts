@@ -58,6 +58,7 @@ export function createMunchPunchRoom(input: {
   promptIds: readonly MunchPunchPromptId[];
   hostPublicKey: string;
 }): MunchPunchRoom {
+  if (!/^[A-Za-z0-9_-]{12,32}$/.test(input.id)) throw new Error("De room heeft geen geldige lokale code");
   const promptIds = [...new Set(input.promptIds)];
   if (promptIds.length < 1 || promptIds.length > 8) throw new Error("Kies tussen één en acht vragen");
   if (!promptIds.every(isMunchPunchPromptId)) throw new Error("De room bevat een onbekende vraag");
@@ -169,8 +170,6 @@ export function visibleMunchPunchResults(room: MunchPunchRoom): MunchPunchPrompt
     });
 
     if (smallTotal > 0 && smallTotal < MUNCH_PUNCH_SMALL_CELL_THRESHOLD) {
-      // Complementary suppression prevents deriving a one- or two-person cell
-      // by subtracting visible buckets from the public response count.
       return {
         promptId,
         question: prompt.question,
