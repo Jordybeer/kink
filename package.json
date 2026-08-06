@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "npm test && npm run lint",
+    "prebuild": "npm run icons:check",
     "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
