@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import "./midnight-palette.css";
-import ThemeProvider from "@/components/ThemeProvider";
+import "./design-role-tokens.css";
+import InstallPromptBridge from "@/components/InstallPromptBridge";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
@@ -18,8 +19,7 @@ const instrumentSans = Instrument_Sans({
   variable: "--font-sans",
   style: ["normal", "italic"],
 });
-/* Display voice — Fraunces: editorial serif with teeth; optical sizing keeps small italics legible
-   where Cormorant went hairline-thin */
+/* Display voice — Fraunces: editorial serif with teeth; optical sizing keeps small italics legible. */
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
@@ -49,10 +49,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl" data-theme="midnight" className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}>
+    <html lang="nl" className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}>
       <head>
-        {/* Synchronous capture of beforeinstallprompt — must run before any module.
-            useEffect (post-hydration) is too late on fast devices. */}
+        {/* Capture beforeinstallprompt before hydration; the bridge consumes it later. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__installPrompt=e;});`,
@@ -61,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col antialiased">
         <AmbientGlow />
-        <ThemeProvider />
+        <InstallPromptBridge />
         <OfflineCacheWarmup />
         <TopNav />
         <BottomNav />
