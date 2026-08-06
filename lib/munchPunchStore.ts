@@ -14,6 +14,8 @@ import {
 } from "./munchPunch";
 import type { MunchPunchPromptId } from "./munchPunchCatalog";
 
+const STORAGE_KEY = "kinksync-munch-punch-v1";
+
 interface MunchPunchState {
   rooms: MunchPunchRoom[];
   _hasHydrated: boolean;
@@ -63,10 +65,18 @@ export const useMunchPunchStore = create<MunchPunchState>()(
       },
     }),
     {
-      name: "kinksync-munch-punch-v1",
+      name: STORAGE_KEY,
       version: 1,
       partialize: (state) => ({ rooms: state.rooms }),
-      onRehydrateStorage: () => (state) => state?.setHasHydrated(true),
+      onRehydrateStorage: () => (_state, error) => {
+        if (error) {
+          console.error("Munch Punch-opslag kon niet worden hersteld; alleen deze tijdelijke rooms worden gewist.", error);
+          if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
+          useMunchPunchStore.setState({ rooms: [], _hasHydrated: true });
+          return;
+        }
+        useMunchPunchStore.setState({ _hasHydrated: true });
+      },
     },
   ),
 );
