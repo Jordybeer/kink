@@ -12,7 +12,7 @@ import {
 } from "@/lib/profileQuarantine";
 
 type CoreState = ReturnType<typeof coreUseStore.getState>;
-export type StoreState = Omit<CoreState, "restoreBackupProfiles"> & ProfileQuarantineState & {
+export type StoreState = Omit<CoreState, "restoreBackupProfiles" | "theme" | "setTheme"> & ProfileQuarantineState & {
   restoreBackupProfiles: (
     incoming: Profile[],
     ownerKeys: ProfileOwnerKey[],
@@ -25,6 +25,25 @@ type SafeStoreHook = UseBoundStore<StoreApi<StoreState>>
 installStoreSecurity(coreUseStore);
 installBackupRestoreSecurity(coreUseStore);
 installProfileQuarantineSecurity(coreUseStore);
+
+function stripLegacyThemeState() {
+  const state = coreUseStore.getState() as CoreState & {
+    theme?: unknown;
+    setTheme?: unknown;
+  };
+  if (!("theme" in state) && !("setTheme" in state)) return;
+
+  // One-way compatibility migration for installations that once persisted a
+  // selectable theme. KinkSync now has one fixed house style.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { theme: _theme, setTheme: _setTheme, ...withoutTheme } = state;
+  coreUseStore.setState(withoutTheme as CoreState, true);
+}
+
+if (typeof window !== "undefined") {
+  stripLegacyThemeState();
+  coreUseStore.persist.onFinishHydration(stripLegacyThemeState);
+}
 
 // Tests and explicit resets must restore the guarded actions, not the raw core.
 const guardedInitialState = coreUseStore.getState();

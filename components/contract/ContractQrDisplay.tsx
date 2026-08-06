@@ -7,6 +7,7 @@ import {
   buildContractQrFrames,
   CONTRACT_QR_AUTO_INTERVAL_MS,
 } from "@/lib/contractQr";
+import { qrRenderOptions } from "@/lib/qrAppearance";
 
 interface Props {
   encoded: string;
@@ -27,22 +28,20 @@ export default function ContractQrDisplay({
   const [images, setImages] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
   const [autoAdvance, setAutoAdvance] = useState(frames.length > 1);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setImages([]);
     setIndex(0);
-    const css = getComputedStyle(document.documentElement);
-    const dark = css.getPropertyValue("--accent").trim() || "#D946AF";
-    const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
-    Promise.all(frames.map((frame) => QRCode.toDataURL(frame.value, {
-      width: 280,
-      margin: 2,
-      errorCorrectionLevel: "L",
-      color: { dark, light },
-    }))).then((next) => {
-      if (!cancelled) setImages(next);
-    });
+    setError(null);
+    Promise.all(frames.map((frame) => QRCode.toDataURL(frame.value, qrRenderOptions(280, "L"))))
+      .then((next) => {
+        if (!cancelled) setImages(next);
+      })
+      .catch(() => {
+        if (!cancelled) setError("De QR-reeks kon niet worden opgebouwd.");
+      });
     return () => { cancelled = true; };
   }, [frames]);
 
@@ -71,13 +70,17 @@ export default function ContractQrDisplay({
       )}
 
       <div
-        className="mx-auto my-4 flex h-[280px] w-[280px] items-center justify-center overflow-hidden rounded-xl"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+        className="mx-auto my-4 flex h-[282px] w-[282px] items-center justify-center overflow-hidden rounded-xl"
+        style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}
       >
         {image ? (
-          <img src={image} width={280} height={280} alt={`Contract QR ${index + 1} van ${frames.length}`} />
+          // QR pixels must remain unoptimised and exact.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="h-[280px] w-[280px] shrink-0" src={image} width={280} height={280} alt={`Contract QR ${index + 1} van ${frames.length}`} />
+        ) : error ? (
+          <span className="px-5 text-center text-sm" style={{ color: "var(--hard-no-text)" }}>{error}</span>
         ) : (
-          <span className="text-sm" style={{ color: "var(--text2)" }}>QR wordt opgebouwd…</span>
+          <span className="text-sm" style={{ color: "#4b5563" }}>QR wordt opgebouwd…</span>
         )}
       </div>
 
@@ -87,7 +90,7 @@ export default function ContractQrDisplay({
             type="button"
             aria-label="Vorige QR"
             onClick={() => { setAutoAdvance(false); setIndex((current) => (current - 1 + frames.length) % frames.length); }}
-            className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
+            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ background: "var(--surface2)", color: "var(--text2)" }}
           >
             <ArrowLeft size={16} aria-hidden="true" />
@@ -95,7 +98,8 @@ export default function ContractQrDisplay({
           <button
             type="button"
             onClick={() => setAutoAdvance((current) => !current)}
-            className="focus-ring min-h-10 rounded-lg px-3 text-xs font-semibold"
+            aria-pressed={autoAdvance}
+            className="focus-ring min-h-11 rounded-lg px-3 text-xs font-semibold"
             style={{ background: "var(--surface2)", color: "var(--text2)" }}
           >
             {autoAdvance ? "Pauzeer wisselen" : "Automatisch wisselen"}
@@ -104,7 +108,7 @@ export default function ContractQrDisplay({
             type="button"
             aria-label="Volgende QR"
             onClick={() => { setAutoAdvance(false); setIndex((current) => (current + 1) % frames.length); }}
-            className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
+            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ background: "var(--surface2)", color: "var(--text2)" }}
           >
             <ArrowRight size={16} aria-hidden="true" />
@@ -117,7 +121,7 @@ export default function ContractQrDisplay({
           type="button"
           onClick={onScanResponse}
           className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold"
-          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+          style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
         >
           <Camera size={17} aria-hidden="true" />
           {scanLabel}

@@ -22,8 +22,6 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
   return kinks.filter((k) => entries[k.id]?.status != null).length;
 }
 
-// The ledger: rated kinks as quiet one-line rows; the unrated remainder is a
-// single invitation back to the deck. No verdict grid in sight.
 export default function CategorySection({
   category, kinks, entries,
   onEdit, onTriage,
@@ -39,43 +37,46 @@ export default function CategorySection({
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
   const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
+  const headingId = `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   return (
-    <section className="mb-3">
+    <section className="mb-3" aria-labelledby={headingId}>
       <div
-        className="sticky top-[calc(var(--nav-h)+53px)] z-[5] flex items-center rounded-2xl transition-colors"
+        className="sticky z-[5] flex items-center rounded-2xl transition-colors"
         style={{
+          top: "calc(var(--nav-h) + var(--profile-subnav-h))",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
         }}
       >
         <button
-          onClick={() => setOpen((v) => !v)}
+          type="button"
+          onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
-          className="focus-ring flex-1 flex items-center gap-2 px-3 py-2.5 text-left min-w-0"
+          aria-controls={`${headingId}-content`}
+          className="focus-ring flex min-h-12 flex-1 items-center gap-2 px-3 py-2.5 text-left min-w-0"
         >
           <span className="text-[var(--accent)] flex-none">
             {open ? <CaretDown aria-hidden="true" size={16} /> : <CaretRight aria-hidden="true" size={16} />}
           </span>
-          <span
+          <h2
+            id={headingId}
             className="text-base flex-1 text-left truncate"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
           >
             {category}
-          </span>
-          <div className="flex items-center gap-1.5 flex-none">
-            <div className="flex gap-0.5 items-center">
-              {Array.from({ length: pipCount }, (_, i) => (
+          </h2>
+          <div className="flex items-center gap-1.5 flex-none" aria-label={`${filled} van ${kinks.length} beoordeeld`}>
+            <div className="flex gap-0.5 items-center" aria-hidden="true">
+              {Array.from({ length: pipCount }, (_, index) => (
                 <div
-                  key={i}
+                  key={index}
                   className="w-1.5 h-1.5 rounded-full transition-colors"
-                  style={{ background: i < filledPips ? "var(--accent)" : "var(--border)" }}
+                  style={{ background: index < filledPips ? "var(--accent)" : "var(--border)" }}
                 />
               ))}
-              {overflow && (
-                <span className="text-xs ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>
-              )}
+              {overflow && <span className="text-xs ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>}
             </div>
             <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
               {filled}/{kinks.length}
@@ -83,9 +84,10 @@ export default function CategorySection({
           </div>
         </button>
         <button
+          type="button"
           onClick={() => {
             const snapshot: Record<string, KinkEntry> = {};
-            for (const k of kinks) snapshot[k.id] = entries[k.id] ?? { status: null, comment: "" };
+            for (const kink of kinks) snapshot[kink.id] = entries[kink.id] ?? { status: null, comment: "" };
             undoSnapshot.current = snapshot;
             onBulkSkip();
             setUndoPending(true);
@@ -93,18 +95,15 @@ export default function CategorySection({
             undoTimer.current = setTimeout(() => setUndoPending(false), 3000);
           }}
           aria-label={`Alle kinks in ${category} overslaan`}
-          className="focus-ring rounded-full transition-colors flex-none mr-2 text-xs min-h-8 px-2.5"
-          style={{
-            border: "1px solid var(--border)",
-            color: "var(--text2)",
+          className="focus-ring mr-2 min-h-11 flex-none rounded-full px-3 text-xs transition-colors"
+          style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.borderColor = "var(--accent)";
+            event.currentTarget.style.color = "var(--accent-text)";
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent)";
-            e.currentTarget.style.color = "var(--accent)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color = "var(--text2)";
+          onMouseLeave={(event) => {
+            event.currentTarget.style.borderColor = "var(--border)";
+            event.currentTarget.style.color = "var(--text2)";
           }}
         >
           Sla over
@@ -123,21 +122,27 @@ export default function CategorySection({
           >
             <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
             <motion.button
-              onClick={() => { onBulkRestore(undoSnapshot.current); setUndoPending(false); if (undoTimer.current) clearTimeout(undoTimer.current); }}
+              type="button"
+              onClick={() => {
+                onBulkRestore(undoSnapshot.current);
+                setUndoPending(false);
+                if (undoTimer.current) clearTimeout(undoTimer.current);
+              }}
               whileTap={TAP_SPRING}
-              className="focus-ring text-sm font-semibold flex-none"
-              style={{ color: "var(--accent)" }}>
+              className="focus-ring min-h-11 flex-none px-2 text-sm font-semibold"
+              style={{ color: "var(--accent-text)" }}
+            >
               Ongedaan maken
             </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className={`accordion-content ${open ? "open" : ""}`}>
+      <div id={`${headingId}-content`} className={`accordion-content ${open ? "open" : ""}`}>
         <div className="accordion-inner">
           <div className="mt-1 flex flex-col pl-1">
             {kinks
-              .filter((k) => entries[k.id]?.status != null)
+              .filter((kink) => entries[kink.id]?.status != null)
               .map((kink) => (
                 <KinkListRow
                   key={kink.id}
@@ -148,11 +153,12 @@ export default function CategorySection({
               ))}
             {unratedCount > 0 && (
               <button
+                type="button"
                 onClick={onTriage}
                 className="focus-ring w-full min-h-12 rounded-xl mb-1 px-3 flex items-center gap-2 text-left transition-colors"
                 style={{
                   border: "1px dashed color-mix(in srgb, var(--accent) 45%, transparent)",
-                  color: "var(--accent)",
+                  color: "var(--accent-text)",
                   background: "transparent",
                 }}
               >
