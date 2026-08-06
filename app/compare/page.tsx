@@ -284,12 +284,16 @@ function ComparePage() {
     const selectedB = profiles.find((profile) => profile.id === bId);
     if (!selectedA || !selectedB) {
       const primary = pinnedProfileId ? profiles.find((profile) => profile.id === pinnedProfileId) : null;
-      const own = primary ?? profiles.find((profile) => !profile.isImported && profile.origin !== "shared") ?? profiles[0];
-      const other = profiles.find((profile) => profile.id !== own.id && (profile.isImported || profile.origin === "shared"))
-        ?? profiles.find((profile) => profile.id !== own.id)
-        ?? profiles[1];
-      if (!selectedA) setAId(own.id);
-      if (!selectedB) setBId(other.id);
+      const preferredOwn = primary ?? profiles.find((profile) => !profile.isImported && profile.origin !== "shared") ?? profiles[0];
+      const nextA = selectedA
+        ?? (preferredOwn.id !== selectedB?.id ? preferredOwn : undefined)
+        ?? profiles.find((profile) => profile.id !== selectedB?.id && !profile.isImported && profile.origin !== "shared")
+        ?? profiles.find((profile) => profile.id !== selectedB?.id);
+      const nextB = selectedB
+        ?? profiles.find((profile) => profile.id !== nextA?.id && (profile.isImported || profile.origin === "shared"))
+        ?? profiles.find((profile) => profile.id !== nextA?.id);
+      if (!selectedA && nextA) setAId(nextA.id);
+      if (!selectedB && nextB) setBId(nextB.id);
     }
   }, [hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
