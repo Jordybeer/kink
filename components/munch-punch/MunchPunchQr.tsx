@@ -3,6 +3,7 @@
 import { Check, CopySimple, QrCode } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { qrRenderOptions } from "@/lib/qrAppearance";
 
 interface MunchPunchQrProps {
   value: string;
@@ -27,16 +28,7 @@ export default function MunchPunchQr({
     setError(null);
     if (!value) return;
 
-    const css = getComputedStyle(document.documentElement);
-    const dark = css.getPropertyValue("--text").trim() || "#f7f2f5";
-    const light = css.getPropertyValue("--bg").trim() || "#0a0a0f";
-
-    void QRCode.toDataURL(value, {
-      width: 320,
-      margin: 2,
-      errorCorrectionLevel: "M",
-      color: { dark, light },
-    }).then((nextDataUrl) => {
+    void QRCode.toDataURL(value, qrRenderOptions(320, "M")).then((nextDataUrl) => {
       if (!cancelled) setDataUrl(nextDataUrl);
     }).catch(() => {
       if (!cancelled) setError("QR-code kon niet worden opgebouwd.");
@@ -59,23 +51,23 @@ export default function MunchPunchQr({
     <section
       className="rounded-2xl p-4"
       style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-      aria-label={title}
+      aria-labelledby="munch-punch-qr-title"
     >
       <div className="flex items-center gap-2 mb-3">
         <QrCode size={18} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 id="munch-punch-qr-title" className="text-base font-semibold">{title}</h2>
       </div>
 
       <div
-        className="mx-auto flex aspect-square w-full max-w-[320px] items-center justify-center overflow-hidden rounded-2xl"
-        style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+        className="mx-auto flex aspect-square w-full max-w-[320px] items-center justify-center overflow-hidden rounded-2xl p-1"
+        style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}
       >
         {dataUrl ? (
           // QR pixels must remain unoptimised and exact.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={dataUrl} alt={title} className="h-full w-full" />
+          <img src={dataUrl} alt={`${title}. Scan deze code met het andere toestel.`} className="h-full w-full" />
         ) : error ? (
-          <p className="px-5 text-center text-sm" style={{ color: "var(--hard-no)" }}>{error}</p>
+          <p className="px-5 text-center text-sm" style={{ color: "var(--hard-no-text)" }}>{error}</p>
         ) : (
           <span className="ks-spinner" role="status" aria-label="QR-code maken" />
         )}
