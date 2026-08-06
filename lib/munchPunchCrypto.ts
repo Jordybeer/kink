@@ -129,9 +129,15 @@ export function encodeMunchPunchJoin(join: MunchPunchJoinEnvelope): string {
 }
 
 export function decodeMunchPunchJoin(value: string): MunchPunchJoinEnvelope {
-  const raw = value.includes("#") ? value.slice(value.indexOf("#") + 1) : value.trim();
+  const trimmed = value.trim();
+  const raw = trimmed.includes("#") ? trimmed.slice(trimmed.indexOf("#") + 1).trim() : trimmed;
   if (!raw.startsWith(JOIN_PREFIX)) throw new Error("Geen geldige Munch Punch-link");
-  return normalizeJoin(parseJsonBase64(raw.slice(JOIN_PREFIX.length)));
+  try {
+    return normalizeJoin(parseJsonBase64(raw.slice(JOIN_PREFIX.length)));
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("De room")) throw error;
+    throw new Error("Geen geldige Munch Punch-link");
+  }
 }
 
 export function buildMunchPunchJoinUrl(join: MunchPunchJoinEnvelope, origin: string): string {
@@ -159,13 +165,18 @@ export async function encryptMunchPunchResponse(
     replayHashes: [],
   };
   const answers = validateMunchPunchAnswers(room, answersInput);
-  const hostPublicKey = await crypto.subtle.importKey(
-    "raw",
-    base64UrlToBytes(join.k),
-    { name: "ECDH", namedCurve: "P-256" },
-    false,
-    [],
-  );
+  let hostPublicKey: CryptoKey;
+  try {
+    hostPublicKey = await crypto.subtle.importKey(
+      "raw",
+      base64UrlToBytes(join.k),
+      { name: "ECDH", namedCurve: "P-256" },
+      false,
+      [],
+    );
+  } catch {
+    throw new Error("De publieke roomsleutel is beschadigd");
+  }
   const guestPair = await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     true,
@@ -215,20 +226,33 @@ export async function decryptMunchPunchResponse(
   if (roomId !== room.id) throw new Error("Deze response hoort bij een andere room");
   if (now >= room.expiresAt) throw new Error("Deze room is vervallen");
   const replayHash = await hashMunchPunchResponse(normalized);
-  const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    base64UrlToBytes(privateKeyEncoded),
-    { name: "ECDH", namedCurve: "P-256" },
-    false,
-    ["deriveKey", "deriveBits"],
-  );
-  const guestPublicKey = await crypto.subtle.importKey(
-    "raw",
-    base64UrlToBytes(guestPublicEncoded),
-    { name: "ECDH", namedCurve: "P-256" },
-    false,
-    [],
-  );
+
+  let privateKey: CryptoKey;
+  try {
+    privateKey = await crypto.subtle.importKey(
+      "pkcs8",
+      base64UrlToBytes(privateKeyEncoded),
+      { name: "ECDH", namedCurve: "P-256" },
+      false,
+      ["deriveKey", "deriveBits"],
+    );
+  } catch {
+    throw new Error("De roomsleutel van deze sessie is niet meer bruikbaar");
+  }
+
+  let guestPublicKey: CryptoKey;
+  try {
+    guestPublicKey = await crypto.subtle.importKey(
+      "raw",
+      base64UrlToBytes(guestPublicEncoded),
+      { name: "ECDH", namedCurve: "P-256" },
+      false,
+      [],
+    );
+  } catch {
+    throw new Error("De response-QR is beschadigd");
+  }
+
   const key = await crypto.subtle.deriveKey(
     { name: "ECDH", public: guestPublicKey },
     privateKey,
@@ -250,7 +274,13 @@ export async function decryptMunchPunchResponse(
   } catch {
     throw new Error("De response kon niet worden geauthenticeerd");
   }
-  const payload = JSON.parse(TEXT_DECODER.decode(plaintext)) as Partial<MunchPunchPlainResponse>;
+
+  let payload: Partial<MunchPunchPlainResponse>;
+  try {
+    payload = JSON.parse(TEXT_DECODER.decode(plaintext)) as Partial<MunchPunchPlainResponse>;
+  } catch {
+    throw new Error("De response is onvolledig");
+  }
   if (payload.v !== 1 || payload.r !== room.id || payload.e !== room.expiresAt) {
     throw new Error("De response hoort niet bij deze roomconfiguratie");
   }
