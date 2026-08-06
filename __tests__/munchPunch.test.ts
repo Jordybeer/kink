@@ -42,6 +42,15 @@ describe("Munch Punch room privacy model", () => {
     expect(JSON.stringify(draft)).not.toMatch(/profile|participant|verification|owner/i);
   });
 
+  it("rejects malformed room identifiers at creation", () => {
+    expect(() => createMunchPunchRoom({
+      id: "too short",
+      now: NOW,
+      promptIds: ["social"],
+      hostPublicKey: "public-key",
+    })).toThrow("lokale code");
+  });
+
   it("persists only aggregates, a count and exact replay hashes", () => {
     const first = recordMunchPunchResponse(room(), [1, 2], "hash-1", NOW + 10);
     expect(first.status).toBe("accepted");
@@ -53,6 +62,12 @@ describe("Munch Punch room privacy model", () => {
     const replay = recordMunchPunchResponse(first.room, [3, 3], "hash-1", NOW + 11);
     expect(replay.status).toBe("replay");
     expect(replay.room).toEqual(first.room);
+  });
+
+  it("rejects answer packets that do not fit the room", () => {
+    expect(() => recordMunchPunchResponse(room(), [0], "hash-short", NOW + 10)).toThrow("past niet");
+    expect(() => recordMunchPunchResponse(room(), [0, 4], "hash-range", NOW + 10)).toThrow("ongeldige keuze");
+    expect(() => recordMunchPunchResponse(room(), [0, 1.5], "hash-float", NOW + 10)).toThrow("ongeldige keuze");
   });
 
   it("keeps results locked until five accepted responses", () => {
