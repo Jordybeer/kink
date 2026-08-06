@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { hexToRgb } from "@/lib/pdfPalette";
 
 const globalsCss = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 const roleCss = readFileSync(new URL("../app/design-role-tokens.css", import.meta.url), "utf8");
@@ -19,17 +18,26 @@ const TOKENS = {
   ...rootHexTokens(roleCss),
 };
 
+function rgb(hex: string): [number, number, number] {
+  const value = Number.parseInt(hex.slice(1), 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
 function luminance(hex: string): number {
-  const lin = hexToRgb(hex).map((value) => {
+  const [red, green, blue] = rgb(hex).map((value) => {
     const channel = value / 255;
-    return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+    return channel <= 0.03928
+      ? channel / 12.92
+      : Math.pow((channel + 0.055) / 1.055, 2.4);
   });
-  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
 
 function contrast(foreground: string, background: string): number {
-  const [a, b] = [luminance(foreground), luminance(background)];
-  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  const foregroundLuminance = luminance(foreground);
+  const backgroundLuminance = luminance(background);
+  return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+    / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
 }
 
 const SURFACES = ["--bg", "--surface", "--surface2", "--surface3"] as const;
@@ -38,10 +46,15 @@ const STATUS_TOKENS = [
 ] as const;
 
 function assertPair(foreground: string, background: string, minimum: number) {
-  const key = `${foreground} on ${background}`;
-  expect(TOKENS[foreground], `${foreground} missing from fixed palette`).toBeDefined();
-  expect(TOKENS[background], `${background} missing from fixed palette`).toBeDefined();
-  expect(contrast(TOKENS[foreground], TOKENS[background]), key).toBeGreaterThanOrEqual(minimum);
+  const foregroundHex = TOKENS[foreground];
+  const backgroundHex = TOKENS[background];
+  expect(foregroundHex, `${foreground} missing from fixed palette`).toBeDefined();
+  expect(backgroundHex, `${background} missing from fixed palette`).toBeDefined();
+  const ratio = contrast(foregroundHex, backgroundHex);
+  expect(
+    ratio,
+    `${foreground} ${foregroundHex} on ${background} ${backgroundHex}`,
+  ).toBeGreaterThanOrEqual(minimum);
 }
 
 describe("tokenContrast — the fixed dark room holds its ratios", () => {
@@ -67,7 +80,9 @@ describe("tokenContrast — the fixed dark room holds its ratios", () => {
   });
 
   it("muted text still whispers legibly on common surfaces (≥ 4.5:1)", () => {
-    for (const background of ["--bg", "--surface", "--surface2"]) assertPair("--text2", background, 4.5);
+    for (const background of ["--bg", "--surface", "--surface2"]) {
+      assertPair("--text2", background, 4.5);
+    }
   });
 
   it("brand, profile B and destructive text hold AA on the highest surface", () => {
