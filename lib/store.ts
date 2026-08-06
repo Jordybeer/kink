@@ -33,15 +33,17 @@ function stripLegacyThemeState() {
   };
   if (!("theme" in state) && !("setTheme" in state)) return;
 
-  // Kept as a one-way compatibility migration for installations that once
-  // persisted a selectable theme. The product now has one fixed house style.
+  // One-way compatibility migration for installations that once persisted a
+  // selectable theme. KinkSync now has one fixed house style.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { theme: _theme, setTheme: _setTheme, ...withoutTheme } = state;
   coreUseStore.setState(withoutTheme as CoreState, true);
 }
 
-stripLegacyThemeState();
-coreUseStore.persist.onFinishHydration(stripLegacyThemeState);
+if (typeof window !== "undefined") {
+  stripLegacyThemeState();
+  coreUseStore.persist.onFinishHydration(stripLegacyThemeState);
+}
 
 // Tests and explicit resets must restore the guarded actions, not the raw core.
 const guardedInitialState = coreUseStore.getState();
