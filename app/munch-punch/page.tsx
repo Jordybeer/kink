@@ -74,8 +74,9 @@ export default function MunchPunchPage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [keyAvailable, setKeyAvailable] = useState(false);
+  const [confirmDeleteRoomId, setConfirmDeleteRoomId] = useState<string | null>(null);
 
-  const activeRoom = rooms.find((room) => room.status === "draft" || room.status === "open") ?? null;
+  const activeRoom = rooms.find((candidate) => candidate.status === "draft" || candidate.status === "open") ?? null;
   const room = rooms.find((candidate) => candidate.id === selectedRoomId)
     ?? activeRoom
     ?? rooms[0]
@@ -105,6 +106,10 @@ export default function MunchPunchPage() {
     }
     setKeyAvailable(!!loadMunchPunchPrivateKey(room.id));
   }, [room?.id, room?.status]);
+
+  useEffect(() => {
+    setConfirmDeleteRoomId(null);
+  }, [room?.id]);
 
   useEffect(() => {
     if (selectedRoomId && !rooms.some((candidate) => candidate.id === selectedRoomId)) {
@@ -164,6 +169,7 @@ export default function MunchPunchPage() {
     forgetMunchPunchPrivateKey(nextRoom.id);
     deleteRoom(nextRoom.id);
     setScanOpen(false);
+    setConfirmDeleteRoomId(null);
   }
 
   const handleScanResult = useCallback(async (raw: string): Promise<MunchPunchScanFeedback> => {
@@ -188,12 +194,8 @@ export default function MunchPunchPage() {
         const count = useMunchPunchStore.getState().rooms.find((candidate) => candidate.id === current.id)?.responseCount ?? 0;
         return { status: "accepted", message: `Response ${count} is opgeteld. Het individuele antwoord is niet bewaard.` };
       }
-      if (status === "replay") {
-        return { status: "replay", message: "Exact dezelfde response-QR was al verwerkt." };
-      }
-      if (status === "full") {
-        return { status: "rejected", message: "Deze room heeft het maximum van dertig responses bereikt." };
-      }
+      if (status === "replay") return { status: "replay", message: "Exact dezelfde response-QR was al verwerkt." };
+      if (status === "full") return { status: "rejected", message: "Deze room heeft het maximum van dertig responses bereikt." };
       return { status: "rejected", message: "Deze room neemt geen responses meer aan." };
     } catch (error) {
       return {
@@ -216,11 +218,11 @@ export default function MunchPunchPage() {
       <PageShell width="2xl" className="lg:max-w-4xl">
         <section className="mb-6 rounded-[26px] p-5" style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}>
           <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+            <span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}>
               <UsersThree size={23} weight="duotone" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-xs font-semibold" style={{ color: "var(--accent)" }}>Tijdelijke groepsroom</p>
+              <p className="text-xs font-semibold" style={{ color: "var(--accent-text)" }}>Tijdelijke groepsroom</p>
               <h1 className="mt-1 text-3xl font-semibold serif-safe" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>
                 Munch Punch
               </h1>
@@ -274,13 +276,13 @@ export default function MunchPunchPage() {
             <p className="mt-3 text-xs" style={{ color: "var(--text2)" }}>
               De room vervalt na vier uur. Vrije tekst, chat en individuele antwoordweergave bestaan niet in deze versie.
             </p>
-            {createError && <p className="mt-3 text-xs" style={{ color: "var(--hard-no)" }}>{createError}</p>}
+            {createError && <p role="alert" className="mt-3 text-xs" style={{ color: "var(--hard-no-text)" }}>{createError}</p>}
             <button
               type="button"
               onClick={() => void handleCreate()}
               disabled={creating || selectedPrompts.length < 1}
               className="focus-ring mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-40"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
             >
               <LockKey size={18} weight="bold" aria-hidden="true" />
               {creating ? "Tijdelijke sleutel maken…" : "Maak conceptroom"}
@@ -312,14 +314,52 @@ export default function MunchPunchPage() {
               </div>
               <button
                 type="button"
-                onClick={() => handleDelete(room)}
+                onClick={() => setConfirmDeleteRoomId(room.id)}
                 aria-label="Room verwijderen"
+                aria-expanded={confirmDeleteRoomId === room.id}
                 className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl"
-                style={{ color: "var(--hard-no)", border: "1px solid var(--border)" }}
+                style={{ color: "var(--hard-no-text)", border: `1px solid ${confirmDeleteRoomId === room.id ? "var(--hard-no)" : "var(--border)"}` }}
               >
                 <Trash size={18} aria-hidden="true" />
               </button>
             </div>
+
+            {confirmDeleteRoomId === room.id && (
+              <div
+                role="alertdialog"
+                aria-labelledby="delete-room-title"
+                aria-describedby="delete-room-description"
+                className="mt-3 rounded-xl p-3"
+                style={{ background: "color-mix(in srgb, var(--hard-no) 6%, var(--surface2))", border: "1px solid var(--hard-no)" }}
+              >
+                <p id="delete-room-title" className="text-sm font-semibold" style={{ color: "var(--hard-no-text)" }}>
+                  Room definitief verwijderen?
+                </p>
+                <p id="delete-room-description" className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                  {room.responseCount > 0
+                    ? `${room.responseCount} responses, alle groepsresultaten en de tijdelijke privésleutel verdwijnen permanent.`
+                    : "Het concept en de tijdelijke privésleutel verdwijnen permanent."}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteRoomId(null)}
+                    className="focus-ring min-h-11 rounded-xl text-sm font-semibold"
+                    style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                  >
+                    Annuleer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(room)}
+                    className="focus-ring min-h-11 rounded-xl text-sm font-bold"
+                    style={{ background: "var(--hard-no)", color: "#09080E" }}
+                  >
+                    Verwijder definitief
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               <div className="rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
@@ -335,7 +375,7 @@ export default function MunchPunchPage() {
             {room.status === "draft" && (
               <div className="mt-4">
                 {!keyAvailable && (
-                  <p className="mb-3 flex items-start gap-2 rounded-xl p-3 text-xs" style={{ color: "var(--hard-no)", background: "var(--surface2)", border: "1px solid var(--hard-no)" }}>
+                  <p className="mb-3 flex items-start gap-2 rounded-xl p-3 text-xs" style={{ color: "var(--hard-no-text)", background: "var(--surface2)", border: "1px solid var(--hard-no)" }}>
                     <WarningCircle size={17} className="mt-0.5 flex-none" aria-hidden="true" />
                     De tijdelijke privésleutel ontbreekt. Dit concept kan niet veilig worden geopend.
                   </p>
@@ -345,7 +385,7 @@ export default function MunchPunchPage() {
                   onClick={() => handleOpen(room)}
                   disabled={!keyAvailable}
                   className="focus-ring flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-40"
-                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                  style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
                 >
                   <Play size={18} weight="fill" aria-hidden="true" />
                   Open room en toon join-QR
@@ -356,7 +396,7 @@ export default function MunchPunchPage() {
             {room.status === "open" && (
               <div className="mt-4 space-y-3">
                 {!keyAvailable && (
-                  <p className="flex items-start gap-2 rounded-xl p-3 text-xs" style={{ color: "var(--hard-no)", background: "var(--surface2)", border: "1px solid var(--hard-no)" }}>
+                  <p className="flex items-start gap-2 rounded-xl p-3 text-xs" style={{ color: "var(--hard-no-text)", background: "var(--surface2)", border: "1px solid var(--hard-no)" }}>
                     <WarningCircle size={17} className="mt-0.5 flex-none" aria-hidden="true" />
                     De browsersessie met de tijdelijke privésleutel is weg. Nieuwe responses kunnen niet worden ontsleuteld; sluit deze room.
                   </p>
@@ -374,7 +414,7 @@ export default function MunchPunchPage() {
                   onClick={() => setScanOpen(true)}
                   disabled={!keyAvailable}
                   className="focus-ring flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-40"
-                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                  style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
                 >
                   <Camera size={19} weight="bold" aria-hidden="true" />
                   Open submission station
@@ -383,7 +423,7 @@ export default function MunchPunchPage() {
                   type="button"
                   onClick={() => handleClose(room)}
                   className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
-                  style={{ color: "var(--hard-no)", border: "1px solid var(--border)" }}
+                  style={{ color: "var(--hard-no-text)", border: "1px solid var(--border)" }}
                 >
                   <Stop size={17} weight="fill" aria-hidden="true" />
                   Sluit room definitief
