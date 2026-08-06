@@ -2,7 +2,6 @@
 import { useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Cormorant_Garamond } from "next/font/google";
 import { ArrowUp, ArrowsLeftRight, CaretDown, FileText, FilmSlate, Lock } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
@@ -22,13 +21,8 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import DiscussedToggle from "@/components/DiscussedToggle";
 import CompareKinkRow from "@/components/CompareKinkRow";
 
-const COLOUR_A = "var(--accent)";
-const COLOUR_B = "var(--accent2)";
-const scoreTypeface = Cormorant_Garamond({
-  subsets: ["latin"],
-  style: ["italic"],
-  weight: ["400"],
-});
+const COLOUR_A = "var(--identity-a)";
+const COLOUR_B = "var(--identity-b)";
 
 function compatibilityVerdict(score: number | null): string | null {
   if (score === null) return null;
@@ -39,13 +33,7 @@ function compatibilityVerdict(score: number | null): string | null {
   return "Grote verschillen";
 }
 
-function ScoreMasthead({
-  score,
-  match,
-  discuss,
-  soft,
-  limit,
-}: {
+function ScoreMasthead({ score, match, discuss, soft, limit }: {
   score: number | null;
   match: number;
   discuss: number;
@@ -54,27 +42,22 @@ function ScoreMasthead({
 }) {
   const total = match + discuss + soft + limit;
   const verdict = compatibilityVerdict(score);
-  const verdictColor =
-    score === null
-      ? "var(--text2)"
-      : score >= 75
-        ? "var(--yes)"
-        : score >= 55
-          ? "var(--maybe)"
-          : score < 40
-            ? "var(--conflict)"
-            : "var(--text)";
+  const verdictColor = score === null
+    ? "var(--text2)"
+    : score >= 75
+      ? "var(--yes)"
+      : score >= 55
+        ? "var(--maybe)"
+        : score < 40
+          ? "var(--conflict)"
+          : "var(--text)";
 
   return (
     <div className="text-center mb-4 mt-1">
       <div
-        className={scoreTypeface.className}
-        aria-label={
-          score === null
-            ? "Nog geen gezamenlijk beoordeelde kinks"
-            : `${score} procent kinkcompatibiliteit`
-        }
+        aria-label={score === null ? "Nog geen gezamenlijk beoordeelde kinks" : `${score} procent kinkcompatibiliteit`}
         style={{
+          fontFamily: "var(--font-display, Georgia, serif)",
           fontStyle: "italic",
           fontWeight: 400,
           fontSize: "clamp(56px, 16vw, 80px)",
@@ -104,72 +87,33 @@ function ScoreMasthead({
           </>
         )}
       </div>
-      <p
-        className="text-xs uppercase tracking-[0.22em] mt-1"
-        style={{ color: "var(--text2)" }}
-      >
-        {score === null ? "beoordeel allebei minstens één kink" : "compatibiliteit"}
+      <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
+        {score === null ? "Beoordeel allebei minstens één kink" : "Compatibiliteit"}
       </p>
-      {verdict && (
-        <p className="text-sm font-semibold mt-2" style={{ color: verdictColor }}>
-          {verdict}
-        </p>
-      )}
+      {verdict && <p className="text-sm font-semibold mt-2" style={{ color: verdictColor }}>{verdict}</p>}
       {total > 0 && (
-        <div
-          className="flex justify-center flex-wrap gap-x-3 gap-y-1 text-xs mt-2"
-          style={{ color: "var(--text2)" }}
-        >
-          <span>
-            <span className="font-semibold tabular-nums" style={{ color: "var(--yes)" }}>{match}</span>{" "}
-            match
-          </span>
-          {discuss > 0 && (
-            <span>
-              <span className="font-semibold tabular-nums" style={{ color: "var(--conflict)" }}>{discuss}</span>{" "}
-              te bespreken
-            </span>
-          )}
-          {soft > 0 && (
-            <span>
-              <span className="font-semibold tabular-nums" style={{ color: "var(--maybe)" }}>{soft}</span>{" "}
-              zacht
-            </span>
-          )}
-          {limit > 0 && (
-            <span>
-              <span className="font-semibold tabular-nums" style={{ color: "var(--hard-no)" }}>{limit}</span>{" "}
-              {limit === 1 ? "grens" : "grenzen"}
-            </span>
-          )}
+        <div className="flex justify-center flex-wrap gap-x-3 gap-y-1 text-xs mt-2" style={{ color: "var(--text2)" }}>
+          <span><span className="font-semibold tabular-nums" style={{ color: "var(--yes)" }}>{match}</span> match</span>
+          {discuss > 0 && <span><span className="font-semibold tabular-nums" style={{ color: "var(--conflict)" }}>{discuss}</span> te bespreken</span>}
+          {soft > 0 && <span><span className="font-semibold tabular-nums" style={{ color: "var(--maybe)" }}>{soft}</span> zacht</span>}
+          {limit > 0 && <span><span className="font-semibold tabular-nums" style={{ color: "var(--hard-no-text)" }}>{limit}</span> {limit === 1 ? "grens" : "grenzen"}</span>}
         </div>
       )}
     </div>
   );
 }
 
-function AlignmentBar({ match, discuss, soft, limit, onFilter }: {
+function AlignmentBar({ match, discuss, soft, limit }: {
   match: number; discuss: number; soft: number; limit: number;
-  onFilter?: (f: "match" | "conflict" | "hardno") => void;
 }) {
   const total = match + discuss + soft + limit;
   if (total === 0) return null;
-  const mPct = (match / total) * 100;
-  const dPct = (discuss / total) * 100;
-  const sPct = (soft / total) * 100;
-  const lPct = (limit / total) * 100;
-  const seg = (pct: number, color: string, filter: "match" | "conflict" | "hardno", label: string) =>
-    pct > 0 ? (
-      <div
-        key={filter}
-        role={onFilter ? "button" : undefined}
-        tabIndex={onFilter ? 0 : undefined}
-        aria-label={onFilter ? `Filter op ${label}` : undefined}
-        onClick={onFilter ? () => onFilter(filter) : undefined}
-        onKeyDown={onFilter ? (e) => { if (e.key === "Enter" || e.key === " ") onFilter(filter); } : undefined}
-        style={{ width: `${pct}%`, background: color, transition: "width 500ms ease-out", cursor: onFilter ? "pointer" : undefined }}
-      />
-    ) : null;
+  const segments = [
+    { key: "match", count: match, color: "var(--yes)" },
+    { key: "discuss", count: discuss, color: "var(--conflict)" },
+    { key: "soft", count: soft, color: "var(--maybe)" },
+    { key: "limit", count: limit, color: "var(--hard-no)" },
+  ];
   return (
     <div
       className="flex rounded-full overflow-hidden mb-4"
@@ -177,57 +121,47 @@ function AlignmentBar({ match, discuss, soft, limit, onFilter }: {
       role="img"
       aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${soft} zacht, ${limit} grenzen`}
     >
-      {seg(mPct, "var(--yes)", "match", "match")}
-      {seg(dPct, "var(--conflict)", "conflict", "bespreken")}
-      {seg(sPct, "var(--maybe)", "conflict", "zacht")}
-      {seg(lPct, "var(--hard-no)", "hardno", "grenzen")}
+      {segments.map((segment) => segment.count > 0 ? (
+        <span
+          key={segment.key}
+          aria-hidden="true"
+          style={{ width: `${(segment.count / total) * 100}%`, background: segment.color, transition: "width 500ms ease-out" }}
+        />
+      ) : null)}
     </div>
   );
 }
 
-function ProfileChip({
-  profile,
-  colour,
-  slot,
-  isPartner,
-  onClick,
-}: {
+function ProfileChip({ profile, colour, slot, isPartner, onClick }: {
   profile: Profile | undefined;
   colour: string;
   slot: "A" | "B";
   isPartner?: boolean;
   onClick: () => void;
 }) {
+  const labelColour = slot === "B" ? "var(--accent2-text)" : "var(--accent-text)";
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={profile ? `Kies profiel ${slot}: ${profile.name}` : `Kies profiel ${slot}`}
-      className="focus-ring flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-colors text-left min-w-0"
-      style={
-        profile
-          ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 10%, transparent)` }
-          : { borderColor: "var(--border)", background: "var(--surface)" }
-      }
+      className="focus-ring min-h-11 flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-colors text-left min-w-0"
+      style={profile
+        ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 10%, transparent)` }
+        : { borderColor: "var(--border)", background: "var(--surface)" }}
     >
-      <div
-        className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold shrink-0"
-        style={{ background: profile ? colour : "var(--surface3)" }}
-      >
+      <div className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold shrink-0" style={{ background: profile ? colour : "var(--surface3)" }}>
         {profile?.avatarDataUrl ? (
           <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <span style={{ color: profile ? "var(--on-accent)" : "var(--text2)" }}>
-            {profile ? profile.name[0].toUpperCase() : slot}
-          </span>
+          <span style={{ color: profile ? "var(--on-accent)" : "var(--text2)" }}>{profile ? profile.name[0].toUpperCase() : slot}</span>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold truncate leading-tight">
-          {profile ? profile.name : "Kies profiel…"}
-        </p>
+        <p className="text-xs font-semibold truncate leading-tight">{profile ? profile.name : "Kies profiel…"}</p>
         {profile && (
-          <p className="text-xs truncate leading-tight" style={{ color: colour }}>
-            {isPartner && <Lock size={9} className="inline mr-0.5" aria-hidden />}
+          <p className="text-xs truncate leading-tight" style={{ color: labelColour }}>
+            {isPartner && <Lock size={9} className="inline mr-0.5" aria-hidden="true" />}
             Profiel {slot}
           </p>
         )}
@@ -237,16 +171,7 @@ function ProfileChip({
   );
 }
 
-function ProfileSelectorSheet({
-  open,
-  onClose,
-  slot,
-  profiles,
-  selectedId,
-  otherSelectedId,
-  pinnedProfileId,
-  onSelect,
-}: {
+function ProfileSelectorSheet({ open, onClose, slot, profiles, selectedId, otherSelectedId, pinnedProfileId, onSelect }: {
   open: boolean;
   onClose: () => void;
   slot: "A" | "B";
@@ -257,54 +182,40 @@ function ProfileSelectorSheet({
   onSelect: (id: string) => void;
 }) {
   const colour = slot === "A" ? COLOUR_A : COLOUR_B;
-  const own = profiles.filter((p) => !p.isImported && p.origin !== "shared");
-  const partners = profiles.filter((p) => p.isImported || p.origin === "shared");
+  const textColour = slot === "A" ? "var(--accent-text)" : "var(--accent2-text)";
+  const own = profiles.filter((profile) => !profile.isImported && profile.origin !== "shared");
+  const partners = profiles.filter((profile) => profile.isImported || profile.origin === "shared");
 
-  const renderRow = (p: Profile) => {
-    const isSelected = p.id === selectedId;
-    const isOther = p.id === otherSelectedId;
-    const isPrimary = p.id === pinnedProfileId;
-    const isPartner = p.isImported || p.origin === "shared";
+  const renderRow = (profile: Profile) => {
+    const isSelected = profile.id === selectedId;
+    const isOther = profile.id === otherSelectedId;
+    const isPrimary = profile.id === pinnedProfileId;
+    const isPartner = profile.isImported || profile.origin === "shared";
     return (
       <button
-        key={p.id}
-        onClick={() => { if (!isOther) { onSelect(p.id); onClose(); } }}
+        key={profile.id}
+        type="button"
+        onClick={() => { if (!isOther) { onSelect(profile.id); onClose(); } }}
         disabled={isOther}
         aria-pressed={isSelected}
-        className="focus-ring w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left"
-        style={
-          isSelected
-            ? { background: `color-mix(in srgb, ${colour} 12%, transparent)`, border: `1px solid ${colour}` }
-            : isOther
+        className="focus-ring min-h-12 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left"
+        style={isSelected
+          ? { background: `color-mix(in srgb, ${colour} 12%, transparent)`, border: `1px solid ${colour}` }
+          : isOther
             ? { background: "transparent", border: "1px solid transparent", opacity: 0.35, cursor: "not-allowed" }
-            : { background: "transparent", border: "1px solid transparent" }
-        }
+            : { background: "transparent", border: "1px solid transparent" }}
       >
-        <div
-          className="w-8 h-8 rounded-full flex-none overflow-hidden flex items-center justify-center text-sm font-bold shrink-0"
-          style={{ background: isSelected ? colour : "var(--surface3)" }}
-        >
-          {p.avatarDataUrl ? (
-            <img src={p.avatarDataUrl} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span style={{ color: isSelected ? "var(--on-accent)" : "var(--text2)" }}>{p.name[0].toUpperCase()}</span>
-          )}
+        <div className="w-8 h-8 rounded-full flex-none overflow-hidden flex items-center justify-center text-sm font-bold shrink-0" style={{ background: isSelected ? colour : "var(--surface3)" }}>
+          {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" /> : <span style={{ color: isSelected ? "var(--on-accent)" : "var(--text2)" }}>{profile.name[0].toUpperCase()}</span>}
         </div>
         <div className="flex-1 min-w-0 text-left">
-          <p className="text-sm font-medium truncate">{p.name}</p>
+          <p className="text-sm font-medium truncate">{profile.name}</p>
           <p className="text-xs truncate" style={{ color: "var(--text2)" }}>
-            {p.role}
-            {isPrimary ? " · Primair" : ""}
-            {isPartner ? " · Partner" : ""}
-            {isOther ? ` · Al geselecteerd als ${slot === "A" ? "B" : "A"}` : ""}
+            {profile.role}{isPrimary ? " · Primair" : ""}{isPartner ? " · Partner" : ""}{isOther ? ` · Al geselecteerd als ${slot === "A" ? "B" : "A"}` : ""}
           </p>
         </div>
-        {isSelected && (
-          <span className="text-xs font-bold shrink-0" style={{ color: colour }}>{slot}</span>
-        )}
-        {isPartner && !isSelected && !isOther && (
-          <Lock aria-hidden="true" size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
-        )}
+        {isSelected && <span className="text-xs font-bold shrink-0" style={{ color: textColour }}>{slot}</span>}
+        {isPartner && !isSelected && !isOther && <Lock aria-hidden="true" size={12} className="shrink-0" style={{ color: "var(--text2)" }} />}
       </button>
     );
   };
@@ -312,57 +223,33 @@ function ProfileSelectorSheet({
   return (
     <Sheet open={open} onClose={onClose} aria-label={`Kies profiel ${slot}`}>
       <SheetContent>
-        <p
-          className="text-sm mb-3"
-          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}
-        >
+        <h2 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
           Profiel {slot}
-        </p>
+        </h2>
         {own.length > 0 && (
-          <>
-            <p className="text-xs uppercase tracking-widest mb-1 px-1" style={{ color: "var(--text2)" }}>
-              Jouw profielen
-            </p>
+          <section aria-labelledby={`own-profiles-${slot}`}>
+            <h3 id={`own-profiles-${slot}`} className="text-xs font-semibold mb-1 px-1" style={{ color: "var(--text2)" }}>Jouw profielen</h3>
             {own.map(renderRow)}
-          </>
+          </section>
         )}
         {partners.length > 0 && (
-          <>
-            <p className="text-xs uppercase tracking-widest mt-3 mb-1 px-1" style={{ color: "var(--text2)" }}>
-              Partners
-            </p>
+          <section className="mt-3" aria-labelledby={`partner-profiles-${slot}`}>
+            <h3 id={`partner-profiles-${slot}`} className="text-xs font-semibold mb-1 px-1" style={{ color: "var(--text2)" }}>Partners</h3>
             {partners.map(renderRow)}
-          </>
+          </section>
         )}
-        {profiles.length === 0 && (
-          <p className="text-sm py-4 text-center" style={{ color: "var(--text2)" }}>
-            Geen profielen gevonden.
-          </p>
-        )}
+        {profiles.length === 0 && <p className="text-sm py-4 text-center" style={{ color: "var(--text2)" }}>Geen profielen gevonden.</p>}
       </SheetContent>
     </Sheet>
   );
 }
 
-function catAbbrev(cat: string): string {
-  const first = cat.split(/\s+/)[0];
-  return first.length > 8 ? first.slice(0, 8) : first;
-}
-
-function categoryPillStyle(rate: number | null): { color: string } {
-  if (rate === null) return { color: "var(--text2)" };
-  if (rate === 0)    return { color: "var(--hard-no)" };
-  if (rate < 0.4)   return { color: "var(--conflict)" };
-  if (rate < 0.7)   return { color: "var(--maybe)" };
-  return { color: "var(--yes)" };
-}
-
 function ComparePage() {
   const searchParams = useSearchParams();
   const { profiles, setEntry, pinnedProfileId } = useStore();
-  const _hasHydrated = useHasHydrated();
+  const hasHydrated = useHasHydrated();
 
-  const cleanParam = (v: string | null) => (v && v !== "undefined" && v !== "null" ? v : "");
+  const cleanParam = (value: string | null) => (value && value !== "undefined" && value !== "null" ? value : "");
   const [aId, setAId] = useState(cleanParam(searchParams.get("a")));
   const [bId, setBId] = useState(cleanParam(searchParams.get("b")));
   const [filterMode, setFilterMode] = useState<"all" | "match" | "conflict" | "hardno">("all");
@@ -370,12 +257,12 @@ function ComparePage() {
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
 
-  const profileA = profiles.find((p) => p.id === aId);
-  const profileB = profiles.find((p) => p.id === bId);
+  const profileA = profiles.find((profile) => profile.id === aId);
+  const profileB = profiles.find((profile) => profile.id === bId);
 
   const toggleDiscussed = useCallback((id: string) => {
-    setDiscussed((prev) => {
-      const next = new Set(prev);
+    setDiscussed((previous) => {
+      const next = new Set(previous);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
@@ -384,124 +271,96 @@ function ComparePage() {
 
   const matchResult = profileA && profileB
     ? profileMatchScore(profileA, profileB)
-    : {
-        overall: 0,
-        counts: {} as Record<MatchKind, number>,
-        comparedTotal: 0,
-        unscoredLimits: 0,
-      };
+    : { overall: 0, counts: {} as Record<MatchKind, number>, comparedTotal: 0, unscoredLimits: 0 };
   const { counts } = matchResult;
-  const matchCount     = (counts.perfect ?? 0) + (counts.strong ?? 0);
+  const matchCount = (counts.perfect ?? 0) + (counts.strong ?? 0);
   const softLimitCount = counts.soft ?? 0;
   const hardLimitCount = counts.limit ?? 0;
-  const discussCount   = (counts.discuss ?? 0) + (counts.conflict ?? 0);
+  const discussCount = (counts.discuss ?? 0) + (counts.conflict ?? 0);
 
   useEffect(() => {
-    if (!_hasHydrated || profiles.length < 2) return;
-    const pa = profiles.find((p) => p.id === aId);
-    const pb = profiles.find((p) => p.id === bId);
-    if (!pa && !pb) {
-      const primary = pinnedProfileId ? profiles.find((p) => p.id === pinnedProfileId) : null;
-      const own = primary ?? profiles.find((p) => !p.isImported && p.origin !== "shared") ?? profiles[0];
-      const other =
-        profiles.find((p) => p.id !== own.id && (p.isImported || p.origin === "shared")) ??
-        profiles.find((p) => p.id !== own.id) ??
-        profiles[1];
-      setAId(own.id);
-      setBId(other.id);
-    } else if (!pa || !pb) {
-      const primary = pinnedProfileId ? profiles.find((p) => p.id === pinnedProfileId) : null;
-      const own = primary ?? profiles.find((p) => !p.isImported && p.origin !== "shared") ?? profiles[0];
-      const other =
-        profiles.find((p) => p.id !== own.id && (p.isImported || p.origin === "shared")) ??
-        profiles.find((p) => p.id !== own.id) ??
-        profiles[1];
-      if (!pa) setAId(own.id);
-      if (!pb) setBId(other.id);
+    if (!hasHydrated || profiles.length < 2) return;
+    const selectedA = profiles.find((profile) => profile.id === aId);
+    const selectedB = profiles.find((profile) => profile.id === bId);
+    if (!selectedA || !selectedB) {
+      const primary = pinnedProfileId ? profiles.find((profile) => profile.id === pinnedProfileId) : null;
+      const own = primary ?? profiles.find((profile) => !profile.isImported && profile.origin !== "shared") ?? profiles[0];
+      const other = profiles.find((profile) => profile.id !== own.id && (profile.isImported || profile.origin === "shared"))
+        ?? profiles.find((profile) => profile.id !== own.id)
+        ?? profiles[1];
+      if (!selectedA) setAId(own.id);
+      if (!selectedB) setBId(other.id);
     }
-  }, [_hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!_hasHydrated) return <PageShell loading width="5xl" />;
+  if (!hasHydrated) return <PageShell loading width="5xl" />;
 
   function getEntry(profile: typeof profileA, kinkId: string): KinkEntry {
     return profile?.entries[kinkId] ?? { status: null, comment: "" };
   }
 
-  function passesFilter(eA: KinkEntry, eB: KinkEntry): boolean {
-    const hasA = eA.status;
-    const hasB = eB.status;
-    if (!hasA && !hasB) return false;
+  function passesFilter(entryA: KinkEntry, entryB: KinkEntry): boolean {
+    if (!entryA.status && !entryB.status) return false;
     if (filterMode === "all") return true;
-    if (filterMode === "hardno") return isHardLimit(eA, eB);
-    if (filterMode === "conflict") return isConflict(eA, eB);
-    if (filterMode === "match") return isKinkMatch(eA, eB);
+    if (filterMode === "hardno") return isHardLimit(entryA, entryB);
+    if (filterMode === "conflict") return isConflict(entryA, entryB);
+    if (filterMode === "match") return isKinkMatch(entryA, entryB);
     return true;
   }
 
   const categoryScores = profileA && profileB
-    ? CATEGORIES.map((cat) => {
-        const kinks = getKinksByCategory(cat);
+    ? CATEGORIES.map((category) => {
+        const kinks = getKinksByCategory(category);
         let scoreSum = 0;
         let compared = 0;
-        for (const k of kinks) {
-          const eA = profileA.entries[k.id] ?? { status: null, comment: "" };
-          const eB = profileB.entries[k.id] ?? { status: null, comment: "" };
-          if (!hasRating(eA) || !hasRating(eB)) continue;
-          scoreSum += kinkMatchScore(eA, eB).score;
-          compared++;
+        let rated = 0;
+        for (const kink of kinks) {
+          const entryA = profileA.entries[kink.id] ?? { status: null, comment: "" };
+          const entryB = profileB.entries[kink.id] ?? { status: null, comment: "" };
+          if (hasRating(entryA) || hasRating(entryB)) rated += 1;
+          if (!hasRating(entryA) || !hasRating(entryB)) continue;
+          scoreSum += kinkMatchScore(entryA, entryB).score;
+          compared += 1;
         }
         return {
-          cat,
+          category,
+          rated,
+          compared,
           rate: compared > 0 ? scoreSum / (compared * MAX_KINK_MATCH_SCORE) : null,
         };
       })
     : [];
 
-  function scrollToCategory(cat: string) {
-    const el = document.getElementById(`cat-${cat}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  function scrollToCategory(category: string) {
+    document.getElementById(`cat-${category}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const samePairError = aId && bId && aId === bId;
+  const samePairError = !!aId && !!bId && aId === bId;
   const isPartnerA = profileA?.isImported || profileA?.origin === "shared";
   const isPartnerB = profileB?.isImported || profileB?.origin === "shared";
   const hasPair = !!profileA && !!profileB && !samePairError;
 
   return (
     <PageShell width="5xl">
+      <h1 className="sr-only">Profielen vergelijken</h1>
       <div
         className="sticky z-10 pb-3 mb-3"
         style={{ top: "var(--nav-h)", background: "var(--bg)", borderBottom: "1px solid var(--border)" }}
       >
         <div className="flex items-center gap-2 pt-3">
-          <ProfileChip
-            profile={profileA}
-            colour={COLOUR_A}
-            slot="A"
-            isPartner={!!isPartnerA}
-            onClick={() => setSelectorOpen("a")}
-          />
+          <ProfileChip profile={profileA} colour={COLOUR_A} slot="A" isPartner={!!isPartnerA} onClick={() => setSelectorOpen("a")} />
           <button
-            onClick={() => { const tmp = aId; setAId(bId); setBId(tmp); }}
-            className="focus-ring flex-none w-9 h-9 rounded-xl border flex items-center justify-center transition-colors"
+            type="button"
+            onClick={() => { const previousA = aId; setAId(bId); setBId(previousA); }}
+            className="focus-ring flex-none w-11 h-11 rounded-xl border flex items-center justify-center transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             aria-label="Wissel profielen"
           >
-            <ArrowsLeftRight aria-hidden="true" size={15} />
+            <ArrowsLeftRight aria-hidden="true" size={17} />
           </button>
-          <ProfileChip
-            profile={profileB}
-            colour={COLOUR_B}
-            slot="B"
-            isPartner={!!isPartnerB}
-            onClick={() => setSelectorOpen("b")}
-          />
+          <ProfileChip profile={profileB} colour={COLOUR_B} slot="B" isPartner={!!isPartnerB} onClick={() => setSelectorOpen("b")} />
         </div>
-        {samePairError && (
-          <p className="text-sm mt-2 px-1" style={{ color: "var(--conflict)" }}>
-            Kies twee verschillende profielen om te vergelijken.
-          </p>
-        )}
+        {samePairError && <p role="alert" className="text-sm mt-2 px-1" style={{ color: "var(--conflict)" }}>Kies twee verschillende profielen om te vergelijken.</p>}
       </div>
 
       {hasPair && (
@@ -513,51 +372,46 @@ function ComparePage() {
             soft={softLimitCount}
             limit={hardLimitCount}
           />
-          <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} onFilter={setFilterMode} />
+          <AlignmentBar match={matchCount} discuss={discussCount} soft={softLimitCount} limit={hardLimitCount} />
 
-          <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 mb-4">
-            {categoryScores
-              .filter((c) => c.rate !== null)
-              .map(({ cat, rate }) => (
-                <button
-                  key={cat}
-                  onClick={() => scrollToCategory(cat)}
-                  className="focus-ring flex-none px-1.5 py-0.5 text-xs uppercase tracking-widest whitespace-nowrap transition-opacity hover:opacity-70"
-                  style={categoryPillStyle(rate)}
-                >
-                  {catAbbrev(cat)}
-                </button>
-              ))}
-          </div>
-
-          <div className="flex items-stretch mb-4 border-b" style={{ borderColor: "var(--border)" }}>
-            {(["all", "match", "conflict", "hardno"] as const).map((f) => {
-              const labels: Record<typeof f, string> = {
-                all: "Alles",
-                match: "Match",
-                conflict: "Bespreken",
-                hardno: "Grenzen",
-              };
-              const badge = f === "match" ? matchCount : f === "conflict" ? discussCount : f === "hardno" ? hardLimitCount : null;
-              const badgeColour = f === "match" ? "var(--yes)" : f === "hardno" ? "var(--hard-no)" : "var(--conflict)";
-              const active = filterMode === f;
+          <nav className="no-scrollbar flex gap-2 overflow-x-auto pb-2 mb-3" aria-label="Spring naar categorie">
+            {categoryScores.filter(({ rated }) => rated > 0).map(({ category, rate, compared }) => {
+              const score = rate === null ? null : Math.round(rate * 100);
               return (
                 <button
-                  key={f}
-                  onClick={() => setFilterMode(f)}
-                  className="focus-ring flex items-center gap-1 px-3 py-2 text-xs font-medium transition-colors"
-                  style={{
-                    color: active ? "var(--text)" : "var(--text2)",
-                    borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
-                    marginBottom: "-1px",
-                  }}
+                  key={category}
+                  type="button"
+                  onClick={() => scrollToCategory(category)}
+                  aria-label={score === null
+                    ? `${category}, nog geen gezamenlijke score`
+                    : `${category}, ${score} procent compatibiliteit over ${compared} gezamenlijke beoordelingen`}
+                  className="focus-ring flex-none min-h-11 rounded-full px-3 text-xs whitespace-nowrap"
+                  style={{ color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)" }}
                 >
-                  {labels[f]}
+                  {category}{score === null ? "" : ` · ${score}%`}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-stretch mb-4 border-b overflow-x-auto" style={{ borderColor: "var(--border)" }} role="group" aria-label="Vergelijkingsfilter">
+            {(["all", "match", "conflict", "hardno"] as const).map((filter) => {
+              const labels = { all: "Alles", match: "Match", conflict: "Bespreken", hardno: "Grenzen" } as const;
+              const badge = filter === "match" ? matchCount : filter === "conflict" ? discussCount : filter === "hardno" ? hardLimitCount : null;
+              const badgeColour = filter === "match" ? "var(--yes)" : filter === "hardno" ? "var(--hard-no-text)" : "var(--conflict)";
+              const active = filterMode === filter;
+              return (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setFilterMode(filter)}
+                  aria-pressed={active}
+                  className="focus-ring min-h-11 flex flex-none items-center gap-1 px-3 text-xs font-medium transition-colors"
+                  style={{ color: active ? "var(--text)" : "var(--text2)", borderBottom: active ? "2px solid var(--focus)" : "2px solid transparent", marginBottom: "-1px" }}
+                >
+                  {labels[filter]}
                   {badge !== null && badge > 0 && (
-                    <span
-                      className="text-[11px] px-1 py-px rounded-full font-semibold tabular-nums"
-                      style={{ background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`, color: badgeColour }}
-                    >
+                    <span className="text-[11px] px-1 py-px rounded-full font-semibold tabular-nums" style={{ background: `color-mix(in srgb, ${badgeColour} 20%, transparent)`, color: badgeColour }}>
                       {badge}
                     </span>
                   )}
@@ -565,45 +419,44 @@ function ComparePage() {
               );
             })}
           </div>
-          <DiscussedToggle
-            count={discussed.size}
-            hidden={hideDiscussed}
-            onToggle={() => setHideDiscussed((v) => !v)}
-          />
+          <DiscussedToggle count={discussed.size} hidden={hideDiscussed} onToggle={() => setHideDiscussed((value) => !value)} />
         </>
       )}
 
       <div>
         {!hasPair ? (
           <p className="text-center py-12 text-sm" style={{ color: "var(--text2)" }}>
-            {samePairError
-              ? "Kies twee verschillende profielen."
-              : "Kies twee profielen — dan kijken we wat jullie gemeen hebben."}
+            {samePairError ? "Kies twee verschillende profielen." : "Kies twee profielen, dan kijken we wat jullie gemeen hebben."}
           </p>
         ) : (
           <>
-            {CATEGORIES.map((cat) => {
-              const kinks = getKinksByCategory(cat).filter((k) => {
-                if (hideDiscussed && discussed.has(k.id)) return false;
-                return passesFilter(getEntry(profileA, k.id), getEntry(profileB, k.id));
+            {CATEGORIES.map((category) => {
+              const kinks = getKinksByCategory(category).filter((kink) => {
+                if (hideDiscussed && discussed.has(kink.id)) return false;
+                return passesFilter(getEntry(profileA, kink.id), getEntry(profileB, kink.id));
               });
               if (!kinks.length) return null;
               return (
-                <section key={cat} id={`cat-${cat}`} className="mb-6 scroll-mt-32">
-                  <h2 className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
-                    {cat}
+                <section
+                  key={category}
+                  id={`cat-${category}`}
+                  className="mb-6"
+                  style={{ scrollMarginTop: "calc(var(--nav-h) + var(--compare-subnav-h) + 1rem)" }}
+                >
+                  <h2 className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>
+                    {category}
                   </h2>
                   <div className="flex flex-col gap-2">
                     {kinks.map((kink) => {
-                      const eA = getEntry(profileA, kink.id);
-                      const eB = getEntry(profileB, kink.id);
+                      const entryA = getEntry(profileA, kink.id);
+                      const entryB = getEntry(profileB, kink.id);
                       return (
                         <CompareKinkRow
                           key={kink.id}
                           rowKey={kink.id}
                           name={kink.name}
-                          entryA={eA}
-                          entryB={eB}
+                          entryA={entryA}
+                          entryB={entryB}
                           profileA={profileA!}
                           profileB={profileB!}
                           colourA={COLOUR_A}
@@ -622,39 +475,34 @@ function ComparePage() {
 
             {(() => {
               const allCustom = [
-                ...(profileA!.customKinks ?? []).map((k) => ({ ...k, side: "a" as const })),
-                ...(profileB!.customKinks ?? []).map((k) => ({ ...k, side: "b" as const })),
+                ...(profileA!.customKinks ?? []).map((kink) => ({ ...kink, side: "a" as const })),
+                ...(profileB!.customKinks ?? []).map((kink) => ({ ...kink, side: "b" as const })),
               ];
               const merged = new Map<string, { name: string; aId?: string; bId?: string }>();
-              for (const ck of allCustom) {
-                const key = ck.name.trim().toLowerCase();
-                const existing = merged.get(key) ?? { name: ck.name };
-                merged.set(key, ck.side === "a" ? { ...existing, aId: ck.id } : { ...existing, bId: ck.id });
+              for (const custom of allCustom) {
+                const key = custom.name.trim().toLowerCase();
+                const existing = merged.get(key) ?? { name: custom.name };
+                merged.set(key, custom.side === "a" ? { ...existing, aId: custom.id } : { ...existing, bId: custom.id });
               }
               if (!merged.size) return null;
               return (
-                <section className="mb-6">
-                  <h2 className="text-xs font-semibold mb-2 px-1 uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+                <section className="mb-6" aria-labelledby="compare-more-heading">
+                  <h2 id="compare-more-heading" className="text-sm mb-2 px-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>
                     Meer
                   </h2>
                   <div className="flex flex-col gap-2">
                     {Array.from(merged.values()).map((item) => {
-                      const eA = item.aId
-                        ? (profileA!.entries[item.aId] ?? { status: null, comment: "" })
-                        : { status: null, comment: "" };
-                      const eB = item.bId
-                        ? (profileB!.entries[item.bId] ?? { status: null, comment: "" })
-                        : { status: null, comment: "" };
+                      const entryA = item.aId ? (profileA!.entries[item.aId] ?? { status: null, comment: "" }) : { status: null, comment: "" };
+                      const entryB = item.bId ? (profileB!.entries[item.bId] ?? { status: null, comment: "" }) : { status: null, comment: "" };
                       const rowKey = item.name.trim().toLowerCase();
-                      if (!passesFilter(eA, eB)) return null;
-                      if (hideDiscussed && discussed.has(rowKey)) return null;
+                      if (!passesFilter(entryA, entryB) || (hideDiscussed && discussed.has(rowKey))) return null;
                       return (
                         <CompareKinkRow
                           key={rowKey}
                           rowKey={rowKey}
                           name={item.name}
-                          entryA={eA}
-                          entryB={eB}
+                          entryA={entryA}
+                          entryB={entryB}
                           profileA={profileA!}
                           profileB={profileB!}
                           colourA={COLOUR_A}
@@ -662,12 +510,8 @@ function ComparePage() {
                           custom
                           isDiscussed={discussed.has(rowKey)}
                           onToggleDiscussed={() => toggleDiscussed(rowKey)}
-                          onCommentA={!profileA!.isImported && item.aId
-                            ? (comment) => setEntry(profileA!.id, item.aId!, { comment })
-                            : undefined}
-                          onCommentB={!profileB!.isImported && item.bId
-                            ? (comment) => setEntry(profileB!.id, item.bId!, { comment })
-                            : undefined}
+                          onCommentA={!profileA!.isImported && item.aId ? (comment) => setEntry(profileA!.id, item.aId!, { comment }) : undefined}
+                          onCommentB={!profileB!.isImported && item.bId ? (comment) => setEntry(profileB!.id, item.bId!, { comment }) : undefined}
                         />
                       );
                     })}
@@ -678,31 +522,16 @@ function ComparePage() {
 
             <div className="pt-2 pb-2 flex flex-col gap-2">
               <div className="flex gap-2">
-                <Link
-                  href={`/scene?a=${aId}&b=${bId}`}
-                  className="focus-ring flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-medium transition-opacity hover:opacity-80"
-                  style={{ borderColor: "var(--border)", color: "var(--text)" }}
-                >
-                  <FilmSlate size={14} aria-hidden="true" />
-                  Plan een scène
+                <Link href={`/scene?a=${aId}&b=${bId}`} className="focus-ring min-h-11 flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-medium transition-opacity hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text)" }}>
+                  <FilmSlate size={14} aria-hidden="true" /> Plan een scène
                 </Link>
-                <Link
-                  href={`/contract?a=${aId}&b=${bId}`}
-                  className="focus-ring flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-80"
-                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                >
-                  <FileText size={14} aria-hidden="true" />
-                  Contract
+                <Link href={`/contract?a=${aId}&b=${bId}`} className="focus-ring min-h-11 flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-80" style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}>
+                  <FileText size={14} aria-hidden="true" /> Contract
                 </Link>
               </div>
               <div className="flex justify-center pt-1">
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  className="focus-ring text-xs px-4 py-2 rounded-full border transition-colors"
-                  style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-                >
-                  <ArrowUp size={14} aria-hidden="true" />
-                  Terug naar boven
+                <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="focus-ring min-h-11 text-xs px-4 rounded-full border transition-colors" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
+                  <ArrowUp size={14} aria-hidden="true" /> Terug naar boven
                 </button>
               </div>
             </div>
@@ -710,39 +539,15 @@ function ComparePage() {
         )}
       </div>
 
-      <ProfileSelectorSheet
-        open={selectorOpen === "a"}
-        onClose={() => setSelectorOpen(null)}
-        slot="A"
-        profiles={profiles}
-        selectedId={aId}
-        otherSelectedId={bId}
-        pinnedProfileId={pinnedProfileId}
-        onSelect={setAId}
-      />
-      <ProfileSelectorSheet
-        open={selectorOpen === "b"}
-        onClose={() => setSelectorOpen(null)}
-        slot="B"
-        profiles={profiles}
-        selectedId={bId}
-        otherSelectedId={aId}
-        pinnedProfileId={pinnedProfileId}
-        onSelect={setBId}
-      />
+      <ProfileSelectorSheet open={selectorOpen === "a"} onClose={() => setSelectorOpen(null)} slot="A" profiles={profiles} selectedId={aId} otherSelectedId={bId} pinnedProfileId={pinnedProfileId} onSelect={setAId} />
+      <ProfileSelectorSheet open={selectorOpen === "b"} onClose={() => setSelectorOpen(null)} slot="B" profiles={profiles} selectedId={bId} otherSelectedId={aId} pinnedProfileId={pinnedProfileId} onSelect={setBId} />
     </PageShell>
   );
 }
 
 export default function CompareSuspense() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-10 text-center text-sm" style={{ color: "var(--text2)" }}>
-          Laden…
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="p-10 text-center text-sm" style={{ color: "var(--text2)" }}>Laden…</div>}>
       <ComparePage />
     </Suspense>
   );
