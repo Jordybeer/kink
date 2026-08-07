@@ -79,8 +79,15 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
         showToast({ message: "Uitwisseling op beide toestellen cryptografisch afgerond.", variant: "success" });
         return;
       }
-      if (envelope.kind !== "request" || !envelope.series || !await verifyContractRequest(envelope)) {
+      if (envelope.kind !== "request" || !envelope.series) {
         throw new Error("Dit verzoek is ongeldig, beschadigd of verlopen.");
+      }
+      const trustedActor = profiles.find((profile) => profile.id === envelope.request.actorProfileId);
+      if (!trustedActor) {
+        throw new Error("Importeer eerst het geverifieerde profiel van de andere contractpartij.");
+      }
+      if (!await verifyContractRequest(envelope, trustedActor)) {
+        throw new Error("De contractcode hoort niet bij de lokaal geverifieerde profielidentiteit.");
       }
       const responder = profiles.find((profile) => profile.id === envelope.request.counterpartyProfileId);
       if (!responder) throw new Error("Het profiel waarvoor dit verzoek bestemd is staat niet op dit toestel.");
@@ -106,8 +113,11 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       if (!sealed) throw new Error(`${responder.name} kon niet cryptografisch worden bevestigd.`);
       const ownerKey = useStore.getState().profileOwnerKeys.find((key) => key.profileId === responder.id);
       if (!ownerKey) throw new Error("De eigendomssleutel ontbreekt.");
+      const trustedActor = profiles.find((profile) => profile.id === requestEnvelope.request.actorProfileId);
+      if (!trustedActor) throw new Error("Het geverifieerde profiel van de andere contractpartij ontbreekt.");
       const result = await createContractResponse({
         envelope: requestEnvelope,
+        trustedActor,
         responder: sealed,
         ownerKey,
       });

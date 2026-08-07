@@ -1,5 +1,6 @@
 import type { Profile, ProfileOwnerKey } from "@/types";
-import { canonicalJson, sha256Base64Url } from "@/lib/consentProof";
+import { canonicalJson, sha256Base64Url, verifyProfileConsent } from "@/lib/consentProof";
+import { getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   cloneSeries,
   contractParticipantFromProfile,
@@ -190,7 +191,10 @@ export async function createContractRequest(input: {
   };
 }
 
-export async function verifyContractRequest(envelope: ContractExchangeEnvelope): Promise<boolean> {
+export async function verifyContractRequest(
+  envelope: ContractExchangeEnvelope,
+  trustedActor?: Profile,
+): Promise<boolean> {
   if (envelope.schema !== 1 || envelope.kind !== "request" || !envelope.series) return false;
   const { request, series } = envelope;
   if (request.seriesId !== series.id) return false;
@@ -200,6 +204,13 @@ export async function verifyContractRequest(envelope: ContractExchangeEnvelope):
   if (!actor || !counterparty) return false;
   if (request.proof.profileId !== actor.profileId) return false;
   if (actor.keyId && actor.keyId !== request.proof.keyId) return false;
+  if (trustedActor) {
+    if (trustedActor.id !== actor.profileId) return false;
+    if (getProfileVerificationCode(trustedActor) !== actor.verificationCode) return false;
+    const trustedConsent = await verifyProfileConsent(trustedActor);
+    if (trustedConsent.status !== "valid") return false;
+    if (trustedConsent.proof.keyId !== request.proof.keyId) return false;
+  }
   if (!await verifyContractProof(requestPayload(request, "request"), request.proof)) return false;
   const version = contractVersionById(series, request.versionId);
   if (!version || version.contentHash !== request.contentHash) return false;
@@ -214,12 +225,13 @@ export async function verifyContractRequest(envelope: ContractExchangeEnvelope):
 
 export async function createContractResponse(input: {
   envelope: ContractExchangeEnvelope;
+  trustedActor: Profile;
   responder: Profile;
   ownerKey: ProfileOwnerKey;
 }): Promise<{ envelope: ContractExchangeEnvelope; series: ContractSeries }> {
   const sourceSeries = input.envelope.series;
   if (input.envelope.kind !== "request" || !sourceSeries
-    || !await verifyContractRequest(input.envelope)) {
+    || !await verifyContractRequest(input.envelope, input.trustedActor)) {
     throw new Error("Dit verzoek is ongeldig of verlopen");
   }
   const request = input.envelope.request;
