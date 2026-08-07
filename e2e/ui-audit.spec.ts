@@ -1,4 +1,18 @@
 import { test, expect } from "@playwright/test";
+import { seedAndGo, PROFILE_ALEX } from "./fixtures";
+
+const AUDIT_PROFILE = {
+  ...PROFILE_ALEX,
+  id: "test-pw-001",
+  name: "Playwright",
+  entries: {
+    spanking_hand: { status: "yes" as const, score: null, comment: "notitie hier" },
+    spanking_implement: { status: "willing" as const, score: null, comment: "" },
+    flogging: { status: "maybe" as const, score: null, comment: "" },
+    paddling: { status: "no" as const, score: null, comment: "" },
+    cropping: { status: "hard_no" as const, score: null, comment: "" },
+  },
+};
 
 // 390 is the Pixel-ish default; 375 is the smallest phone the house dresses
 // for — every overflow guard runs at both so the corset never pinches.
@@ -77,46 +91,15 @@ test.describe("UI audit", () => {
   }
 
   test("seed profile then visit profile page", async ({ page }) => {
-    // Seed localStorage with a test profile
-    await page.goto("/");
-    await page.evaluate(() => {
-      const profile = {
-        id: "test-pw-001",
-        name: "Playwright",
-        role: "Switch",
-        experienceLevel: "ervaren",
-        customKinks: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        entries: {
-          "bdsm-general": { status: "yes", score: null, comment: "test notitie" },
-          "bondage-rope": { status: "willing", score: null, comment: "" },
-          "impact-spanking": { status: "maybe", score: null, comment: "" },
-          "pain-biting": { status: "no", score: null, comment: "" },
-          "humiliation-general": { status: "hard_no", score: null, comment: "" },
-        }
-      };
-      const existing = JSON.parse(localStorage.getItem("kink-profiles") || "{}");
-      existing.state = existing.state || {};
-      existing.state.profiles = [profile];
-      existing.version = 8;
-      localStorage.setItem("kink-profiles", JSON.stringify(existing));
-    });
-    await page.goto("/profile/test-pw-001");
-    await page.waitForLoadState("networkidle");
+    await seedAndGo(page, "/profile/test-pw-001", [AUDIT_PROFILE]);
     await page.screenshot({ path: "/tmp/pw-profile.png", fullPage: true });
 
-    // Check key elements are visible — the name wears three collars now
-    // (nav pill, sr-only h1, hero h2), so aim at the hero heading precisely.
-    await expect(page.locator("h2").filter({ hasText: "Playwright" }).first()).toBeVisible();
+    await expect(page.getByText("Playwright", { exact: true }).first()).toBeVisible();
 
     // Check Bewerken tab is visible in the profile hero area
-    const bewerkenTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
-    const hasTab = await bewerkenTab.count() > 0;
-    if (hasTab) {
-      const tabY = await bewerkenTab.first().evaluate(el => el.getBoundingClientRect().top);
-      expect(tabY).toBeLessThan(600);
-    }
+    const bewerkenTab = page.getByRole("tab", { name: "Bewerken" });
+    const tabY = await bewerkenTab.evaluate(el => el.getBoundingClientRect().top);
+    expect(tabY).toBeLessThan(600);
 
     // Check no x overflow
     const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
@@ -129,45 +112,18 @@ test.describe("UI audit", () => {
     expect(xOverflowMobile).toBe(false);
   });
 
-  test("profile page — DNA bar renders, kink overview shows 5 statuses", async ({ page }) => {
-    await page.goto("/");
-    await page.evaluate(() => {
-      const profile = {
-        id: "test-pw-001",
-        name: "Playwright",
-        role: "Switch",
-        experienceLevel: "ervaren",
-        customKinks: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        entries: {
-          // Live kink ids from lib/kinks.ts — the v8-era slugs rotted into
-          // ghosts and made this test pass on an empty overview for weeks.
-          spanking_hand: { status: "yes", score: null, comment: "notitie hier" },
-          spanking_implement: { status: "willing", score: null, comment: "" },
-          flogging: { status: "maybe", score: null, comment: "" },
-          caning: { status: "no", score: null, comment: "" },
-          cropping: { status: "hard_no", score: null, comment: "" },
-        }
-      };
-      const s = { state: { profiles: [profile] }, version: 15 };
-      localStorage.setItem("kink-profiles", JSON.stringify(s));
-    });
-    await page.goto("/profile/test-pw-001");
-    await page.waitForLoadState("networkidle");
+  test("profile page — status bar renders, kink overview shows 5 statuses", async ({ page }) => {
+    await seedAndGo(page, "/profile/test-pw-001", [AUDIT_PROFILE]);
 
     // Overview should count the five rated kinks — not the vacuous
     // "Nog niets beoordeeld." that also contains the word.
     await expect(page.locator("text=5 beoordeeld").first()).toBeVisible();
 
-    // The DNA bar left the hero in 5bd1c25 ("hero is identity, not
-    // statistics") — it now lives in the Bewerken tab's sticky header,
-    // and the tabs themselves are radios these days.
-    await page.getByRole("radio", { name: "Bewerken" }).click();
-    const dnaBar = page.locator('[aria-label^="Kink DNA:"]');
-    await expect(dnaBar.first()).toBeVisible();
-    const dnaLabel = await dnaBar.first().getAttribute("aria-label");
-    expect(dnaLabel).not.toContain("nog niets beoordeeld");
+    await page.getByRole("tab", { name: "Bewerken" }).click();
+    const statusBar = page.getByRole("img", { name: /Harde grens/ });
+    await expect(statusBar).toBeVisible();
+    const statusLabel = await statusBar.getAttribute("aria-label");
+    expect(statusLabel).not.toContain("nog niets beoordeeld");
 
     // No ★ characters anywhere on page
     const pageText = await page.evaluate(() => document.body.innerText);
@@ -176,13 +132,7 @@ test.describe("UI audit", () => {
 
   test("check for elements clipped by bottom nav", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/");
-    await page.evaluate(() => {
-      const s = { state: { profiles: [] }, version: 8 };
-      localStorage.setItem("kink-profiles", JSON.stringify(s));
-    });
-    await page.reload();
-    await page.waitForLoadState("networkidle");
+    await seedAndGo(page, "/", []);
 
     // Check BottomNav z-index is high
     const navZ = await page.evaluate(() => {

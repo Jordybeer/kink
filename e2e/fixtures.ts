@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import type { Profile } from "@/types";
+import type { ContractSnapshot, Profile } from "@/types";
 
 const STORE_KEY = "kink-profiles";
 const SEED_GUARD = "kinksync-e2e-store-seeded";
@@ -58,7 +58,22 @@ export const PROFILE_SAM: Profile = {
   },
 };
 
+export const CONTRACT_ALEX_SAM: ContractSnapshot = {
+  id: "pw-contract-alex-sam",
+  date: 1700000002000,
+  profileAId: PROFILE_ALEX.id,
+  profileBId: PROFILE_SAM.id,
+  profileAName: PROFILE_ALEX.name,
+  profileBName: PROFILE_SAM.name,
+  matchCount: 5,
+  hardLimitCount: 1,
+  softLimitCount: 1,
+  discussCount: 2,
+  safeword: "Rood",
+};
+
 export function buildStore(profiles: Profile[], extras: Partial<{
+  contracts: ContractSnapshot[];
   onboardingComplete: boolean;
   profileTourComplete: boolean;
   pinnedProfileId: string | null;
@@ -67,7 +82,7 @@ export function buildStore(profiles: Profile[], extras: Partial<{
   return {
     state: {
       profiles,
-      contracts: [],
+      contracts: extras.contracts ?? [],
       onboardingComplete: extras.onboardingComplete ?? true,
       profileTourComplete: extras.profileTourComplete ?? true,
       installPromptDismissed: true,
