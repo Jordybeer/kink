@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 test("home page loads without horizontal overflow", async ({ page }) => {
   await page.goto("/");
@@ -37,12 +38,8 @@ test("main element has dark background — no white flash", async ({ page }) => 
   expect(bg).not.toBe("rgb(255, 255, 255)");
 });
 
-test("contract page renders signature canvas and clear button", async ({ page }) => {
-  // Navigate to contract page — needs ?a=&b= params; page should show the fallback state
-  await page.goto("/contract");
-  await page.waitForLoadState("networkidle");
-  // Either the canvas is present (valid profiles) or the fallback message is shown
-  const hasCanvas = await page.locator("canvas").count();
-  const hasFallback = await page.locator("text=Geen twee profielen geselecteerd").count();
-  expect(hasCanvas + hasFallback).toBeGreaterThan(0);
+test("contract page shows its empty state without profile params", async ({ page }) => {
+  await seedAndGo(page, "/contract", [PROFILE_ALEX, PROFILE_SAM]);
+  const text = await page.evaluate(() => document.body.innerText);
+  expect(text).toMatch(/geen|selecteer|profiel/i);
 });

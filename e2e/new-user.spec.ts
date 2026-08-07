@@ -24,7 +24,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.waitForTimeout(300);
 
     // Step 2 — data: privacy + live + back-up in één stap
-    await expect(page.getByText(/verlaat dit apparaat nooit/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /jouw gegevens blijven onder jouw controle/i })).toBeVisible();
     await expect(page.getByText(/back-up/i).first()).toBeVisible();
     await page.getByRole("button", { name: /volgende/i }).click();
     await page.waitForTimeout(300);
@@ -45,8 +45,8 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /maak je eerste profiel/i }).click();
     await page.waitForTimeout(400);
 
-    // Should be on home — onboarding gone, create form ready
-    await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
+    // Should be on home — onboarding gone, empty state ready
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
     await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
@@ -96,7 +96,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("heading", { name: /consent, altijd/i })).toBeVisible();
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(400);
-    await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
   });
 
   test("lockout bij 'ik ben jonger'", async ({ page }) => {
@@ -109,7 +109,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   });
 
   test("nieuw profiel aanmaken direct na onboarding", async ({ page }) => {
-    // Fast-path via skip → age gate → consent → home
+    // Fast-path via skip → age gate → consent → home, then the three-step profile sheet
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
     await page.waitForTimeout(400);
     await page.getByRole("button", { name: /18\+/i }).click();
@@ -117,8 +117,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /ga door/i }).click();
     await page.waitForTimeout(400);
 
-    await page.getByPlaceholder(/naam of alias/i).fill("Testmeester");
-    await page.getByRole("button", { name: /sla jezelf vast/i }).click();
+    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
+    await page.getByLabel("Naam of alias").fill("Testmeester");
+    await page.getByRole("button", { name: /^Dominant/ }).click();
+    await page.getByRole("button", { name: "Verder" }).click();
+    await page.getByRole("button", { name: "Verder" }).click();
+    await page.getByRole("button", { name: "Profiel maken" }).click();
     await page.waitForLoadState("networkidle");
 
     // Should have navigated to the profile page

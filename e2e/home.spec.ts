@@ -21,13 +21,14 @@ test.describe("Home page — profielen aanwezig", () => {
   });
 
   test("navigeert naar profielpagina via link op profiel", async ({ page }) => {
-    await page.locator(`a[href="/profile/pw-alex-001"]`).first().click();
+    await page.getByRole("link", { name: "Alex Dominant openen" }).click();
     await expect(page).toHaveURL(/\/profile\/pw-alex-001/);
   });
 
   test("toont link naar vergelijken pagina", async ({ page }) => {
-    const compareLink = page.locator("a[href*='compare']").first();
+    const compareLink = page.getByRole("link", { name: /Vergelijk.*Alex.*Sam/i });
     await expect(compareLink).toBeVisible();
+    await expect(compareLink).toHaveAttribute("href", /\/compare\?a=pw-alex-001&b=pw-sam-002/);
   });
 
   test("geen horizontale overflow op mobiel (390px)", async ({ page }) => {
@@ -43,21 +44,13 @@ test.describe("Profiel aanmaken via UI", () => {
   test("opent het formulier en maakt een nieuw profiel aan", async ({ page }) => {
     await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
-    // When no profiles exist the form is always visible; when profiles exist a toggle button is shown
-    const toggleBtn = page.locator("button").filter({ hasText: /Nieuw profiel/i });
-    if (await toggleBtn.count() > 0) {
-      await toggleBtn.first().scrollIntoViewIfNeeded();
-      await toggleBtn.first().click({ force: true });
-    }
-
-    const nameInput = page.locator("input[placeholder*='naam' i], input[type='text']").first();
-    await expect(nameInput).toBeVisible({ timeout: 5000 });
-    await nameInput.fill("TestPersoon");
-
-    // Submit button text is "Sla jezelf vast"
-    const saveBtn = page.locator("button[type='submit']").first();
-    await saveBtn.scrollIntoViewIfNeeded();
-    await saveBtn.click({ force: true });
+    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
+    await expect(page.getByRole("dialog", { name: "Nieuw profiel maken" })).toBeVisible();
+    await page.getByLabel("Naam of alias").fill("TestPersoon");
+    await page.getByRole("button", { name: /^Dominant/ }).click();
+    await page.getByRole("button", { name: "Verder" }).click();
+    await page.getByRole("button", { name: "Verder" }).click();
+    await page.getByRole("button", { name: "Profiel maken" }).click();
 
     await expect(page.getByText("TestPersoon", { exact: true })).toBeVisible({ timeout: 8000 });
   });

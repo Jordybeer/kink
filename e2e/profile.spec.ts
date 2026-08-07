@@ -11,11 +11,9 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByText("Dominant").first()).toBeVisible();
   });
 
-  test("DNA-balk is aanwezig op het bewerken-tabblad", async ({ page }) => {
-    const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
-    await editTab.first().click();
-    const dna = page.locator('[aria-label*="Kink DNA"]');
-    expect(await dna.count()).toBeGreaterThan(0);
+  test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
+    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await expect(page.getByRole("img", { name: /Harde grens/ })).toBeVisible();
   });
 
   test("ingevulde kinks tellen mee — teller zichtbaar", async ({ page }) => {
@@ -48,7 +46,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("tabblad 'Bewerken' opent bewerkingsmodus", async ({ page }) => {
-    const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
+    const editTab = page.getByRole("tab", { name: "Bewerken" });
     if (await editTab.count() > 0) {
       await editTab.first().click();
       await expect(page.locator("text=Impact Play").first()).toBeVisible();
@@ -60,7 +58,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
     // Navigate to edit tab if needed
-    const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
+    const editTab = page.getByRole("tab", { name: "Bewerken" });
     if (await editTab.count() > 0) await editTab.first().click();
 
     // The deck offers the five verdicts as stacked rows — take "Ja"
@@ -91,11 +89,8 @@ test.describe("Profielpagina — Sam (gevorderd, Submissive)", () => {
     expect(text).toMatch(/\d+\s*BEOORDEELD|\d+\s*beoordeeld/i);
   });
 
-  test("hard grens (humiliation_verbal) is verwerkt in de DNA-balk", async ({ page }) => {
-    // The DNA bar's accessible name carries per-status counts — hard limits included
-    const editTab = page.locator("button, [role='tab']").filter({ hasText: /^Bewerken$/ });
-    await editTab.first().click();
-    const dna = page.locator('[aria-label*="Kink DNA"]').first();
-    await expect(dna).toHaveAttribute("aria-label", /\d+ Harde grens/);
+  test("hard grens (humiliation_verbal) is verwerkt in de statusbalk", async ({ page }) => {
+    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await expect(page.getByRole("img", { name: /\d+ Harde grens/ })).toBeVisible();
   });
 });
