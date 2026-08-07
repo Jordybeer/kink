@@ -52,6 +52,7 @@ test.describe("Profiel aanmaken via UI", () => {
     await page.getByRole("button", { name: "Verder" }).click();
     await page.getByRole("button", { name: "Profiel maken" }).click();
 
-    await expect(page.getByText("TestPersoon", { exact: true })).toBeVisible({ timeout: 8000 });
+    await expect(page).toHaveURL(/\/profile\//, { timeout: 8000 });
+    await expect(page.getByRole("heading", { level: 2, name: "TestPersoon" })).toBeVisible();
   });
 });

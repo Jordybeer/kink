@@ -13,7 +13,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
   test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
     await page.getByRole("tab", { name: "Bewerken" }).click();
-    await expect(page.getByRole("img", { name: /Harde grens/ })).toBeVisible();
+    await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();
   });
 
   test("ingevulde kinks tellen mee — teller zichtbaar", async ({ page }) => {

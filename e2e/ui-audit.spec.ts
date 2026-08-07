@@ -9,7 +9,7 @@ const AUDIT_PROFILE = {
     spanking_hand: { status: "yes" as const, score: null, comment: "notitie hier" },
     spanking_implement: { status: "willing" as const, score: null, comment: "" },
     flogging: { status: "maybe" as const, score: null, comment: "" },
-    caning: { status: "no" as const, score: null, comment: "" },
+    paddling: { status: "no" as const, score: null, comment: "" },
     cropping: { status: "hard_no" as const, score: null, comment: "" },
   },
 };

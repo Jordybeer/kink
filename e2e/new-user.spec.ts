@@ -126,6 +126,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.waitForLoadState("networkidle");
 
     // Should have navigated to the profile page
-    await expect(page.getByText("Testmeester")).toBeVisible();
+    await expect(page).toHaveURL(/\/profile\//);
+    await expect(page.getByRole("heading", { level: 2, name: "Testmeester" })).toBeVisible();
   });
 });
