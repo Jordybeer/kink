@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, GearSix, UsersThree } from "@phosphor-icons/react";
+import { CaretLeft, GearSix } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 
@@ -76,14 +76,6 @@ export default function TopNav() {
           </span>
           <div className="ml-auto flex items-center justify-end gap-2">
             <StatusDot />
-            <Link
-              href="/munch-punch"
-              aria-label="Munch Punch openen"
-              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
-              style={{ color: "var(--text2)" }}
-            >
-              <UsersThree size={19} aria-hidden="true" />
-            </Link>
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
@@ -192,8 +184,6 @@ function focusedRoute(
   if (path === "/compare") return { title: "Vergelijk", back: "/" };
   if (path === "/timeline") return { title: "Geschiedenis", back: "/" };
   if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
-  if (path === "/munch-punch/join") return { title: "Munch Punch", back: "/munch-punch" };
-  if (path === "/munch-punch") return { title: "Munch Punch", back: "/" };
   if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
   if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
   if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
