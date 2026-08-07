@@ -121,4 +121,9 @@ describe("profile QR splitting", () => {
     expect(parseSharePaste("https://kink.example/#p3m=bad")).toEqual({ kind: "invalid" });
     expect(parseSharePaste("https://kink.example/#p3b=bad")).toEqual({ kind: "invalid" });
   });
+
+  it("rejects a multipart frame that exceeds the sender chunk bound", () => {
+    const oversized = `abcdefgh.1.2.abcdefg.${"A".repeat(PROFILE_QR_CHUNK_SIZE + 1)}`;
+    expect(parseProfileQrPart(oversized)).toBeNull();
+  });
 });

@@ -317,4 +317,9 @@ describe("contract lifecycle", () => {
     }
     expect(decodeContractEnvelope(completed).request.requestId).toBe(request.envelope.request.requestId);
   });
+
+  it("rejects oversized single-frame and multipart contract input before assembly", () => {
+    expect(parseContractQrValue(`KSC1:${"A".repeat(100_000)}`)).toBeNull();
+    expect(parseContractQrValue(`KSC1P:abcdefgh.1.2.abcdefg.${"A".repeat(5_000)}`)).toBeNull();
+  });
 });
