@@ -15,7 +15,6 @@ export default function TopNav() {
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
   const onboardingComplete = useStore((state) => state.onboardingComplete);
-  const appLockEnabled = useStore((state) => state.appLockEnabled);
   const [savedVisible, setSavedVisible] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,12 +48,6 @@ export default function TopNav() {
 
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
-  if (
-    hydrated
-    && appLockEnabled
-    && typeof sessionStorage !== "undefined"
-    && sessionStorage.getItem("app_unlocked") !== "1"
-  ) return null;
 
   const shell = {
     paddingTop: "env(safe-area-inset-top)",
