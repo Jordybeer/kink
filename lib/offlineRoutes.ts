@@ -14,8 +14,6 @@ export const STATIC_OFFLINE_ROUTES = [
   SCENE_DETAIL_SHELL_ROUTE,
   "/about",
   "/timeline",
-  "/munch-punch",
-  "/munch-punch/join",
 ] as const;
 
 export function buildOfflineWarmupRoutes(

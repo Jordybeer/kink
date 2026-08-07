@@ -242,7 +242,7 @@ describe("decodeAny — v1 door now frisked", () => {
     const decoded = decodeAny(encoded);
     expect(decoded.experienceLevel).toBe("beginner");
     expect(decoded.entries.a?.status ?? null).toBeNull();
-    expect((decoded as Record<string, unknown>).extraField).toBeUndefined();
+    expect((decoded as unknown as Record<string, unknown>).extraField).toBeUndefined();
     expect(decoded.customKinks.length).toBe(100);
   });
 

@@ -6,7 +6,7 @@ const PROFILE: Profile = {
   id: "profile-a",
   name: "Alice",
   role: "Switch",
-  experienceLevel: "expert",
+  experienceLevel: "ervaren",
   createdAt: 1,
   updatedAt: 1,
   customKinks: [

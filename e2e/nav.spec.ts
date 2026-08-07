@@ -7,7 +7,6 @@ test("hub shows utility actions, no back chevron", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Munch Punch openen" })).toHaveAttribute("href", "/munch-punch");
   await expect(nav.getByRole("button", { name: "Instellingen openen" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
 });
