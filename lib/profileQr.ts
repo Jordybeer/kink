@@ -204,7 +204,7 @@ export function parseProfileQrPart(value: string): ProfileQrPart | null {
   const index = Number(indexRaw);
   const total = Number(totalRaw);
   if (!Number.isInteger(index) || !Number.isInteger(total) || total < 2 || total > PROFILE_QR_MAX_PARTS) return null;
-  if (index < 1 || index > total || !chunk) return null;
+  if (index < 1 || index > total || !chunk || chunk.length > PROFILE_QR_CHUNK_SIZE) return null;
   return { transferId, index, total, checksum, chunk };
 }
 
@@ -215,7 +215,7 @@ export function parseProfileQrBundlePart(value: string): ProfileQrBundlePart | n
   const index = Number(indexRaw);
   const total = Number(totalRaw);
   if (!Number.isInteger(index) || !Number.isInteger(total) || total < 1 || total > PROFILE_QR_MAX_PARTS) return null;
-  if (index < 1 || index > total || !chunk) return null;
+  if (index < 1 || index > total || !chunk || chunk.length > PROFILE_QR_CHUNK_SIZE) return null;
   return {
     transferId,
     phase: phaseRaw.toLowerCase() === "p" ? "profile" : "avatar",
@@ -239,6 +239,7 @@ function addAssemblyPart(
   current: ProfileQrAssembly | null,
   part: ProfileQrPart,
 ): ProfileQrAssembly | null {
+  if (!part.chunk || part.chunk.length > PROFILE_QR_CHUNK_SIZE) return null;
   if (current && (current.transferId !== part.transferId
     || current.total !== part.total
     || current.checksum !== part.checksum)) return null;
@@ -256,6 +257,9 @@ export function addProfileQrPart(
   current: ProfileQrAssembly | null,
   part: ProfileQrPart,
 ): ProfileQrCollectResult {
+  if (!part.chunk || part.chunk.length > PROFILE_QR_CHUNK_SIZE) {
+    return { status: "error", message: "Dit QR-deel is te groot." };
+  }
   if (current && current.transferId === part.transferId
     && (current.total !== part.total || current.checksum !== part.checksum)) {
     return { status: "error", message: "Deze QR hoort niet bij dezelfde profielset." };

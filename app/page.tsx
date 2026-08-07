@@ -22,6 +22,7 @@ import SettingsSheet from "@/components/sheets/SettingsSheet";
 import PinFlowSheet from "@/components/sheets/PinFlowSheet";
 import DestroyAllSheet from "@/components/sheets/DestroyAllSheet";
 import { EncryptedExportSheet, EncryptedImportSheet } from "@/components/sheets/EncryptedBackupSheets";
+import { backupFileSizeAllowed } from "@/lib/importLimits";
 import Sheet from "@/components/ui/Sheet";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
@@ -160,6 +161,11 @@ function HomeContent() {
     setImportSuccess(null);
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!backupFileSizeAllowed(file.size)) {
+      setImportError("Backupbestand is te groot (max. 10 MB).");
+      event.target.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = async (loadEvent) => {

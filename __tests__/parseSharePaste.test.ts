@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import { buildProfileQrSet } from "@/lib/profileQr";
+import { PROFILE_SHARE_INPUT_MAX_CHARS } from "@/lib/importLimits";
 
 describe("parseSharePaste", () => {
   it("extracts a legacy profile payload from a share URL", () => {
@@ -39,5 +40,9 @@ describe("parseSharePaste", () => {
     expect(parseSharePaste("")).toEqual({ kind: "invalid" });
     expect(parseSharePaste("https://example.com/foo")).toEqual({ kind: "invalid" });
     expect(parseSharePaste("hello world!")).toEqual({ kind: "invalid" });
+  });
+
+  it("rejects multi-megabyte pasted payloads before URL or profile decoding", () => {
+    expect(parseSharePaste(`3r.${"A".repeat(PROFILE_SHARE_INPUT_MAX_CHARS)}`)).toEqual({ kind: "invalid" });
   });
 });

@@ -4,6 +4,7 @@ import {
   type ProfileQrBundlePart,
   type ProfileQrPart,
 } from "@/lib/profileQr";
+import { PROFILE_SHARE_INPUT_MAX_CHARS } from "@/lib/importLimits";
 
 export type ParsedShare =
   | { kind: "profile"; encoded: string }
@@ -31,6 +32,7 @@ function parseHash(hash: string): ParsedShare | null {
 }
 
 export function parseSharePaste(raw: string): ParsedShare {
+  if (raw.length > PROFILE_SHARE_INPUT_MAX_CHARS) return { kind: "invalid" };
   const input = raw.trim();
   if (!input) return { kind: "invalid" };
 

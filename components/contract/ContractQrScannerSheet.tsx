@@ -77,7 +77,7 @@ export default function ContractQrScannerSheet({
     const now = Date.now();
     if (dedupe && lastValueRef.current?.value === raw && now - lastValueRef.current.at < 800) return false;
     if (dedupe) lastValueRef.current = { value: raw, at: now };
-    const parsed = parseContractQrValue(raw.trim());
+    const parsed = parseContractQrValue(raw);
     if (!parsed) {
       setError("Geen geldige KinkSync-contractcode gevonden.");
       return false;
