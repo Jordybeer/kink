@@ -583,6 +583,7 @@ function ScenePage() {
         <div className="flex items-center gap-2 mb-3">
           <Link
             href={backHref}
+            prefetch={false}
             aria-label="Terug"
             className="focus-ring rounded-lg flex-none"
             style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", color: "var(--text2)", fontSize: 13 }}

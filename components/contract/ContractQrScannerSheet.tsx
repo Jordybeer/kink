@@ -26,6 +26,7 @@ export default function ContractQrScannerSheet({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
+  const cameraGenerationRef = useRef(0);
   const assemblyRef = useRef<ContractQrAssembly | null>(null);
   const lastValueRef = useRef<{ value: string; at: number } | null>(null);
   const [received, setReceived] = useState(0);
@@ -36,6 +37,7 @@ export default function ContractQrScannerSheet({
 
   useEffect(() => {
     if (!open) return;
+    const cameraGeneration = ++cameraGenerationRef.current;
     setError(null);
     setReceived(0);
     setTotal(0);
@@ -46,14 +48,19 @@ export default function ContractQrScannerSheet({
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then((stream) => {
+        if (cameraGenerationRef.current !== cameraGeneration) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           void videoRef.current.play();
         }
-        scan();
+        scan(cameraGeneration);
       })
       .catch(() => {
+        if (cameraGenerationRef.current !== cameraGeneration) return;
         setError("Camera niet beschikbaar of geweigerd.");
         setPasteMode(true);
       });
@@ -62,6 +69,7 @@ export default function ContractQrScannerSheet({
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function stopCamera() {
+    cameraGenerationRef.current += 1;
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -102,11 +110,12 @@ export default function ContractQrScannerSheet({
     return false;
   }
 
-  function scan() {
+  function scan(cameraGeneration: number) {
+    if (cameraGenerationRef.current !== cameraGeneration) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) {
-      rafRef.current = requestAnimationFrame(scan);
+      rafRef.current = requestAnimationFrame(() => scan(cameraGeneration));
       return;
     }
     canvas.width = video.videoWidth;
@@ -117,7 +126,7 @@ export default function ContractQrScannerSheet({
     const frame = context.getImageData(0, 0, canvas.width, canvas.height);
     const found = jsQR(frame.data, frame.width, frame.height);
     if (found?.data && consume(found.data)) return;
-    rafRef.current = requestAnimationFrame(scan);
+    rafRef.current = requestAnimationFrame(() => scan(cameraGeneration));
   }
 
   function handleClose() {

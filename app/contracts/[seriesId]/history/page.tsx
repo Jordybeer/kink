@@ -73,6 +73,7 @@ export default function ContractHistoryPage() {
     <PageShell width="2xl" className="lg:max-w-3xl">
       <Link
         href={`/contracts/${encodeURIComponent(series.id)}`}
+        prefetch={false}
         className="focus-ring inline-flex min-h-10 items-center gap-1 text-sm"
         style={{ color: "var(--text2)" }}
       >
@@ -166,6 +167,7 @@ export default function ContractHistoryPage() {
               </div>
               <Link
                 href={`/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`}
+                prefetch={false}
                 className="focus-ring mt-3 flex min-h-10 items-center text-xs font-semibold"
                 style={{ color: "var(--text)" }}
               >

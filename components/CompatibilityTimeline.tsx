@@ -47,6 +47,7 @@ export function CompatibilityTimeline({ contracts }: Props) {
               {c.profileAId && c.profileBId && (
                 <Link
                   href={`/contract?a=${c.profileAId}&b=${c.profileBId}`}
+                  prefetch={false}
                   className="focus-ring inline-flex items-center gap-1 text-xs transition-colors"
                   style={{ color: "var(--accent)" }}
                 >

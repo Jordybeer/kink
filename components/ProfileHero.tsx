@@ -199,6 +199,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           {profileType === "partner" && contractCount > 0 && (
             <Link
               href={`/contracts?person=${encodeURIComponent(contractPersonId)}`}
+              prefetch={false}
               aria-label={`${contractCount} ${contractCount === 1 ? "contract" : "contracten"} met ${profile.name}`}
               className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-normal"
               style={{

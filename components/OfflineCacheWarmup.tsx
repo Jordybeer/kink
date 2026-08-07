@@ -2,7 +2,6 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useHasHydrated, useStore } from "@/lib/store";
-import { useContractStore } from "@/lib/contractStore";
 import {
   buildOfflineWarmupRoutes,
   warmOfflineRoutes,
@@ -33,28 +32,15 @@ export default function OfflineCacheWarmup() {
   const profileIdsKey = useStore((state) =>
     state.profiles.map((profile) => profile.id).join("\u001f"),
   );
-  const sceneIdsKey = useStore((state) =>
-    state.scenes.map((scene) => scene.id).join("\u001f"),
-  );
-  const contractRoutesKey = useContractStore((state) => state.series.flatMap((series) => [
-    `/contracts/${encodeURIComponent(series.id)}`,
-    `/contracts/${encodeURIComponent(series.id)}/history`,
-    ...series.versions.map((version) => `/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`),
-  ]).join("\u001f"));
   const profileIds = useMemo(() => idsFromKey(profileIdsKey), [profileIdsKey]);
   const latestProfileIds = useRef(profileIds);
   const profileCreateBaseline = useRef<string[] | null>(null);
   latestProfileIds.current = profileIds;
 
-  const routes = useMemo(
-    () =>
-      buildOfflineWarmupRoutes(
-        profileIds,
-        idsFromKey(sceneIdsKey),
-        idsFromKey(contractRoutesKey),
-      ),
-    [profileIds, sceneIdsKey, contractRoutesKey],
-  );
+  // Background warming must never turn local record identifiers into origin
+  // requests. Dynamic profile/scene routes use fixed offline shells; contract
+  // details remain available offline after an explicit visit/runtime cache.
+  const routes = useMemo(() => buildOfflineWarmupRoutes(), []);
 
   useEffect(() => {
     if (!hydrated || typeof navigator === "undefined") return;

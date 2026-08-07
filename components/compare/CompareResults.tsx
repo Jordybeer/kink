@@ -173,6 +173,7 @@ export default function CompareResults({
         <div className="flex gap-2">
           <Link
             href={`/scene?a=${profileA.id}&b=${profileB.id}`}
+            prefetch={false}
             className="focus-ring min-h-11 flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-medium transition-opacity hover:opacity-80"
             style={{ borderColor: "var(--border)", color: "var(--text)" }}
           >
@@ -180,6 +181,7 @@ export default function CompareResults({
           </Link>
           <Link
             href={`/contract?a=${profileA.id}&b=${profileB.id}`}
+            prefetch={false}
             className="focus-ring min-h-11 flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-80"
             style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
           >

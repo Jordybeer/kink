@@ -114,6 +114,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
       <div className="flex min-h-12 items-center gap-2 px-3" style={{ borderTop: "1px solid var(--border)" }}>
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}`}
+          prefetch={false}
           className="focus-ring inline-flex min-h-10 items-center gap-1.5 px-2 text-xs font-semibold"
           style={{ color: "var(--text)" }}
         >
@@ -122,6 +123,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         </Link>
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
+          prefetch={false}
           className="focus-ring ml-auto inline-flex min-h-10 items-center px-2 text-xs font-medium"
           style={{ color: "var(--text2)" }}
         >
@@ -185,6 +187,7 @@ function ContractsContent() {
           </button>
           <Link
             href={createHref}
+            prefetch={false}
             className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
@@ -225,6 +228,7 @@ function ContractsContent() {
                   <Link
                     key={item.id}
                     href={`/contract?a=${encodeURIComponent(a.profileId)}&b=${encodeURIComponent(b.profileId)}`}
+                    prefetch={false}
                     className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
