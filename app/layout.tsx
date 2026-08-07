@@ -11,6 +11,7 @@ import NotificationPrompt from "@/components/NotificationPrompt";
 import AmbientGlow from "@/components/ui/AmbientGlow";
 import OfflineCacheWarmup from "@/components/OfflineCacheWarmup";
 import ImportedProfileIntegrityGate from "@/components/ImportedProfileIntegrityGate";
+import AppLockGate from "@/components/AppLockGate";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -56,17 +57,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col antialiased">
         <AmbientGlow />
-        <InstallPromptBridge />
-        <OfflineCacheWarmup />
-        <TopNav />
-        <BottomNav />
-        <ToastProvider>
-          <ImportedProfileIntegrityGate>
-            {children}
-            <UpdateBanner />
-            <NotificationPrompt />
-          </ImportedProfileIntegrityGate>
-        </ToastProvider>
+        <AppLockGate>
+          <InstallPromptBridge />
+          <OfflineCacheWarmup />
+          <TopNav />
+          <BottomNav />
+          <ToastProvider>
+            <ImportedProfileIntegrityGate>
+              {children}
+              <UpdateBanner />
+              <NotificationPrompt />
+            </ImportedProfileIntegrityGate>
+          </ToastProvider>
+        </AppLockGate>
       </body>
     </html>
   );

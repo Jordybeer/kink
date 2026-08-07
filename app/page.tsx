@@ -14,7 +14,6 @@ import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profile
 import { profileConsentAlias } from "@/lib/consentProof";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
-import AppLock from "@/components/AppLock";
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
 import ProfileList from "@/components/ProfileList";
@@ -45,10 +44,6 @@ function HomeContent() {
     completeOnboarding,
     installPromptDismissed,
     dismissInstallPrompt,
-    appLockEnabled,
-    appLockPin,
-    biometricEnabled,
-    biometricCredentialId,
   } = useStore();
   const hydrated = useHasHydrated();
 
@@ -56,8 +51,6 @@ function HomeContent() {
   const [hasNativePrompt, setHasNativePrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
-
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
@@ -76,12 +69,6 @@ function HomeContent() {
   const [importPreview, setImportPreview] = useState<Profile | null>(null);
   const [importDone, setImportDone] = useState(false);
   const importIdentity = importPreview ? classifyProfileImport(profiles, importPreview) : null;
-
-  useEffect(() => {
-    if (hydrated && appLockEnabled && sessionStorage.getItem("app_unlocked") !== "1") {
-      setLockState("locked");
-    }
-  }, [hydrated, appLockEnabled]);
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
@@ -193,19 +180,6 @@ function HomeContent() {
   }
 
   if (!hydrated) return <PageShell loading width="2xl" />;
-
-  if (appLockEnabled && lockState === "locked") {
-    return (
-      <AppLock
-        storedHash={appLockPin}
-        biometricCredentialId={biometricEnabled ? biometricCredentialId : null}
-        onUnlock={() => {
-          sessionStorage.setItem("app_unlocked", "1");
-          setLockState("unlocked");
-        }}
-      />
-    );
-  }
 
   if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
 
