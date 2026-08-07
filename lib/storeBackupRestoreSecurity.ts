@@ -111,15 +111,23 @@ export function installBackupRestoreSecurity(store: StoreHook): void {
       const acceptedKeyIds = new Set<string>();
 
       for (const incomingProfile of incoming) {
-        const incomingShared = isSharedProfile(incomingProfile);
-        const incomingOwn = isOwnProfile(incomingProfile);
-        const incomingKey = incomingKeyByProfile.get(incomingProfile.id);
+        const unsignedOwnershipClaim = isOwnProfile(incomingProfile) && !incomingProfile.consentProof;
+        const safeIncomingProfile: Profile = unsignedOwnershipClaim
+          ? {
+              ...incomingProfile,
+              origin: "shared",
+              isImported: true,
+              lockedAt: incomingProfile.lockedAt ?? Date.now(),
+            }
+          : incomingProfile;
+        const incomingShared = isSharedProfile(safeIncomingProfile);
+        const incomingOwn = isOwnProfile(safeIncomingProfile);
+        const incomingKey = incomingKeyByProfile.get(safeIncomingProfile.id);
         const ownerKeyValid = incomingOwn
           && !!incomingKey
-          && keyMatchesProfile(incomingKey, incomingProfile);
-        const legacyOwner = incomingOwn && !incomingProfile.consentProof;
+          && keyMatchesProfile(incomingKey, safeIncomingProfile);
 
-        if (incomingOwn && incomingProfile.consentProof && !ownerKeyValid) {
+        if (incomingOwn && safeIncomingProfile.consentProof && !ownerKeyValid) {
           result.conflicts += 1;
           continue;
         }
@@ -128,10 +136,10 @@ export function installBackupRestoreSecurity(store: StoreHook): void {
           continue;
         }
 
-        const exactIndex = profiles.findIndex((profile) => profile.id === incomingProfile.id);
+        const exactIndex = profiles.findIndex((profile) => profile.id === safeIncomingProfile.id);
         const sameCodeIndex = profiles.findIndex(
           (profile) => getProfileVerificationCode(profile)
-            === getProfileVerificationCode(incomingProfile),
+            === getProfileVerificationCode(safeIncomingProfile),
         );
 
         if (exactIndex < 0) {
@@ -139,14 +147,14 @@ export function installBackupRestoreSecurity(store: StoreHook): void {
             result.conflicts += 1;
             continue;
           }
-          profiles.push(incomingProfile);
+          profiles.push(safeIncomingProfile);
           if (ownerKeyValid && incomingKey) acceptedKeyIds.add(incomingKey.profileId);
           result.added += 1;
           continue;
         }
 
         const existing = profiles[exactIndex];
-        if (!sameTechnicalIdentity(existing, incomingProfile)) {
+        if (!sameTechnicalIdentity(existing, safeIncomingProfile)) {
           result.conflicts += 1;
           continue;
         }
@@ -162,45 +170,15 @@ export function installBackupRestoreSecurity(store: StoreHook): void {
             result.unchanged += 1;
             continue;
           }
-          const freshness = compareFreshness(incomingProfile, existing);
+          const freshness = compareFreshness(safeIncomingProfile, existing);
           if (freshness === "conflict") {
             result.conflicts += 1;
           } else if (freshness === "newer") {
-            profiles[exactIndex] = preserveReceiverLocalFields(incomingProfile, existing);
+            profiles[exactIndex] = preserveReceiverLocalFields(safeIncomingProfile, existing);
             result.updated += 1;
           } else {
             result.unchanged += 1;
           }
-          continue;
-        }
-
-        if (legacyOwner && !incomingProfile.consentProof) {
-          if (existing.consentProof) {
-            if (!ownerKeyValid || !incomingKey || existing.consentProof.keyId !== incomingKey.keyId) {
-              result.conflicts += 1;
-              continue;
-            }
-            acceptedKeyIds.add(incomingKey.profileId);
-            if (isSharedProfile(existing)) {
-              profiles[exactIndex] = promoteExistingOwner(existing);
-              result.updated += 1;
-            } else {
-              result.unchanged += 1;
-            }
-            continue;
-          }
-
-          const freshness = compareFreshness(incomingProfile, existing);
-          if (freshness === "newer") {
-            profiles[exactIndex] = incomingProfile;
-            result.updated += 1;
-          } else if (isSharedProfile(existing)) {
-            profiles[exactIndex] = promoteExistingOwner(existing);
-            result.updated += 1;
-          } else {
-            result.unchanged += 1;
-          }
-          if (ownerKeyValid && incomingKey) acceptedKeyIds.add(incomingKey.profileId);
           continue;
         }
 
@@ -214,7 +192,7 @@ export function installBackupRestoreSecurity(store: StoreHook): void {
           continue;
         }
 
-        const freshness = compareFreshness(incomingProfile, existing);
+        const freshness = compareFreshness(safeIncomingProfile, existing);
         if (freshness === "conflict") {
           result.conflicts += 1;
           continue;
@@ -222,7 +200,7 @@ export function installBackupRestoreSecurity(store: StoreHook): void {
 
         acceptedKeyIds.add(incomingKey.profileId);
         if (freshness === "newer") {
-          profiles[exactIndex] = incomingProfile;
+          profiles[exactIndex] = safeIncomingProfile;
           result.updated += 1;
         } else if (isSharedProfile(existing)) {
           // Keep the same/newer imported content, but restore editability because

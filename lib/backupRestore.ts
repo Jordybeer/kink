@@ -353,7 +353,6 @@ export async function prepareBackupRestore(raw: unknown): Promise<PreparedBackup
 
   const profiles: Profile[] = [];
   for (const profile of sanitizedProfiles) {
-    const wasShared = profile.origin === "shared" || profile.isImported === true;
     const key = keyByProfile.get(profile.id);
     const verification = profile.consentProof
       ? await verifyProfileConsent(profile)
@@ -376,14 +375,7 @@ export async function prepareBackupRestore(raw: unknown): Promise<PreparedBackup
       continue;
     }
 
-    // Backups van vóór bronbevestiging bevatten terecht nog geen sleutel.
-    if (!wasShared && !profile.consentProof) {
-      const { lockedAt: _lockedAt, ...rest } = profile;
-      profiles.push({ ...rest, origin: "own", isImported: false });
-      continue;
-    }
-
-    // Een ondertekend profiel zonder de passende private sleutel is geen eigendom.
+    // Zonder cryptografisch bewijs kan een backup data herstellen, maar geen eigendom claimen.
     if (verification.status === "invalid") continue;
     profiles.push({
       ...profile,
