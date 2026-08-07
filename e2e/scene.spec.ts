@@ -1,10 +1,17 @@
 import { test, expect } from "@playwright/test";
-import { seedAndGo, PROFILE_ALEX, PROFILE_SAM, CONTRACT_ALEX_SAM } from "./fixtures";
+import {
+  seedAndGo,
+  PROFILE_ALEX,
+  PROFILE_SAM,
+  CONTRACT_ALEX_SAM,
+  CONTRACT_SERIES_ALEX_SAM,
+} from "./fixtures";
 
 test.describe("Scene planner", () => {
   test.beforeEach(async ({ page }) => {
     await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM], {
       contracts: [CONTRACT_ALEX_SAM],
+      contractSeries: [CONTRACT_SERIES_ALEX_SAM],
     });
   });
 
@@ -58,6 +65,13 @@ test("scene planner requires a contract for a selected pair", async ({ page }) =
   await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
   await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Contract opstellen" })).toBeVisible();
+});
+
+test("a legacy contract snapshot alone never opens the scene gate", async ({ page }) => {
+  await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM], {
+    contracts: [CONTRACT_ALEX_SAM],
+  });
+  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
 });
 
 test.describe("Scene planner — zonder URL-params", () => {
