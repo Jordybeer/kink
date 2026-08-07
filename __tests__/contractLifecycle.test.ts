@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Profile } from "@/types";
-import { generateProfileOwnerKey } from "@/lib/consentProof";
+import { generateProfileOwnerKey, signProfileConsent } from "@/lib/consentProof";
 import {
   contractBucket,
   contractParticipantFromProfile,
@@ -131,16 +131,44 @@ describe("contract lifecycle", () => {
     expect(await verifyContractProof(body, { ...proof, signedAt: proof.signedAt + 1 })).toBe(false);
   });
 
+  it("rejects a request that claims a known profile id with an unrelated signing key", async () => {
+    const trustedActor = profile("a-dom", "A", "shared");
+    const trustedKey = await generateProfileOwnerKey(trustedActor.id);
+    trustedActor.consentProof = (await signProfileConsent(trustedActor, trustedKey)).proof;
+
+    const impersonator = profile("a-dom", "A");
+    const rogueKey = await generateProfileOwnerKey(impersonator.id);
+    const responder = profile("b-sub", "B");
+    const responderKey = await generateProfileOwnerKey(responder.id);
+    const draft = await draftSeries(impersonator, responder);
+    const request = await createContractRequest({
+      series: draft,
+      action: "activate",
+      actor: impersonator,
+      counterparty: responder,
+      ownerKey: rogueKey,
+    });
+
+    expect(await verifyContractRequest(request.envelope, trustedActor)).toBe(false);
+    await expect(createContractResponse({
+      envelope: request.envelope,
+      trustedActor,
+      responder,
+      ownerKey: responderKey,
+    })).rejects.toThrow("ongeldig of verlopen");
+  });
+
   it("completes activation, pause acknowledgement and mutual resume through two-device proofs", async () => {
     const a = profile("a-dom", "A");
     const b = profile("b-sub", "B");
     const keyA = await generateProfileOwnerKey(a.id);
     const keyB = await generateProfileOwnerKey(b.id);
+    a.consentProof = (await signProfileConsent(a, keyA)).proof;
     const draft = await draftSeries(a, b);
 
     const signing = await createContractRequest({ series: draft, action: "activate", actor: a, counterparty: b, ownerKey: keyA });
     expect(await verifyContractRequest(signing.envelope)).toBe(true);
-    const signed = await createContractResponse({ envelope: signing.envelope, responder: b, ownerKey: keyB });
+    const signed = await createContractResponse({ envelope: signing.envelope, trustedActor: a, responder: b, ownerKey: keyB });
     const responderSeries = structuredClone(signed.series);
     signed.envelope.series!.status = "stopped";
     signed.envelope.series!.events = [];
@@ -175,14 +203,14 @@ describe("contract lifecycle", () => {
       note: "Eerst opnieuw bespreken.",
     });
     expect(pausing.series.status).toBe("paused");
-    const pauseAck = await createContractResponse({ envelope: pausing.envelope, responder: b, ownerKey: keyB });
+    const pauseAck = await createContractResponse({ envelope: pausing.envelope, trustedActor: a, responder: b, ownerKey: keyB });
     const paused = await verifyAndApplyContractResponse({ currentSeries: pausing.series, envelope: pauseAck.envelope });
     expect(paused.status).toBe("paused");
     expect(paused.events.some((event) => event.type === "pause_acknowledged")).toBe(true);
 
     const resuming = await createContractRequest({ series: paused, action: "resume", actor: a, counterparty: b, ownerKey: keyA });
     expect(resuming.series.status).toBe("resume_pending");
-    const resumeAck = await createContractResponse({ envelope: resuming.envelope, responder: b, ownerKey: keyB });
+    const resumeAck = await createContractResponse({ envelope: resuming.envelope, trustedActor: a, responder: b, ownerKey: keyB });
     const resumed = await verifyAndApplyContractResponse({ currentSeries: resuming.series, envelope: resumeAck.envelope });
     expect(resumed.status).toBe("active");
     expect(resumed.events.at(-1)?.type).toBe("resumed");
@@ -193,9 +221,10 @@ describe("contract lifecycle", () => {
     const b = profile("b-sub", "B");
     const keyA = await generateProfileOwnerKey(a.id);
     const keyB = await generateProfileOwnerKey(b.id);
+    a.consentProof = (await signProfileConsent(a, keyA)).proof;
     const draft = await draftSeries(a, b);
     const signing = await createContractRequest({ series: draft, action: "activate", actor: a, counterparty: b, ownerKey: keyA });
-    const signed = await createContractResponse({ envelope: signing.envelope, responder: b, ownerKey: keyB });
+    const signed = await createContractResponse({ envelope: signing.envelope, trustedActor: a, responder: b, ownerKey: keyB });
     const active = await verifyAndApplyContractResponse({ currentSeries: signing.series, envelope: signed.envelope });
     const receipt = await createContractReceipt({
       series: active,
@@ -218,14 +247,16 @@ describe("contract lifecycle", () => {
     const keyA = await generateProfileOwnerKey(a.id);
     const keyB = await generateProfileOwnerKey(b.id);
     const rogueKeyB = await generateProfileOwnerKey(b.id);
+    a.consentProof = (await signProfileConsent(a, keyA)).proof;
     const draft = await draftSeries(a, b);
     const signing = await createContractRequest({ series: draft, action: "activate", actor: a, counterparty: b, ownerKey: keyA });
-    const signed = await createContractResponse({ envelope: signing.envelope, responder: b, ownerKey: keyB });
+    const signed = await createContractResponse({ envelope: signing.envelope, trustedActor: a, responder: b, ownerKey: keyB });
     const active = await verifyAndApplyContractResponse({ currentSeries: signing.series, envelope: signed.envelope });
     const pausing = await createContractRequest({ series: active, action: "pause", actor: a, counterparty: b, ownerKey: keyA });
 
     await expect(createContractResponse({
       envelope: pausing.envelope,
+      trustedActor: a,
       responder: b,
       ownerKey: rogueKeyB,
     })).rejects.toThrow("eerder bevestigde contractpartij");
