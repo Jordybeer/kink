@@ -18,6 +18,11 @@ export function visibleStatus(entry: KinkEntry | undefined, revealed = false): K
   return isResponseVisible(entry, revealed) ? (entry?.status ?? null) : null;
 }
 
+export function visibleUsedInScene(entry: KinkEntry | undefined, revealed = false): number {
+  if (!isResponseVisible(entry, revealed)) return 0;
+  return entry?.usedInScene ?? 0;
+}
+
 /**
  * Returns the only safe comparison shape for a concealed answer. The kink name
  * lives outside KinkEntry and may stay visible; every answer-derived field stays
