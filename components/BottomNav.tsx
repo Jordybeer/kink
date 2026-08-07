@@ -12,8 +12,6 @@ export default function BottomNav() {
   // Hide on focused routes
   if (path.startsWith("/profile/") && path.split("/").length > 2) return null;
   if (path === "/scene" || path.startsWith("/scenes/")) return null;
-  if (path.startsWith("/munch-punch")) return null;
-
   const firstProfileId = _hasHydrated ? profiles[0]?.id : undefined;
   const profileHref = firstProfileId ? `/profile/${firstProfileId}` : "/";
 
