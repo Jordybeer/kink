@@ -27,6 +27,17 @@ export interface RestoreContractSeriesResult {
   unchanged: number;
 }
 
+function safeRestoredSeries(candidate: ContractSeries, existing?: ContractSeries): ContractSeries {
+  const restored = structuredClone(candidate);
+  if (existing?.status === "stopped" && restored.status !== "stopped") {
+    restored.status = "stopped";
+  } else if (restored.status === "active" && existing?.status !== "active") {
+    // A backup can restore signed history, but it cannot prove that consent is still active now.
+    restored.status = "paused";
+  }
+  return restored;
+}
+
 interface ContractStoreState {
   series: ContractSeries[];
   migratedLegacySnapshotIds: string[];
@@ -136,10 +147,10 @@ export const useContractStore = create<ContractStoreState>()(
         for (const candidate of incoming) {
           const existing = byId.get(candidate.id);
           if (!existing) {
-            byId.set(candidate.id, structuredClone(candidate));
+            byId.set(candidate.id, safeRestoredSeries(candidate));
             added += 1;
           } else if (candidate.updatedAt > existing.updatedAt) {
-            byId.set(candidate.id, structuredClone(candidate));
+            byId.set(candidate.id, safeRestoredSeries(candidate, existing));
             updated += 1;
           } else {
             unchanged += 1;
