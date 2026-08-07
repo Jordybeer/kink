@@ -4,6 +4,7 @@ import {
   isResponseVisible,
   privateResponseKey,
   profileExportResponse,
+  visibleUsedInScene,
   visibleStatus,
 } from "@/lib/privateResponses";
 import type { KinkEntry } from "@/types";
@@ -35,6 +36,11 @@ describe("private responses", () => {
       comment: "",
       privateResponse: true,
     });
+  });
+
+  it("does not let concealed scene history influence suggestions", () => {
+    expect(visibleUsedInScene({ ...PRIVATE_ENTRY, usedInScene: 7 })).toBe(0);
+    expect(visibleUsedInScene({ status: "yes", comment: "", usedInScene: 3 })).toBe(3);
   });
 
   it("omits a concealed answer from a safe export model", () => {

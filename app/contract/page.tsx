@@ -19,6 +19,7 @@ import { canvasHasInk } from "@/lib/canvasUtils";
 import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
 import { buildContractPdf, isKinkDetail, DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
 import type { ContractItem, KinkDetailItem, Signals } from "@/lib/contractPdf";
+import { comparableEntry } from "@/lib/privateResponses";
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 
@@ -93,8 +94,8 @@ function ContractPage() {
   const EMPTY: KinkEntry = { status: null, comment: "" };
 
   for (const kink of KINKS) {
-    const entryA = profileA.entries[kink.id] ?? EMPTY;
-    const entryB = profileB.entries[kink.id] ?? EMPTY;
+    const entryA = comparableEntry(profileA.entries[kink.id]);
+    const entryB = comparableEntry(profileB.entries[kink.id]);
     const hasA = entryA.status;
     const hasB = entryB.status;
     if (!hasA && !hasB) continue;
@@ -134,8 +135,8 @@ function ContractPage() {
     customMerged.set(key, ck.side === "a" ? { ...ex, aId: ck.id } : { ...ex, bId: ck.id });
   }
   for (const item of customMerged.values()) {
-    const entryA = item.aId ? (profileA.entries[item.aId] ?? EMPTY) : EMPTY;
-    const entryB = item.bId ? (profileB.entries[item.bId] ?? EMPTY) : EMPTY;
+    const entryA = item.aId ? comparableEntry(profileA.entries[item.aId]) : EMPTY;
+    const entryB = item.bId ? comparableEntry(profileB.entries[item.bId]) : EMPTY;
     const hasA = entryA.status;
     const hasB = entryB.status;
     const detail: KinkDetail = {

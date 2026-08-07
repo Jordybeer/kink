@@ -14,6 +14,7 @@ import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
 import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
+import { visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
 
 function uid() {
   return crypto.randomUUID();
@@ -552,22 +553,22 @@ function ScenePage() {
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
   const topKinks = profileA
-    ? KINKS.filter((k) => (profileA.entries[k.id]?.usedInScene ?? 0) > 0)
+    ? KINKS.filter((k) => visibleUsedInScene(profileA.entries[k.id]) > 0)
         .sort((a, b) =>
-          ((profileB?.entries[b.id]?.usedInScene ?? 0) + (profileA.entries[b.id]?.usedInScene ?? 0)) -
-          ((profileB?.entries[a.id]?.usedInScene ?? 0) + (profileA.entries[a.id]?.usedInScene ?? 0)))
+          (visibleUsedInScene(profileB?.entries[b.id]) + visibleUsedInScene(profileA.entries[b.id])) -
+          (visibleUsedInScene(profileB?.entries[a.id]) + visibleUsedInScene(profileA.entries[a.id])))
         .slice(0, 5)
     : [];
 
   const mutualKinks = KINKS.filter((k) => {
-    const a = profileA?.entries[k.id]?.status ?? null;
-    const b = profileB?.entries[k.id]?.status ?? null;
+    const a = visibleStatus(profileA?.entries[k.id]);
+    const b = visibleStatus(profileB?.entries[k.id]);
     return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
   });
 
   const spanningKinks = KINKS.filter((k) => {
-    const a = profileA?.entries[k.id]?.status ?? null;
-    const b = profileB?.entries[k.id]?.status ?? null;
+    const a = visibleStatus(profileA?.entries[k.id]);
+    const b = visibleStatus(profileB?.entries[k.id]);
     if (!a || !b || a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
     return !((a === "yes" || a === "willing") && (b === "yes" || b === "willing")) && (a === "maybe" || b === "maybe");
   });
