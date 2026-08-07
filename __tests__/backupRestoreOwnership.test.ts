@@ -44,14 +44,15 @@ describe("encrypted backup ownership", () => {
     expect(withoutKey.profiles[0].isImported).toBe(true);
   });
 
-  it("keeps unsigned legacy own backups editable", async () => {
+  it("restores unsigned legacy own backups as read-only shared data", async () => {
     const restored = await prepareBackupRestore({
       source: "backup",
       profiles: [profile()],
       profileOwnerKeys: [],
     });
-    expect(restored.profiles[0].origin).toBe("own");
-    expect(restored.profiles[0].isImported).toBe(false);
+    expect(restored.profiles[0].origin).toBe("shared");
+    expect(restored.profiles[0].isImported).toBe(true);
+    expect(restored.profiles[0].lockedAt).toBeTypeOf("number");
   });
 
   it("does not accept a private key belonging to another profile", async () => {
