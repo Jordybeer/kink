@@ -3,6 +3,7 @@ import type { Profile } from "@/types";
 import { generateProfileOwnerKey, signProfileConsent } from "@/lib/consentProof";
 import {
   contractBucket,
+  activeSignedContractForPair,
   contractParticipantFromProfile,
   contractSummaryFromContent,
   contractPairKey,
@@ -93,6 +94,36 @@ async function draftSeries(a: Profile, b: Profile): Promise<ContractSeries> {
 }
 
 describe("contract lifecycle", () => {
+  it("only lets a current mutually signed active series satisfy a pair gate", async () => {
+    const a = profile("a-dom", "A");
+    const b = profile("b-sub", "B");
+    const keyA = await generateProfileOwnerKey(a.id);
+    const keyB = await generateProfileOwnerKey(b.id);
+    const active = await draftSeries(a, b);
+    const version = active.versions[0];
+    version.state = "signed";
+    version.signatures = [
+      await signContractPayload(version.content!, a.id, keyA),
+      await signContractPayload(version.content!, b.id, keyB),
+    ];
+    active.participants = active.participants.map((participant) => {
+      const proof = version.signatures.find((signature) => signature.profileId === participant.profileId)!;
+      return { ...participant, keyId: proof.keyId, publicKeyJwk: proof.publicKeyJwk };
+    }) as ContractSeries["participants"];
+    active.status = "active";
+    active.currentVersionId = version.id;
+    active.draftVersionId = undefined;
+
+    expect(activeSignedContractForPair([active], a.id, b.id)?.id).toBe(active.id);
+    expect(activeSignedContractForPair([{ ...active, status: "stopped" }], a.id, b.id)).toBeUndefined();
+
+    const legacy = structuredClone(active);
+    legacy.versions[0].content = undefined;
+    legacy.versions[0].signatures = [];
+    legacy.versions[0].legacySnapshotId = "legacy-snapshot";
+    expect(activeSignedContractForPair([legacy], a.id, b.id)).toBeUndefined();
+  });
+
   it("groups role profiles as one person for the profile badge while keeping exact pair series separate", async () => {
     const me = profile("me-dom", "Jordy");
     const partnerDom = profile("noiva-dom", "Noiva", "shared", "noiva");

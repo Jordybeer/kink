@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   CONTRACT_ALEX_SAM,
+  CONTRACT_SERIES_ALEX_SAM,
   PROFILE_ALEX,
   PROFILE_SAM,
   seedAndGo,
@@ -61,7 +62,10 @@ test("scene suggestions ignore concealed status and usage history", async ({ pag
     page,
     "/scene?a=pw-alex-001&b=pw-sam-002",
     [alex, sam],
-    { contracts: [CONTRACT_ALEX_SAM] },
+    {
+      contracts: [CONTRACT_ALEX_SAM],
+      contractSeries: [CONTRACT_SERIES_ALEX_SAM],
+    },
   );
   await page.getByRole("button", { name: "Kinks toevoegen" }).click();
 

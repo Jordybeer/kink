@@ -1,7 +1,9 @@
 import type { Page } from "@playwright/test";
 import type { ContractSnapshot, Profile } from "@/types";
+import type { ContractSeries } from "@/lib/contractLifecycle";
 
 const STORE_KEY = "kink-profiles";
+const CONTRACT_STORE_KEY = "kink-contract-series";
 const SEED_GUARD = "kinksync-e2e-store-seeded";
 
 // Realistic test profiles with entries covering all match types
@@ -72,8 +74,85 @@ export const CONTRACT_ALEX_SAM: ContractSnapshot = {
   safeword: "Rood",
 };
 
+const ALEX_PARTICIPANT = {
+  profileId: PROFILE_ALEX.id,
+  profileName: PROFILE_ALEX.name,
+  role: PROFILE_ALEX.role,
+  verificationCode: "e2e-alex-verification",
+  keyId: "e2e-key-alex",
+};
+
+const SAM_PARTICIPANT = {
+  profileId: PROFILE_SAM.id,
+  profileName: PROFILE_SAM.name,
+  role: PROFILE_SAM.role,
+  verificationCode: "e2e-sam-verification",
+  keyId: "e2e-key-sam",
+};
+
+export const CONTRACT_SERIES_ALEX_SAM: ContractSeries = {
+  id: "pw-contract-series-alex-sam",
+  pairKey: [PROFILE_ALEX.id, PROFILE_SAM.id].sort().join("|"),
+  participants: [ALEX_PARTICIPANT, SAM_PARTICIPANT],
+  status: "active",
+  createdAt: 1700000002000,
+  updatedAt: 1700000002000,
+  currentVersionId: "pw-contract-version-alex-sam",
+  versions: [{
+    id: "pw-contract-version-alex-sam",
+    number: 1,
+    createdAt: 1700000002000,
+    updatedAt: 1700000002000,
+    contentHash: "e2e-contract-content-hash",
+    content: {
+      schema: 1,
+      profileA: ALEX_PARTICIPANT,
+      profileB: SAM_PARTICIPANT,
+      preamble: "E2E verbond",
+      createdAt: 1700000002000,
+      signalsA: { green: "Groen", amber: "Oranje", red: "Rood", black: "Zwart" },
+      signalsB: { green: "Groen", amber: "Oranje", red: "Rood", black: "Zwart" },
+      aftercareA: [],
+      aftercareB: [],
+      shared: [],
+      softLimits: [],
+      hardLimits: [],
+      hardLimitDetails: [],
+      discuss: [],
+    },
+    summary: {
+      matchCount: 5,
+      hardLimitCount: 1,
+      softLimitCount: 1,
+      discussCount: 2,
+      safeword: "Rood",
+    },
+    state: "signed",
+    signatures: [
+      {
+        profileId: PROFILE_ALEX.id,
+        keyId: ALEX_PARTICIPANT.keyId,
+        publicKeyJwk: { kty: "EC", crv: "P-256", x: "e2e-x-alex", y: "e2e-y-alex", ext: true },
+        signedAt: 1700000002000,
+        payloadHash: "e2e-alex-payload-hash",
+        signature: "e2e-alex-signature",
+      },
+      {
+        profileId: PROFILE_SAM.id,
+        keyId: SAM_PARTICIPANT.keyId,
+        publicKeyJwk: { kty: "EC", crv: "P-256", x: "e2e-x-sam", y: "e2e-y-sam", ext: true },
+        signedAt: 1700000002000,
+        payloadHash: "e2e-sam-payload-hash",
+        signature: "e2e-sam-signature",
+      },
+    ],
+  }],
+  events: [],
+};
+
 export function buildStore(profiles: Profile[], extras: Partial<{
   contracts: ContractSnapshot[];
+  contractSeries: ContractSeries[];
   onboardingComplete: boolean;
   profileTourComplete: boolean;
   pinnedProfileId: string | null;
@@ -99,13 +178,27 @@ async function installStoreSeed(
   extras?: Parameters<typeof buildStore>[1],
 ) {
   const serialized = JSON.stringify(buildStore(profiles, extras));
+  const serializedContractStore = JSON.stringify({
+    state: {
+      series: extras?.contractSeries ?? [],
+      migratedLegacySnapshotIds: [],
+    },
+    version: 1,
+  });
   await page.addInitScript(
-    ({ storeKey, seedGuard, value }) => {
+    ({ storeKey, contractStoreKey, seedGuard, value, contractStoreValue }) => {
       if (sessionStorage.getItem(seedGuard) === "1") return;
       localStorage.setItem(storeKey, value);
+      localStorage.setItem(contractStoreKey, contractStoreValue);
       sessionStorage.setItem(seedGuard, "1");
     },
-    { storeKey: STORE_KEY, seedGuard: SEED_GUARD, value: serialized },
+    {
+      storeKey: STORE_KEY,
+      contractStoreKey: CONTRACT_STORE_KEY,
+      seedGuard: SEED_GUARD,
+      value: serialized,
+      contractStoreValue: serializedContractStore,
+    },
   );
 }
 

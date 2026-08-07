@@ -5,8 +5,14 @@ import { useMotionSafe } from "@/lib/motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { useContractStore } from "@/lib/contractStore";
 import { KINKS } from "@/lib/kinks";
-import type { Profile, SceneItem, SceneRecord, ContractSnapshot } from "@/types";
+import type { Profile, SceneItem, SceneRecord } from "@/types";
+import {
+  activeSignedContractForPair,
+  contractVersionById,
+  type ContractSeries,
+} from "@/lib/contractLifecycle";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
@@ -20,33 +26,18 @@ function uid() {
   return crypto.randomUUID();
 }
 
-// ─── Contract helpers ────────────────────────────────────────────────────────
-
-function contractForPair(
-  contracts: ContractSnapshot[],
-  aId: string,
-  bId: string
-): ContractSnapshot | undefined {
-  if (!aId || !bId) return undefined;
-  return contracts.find(
-    (c) =>
-      (c.profileAId === aId && c.profileBId === bId) ||
-      (c.profileAId === bId && c.profileBId === aId)
-  );
-}
-
 // ─── Contract gate ────────────────────────────────────────────────────────────
 
 function ContractGate({
   profiles,
   initialA,
   initialB,
-  contracts,
+  contractSeries,
 }: {
   profiles: Profile[];
   initialA: string;
   initialB: string;
-  contracts: ContractSnapshot[];
+  contractSeries: ContractSeries[];
 }) {
   const router = useRouter();
   const t = useMotionSafe();
@@ -54,7 +45,9 @@ function ContractGate({
   const [selectedB, setSelectedB] = useState(initialB);
 
   const canProceed = selectedA && selectedB && selectedA !== selectedB;
-  const existingContract = canProceed ? contractForPair(contracts, selectedA, selectedB) : undefined;
+  const existingContract = canProceed
+    ? activeSignedContractForPair(contractSeries, selectedA, selectedB)
+    : undefined;
   const contractHref = canProceed
     ? `/contract?a=${selectedA}&b=${selectedB}`
     : "/contract";
@@ -395,7 +388,8 @@ function KinkChip({
 function ScenePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { profiles, scenes, contracts, saveScene, lockSceneConsent } = useStore();
+  const { profiles, scenes, saveScene, lockSceneConsent } = useStore();
+  const contractSeries = useContractStore((state) => state.series);
   const _hasHydrated = useHasHydrated();
 
   const sceneIdParam = searchParams.get("id");
@@ -442,11 +436,12 @@ function ScenePage() {
   // Autofill safeword from contract when profiles are known
   useEffect(() => {
     if (!_hasHydrated || !resolvedAId || !resolvedBId) return;
-    const contract = contractForPair(contracts, resolvedAId, resolvedBId);
-    if (contract?.safeword) {
-      setSafeword((prev) => prev || contract.safeword!);
+    const contract = activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
+    const version = contract ? contractVersionById(contract, contract.currentVersionId) : undefined;
+    if (version?.summary.safeword) {
+      setSafeword((prev) => prev || version.summary.safeword!);
     }
-  }, [_hasHydrated, resolvedAId, resolvedBId, contracts]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [_hasHydrated, resolvedAId, resolvedBId, contractSeries]);
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     if (isConsentLocked) return;
@@ -576,7 +571,7 @@ function ScenePage() {
   const hasKinks = mutualKinks.length > 0 || spanningKinks.length > 0 || topKinks.length > 0;
 
   // Gate: new scene with no signed contract for the pair
-  const gated = !sceneIdParam && !contractForPair(contracts, resolvedAId, resolvedBId);
+  const gated = !sceneIdParam && !activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
 
   return (
     <>
@@ -791,7 +786,7 @@ function ScenePage() {
           profiles={profiles}
           initialA={aId}
           initialB={bId}
-          contracts={contracts}
+          contractSeries={contractSeries}
         />
       )}
 

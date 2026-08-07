@@ -257,6 +257,31 @@ export function contractPairKey(profileAId: string, profileBId: string): string 
   return [profileAId, profileBId].sort().join("|");
 }
 
+export function activeSignedContractForPair(
+  series: readonly ContractSeries[],
+  profileAId: string,
+  profileBId: string,
+): ContractSeries | undefined {
+  if (!profileAId || !profileBId || profileAId === profileBId) return undefined;
+  const pairKey = contractPairKey(profileAId, profileBId);
+  return series.find((candidate) => {
+    if (candidate.pairKey !== pairKey || candidate.status !== "active" || !candidate.currentVersionId) return false;
+    const version = contractVersionById(candidate, candidate.currentVersionId);
+    if (!version?.content || version.state !== "signed" || version.legacySnapshotId) return false;
+    if (contractPairKey(version.content.profileA.profileId, version.content.profileB.profileId) !== pairKey) return false;
+
+    const expectedIds = new Set([profileAId, profileBId]);
+    if (candidate.participants.length !== 2
+      || candidate.participants.some((participant) => !expectedIds.has(participant.profileId))) return false;
+
+    return candidate.participants.every((participant) => {
+      if (!participant.keyId) return false;
+      const proof = version.signatures.find((signature) => signature.profileId === participant.profileId);
+      return !!proof && proof.keyId === participant.keyId;
+    });
+  });
+}
+
 export function contractPersonIdentity(participant: ContractParticipant): string {
   return participant.personGroupId ?? participant.profileId;
 }
