@@ -11,9 +11,9 @@ async function blockServiceWorkerNetwork(route: Route) {
 }
 
 export async function goOffline(context: BrowserContext) {
-  // `setOffline(true)` updates the page-facing network state, while explicitly
-  // aborting Service Worker-owned requests guarantees that a NetworkFirst
-  // strategy cannot quietly reach the test server behind that emulation.
+  // `setOffline(true)` tells the page the network is gagged; aborting
+  // Service Worker-owned requests keeps NetworkFirst on the same short leash,
+  // so it cannot sneak back to the test server behind the emulation.
   await context.route(NETWORK_PATTERN, blockServiceWorkerNetwork);
   await context.setOffline(true);
 }

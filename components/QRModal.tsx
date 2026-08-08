@@ -136,8 +136,8 @@ export default function QRModal({ profile, onClose }: Props) {
     })();
 
     return () => { cancelled = true; };
-    // Sealing consent replaces the profile object without changing shareable
-    // profile content. The identity/content fields below are the intended key.
+    // Consent sealing may swap the profile object, but it doesn't get to tug
+    // this QR around: only the shareable identity/content fields hold the leash.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     profile?.id,

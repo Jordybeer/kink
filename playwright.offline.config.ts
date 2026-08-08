@@ -2,9 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const galaxyS26Ultra = {
   ...devices["Galaxy S24"],
-  // Galaxy S26 Ultra's 1440×3120 panel has the same 13:6 portrait ratio.
-  // 360×780 is deliberately conservative in CSS pixels; DPR 4 maps it to
-  // the panel resolution while keeping the layout stress-test phone-sized.
+  // Keep this S26 Ultra-class viewport tightly restrained: its 1440×3120
+  // panel shares the 13:6 portrait ratio, while 360×780 CSS px at DPR 4
+  // puts the layout through a properly phone-sized stress test.
   viewport: { width: 360, height: 780 },
   screen: { width: 360, height: 780 },
   deviceScaleFactor: 4,

@@ -124,14 +124,15 @@ test("every fixed room works offline without visiting it first", async ({ page, 
 
   for (const route of STATIC_ROUTES) {
     await page.goto(route.url, { waitUntil: "domcontentloaded" });
-    if ("shellMarker" in route) {
-      await expect(page.getByText(route.shellMarker)).toBeVisible({ timeout: 10_000 });
+    const shellMarker = "shellMarker" in route ? route.shellMarker : undefined;
+    if (shellMarker) {
+      await expect(page.getByText(shellMarker)).toBeVisible({ timeout: 10_000 });
     } else {
       await page.waitForTimeout(300);
     }
     const text = (await page.evaluate(() => document.body.innerText)).trim();
-    if ("shellMarker" in route) {
-      expect(text, `offline ${route.url} should render its fixed shell`).toContain(route.shellMarker);
+    if (shellMarker) {
+      expect(text, `offline ${route.url} should render its fixed shell`).toContain(shellMarker);
     } else {
       expect(text.length, `offline ${route.url} should render content`).toBeGreaterThan(30);
     }
