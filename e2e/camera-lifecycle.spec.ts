@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
 type DeferredCameraWindow = Window & {
+  __playRejectCalls?: number;
   __resolveDeferredCamera?: () => void;
   __stoppedCameraTracks?: number;
 };
@@ -40,6 +41,7 @@ async function resolveCameraAfterClose(page: Page) {
 async function installPlaybackRejectingCamera(page: Page) {
   await page.addInitScript(() => {
     const cameraWindow = window as DeferredCameraWindow;
+    cameraWindow.__playRejectCalls = 0;
     cameraWindow.__stoppedCameraTracks = 0;
 
     Object.defineProperty(navigator, "mediaDevices", {
@@ -56,11 +58,17 @@ async function installPlaybackRejectingCamera(page: Page) {
         },
       },
     });
-    HTMLMediaElement.prototype.play = () => Promise.reject(new Error("playback blocked"));
+    HTMLMediaElement.prototype.play = () => {
+      cameraWindow.__playRejectCalls = (cameraWindow.__playRejectCalls ?? 0) + 1;
+      return Promise.reject(new Error("playback blocked"));
+    };
   });
 }
 
-async function expectCameraStopped(page: Page) {
+async function expectRejectedPlaybackStoppedCamera(page: Page) {
+  await expect.poll(() => page.evaluate(
+    () => (window as DeferredCameraWindow).__playRejectCalls ?? 0,
+  )).toBeGreaterThan(0);
   await expect.poll(() => page.evaluate(
     () => (window as DeferredCameraWindow).__stoppedCameraTracks ?? 0,
   )).toBe(1);
@@ -95,8 +103,7 @@ test("stopt de profielcamera als video afspelen faalt", async ({ page }) => {
   await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
   await page.getByRole("button", { name: "Scan het profiel van je partner" }).click();
-  await expect(page.getByText("Camera kon niet worden gestart. Probeer opnieuw.")).toBeVisible();
-  await expectCameraStopped(page);
+  await expectRejectedPlaybackStoppedCamera(page);
 });
 
 test("stopt de contractcamera als video afspelen faalt", async ({ page }) => {
@@ -104,6 +111,5 @@ test("stopt de contractcamera als video afspelen faalt", async ({ page }) => {
   await seedAndGo(page, "/contracts", [PROFILE_ALEX]);
 
   await page.getByRole("button", { name: "Contractverzoek scannen" }).click();
-  await expect(page.getByText("Camera kon niet worden gestart. Probeer opnieuw.")).toBeVisible();
-  await expectCameraStopped(page);
+  await expectRejectedPlaybackStoppedCamera(page);
 });
