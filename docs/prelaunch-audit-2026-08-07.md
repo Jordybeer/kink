@@ -2,6 +2,8 @@
 
 Status: **NO-GO voor publieke launch** totdat alle P0/P1 launch-blockers hieronder gesloten en opnieuw geverifieerd zijn.
 
+> **Close-out 2026-08-08:** deze statusregel hoort bij de auditfreeze van 7 augustus. De actuele release-candidate status, gesloten findings en finale CI/devicebewijzen staan in **§14** onderaan dit document.
+
 Doelplatform: **mobile first** — geïnstalleerde PWA en mobiele browser zijn primair; tablet en desktop zijn secundair.
 
 Deze audit is de bron van waarheid voor de launch-hardening. Een finding wordt pas op `DONE` gezet nadat de kwetsbare of defecte route opnieuw is bewezen, de fix regressiedekking heeft, de relevante suite groen is en de GitHub-checks zijn bevestigd.
@@ -441,3 +443,97 @@ Input-size caps, camera lifecycle, privacyvriendelijker offline warmup, één Sh
 | P2-11 camera late stream | OPEN | — | async cleanup race bevestigd |
 | P2-12 offline ID metadata | OPEN | — | dynamic warmup routes bevestigd |
 | P2-13 SECURITY.md | OPEN | — | bestand ontbreekt |
+
+---
+
+## 14. Close-out — 2026-08-08
+
+Deze sectie is de actuele laag bovenop de historische auditfreeze. De oorspronkelijke findingteksten blijven bewust ongewijzigd zodat oorzaak, risico en fixrichting niet achteraf worden herschreven.
+
+Actuele `dev` na launch-hardening: `123cd02d2a3a9834c624c6931f126aa2a297fafe` (PR #296).
+
+### 14.1 Findingledger na herverificatie
+
+| ID | Actuele status | Geland | Bewijs / resultaat |
+| --- | --- | --- | --- |
+| A-guardrails | DONE | #284 · `1cacd52` | Next 16.3.0; dependency guardrails; finale audit 0 vulnerabilities |
+| A-e2e | DONE | #285 · `cf3abd2` + #296 · `123cd02` | stale suite hersteld; browser/device rehearsal is nu een harde gate |
+| A-munch-removal | DONE | #286 · `299529e` | Munch Punch volledig verwijderd; ~2.225 regels en bijbehorend oppervlak weg |
+| P0-01 private contract data | DONE | #288 · `c320f81` | private responses worden vóór contract/PDF/signed transfer begrensd + regressiedekking |
+| P0-02 private scene inference | DONE | #288 · `c320f81` | private responses uitgesloten van cross-profile scene-suggesties |
+| P0-03 app-lock direct routes | DONE | #289 · `89c339f` | gevoelige routes delen de lock-boundary; directe-route regressies gedekt |
+| P0-04 contract actor binding | DONE | #290 · `fdbb99f` | ontvangen actor identity wordt aan lokaal bekende identity/key-data geankerd |
+| P1-05 scene consent gate | DONE | #291 · `301587b` | historische snapshot alleen autoriseert geen nieuwe scene meer |
+| P1-06 contract restore proofs | DONE | #292 · `3583fc4` | contractseries worden cryptografisch geverifieerd vóór restore/freshness |
+| P1-07 unsigned legacy ownership | DONE | #293 · `3ad5b07` | dataherstel blijft mogelijk; unsigned legacy data verzint geen editable ownership |
+| P1-08 production deps | DONE | #284 + #296 | finale `npm audit --audit-level=high` en `npm audit --omit=dev`: 0 vulnerabilities |
+| P1-09 backup size cap | DONE | #294 · `08f87bb` | bestandsgrootte begrensd vóór volledige read/parse |
+| P1-10 contract QR size cap | DONE | #294 · `08f87bb` | totale transferlimiet vóór base64/JSON allocatie/parse |
+| P2-11 camera late stream | DONE | #295 · `9324070` | generation-token/cleanup; stale of mislukte streams laten geen actieve track achter |
+| P2-12 offline ID metadata | DONE | #295 · `9324070` | warmup gebruikt vaste routes; ID-dragende links prefetch uit; regressie bewaakt background requests |
+| P2-13 SECURITY.md | PENDING | — | root policy ontbreekt nog; vereist expliciete policy-review/goedkeuring vóór schrijven |
+
+Er staan daarmee **geen P0- of P1-findings meer open** uit deze audit.
+
+### 14.2 Finale launch-gate — GitHub Actions run #44
+
+Run `31261363566` draaide op PR #296 head `f2586d6d5a470ba3271d0a27e4822bf25dac3eae`; die PR is na volledig groen resultaat squash-gemerged als `123cd02`.
+
+- core: dependency audit, lint, **379/379 unit-tests** en Next/Serwist productiebuild groen;
+- reguliere browserrehearsal: **222/222 Playwright-tests** groen in Chromium/WebKit;
+- productie-PWA/offline: **16/16** groen, met Service Worker-owned netwerkrequests expliciet afgebroken tijdens offline simulatie;
+- launch-device smoke: **5/5** groen;
+- artifact `device-smoke-screenshots`: **25 screenshots** = 5 kernroutes × 5 deviceprofielen, gekoppeld aan exact dezelfde PR-head;
+- Vercel preview status op de finale head: Ready.
+
+De offline-harness is tijdens deze close-out strenger gemaakt: `context.setOffline(true)` wordt niet als enige bewijs gebruikt; Service Worker-owned requests worden eveneens afgebroken. Daardoor kan een `NetworkFirst` route de testserver niet stiekem als vangnet gebruiken.
+
+### 14.3 Device- en visuele beoordeling
+
+Geautomatiseerde profielen:
+
+| Profiel | Engine / emulatie | Visuele uitkomst |
+| --- | --- | --- |
+| iPhone 17 | WebKit · 402×681 viewport · DPR 3 | geen launch-blocking overflow, clipping of CTA-overlap gezien |
+| iPhone 17 Pro Max | WebKit · 440×763 viewport · DPR 3 | idem; langere content en bottom controls blijven bruikbaar |
+| iPad Pro 11 portrait | WebKit · 834×1194 | stabiel; bewust smalle mobile-first contentkolom met veel vrije ruimte |
+| iPad Pro 11 landscape | WebKit · 1194×834 | stabiel; veel vrije ruimte, functioneel maar geen tablet-specifieke luxe-layout |
+| Galaxy S26 Ultra-class | Chromium · 360×780 · DPR 4 | geen launch-blocking overflow, clipping of CTA-overlap gezien |
+
+De 25 full-page screenshots van home, profiel, compare, contract en scene zijn visueel bekeken. De smalle centrale kolom op iPad is een **postlaunch polishpunt**, geen functionele blocker.
+
+Belangrijk: dit zijn browser/device-emulaties. Ze bewijzen layout, browsergedrag en geautomatiseerde flows, **niet** fysieke hardware, echte camera-permissions, iOS installed-PWA lifecycle, notch/safe-area gedrag of VoiceOver.
+
+### 14.4 Extra bugs die de gate zelf ving
+
+De launch-gate vond tijdens het harden nog drie zaken die niet als oorspronkelijke audit-ID waren genummerd:
+
+1. offline profielcreatie kon na een persistence-timeout opnieuw `createPerspectiveProfiles()` aanroepen en zo een duplicaat maken; #296 bewaart de pending profiel-ID, blokkeert re-entrancy en maakt de retry expliciet `Opslaan opnieuw`;
+2. een offline shell-test vertrouwde eerst op een vaste 300 ms hydration-wacht; hij wacht nu op de echte route-marker en faalt als de shell niet hydrateert;
+3. één PDF filename unit-fixture parseerde een date-only string als UTC en was daardoor timezone-afhankelijk; de fixture gebruikt nu een lokale middagdatum.
+
+### 14.5 Wat nog vóór een publieke launch op echte hardware moet
+
+De software-releasecandidate is technisch **GO**, maar publieke launch blijft **CONDITIONAL GO** totdat de korte menselijke/device gate is afgevinkt:
+
+1. fysieke iPhone: Safari én geïnstalleerde PWA — onboarding, lock/unlock, QR camera permission/close/reopen, keyboard/zoom, safe areas, background/resume en Service Worker update;
+2. fysieke iPhone: minimaal één volledige contract sign/scan + PDF export;
+3. VoiceOver spotcheck op onboarding, profiel, sheets en contract signing; reduced-motion spotcheck;
+4. bij voorkeur één actuele fysieke Samsung/Chrome smoke voor camera, keyboard en installed-PWA gedrag;
+5. root `SECURITY.md` publiceren nadat de exacte disclosurepolicy expliciet is goedgekeurd.
+
+### 14.6 Geactualiseerde readiness
+
+**Engineering/product release candidate: ~9/10 en technisch GO.** De oorspronkelijke 6/10 NO-GO is substantieel veranderd: alle P0/P1's zijn gesloten, productie-dependencies auditen schoon en de browser/PWA/device-gates blokkeren voortaan regressies.
+
+**Publieke launch: CONDITIONAL GO.** Het resterende risico zit niet meer in een bekende P0/P1 uit deze audit, maar in twee bewust niet-geclaimde oppervlakken: fysieke iOS/Android hardwaregedrag en disclosure/governance via `SECURITY.md`.
+
+### 14.7 Efficiënte voortgangsvolgorde vanaf hier
+
+1. `SECURITY.md` exact reviewen en na expliciete goedkeuring toevoegen.
+2. Eén fysieke iPhone installed-PWA/Safari walkthrough inclusief camera + PDF + VoiceOver.
+3. Eén fysieke Samsung/Chrome smoke als er een toestel beschikbaar is.
+4. Pas daarna `dev → main` als public-release promotion; niet eerder alleen omdat emulatie groen is.
+5. Postlaunch: Sheet-primitieven consolideren, z-index layer tokens introduceren, routehiërarchie `/contract(s)` en `/scene(s)` normaliseren, en tablet/desktop whitespace verfijnen.
+
+Die volgorde maximaliseert launchzekerheid zonder vlak voor release een brede UI-architectuurrefactor te riskeren.

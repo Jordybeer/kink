@@ -58,7 +58,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 
 ### Post-v6 re-rating leftovers (added 2026-07-12 late night — the ~8.7 → 9+ shortlist)
 In order of expected win, per the evening's re-rating against the July 11 audit:
-1. **Re-enable CI** — the `safe-word check` workflow is still manually disabled on GitHub (since ~06-21); one click by the owner, repo → Actions → Enable workflow. Everything else on this list is worth less while the watchdog sleeps.
+1. ~~**Re-enable CI**~~ → **SHIPPED** — `safe-word check` draait weer; PR #296 promoveerde core, browser/device én productie-PWA naar harde launch-gates.
 2. **Motion consolidation** — 15 inline `transition:` styles remain (Onboarding ×6, AppLock ×3, compare ×2, 4 strays); fold them into the shared motion vocabulary.
 3. **Compare-page extraction** — compare (937), session (890) and scene (828) are now the fattest pages; same copy-move `lib/` treatment that slimmed Contract 1372→754 and Profile 1133→784.
 4. **Last 3 bare radii** — the design-system sweep left three bare `rounded` classes standing.
@@ -68,7 +68,7 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 - **e2e fixture rot guard**: `buildStore` still seeds persist `version: 8` — the migration wipes any seeded `scenes` (pre-v10 payloads get `scenes = []`). Bit the Phase 9 proof shots. Bump the fixture to v15 and teach `buildStore` extras to carry `scenes`/`contracts` so future specs don't rediscover this.
 - **TRAFFIC map deduped**: the green/amber/red label+colour map lives twice (`app/scenes/page.tsx` and `app/scenes/[id]/page.tsx`). One home in `lib/` next to the status vocabulary.
 - **ProfileSelect accent prop**: the old timeline selects wore their line colours on the border; the house dropdown lost that. An optional `accent` prop would restore the A/B colour echo without forking the component.
-- **CI e2e graduation**: the advisory job gets its first real runs on PR #248 — if it stays green there, flip `continue-on-error` off in a one-line follow-up.
+- ~~**CI e2e graduation**~~ → **SHIPPED in PR #296**: browser/device rehearsal en productie-PWA zijn enforcing; geen `continue-on-error` meer op de launch-gates.
 - **Rare-state e2e for the unswept two**: session "connected" and AppLock never appear in screenshot sweeps (need a live peer / PIN hash). A mocked-signaling fixture would close the last visual blind spots.
 
 ### Navigation polish (TopNav)
@@ -101,7 +101,7 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 - **Overview card tap-to-edit**: tap a read-only Overzicht card to open `KinkEditSheet` directly (own profiles only — the accordion flow this originally targeted is gone).
 
 ### Performance / Technical
-- **Playwright CI integration**: run the visual audit in CI.
+- ~~**Playwright CI integration**~~ → **SHIPPED in PR #296**: 222-test browserrehearsal + 5 launch-device smokes; 25 screenshots worden als CI-artifact bewaard.
 - **Bundle size audit**: `@next/bundle-analyzer` pass.
 - **Custom kink persistence race**: rapid add-then-navigate may drop the write in the persist debounce.
 - ~~**Offline support**: PWA manifest exists but no service-worker caching strategy.~~ → shipped via PR #263 and completed for newly created local profile/scene routes in PR #266 (see ledger).
