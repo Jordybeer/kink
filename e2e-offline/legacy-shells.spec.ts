@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { goOffline } from "./offlineHarness";
 
 async function waitForOfflineCache(page: import("@playwright/test").Page) {
   await expect.poll(
@@ -9,6 +10,7 @@ async function waitForOfflineCache(page: import("@playwright/test").Page) {
 
 test("legacy profile and scene urls use the fixed shells for records born offline", async ({ page, context }) => {
   await page.addInitScript(() => {
+    if (localStorage.getItem("kink-profiles")) return;
     localStorage.setItem("kink-profiles", JSON.stringify({
       state: {
         profiles: [],
@@ -32,7 +34,7 @@ test("legacy profile and scene urls use the fixed shells for records born offlin
 
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   await page.evaluate(() => {
     const raw = localStorage.getItem("kink-profiles");

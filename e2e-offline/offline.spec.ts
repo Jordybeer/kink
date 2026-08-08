@@ -1,20 +1,21 @@
 import { test, expect } from "@playwright/test";
+import { goOffline, goOnline } from "./offlineHarness";
 
 // Offline capability only exists in a PRODUCTION build — Serwist is disabled in
 // dev (next.config.ts: `disable: NODE_ENV !== "production"`). This suite runs
 // against `next start` via playwright.offline.config.ts, NOT the dev server.
 
 const STATIC_ROUTES = [
-  "/",
-  "/profile",
-  "/scene",
-  "/scenes",
-  "/scenes/view",
-  "/compare",
-  "/contract",
-  "/contracts",
-  "/timeline",
-  "/about",
+  { url: "/" },
+  { url: "/profile", shellMarker: "Profiel niet gevonden" },
+  { url: "/scene" },
+  { url: "/scenes" },
+  { url: "/scenes/view", shellMarker: "Scène niet gevonden" },
+  { url: "/compare" },
+  { url: "/contract" },
+  { url: "/contracts" },
+  { url: "/timeline" },
+  { url: "/about" },
 ];
 
 async function waitForOfflineCache(page: import("@playwright/test").Page) {
@@ -79,6 +80,7 @@ function storedState() {
 
 async function seedStore(page: import("@playwright/test").Page) {
   await page.addInitScript((persisted) => {
+    if (localStorage.getItem("kink-profiles")) return;
     localStorage.setItem("kink-profiles", JSON.stringify(persisted));
   }, storedState());
 }
@@ -93,7 +95,10 @@ test("background work never sends local record ids to the origin", async ({ page
 
   // Next.js only starts automatic Link prefetching when a link becomes visible.
   // Exercise every home link carrying a seeded local id without clicking it.
-  const privateLinks = page.locator('a[href*="profile-a"], a[href*="profile-b"], a[href*="scene-a"]');
+  const privateLinks = page.locator(
+    'a[href*="profile-a"]:visible, a[href*="profile-b"]:visible, a[href*="scene-a"]:visible',
+  );
+  expect(await privateLinks.count(), "expected visible links carrying seeded local ids").toBeGreaterThan(0);
   for (let index = 0; index < await privateLinks.count(); index += 1) {
     await privateLinks.nth(index).scrollIntoViewIfNeeded();
     await page.waitForTimeout(100);
@@ -115,14 +120,23 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await context.setOffline(true);
+  await goOffline(context);
 
   for (const route of STATIC_ROUTES) {
-    await page.goto(route, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(300);
+    await page.goto(route.url, { waitUntil: "domcontentloaded" });
+    const shellMarker = "shellMarker" in route ? route.shellMarker : undefined;
+    if (shellMarker) {
+      await expect(page.getByText(shellMarker)).toBeVisible({ timeout: 10_000 });
+    } else {
+      await page.waitForTimeout(300);
+    }
     const text = (await page.evaluate(() => document.body.innerText)).trim();
-    expect(text.length, `offline ${route} should render content`).toBeGreaterThan(30);
-    expect(text, `offline ${route} should not be the offline fallback`).not.toContain("Je bent offline");
+    if (shellMarker) {
+      expect(text, `offline ${route.url} should render its fixed shell`).toContain(shellMarker);
+    } else {
+      expect(text.length, `offline ${route.url} should render content`).toBeGreaterThan(30);
+    }
+    expect(text, `offline ${route.url} should not be the offline fallback`).not.toContain("Je bent offline");
   }
 
   expect(errors, `page errors offline: ${errors.join(" | ")}`).toHaveLength(0);
@@ -130,7 +144,7 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await page.goto("/scenes", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("status", { name: "Offline" }).first()).toBeVisible();
 
-  await context.setOffline(false);
+  await goOnline(context);
   await expect(page.getByRole("status", { name: "Online" }).first()).toBeVisible();
 });
 
@@ -138,7 +152,7 @@ test("legacy cards fold into the fixed profile and scene shells offline", async 
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   // The large home CTA carries profile IDs in its query string. Offline it must
   // preserve those IDs instead of reusing a query-less RSC payload.
@@ -147,7 +161,7 @@ test("legacy cards fold into the fixed profile and scene shells offline", async 
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.getByRole("link", { name: "Profiel Mira openen" }).click();
+  await page.getByRole("link", { name: "Mira Switch openen" }).click();
   await expect(page).toHaveURL(/\/profile\?id=profile-a$/);
   await expect(page.getByText("Mira").first()).toBeVisible();
   await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
@@ -161,11 +175,14 @@ test("a profile born after the network cut opens and reloads immediately", async
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   await page.getByRole("button", { name: "Nieuw profiel" }).click();
-  await page.getByPlaceholder("Naam of alias…").fill("Nova offline");
-  await page.getByRole("button", { name: "Sla jezelf vast" }).click();
+  await page.getByLabel("Naam of alias").fill("Nova offline");
+  await page.getByRole("button", { name: /^Submissive/ }).click();
+  await page.getByRole("button", { name: "Verder" }).click();
+  await page.getByRole("button", { name: "Verder" }).click();
+  await page.getByRole("button", { name: "Profiel maken" }).click();
 
   await expect(page).toHaveURL(/\/profile\?id=[^&]+$/);
   await expect(page.getByText("Nova offline").first()).toBeVisible();
@@ -180,7 +197,7 @@ test("a scene born after the network cut opens in a new browser tab", async ({ p
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   await page.evaluate(() => {
     const raw = localStorage.getItem("kink-profiles");
@@ -214,7 +231,7 @@ test("an ordinary browser tab can open cached pages after going offline", async 
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   const browserTab = await context.newPage();
   await browserTab.goto("/compare?a=profile-a&b=profile-b", {
@@ -231,12 +248,18 @@ test("an ordinary browser tab can open cached pages after going offline", async 
   await expect(browserTab.getByText("Mira").first()).toBeVisible();
 });
 
-test("an unknown dynamic legacy route still falls back safely offline", async ({ page, context }) => {
+test("unknown routes choose the right safe offline fallback", async ({ page, context }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
 
-  await context.setOffline(true);
+  await goOffline(context);
   await page.goto("/scenes/never-cached-" + Date.now(), {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.getByText("Scène niet gevonden")).toBeVisible();
+  await expect(page.getByText("Je bent offline")).toHaveCount(0);
+
+  await page.goto("/never-cached-" + Date.now(), {
     waitUntil: "domcontentloaded",
   });
   await expect(page.getByText("Je bent offline")).toBeVisible();

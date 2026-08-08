@@ -19,7 +19,7 @@ describe("formatSceneFilename", () => {
   });
 
   it("missing date → uses injected now", () =>
-    expect(formatSceneFilename("Saturday", undefined, new Date("2026-07-04"))).toBe("kink-scene-saturday-2026-07-04.pdf"));
+    expect(formatSceneFilename("Saturday", undefined, new Date(2026, 6, 4, 12))).toBe("kink-scene-saturday-2026-07-04.pdf"));
 });
 
 describe("summarizeIntensities", () => {

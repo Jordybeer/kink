@@ -22,6 +22,7 @@ import {
   createPerspectiveProfiles,
   type ProfileDirectionChoice,
 } from "@/lib/profilePerspectives";
+import { profileHref, waitForPersistedProfile } from "@/lib/localRoutes";
 import type {
   QuestionnaireInterest,
   QuestionnairePreset,
@@ -64,12 +65,15 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   const router = useRouter();
   const nameId = useId();
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const createInFlightRef = useRef(false);
   const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [direction, setDirection] = useState<ProfileDirectionChoice | null>(null);
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
   const [preset, setPreset] = useState<QuestionnairePreset>("balanced");
+  const [isCreating, setIsCreating] = useState(false);
+  const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -79,6 +83,9 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     setDirection(null);
     setInterests([]);
     setPreset("balanced");
+    setIsCreating(false);
+    setPendingProfileId(null);
+    createInFlightRef.current = false;
   }, [open]);
 
   useEffect(() => {
@@ -111,23 +118,49 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     setStep(1);
   }
 
-  function create() {
-    if (!direction) return;
+  async function create() {
+    if (!direction || createInFlightRef.current) return;
+    createInFlightRef.current = true;
+    setIsCreating(true);
+    setNameError(null);
     try {
-      const created = createPerspectiveProfiles({
-        name: name.trim(),
-        direction,
-        questionnaireSetup: {
-          preset,
-          interests,
-          version: 1,
-        },
-      });
+      let primaryId = pendingProfileId;
+      if (!primaryId) {
+        const created = createPerspectiveProfiles({
+          name: name.trim(),
+          direction,
+          questionnaireSetup: {
+            preset,
+            interests,
+            version: 1,
+          },
+        });
+        primaryId = created.primaryId;
+        setPendingProfileId(primaryId);
+      }
+
+      if (!navigator.onLine) {
+        const persisted = await waitForPersistedProfile(primaryId);
+        if (!persisted) {
+          setNameError("Profiel is aangemaakt, maar lokale opslag is nog niet klaar. Blijf op deze pagina en probeer opslaan opnieuw.");
+          return;
+        }
+        setPendingProfileId(null);
+        onClose();
+        window.location.assign(profileHref(primaryId));
+        return;
+      }
+
+      setPendingProfileId(null);
       onClose();
-      router.push(`/profile/${created.primaryId}`);
+      router.push(`/profile/${primaryId}`);
     } catch (error) {
+      setPendingProfileId(null);
       setNameError(error instanceof Error ? error.message : "Profiel kon niet worden gemaakt.");
       setStep(0);
+    } finally {
+      createInFlightRef.current = false;
+      setIsCreating(false);
     }
   }
 
@@ -392,6 +425,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           <button
             type="button"
             onClick={step === 0 ? onClose : () => setStep((current) => (current - 1) as Step)}
+            disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
             style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
           >
@@ -400,10 +434,13 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           <button
             type="button"
             onClick={step === 0 ? continueFromIdentity : step === 1 ? () => setStep(2) : create}
+            disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-bold"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
-            {step === 2 ? "Profiel maken" : "Verder"}
+            {step === 2
+              ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Profiel maken")
+              : "Verder"}
             {step < 2 && <ArrowRight size={16} weight="bold" aria-hidden="true" />}
           </button>
         </div>

@@ -136,6 +136,9 @@ export default function QRModal({ profile, onClose }: Props) {
     })();
 
     return () => { cancelled = true; };
+    // Consent sealing may swap the profile object, but it doesn't get to tug
+    // this QR around: only the shareable identity/content fields hold the leash.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     profile?.id,
     profile?.updatedAt,
@@ -147,7 +150,7 @@ export default function QRModal({ profile, onClose }: Props) {
     preferenceKey,
     settledPreferenceKey,
     sealProfileConsent,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+  ]);
 
   useEffect(() => {
     let cancelled = false;
