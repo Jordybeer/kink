@@ -19,37 +19,68 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 26
           cache: npm
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: npm run lint
       - run: npm test
       - run: npm run build
 
-  # The dungeon rehearsal — full Playwright walk-through of both stages
-  # (mobile + desktop). Advisory for now (continue-on-error): it watches,
-  # it reports, it doesn't yet hold the safeword. Flip to enforcing once
-  # it has proven itself green across a few PRs. Offline suite stays
-  # local-only — its production build is too heavy a rig for every push.
+  # The dungeon rehearsal has earned the safeword: the full suite has stayed
+  # green across the hardening PRs, so browser regressions now block a merge.
+  # A small launch matrix then checks the current iPhone/iPad/Galaxy-sized
+  # surfaces without multiplying the entire 200+ test suite four times.
   scene-rehearsal:
+    name: Browser and device rehearsal
     runs-on: ubuntu-latest
-    continue-on-error: true
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e
+        env:
+          CI: "1"
+      - run: npm run test:e2e:launch
+        env:
+          CI: "1"
+      - name: Keep device smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: device-smoke-screenshots
+          path: test-results/device-screenshots
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # PWA/offline behavior only exists in a production build. It used to be a
+  # local-only suite; for a mobile-first public release it belongs in CI too.
+  pwa-rehearsal:
+    name: Production PWA and offline rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 26
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - run: npm run test:e2e:offline
         env:
           CI: "1"
