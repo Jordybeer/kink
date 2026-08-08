@@ -124,7 +124,11 @@ test("every fixed room works offline without visiting it first", async ({ page, 
 
   for (const route of STATIC_ROUTES) {
     await page.goto(route.url, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(300);
+    if ("shellMarker" in route) {
+      await expect(page.getByText(route.shellMarker)).toBeVisible({ timeout: 10_000 });
+    } else {
+      await page.waitForTimeout(300);
+    }
     const text = (await page.evaluate(() => document.body.innerText)).trim();
     if ("shellMarker" in route) {
       expect(text, `offline ${route.url} should render its fixed shell`).toContain(route.shellMarker);
