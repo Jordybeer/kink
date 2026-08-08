@@ -67,15 +67,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           return;
         }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {
-            if (cameraGenerationRef.current === cameraGeneration) {
-              stopCamera();
-              setError("Camera kon niet worden gestart. Probeer opnieuw.");
-            }
-          });
-        }
+        attachCameraStream(cameraGeneration);
         scan(cameraGeneration);
       })
       .catch(() => {
@@ -93,6 +85,20 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     rafRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+  }
+
+  function attachCameraStream(cameraGeneration: number) {
+    if (cameraGenerationRef.current !== cameraGeneration) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video || !stream || video.srcObject === stream) return;
+
+    video.srcObject = stream;
+    video.play().catch(() => {
+      if (cameraGenerationRef.current !== cameraGeneration) return;
+      stopCamera();
+      setError("Camera kon niet worden gestart. Probeer opnieuw.");
+    });
   }
 
   function dispatchPayload(raw: string, dedupeCameraFrames = true): DispatchResult {
@@ -178,6 +184,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
 
   function scan(cameraGeneration: number) {
     if (cameraGenerationRef.current !== cameraGeneration) return;
+    attachCameraStream(cameraGeneration);
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) {
