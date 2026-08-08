@@ -16,6 +16,7 @@ const CARD_FADE_SECONDS = 0.11;
 
 interface Props {
   kinks: Kink[];
+  priorityKinks?: Kink[];
   entries: Record<string, KinkEntry>;
   focusCategory?: string | null;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
@@ -26,6 +27,7 @@ interface Props {
 
 export default function TriageDeck({
   kinks,
+  priorityKinks,
   entries,
   focusCategory,
   onStatusChange,
@@ -48,7 +50,8 @@ export default function TriageDeck({
     };
   }, []);
 
-  const unrated = kinks.filter((kink) => entries[kink.id]?.status == null && !skipped.has(kink.id));
+  const unrated = (priorityKinks ?? kinks)
+    .filter((kink) => entries[kink.id]?.status == null && !skipped.has(kink.id));
   const focused = focusCategory ? unrated.filter((kink) => kink.category === focusCategory) : [];
   const queue = focused.length ? focused : unrated;
   const held = holding ? kinks.find((kink) => kink.id === holding) : null;

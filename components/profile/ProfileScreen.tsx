@@ -14,7 +14,11 @@ import {
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, LEVEL_MAX } from "@/lib/kinks";
-import { getQuestionnaireKinks, searchAllKinks } from "@/lib/questionnaire";
+import {
+  getAdaptiveQuestionQueue,
+  getQuestionnaireKinks,
+  searchAllKinks,
+} from "@/lib/questionnaire";
 import { useMotionSafe } from "@/lib/motion";
 import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
@@ -92,6 +96,10 @@ export default function ProfilePage({ params }: Props) {
 
   const visibleKinks = useMemo(
     () => profile ? getQuestionnaireKinks(profile) : [],
+    [profile],
+  );
+  const priorityKinks = useMemo(
+    () => profile ? getAdaptiveQuestionQueue(profile) : [],
     [profile],
   );
   const kinksByCategory = useMemo(() => {
@@ -317,7 +325,7 @@ export default function ProfilePage({ params }: Props) {
                 />
                 {currentProfile.questionnaireSetup && !searchTerm && (
                   <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                    {visibleKinks.length} onderwerpen in je startselectie. Zoeken toont altijd alles.
+                    {visibleKinks.length} onderwerpen in deze ronde. De stapel past zich aan op je eigen antwoorden; niets wordt voor je ingevuld. Zoeken toont altijd alles.
                   </p>
                 )}
               </div>
@@ -365,6 +373,7 @@ export default function ProfilePage({ params }: Props) {
                   <div ref={deckRef} className="px-4 mb-4" style={{ scrollMarginTop: "calc(var(--nav-h) + 12px)" }}>
                     <TriageDeck
                       kinks={visibleKinks}
+                      priorityKinks={priorityKinks}
                       entries={currentProfile.entries}
                       focusCategory={deckFocus}
                       onStatusChange={updateStatus}

@@ -1,4 +1,5 @@
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
+import { rankQuestionnaireCandidates } from "@/lib/questionnaireEngine";
 import type {
   Kink,
   Profile,
@@ -193,27 +194,24 @@ function matchesLabelTerms(kink: Kink, terms: string[]): boolean {
   return terms.some((term) => haystack.includes(term));
 }
 
-function addUnique(target: Kink[], seen: Set<string>, kink: Kink) {
-  if (seen.has(kink.id)) return;
-  seen.add(kink.id);
-  target.push(kink);
-}
-
-function addUntil(
-  target: Kink[],
-  seen: Set<string>,
-  candidates: Kink[],
-  targetCount: number,
-) {
-  for (const kink of candidates) {
-    if (target.length >= targetCount) break;
-    addUnique(target, seen, kink);
-  }
-}
-
 function legacyQuestionnaire(profile: Profile): Kink[] {
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"] ?? 1;
   return KINKS.filter((kink) => kink.level <= maxLevel);
+}
+
+function adaptiveCandidates(profile: Profile): Kink[] {
+  const setup = profile.questionnaireSetup;
+  if (!setup) return [];
+  const chosenTerms = setup.interests.flatMap((interest) => INTEREST_TERMS[interest]);
+  const preferredIds = new Set(
+    chosenTerms.length > 0
+      ? KINKS.filter((kink) => matchesTerms(kink, chosenTerms)).map((kink) => kink.id)
+      : [],
+  );
+  const safetyIds = new Set(
+    KINKS.filter((kink) => matchesLabelTerms(kink, SAFETY_TERMS)).map((kink) => kink.id),
+  );
+  return rankQuestionnaireCandidates(KINKS, profile.entries, { preferredIds, safetyIds });
 }
 
 /**
@@ -229,41 +227,24 @@ export function getQuestionnaireKinks(profile: Profile): Kink[] {
   if (setup.preset === "full") return [...KINKS];
 
   const targetCount = setup.preset === "quick" ? 52 : 104;
-  const selected: Kink[] = [];
-  const seen = new Set<string>();
-
-  // Existing answers are mandatory data. They may legitimately push a shorter
-  // preset above its nominal size, but unreviewed suggestions may not.
-  for (const kink of KINKS) {
-    if (profile.entries[kink.id]?.status != null) addUnique(selected, seen, kink);
-  }
-  const selectionLimit = Math.max(targetCount, selected.length);
-
-  // Only subjects whose title/category is actually about safety or consent
-  // belong to the safety core. Generic warnings in descriptions must not crowd
-  // chosen interests out of a compact questionnaire.
-  const safetyMatches = KINKS.filter((kink) => matchesLabelTerms(kink, SAFETY_TERMS));
-  addUntil(selected, seen, safetyMatches, selectionLimit);
-
-  const chosenTerms = setup.interests.flatMap((interest) => INTEREST_TERMS[interest]);
-  const interestMatches = chosenTerms.length > 0
-    ? KINKS.filter((kink) => matchesTerms(kink, chosenTerms))
-    : [];
-  addUntil(selected, seen, interestMatches, selectionLimit);
-
-  const approachable = KINKS.filter((kink) => kink.level === 1);
-  addUntil(selected, seen, approachable, selectionLimit);
-
-  if (setup.preset === "balanced") {
-    const discovery = KINKS.filter((kink, index) => !seen.has(kink.id) && index % 3 === 0);
-    addUntil(selected, seen, discovery, selectionLimit);
-  }
-
-  const byApproachability = [...KINKS].sort((a, b) => a.level - b.level);
-  addUntil(selected, seen, byApproachability, selectionLimit);
-
-  const selectedIds = new Set(selected.map((kink) => kink.id));
+  const answeredIds = new Set(
+    KINKS.filter((kink) => profile.entries[kink.id]?.status != null).map((kink) => kink.id),
+  );
+  const selectionLimit = Math.max(targetCount, answeredIds.size);
+  const remainingSlots = Math.max(0, selectionLimit - answeredIds.size);
+  const selectedIds = new Set(answeredIds);
+  for (const kink of adaptiveCandidates(profile).slice(0, remainingSlots)) selectedIds.add(kink.id);
   return KINKS.filter((kink) => selectedIds.has(kink.id));
+}
+
+/** Runtime priority queue; selection/search/storage remain separate concerns. */
+export function getAdaptiveQuestionQueue(profile: Profile): Kink[] {
+  const selected = getQuestionnaireKinks(profile);
+  if (!profile.questionnaireSetup) {
+    return selected.filter((kink) => profile.entries[kink.id]?.status == null);
+  }
+  const selectedIds = new Set(selected.map((kink) => kink.id));
+  return adaptiveCandidates(profile).filter((kink) => selectedIds.has(kink.id));
 }
 
 export function getQuestionnaireKinksByCategory(profile: Profile, category: string): Kink[] {

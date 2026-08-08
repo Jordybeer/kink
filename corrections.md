@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-08 — Dependency-setup liep in de hoofdcheckout
+
+**What went wrong:** Na het aanmaken van `worktree-arousal` bleef de shell in de hoofdcheckout staan en startte `npm ci` daar. De installatie faalde bovendien omdat npm zijn standaardcache onder `/root/.npm` niet kon aanmaken. Er zijn geen tracked bestanden gewijzigd, maar de geïsoleerde-worktreegrens werd operationeel niet gevolgd.
+
+**Rule:** Zet voor iedere install-, test-, build- en edit-opdracht de `workdir` expliciet op de actieve worktree en controleer daar `git branch --show-current`. Gebruik in deze sandbox een expliciete schrijfbare npm-cache buiten de repository in plaats van de standaardcache onder `/root`.
+
+---
+
 ## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld
 
 **What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.
