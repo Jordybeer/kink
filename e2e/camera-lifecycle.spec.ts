@@ -54,7 +54,6 @@ test("stopt een contractcamera die pas na sluiten beschikbaar komt", async ({ pa
   await seedAndGo(page, "/contracts", [PROFILE_ALEX]);
 
   await page.getByRole("button", { name: "Contractverzoek scannen" }).click();
-  await page.getByRole("button", { name: "Scanner openen" }).click();
   await expect(page.getByRole("dialog", { name: "Contractcode scannen" })).toBeVisible();
   await page.getByRole("button", { name: "Annuleer" }).click();
   await expect(page.getByRole("dialog", { name: "Contractcode scannen" })).toBeHidden();
