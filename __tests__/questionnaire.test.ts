@@ -6,11 +6,13 @@ import {
   questionnaireCount,
   searchAllKinks,
 } from "@/lib/questionnaire";
+import { rankQuestionnaireCandidates } from "@/lib/questionnaireEngine";
 import {
   QUESTIONNAIRE_CATEGORY_CLUSTERS,
+  QUESTIONNAIRE_TOPIC_IDS,
   questionnairePrimaryCluster,
 } from "@/lib/questionnaireMetadata";
-import type { Profile, QuestionnaireSetup } from "@/types";
+import type { Kink, KinkStatus, Profile, QuestionnaireSetup } from "@/types";
 
 function profile(setup: QuestionnaireSetup): Profile {
   return {
@@ -26,6 +28,20 @@ function profile(setup: QuestionnaireSetup): Profile {
     entries: {},
     origin: "own",
   };
+}
+
+function catalogSlice(...ids: string[]): Kink[] {
+  return ids.map((id) => {
+    const kink = KINKS.find((candidate) => candidate.id === id);
+    if (!kink) throw new Error(`Test kink ontbreekt: ${id}`);
+    return kink;
+  });
+}
+
+function entriesWith(statuses: Record<string, NonNullable<KinkStatus>>) {
+  return Object.fromEntries(
+    Object.entries(statuses).map(([id, status]) => [id, { status, comment: "" }]),
+  );
 }
 
 describe("adaptive questionnaire", () => {
@@ -86,6 +102,14 @@ describe("adaptive questionnaire", () => {
     expect(unmapped).toEqual([]);
   });
 
+  it("keeps every explicit topical neighbor anchored to a real catalog kink", () => {
+    const catalogIds = new Set(KINKS.map((kink) => kink.id));
+    const unknownIds = Object.values(QUESTIONNAIRE_TOPIC_IDS)
+      .flat()
+      .filter((id) => !catalogIds.has(id));
+    expect(unknownIds).toEqual([]);
+  });
+
   it("never mutates, invents, or loses an explicit answer", () => {
     const current = profile({ preset: "quick", interests: [], version: 1 });
     current.entries.handcuffs = { status: "yes", comment: "bewaar mij" };
@@ -99,16 +123,31 @@ describe("adaptive questionnaire", () => {
     expect(Object.keys(current.entries)).toEqual(["handcuffs"]);
   });
 
-  it("moves related unanswered follow-ups forward after an explicit positive answer", () => {
+  it("moves a true topical neighbor forward after an explicit positive answer", () => {
     const baseline = profile({ preset: "full", interests: [], version: 1 });
+    baseline.entries.handcuffs = { status: "maybe", comment: "" };
     const before = getAdaptiveQuestionQueue(baseline).map((kink) => kink.id);
-    const current = profile({ preset: "full", interests: [], version: 1 });
+    const current = structuredClone(baseline);
     current.entries.handcuffs = { status: "yes", comment: "" };
 
-    const after = getAdaptiveQuestionQueue(current);
-    const afterIds = after.map((kink) => kink.id);
+    const after = getAdaptiveQuestionQueue(current).map((kink) => kink.id);
 
-    expect(afterIds.indexOf("shibari")).toBeLessThan(before.indexOf("shibari"));
+    expect(after.indexOf("leather_cuffs")).toBeLessThan(before.indexOf("leather_cuffs"));
+  });
+
+  it("lets Ja promote a topical follow-up while Misschien stays neutral", () => {
+    const catalog = catalogSlice("handcuffs", "mummification", "doctor_patient");
+    const neutral = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ handcuffs: "maybe" }),
+    ).map((kink) => kink.id);
+    const willing = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ handcuffs: "willing" }),
+    ).map((kink) => kink.id);
+
+    expect(neutral.indexOf("mummification")).toBeGreaterThan(neutral.indexOf("doctor_patient"));
+    expect(willing.indexOf("mummification")).toBeLessThan(willing.indexOf("doctor_patient"));
   });
 
   it("lets an unexpected positive answer open its cluster inside a quick budget", () => {
@@ -126,19 +165,110 @@ describe("adaptive questionnaire", () => {
     expect(after).toHaveLength(52);
   });
 
-  it("pushes deeper related questions back after repeated explicit negatives", () => {
-    const baseline = profile({ preset: "full", interests: [], version: 1 });
-    const before = getAdaptiveQuestionQueue(baseline).map((kink) => kink.id);
-    const current = profile({ preset: "full", interests: [], version: 1 });
-    current.entries.handcuffs = { status: "no", comment: "" };
-    current.entries.leather_cuffs = { status: "hard_no", comment: "" };
+  it("treats Voor hen as neutral instead of helping a hard limit close a branch", () => {
+    const catalog = catalogSlice("handcuffs", "leather_cuffs", "mummification", "financial_domination");
+    const withVoorHen = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ handcuffs: "no", leather_cuffs: "hard_no" }),
+    ).map((kink) => kink.id);
+    const neutral = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ handcuffs: "maybe", leather_cuffs: "hard_no" }),
+    ).map((kink) => kink.id);
 
-    const after = getAdaptiveQuestionQueue(current).map((kink) => kink.id);
-    const beforeIndex = before.indexOf("mummification");
-    const afterIndex = after.indexOf("mummification");
+    expect(withVoorHen).toEqual(neutral);
+  });
 
-    expect(afterIndex).toBeGreaterThan(beforeIndex);
-    expect(current.entries.mummification).toBeUndefined();
+  it("uses repeated hard limits as the only negative branch signal", () => {
+    const catalog = catalogSlice("handcuffs", "leather_cuffs", "mummification", "financial_domination");
+    const neutral = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ handcuffs: "maybe", leather_cuffs: "maybe" }),
+    ).map((kink) => kink.id);
+    const limited = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ handcuffs: "hard_no", leather_cuffs: "hard_no" }),
+    ).map((kink) => kink.id);
+
+    expect(neutral.indexOf("mummification")).toBeLessThan(neutral.indexOf("financial_domination"));
+    expect(limited.indexOf("mummification")).toBeGreaterThan(limited.indexOf("financial_domination"));
+  });
+
+  it("boosts voyeurism neighbors without dragging fluids or anal along", () => {
+    const catalog = catalogSlice("voyeurism", "watching_others", "cum_play", "anal_fingering");
+    const neutral = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ voyeurism: "maybe" }),
+    ).map((kink) => kink.id);
+    const enthusiastic = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ voyeurism: "yes" }),
+    ).map((kink) => kink.id);
+
+    expect(enthusiastic.indexOf("watching_others")).toBeLessThan(neutral.indexOf("watching_others"));
+    expect(enthusiastic.indexOf("watching_others")).toBeLessThan(enthusiastic.indexOf("cum_play"));
+    expect(enthusiastic.indexOf("watching_others")).toBeLessThan(enthusiastic.indexOf("anal_fingering"));
+    expect(enthusiastic.filter((id) => id === "cum_play" || id === "anal_fingering"))
+      .toEqual(neutral.filter((id) => id === "cum_play" || id === "anal_fingering"));
+  });
+
+  it("keeps Little/Ageplay relevance separate from Pet Play", () => {
+    const catalog = catalogSlice("little_space", "baby_infantiliteit", "petplay_puppy", "uniforms");
+    const neutral = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ little_space: "maybe" }),
+    ).map((kink) => kink.id);
+    const enthusiastic = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ little_space: "yes" }),
+    ).map((kink) => kink.id);
+
+    expect(neutral.indexOf("baby_infantiliteit")).toBeGreaterThan(neutral.indexOf("petplay_puppy"));
+    expect(enthusiastic.indexOf("baby_infantiliteit")).toBeLessThan(enthusiastic.indexOf("petplay_puppy"));
+    expect(enthusiastic.filter((id) => id === "petplay_puppy" || id === "uniforms"))
+      .toEqual(neutral.filter((id) => id === "petplay_puppy" || id === "uniforms"));
+  });
+
+  it("suppresses only true topical depth after repeated hard limits", () => {
+    const catalog = catalogSlice(
+      "rope_bondage",
+      "shibari",
+      "suspension_ondersteboven",
+      "mummification",
+    );
+    const neutral = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ rope_bondage: "maybe", shibari: "maybe" }),
+    ).map((kink) => kink.id);
+    const limited = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ rope_bondage: "hard_no", shibari: "hard_no" }),
+    ).map((kink) => kink.id);
+
+    expect(neutral.indexOf("suspension_ondersteboven")).toBeLessThan(neutral.indexOf("mummification"));
+    expect(limited.indexOf("suspension_ondersteboven")).toBeGreaterThan(limited.indexOf("mummification"));
+  });
+
+  it("keeps safety and chosen interests ahead of concentrated topical enthusiasm", () => {
+    const catalog = catalogSlice(
+      "feet",
+      "hoge_hakken_aanbidding",
+      "footjob",
+      "voetslaaf",
+      "financial_domination",
+      "scarification",
+    );
+    const ranked = rankQuestionnaireCandidates(
+      catalog,
+      entriesWith({ feet: "yes", hoge_hakken_aanbidding: "yes", footjob: "willing" }),
+      {
+        preferredIds: new Set(["financial_domination"]),
+        safetyIds: new Set(["scarification"]),
+      },
+    ).map((kink) => kink.id);
+
+    expect(ranked.indexOf("financial_domination")).toBeLessThan(ranked.indexOf("voetslaaf"));
+    expect(ranked.indexOf("scarification")).toBeLessThan(ranked.indexOf("voetslaaf"));
   });
 
   it("keeps discovery alive even when one cluster has several positive answers", () => {

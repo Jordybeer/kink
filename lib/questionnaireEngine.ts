@@ -1,7 +1,7 @@
 import {
-  questionnaireClustersFor,
   questionnairePrimaryCluster,
-  type QuestionnaireCluster,
+  questionnaireTopicsFor,
+  type QuestionnaireTopic,
 } from "@/lib/questionnaireMetadata";
 import type { Kink, KinkEntry } from "@/types";
 
@@ -10,9 +10,9 @@ interface RankOptions {
   safetyIds?: ReadonlySet<string>;
 }
 
-interface ClusterSignal {
+interface TopicSignal {
   positive: number;
-  negative: number;
+  hardLimits: number;
 }
 
 interface RankedKink {
@@ -23,29 +23,35 @@ interface RankedKink {
 
 const MAX_CLUSTER_RUN = 2;
 const DISCOVERY_INTERVAL = 5;
-const POSITIVE_STATUSES = new Set(["yes", "willing"]);
-const NEGATIVE_STATUSES = new Set(["no", "hard_no"]);
+const YES_TOPIC_WEIGHT = 2;
+const WILLING_TOPIC_WEIGHT = 1;
+const MAX_POSITIVE_TOPIC_WEIGHT = 2;
+const POSITIVE_TOPIC_BOOST = 120;
 
-function buildClusterSignals(
+function buildTopicSignals(
   catalog: readonly Kink[],
   entries: Record<string, KinkEntry>,
-): Map<QuestionnaireCluster, ClusterSignal> {
-  const signals = new Map<QuestionnaireCluster, ClusterSignal>();
+): Map<QuestionnaireTopic, TopicSignal> {
+  const signals = new Map<QuestionnaireTopic, TopicSignal>();
   const byId = new Map(catalog.map((kink) => [kink.id, kink]));
 
   for (const [kinkId, entry] of Object.entries(entries)) {
     if (!entry.status) continue;
     const kink = byId.get(kinkId);
     if (!kink) continue;
-    const positive = POSITIVE_STATUSES.has(entry.status);
-    const negative = NEGATIVE_STATUSES.has(entry.status);
-    if (!positive && !negative) continue;
+    const positive = entry.status === "yes"
+      ? YES_TOPIC_WEIGHT
+      : entry.status === "willing"
+        ? WILLING_TOPIC_WEIGHT
+        : 0;
+    const hardLimit = entry.status === "hard_no";
+    if (positive === 0 && !hardLimit) continue;
 
-    for (const cluster of questionnaireClustersFor(kink)) {
-      const signal = signals.get(cluster) ?? { positive: 0, negative: 0 };
-      if (positive) signal.positive += 1;
-      if (negative) signal.negative += 1;
-      signals.set(cluster, signal);
+    for (const topic of questionnaireTopicsFor(kink)) {
+      const signal = signals.get(topic) ?? { positive: 0, hardLimits: 0 };
+      signal.positive += positive;
+      if (hardLimit) signal.hardLimits += 1;
+      signals.set(topic, signal);
     }
   }
 
@@ -54,27 +60,27 @@ function buildClusterSignals(
 
 function adaptiveScore(
   kink: Kink,
-  signals: Map<QuestionnaireCluster, ClusterSignal>,
+  signals: Map<QuestionnaireTopic, TopicSignal>,
   options: RankOptions,
 ): number {
   let score = (5 - kink.level) * 45;
   if (options.safetyIds?.has(kink.id)) score += 650;
   if (options.preferredIds?.has(kink.id)) score += 500;
 
-  const clusterSignals = questionnaireClustersFor(kink).map(
-    (cluster) => signals.get(cluster) ?? { positive: 0, negative: 0 },
+  const topicSignals = questionnaireTopicsFor(kink).map(
+    (topic) => signals.get(topic) ?? { positive: 0, hardLimits: 0 },
   );
-  const strongestPositive = Math.max(0, ...clusterSignals.map((signal) => signal.positive));
-  const strongestNegative = Math.max(0, ...clusterSignals.map((signal) => signal.negative));
+  const strongestPositive = Math.max(0, ...topicSignals.map((signal) => signal.positive));
+  const strongestHardLimit = Math.max(0, ...topicSignals.map((signal) => signal.hardLimits));
 
-  // Explicit enthusiasm opens nearby doors. The cap keeps one enthusiastic
-  // cluster from overpowering discovery forever.
-  score += Math.min(strongestPositive, 3) * 260;
+  // Yes opens a close door more strongly than willing. Even several answers
+  // cannot outbid explicit interests or the safety/core coverage weights.
+  score += Math.min(strongestPositive, MAX_POSITIVE_TOPIC_WEIGHT) * POSITIVE_TOPIC_BOOST;
 
-  // Repeated explicit negatives only push *deeper* related material back in
-  // the queue. They never remove a question and never create an answer.
-  if (strongestNegative >= 2 && kink.level > 1) {
-    score -= (strongestNegative - 1) * (kink.level - 1) * 210;
+  // Only repeated hard limits push deeper *topical* neighbors back. "Voor hen"
+  // and "Misschien" are deliberately neutral and never close a branch.
+  if (strongestHardLimit >= 2 && kink.level > 1) {
+    score -= (strongestHardLimit - 1) * (kink.level - 1) * 210;
   }
 
   return score;
@@ -125,7 +131,7 @@ export function rankQuestionnaireCandidates(
   entries: Record<string, KinkEntry>,
   options: RankOptions = {},
 ): Kink[] {
-  const signals = buildClusterSignals(catalog, entries);
+  const signals = buildTopicSignals(catalog, entries);
   const ranked = catalog
     .map((kink, catalogIndex): RankedKink => ({
       kink,

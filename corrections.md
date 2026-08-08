@@ -6,11 +6,11 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
-## 2026-08-08 — Dependency-setup liep in de hoofdcheckout
+## 2026-08-08 — Dependency-setup zat in de verkeerde speelkamer
 
-**What went wrong:** Na het aanmaken van `worktree-arousal` bleef de shell in de hoofdcheckout staan en startte `npm ci` daar. De installatie faalde bovendien omdat npm zijn standaardcache onder `/root/.npm` niet kon aanmaken. Er zijn geen tracked bestanden gewijzigd, maar de geïsoleerde-worktreegrens werd operationeel niet gevolgd.
+**What went wrong:** Na het aantrekken van `worktree-arousal` bleef de shell in de hoofdcheckout hangen en liet daar `npm ci` los — braaf commando, verkeerde speelkamer. Die run faalde ook omdat npm zijn standaardcache onder `/root/.npm` niet kon aanmaken. Er zijn geen tracked bestanden gewijzigd, maar de geïsoleerde-worktreegrens werd operationeel wel overschreden.
 
-**Rule:** Zet voor iedere install-, test-, build- en edit-opdracht de `workdir` expliciet op de actieve worktree en controleer daar `git branch --show-current`. Gebruik in deze sandbox een expliciete schrijfbare npm-cache buiten de repository in plaats van de standaardcache onder `/root`.
+**Rule:** Klik de riem vast vóór iedere install-, test-, build- en edit-opdracht: zet `workdir` expliciet op de actieve worktree en laat `git branch --show-current` bewijzen dat de shell in de juiste kamer zit. Geef npm in deze sandbox expliciet een schrijfbare cache buiten de repository; de standaardcache onder `/root/.npm` blijft verboden terrein.
 
 ---
 
