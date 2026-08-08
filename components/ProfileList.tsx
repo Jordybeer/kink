@@ -140,6 +140,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                   {group.profiles.length === 2 && (
                     <Link
                       href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
+                      prefetch={false}
                       className="focus-ring min-h-9 px-3 rounded-full inline-flex items-center text-xs font-semibold"
                       style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
                     >
@@ -173,6 +174,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
         {comparePair ? (
           <Link
             href={`/compare?a=${comparePair[0].id}&b=${comparePair[1].id}`}
+            prefetch={false}
             className="focus-ring block rounded-2xl p-5 transition-opacity hover:opacity-90 lg:col-span-2"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
@@ -218,6 +220,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           {comparePair ? (
             <Link
               href={`/contract?a=${comparePair[0].id}&b=${comparePair[1].id}`}
+              prefetch={false}
               className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3"
               style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
@@ -320,6 +323,7 @@ function ProfileRow({
     >
       <Link
         href={`/profile/${profile.id}`}
+        prefetch={false}
         className="focus-ring flex items-center gap-3 rounded-xl pr-20"
         aria-label={`${profile.name} ${profile.role} openen`}
       >
@@ -357,6 +361,7 @@ function ProfileRow({
           </button>
           <Link
             href={`/profile/${profile.id}?edit=1`}
+            prefetch={false}
             aria-label={`${profile.name} bewerken`}
             className="focus-ring w-9 h-9 rounded-full flex items-center justify-center"
             style={{ color: "var(--text2)" }}

@@ -16,17 +16,8 @@ export const STATIC_OFFLINE_ROUTES = [
   "/timeline",
 ] as const;
 
-export function buildOfflineWarmupRoutes(
-  profileIds: readonly string[],
-  sceneIds: readonly string[],
-  extraRoutes: readonly string[] = [],
-): string[] {
-  return [
-    ...STATIC_OFFLINE_ROUTES,
-    ...profileIds.map((id) => `/profile/${encodeURIComponent(id)}`),
-    ...sceneIds.map((id) => `/scenes/${encodeURIComponent(id)}`),
-    ...extraRoutes,
-  ].filter((route, index, routes) => routes.indexOf(route) === index);
+export function buildOfflineWarmupRoutes(): string[] {
+  return [...STATIC_OFFLINE_ROUTES];
 }
 
 export async function warmOfflineRoutes(routes: readonly string[]): Promise<boolean> {

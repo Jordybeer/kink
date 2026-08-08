@@ -283,7 +283,7 @@ function ContractPage() {
     <PageShell width="3xl" className="contract-print">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
-        <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
+        <Link href={`/compare?a=${aId}&b=${bId}`} prefetch={false} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
           <ArrowRight size={16} className="mr-1 rotate-180" aria-hidden="true" />
           Terug
         </Link>
@@ -538,6 +538,7 @@ function ContractPage() {
             </h2>
             <Link
               href={`/timeline?a=${aId}&b=${bId}`}
+              prefetch={false}
               className="focus-ring text-xs transition-colors inline-flex items-center gap-1"
               style={{ color: "var(--text2)" }}
             >
@@ -582,6 +583,7 @@ function ContractPage() {
                     {c.profileAId && c.profileBId && (
                       <Link
                         href={`/contract?a=${c.profileAId}&b=${c.profileBId}`}
+                        prefetch={false}
                         className="focus-ring text-xs px-3 py-1.5 rounded-lg transition-colors"
                         style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
                       >

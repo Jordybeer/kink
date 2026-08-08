@@ -51,6 +51,7 @@ export default function ContractVersionPage() {
     <PageShell width="2xl" className="lg:max-w-3xl">
       <Link
         href={`/contracts/${encodeURIComponent(series.id)}/history`}
+        prefetch={false}
         className="focus-ring inline-flex min-h-10 items-center gap-1 text-sm"
         style={{ color: "var(--text2)" }}
       >

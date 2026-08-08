@@ -83,6 +83,29 @@ async function seedStore(page: import("@playwright/test").Page) {
   }, storedState());
 }
 
+test("background work never sends local record ids to the origin", async ({ page }) => {
+  await seedStore(page);
+  const requestedUrls: string[] = [];
+  page.on("request", (request) => requestedUrls.push(request.url()));
+
+  await page.goto("/", { waitUntil: "networkidle" });
+  await waitForOfflineCache(page);
+
+  // Next.js only starts automatic Link prefetching when a link becomes visible.
+  // Exercise every home link carrying a seeded local id without clicking it.
+  const privateLinks = page.locator('a[href*="profile-a"], a[href*="profile-b"], a[href*="scene-a"]');
+  for (let index = 0; index < await privateLinks.count(); index += 1) {
+    await privateLinks.nth(index).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(100);
+  }
+  await page.waitForTimeout(500);
+
+  const leakedRequests = requestedUrls.filter((url) =>
+    ["profile-a", "profile-b", "scene-a"].some((id) => url.includes(id)),
+  );
+  expect(leakedRequests, `background requests exposed local ids: ${leakedRequests.join(" | ")}`).toEqual([]);
+});
+
 test("every fixed room works offline without visiting it first", async ({ page, context }) => {
   // Only the home page is visited online. The install + automatic warmup must
   // prepare every other fixed route without a manual page-by-page ritual.
@@ -203,7 +226,7 @@ test("an ordinary browser tab can open cached pages after going offline", async 
   await expect(browserTab.getByText("Mira").first()).toBeVisible();
   await expect(browserTab.getByText("Profiel niet gevonden")).toHaveCount(0);
 
-  // Old bookmarks remain supported while known local records are still warmed.
+  // Old bookmarks remain supported through the fixed offline profile shell.
   await browserTab.goto("/profile/profile-a", { waitUntil: "domcontentloaded" });
   await expect(browserTab.getByText("Mira").first()).toBeVisible();
 });

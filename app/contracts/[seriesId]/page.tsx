@@ -114,6 +114,7 @@ export default function ContractDetailPage() {
         {version && (
           <Link
             href={`/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`}
+            prefetch={false}
             className="focus-ring flex min-h-12 items-center gap-2 rounded-xl px-4 text-sm font-semibold"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
@@ -124,6 +125,7 @@ export default function ContractDetailPage() {
         )}
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
+          prefetch={false}
           className="focus-ring flex min-h-12 items-center gap-2 rounded-xl px-4 text-sm font-semibold"
           style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
         >
