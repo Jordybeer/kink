@@ -9,6 +9,7 @@ async function waitForOfflineCache(page: import("@playwright/test").Page) {
 
 test("legacy profile and scene urls use the fixed shells for records born offline", async ({ page, context }) => {
   await page.addInitScript(() => {
+    if (localStorage.getItem("kink-profiles")) return;
     localStorage.setItem("kink-profiles", JSON.stringify({
       state: {
         profiles: [],

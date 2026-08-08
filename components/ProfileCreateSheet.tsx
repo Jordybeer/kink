@@ -22,6 +22,7 @@ import {
   createPerspectiveProfiles,
   type ProfileDirectionChoice,
 } from "@/lib/profilePerspectives";
+import { profileHref, waitForPersistedProfile } from "@/lib/localRoutes";
 import type {
   QuestionnaireInterest,
   QuestionnairePreset,
@@ -111,7 +112,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     setStep(1);
   }
 
-  function create() {
+  async function create() {
     if (!direction) return;
     try {
       const created = createPerspectiveProfiles({
@@ -123,6 +124,19 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           version: 1,
         },
       });
+
+      if (!navigator.onLine) {
+        const persisted = await waitForPersistedProfile(created.primaryId);
+        if (!persisted) {
+          setNameError("Profiel is aangemaakt, maar lokale opslag is nog niet klaar. Blijf op deze pagina en probeer opnieuw.");
+          setStep(0);
+          return;
+        }
+        onClose();
+        window.location.assign(profileHref(created.primaryId));
+        return;
+      }
+
       onClose();
       router.push(`/profile/${created.primaryId}`);
     } catch (error) {
