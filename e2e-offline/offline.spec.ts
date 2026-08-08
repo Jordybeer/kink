@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { goOffline, goOnline } from "./offlineHarness";
 
 // Offline capability only exists in a PRODUCTION build — Serwist is disabled in
 // dev (next.config.ts: `disable: NODE_ENV !== "production"`). This suite runs
@@ -119,7 +120,7 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await context.setOffline(true);
+  await goOffline(context);
 
   for (const route of STATIC_ROUTES) {
     await page.goto(route, { waitUntil: "domcontentloaded" });
@@ -134,7 +135,7 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await page.goto("/scenes", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("status", { name: "Offline" }).first()).toBeVisible();
 
-  await context.setOffline(false);
+  await goOnline(context);
   await expect(page.getByRole("status", { name: "Online" }).first()).toBeVisible();
 });
 
@@ -142,7 +143,7 @@ test("legacy cards fold into the fixed profile and scene shells offline", async 
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   // The large home CTA carries profile IDs in its query string. Offline it must
   // preserve those IDs instead of reusing a query-less RSC payload.
@@ -165,7 +166,7 @@ test("a profile born after the network cut opens and reloads immediately", async
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   await page.getByRole("button", { name: "Nieuw profiel" }).click();
   await page.getByLabel("Naam of alias").fill("Nova offline");
@@ -187,7 +188,7 @@ test("a scene born after the network cut opens in a new browser tab", async ({ p
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   await page.evaluate(() => {
     const raw = localStorage.getItem("kink-profiles");
@@ -221,7 +222,7 @@ test("an ordinary browser tab can open cached pages after going offline", async 
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
-  await context.setOffline(true);
+  await goOffline(context);
 
   const browserTab = await context.newPage();
   await browserTab.goto("/compare?a=profile-a&b=profile-b", {
@@ -242,7 +243,7 @@ test("unknown routes choose the right safe offline fallback", async ({ page, con
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
 
-  await context.setOffline(true);
+  await goOffline(context);
   await page.goto("/scenes/never-cached-" + Date.now(), {
     waitUntil: "domcontentloaded",
   });
