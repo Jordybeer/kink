@@ -55,7 +55,12 @@ export default function ContractQrScannerSheet({
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          void videoRef.current.play();
+          videoRef.current.play().catch(() => {
+            if (cameraGenerationRef.current !== cameraGeneration) return;
+            stopCamera();
+            setError("Camera kon niet worden gestart. Probeer opnieuw.");
+            setPasteMode(true);
+          });
         }
         scan(cameraGeneration);
       })

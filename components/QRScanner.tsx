@@ -71,6 +71,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           videoRef.current.srcObject = stream;
           videoRef.current.play().catch(() => {
             if (cameraGenerationRef.current === cameraGeneration) {
+              stopCamera();
               setError("Camera kon niet worden gestart. Probeer opnieuw.");
             }
           });
