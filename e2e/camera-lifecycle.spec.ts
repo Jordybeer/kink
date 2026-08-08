@@ -45,13 +45,15 @@ async function installPlaybackRejectingCamera(page: Page) {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {
-        getUserMedia: () => Promise.resolve({
-          getTracks: () => [{
+        getUserMedia: () => {
+          const stream = new MediaStream();
+          Object.defineProperty(stream, "getTracks", { value: () => [{
             stop: () => {
               cameraWindow.__stoppedCameraTracks = (cameraWindow.__stoppedCameraTracks ?? 0) + 1;
             },
-          }],
-        } as unknown as MediaStream),
+          }] });
+          return Promise.resolve(stream);
+        },
       },
     });
     HTMLMediaElement.prototype.play = () => Promise.reject(new Error("playback blocked"));
