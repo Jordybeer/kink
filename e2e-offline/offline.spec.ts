@@ -6,16 +6,16 @@ import { goOffline, goOnline } from "./offlineHarness";
 // against `next start` via playwright.offline.config.ts, NOT the dev server.
 
 const STATIC_ROUTES = [
-  "/",
-  "/profile",
-  "/scene",
-  "/scenes",
-  "/scenes/view",
-  "/compare",
-  "/contract",
-  "/contracts",
-  "/timeline",
-  "/about",
+  { url: "/" },
+  { url: "/profile", shellMarker: "Profiel niet gevonden" },
+  { url: "/scene" },
+  { url: "/scenes" },
+  { url: "/scenes/view", shellMarker: "Scène niet gevonden" },
+  { url: "/compare" },
+  { url: "/contract" },
+  { url: "/contracts" },
+  { url: "/timeline" },
+  { url: "/about" },
 ];
 
 async function waitForOfflineCache(page: import("@playwright/test").Page) {
@@ -123,11 +123,15 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await goOffline(context);
 
   for (const route of STATIC_ROUTES) {
-    await page.goto(route, { waitUntil: "domcontentloaded" });
+    await page.goto(route.url, { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(300);
     const text = (await page.evaluate(() => document.body.innerText)).trim();
-    expect(text.length, `offline ${route} should render content`).toBeGreaterThan(30);
-    expect(text, `offline ${route} should not be the offline fallback`).not.toContain("Je bent offline");
+    if ("shellMarker" in route) {
+      expect(text, `offline ${route.url} should render its fixed shell`).toContain(route.shellMarker);
+    } else {
+      expect(text.length, `offline ${route.url} should render content`).toBeGreaterThan(30);
+    }
+    expect(text, `offline ${route.url} should not be the offline fallback`).not.toContain("Je bent offline");
   }
 
   expect(errors, `page errors offline: ${errors.join(" | ")}`).toHaveLength(0);
