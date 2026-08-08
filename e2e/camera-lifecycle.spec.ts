@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
 type DeferredCameraWindow = Window & {
+  __activeCameraTracks?: number;
   __playRejectCalls?: number;
   __resolveDeferredCamera?: () => void;
   __stoppedCameraTracks?: number;
@@ -41,6 +42,7 @@ async function resolveCameraAfterClose(page: Page) {
 async function installPlaybackRejectingCamera(page: Page) {
   await page.addInitScript(() => {
     const cameraWindow = window as DeferredCameraWindow;
+    cameraWindow.__activeCameraTracks = 0;
     cameraWindow.__playRejectCalls = 0;
     cameraWindow.__stoppedCameraTracks = 0;
 
@@ -49,8 +51,13 @@ async function installPlaybackRejectingCamera(page: Page) {
       value: {
         getUserMedia: () => {
           const stream = new MediaStream();
+          let stopped = false;
+          cameraWindow.__activeCameraTracks = (cameraWindow.__activeCameraTracks ?? 0) + 1;
           Object.defineProperty(stream, "getTracks", { value: () => [{
             stop: () => {
+              if (stopped) return;
+              stopped = true;
+              cameraWindow.__activeCameraTracks = Math.max(0, (cameraWindow.__activeCameraTracks ?? 0) - 1);
               cameraWindow.__stoppedCameraTracks = (cameraWindow.__stoppedCameraTracks ?? 0) + 1;
             },
           }] });
@@ -71,7 +78,10 @@ async function expectRejectedPlaybackStoppedCamera(page: Page) {
   )).toBeGreaterThan(0);
   await expect.poll(() => page.evaluate(
     () => (window as DeferredCameraWindow).__stoppedCameraTracks ?? 0,
-  )).toBe(1);
+  )).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(
+    () => (window as DeferredCameraWindow).__activeCameraTracks ?? 0,
+  )).toBe(0);
 }
 
 test("stopt een profielcamera die pas na sluiten beschikbaar komt", async ({ page }) => {
