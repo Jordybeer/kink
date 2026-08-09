@@ -1,12 +1,54 @@
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
-import { rankQuestionnaireCandidates } from "@/lib/questionnaireEngine";
+import {
+  derivePendingExpansionProbes,
+  rankQuestionnaireCandidates,
+  rankQuestionnaireQueueItems,
+  type PendingExpansionProbe,
+  type QuestionnaireQueueItem,
+} from "@/lib/questionnaireEngine";
+import {
+  QUESTIONNAIRE_COVERAGE_ANCHOR_IDS,
+  QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
+  QUESTIONNAIRE_INTEREST_ANCHOR_IDS,
+  questionnairePrimaryCluster,
+} from "@/lib/questionnaireMetadata";
 import type {
+  DynamicQuestionnaireSetup,
   Kink,
   Profile,
   QuestionnaireInterest,
+  QuestionnaireMode,
   QuestionnairePreset,
   QuestionnaireSetup,
 } from "@/types";
+
+export type QuestionnaireIntent = "dynamic" | "discover" | "deepDive";
+
+export interface QuestionnaireCoverage {
+  answered: number;
+  total: number;
+  percent: number;
+  complete: boolean;
+}
+
+export interface QuestionnaireCoveragePlan {
+  anchorIds: string[];
+  interestAnchorIds: string[];
+}
+
+export interface QuestionnaireRuntime {
+  intent: QuestionnaireIntent | "legacy";
+  queue: QuestionnaireQueueItem[];
+  visibleKinks: Kink[];
+  pendingProbes: PendingExpansionProbe[];
+  coverage: QuestionnaireCoverage | null;
+  complete: boolean;
+}
+
+interface RuntimeOptions {
+  intent?: QuestionnaireIntent;
+  discoveryWaveIds?: readonly string[];
+}
 
 export const QUESTIONNAIRE_INTERESTS: Array<{
   value: QuestionnaireInterest;
@@ -45,6 +87,7 @@ export const QUESTIONNAIRE_INTERESTS: Array<{
   },
 ];
 
+/** v1 is deliberately still exported for old profile settings and tests. */
 export const QUESTIONNAIRE_PRESETS: Array<{
   value: QuestionnairePreset;
   label: string;
@@ -71,10 +114,27 @@ export const QUESTIONNAIRE_PRESETS: Array<{
   },
 ];
 
-export const DEFAULT_QUESTIONNAIRE_SETUP: QuestionnaireSetup = {
-  preset: "balanced",
+export const QUESTIONNAIRE_MODES: Array<{
+  value: QuestionnaireMode;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "dynamic",
+    label: "Dynamic",
+    description: "Brede dekking, met lokale vervolgvragen die alleen uit jouw expliciete antwoorden ontstaan.",
+  },
+  {
+    value: "deepDive",
+    label: "Deep Dive",
+    description: "Werk uiteindelijk de volledige catalogus af; de volgorde blijft rustig en gevarieerd.",
+  },
+];
+
+export const DEFAULT_QUESTIONNAIRE_SETUP: DynamicQuestionnaireSetup = {
+  mode: "dynamic",
   interests: [],
-  version: 1,
+  version: 2,
 };
 
 const SAFETY_TERMS = [
@@ -93,86 +153,28 @@ const SAFETY_TERMS = [
 
 const INTEREST_TERMS: Record<QuestionnaireInterest, string[]> = {
   power: [
-    "domin",
-    "submiss",
-    "macht",
-    "controle",
-    "service",
-    "protocol",
-    "ritueel",
-    "training",
-    "straf",
-    "correctie",
-    "regel",
+    "domin", "submiss", "macht", "controle", "service", "protocol", "ritueel",
+    "training", "straf", "correctie", "regel",
   ],
   impact: [
-    "impact",
-    "spank",
-    "flog",
-    "whip",
-    "paddle",
-    "crop",
-    "pijn",
-    "sadis",
-    "masoch",
-    "needle",
-    "naald",
-    "elektro",
+    "impact", "spank", "flog", "whip", "paddle", "crop", "pijn", "sadis",
+    "masoch", "needle", "naald", "elektro",
   ],
   bondage: [
-    "bondage",
-    "rope",
-    "touw",
-    "shibari",
-    "cuff",
-    "boei",
-    "restraint",
-    "beperk",
-    "immobil",
-    "suspension",
+    "bondage", "rope", "touw", "shibari", "cuff", "boei", "restraint", "beperk",
+    "immobil", "suspension",
   ],
   sensation: [
-    "sensatie",
-    "sensory",
-    "zintuig",
-    "temperatuur",
-    "wax",
-    "kaars",
-    "ijs",
-    "tickl",
-    "kietel",
-    "aanraking",
-    "adem",
-    "breath",
+    "sensatie", "sensory", "zintuig", "temperatuur", "wax", "kaars", "ijs", "tickl",
+    "kietel", "aanraking", "adem", "breath",
   ],
   humiliation: [
-    "verneder",
-    "humili",
-    "degrad",
-    "object",
-    "worship",
-    "aanbidding",
-    "service",
-    "exposure",
-    "lichaam",
-    "body",
+    "verneder", "humili", "degrad", "object", "worship", "aanbidding", "service",
+    "exposure", "lichaam", "body",
   ],
   sexual_social: [
-    "seks",
-    "sexual",
-    "oral",
-    "anaal",
-    "anal",
-    "penetr",
-    "orgasm",
-    "groep",
-    "group",
-    "publiek",
-    "public",
-    "voyeur",
-    "exhibition",
-    "roleplay",
-    "rollenspel",
+    "seks", "sexual", "oral", "anaal", "anal", "penetr", "orgasm", "groep", "group",
+    "publiek", "public", "voyeur", "exhibition", "roleplay", "rollenspel",
   ],
 };
 
@@ -194,14 +196,18 @@ function matchesLabelTerms(kink: Kink, terms: string[]): boolean {
   return terms.some((term) => haystack.includes(term));
 }
 
+function explicitlyAnswered(profile: Profile, kinkId: string): boolean {
+  return profile.entries[kinkId]?.status != null;
+}
+
 function legacyQuestionnaire(profile: Profile): Kink[] {
   const maxLevel = LEVEL_MAX[profile.experienceLevel ?? "beginner"] ?? 1;
   return KINKS.filter((kink) => kink.level <= maxLevel);
 }
 
-function adaptiveCandidates(profile: Profile): Kink[] {
+function v1AdaptiveCandidates(profile: Profile): Kink[] {
   const setup = profile.questionnaireSetup;
-  if (!setup) return [];
+  if (!setup || setup.version !== 1) return [];
   const chosenTerms = setup.interests.flatMap((interest) => INTEREST_TERMS[interest]);
   const preferredIds = new Set(
     chosenTerms.length > 0
@@ -214,44 +220,208 @@ function adaptiveCandidates(profile: Profile): Kink[] {
   return rankQuestionnaireCandidates(KINKS, profile.entries, { preferredIds, safetyIds });
 }
 
-/**
- * Returns the current start selection for a profile.
- *
- * Legacy profiles retain their experience-level list. New profiles use an
- * adaptive preset, but every already answered kink is always included so a
- * smaller preset can never hide or reinterpret existing data.
- */
-export function getQuestionnaireKinks(profile: Profile): Kink[] {
+function v1Questionnaire(profile: Profile): Kink[] {
   const setup = profile.questionnaireSetup;
-  if (!setup) return legacyQuestionnaire(profile);
+  if (!setup || setup.version !== 1) return legacyQuestionnaire(profile);
   if (setup.preset === "full") return [...KINKS];
 
   const targetCount = setup.preset === "quick" ? 52 : 104;
   const answeredIds = new Set(
-    KINKS.filter((kink) => profile.entries[kink.id]?.status != null).map((kink) => kink.id),
+    KINKS.filter((kink) => explicitlyAnswered(profile, kink.id)).map((kink) => kink.id),
   );
   const selectionLimit = Math.max(targetCount, answeredIds.size);
   const remainingSlots = Math.max(0, selectionLimit - answeredIds.size);
   const selectedIds = new Set(answeredIds);
-  for (const kink of adaptiveCandidates(profile).slice(0, remainingSlots)) selectedIds.add(kink.id);
+  for (const kink of v1AdaptiveCandidates(profile).slice(0, remainingSlots)) selectedIds.add(kink.id);
   return KINKS.filter((kink) => selectedIds.has(kink.id));
 }
 
-/** Runtime priority queue; selection/search/storage remain separate concerns. */
-export function getAdaptiveQuestionQueue(profile: Profile): Kink[] {
-  const selected = getQuestionnaireKinks(profile);
-  if (!profile.questionnaireSetup) {
-    return selected.filter((kink) => profile.entries[kink.id]?.status == null);
+export function buildQuestionnaireCoveragePlan(
+  interests: readonly QuestionnaireInterest[],
+): QuestionnaireCoveragePlan {
+  const catalogIds = new Set(KINKS.map((kink) => kink.id));
+  const anchorIds: string[] = [];
+  const interestAnchorIds: string[] = [];
+  const seen = new Set<string>();
+
+  for (const kinkId of QUESTIONNAIRE_COVERAGE_ANCHOR_IDS) {
+    if (!catalogIds.has(kinkId) || seen.has(kinkId)) continue;
+    seen.add(kinkId);
+    anchorIds.push(kinkId);
   }
+  for (const interest of interests) {
+    for (const kinkId of QUESTIONNAIRE_INTEREST_ANCHOR_IDS[interest]) {
+      if (!catalogIds.has(kinkId)) continue;
+      if (!interestAnchorIds.includes(kinkId)) interestAnchorIds.push(kinkId);
+      if (seen.has(kinkId)) continue;
+      seen.add(kinkId);
+      anchorIds.push(kinkId);
+    }
+  }
+
+  return { anchorIds, interestAnchorIds };
+}
+
+export function questionnaireCoverage(
+  profile: Profile,
+  plan: QuestionnaireCoveragePlan = buildQuestionnaireCoveragePlan(profile.questionnaireSetup?.interests ?? []),
+): QuestionnaireCoverage {
+  const answered = plan.anchorIds.filter((kinkId) => explicitlyAnswered(profile, kinkId)).length;
+  const total = plan.anchorIds.length;
+  return {
+    answered,
+    total,
+    percent: total === 0 ? 100 : Math.round((answered / total) * 100),
+    complete: answered === total,
+  };
+}
+
+/**
+ * One optional unanswered anchor per broad cluster. Re-running after a wave
+ * naturally advances to the next anchor; no hidden discovery score is stored.
+ */
+export function buildQuestionnaireDiscoveryWave(profile: Profile): string[] {
+  const byId = new Map(KINKS.map((kink) => [kink.id, kink]));
+  const selectedClusters = new Set<string>();
+  const wave: string[] = [];
+
+  for (const kinkId of QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS) {
+    const kink = byId.get(kinkId);
+    if (!kink || explicitlyAnswered(profile, kinkId)) continue;
+    const cluster = questionnairePrimaryCluster(kink);
+    if (selectedClusters.has(cluster)) continue;
+    selectedClusters.add(cluster);
+    wave.push(kinkId);
+  }
+
+  return wave;
+}
+
+function runtimeVisibleKinks(profile: Profile, eligibleIds: ReadonlySet<string>): Kink[] {
+  return KINKS.filter((kink) => eligibleIds.has(kink.id) || explicitlyAnswered(profile, kink.id));
+}
+
+function runtimeForLegacy(profile: Profile): QuestionnaireRuntime {
+  const selected = v1Questionnaire(profile);
   const selectedIds = new Set(selected.map((kink) => kink.id));
-  return adaptiveCandidates(profile).filter((kink) => selectedIds.has(kink.id));
+  const queue = (profile.questionnaireSetup?.version === 1
+    ? v1AdaptiveCandidates(profile)
+    : selected.filter((kink) => !explicitlyAnswered(profile, kink.id)))
+    .filter((kink) => selectedIds.has(kink.id))
+    .map((kink): QuestionnaireQueueItem => ({
+      kink,
+      lane: "legacy",
+      isProbe: false,
+      coversAnchor: false,
+      reasons: [],
+    }));
+
+  return {
+    intent: "legacy",
+    queue,
+    visibleKinks: selected,
+    pendingProbes: [],
+    coverage: null,
+    complete: queue.length === 0,
+  };
+}
+
+export function getQuestionnaireRuntime(
+  profile: Profile,
+  options: RuntimeOptions = {},
+): QuestionnaireRuntime {
+  const setup = profile.questionnaireSetup;
+  if (!setup || setup.version === 1) return runtimeForLegacy(profile);
+
+  const intent: QuestionnaireIntent = setup.mode === "deepDive"
+    ? "deepDive"
+    : options.intent ?? "dynamic";
+  const coveragePlan = buildQuestionnaireCoveragePlan(setup.interests);
+  const coverage = questionnaireCoverage(profile, coveragePlan);
+  const coverageIds = new Set(coveragePlan.anchorIds);
+  const interestIds = new Set(coveragePlan.interestAnchorIds);
+  const pendingProbes = derivePendingExpansionProbes(KINKS, profile.entries);
+  const probeByTarget = new Map(pendingProbes.map((probe) => [probe.targetKinkId, probe]));
+  const discoveryIds = new Set(
+    intent === "discover"
+      ? (options.discoveryWaveIds ?? []).filter((kinkId) =>
+          QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS.includes(
+            kinkId as (typeof QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS)[number],
+          ))
+      : [],
+  );
+  const eligibleIds = new Set<string>();
+
+  if (intent === "deepDive") {
+    for (const kink of KINKS) {
+      if (!explicitlyAnswered(profile, kink.id)) eligibleIds.add(kink.id);
+    }
+  } else {
+    for (const kinkId of coveragePlan.anchorIds) {
+      if (!explicitlyAnswered(profile, kinkId)) eligibleIds.add(kinkId);
+    }
+    for (const kinkId of discoveryIds) {
+      if (!explicitlyAnswered(profile, kinkId)) eligibleIds.add(kinkId);
+    }
+    for (const probe of pendingProbes) eligibleIds.add(probe.targetKinkId);
+  }
+
+  const items = KINKS
+    .filter((kink) => eligibleIds.has(kink.id) && !explicitlyAnswered(profile, kink.id))
+    .map((kink): QuestionnaireQueueItem => {
+      const probe = probeByTarget.get(kink.id);
+      const lane = interestIds.has(kink.id)
+        ? "interest"
+        : probe
+          ? "expansion"
+          : discoveryIds.has(kink.id)
+            ? "discovery"
+            : coverageIds.has(kink.id)
+              ? "coverage"
+              : "deepDive";
+      return {
+        kink,
+        lane,
+        isProbe: !!probe,
+        coversAnchor: coverageIds.has(kink.id),
+        reasons: probe?.reasons ?? [],
+      };
+    });
+  const queue = rankQuestionnaireQueueItems(items, KINKS, profile.entries);
+  const discoveryComplete = [...discoveryIds].every((kinkId) => explicitlyAnswered(profile, kinkId));
+  const complete = intent === "deepDive"
+    ? KINKS.every((kink) => explicitlyAnswered(profile, kink.id))
+    : coverage.complete
+      && pendingProbes.length === 0
+      && (intent !== "discover" || discoveryComplete);
+
+  return {
+    intent,
+    queue,
+    visibleKinks: intent === "deepDive" ? [...KINKS] : runtimeVisibleKinks(profile, eligibleIds),
+    pendingProbes,
+    coverage,
+    complete,
+  };
+}
+
+/**
+ * Compatibility accessor. v1 keeps 52/104/full; v2 returns only the factual
+ * Dynamic working set (answered + required/open) or the full Deep Dive catalog.
+ */
+export function getQuestionnaireKinks(profile: Profile): Kink[] {
+  return getQuestionnaireRuntime(profile).visibleKinks;
+}
+
+export function getAdaptiveQuestionQueue(profile: Profile): Kink[] {
+  return getQuestionnaireRuntime(profile).queue.map((item) => item.kink);
 }
 
 export function getQuestionnaireKinksByCategory(profile: Profile, category: string): Kink[] {
   return getQuestionnaireKinks(profile).filter((kink) => kink.category === category);
 }
 
-/** Search deliberately ignores the preset so the full catalog stays reachable. */
+/** Search deliberately ignores questionnaire mode so the full catalog stays reachable. */
 export function searchAllKinks(query: string): Kink[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return [];
@@ -262,6 +432,9 @@ export function questionnaireCount(
   setup: QuestionnaireSetup,
   interests: QuestionnaireInterest[] = setup.interests,
 ): number {
+  if (setup.version === 2) {
+    return setup.mode === "deepDive" ? KINKS.length : buildQuestionnaireCoveragePlan(interests).anchorIds.length;
+  }
   const mockProfile: Profile = {
     id: "questionnaire-preview",
     name: "Preview",
@@ -274,5 +447,5 @@ export function questionnaireCount(
     updatedAt: 0,
     entries: {},
   };
-  return getQuestionnaireKinks(mockProfile).length;
+  return v1Questionnaire(mockProfile).length;
 }

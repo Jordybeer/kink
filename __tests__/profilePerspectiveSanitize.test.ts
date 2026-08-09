@@ -33,6 +33,30 @@ describe("profile perspective backup sanitizing", () => {
     });
   });
 
+  it("preserves a valid v2 Dynamic setup for an own backup profile", () => {
+    const profile = sanitizeProfileFull({
+      id: "profile-v2",
+      name: "Nova",
+      role: "Submissive",
+      origin: "own",
+      experienceLevel: "gevorderd",
+      customKinks: [],
+      entries: {},
+      perspective: "submissive",
+      questionnaireSetup: {
+        mode: "dynamic",
+        interests: ["sexual_social", "bogus"],
+        version: 2,
+      },
+    })!;
+
+    expect(profile.questionnaireSetup).toEqual({
+      mode: "dynamic",
+      interests: ["sexual_social"],
+      version: 2,
+    });
+  });
+
   it("drops local grouping fields from a shared profile", () => {
     const profile = sanitizeProfileFull({
       id: "profile-1",

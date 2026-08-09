@@ -10,6 +10,19 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 **Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
+### PR #299 — Dynamic questionnaire v2 [IN REVIEW]
+
+Dynamic replaces fixed budgets for newly created profiles; Deep Dive remains the
+explicit route to every catalog item. Coverage is a fixed, monotonic set of
+explicit questions; local expansion is stateless and sparse: `yes`/`willing`
+may open one pinned canonical follow-up, `no` (Voor hen) and `maybe` are neutral,
+and only `hard_no` may delay an explicit directional continuation. Broad
+clusters exist only for diversity; topic metadata only spaces the conversation.
+No metadata means zero propagation. Existing v1 quick/balanced/full setups stay
+editable and unmigrated until the user explicitly switches flow. Changing an
+existing canonical source → target mapping is a semantic data migration, not a
+metadata tidy-up.
+
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 
 Verdict: v5 improves or holds every surface; zero code regressions. Two rot

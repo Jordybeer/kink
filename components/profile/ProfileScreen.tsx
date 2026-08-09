@@ -13,12 +13,14 @@ import {
   UserMinus,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { CATEGORIES, LEVEL_MAX } from "@/lib/kinks";
+import { CATEGORIES, KINKS, LEVEL_MAX } from "@/lib/kinks";
 import {
-  getAdaptiveQuestionQueue,
-  getQuestionnaireKinks,
+  buildQuestionnaireDiscoveryWave,
+  getQuestionnaireRuntime,
   searchAllKinks,
+  type QuestionnaireIntent,
 } from "@/lib/questionnaire";
+import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
 import { useMotionSafe } from "@/lib/motion";
 import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
@@ -53,6 +55,7 @@ const TAB_VARIANTS = {
   center: { opacity: 1, x: 0 },
   exit: (direction: number) => ({ opacity: 0, x: direction > 0 ? -28 : 28 }),
 };
+const EMPTY_KINKS: Kink[] = [];
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
@@ -80,6 +83,8 @@ export default function ProfilePage({ params }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [search, setSearch] = useState("");
   const [deckFocus, setDeckFocus] = useState<string | null>(null);
+  const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>("dynamic");
+  const [discoveryWaveIds, setDiscoveryWaveIds] = useState<string[]>([]);
   const [customInput, setCustomInput] = useState("");
   const [editKink, setEditKink] = useState<Kink | null>(null);
   const [editing, setEditing] = useState(false);
@@ -94,14 +99,16 @@ export default function ProfilePage({ params }: Props) {
   const editQueryConsumed = useRef(false);
   const deckRef = useRef<HTMLDivElement>(null);
 
-  const visibleKinks = useMemo(
-    () => profile ? getQuestionnaireKinks(profile) : [],
-    [profile],
+  const questionnaireRuntime = useMemo(
+    () => profile
+      ? getQuestionnaireRuntime(profile, {
+          intent: questionnaireIntent,
+          discoveryWaveIds,
+        })
+      : null,
+    [profile, questionnaireIntent, discoveryWaveIds],
   );
-  const priorityKinks = useMemo(
-    () => profile ? getAdaptiveQuestionQueue(profile) : [],
-    [profile],
-  );
+  const visibleKinks = questionnaireRuntime?.visibleKinks ?? EMPTY_KINKS;
   const kinksByCategory = useMemo(() => {
     const groups = new Map<string, Kink[]>();
     for (const kink of visibleKinks) {
@@ -116,6 +123,8 @@ export default function ProfilePage({ params }: Props) {
     setRevealedPrivateResponses(new Set());
     setIncludePrivateExports(false);
     setEditing(false);
+    setQuestionnaireIntent("dynamic");
+    setDiscoveryWaveIds([]);
     initializedProfileId.current = null;
     editQueryConsumed.current = false;
   }, [id]);
@@ -166,6 +175,10 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const currentProfile = profile;
+  const runtime = questionnaireRuntime!;
+  const questionnaireV2 = currentProfile.questionnaireSetup?.version === 2
+    ? currentProfile.questionnaireSetup
+    : null;
   const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   const effectiveTab = shared ? "overzicht" : activeTab;
   const visibleCategories = CATEGORIES.filter((category) => kinksByCategory.has(category));
@@ -174,6 +187,10 @@ export default function ProfilePage({ params }: Props) {
   const searchResults = searchTerm ? searchAllKinks(searchTerm) : [];
   const customKinks = currentProfile.customKinks ?? [];
   const totalRated = visibleKinks.filter((kink) => currentProfile.entries[kink.id]?.status).length;
+  const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
+  const nextDiscoveryWave = questionnaireV2?.mode === "dynamic" && runtime.complete
+    ? buildQuestionnaireDiscoveryWave(currentProfile)
+    : [];
   const hasPrivateResponses = Object.values(currentProfile.entries).some(
     (entry) => entry.status && entry.privateResponse,
   );
@@ -203,6 +220,27 @@ export default function ProfilePage({ params }: Props) {
 
   function updateStatus(kinkId: string, status: KinkStatus) {
     setEntry(currentProfile.id, kinkId, { status, desire: null });
+  }
+
+  function startDiscovery() {
+    const wave = buildQuestionnaireDiscoveryWave(currentProfile);
+    if (wave.length === 0) return;
+    setDiscoveryWaveIds(wave);
+    setQuestionnaireIntent("discover");
+    setDeckFocus(null);
+    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function startDeepDive() {
+    if (!questionnaireV2) return;
+    updateProfileQuestionnaire(currentProfile.id, {
+      mode: "deepDive",
+      interests: [...questionnaireV2.interests],
+      version: 2,
+    });
+    setQuestionnaireIntent("deepDive");
+    setDiscoveryWaveIds([]);
+    setDeckFocus(null);
   }
 
   function privateResponseRevealed(kinkId: string): boolean {
@@ -324,9 +362,41 @@ export default function ProfilePage({ params }: Props) {
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
                 {currentProfile.questionnaireSetup && !searchTerm && (
-                  <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                    {visibleKinks.length} onderwerpen in deze ronde. De stapel past zich aan op je eigen antwoorden; niets wordt voor je ingevuld. Zoeken toont altijd alles.
-                  </p>
+                  questionnaireV2 && runtime.coverage ? (
+                    <div className="mt-2">
+                      <div
+                        role="progressbar"
+                        aria-label={questionnaireV2.mode === "deepDive" ? "Catalogusvoortgang" : "Profieldekking"}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={questionnaireV2.mode === "deepDive"
+                          ? Math.round((catalogRated / KINKS.length) * 100)
+                          : runtime.coverage.percent}
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "var(--surface2)" }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-[width]"
+                          style={{
+                            width: `${questionnaireV2.mode === "deepDive"
+                              ? Math.round((catalogRated / KINKS.length) * 100)
+                              : runtime.coverage.percent}%`,
+                            background: "var(--accent)",
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
+                        {questionnaireV2.mode === "deepDive"
+                          ? `Catalogus: ${catalogRated} / ${KINKS.length} beoordeeld.`
+                          : `Profieldekking ${runtime.coverage.percent}% · ${runtime.coverage.answered} / ${runtime.coverage.total} kernvragen expliciet beantwoord.`}
+                        {" "}Zoeken toont altijd alles.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
+                      {visibleKinks.length} onderwerpen in deze ronde. De stapel past zich aan op je eigen antwoorden; niets wordt voor je ingevuld. Zoeken toont altijd alles.
+                    </p>
+                  )
                 )}
               </div>
 
@@ -371,16 +441,65 @@ export default function ProfilePage({ params }: Props) {
                   </div>
 
                   <div ref={deckRef} className="px-4 mb-4" style={{ scrollMarginTop: "calc(var(--nav-h) + 12px)" }}>
-                    <TriageDeck
-                      kinks={visibleKinks}
-                      priorityKinks={priorityKinks}
-                      entries={currentProfile.entries}
-                      focusCategory={deckFocus}
-                      onStatusChange={updateStatus}
-                      onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
-                      onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
-                      onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
-                    />
+                    {questionnaireV2 && runtime.complete ? (
+                      <div
+                        className="rounded-2xl p-5 text-center"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                      >
+                        <p
+                          className="text-xl"
+                          style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}
+                        >
+                          {questionnaireV2.mode === "deepDive"
+                            ? "De hele catalogus ligt open op tafel."
+                            : runtime.intent === "discover"
+                              ? "Dit ontdekrondje is rond."
+                              : "Brede profieldekking bereikt."}
+                        </p>
+                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                          {questionnaireV2.mode === "deepDive"
+                            ? `${catalogRated} van ${KINKS.length} onderwerpen expliciet beoordeeld.`
+                            : "Geen antwoord is ingevuld of voorspeld. Je kunt nieuwe gebieden proeven of bewust alles afwerken."}
+                        </p>
+                        {questionnaireV2.mode === "dynamic" && (
+                          <div className="grid grid-cols-2 gap-2 mt-4">
+                            <button
+                              type="button"
+                              onClick={startDiscovery}
+                              disabled={nextDiscoveryWave.length === 0}
+                              className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
+                              style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                            >
+                              Meer ontdekken
+                            </button>
+                            <button
+                              type="button"
+                              onClick={startDeepDive}
+                              className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold"
+                              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                            >
+                              Deep Dive
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <TriageDeck
+                        kinks={visibleKinks}
+                        queueItems={runtime.queue}
+                        entries={currentProfile.entries}
+                        focusCategory={deckFocus}
+                        progressLabel={questionnaireV2 && runtime.coverage
+                          ? questionnaireV2.mode === "deepDive"
+                            ? `Catalogus: ${catalogRated} / ${KINKS.length}`
+                            : `Profieldekking ${runtime.coverage.percent}%`
+                          : undefined}
+                        onStatusChange={updateStatus}
+                        onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
+                        onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
+                        onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
+                      />
+                    )}
                   </div>
 
                   <div className="px-4">

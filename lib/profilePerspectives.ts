@@ -46,11 +46,16 @@ function experienceForPreset(preset: QuestionnairePreset): ExperienceLevel {
   return "gevorderd";
 }
 
+function experienceForQuestionnaire(setup: QuestionnaireSetup): ExperienceLevel {
+  if (setup.version === 1) return experienceForPreset(setup.preset);
+  return setup.mode === "deepDive" ? "diepgaand" : "gevorderd";
+}
+
 function widenExperience(
   current: ExperienceLevel | undefined,
-  preset: QuestionnairePreset,
+  setup: QuestionnaireSetup,
 ): ExperienceLevel {
-  const derived = experienceForPreset(preset);
+  const derived = experienceForQuestionnaire(setup);
   if (!current) return derived;
   return LEVEL_RANK[current] >= LEVEL_RANK[derived] ? current : derived;
 }
@@ -80,7 +85,7 @@ function patchProfiles(
         personGroupId: groupId,
         perspective,
         role: roleForPerspective(perspective),
-        experienceLevel: experienceForPreset(questionnaireSetup.preset),
+        experienceLevel: experienceForQuestionnaire(questionnaireSetup),
         questionnaireSetup: {
           ...questionnaireSetup,
           interests: [...questionnaireSetup.interests],
@@ -112,7 +117,7 @@ export function createPerspectiveProfiles(
   const perspectives: ProfilePerspective[] = input.direction === "both"
     ? ["dominant", "submissive"]
     : [input.direction];
-  const experienceLevel = experienceForPreset(input.questionnaireSetup.preset);
+  const experienceLevel = experienceForQuestionnaire(input.questionnaireSetup);
 
   const profileIds = perspectives.map((perspective) =>
     useStore.getState().createProfile(
@@ -147,7 +152,7 @@ export function updateProfileQuestionnaire(
       profile.id === profileId
         ? {
             ...profile,
-            experienceLevel: widenExperience(profile.experienceLevel, questionnaireSetup.preset),
+            experienceLevel: widenExperience(profile.experienceLevel, questionnaireSetup),
             questionnaireSetup: {
               ...questionnaireSetup,
               interests: [...questionnaireSetup.interests],
