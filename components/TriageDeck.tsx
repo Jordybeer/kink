@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Circle, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
+import { KINKS } from "@/lib/kinks";
+import {
+  selectConversationQuestion,
+  type QuestionnaireQueueItem,
+} from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
 import InfoSheet from "./InfoSheet";
 
@@ -11,13 +16,15 @@ const AGREEMENTS = [
   { value: "eerste keer", label: "Eerste keer", emphasized: false },
 ] as const;
 
-const CARD_FEEDBACK_MS = 90;
-const CARD_FADE_SECONDS = 0.11;
+const CARD_FEEDBACK_MS = 200;
+const CARD_FADE_SECONDS = 0.17;
 
 interface Props {
   kinks: Kink[];
+  queueItems?: QuestionnaireQueueItem[];
   entries: Record<string, KinkEntry>;
   focusCategory?: string | null;
+  progressLabel?: string;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange: (kinkId: string, v: boolean) => void;
   onPrivateChange: (kinkId: string, v: boolean) => void;
@@ -26,8 +33,10 @@ interface Props {
 
 export default function TriageDeck({
   kinks,
+  queueItems,
   entries,
   focusCategory,
+  progressLabel,
   onStatusChange,
   onCuriousChange,
   onPrivateChange,
@@ -36,6 +45,8 @@ export default function TriageDeck({
   const reducedMotion = useReducedMotion();
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [holding, setHolding] = useState<string | null>(null);
+  const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
+  const [requireNonProbe, setRequireNonProbe] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [infoOpen, setInfoOpen] = useState<Kink | null>(null);
   const fadeTransition = reducedMotion
@@ -48,19 +59,45 @@ export default function TriageDeck({
     };
   }, []);
 
-  const unrated = kinks.filter((kink) => entries[kink.id]?.status == null && !skipped.has(kink.id));
-  const focused = focusCategory ? unrated.filter((kink) => kink.category === focusCategory) : [];
-  const queue = focused.length ? focused : unrated;
+  const sourceItems = queueItems ?? kinks.map((kink): QuestionnaireQueueItem => ({
+    kink,
+    lane: "legacy",
+    isProbe: false,
+    coversAnchor: false,
+    reasons: [],
+  }));
+  const unanswered = sourceItems.filter((item) => entries[item.kink.id]?.status == null);
+  const skippedUnansweredCount = unanswered.filter((item) => skipped.has(item.kink.id)).length;
+  const unskipped = unanswered.filter((item) => !skipped.has(item.kink.id));
+  const focused = focusCategory
+    ? unskipped.filter((item) => item.kink.category === focusCategory)
+    : [];
+  let queue = focused.length ? focused : unskipped;
+  // "Sla over" means later, not never. Once everything else has had a turn,
+  // skipped cards become eligible again instead of deadlocking Dynamic coverage.
+  if (queue.length === 0 && unanswered.length > 0) {
+    const deferredFocus = focusCategory
+      ? unanswered.filter((item) => item.kink.category === focusCategory)
+      : [];
+    queue = deferredFocus.length ? deferredFocus : unanswered;
+  }
+  const currentItem = selectConversationQuestion(queue, KINKS, {
+    requireNonProbe,
+    lastKinkId: lastAnsweredId,
+  });
   const held = holding ? kinks.find((kink) => kink.id === holding) : null;
-  const current = held ?? queue[0] ?? null;
+  const current = held ?? currentItem?.kink ?? null;
 
   function handleSelect(kink: Kink, status: KinkStatus) {
+    const answeredWasProbe = currentItem?.kink.id === kink.id && currentItem.isProbe;
     onStatusChange(kink.id, status);
     if (holdTimer.current) clearTimeout(holdTimer.current);
     if (status == null) {
       setHolding(null);
       return;
     }
+    setLastAnsweredId(kink.id);
+    setRequireNonProbe(answeredWasProbe);
     setHolding(kink.id);
     holdTimer.current = setTimeout(() => setHolding(null), CARD_FEEDBACK_MS);
   }
@@ -78,11 +115,13 @@ export default function TriageDeck({
 
   function skip(kink: Kink) {
     setHolding(null);
+    setLastAnsweredId(kink.id);
+    if (currentItem?.kink.id === kink.id && !currentItem.isProbe) setRequireNonProbe(false);
     setSkipped((previous) => new Set(previous).add(kink.id));
   }
 
   const remainingInCat = current
-    ? queue.filter((kink) => kink.category === current.category).length
+    ? queue.filter((item) => item.kink.category === current.category).length
     : 0;
   const totalDone = kinks.filter((kink) => entries[kink.id]?.status != null).length;
   const currentEntry = current ? entries[current.id] : undefined;
@@ -202,7 +241,7 @@ export default function TriageDeck({
 
             <div className="flex items-center mt-2">
               <span className="flex-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-                {totalDone} van {kinks.length} beoordeeld
+                {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}
               </span>
               <button
                 onClick={() => skip(current)}
@@ -227,18 +266,18 @@ export default function TriageDeck({
             className="text-lg italic"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}
           >
-            {skipped.size > 0 ? "Voor nu klaar." : "Alles beoordeeld."}
+            {skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld."}
           </p>
           <p className="text-xs mt-1 tabular-nums" style={{ color: "var(--text2)" }}>
-            {totalDone} van {kinks.length} — tik een kink hieronder om bij te stellen.
+            {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`} — tik een kink hieronder om bij te stellen.
           </p>
-          {skipped.size > 0 && (
+          {skippedUnansweredCount > 0 && (
             <button
               onClick={() => setSkipped(new Set())}
               className="focus-ring mt-3 h-9 px-4 rounded-lg text-xs border transition-colors"
               style={{ color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}
             >
-              {skipped.size} overgeslagen — toon opnieuw
+              {skippedUnansweredCount} overgeslagen — toon opnieuw
             </button>
           )}
         </motion.div>

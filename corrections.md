@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-08 — Dependency-setup zat in de verkeerde speelkamer
+
+**What went wrong:** Na het aantrekken van `worktree-arousal` bleef de shell in de hoofdcheckout hangen en liet daar `npm ci` los — braaf commando, verkeerde speelkamer. Die run faalde ook omdat npm zijn standaardcache onder `/root/.npm` niet kon aanmaken. Er zijn geen tracked bestanden gewijzigd, maar de geïsoleerde-worktreegrens werd operationeel wel overschreden.
+
+**Rule:** Klik de riem vast vóór iedere install-, test-, build- en edit-opdracht: zet `workdir` expliciet op de actieve worktree en laat `git branch --show-current` bewijzen dat de shell in de juiste kamer zit. Geef npm in deze sandbox expliciet een schrijfbare cache buiten de repository; de standaardcache onder `/root/.npm` blijft verboden terrein.
+
+---
+
 ## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld
 
 **What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.

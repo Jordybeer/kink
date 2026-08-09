@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,8 +15,7 @@ import {
 import Sheet, { SheetContent } from "@/components/Sheet";
 import {
   QUESTIONNAIRE_INTERESTS,
-  QUESTIONNAIRE_PRESETS,
-  questionnaireCount,
+  QUESTIONNAIRE_MODES,
 } from "@/lib/questionnaire";
 import {
   createPerspectiveProfiles,
@@ -25,7 +24,7 @@ import {
 import { profileHref, waitForPersistedProfile } from "@/lib/localRoutes";
 import type {
   QuestionnaireInterest,
-  QuestionnairePreset,
+  QuestionnaireMode,
 } from "@/types";
 
 interface Props {
@@ -71,7 +70,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [direction, setDirection] = useState<ProfileDirectionChoice | null>(null);
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
-  const [preset, setPreset] = useState<QuestionnairePreset>("balanced");
+  const [mode, setMode] = useState<QuestionnaireMode>("dynamic");
   const [isCreating, setIsCreating] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
@@ -82,7 +81,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     setNameError(null);
     setDirection(null);
     setInterests([]);
-    setPreset("balanced");
+    setMode("dynamic");
     setIsCreating(false);
     setPendingProfileId(null);
     createInFlightRef.current = false;
@@ -91,11 +90,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [step]);
-
-  const estimatedCount = useMemo(
-    () => questionnaireCount({ preset, interests, version: 1 }),
-    [preset, interests],
-  );
 
   function toggleInterest(interest: QuestionnaireInterest) {
     setInterests((current) =>
@@ -130,9 +124,9 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           name: name.trim(),
           direction,
           questionnaireSetup: {
-            preset,
+            mode,
             interests,
-            version: 1,
+            version: 2,
           },
         });
         primaryId = created.primaryId;
@@ -147,13 +141,13 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         }
         setPendingProfileId(null);
         onClose();
-        window.location.assign(profileHref(primaryId));
+        window.location.assign(`${profileHref(primaryId)}&focus=questionnaire`);
         return;
       }
 
       setPendingProfileId(null);
       onClose();
-      router.push(`/profile/${primaryId}`);
+      router.push(`/profile/${primaryId}?focus=questionnaire`);
     } catch (error) {
       setPendingProfileId(null);
       setNameError(error instanceof Error ? error.message : "Profiel kon niet worden gemaakt.");
@@ -168,7 +162,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     ? "Wie ben je hier?"
     : step === 1
       ? "Wat wil je verkennen?"
-      : "Kies je startlijst";
+      : "Kies je route";
 
   return (
     <Sheet open={open} onClose={onClose} scrollable aria-label="Nieuw profiel maken">
@@ -312,7 +306,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           {step === 1 && (
             <div className="ks-fade-in">
               <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--text2)" }}>
-                Kies wat nu relevant voelt. Dit bepaalt alleen je startselectie; de volledige catalogus blijft altijd doorzoekbaar.
+                Kies wat nu relevant voelt. Dat geeft die gebieden eerder dekking; je antwoorden worden nooit voorspeld of ingevuld.
               </p>
               <div className="grid gap-2">
                 {QUESTIONNAIRE_INTERESTS.map((interest) => {
@@ -364,13 +358,13 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 Je kunt dit later aanpassen zonder bestaande antwoorden te verliezen.
               </p>
               <div className="grid gap-2">
-                {QUESTIONNAIRE_PRESETS.map((option) => {
-                  const active = preset === option.value;
+                {QUESTIONNAIRE_MODES.map((option) => {
+                  const active = mode === option.value;
                   return (
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => setPreset(option.value)}
+                      onClick={() => setMode(option.value)}
                       aria-pressed={active}
                       className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
                       style={active
@@ -406,7 +400,9 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                   {direction === "both" ? "Dominant + Submissive" : direction === "dominant" ? "Dominant" : "Submissive"}
                 </p>
                 <p className="text-xs mt-2" style={{ color: "var(--text2)" }}>
-                  Ongeveer {estimatedCount} onderwerpen per profiel om te beoordelen.
+                  {mode === "dynamic"
+                    ? "Dynamic stopt bij brede, expliciete dekking en vlecht echte vervolgvragen later terug in de flow."
+                    : "Deep Dive blijft doorvragen tot de volledige catalogus expliciet is beoordeeld."}
                 </p>
                 {direction === "both" && (
                   <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>

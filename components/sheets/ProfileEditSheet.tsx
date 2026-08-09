@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CaretDown,
   CaretUp,
@@ -17,10 +17,9 @@ import { useStore } from "@/lib/store";
 import { RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 import {
-  DEFAULT_QUESTIONNAIRE_SETUP,
   QUESTIONNAIRE_INTERESTS,
+  QUESTIONNAIRE_MODES,
   QUESTIONNAIRE_PRESETS,
-  questionnaireCount,
 } from "@/lib/questionnaire";
 import {
   adoptProfilePerspective,
@@ -32,6 +31,7 @@ import type {
   Profile,
   ProfilePerspective,
   QuestionnaireInterest,
+  QuestionnaireMode,
   QuestionnairePreset,
 } from "@/types";
 
@@ -60,7 +60,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const [relationshipStatus, setRelationshipStatus] = useState("");
   const [fetLife, setFetLife] = useState("");
   const [bdsmtestUrl, setBdsmtestUrl] = useState("");
-  const [preset, setPreset] = useState<QuestionnairePreset>("balanced");
+  const [questionnaireMode, setQuestionnaireMode] = useState<QuestionnaireMode | null>(null);
+  const [legacyPreset, setLegacyPreset] = useState<QuestionnairePreset>("balanced");
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [bdsmPaste, setBdsmPaste] = useState("");
@@ -69,14 +70,15 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
 
   useEffect(() => {
     if (!open) return;
-    const setup = profile.questionnaireSetup ?? DEFAULT_QUESTIONNAIRE_SETUP;
+    const setup = profile.questionnaireSetup;
     setName(profile.name);
     setPerspective(inferredPerspective(profile));
     setRelationshipStatus(profile.relationshipStatus ?? "");
     setFetLife(profile.fetLifeUsername ?? "");
     setBdsmtestUrl(profile.bdsmtestUrl ?? "");
-    setPreset(setup.preset);
-    setInterests([...setup.interests]);
+    setQuestionnaireMode(setup?.version === 2 ? setup.mode : null);
+    setLegacyPreset(setup?.version === 1 ? setup.preset : "balanced");
+    setInterests([...(setup?.interests ?? [])]);
     setAdvancedOpen(false);
     setBdsmPaste("");
     setBdsmParseCount(null);
@@ -84,11 +86,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     // Reset when this sheet opens for a profile, not after every store mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, profile.id]);
-
-  const count = useMemo(
-    () => questionnaireCount({ preset, interests, version: 1 }),
-    [preset, interests],
-  );
 
   function toggleInterest(interest: QuestionnaireInterest) {
     setInterests((current) =>
@@ -132,11 +129,20 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         adoptProfilePerspective(profile.id, perspective);
       }
 
-      updateProfileQuestionnaire(profile.id, {
-        preset,
-        interests,
-        version: 1,
-      });
+      if (questionnaireMode) {
+        updateProfileQuestionnaire(profile.id, {
+          mode: questionnaireMode,
+          interests,
+          version: 2,
+        });
+      } else if (profile.questionnaireSetup?.version === 1) {
+        // Merely editing a legacy profile must never silently opt it into v2.
+        updateProfileQuestionnaire(profile.id, {
+          preset: legacyPreset,
+          interests,
+          version: 1,
+        });
+      }
 
       setError(null);
       onClose();
@@ -285,17 +291,58 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <h3 className="text-sm font-semibold">Jouw vragenlijst</h3>
             </div>
             <p className="text-xs mb-3 leading-relaxed" style={{ color: "var(--text2)" }}>
-              Verkleinen wist niets. Reeds beantwoorde onderwerpen blijven altijd zichtbaar.
+              Bestaande antwoorden blijven staan. De flow kiest alleen welke onbeantwoorde vraag nu nuttig is.
             </p>
 
+            {questionnaireMode === null && (
+              <div
+                className="rounded-xl p-3 mb-3 text-xs leading-relaxed"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)" }}
+              >
+                {profile.questionnaireSetup?.version === 1
+                  ? `Je bestaande ${QUESTIONNAIRE_PRESETS.find((option) => option.value === legacyPreset)?.label ?? "legacy-selectie"} blijft actief. Je kunt die hieronder blijven bijstellen, of bewust overstappen.`
+                  : "Dit legacy-profiel houdt zijn bestaande ervaringsselectie tot je hieronder bewust een nieuwe flow kiest."}
+              </div>
+            )}
+
+            {questionnaireMode === null && profile.questionnaireSetup?.version === 1 && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold mb-2" style={{ color: "var(--text2)" }}>
+                  Bestaande legacy-diepte
+                </p>
+                <div className="grid gap-2">
+                  {QUESTIONNAIRE_PRESETS.map((option) => {
+                    const active = legacyPreset === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setLegacyPreset(option.value)}
+                        aria-pressed={active}
+                        className="focus-ring min-h-11 rounded-xl px-3 py-2 text-left"
+                        style={active
+                          ? { background: "color-mix(in srgb, var(--accent) 8%, var(--surface))", border: "1px solid var(--accent)" }
+                          : { background: "var(--surface)", border: "1px solid var(--border)" }}
+                      >
+                        <span className="text-xs font-semibold">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs font-semibold mb-2" style={{ color: "var(--text2)" }}>
+              {questionnaireMode === null ? "Nieuwe flow" : "Flow"}
+            </p>
             <div className="grid gap-2 mb-4">
-              {QUESTIONNAIRE_PRESETS.map((option) => {
-                const active = preset === option.value;
+              {QUESTIONNAIRE_MODES.map((option) => {
+                const active = questionnaireMode === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setPreset(option.value)}
+                    onClick={() => setQuestionnaireMode(option.value)}
                     aria-pressed={active}
                     className="focus-ring min-h-[62px] rounded-xl px-3 py-2.5 text-left"
                     style={active
@@ -314,30 +361,38 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               })}
             </div>
 
-            <p className="text-xs font-semibold mb-2" style={{ color: "var(--text2)" }}>
-              Interessegebieden
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {QUESTIONNAIRE_INTERESTS.map((interest) => {
-                const active = interests.includes(interest.value);
-                return (
-                  <button
-                    key={interest.value}
-                    type="button"
-                    onClick={() => toggleInterest(interest.value)}
-                    aria-pressed={active}
-                    className="focus-ring min-h-10 rounded-full px-3 text-xs font-semibold"
-                    style={active
-                      ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
-                      : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                  >
-                    {interest.label}
-                  </button>
-                );
-              })}
-            </div>
+            {(questionnaireMode !== null || profile.questionnaireSetup?.version === 1) && (
+              <>
+                <p className="text-xs font-semibold mb-2" style={{ color: "var(--text2)" }}>
+                  Interessegebieden
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {QUESTIONNAIRE_INTERESTS.map((interest) => {
+                    const active = interests.includes(interest.value);
+                    return (
+                      <button
+                        key={interest.value}
+                        type="button"
+                        onClick={() => toggleInterest(interest.value)}
+                        aria-pressed={active}
+                        className="focus-ring min-h-10 rounded-full px-3 text-xs font-semibold"
+                        style={active
+                          ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
+                          : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                      >
+                        {interest.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
             <p className="text-xs mt-3" style={{ color: "var(--accent)" }}>
-              Ongeveer {count} onderwerpen in deze startselectie.
+              {questionnaireMode === "dynamic"
+                ? "Dynamic heeft geen vast aantal: coverage blijft stabiel, expliciete positieve antwoorden kunnen één lokale vervolgdeur openen."
+                : questionnaireMode === "deepDive"
+                  ? "Deep Dive blijft ordenen, maar laat uiteindelijk geen catalogusonderwerp over."
+                  : "Geen automatische migratie: je huidige legacy-flow blijft behouden."}
             </p>
           </section>
 

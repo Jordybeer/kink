@@ -8,6 +8,7 @@ import type {
   Profile,
   ProfilePerspective,
   QuestionnaireInterest,
+  QuestionnaireMode,
   QuestionnairePreset,
   QuestionnaireSetup,
 } from "@/types";
@@ -31,6 +32,7 @@ import {
 const VALID_STATUSES: readonly NonNullable<KinkStatus>[] = ["yes", "willing", "maybe", "no", "hard_no"];
 const VALID_PERSPECTIVES: readonly ProfilePerspective[] = ["dominant", "submissive"];
 const VALID_PRESETS: readonly QuestionnairePreset[] = ["quick", "balanced", "full"];
+const VALID_QUESTIONNAIRE_MODES: readonly QuestionnaireMode[] = ["dynamic", "deepDive"];
 const VALID_INTERESTS: readonly QuestionnaireInterest[] = [
   "power",
   "impact",
@@ -120,21 +122,24 @@ function sanitizeCustomKinks(raw: unknown): CustomKink[] {
 function sanitizeQuestionnaireSetup(raw: unknown): QuestionnaireSetup | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const record = raw as Record<string, unknown>;
-  if (record.version !== 1) return undefined;
-  if (typeof record.preset !== "string" || !(VALID_PRESETS as readonly string[]).includes(record.preset)) {
-    return undefined;
-  }
   const interests = Array.isArray(record.interests)
     ? [...new Set(record.interests.filter(
         (interest): interest is QuestionnaireInterest =>
           typeof interest === "string" && (VALID_INTERESTS as readonly string[]).includes(interest),
       ))]
     : [];
-  return {
-    preset: record.preset as QuestionnairePreset,
-    interests,
-    version: 1,
-  };
+  if (record.version === 1) {
+    if (typeof record.preset !== "string" || !(VALID_PRESETS as readonly string[]).includes(record.preset)) {
+      return undefined;
+    }
+    return { preset: record.preset as QuestionnairePreset, interests, version: 1 };
+  }
+  if (record.version === 2) {
+    if (typeof record.mode !== "string"
+      || !(VALID_QUESTIONNAIRE_MODES as readonly string[]).includes(record.mode)) return undefined;
+    return { mode: record.mode as QuestionnaireMode, interests, version: 2 };
+  }
+  return undefined;
 }
 
 /**

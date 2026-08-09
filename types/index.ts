@@ -4,6 +4,7 @@ export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand"
 
 export type ProfilePerspective = "dominant" | "submissive";
 export type QuestionnairePreset = "quick" | "balanced" | "full";
+export type QuestionnaireMode = "dynamic" | "deepDive";
 export type QuestionnaireInterest =
   | "power"
   | "impact"
@@ -12,11 +13,19 @@ export type QuestionnaireInterest =
   | "humiliation"
   | "sexual_social";
 
-export interface QuestionnaireSetup {
+export interface LegacyQuestionnaireSetup {
   preset: QuestionnairePreset;
   interests: QuestionnaireInterest[];
   version: 1;
 }
+
+export interface DynamicQuestionnaireSetup {
+  mode: QuestionnaireMode;
+  interests: QuestionnaireInterest[];
+  version: 2;
+}
+
+export type QuestionnaireSetup = LegacyQuestionnaireSetup | DynamicQuestionnaireSetup;
 
 export interface CustomKink {
   id: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChatCircle,
@@ -13,8 +13,14 @@ import {
   UserMinus,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { CATEGORIES, LEVEL_MAX } from "@/lib/kinks";
-import { getQuestionnaireKinks, searchAllKinks } from "@/lib/questionnaire";
+import { CATEGORIES, KINKS, LEVEL_MAX } from "@/lib/kinks";
+import {
+  buildQuestionnaireDiscoveryWave,
+  getQuestionnaireRuntime,
+  searchAllKinks,
+  type QuestionnaireIntent,
+} from "@/lib/questionnaire";
+import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
 import { useMotionSafe } from "@/lib/motion";
 import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
@@ -49,9 +55,11 @@ const TAB_VARIANTS = {
   center: { opacity: 1, x: 0 },
   exit: (direction: number) => ({ opacity: 0, x: direction > 0 ? -28 : 28 }),
 };
+const EMPTY_KINKS: Kink[] = [];
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const transition = useMotionSafe();
@@ -76,6 +84,8 @@ export default function ProfilePage({ params }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [search, setSearch] = useState("");
   const [deckFocus, setDeckFocus] = useState<string | null>(null);
+  const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>("dynamic");
+  const [discoveryWaveIds, setDiscoveryWaveIds] = useState<string[]>([]);
   const [customInput, setCustomInput] = useState("");
   const [editKink, setEditKink] = useState<Kink | null>(null);
   const [editing, setEditing] = useState(false);
@@ -88,12 +98,19 @@ export default function ProfilePage({ params }: Props) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const initializedProfileId = useRef<string | null>(null);
   const editQueryConsumed = useRef(false);
+  const questionnaireFocusConsumed = useRef(false);
   const deckRef = useRef<HTMLDivElement>(null);
 
-  const visibleKinks = useMemo(
-    () => profile ? getQuestionnaireKinks(profile) : [],
-    [profile],
+  const questionnaireRuntime = useMemo(
+    () => profile
+      ? getQuestionnaireRuntime(profile, {
+          intent: questionnaireIntent,
+          discoveryWaveIds,
+        })
+      : null,
+    [profile, questionnaireIntent, discoveryWaveIds],
   );
+  const visibleKinks = questionnaireRuntime?.visibleKinks ?? EMPTY_KINKS;
   const kinksByCategory = useMemo(() => {
     const groups = new Map<string, Kink[]>();
     for (const kink of visibleKinks) {
@@ -108,8 +125,11 @@ export default function ProfilePage({ params }: Props) {
     setRevealedPrivateResponses(new Set());
     setIncludePrivateExports(false);
     setEditing(false);
+    setQuestionnaireIntent("dynamic");
+    setDiscoveryWaveIds([]);
     initializedProfileId.current = null;
     editQueryConsumed.current = false;
+    questionnaireFocusConsumed.current = false;
   }, [id]);
 
   useEffect(() => {
@@ -130,6 +150,29 @@ export default function ProfilePage({ params }: Props) {
     const query = nextParams.toString();
     router.replace(`/profile/${profile.id}${query ? `?${query}` : ""}`, { scroll: false });
   }, [hydrated, profile, router, searchParams]);
+
+  useEffect(() => {
+    if (!hydrated || !profile || !profileTourComplete || activeTab !== "bewerken") return;
+    if (questionnaireFocusConsumed.current || searchParams.get("focus") !== "questionnaire") return;
+    const target = deckRef.current;
+    if (!target) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!target.isConnected) return;
+      questionnaireFocusConsumed.current = true;
+      target.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
+
+      const nextParams = new URLSearchParams(searchParams.toString());
+      nextParams.delete("focus");
+      const query = nextParams.toString();
+      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, hydrated, pathname, profile, profileTourComplete, router, searchParams]);
 
   useEffect(() => {
     const sharedProfile = profile?.origin === "shared" || profile?.isImported === true;
@@ -158,14 +201,27 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const currentProfile = profile;
+  const runtime = questionnaireRuntime!;
+  const questionnaireV2 = currentProfile.questionnaireSetup?.version === 2
+    ? currentProfile.questionnaireSetup
+    : null;
   const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   const effectiveTab = shared ? "overzicht" : activeTab;
   const visibleCategories = CATEGORIES.filter((category) => kinksByCategory.has(category));
   const maxLevel = LEVEL_MAX[currentProfile.experienceLevel ?? "beginner"];
+  const exportMaxLevel = questionnaireV2 ? LEVEL_MAX.diepgaand : maxLevel;
   const searchTerm = search.trim();
   const searchResults = searchTerm ? searchAllKinks(searchTerm) : [];
   const customKinks = currentProfile.customKinks ?? [];
   const totalRated = visibleKinks.filter((kink) => currentProfile.entries[kink.id]?.status).length;
+  const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
+  const deepDiveMode = questionnaireV2?.mode === "deepDive";
+  const progressPercent = deepDiveMode
+    ? Math.round((catalogRated / KINKS.length) * 100)
+    : runtime.coverage?.percent ?? 0;
+  const nextDiscoveryWave = questionnaireV2?.mode === "dynamic" && runtime.complete
+    ? buildQuestionnaireDiscoveryWave(currentProfile)
+    : [];
   const hasPrivateResponses = Object.values(currentProfile.entries).some(
     (entry) => entry.status && entry.privateResponse,
   );
@@ -197,6 +253,27 @@ export default function ProfilePage({ params }: Props) {
     setEntry(currentProfile.id, kinkId, { status, desire: null });
   }
 
+  function startDiscovery() {
+    const wave = buildQuestionnaireDiscoveryWave(currentProfile);
+    if (wave.length === 0) return;
+    setDiscoveryWaveIds(wave);
+    setQuestionnaireIntent("discover");
+    setDeckFocus(null);
+    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function startDeepDive() {
+    if (!questionnaireV2) return;
+    updateProfileQuestionnaire(currentProfile.id, {
+      mode: "deepDive",
+      interests: [...questionnaireV2.interests],
+      version: 2,
+    });
+    setQuestionnaireIntent("deepDive");
+    setDiscoveryWaveIds([]);
+    setDeckFocus(null);
+  }
+
   function privateResponseRevealed(kinkId: string): boolean {
     return revealedPrivateResponses.has(privateResponseKey(currentProfile.id, kinkId));
   }
@@ -223,7 +300,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   function downloadText() {
-    const text = buildProfileTextExport(currentProfile, maxLevel, {
+    const text = buildProfileTextExport(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
     });
     const blob = new Blob([text], { type: "text/plain" });
@@ -236,7 +313,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   async function downloadPdf() {
-    const { doc, filename } = await buildProfilePdf(currentProfile, maxLevel, {
+    const { doc, filename } = await buildProfilePdf(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
     });
     doc.save(filename);
@@ -316,9 +393,37 @@ export default function ProfilePage({ params }: Props) {
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
                 {currentProfile.questionnaireSetup && !searchTerm && (
-                  <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                    {visibleKinks.length} onderwerpen in je startselectie. Zoeken toont altijd alles.
-                  </p>
+                  questionnaireV2 && runtime.coverage ? (
+                    <div className="mt-2">
+                      <div
+                        role="progressbar"
+                        aria-label={deepDiveMode ? "Catalogusvoortgang" : "Profieldekking"}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={progressPercent}
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "var(--surface2)" }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-[width]"
+                          style={{
+                            width: `${progressPercent}%`,
+                            background: "var(--accent)",
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
+                        {deepDiveMode
+                          ? `Catalogus: ${catalogRated} / ${KINKS.length} beoordeeld.`
+                          : `Profieldekking ${runtime.coverage.percent}% · ${runtime.coverage.answered} / ${runtime.coverage.total} kernvragen expliciet beantwoord.`}
+                        {" "}Zoeken toont altijd alles.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
+                      {visibleKinks.length} onderwerpen in deze ronde. De stapel past zich aan op je eigen antwoorden; niets wordt voor je ingevuld. Zoeken toont altijd alles.
+                    </p>
+                  )
                 )}
               </div>
 
@@ -363,15 +468,65 @@ export default function ProfilePage({ params }: Props) {
                   </div>
 
                   <div ref={deckRef} className="px-4 mb-4" style={{ scrollMarginTop: "calc(var(--nav-h) + 12px)" }}>
-                    <TriageDeck
-                      kinks={visibleKinks}
-                      entries={currentProfile.entries}
-                      focusCategory={deckFocus}
-                      onStatusChange={updateStatus}
-                      onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
-                      onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
-                      onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
-                    />
+                    {questionnaireV2 && runtime.complete ? (
+                      <div
+                        className="rounded-2xl p-5 text-center"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
+                      >
+                        <p
+                          className="text-xl"
+                          style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}
+                        >
+                          {questionnaireV2.mode === "deepDive"
+                            ? "De hele catalogus ligt open op tafel."
+                            : runtime.intent === "discover"
+                              ? "Dit ontdekrondje is rond."
+                              : "Brede profieldekking bereikt."}
+                        </p>
+                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                          {questionnaireV2.mode === "deepDive"
+                            ? `${catalogRated} van ${KINKS.length} onderwerpen expliciet beoordeeld.`
+                            : "Geen antwoord is ingevuld of voorspeld. Je kunt nieuwe gebieden proeven of bewust alles afwerken."}
+                        </p>
+                        {questionnaireV2.mode === "dynamic" && (
+                          <div className="grid grid-cols-2 gap-2 mt-4">
+                            <button
+                              type="button"
+                              onClick={startDiscovery}
+                              disabled={nextDiscoveryWave.length === 0}
+                              className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
+                              style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                            >
+                              Meer ontdekken
+                            </button>
+                            <button
+                              type="button"
+                              onClick={startDeepDive}
+                              className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold"
+                              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                            >
+                              Deep Dive
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <TriageDeck
+                        kinks={visibleKinks}
+                        queueItems={runtime.queue}
+                        entries={currentProfile.entries}
+                        focusCategory={deckFocus}
+                        progressLabel={questionnaireV2 && runtime.coverage
+                          ? questionnaireV2.mode === "deepDive"
+                            ? `Catalogus: ${catalogRated} / ${KINKS.length}`
+                            : `Profieldekking ${runtime.coverage.percent}%`
+                          : undefined}
+                        onStatusChange={updateStatus}
+                        onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
+                        onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
+                        onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
+                      />
+                    )}
                   </div>
 
                   <div className="px-4">

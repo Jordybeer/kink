@@ -229,6 +229,19 @@ describe("decodeAny", () => {
     expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.flogging.status).toBe("maybe");
   });
+
+  it("keeps additive v2 questionnaire metadata compatible with a full own-profile round trip", () => {
+    const profile: Profile = {
+      ...BASE_PROFILE,
+      origin: "own",
+      perspective: "dominant",
+      questionnaireSetup: { mode: "dynamic", interests: ["bondage"], version: 2 },
+    };
+    const decoded = decodeAny(encodeProfile(profile, { includePrivateResponses: true }));
+    expect(decoded.questionnaireSetup).toEqual({ mode: "dynamic", interests: ["bondage"], version: 2 });
+    expect(decoded.entries.spanking_hand.status).toBe("yes");
+    expect(decoded.isImported).toBe(true);
+  });
 });
 
 describe("legacy give/receive backward compat", () => {
