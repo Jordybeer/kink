@@ -141,13 +141,13 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         }
         setPendingProfileId(null);
         onClose();
-        window.location.assign(profileHref(primaryId));
+        window.location.assign(`${profileHref(primaryId)}&focus=questionnaire`);
         return;
       }
 
       setPendingProfileId(null);
       onClose();
-      router.push(`/profile/${primaryId}`);
+      router.push(`/profile/${primaryId}?focus=questionnaire`);
     } catch (error) {
       setPendingProfileId(null);
       setNameError(error instanceof Error ? error.message : "Profiel kon niet worden gemaakt.");

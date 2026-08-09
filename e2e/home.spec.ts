@@ -54,5 +54,8 @@ test.describe("Profiel aanmaken via UI", () => {
 
     await expect(page).toHaveURL(/\/profile\//, { timeout: 8000 });
     await expect(page.getByRole("heading", { level: 2, name: "TestPersoon" })).toBeVisible();
+    await expect(page).not.toHaveURL(/focus=questionnaire/);
+    await expect(page.locator('[data-tour="kink-card"]')).toBeInViewport();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   });
 });

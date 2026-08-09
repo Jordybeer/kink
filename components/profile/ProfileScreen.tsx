@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChatCircle,
@@ -59,6 +59,7 @@ const EMPTY_KINKS: Kink[] = [];
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const transition = useMotionSafe();
@@ -97,6 +98,7 @@ export default function ProfilePage({ params }: Props) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const initializedProfileId = useRef<string | null>(null);
   const editQueryConsumed = useRef(false);
+  const questionnaireFocusConsumed = useRef(false);
   const deckRef = useRef<HTMLDivElement>(null);
 
   const questionnaireRuntime = useMemo(
@@ -127,6 +129,7 @@ export default function ProfilePage({ params }: Props) {
     setDiscoveryWaveIds([]);
     initializedProfileId.current = null;
     editQueryConsumed.current = false;
+    questionnaireFocusConsumed.current = false;
   }, [id]);
 
   useEffect(() => {
@@ -147,6 +150,29 @@ export default function ProfilePage({ params }: Props) {
     const query = nextParams.toString();
     router.replace(`/profile/${profile.id}${query ? `?${query}` : ""}`, { scroll: false });
   }, [hydrated, profile, router, searchParams]);
+
+  useEffect(() => {
+    if (!hydrated || !profile || !profileTourComplete || activeTab !== "bewerken") return;
+    if (questionnaireFocusConsumed.current || searchParams.get("focus") !== "questionnaire") return;
+    const target = deckRef.current;
+    if (!target) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!target.isConnected) return;
+      questionnaireFocusConsumed.current = true;
+      target.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
+
+      const nextParams = new URLSearchParams(searchParams.toString());
+      nextParams.delete("focus");
+      const query = nextParams.toString();
+      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, hydrated, pathname, profile, profileTourComplete, router, searchParams]);
 
   useEffect(() => {
     const sharedProfile = profile?.origin === "shared" || profile?.isImported === true;
