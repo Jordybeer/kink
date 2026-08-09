@@ -137,6 +137,15 @@ export const QUESTIONNAIRE_COVERAGE_ANCHOR_IDS = [
   "rules_protocols",
 ] as const;
 
+/**
+ * Small, explicit subset that should surface before interests or expansion.
+ * Core means foundational questionnaire coverage, never a preference signal.
+ */
+export const QUESTIONNAIRE_CORE_ANCHOR_IDS = [
+  "dominance_submission",
+  "aftercare_physical",
+] as const;
+
 /** Extra fixed anchors earned only by interests the user explicitly selected. */
 export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, readonly string[]> = {
   power: ["service", "rules_protocols", "orgasm_control"],

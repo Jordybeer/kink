@@ -20,6 +20,7 @@ import {
   QUESTIONNAIRE_CANONICAL_PROBE_TARGETS,
   QUESTIONNAIRE_CATEGORY_CLUSTERS,
   QUESTIONNAIRE_COVERAGE_ANCHOR_IDS,
+  QUESTIONNAIRE_CORE_ANCHOR_IDS,
   QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
   QUESTIONNAIRE_FOLLOW_UPS,
   QUESTIONNAIRE_INTEREST_ANCHOR_IDS,
@@ -122,6 +123,7 @@ describe("adaptive questionnaire", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     const referenced = [
       ...QUESTIONNAIRE_COVERAGE_ANCHOR_IDS,
+      ...QUESTIONNAIRE_CORE_ANCHOR_IDS,
       ...QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
       ...Object.values(QUESTIONNAIRE_INTEREST_ANCHOR_IDS).flat(),
       ...Object.values(QUESTIONNAIRE_TOPIC_IDS).flat(),
@@ -132,6 +134,19 @@ describe("adaptive questionnaire", () => {
     expect(referenced.filter((id) => !ids.has(id))).toEqual([]);
     expect([...new Set(KINKS.map((kink) => kink.category))]
       .filter((category) => !QUESTIONNAIRE_CATEGORY_CLUSTERS[category])).toEqual([]);
+    expect(QUESTIONNAIRE_CORE_ANCHOR_IDS.every((id) =>
+      QUESTIONNAIRE_COVERAGE_ANCHOR_IDS.includes(
+        id as (typeof QUESTIONNAIRE_COVERAGE_ANCHOR_IDS)[number],
+      ))).toBe(true);
+  });
+
+  it("covers every catalog broad cluster in the fixed Dynamic plan", () => {
+    const planClusters = new Set(
+      buildQuestionnaireCoveragePlan([]).anchorIds
+        .map((id) => questionnairePrimaryCluster(catalogSlice(id)[0])),
+    );
+    const catalogClusters = new Set(KINKS.map(questionnairePrimaryCluster));
+    expect([...planClusters].sort()).toEqual([...catalogClusters].sort());
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
@@ -426,6 +441,19 @@ describe("adaptive questionnaire", () => {
     ).map((kink) => kink.id);
     expect(ranked.indexOf("financial_domination")).toBeLessThan(ranked.indexOf("watching_others"));
     expect(ranked.indexOf("scarification")).toBeLessThan(ranked.indexOf("watching_others"));
+  });
+
+  it("schedules the tiny core set before interests and expansion", () => {
+    const current = dynamicProfile(["impact"]);
+    current.entries.handcuffs = { status: "yes", comment: "" };
+    const queue = getQuestionnaireRuntime(current).queue;
+    const coreIndexes = queue
+      .map((item, index) => item.lane === "core" ? index : -1)
+      .filter((index) => index >= 0);
+    const firstAdaptiveIndex = queue.findIndex((item) =>
+      item.lane === "interest" || item.lane === "expansion");
+    expect(coreIndexes).toHaveLength(QUESTIONNAIRE_CORE_ANCHOR_IDS.length);
+    expect(Math.max(...coreIndexes)).toBeLessThan(firstAdaptiveIndex);
   });
 
   it("keeps broad discovery alive and never lets one cluster own three consecutive cards", () => {

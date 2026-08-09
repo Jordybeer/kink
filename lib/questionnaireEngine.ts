@@ -14,6 +14,7 @@ interface RankOptions {
 
 export type PositiveQuestionnaireStatus = "yes" | "willing";
 export type QuestionnaireLane =
+  | "core"
   | "interest"
   | "expansion"
   | "coverage"
@@ -66,12 +67,13 @@ const MAX_CLUSTER_RUN = 2;
 const DISCOVERY_INTERVAL = 5;
 
 const LANE_RANK: Record<QuestionnaireLane, number> = {
-  interest: 0,
-  expansion: 1,
-  discovery: 2,
-  coverage: 3,
-  deepDive: 4,
-  legacy: 4,
+  core: 0,
+  interest: 1,
+  expansion: 2,
+  discovery: 3,
+  coverage: 4,
+  deepDive: 5,
+  legacy: 5,
 };
 
 function positiveStatus(status: KinkEntry["status"]): PositiveQuestionnaireStatus | null {

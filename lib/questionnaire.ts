@@ -8,6 +8,7 @@ import {
 } from "@/lib/questionnaireEngine";
 import {
   QUESTIONNAIRE_COVERAGE_ANCHOR_IDS,
+  QUESTIONNAIRE_CORE_ANCHOR_IDS,
   QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
   QUESTIONNAIRE_INTEREST_ANCHOR_IDS,
   questionnairePrimaryCluster,
@@ -339,6 +340,7 @@ export function getQuestionnaireRuntime(
   const coveragePlan = buildQuestionnaireCoveragePlan(setup.interests);
   const coverage = questionnaireCoverage(profile, coveragePlan);
   const coverageIds = new Set(coveragePlan.anchorIds);
+  const coreIds = new Set<string>(QUESTIONNAIRE_CORE_ANCHOR_IDS);
   const interestIds = new Set(coveragePlan.interestAnchorIds);
   const pendingProbes = derivePendingExpansionProbes(KINKS, profile.entries);
   const probeByTarget = new Map(pendingProbes.map((probe) => [probe.targetKinkId, probe]));
@@ -370,15 +372,17 @@ export function getQuestionnaireRuntime(
     .filter((kink) => eligibleIds.has(kink.id) && !explicitlyAnswered(profile, kink.id))
     .map((kink): QuestionnaireQueueItem => {
       const probe = probeByTarget.get(kink.id);
-      const lane = interestIds.has(kink.id)
-        ? "interest"
-        : probe
-          ? "expansion"
-          : discoveryIds.has(kink.id)
-            ? "discovery"
-            : coverageIds.has(kink.id)
-              ? "coverage"
-              : "deepDive";
+      const lane = coreIds.has(kink.id)
+        ? "core"
+        : interestIds.has(kink.id)
+          ? "interest"
+          : probe
+            ? "expansion"
+            : discoveryIds.has(kink.id)
+              ? "discovery"
+              : coverageIds.has(kink.id)
+                ? "coverage"
+                : "deepDive";
       return {
         kink,
         lane,
