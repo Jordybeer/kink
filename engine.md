@@ -72,10 +72,11 @@ geweest.
 | `hard_no` | Harde grens | telt | enige negatieve status |
 | skip | Later | telt niet | geen |
 
-`no / Voor hen` is nooit een afwijzing en sluit geen branch. Een `hard_no`
-reist niet zijwaarts of terug door een topic, related edge of broad cluster.
-Alleen herhaalde harde grenzen mogen een expliciete directionele vervolgvraag
-binnen hetzelfde lokale onderwerp later zetten.
+`no / Voor hen` is nooit een afwijzing en sluit geen branch. Voor ieder vast
+target telt de engine uitsluitend `hard_no`-antwoorden op expliciete
+directionele `source -> target`-edges. Eén zo'n antwoord is neutraal voor de
+volgorde; de effectieve penalty is `Math.max(0, count - 1)`. Topic-, related- en
+broad-cluster-metadata doen niet mee aan die targetgebonden telling.
 
 ## Metadata: dun en streng
 
@@ -120,6 +121,29 @@ Iedere positieve source heeft deterministisch hoogstens één pinned target.
 Een bestaande canonical mapping wijzigen is een semantische datamigratie, geen
 onschuldig metadatafeestje. Nieuwe mappings vanaf bestaande oude sources krijgen
 dezelfde zware review, omdat ze afgeronde profielen opnieuw kunnen openen.
+
+De huidige allowlist heet `canonical-follow-ups@1` en is exact:
+
+```text
+spanking_hand             -> spanking_implement
+rope_bondage              -> shibari
+handcuffs                 -> leather_cuffs
+rules_protocols           -> rituelen_protocols
+ochtend_avondritueel      -> rituelen_protocols
+orgasm_control            -> orgasm_denial
+exhibitionism             -> being_watched
+voyeurism                 -> watching_others
+watersports_geven         -> watersports_ontvangen
+geur_scent_fetish         -> panty_sniffing
+petplay_puppy             -> petplay_harnas
+```
+
+Een source die niet in deze versie staat heeft geen canonical target. Een nieuwe
+catalogusentry mag dus wel zonder edge landen, maar kan probes, provenance of de
+heropening van een afgerond profiel pas beïnvloeden nadat een nieuwe mapping
+expliciet is vastgepind, gereviewd en geversioneerd. Ook vóór een nieuwe chain
+wordt toegevoegd geldt die poort; catalogusvolgorde of runtime-score kiest nooit
+een vervangend target.
 
 ## Gespreksritme
 
@@ -290,7 +314,8 @@ play-party, top-aftercare, dollification, pettraining en luier natmaken.
 
 ### Expansion
 
-Nieuwe entries krijgen standaard geen edge. Sterke mogelijke chains zijn:
+Nieuwe entries krijgen standaard geen edge. Kandidaten voor een volgende,
+expliciet gereviewde mappingversie zijn bijvoorbeeld:
 
 ```text
 prostaatmassage -> prostaatmilking
@@ -314,8 +339,8 @@ het getal 52/104.
 
 - bestaande catalogus-IDs vormen generation 1;
 - nieuwe IDs vormen generation 2;
-- v1 Quick/Balanced en profielen zonder setup blijven generation 1 gebruiken;
-- Full, Deep Dive en full-catalog search bereiken iedere actieve generation;
+- v1 Quick/Balanced/Full en profielen zonder setup blijven generation 1 gebruiken;
+- v2 Deep Dive en full-catalog search bereiken iedere actieve generation;
 - iedere reeds beantwoorde entry blijft zichtbaar;
 - bestaande IDs en profielentries blijven byte-compatibel.
 
@@ -362,10 +387,20 @@ staan. Compatibility scoring en BDSMtest-signalen veranderen niet.
 
 ### Catalogus
 
-- iedere ID is uniek en volledig ingevuld;
+- iedere actieve, zoekbare ID heeft een stabiele unieke `id`, niet-lege `name`,
+  geldige `category`, `level` 1–4 en een neutrale niet-lege `description`;
+- zodra catalogusgeneraties landen, is `generation` eveneens verplichte
+  routingmetadata voor iedere actieve ID;
 - genormaliseerde naamdoublures falen of staan op een expliciete allowlist;
 - iedere nieuwe ID is via search en Deep Dive bereikbaar;
 - geen bestaande entry wordt verwijderd of geherinterpreteerd.
+
+Propagation-metadata is afzonderlijk en optioneel: topic, related, follow-up,
+canonical target, anchor en direction. Ontbreekt die laag, dan blijft de ID
+zichtbaar en zoekbaar, maar veroorzaakt hij exact nul propagation. Een
+generation-1-ID blijft bereikbaar via v1 Full, search en v2 Deep Dive; een latere
+generation blijft bereikbaar via search en v2 Deep Dive en wordt niet
+stilletjes in het bevroren v1 Full-universum geschoven.
 
 ### Engine
 
@@ -381,7 +416,9 @@ staan. Compatibility scoring en BDSMtest-signalen veranderen niet.
 
 - v1 Quick blijft 52 en behoudt zijn selectie-universum;
 - Balanced blijft 104 en behoudt zijn selectie-universum;
-- Full en Deep Dive bereiken de volledige uitgebreide catalogus;
+- v1 Full blijft exhaustief binnen generation 1;
+- v2 Deep Dive bereikt de volledige uitgebreide catalogus over alle actieve
+  generations;
 - perspective-profielen blijven onafhankelijk;
 - export/import/sanitize/sharing/QR verwerken nieuwe IDs;
 - een maximaal ingevuld profiel blijft deelbaar via multi-QR;
