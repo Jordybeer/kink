@@ -50,6 +50,8 @@ describe("profile perspectives", () => {
         { mode: "dynamic", interests: ["bondage"], version: 2 },
       ]);
     expect(profiles[0].entries).not.toBe(profiles[1].entries);
+    expect(profiles[0].questionnaireSetup?.interests)
+      .not.toBe(profiles[1].questionnaireSetup?.interests);
   });
 
   it("keeps answers independent between dominant and submissive profiles", () => {
@@ -177,8 +179,10 @@ describe("profile perspectives", () => {
     const dominant = useStore.getState().profiles.find((candidate) => candidate.id === dominantId)!;
     const submissive = useStore.getState().profiles.find((candidate) => candidate.id === submissiveId)!;
     expect(dominant.questionnaireSetup).toEqual({ mode: "deepDive", interests: [], version: 2 });
+    expect(dominant.experienceLevel).toBe("diepgaand");
     expect(dominant.entries.handcuffs).toMatchObject({ status: "yes", comment: "blijft staan" });
     expect(submissive.questionnaireSetup).toEqual({ mode: "dynamic", interests: [], version: 2 });
+    expect(submissive.experienceLevel).toBe("gevorderd");
     expect(submissive.entries.handcuffs).toBeUndefined();
   });
 

@@ -97,4 +97,23 @@ describe("profile perspective backup sanitizing", () => {
     expect(profile.perspective).toBeUndefined();
     expect(profile.questionnaireSetup).toBeUndefined();
   });
+
+  it("rejects an unknown v2 questionnaire mode", () => {
+    const profile = sanitizeProfileFull({
+      id: "profile-v2-invalid",
+      name: "Nova",
+      role: "Dominant",
+      origin: "own",
+      experienceLevel: "gevorderd",
+      customKinks: [],
+      entries: {},
+      questionnaireSetup: {
+        mode: "freestyle",
+        interests: ["bondage"],
+        version: 2,
+      },
+    })!;
+
+    expect(profile.questionnaireSetup).toBeUndefined();
+  });
 });

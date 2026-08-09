@@ -67,6 +67,7 @@ export default function TriageDeck({
     reasons: [],
   }));
   const unanswered = sourceItems.filter((item) => entries[item.kink.id]?.status == null);
+  const skippedUnansweredCount = unanswered.filter((item) => skipped.has(item.kink.id)).length;
   const unskipped = unanswered.filter((item) => !skipped.has(item.kink.id));
   const focused = focusCategory
     ? unskipped.filter((item) => item.kink.category === focusCategory)
@@ -265,18 +266,18 @@ export default function TriageDeck({
             className="text-lg italic"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}
           >
-            {skipped.size > 0 ? "Voor nu klaar." : "Alles beoordeeld."}
+            {skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld."}
           </p>
           <p className="text-xs mt-1 tabular-nums" style={{ color: "var(--text2)" }}>
             {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`} — tik een kink hieronder om bij te stellen.
           </p>
-          {skipped.size > 0 && (
+          {skippedUnansweredCount > 0 && (
             <button
               onClick={() => setSkipped(new Set())}
               className="focus-ring mt-3 h-9 px-4 rounded-lg text-xs border transition-colors"
               style={{ color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}
             >
-              {skipped.size} overgeslagen — toon opnieuw
+              {skippedUnansweredCount} overgeslagen — toon opnieuw
             </button>
           )}
         </motion.div>

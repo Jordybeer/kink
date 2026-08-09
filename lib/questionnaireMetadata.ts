@@ -10,7 +10,7 @@ export type QuestionnaireCluster =
   | "care"
   | "discovery";
 
-/** Broad subject buckets used only to keep discovery varied and prevent runs. */
+/** Brede speelkamers voor variatie; ze sturen het ritme, nooit iemands verlangen. */
 export const QUESTIONNAIRE_CATEGORY_CLUSTERS: Record<string, readonly QuestionnaireCluster[]> = {
   "Impact Play": ["impact"],
   Bondage: ["bondage"],
@@ -41,10 +41,9 @@ export function questionnairePrimaryCluster(kink: Kink): QuestionnaireCluster {
 }
 
 /**
- * Conversation topics are deliberately finer than clusters, but still do not
- * propagate an answer. They only stop the deck from firing several near-identical
- * questions back-to-back. Missing topic metadata therefore means less spacing,
- * never an inferred preference.
+ * Topics zijn fijner dan clusters en houden enkel soortgelijke kaarten uit
+ * elkaars nek. Ze dragen geen antwoord over: ontbrekende metadata geeft minder
+ * spacing, nooit een verzonnen voorkeur.
  */
 export const QUESTIONNAIRE_TOPIC_IDS = {
   impact: [
@@ -111,8 +110,8 @@ export function questionnaireTopicsFor(kink: Kink): readonly QuestionnaireTopic[
 }
 
 /**
- * Stable Dynamic denominator. An anchor means only "this area was explicitly
- * asked". Every explicit status covers it equally; skip does not.
+ * De vaste Dynamic-meetlat. Een anchor zegt alleen: "dit is expliciet gevraagd".
+ * Elke echte status gespt hem vast; overslaan doet dat niet.
  */
 export const QUESTIONNAIRE_COVERAGE_ANCHOR_IDS = [
   "aftercare_physical",
@@ -138,15 +137,15 @@ export const QUESTIONNAIRE_COVERAGE_ANCHOR_IDS = [
 ] as const;
 
 /**
- * Small, explicit subset that should surface before interests or expansion.
- * Core means foundational questionnaire coverage, never a preference signal.
+ * Klein voorste rijtje vóór interesses of expansion. Core betekent fundamentele
+ * dekking, niet dat de engine een voorkeur ruikt.
  */
 export const QUESTIONNAIRE_CORE_ANCHOR_IDS = [
   "dominance_submission",
   "aftercare_physical",
 ] as const;
 
-/** Extra fixed anchors earned only by interests the user explicitly selected. */
+/** Extra anchors die alleen door zelfgekozen interesses op de gastenlijst komen. */
 export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, readonly string[]> = {
   power: ["service", "rules_protocols", "orgasm_control"],
   impact: ["spanking_hand", "flogging"],
@@ -157,9 +156,9 @@ export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, re
 };
 
 /**
- * Optional anchors sampled by "Meer ontdekken". The wave scheduler takes at
- * most one still-unanswered anchor per broad cluster, so this list can grow
- * without turning discovery into another fixed questionnaire budget.
+ * Optionele smaakmakers voor "Meer ontdekken". Elke wave pakt hoogstens één
+ * onbeantwoorde anchor per brede kamer, zonder discovery in een nieuw korset te
+ * dwingen.
  */
 export const QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS = [
   "service",
@@ -185,8 +184,8 @@ export const QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS = [
 ] as const;
 
 /**
- * Symmetric content-nearness used only as a positive ordering hint. It never
- * creates a probe and a hard limit never propagates over these edges.
+ * Symmetrische inhoudelijke nabijheid: alleen een positieve fluistering voor de
+ * volgorde. Ze opent geen probe en draagt nooit een harde grens mee.
  */
 export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["spanking_hand", "spanking_implement"],
@@ -207,8 +206,8 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
 ] as const satisfies readonly (readonly [string, string])[];
 
 /**
- * Directional question-to-question continuation. No category/topic fallback is
- * allowed: if an edge is absent, propagation is exactly zero.
+ * Directionele deur van vraag naar vraag. Geen categorie- of topicachterdeur:
+ * zonder expliciete edge is de propagation precies nul.
  */
 export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]>> = {
   spanking_hand: ["spanking_implement", "flogging"],
@@ -225,12 +224,12 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
 };
 
 /**
- * APPEND-ONLY CONTRACT.
+ * APPEND-ONLY CONTRACT — dit slot gaat niet stiekem van sleutel wisselen.
  *
- * Changing or deleting an existing source -> target mapping is a semantic data
- * migration, not a metadata tidy-up. New sources may be added. The target is
- * pinned so a reload or later catalog reorder can never give one old positive
- * answer a second expansion slot. There is deliberately no fallback target.
+ * Een bestaande source -> target wijzigen of wissen is een semantische migratie,
+ * geen onschuldige metadata-opruimbeurt. Nieuwe sources mogen erbij. Het target
+ * blijft vastgepind, zodat reloads of catalogusherschikking een oud positief
+ * antwoord nooit een tweede expansionbeurt geven. Er is bewust geen fallback.
  */
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
   spanking_hand: "spanking_implement",

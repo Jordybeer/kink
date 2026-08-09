@@ -43,9 +43,9 @@ export interface QuestionnaireQueueItem {
 }
 
 export interface ConversationContext {
-  /** A positive probe must breathe before another probe may appear. */
+  /** Een positieve probe krijgt ademruimte voor de volgende zich aandient. */
   requireNonProbe?: boolean;
-  /** Used only for topical spacing, never as an answer signal. */
+  /** Een spacing-lijntje, nooit een fluistering over het volgende antwoord. */
   lastKinkId?: string | null;
 }
 
@@ -84,6 +84,10 @@ function statusStrength(status: PositiveQuestionnaireStatus): 1 | 2 {
   return status === "yes" ? 2 : 1;
 }
 
+function repeatedHardLimitPenalty(hardLimits: number): number {
+  return Math.max(0, hardLimits - 1);
+}
+
 function directSignals(
   catalog: readonly Kink[],
   entries: Record<string, KinkEntry>,
@@ -98,8 +102,8 @@ function directSignals(
   for (const [sourceKinkId, entry] of Object.entries(entries)) {
     const status = positiveStatus(entry.status);
     if (!catalogIds.has(sourceKinkId)) continue;
-    // A hard limit may delay only explicit directional continuations. It never
-    // propagates backwards over symmetric `related` edges or across a topic.
+    // Alleen herhaalde harde grenzen mogen een expliciete vervolgvraag wat later
+    // laten verleiden. Nooit achteruit over `related`, nooit door een heel topic.
     const targets = status
       ? new Set([
           ...questionnaireRelatedIds(sourceKinkId),
@@ -139,9 +143,9 @@ function directSignals(
 }
 
 /**
- * Pure, stateless expansion ledger. Each positive source can nominate only its
- * pinned canonical target. If that target was already answered, the source is
- * exhausted forever; there is deliberately no fallback to a second edge.
+ * Puur, stateless expansionboekje: elke positieve bron mag precies haar ene
+ * vastgepinde target uitnodigen. Is die al beantwoord, dan blijft de tweede deur
+ * dicht — geen stiekeme fallback naar een andere edge.
  */
 export function derivePendingExpansionProbes(
   catalog: readonly Kink[],
@@ -196,10 +200,13 @@ function discoveryIndex<T extends { kink: Kink }>(remaining: readonly T[], queue
   );
 }
 
-function diversify<T extends { kink: Kink }>(ranked: readonly T[]): T[] {
+function diversify<T extends { kink: Kink }>(
+  ranked: readonly T[],
+  queuedBefore: readonly Kink[] = [],
+): T[] {
   const remaining = [...ranked];
   const result: T[] = [];
-  const queuedKinks: Kink[] = [];
+  const queuedKinks: Kink[] = [...queuedBefore];
 
   while (remaining.length > 0) {
     let index = discoveryIndex(remaining, queuedKinks);
@@ -216,9 +223,9 @@ function diversify<T extends { kink: Kink }>(ranked: readonly T[]): T[] {
 }
 
 /**
- * Legacy v1 ranking remains budget-based, but propagation now uses only sparse
- * explicit relations. Safety and user-selected interests always outrank answer
- * relevance; yes outranks willing; only hard_no may delay a directional child.
+ * Legacy v1 houdt zijn vertrouwde budgetkorset, terwijl alleen expliciete,
+ * schaarse relaties mogen vonken. Safety en gekozen interesses staan vooraan;
+ * yes verleidt sterker dan willing; pas herhaalde hard_no's vertragen een edge.
  */
 export function rankQuestionnaireCandidates(
   catalog: readonly Kink[],
@@ -240,14 +247,15 @@ export function rankQuestionnaireCandidates(
       || Number(right.preferred) - Number(left.preferred)
       || right.support.strongest - left.support.strongest
       || right.support.sources - left.support.sources
-      || left.support.hardLimits - right.support.hardLimits
+      || repeatedHardLimitPenalty(left.support.hardLimits)
+        - repeatedHardLimitPenalty(right.support.hardLimits)
       || left.kink.level - right.kink.level
       || left.catalogIndex - right.catalogIndex);
 
   return diversify(ranked).map(({ kink }) => kink);
 }
 
-/** Lane ordering is categorical; no magic score can let enthusiasm swamp coverage. */
+/** De lanes houden de teugels: geen vurige score mag coverage onder de voet lopen. */
 export function rankQuestionnaireQueueItems(
   items: readonly QuestionnaireQueueItem[],
   catalog: readonly Kink[],
@@ -269,12 +277,24 @@ export function rankQuestionnaireQueueItems(
       || right.reasons.length - left.reasons.length
       || rightSupport.strongest - leftSupport.strongest
       || rightSupport.sources - leftSupport.sources
-      || leftSupport.hardLimits - rightSupport.hardLimits
+      || repeatedHardLimitPenalty(leftSupport.hardLimits)
+        - repeatedHardLimitPenalty(rightSupport.hardLimits)
       || left.kink.level - right.kink.level
       || (catalogIndex.get(left.kink.id) ?? 0) - (catalogIndex.get(right.kink.id) ?? 0);
   });
 
-  return diversify(ranked);
+  const itemsByLane = new Map<QuestionnaireLane, QuestionnaireQueueItem[]>();
+  for (const item of ranked) {
+    const laneItems = itemsByLane.get(item.lane) ?? [];
+    laneItems.push(item);
+    itemsByLane.set(item.lane, laneItems);
+  }
+
+  const diversified: QuestionnaireQueueItem[] = [];
+  for (const laneItems of itemsByLane.values()) {
+    diversified.push(...diversify(laneItems, diversified.map((item) => item.kink)));
+  }
+  return diversified;
 }
 
 function sharesTopic(left: Kink, right: Kink): boolean {
@@ -285,8 +305,8 @@ function sharesTopic(left: Kink, right: Kink): boolean {
 }
 
 /**
- * Final card chooser. Conversation state affects cadence only: it can delay a
- * probe or topical echo, never create/remove an answer or change eligibility.
+ * De laatste kaartdanser bewaakt alleen het ritme: een probe of topical echo mag
+ * even wachten, maar Conversation maakt nooit antwoorden of eligibility aan.
  */
 export function selectConversationQuestion(
   queue: readonly QuestionnaireQueueItem[],

@@ -51,6 +51,10 @@ interface RuntimeOptions {
   discoveryWaveIds?: readonly string[];
 }
 
+const DISCOVERY_ANCHOR_SET: ReadonlySet<string> = new Set(
+  QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
+);
+
 export const QUESTIONNAIRE_INTERESTS: Array<{
   value: QuestionnaireInterest;
   label: string;
@@ -346,10 +350,7 @@ export function getQuestionnaireRuntime(
   const probeByTarget = new Map(pendingProbes.map((probe) => [probe.targetKinkId, probe]));
   const discoveryIds = new Set(
     intent === "discover"
-      ? (options.discoveryWaveIds ?? []).filter((kinkId) =>
-          QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS.includes(
-            kinkId as (typeof QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS)[number],
-          ))
+      ? (options.discoveryWaveIds ?? []).filter((kinkId) => DISCOVERY_ANCHOR_SET.has(kinkId))
       : [],
   );
   const eligibleIds = new Set<string>();

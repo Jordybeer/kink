@@ -13,6 +13,7 @@ import {
 import {
   derivePendingExpansionProbes,
   rankQuestionnaireCandidates,
+  rankQuestionnaireQueueItems,
   selectConversationQuestion,
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
@@ -235,7 +236,7 @@ describe("adaptive questionnaire", () => {
     expect(derivePendingExpansionProbes(catalog, entriesWith({ handcuffs: "no" }))).toEqual([]);
   });
 
-  it("lets hard_no delay only an explicit directional continuation", () => {
+  it("keeps one hard_no neutral even on an explicit directional continuation", () => {
     const [source, target, unrelated] = catalogSlice("handcuffs", "leather_cuffs", "doctor_patient");
     const catalog = [
       { ...source, level: 1 as const },
@@ -246,8 +247,22 @@ describe("adaptive questionnaire", () => {
       .map((kink) => kink.id);
     const hard = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs: "hard_no" }))
       .map((kink) => kink.id);
-    expect(neutral.indexOf("leather_cuffs")).toBeLessThan(neutral.indexOf("doctor_patient"));
-    expect(hard.indexOf("leather_cuffs")).toBeGreaterThan(hard.indexOf("doctor_patient"));
+    expect(hard).toEqual(neutral);
+    const queueItems: QuestionnaireQueueItem[] = [
+      { ...queueItem(target.id), kink: target },
+      { ...queueItem(unrelated.id), kink: unrelated },
+    ];
+    const neutralQueue = rankQuestionnaireQueueItems(
+      queueItems,
+      catalog,
+      entriesWith({ handcuffs: "maybe" }),
+    ).map((item) => item.kink.id);
+    const hardQueue = rankQuestionnaireQueueItems(
+      queueItems,
+      catalog,
+      entriesWith({ handcuffs: "hard_no" }),
+    ).map((item) => item.kink.id);
+    expect(hardQueue).toEqual(neutralQueue);
     expect(derivePendingExpansionProbes(catalog, entriesWith({ handcuffs: "hard_no" }))).toEqual([]);
   });
 
@@ -269,6 +284,16 @@ describe("adaptive questionnaire", () => {
       entriesWith({ rules_protocols: "hard_no", ochtend_avondritueel: "hard_no" }),
     ).map((kink) => kink.id);
     expect(ranked.indexOf("rituelen_protocols")).toBeGreaterThan(ranked.indexOf("doctor_patient"));
+    const queueRanked = rankQuestionnaireQueueItems(
+      [
+        { ...queueItem(target.id), kink: target },
+        { ...queueItem(unrelated.id), kink: unrelated },
+      ],
+      catalog,
+      entriesWith({ rules_protocols: "hard_no", ochtend_avondritueel: "hard_no" }),
+    ).map((item) => item.kink.id);
+    expect(queueRanked.indexOf("rituelen_protocols"))
+      .toBeGreaterThan(queueRanked.indexOf("doctor_patient"));
   });
 
   it("does not let a hard limit on urine drinking close a Golden Shower branch", () => {
@@ -373,7 +398,7 @@ describe("adaptive questionnaire", () => {
   it("stops Dynamic only after the fixed coverage plan and every open probe are answered", () => {
     const current = dynamicProfile();
     const plan = buildQuestionnaireCoveragePlan([]);
-    answerIds(current, plan.anchorIds);
+    answerIds(current, plan.anchorIds, "maybe");
     expect(getQuestionnaireRuntime(current).complete).toBe(true);
 
     current.entries.handcuffs = { status: "yes", comment: "" };
@@ -456,12 +481,32 @@ describe("adaptive questionnaire", () => {
     expect(Math.max(...coreIndexes)).toBeLessThan(firstAdaptiveIndex);
   });
 
-  it("keeps broad discovery alive and never lets one cluster own three consecutive cards", () => {
-    const queue = getQuestionnaireRuntime(dynamicProfile(["power"])).queue.map((item) => item.kink);
-    expect(new Set(queue.slice(0, 15).map(questionnairePrimaryCluster)).size).toBeGreaterThanOrEqual(3);
+  it("diversifies inside a lane without letting a lower lane jump the queue", () => {
+    const items: QuestionnaireQueueItem[] = [
+      { ...queueItem("aftercare_physical"), lane: "core" },
+      { ...queueItem("aftercare_verbal"), lane: "core" },
+      { ...queueItem("aftercare_food"), lane: "core" },
+      { ...queueItem("handcuffs"), lane: "interest" },
+    ];
+    const ranked = rankQuestionnaireQueueItems(items, KINKS, {});
+    expect(ranked.slice(0, 3).every((item) => item.lane === "core")).toBe(true);
+    expect(ranked[3].lane).toBe("interest");
+  });
+
+  it("keeps discovery broad and avoids a third cluster echo when its lane has an alternative", () => {
+    const queue = getQuestionnaireRuntime(dynamicProfile(["power"])).queue;
+    expect(new Set(queue.slice(0, 15).map((item) => questionnairePrimaryCluster(item.kink))).size)
+      .toBeGreaterThanOrEqual(3);
     for (let index = 0; index <= queue.length - 3; index += 1) {
-      const clusters = queue.slice(index, index + 3).map(questionnairePrimaryCluster);
-      expect(new Set(clusters).size).toBeGreaterThan(1);
+      const window = queue.slice(index, index + 3);
+      const clusters = window.map((item) => questionnairePrimaryCluster(item.kink));
+      if (new Set(clusters).size > 1) continue;
+
+      const third = window[2];
+      const sameLaneAlternativeRemains = queue.slice(index + 3).some((item) =>
+        item.lane === third.lane
+        && questionnairePrimaryCluster(item.kink) !== clusters[2]);
+      expect(sameLaneAlternativeRemains).toBe(false);
     }
   });
 

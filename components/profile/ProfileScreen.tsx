@@ -209,11 +209,16 @@ export default function ProfilePage({ params }: Props) {
   const effectiveTab = shared ? "overzicht" : activeTab;
   const visibleCategories = CATEGORIES.filter((category) => kinksByCategory.has(category));
   const maxLevel = LEVEL_MAX[currentProfile.experienceLevel ?? "beginner"];
+  const exportMaxLevel = questionnaireV2 ? LEVEL_MAX.diepgaand : maxLevel;
   const searchTerm = search.trim();
   const searchResults = searchTerm ? searchAllKinks(searchTerm) : [];
   const customKinks = currentProfile.customKinks ?? [];
   const totalRated = visibleKinks.filter((kink) => currentProfile.entries[kink.id]?.status).length;
   const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
+  const deepDiveMode = questionnaireV2?.mode === "deepDive";
+  const progressPercent = deepDiveMode
+    ? Math.round((catalogRated / KINKS.length) * 100)
+    : runtime.coverage?.percent ?? 0;
   const nextDiscoveryWave = questionnaireV2?.mode === "dynamic" && runtime.complete
     ? buildQuestionnaireDiscoveryWave(currentProfile)
     : [];
@@ -295,7 +300,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   function downloadText() {
-    const text = buildProfileTextExport(currentProfile, maxLevel, {
+    const text = buildProfileTextExport(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
     });
     const blob = new Blob([text], { type: "text/plain" });
@@ -308,7 +313,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   async function downloadPdf() {
-    const { doc, filename } = await buildProfilePdf(currentProfile, maxLevel, {
+    const { doc, filename } = await buildProfilePdf(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
     });
     doc.save(filename);
@@ -392,27 +397,23 @@ export default function ProfilePage({ params }: Props) {
                     <div className="mt-2">
                       <div
                         role="progressbar"
-                        aria-label={questionnaireV2.mode === "deepDive" ? "Catalogusvoortgang" : "Profieldekking"}
+                        aria-label={deepDiveMode ? "Catalogusvoortgang" : "Profieldekking"}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-valuenow={questionnaireV2.mode === "deepDive"
-                          ? Math.round((catalogRated / KINKS.length) * 100)
-                          : runtime.coverage.percent}
+                        aria-valuenow={progressPercent}
                         className="h-1.5 rounded-full overflow-hidden"
                         style={{ background: "var(--surface2)" }}
                       >
                         <div
                           className="h-full rounded-full transition-[width]"
                           style={{
-                            width: `${questionnaireV2.mode === "deepDive"
-                              ? Math.round((catalogRated / KINKS.length) * 100)
-                              : runtime.coverage.percent}%`,
+                            width: `${progressPercent}%`,
                             background: "var(--accent)",
                           }}
                         />
                       </div>
                       <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                        {questionnaireV2.mode === "deepDive"
+                        {deepDiveMode
                           ? `Catalogus: ${catalogRated} / ${KINKS.length} beoordeeld.`
                           : `Profieldekking ${runtime.coverage.percent}% · ${runtime.coverage.answered} / ${runtime.coverage.total} kernvragen expliciet beantwoord.`}
                         {" "}Zoeken toont altijd alles.
