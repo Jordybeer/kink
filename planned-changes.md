@@ -71,11 +71,10 @@ exploration and honest `Later`, expands descriptions inline, fixes new-profile
 card focus, and ships store v18 normalization so the runtime has no permanent
 v1 budget branch.
 
-The final metadata slice is in progress on `feature/questionnaire-metadata-v2`.
-It audits topics and every canonical edge separately, pins the allowlist as
-mapping version 2 while preserving every @1 source-target pair, and documents
-rejected suggestive associations. “Auto masturbation” was explicitly dropped
-from scope; it is not an open gate.
+The final metadata slice shipped in PR #305 and its canonical allowlist has now advanced to
+mapping version 3 for the explicit Release B semantic migration. The Golden Shower give→receive
+inference is removed and retired anal source IDs are replaced by explicit same-side directional
+mappings. “Auto masturbation” remains explicitly out of scope.
 
 The original Pegging product gate is shipped. Directionality Release B now audits the catalog with the same anti-inference contract: high-confidence role-neutral sexual actions become explicit complementary pairs, while impact/bondage stay deferred behind a role-affinity eligibility pass so Dynamic does not balloon.
 

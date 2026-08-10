@@ -46,9 +46,12 @@ describe("complementaire directionele matching", () => {
 
   it("applies complementary matching to every registered concept, not just Pegging", () => {
     for (const [giveId, receiveId] of [
+      ["pegging_give", "pegging_receive"],
       ["watersports_geven", "watersports_ontvangen"],
       ["anal_sex_give", "anal_sex_receive"],
+      ["anal_fingering_give", "anal_fingering_receive"],
       ["fisting_anal_give", "fisting_anal_receive"],
+      ["fisting_vaginal_give", "fisting_vaginal_receive"],
       ["deep_throat_give", "deep_throat_receive"],
       ["rimming_give", "rimming_receive"],
       ["footjob_give", "footjob_receive"],
