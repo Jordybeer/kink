@@ -256,7 +256,10 @@ export async function relinkVerifiedSwitchProfiles(profiles: Profile[]): Promise
 
   return profiles.map((profile) => {
     const patch = patches.get(profile.id);
-    if (!patch) return profile;
+    if (!patch) {
+      const { switchShareProof: _unverifiedProof, ...withoutUnverifiedProof } = profile;
+      return withoutUnverifiedProof;
+    }
     return {
       ...profile,
       personGroupId: patch.groupId,
