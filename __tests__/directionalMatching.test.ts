@@ -5,6 +5,7 @@ import {
   getComparePartnerKinkId,
   getCompareSummary,
 } from "@/lib/compare";
+import { DIRECTIONAL_KINK_PAIRS } from "@/lib/directionality";
 import { profileMatchScore } from "@/lib/matching";
 import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
 
@@ -45,17 +46,7 @@ describe("complementaire directionele matching", () => {
   });
 
   it("applies complementary matching to every registered concept, not just Pegging", () => {
-    for (const [giveId, receiveId] of [
-      ["pegging_give", "pegging_receive"],
-      ["watersports_geven", "watersports_ontvangen"],
-      ["anal_sex_give", "anal_sex_receive"],
-      ["anal_fingering_give", "anal_fingering_receive"],
-      ["fisting_anal_give", "fisting_anal_receive"],
-      ["fisting_vaginal_give", "fisting_vaginal_receive"],
-      ["deep_throat_give", "deep_throat_receive"],
-      ["rimming_give", "rimming_receive"],
-      ["footjob_give", "footjob_receive"],
-    ] as const) {
+    for (const { giveId, receiveId } of DIRECTIONAL_KINK_PAIRS) {
       const a = profile("A-" + giveId, "dominant", { [giveId]: { status: "yes" } });
       const b = profile("B-" + receiveId, "submissive", { [receiveId]: { status: "yes" } });
       const result = profileMatchScore(a, b);
@@ -81,6 +72,10 @@ describe("complementaire directionele matching", () => {
 
     expect(profileMatchScore(dominantReceiver, dominantGiver).overall).toBe(100);
     expect(profileMatchScore(submissiveReceiver, dominantGiver).overall).toBe(100);
+
+    const dominantSpankingReceiver = profile("D", "dominant", { spanking_hand_receive: { status: "yes" } });
+    const submissiveSpankingGiver = profile("E", "submissive", { spanking_hand_give: { status: "yes" } });
+    expect(profileMatchScore(dominantSpankingReceiver, submissiveSpankingGiver).overall).toBe(100);
   });
 
   it("applies a hard limit only to the concrete complementary direction", () => {

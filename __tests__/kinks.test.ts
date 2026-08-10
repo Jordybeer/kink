@@ -25,7 +25,6 @@ const RELEASE_A_IDS = [
   "vampire_fangs",
   "erotic_massage",
   "vibration_play",
-  "sound_deprivation",
   "wetlook",
   "prostate_massage",
   "sex_machine",
@@ -53,6 +52,17 @@ const DIRECTIONAL_RELEASE_IDS = [
   "deep_throat_give", "deep_throat_receive",
   "rimming_give", "rimming_receive",
   "footjob_give", "footjob_receive",
+  "spanking_hand_give", "spanking_hand_receive",
+  "spanking_implement_give", "spanking_implement_receive",
+  "flogging_give", "flogging_receive",
+  "rope_bondage_give", "rope_bondage_receive",
+  "shibari_give", "shibari_receive",
+  "handcuffs_give", "handcuffs_receive",
+  "leather_cuffs_give", "leather_cuffs_receive",
+  "gag_ball_give", "gag_ball_receive",
+  "gag_bit_give", "gag_bit_receive",
+  "blindfold_give", "blindfold_receive",
+  "sound_deprivation_give", "sound_deprivation_receive",
 ] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
@@ -69,7 +79,19 @@ const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
   "deep_throat",
   "rimmen",
   "footjob",
+  "spanking_hand",
+  "spanking_implement",
+  "flogging",
+  "rope_bondage",
+  "shibari",
+  "handcuffs",
+  "leather_cuffs",
+  "gag_ball",
+  "gag_bit",
+  "blindfold",
 ] as const;
+
+const RETIRED_POST_V2_DIRECTIONAL_IDS = ["sound_deprivation"] as const;
 
 describe("kink database integrity", () => {
   it("every kink has a unique id", () => {
@@ -129,7 +151,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(299);
+    expect(KINKS).toHaveLength(310);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -138,6 +160,7 @@ describe("kink database integrity", () => {
   it("retires composite or duplicate questions instead of copying their answer meaning", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RETIRED_COMPOSITE_OR_DUPLICATE_IDS.filter((id) => ids.has(id))).toEqual([]);
+    expect(RETIRED_POST_V2_DIRECTIONAL_IDS.filter((id) => ids.has(id))).toEqual([]);
     expect(ids.has("breeding_fantasy")).toBe(true);
     expect(ids.has("creampie")).toBe(true);
     expect(ids.has("diaper_wetting")).toBe(true);
@@ -168,7 +191,7 @@ describe("kink database integrity", () => {
       "petplay_kooi", "urine_intiem", "plas_desperation", "bloed_play",
       "katheters_urethral", "klysma_reiniging", "klysma_straf", "penisring_cockring",
       "rubber_latex_kleding", "korset_middelafname", "luiers_dragen", "adult_content_creation",
-      "crying_tears", "sound_deprivation", "prostate_massage", "sex_machine",
+      "crying_tears", "sound_deprivation_give", "sound_deprivation_receive", "prostate_massage", "sex_machine",
       "play_party", "diaper_messing", "breeding_fantasy", "creampie",
     ];
     const byId = new Map(KINKS.map((kink) => [kink.id, kink]));

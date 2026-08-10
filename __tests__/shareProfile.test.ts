@@ -15,8 +15,8 @@ const BASE_PROFILE: Profile = {
   createdAt: 1716000000000,
   updatedAt: 1716000000000,
   entries: {
-    spanking_hand: { status: "yes", desire: 5, experienced: true, score: 4, comment: "fijn", tags: ["eerste keer"], curious: true, privateResponse: true },
-    flogging: { status: "maybe", desire: 3, experienced: null, score: null, comment: "" },
+    latex_rubber: { status: "yes", desire: 5, experienced: true, score: 4, comment: "fijn", tags: ["eerste keer"], curious: true, privateResponse: true },
+    lingerie: { status: "maybe", desire: 3, experienced: null, score: null, comment: "" },
   },
 };
 
@@ -76,7 +76,7 @@ describe("encodeProfile / decodeProfile", () => {
     const expected = {
       ...base,
       entries: {
-        flogging: { status: "maybe", desire: 3 },
+        lingerie: { status: "maybe", desire: 3 },
       },
     };
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
@@ -106,19 +106,19 @@ describe("encodeProfile / decodeProfile", () => {
 
   it("round-trips visible desire and experienced fields", () => {
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand).toBeUndefined();
-    expect(decoded.entries.flogging.desire).toBe(3);
-    expect(decoded.entries.flogging.experienced).toBeFalsy();
+    expect(decoded.entries.latex_rubber).toBeUndefined();
+    expect(decoded.entries.lingerie.desire).toBe(3);
+    expect(decoded.entries.lingerie.experienced).toBeFalsy();
   });
 
   it("omits every field of a private house kink by default", () => {
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand).toBeUndefined();
+    expect(decoded.entries.latex_rubber).toBeUndefined();
   });
 
   it("includes a private answer only after explicit share opt-in", () => {
     const decoded = decodeProfile(encodeProfile(BASE_PROFILE, { includePrivateResponses: true }));
-    expect(decoded.entries.spanking_hand).toEqual({
+    expect(decoded.entries.latex_rubber).toEqual({
       status: "yes",
       desire: 5,
       experienced: true,
@@ -159,8 +159,8 @@ describe("encodeProfile / decodeProfile", () => {
     const decoded = decodeProfile(encodeProfile(profile));
     expect(decoded.name).toBe(profile.name);
     expect(decoded.relationshipStatus).toBeUndefined();
-    expect(decoded.entries.spanking_hand).toBeUndefined();
-    expect(decoded.entries.flogging.status).toBe("maybe");
+    expect(decoded.entries.latex_rubber).toBeUndefined();
+    expect(decoded.entries.lingerie.status).toBe("maybe");
   });
 });
 
@@ -176,19 +176,19 @@ describe("legacy v2 compact decoder", () => {
     const profile: Profile = {
       ...BASE_PROFILE,
       entries: {
-        spanking_hand:      { status: "yes",     desire: null, experienced: null, score: null, comment: "" },
-        flogging:           { status: "willing", desire: null, experienced: null, score: null, comment: "" },
-        caning:             { status: "maybe",   desire: null, experienced: null, score: null, comment: "" },
-        cropping:           { status: "no",      desire: null, experienced: null, score: null, comment: "" },
-        spanking_implement: { status: "hard_no", desire: null, experienced: null, score: null, comment: "" },
+        latex_rubber: { status: "yes",     desire: null, experienced: null, score: null, comment: "" },
+        lingerie:     { status: "willing", desire: null, experienced: null, score: null, comment: "" },
+        uniforms:     { status: "maybe",   desire: null, experienced: null, score: null, comment: "" },
+        feet:         { status: "no",      desire: null, experienced: null, score: null, comment: "" },
+        leather:      { status: "hard_no", desire: null, experienced: null, score: null, comment: "" },
       },
     };
     const decoded = decodeProfileCompact(legacyV2Fixture(profile));
-    expect(decoded.entries.spanking_hand.status).toBe("yes");
-    expect(decoded.entries.flogging.status).toBe("willing");
-    expect(decoded.entries.caning.status).toBe("maybe");
-    expect(decoded.entries.cropping.status).toBe("no");
-    expect(decoded.entries.spanking_implement.status).toBe("hard_no");
+    expect(decoded.entries.latex_rubber.status).toBe("yes");
+    expect(decoded.entries.lingerie.status).toBe("willing");
+    expect(decoded.entries.uniforms.status).toBe("maybe");
+    expect(decoded.entries.feet.status).toBe("no");
+    expect(decoded.entries.leather.status).toBe("hard_no");
   });
 
   it("omits private house and custom kinks from a normal QR", () => {
@@ -200,7 +200,7 @@ describe("legacy v2 compact decoder", () => {
       },
     };
     const decoded = decodeProfileCompact(legacyV2Fixture(profile));
-    expect(decoded.entries.spanking_hand).toBeUndefined();
+    expect(decoded.entries.latex_rubber).toBeUndefined();
     expect(decoded.entries.custom_1).toBeUndefined();
     expect(decoded.customKinks).toEqual([]);
   });
@@ -214,21 +214,21 @@ describe("legacy v2 compact decoder", () => {
       },
     };
     const decoded = decodeProfileCompact(legacyV2Fixture(profile, { includePrivateResponses: true }));
-    expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
+    expect(decoded.entries.latex_rubber.privateResponse).toBe(true);
     expect(decoded.entries.custom_1.privateResponse).toBe(true);
     expect(decoded.customKinks[0].name).toBe("Eigen ding");
   });
 
   it("drops desire and experienced to keep QR url short", () => {
     const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
-    expect(decoded.entries.spanking_hand).toBeUndefined();
-    expect(decoded.entries.flogging.desire).toBeNull();
+    expect(decoded.entries.latex_rubber).toBeUndefined();
+    expect(decoded.entries.lingerie.desire).toBeNull();
   });
 
   it("strips comments and tags from visible QR answers", () => {
     const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
-    expect(decoded.entries.flogging.comment).toBe("");
-    expect(decoded.entries.flogging.tags).toBeUndefined();
+    expect(decoded.entries.lingerie.comment).toBe("");
+    expect(decoded.entries.lingerie.tags).toBeUndefined();
   });
 
   it("round-trips visible custom kinks with status", () => {
@@ -271,14 +271,14 @@ describe("decodeAny", () => {
   it("decodes safe v1 profiles without private answers", () => {
     const decoded = decodeAny(encodeProfile(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
-    expect(decoded.entries.spanking_hand).toBeUndefined();
+    expect(decoded.entries.latex_rubber).toBeUndefined();
   });
 
   it("decodes safe v2 compact profiles without private answers", () => {
     const decoded = decodeAny(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
-    expect(decoded.entries.spanking_hand).toBeUndefined();
-    expect(decoded.entries.flogging.status).toBe("maybe");
+    expect(decoded.entries.latex_rubber).toBeUndefined();
+    expect(decoded.entries.lingerie.status).toBe("maybe");
   });
 
   it("keeps additive v2 questionnaire metadata compatible with a full own-profile round trip", () => {
@@ -290,18 +290,21 @@ describe("decodeAny", () => {
     };
     const decoded = decodeAny(encodeProfile(profile, { includePrivateResponses: true }));
     expect(decoded.questionnaireSetup).toEqual({ mode: "dynamic", interests: ["bondage"], version: 2 });
-    expect(decoded.entries.spanking_hand.status).toBe("yes");
+    expect(decoded.entries.latex_rubber.status).toBe("yes");
     expect(decoded.isImported).toBe(true);
   });
 });
 
 describe("legacy give/receive backward compat", () => {
-  it("v2: collapses legacy sg/sr into status (worst-of logic)", () => {
+  it("v2: collapses legacy sg/sr into status (worst-of logic) on an active historical ID", () => {
+    const historicalId = "latex_rubber";
+    const index = LEGACY_COMPACT_KINK_IDS_V2.indexOf(historicalId);
+    const at = (char: string) => " ".repeat(index) + char;
     const legacyPayload = { v: 2, id: "x", n: "n", r: "r", e: "beginner", ca: 0, ua: 0,
-      s: " ".repeat(100), sg: "y" + " ".repeat(99), sr: "n" + " ".repeat(99) };
+      s: " ".repeat(index + 1), sg: at("y"), sr: at("n") };
     const encoded = btoa(JSON.stringify(legacyPayload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const decoded = decodeProfileCompact(encoded);
-    expect(decoded.entries[Object.keys(decoded.entries)[0]]?.status).toBe("no");
+    expect(decoded.entries[historicalId]?.status).toBe("no");
   });
 
   it("pins historic positions without consulting the active catalog", () => {

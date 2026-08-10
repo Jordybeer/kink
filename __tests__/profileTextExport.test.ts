@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { KINKS } from "@/lib/kinks";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import type { Profile } from "@/types";
 
@@ -14,12 +15,12 @@ const PROFILE: Profile = {
     { id: "custom-private", name: "Geheime custom naam" },
   ],
   entries: {
-    spanking_hand: {
+    ice_play: {
       status: "yes",
       comment: "zichtbare notitie",
       tags: ["vraag eerst"],
     },
-    flogging: {
+    latex_rubber: {
       status: "hard_no",
       comment: "geheime notitie",
       tags: ["alleen privé"],
@@ -34,16 +35,19 @@ const PROFILE: Profile = {
   },
 };
 
+const ICE_PLAY_NAME = KINKS.find((kink) => kink.id === "ice_play")!.name;
+const LATEX_NAME = KINKS.find((kink) => kink.id === "latex_rubber")!.name;
+
 describe("profile text export", () => {
   it("omits every trace of private house and custom answers by default", () => {
     const text = buildProfileTextExport(PROFILE, 5, {
       generatedAt: new Date("2026-07-28T00:00:00Z"),
     });
 
-    expect(text).toContain("Spanking (hand)");
+    expect(text).toContain(ICE_PLAY_NAME);
     expect(text).toContain("zichtbare notitie");
     expect(text).toContain("Zichtbaar eigen ding");
-    expect(text).not.toContain("Flogging");
+    expect(text).not.toContain(LATEX_NAME);
     expect(text).not.toContain("geheime notitie");
     expect(text).not.toContain("alleen privé");
     expect(text).not.toContain("Geheime custom naam");
@@ -57,7 +61,7 @@ describe("profile text export", () => {
       generatedAt: new Date("2026-07-28T00:00:00Z"),
     });
 
-    expect(text).toContain("Flogging");
+    expect(text).toContain(LATEX_NAME);
     expect(text).toContain("geheime notitie");
     expect(text).toContain("Geheime custom naam");
     expect(text).toContain("custom geheim");

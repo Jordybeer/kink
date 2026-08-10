@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { directionalPairForKinkId } from "@/lib/directionality";
 import { CATEGORIES, KINKS } from "@/lib/kinks";
 import {
   buildQuestionnaireCoveragePlan,
@@ -42,7 +43,7 @@ const CATALOG_V2_RELEASE_A_IDS = [
   "remote_toy", "nude_photography", "adult_content_creation", "mutual_masturbation",
   "partner_masturbation_watch", "thigh_focus", "muscle_focus", "pregnancy_attraction",
   "smeared_makeup", "crying_tears", "vampire_fangs", "erotic_massage", "vibration_play",
-  "sound_deprivation", "wetlook", "prostate_massage", "sex_machine", "drool_play",
+  "sound_deprivation_give", "wetlook", "prostate_massage", "sex_machine", "drool_play",
   "being_heard", "play_party", "next_day_check_in", "aftercare_cleanup", "dollification",
   "pet_training", "pet_grooming", "diaper_wetting", "diaper_messing", "diaper_changing",
   "breeding_fantasy", "creampie",
@@ -115,6 +116,21 @@ describe("adaptive questionnaire", () => {
     const runtime = getQuestionnaireRuntime(withoutSetup);
     expect(runtime.intent).toEqual({ kind: "dynamic" });
     expect(runtime.coverage?.total).toBe(45);
+  });
+
+  it("keeps compact role-affinity coverage the same size for both perspectives", () => {
+    const dominant = buildQuestionnaireCoveragePlan([], "dominant");
+    const submissive = buildQuestionnaireCoveragePlan([], "submissive");
+    expect(dominant.anchorIds).toHaveLength(45);
+    expect(submissive.anchorIds).toHaveLength(45);
+    expect(dominant.anchorIds).toContain("handcuffs_give");
+    expect(dominant.anchorIds).not.toContain("handcuffs_receive");
+    expect(submissive.anchorIds).toContain("handcuffs_receive");
+    expect(submissive.anchorIds).not.toContain("handcuffs_give");
+    expect(dominant.anchorIds).toContain("pegging_give");
+    expect(dominant.anchorIds).toContain("pegging_receive");
+    expect(submissive.anchorIds).toContain("pegging_give");
+    expect(submissive.anchorIds).toContain("pegging_receive");
   });
 
   it("never hides an existing answer outside the Dynamic plan", () => {
@@ -211,11 +227,14 @@ describe("adaptive questionnaire", () => {
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
-    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(3);
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(4);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).toEqual({
-      spanking_hand: "spanking_implement",
-      rope_bondage: "shibari",
-      handcuffs: "leather_cuffs",
+      spanking_hand_give: "spanking_implement_give",
+      spanking_hand_receive: "spanking_implement_receive",
+      rope_bondage_give: "shibari_give",
+      rope_bondage_receive: "shibari_receive",
+      handcuffs_give: "leather_cuffs_give",
+      handcuffs_receive: "leather_cuffs_receive",
       rules_protocols: "rituelen_protocols",
       ochtend_avondritueel: "rituelen_protocols",
       orgasm_control: "orgasm_denial",
@@ -224,8 +243,8 @@ describe("adaptive questionnaire", () => {
       watersports_ontvangen: "urine_intiem",
       geur_scent_fetish: "panty_sniffing",
       petplay_puppy: "petplay_harnas",
-      shibari: "suspension_rechtop",
-      blindfold: "sound_deprivation",
+      blindfold_give: "sound_deprivation_give",
+      blindfold_receive: "sound_deprivation_receive",
       being_watched: "public_play",
       remote_toy: "remote_toy_publiek",
       nude_photography: "recording",
@@ -247,7 +266,7 @@ describe("adaptive questionnaire", () => {
     const current = dynamicProfile(["impact", "humiliation"]);
     const plan = buildQuestionnaireCoveragePlan(current.questionnaireSetup!.interests);
     const before = questionnaireCoverage(current, plan);
-    current.entries.spanking_hand = { status: "yes", comment: "" };
+    current.entries.spanking_hand_give = { status: "yes", comment: "" };
     current.entries.humiliation_verbal = { status: "yes", comment: "" };
     const after = questionnaireCoverage(current, plan);
     expect(after.total).toBe(before.total);
@@ -269,22 +288,22 @@ describe("adaptive questionnaire", () => {
 
   it("never mutates, invents, or loses a profile entry while ranking", () => {
     const current = dynamicProfile();
-    current.entries.handcuffs = { status: "yes", comment: "bewaar mij" };
+    current.entries.handcuffs_give = { status: "yes", comment: "bewaar mij" };
     const before = structuredClone(current.entries);
     getQuestionnaireRuntime(current);
     getAdaptiveQuestionQueue(current);
     expect(current.entries).toEqual(before);
-    expect(Object.keys(current.entries)).toEqual(["handcuffs"]);
+    expect(Object.keys(current.entries)).toEqual(["handcuffs_give"]);
   });
 
   it("opens exactly the pinned adjacent probe after an explicit positive answer", () => {
     const current = dynamicProfile();
-    current.entries.handcuffs = { status: "yes", comment: "" };
+    current.entries.handcuffs_give = { status: "yes", comment: "" };
     const runtime = getQuestionnaireRuntime(current);
-    const probe = runtime.queue.find((item) => item.kink.id === "leather_cuffs");
+    const probe = runtime.queue.find((item) => item.kink.id === "leather_cuffs_give");
     expect(probe?.isProbe).toBe(true);
     expect(probe?.reasons).toEqual([
-      { sourceKinkId: "handcuffs", targetKinkId: "leather_cuffs", relationType: "followUp", status: "yes" },
+      { sourceKinkId: "handcuffs_give", targetKinkId: "leather_cuffs_give", relationType: "followUp", status: "yes" },
     ]);
   });
 
@@ -303,23 +322,23 @@ describe("adaptive questionnaire", () => {
   });
 
   it("treats Voor hen and Misschien identically for propagation", () => {
-    const catalog = catalogSlice("handcuffs", "leather_cuffs", "doctor_patient");
-    const voorHen = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs: "no" })).map((kink) => kink.id);
-    const maybe = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs: "maybe" })).map((kink) => kink.id);
+    const catalog = catalogSlice("handcuffs_give", "leather_cuffs_give", "doctor_patient");
+    const voorHen = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs_give: "no" })).map((kink) => kink.id);
+    const maybe = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs_give: "maybe" })).map((kink) => kink.id);
     expect(voorHen).toEqual(maybe);
-    expect(derivePendingExpansionProbes(catalog, entriesWith({ handcuffs: "no" }))).toEqual([]);
+    expect(derivePendingExpansionProbes(catalog, entriesWith({ handcuffs_give: "no" }))).toEqual([]);
   });
 
   it("keeps one hard_no neutral even on an explicit directional continuation", () => {
-    const [source, target, unrelated] = catalogSlice("handcuffs", "leather_cuffs", "doctor_patient");
+    const [source, target, unrelated] = catalogSlice("handcuffs_give", "leather_cuffs_give", "doctor_patient");
     const catalog = [
       { ...source, level: 1 as const },
       { ...target, level: 1 as const },
       { ...unrelated, level: 1 as const },
     ];
-    const neutral = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs: "maybe" }))
+    const neutral = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs_give: "maybe" }))
       .map((kink) => kink.id);
-    const hard = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs: "hard_no" }))
+    const hard = rankQuestionnaireCandidates(catalog, entriesWith({ handcuffs_give: "hard_no" }))
       .map((kink) => kink.id);
     expect(hard).toEqual(neutral);
     const queueItems: QuestionnaireQueueItem[] = [
@@ -329,15 +348,15 @@ describe("adaptive questionnaire", () => {
     const neutralQueue = rankQuestionnaireQueueItems(
       queueItems,
       catalog,
-      entriesWith({ handcuffs: "maybe" }),
+      entriesWith({ handcuffs_give: "maybe" }),
     ).map((item) => item.kink.id);
     const hardQueue = rankQuestionnaireQueueItems(
       queueItems,
       catalog,
-      entriesWith({ handcuffs: "hard_no" }),
+      entriesWith({ handcuffs_give: "hard_no" }),
     ).map((item) => item.kink.id);
     expect(hardQueue).toEqual(neutralQueue);
-    expect(derivePendingExpansionProbes(catalog, entriesWith({ handcuffs: "hard_no" }))).toEqual([]);
+    expect(derivePendingExpansionProbes(catalog, entriesWith({ handcuffs_give: "hard_no" }))).toEqual([]);
   });
 
   it("accumulates repeated hard limits only on their shared explicit deeper target", () => {
@@ -526,23 +545,23 @@ describe("adaptive questionnaire", () => {
   });
 
   it("never falls through to a second follow-up after the canonical target was answered", () => {
-    const catalog = catalogSlice("spanking_hand", "spanking_implement", "flogging");
-    const entries = entriesWith({ spanking_hand: "yes", spanking_implement: "maybe" });
-    expect(QUESTIONNAIRE_FOLLOW_UPS.spanking_hand).toEqual(["spanking_implement", "flogging"]);
+    const catalog = catalogSlice("spanking_hand_give", "spanking_implement_give", "flogging_give");
+    const entries = entriesWith({ spanking_hand_give: "yes", spanking_implement_give: "maybe" });
+    expect(QUESTIONNAIRE_FOLLOW_UPS.spanking_hand_give).toEqual(["spanking_implement_give", "flogging_give"]);
     expect(derivePendingExpansionProbes(catalog, entries)).toEqual([]);
   });
 
   it("never falls through when a canonical target is unavailable in the active catalog", () => {
-    const catalog = catalogSlice("spanking_hand", "flogging");
-    expect(QUESTIONNAIRE_FOLLOW_UPS.spanking_hand).toEqual(["spanking_implement", "flogging"]);
-    expect(derivePendingExpansionProbes(catalog, entriesWith({ spanking_hand: "yes" }))).toEqual([]);
+    const catalog = catalogSlice("spanking_hand_give", "flogging_give");
+    expect(QUESTIONNAIRE_FOLLOW_UPS.spanking_hand_give).toEqual(["spanking_implement_give", "flogging_give"]);
+    expect(derivePendingExpansionProbes(catalog, entriesWith({ spanking_hand_give: "yes" }))).toEqual([]);
   });
 
   it("consumes a source when its canonical target was already answered before the source", () => {
-    const catalog = catalogSlice("handcuffs", "leather_cuffs");
+    const catalog = catalogSlice("handcuffs_give", "leather_cuffs_give");
     expect(derivePendingExpansionProbes(
       catalog,
-      entriesWith({ leather_cuffs: "maybe", handcuffs: "yes" }),
+      entriesWith({ leather_cuffs_give: "maybe", handcuffs_give: "yes" }),
     )).toEqual([]);
   });
 
@@ -576,9 +595,9 @@ describe("adaptive questionnaire", () => {
     answerIds(current, plan.anchorIds, "maybe");
     expect(getQuestionnaireRuntime(current).complete).toBe(true);
 
-    current.entries.handcuffs = { status: "yes", comment: "" };
+    current.entries.handcuffs_give = { status: "yes", comment: "" };
     expect(getQuestionnaireRuntime(current).complete).toBe(false);
-    current.entries.leather_cuffs = { status: "maybe", comment: "" };
+    current.entries.leather_cuffs_give = { status: "maybe", comment: "" };
     expect(getQuestionnaireRuntime(current).complete).toBe(true);
   });
 
@@ -601,7 +620,7 @@ describe("adaptive questionnaire", () => {
 
   it("keeps category exploration local without creating answers or consuming outside probes", () => {
     const current = dynamicProfile();
-    current.entries.handcuffs = { status: "yes", comment: "expliciet" };
+    current.entries.handcuffs_give = { status: "yes", comment: "expliciet" };
     const before = structuredClone(current.entries);
     const local = getQuestionnaireRuntime(current, {
       intent: { kind: "category", category: "fluids" },
@@ -609,12 +628,12 @@ describe("adaptive questionnaire", () => {
 
     expect(local.queue.length).toBeGreaterThan(0);
     expect(local.queue.every((item) => item.kink.category === "fluids")).toBe(true);
-    expect(local.queue.some((item) => item.kink.id === "leather_cuffs")).toBe(false);
-    expect(local.pendingProbes.map((probe) => probe.targetKinkId)).toContain("leather_cuffs");
+    expect(local.queue.some((item) => item.kink.id === "leather_cuffs_give")).toBe(false);
+    expect(local.pendingProbes.map((probe) => probe.targetKinkId)).toContain("leather_cuffs_give");
     expect(current.entries).toEqual(before);
 
     const global = getQuestionnaireRuntime(current);
-    expect(global.queue.some((item) => item.kink.id === "leather_cuffs")).toBe(true);
+    expect(global.queue.some((item) => item.kink.id === "leather_cuffs_give")).toBe(true);
   });
 
   it("finishes category exploration only when that category is explicitly answered", () => {
@@ -630,7 +649,7 @@ describe("adaptive questionnaire", () => {
 
   it("keeps an explicit non-probe between probes when one is available", () => {
     const next = selectConversationQuestion(
-      [queueItem("leather_cuffs", true), queueItem("doctor_patient")],
+      [queueItem("leather_cuffs_give", true), queueItem("doctor_patient")],
       KINKS,
       { requireNonProbe: true },
     );
@@ -639,9 +658,9 @@ describe("adaptive questionnaire", () => {
 
   it("avoids an immediate topical echo when another valid question exists", () => {
     const next = selectConversationQuestion(
-      [queueItem("spanking_implement"), queueItem("doctor_patient")],
+      [queueItem("spanking_implement_give"), queueItem("doctor_patient")],
       KINKS,
-      { lastKinkId: "spanking_hand" },
+      { lastKinkId: "spanking_hand_give" },
     );
     expect(next?.kink.id).toBe("doctor_patient");
   });
@@ -671,7 +690,7 @@ describe("adaptive questionnaire", () => {
 
   it("schedules the tiny core set before interests and expansion", () => {
     const current = dynamicProfile(["impact"]);
-    current.entries.handcuffs = { status: "yes", comment: "" };
+    current.entries.handcuffs_give = { status: "yes", comment: "" };
     const queue = getQuestionnaireRuntime(current).queue;
     const coreIndexes = queue
       .map((item, index) => item.lane === "core" ? index : -1)
@@ -687,7 +706,7 @@ describe("adaptive questionnaire", () => {
       { ...queueItem("aftercare_physical"), lane: "core" },
       { ...queueItem("aftercare_verbal"), lane: "core" },
       { ...queueItem("aftercare_food"), lane: "core" },
-      { ...queueItem("handcuffs"), lane: "interest" },
+      { ...queueItem("handcuffs_give"), lane: "interest" },
     ];
     const ranked = rankQuestionnaireQueueItems(items, KINKS, {});
     expect(ranked.slice(0, 3).every((item) => item.lane === "core")).toBe(true);
@@ -713,12 +732,14 @@ describe("adaptive questionnaire", () => {
 
   it("keeps Deep Dive exhaustive even after repeated hard limits", () => {
     const current = profile({ mode: "deepDive", interests: [], version: 2 });
-    current.entries.rope_bondage = { status: "hard_no", comment: "" };
-    current.entries.handcuffs = { status: "hard_no", comment: "" };
+    current.entries.rope_bondage_give = { status: "hard_no", comment: "" };
+    current.entries.handcuffs_give = { status: "hard_no", comment: "" };
     const runtime = getQuestionnaireRuntime(current);
     expect(runtime.visibleKinks.map((kink) => kink.id)).toEqual(KINKS.map((kink) => kink.id));
-    expect(runtime.queue.some((item) => item.kink.id === "shibari")).toBe(true);
-    expect(runtime.queue.some((item) => item.kink.id === "leather_cuffs")).toBe(true);
+    expect(runtime.queue.some((item) => item.kink.id === "shibari_give")).toBe(true);
+    expect(runtime.queue.some((item) => item.kink.id === "shibari_receive")).toBe(true);
+    expect(runtime.queue.some((item) => item.kink.id === "leather_cuffs_give")).toBe(true);
+    expect(runtime.queue.some((item) => item.kink.id === "leather_cuffs_receive")).toBe(true);
   });
 
   it("lets a fresh Deep Dive reach the complete catalog", () => {
@@ -729,8 +750,8 @@ describe("adaptive questionnaire", () => {
 
   it("produces deterministic ordering for identical Dynamic inputs", () => {
     const current = dynamicProfile(["impact", "bondage"]);
-    current.entries.spanking_hand = { status: "willing", comment: "" };
-    current.entries.handcuffs = { status: "no", comment: "" };
+    current.entries.spanking_hand_give = { status: "willing", comment: "" };
+    current.entries.handcuffs_give = { status: "no", comment: "" };
     const first = getQuestionnaireRuntime(current).queue.map((item) => item.kink.id);
     const second = getQuestionnaireRuntime(structuredClone(current)).queue.map((item) => item.kink.id);
     expect(second).toEqual(first);
@@ -750,7 +771,7 @@ describe("adaptive questionnaire", () => {
     const dominant = dynamicProfile();
     dominant.id = "dominant";
     dominant.perspective = "dominant";
-    dominant.entries.handcuffs = { status: "yes", comment: "" };
+    dominant.entries.handcuffs_give = { status: "yes", comment: "" };
     const submissive = dynamicProfile();
     submissive.id = "submissive";
     submissive.perspective = "submissive";
@@ -760,13 +781,18 @@ describe("adaptive questionnaire", () => {
     expect(submissive.entries).toEqual({});
   });
 
-  it("does not treat perspective itself as a hidden preference signal", () => {
+  it("uses perspective only to choose the compact role-affinity side, never a different concept path", () => {
     const dominant = dynamicProfile();
     dominant.perspective = "dominant";
     const submissive = dynamicProfile();
     submissive.perspective = "submissive";
-    expect(getQuestionnaireRuntime(dominant).queue.map((item) => item.kink.id))
-      .toEqual(getQuestionnaireRuntime(submissive).queue.map((item) => item.kink.id));
+    const dominantIds = getQuestionnaireRuntime(dominant).queue.map((item) => item.kink.id);
+    const submissiveIds = getQuestionnaireRuntime(submissive).queue.map((item) => item.kink.id);
+    const concepts = (ids: string[]) => ids.map((id) => directionalPairForKinkId(id)?.conceptId ?? id);
+    expect(dominantIds).not.toEqual(submissiveIds);
+    expect(concepts(dominantIds)).toEqual(concepts(submissiveIds));
+    expect(dominant.entries).toEqual({});
+    expect(submissive.entries).toEqual({});
   });
 
   it("ignores BDSMtest scores and keeps full-catalog search independent", () => {
@@ -774,8 +800,11 @@ describe("adaptive questionnaire", () => {
     const scored = { ...structuredClone(neutral), bdsmtestScores: [{ role: "Master", pct: 100 }] };
     expect(getQuestionnaireRuntime(scored).queue.map((item) => item.kink.id))
       .toEqual(getQuestionnaireRuntime(neutral).queue.map((item) => item.kink.id));
-    expect(searchAllKinks("Shibari").some((kink) => kink.id === "shibari")).toBe(true);
-    expect(searchAllKinks("vastbinden met touw").some((kink) => kink.id === "rope_bondage")).toBe(true);
+    const shibari_give = searchAllKinks("Shibari").map((kink) => kink.id);
+    expect(shibari_give).toContain("shibari_give");
+    expect(shibari_give).toContain("shibari_receive");
+    const rope = searchAllKinks("vastbinden met touw").map((kink) => kink.id);
+    expect(rope).toContain("rope_bondage_give");
     expect(searchAllKinks("Nazorg").some((kink) => kink.id === "aftercare_physical")).toBe(true);
   });
 

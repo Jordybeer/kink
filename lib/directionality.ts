@@ -1,4 +1,4 @@
-import type { KinkEntry, Profile } from "@/types";
+import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
 
 export type DirectionalKinkSide = "give" | "receive";
 
@@ -6,7 +6,14 @@ export interface DirectionalKinkPair {
   conceptId: string;
   giveId: string;
   receiveId: string;
+  /** Alleen voor compacte Dynamic eligibility; nooit voor matching of antwoord-inferentie. */
+  questionnaireAffinity?: Readonly<Partial<Record<ProfilePerspective, DirectionalKinkSide>>>;
 }
+
+const DOM_GIVE_SUB_RECEIVE_AFFINITY = {
+  dominant: "give",
+  submissive: "receive",
+} as const satisfies Readonly<Record<ProfilePerspective, DirectionalKinkSide>>;
 
 /**
  * Expliciete handelingparen. Dit is presentation/matching-metadata, geen
@@ -22,6 +29,17 @@ export const DIRECTIONAL_KINK_PAIRS = [
   { conceptId: "deep_throat", giveId: "deep_throat_give", receiveId: "deep_throat_receive" },
   { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
   { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
+  { conceptId: "spanking_hand", giveId: "spanking_hand_give", receiveId: "spanking_hand_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "spanking_implement", giveId: "spanking_implement_give", receiveId: "spanking_implement_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "flogging", giveId: "flogging_give", receiveId: "flogging_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "rope_bondage", giveId: "rope_bondage_give", receiveId: "rope_bondage_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "shibari", giveId: "shibari_give", receiveId: "shibari_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "handcuffs", giveId: "handcuffs_give", receiveId: "handcuffs_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "leather_cuffs", giveId: "leather_cuffs_give", receiveId: "leather_cuffs_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "gag_ball", giveId: "gag_ball_give", receiveId: "gag_ball_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "gag_bit", giveId: "gag_bit_give", receiveId: "gag_bit_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "blindfold", giveId: "blindfold_give", receiveId: "blindfold_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "sound_deprivation", giveId: "sound_deprivation_give", receiveId: "sound_deprivation_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
 ] as const satisfies readonly DirectionalKinkPair[];
 
 const DIRECTIONAL_CONCEPT_LABELS: Readonly<Record<string, string>> = {
@@ -34,6 +52,17 @@ const DIRECTIONAL_CONCEPT_LABELS: Readonly<Record<string, string>> = {
   deep_throat: "Deep throat",
   rimming: "Rimming",
   footjob: "Footjob",
+  spanking_hand: "Spanking (hand)",
+  spanking_implement: "Implement spanking",
+  flogging: "Flogging",
+  rope_bondage: "Rope bondage",
+  shibari: "Shibari",
+  handcuffs: "Handcuffs",
+  leather_cuffs: "Leather cuffs",
+  gag_ball: "Ball gag",
+  gag_bit: "Bit gag",
+  blindfold: "Blindfold",
+  sound_deprivation: "Sound deprivation",
 };
 
 const PAIR_BY_KINK_ID = new Map<string, DirectionalKinkPair>();
@@ -56,6 +85,21 @@ export function directionalSiblingId(kinkId: string): string | null {
   const pair = directionalPairForKinkId(kinkId);
   if (!pair) return null;
   return pair.giveId === kinkId ? pair.receiveId : pair.giveId;
+}
+
+/**
+ * Kiest uitsluitend welke kant als compacte Dynamic-anchor telt. De helper
+ * muteert geen entry en zegt niets over de onbekende sibling.
+ */
+export function questionnaireDirectionalKinkIdForPerspective(
+  kinkId: string,
+  perspective?: ProfilePerspective,
+): string {
+  if (!perspective) return kinkId;
+  const pair = directionalPairForKinkId(kinkId);
+  const side = pair?.questionnaireAffinity?.[perspective];
+  if (!pair || !side) return kinkId;
+  return side === "give" ? pair.giveId : pair.receiveId;
 }
 
 /** De partnerkant voor complementaire matching; niet-directionele IDs blijven zichzelf. */
@@ -113,6 +157,17 @@ const DEPRECATED_DIRECTIONAL_KINK_IDS = new Set<string>([
   "deep_throat",
   "rimmen",
   "footjob",
+  "spanking_hand",
+  "spanking_implement",
+  "flogging",
+  "rope_bondage",
+  "shibari",
+  "handcuffs",
+  "leather_cuffs",
+  "gag_ball",
+  "gag_bit",
+  "blindfold",
+  "sound_deprivation",
 ]);
 
 /**
