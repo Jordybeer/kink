@@ -44,9 +44,8 @@ function sanitizeMember(raw: unknown): SwitchShareMemberProof | null {
   const member = raw as Record<string, unknown>;
   const profileId = cleanBoundedString(member.profileId, MAX_PROOF_STRING);
   const keyId = cleanBoundedString(member.keyId, MAX_PROOF_STRING);
-  const proofHash = cleanBoundedString(member.proofHash, MAX_PROOF_STRING);
-  if (!profileId || !keyId || !proofHash) return null;
-  return { profileId, keyId, proofHash };
+  if (!profileId || !keyId) return null;
+  return { profileId, keyId };
 }
 
 export function sanitizeSwitchShareProof(raw: unknown): SwitchShareProof | undefined {
@@ -115,7 +114,6 @@ function memberFor(profile: Profile): SwitchShareMemberProof {
   return {
     profileId: profile.id,
     keyId: proof.keyId,
-    proofHash: proof.proofHash,
   };
 }
 
@@ -216,10 +214,8 @@ export async function verifySwitchShareProof(
   if (!dominantConsent || !submissiveConsent) return false;
   if (proof.dominant.profileId !== dominant.id
     || proof.dominant.keyId !== dominantConsent.keyId
-    || proof.dominant.proofHash !== dominantConsent.proofHash
     || proof.submissive.profileId !== submissive.id
-    || proof.submissive.keyId !== submissiveConsent.keyId
-    || proof.submissive.proofHash !== submissiveConsent.proofHash) {
+    || proof.submissive.keyId !== submissiveConsent.keyId) {
     return false;
   }
   const [dominantVerification, submissiveVerification] = await Promise.all([
