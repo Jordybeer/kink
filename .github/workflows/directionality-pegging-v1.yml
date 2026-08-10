@@ -21,6 +21,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node scripts/fix-directionality-forge.mjs
       - run: node scripts/apply-directionality-pegging-v1.mjs
       - run: npm test
       - run: npm run build
