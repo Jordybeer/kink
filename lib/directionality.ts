@@ -14,10 +14,26 @@ export interface DirectionalKinkPair {
  */
 export const DIRECTIONAL_KINK_PAIRS = [
   { conceptId: "pegging", giveId: "pegging_give", receiveId: "pegging_receive" },
+  { conceptId: "golden_shower", giveId: "watersports_geven", receiveId: "watersports_ontvangen" },
+  { conceptId: "anal_sex", giveId: "anal_sex_give", receiveId: "anal_sex_receive" },
+  { conceptId: "anal_fingering", giveId: "anal_fingering_give", receiveId: "anal_fingering_receive" },
+  { conceptId: "anal_fisting", giveId: "fisting_anal_give", receiveId: "fisting_anal_receive" },
+  { conceptId: "vaginal_fisting", giveId: "fisting_vaginal_give", receiveId: "fisting_vaginal_receive" },
+  { conceptId: "deep_throat", giveId: "deep_throat_give", receiveId: "deep_throat_receive" },
+  { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
+  { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
 ] as const satisfies readonly DirectionalKinkPair[];
 
 const DIRECTIONAL_CONCEPT_LABELS: Readonly<Record<string, string>> = {
   pegging: "Pegging",
+  golden_shower: "Golden shower",
+  anal_sex: "Anal sex",
+  anal_fingering: "Anal fingering",
+  anal_fisting: "Anal fisting",
+  vaginal_fisting: "Vaginal fisting",
+  deep_throat: "Deep throat",
+  rimming: "Rimming",
+  footjob: "Footjob",
 };
 
 const PAIR_BY_KINK_ID = new Map<string, DirectionalKinkPair>();
@@ -88,7 +104,16 @@ export function directionalCompareLabel(kinkId: string, fallbackName: string): s
     : `${conceptLabel} — ontvangen ↔ geven`;
 }
 
-const DEPRECATED_DIRECTIONAL_KINK_IDS = new Set<string>(["pegging"]);
+const DEPRECATED_DIRECTIONAL_KINK_IDS = new Set<string>([
+  "pegging",
+  "anal_sex",
+  "anal_fingering",
+  "fisting_anal",
+  "fisting_vaginal",
+  "deep_throat",
+  "rimmen",
+  "footjob",
+]);
 
 /**
  * Pre-launch cleanup: een oud gecombineerd antwoord kan niet eerlijk naar give

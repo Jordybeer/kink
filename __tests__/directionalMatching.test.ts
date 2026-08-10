@@ -44,6 +44,26 @@ describe("complementaire directionele matching", () => {
     expect(result.counts.perfect).toBe(1);
   });
 
+  it("applies complementary matching to every registered concept, not just Pegging", () => {
+    for (const [giveId, receiveId] of [
+      ["pegging_give", "pegging_receive"],
+      ["watersports_geven", "watersports_ontvangen"],
+      ["anal_sex_give", "anal_sex_receive"],
+      ["anal_fingering_give", "anal_fingering_receive"],
+      ["fisting_anal_give", "fisting_anal_receive"],
+      ["fisting_vaginal_give", "fisting_vaginal_receive"],
+      ["deep_throat_give", "deep_throat_receive"],
+      ["rimming_give", "rimming_receive"],
+      ["footjob_give", "footjob_receive"],
+    ] as const) {
+      const a = profile("A-" + giveId, "dominant", { [giveId]: { status: "yes" } });
+      const b = profile("B-" + receiveId, "submissive", { [receiveId]: { status: "yes" } });
+      const result = profileMatchScore(a, b);
+      expect(result.comparedTotal, giveId).toBe(1);
+      expect(result.overall, giveId).toBe(100);
+    }
+  });
+
   it("does not mistake two give answers for a complementary match", () => {
     const a = profile("A", "dominant", { pegging_give: { status: "yes" } });
     const b = profile("B", "submissive", { pegging_give: { status: "yes" } });
@@ -114,6 +134,8 @@ describe("complementaire directionele matching", () => {
   it("makes the compare direction explicit and routes B to the counterpart ID", () => {
     expect(getComparePartnerKinkId("pegging_give")).toBe("pegging_receive");
     expect(getComparePartnerKinkId("pegging_receive")).toBe("pegging_give");
+    expect(getComparePartnerKinkId("watersports_geven")).toBe("watersports_ontvangen");
+    expect(getComparePartnerKinkId("rimming_receive")).toBe("rimming_give");
     expect(getComparePartnerKinkId("spanking_hand")).toBe("spanking_hand");
 
     expect(getCompareKinkLabel("pegging_give", "Pegging — giving")).toBe("Pegging — geven ↔ ontvangen");

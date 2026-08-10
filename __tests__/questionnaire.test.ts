@@ -211,7 +211,7 @@ describe("adaptive questionnaire", () => {
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
-    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(2);
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(3);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).toEqual({
       spanking_hand: "spanking_implement",
       rope_bondage: "shibari",
@@ -221,7 +221,6 @@ describe("adaptive questionnaire", () => {
       orgasm_control: "orgasm_denial",
       exhibitionism: "being_watched",
       voyeurism: "watching_others",
-      watersports_geven: "watersports_ontvangen",
       watersports_ontvangen: "urine_intiem",
       geur_scent_fetish: "panty_sniffing",
       petplay_puppy: "petplay_harnas",
@@ -232,7 +231,8 @@ describe("adaptive questionnaire", () => {
       nude_photography: "recording",
       recording: "adult_content_creation",
       partner_masturbation_watch: "mutual_masturbation",
-      anal_fingering: "anal_sex",
+      anal_fingering_give: "anal_sex_give",
+      anal_fingering_receive: "anal_sex_receive",
       luiers_dragen: "diaper_wetting",
       diaper_wetting: "diaper_changing",
       diaper_messing: "diaper_changing",
@@ -370,12 +370,13 @@ describe("adaptive questionnaire", () => {
       .toBeGreaterThan(queueRanked.indexOf("doctor_patient"));
   });
 
-  it("does not let a hard limit on urine drinking close a Golden Shower branch", () => {
+  it("never infers receiving Golden Shower from explicitly liking giving it", () => {
     const current = dynamicProfile();
-    current.entries.watersports_geven = { status: "yes", comment: "" };
+    current.entries.watersports_geven = { status: "yes", comment: "geven is expliciet" };
     current.entries.urine_intiem = { status: "hard_no", comment: "absoluut niet" };
     const runtime = getQuestionnaireRuntime(current);
-    expect(runtime.pendingProbes.map((probe) => probe.targetKinkId)).toContain("watersports_ontvangen");
+    expect(runtime.pendingProbes.map((probe) => probe.targetKinkId)).not.toContain("watersports_ontvangen");
+    expect(current.entries.watersports_ontvangen).toBeUndefined();
     expect(current.entries.urine_intiem.status).toBe("hard_no");
   });
 
@@ -407,12 +408,12 @@ describe("adaptive questionnaire", () => {
   });
 
   it("boosts voyeurism's real neighbor without dragging fluids or anal along", () => {
-    const catalog = catalogSlice("voyeurism", "watching_others", "cum_play", "anal_fingering");
+    const catalog = catalogSlice("voyeurism", "watching_others", "cum_play", "anal_fingering_give");
     const neutral = rankQuestionnaireCandidates(catalog, entriesWith({ voyeurism: "maybe" })).map((kink) => kink.id);
     const positive = rankQuestionnaireCandidates(catalog, entriesWith({ voyeurism: "yes" })).map((kink) => kink.id);
     expect(positive.indexOf("watching_others")).toBeLessThan(neutral.indexOf("watching_others"));
-    expect(positive.filter((id) => id === "cum_play" || id === "anal_fingering"))
-      .toEqual(neutral.filter((id) => id === "cum_play" || id === "anal_fingering"));
+    expect(positive.filter((id) => id === "cum_play" || id === "anal_fingering_give"))
+      .toEqual(neutral.filter((id) => id === "cum_play" || id === "anal_fingering_give"));
   });
 
   it("keeps Little/Ageplay separate from unrelated Pet Play", () => {
@@ -485,7 +486,8 @@ describe("adaptive questionnaire", () => {
     const cases = [
       ["remote_toy", "remote_toy_publiek"],
       ["partner_masturbation_watch", "mutual_masturbation"],
-      ["anal_fingering", "anal_sex"],
+      ["anal_fingering_give", "anal_sex_give"],
+      ["anal_fingering_receive", "anal_sex_receive"],
       ["luiers_dragen", "diaper_wetting"],
       ["breeding_fantasy", "creampie"],
     ] as const;

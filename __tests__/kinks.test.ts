@@ -44,7 +44,16 @@ const RELEASE_A_IDS = [
   "creampie",
 ] as const;
 
-const DIRECTIONAL_RELEASE_IDS = ["pegging_give", "pegging_receive"] as const;
+const DIRECTIONAL_RELEASE_IDS = [
+  "pegging_give", "pegging_receive",
+  "anal_sex_give", "anal_sex_receive",
+  "anal_fingering_give", "anal_fingering_receive",
+  "fisting_anal_give", "fisting_anal_receive",
+  "fisting_vaginal_give", "fisting_vaginal_receive",
+  "deep_throat_give", "deep_throat_receive",
+  "rimming_give", "rimming_receive",
+  "footjob_give", "footjob_receive",
+] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
   "filmen_prive",
@@ -53,6 +62,13 @@ const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
   "luiers_gebruik",
   "deepthroat",
   "pegging",
+  "anal_sex",
+  "anal_fingering",
+  "fisting_anal",
+  "fisting_vaginal",
+  "deep_throat",
+  "rimmen",
+  "footjob",
 ] as const;
 
 describe("kink database integrity", () => {
@@ -113,7 +129,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(292);
+    expect(KINKS).toHaveLength(299);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -199,7 +215,7 @@ describe("intensity ordering (juli 2026 uitbreiding)", () => {
   it("the new temptations joined the catalogue", () => {
     const ids = new Set(KINKS.map((k) => k.id));
     for (const id of [
-      "rimmen", "dirty_talk", "free_use", "keyholding", "predicament_bondage",
+      "rimming_give", "rimming_receive", "dirty_talk", "free_use", "keyholding", "predicament_bondage",
       "primal_play", "glory_hole", "figging", "body_slapping", "trio_groepsseks",
     ]) {
       expect(ids.has(id), `missing kink: ${id}`).toBe(true);

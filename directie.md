@@ -97,15 +97,15 @@ KinkSync mag nooit automatisch hetzelfde antwoord op beide kanten zetten.
 
 Een optionele snelle actie zoals `Zelfde antwoord voor beide` is alleen acceptabel na een expliciete tik van de gebruiker. De standaard blijft twee onafhankelijke antwoorden.
 
-### Alle perspectieven krijgen beide kanten
+### Perspective bepaalt nooit een antwoord — eligibility mag wel zuinig zijn
 
-Dit geldt voor ieder profielperspectief:
+Iedere directionele kant blijft een zelfstandig mogelijk antwoord. Dominant of Submissive vult nooit een sibling in, maakt hem nooit `no` en kopieert geen status.
 
-- Dominant profiel: geven + ontvangen;
-- Submissive profiel: geven + ontvangen;
-- `Beide kanten`: twee onafhankelijke profielen, dus elk profiel opnieuw geven + ontvangen.
+Voor **rol-neutrale** directionele concepten (zoals Pegging, fisting of rimming) mag perspective geen kant wegfilteren. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden.
 
-Dat kan vier verschillende antwoorden voor één persoon opleveren en dat is inhoudelijk correct.
+Voor een latere **sterk rol-geassocieerde** pair (bijvoorbeeld bepaalde impact- of bondagehandelingen) mag Dynamic één rol-aligned kant als basisvraag kiezen om de standaardflow niet kunstmatig te verdubbelen. De andere kant blijft dan **onbekend**, niet negatief, en blijft bereikbaar via Discover, Deep Dive, categorie-exploratie of gericht zoeken. Een Switch behoudt twee perspectieven; ieder perspectief krijgt zijn eigen zuinige basisflow.
+
+Role affinity is dus uitsluitend een eligibility/prioriteitsregel en nooit een voorkeurssignaal. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.
 
 ## Engine-regels
 
@@ -165,9 +165,9 @@ Een bestaande kink wordt alleen directioneel gesplitst wanneer:
 3. de richting objectief in de handeling zit en niet uit rol, psychologie of motivatie wordt afgeleid;
 4. beide varianten zelfstandig begrijpelijk blijven.
 
-### Eerste vertical slice — uitgevoerd
+### Vertical slices — uitgevoerd
 
-De eerste en voorlopig enige directionele vertical slice is **Pegging**.
+**Pegging** blijft de referentie-vertical-slice. Release B breidt hetzelfde bewezen model conservatief uit naar rol-neutrale handelingen waarvan de twee kanten onafhankelijk betekenisvol zijn.
 
 Waarom:
 
@@ -176,9 +176,9 @@ Waarom:
 - het huidige samengestelde antwoord is aantoonbaar onvoldoende voor complementaire matching;
 - het is een goede end-to-end testcase voor questionnaire, sharing, import, compare en matching.
 
-Pas nadat de volledige pegging-slice bewezen stabiel is, wordt de rest van de catalogus geaudit.
+De eerste catalogusaudit daarna splitst uitsluitend high-confidence rol-neutrale handelingen: Golden shower (bestaande twee IDs worden nu echt complementair), anal sex, anal fingering, anal/vaginal fisting, deep throat, rimming en footjob. De oude enkelvoudige IDs starten pre-launch bewust onbeantwoord; er wordt niets naar siblings gekopieerd.
 
-Mogelijke latere kandidaten zijn bijvoorbeeld expliciete bondage-, impact-, watersports- of worship-handelingen, maar alleen na item-per-item review. Geen bulktransformatie op basis van categorie of grammatica.
+Impact, bondage en andere sterk rol-geassocieerde handelingen worden **niet** in deze release gebulksplitst. Ze wachten op item-per-item role-affinity-audit zodat Dynamic niet onnodig verdubbelt. Worship, toys en anatomy/equipment-gevoelige gevallen blijven eveneens apart staan totdat de labels ondubbelzinnig zijn.
 
 ## Pre-launch migratie
 
