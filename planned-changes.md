@@ -54,6 +54,12 @@ display copy, Dutch aliases join full-catalog search, and the retired positional
 v2 QR decoder is pinned to its own immutable historical ID order before the
 active catalog changes.
 
+The stacked content slice is in progress on `feature/catalog-content-v2`. It
+applies all 155 audited change rows except the explicit pegging gate, retires
+five composite/duplicate questions without copying answers, and adds the 30
+reviewed Release-A questions with zero propagation metadata. “Auto
+masturbation” remains absent until its meaning is confirmed.
+
 No catalog generations or permanent v1/v2 dual engine: there is no public
 legacy population to justify that complexity. The pre-launch migration maps v1
 Full to Deep Dive and Quick/Balanced/no-setup to Dynamic while preserving

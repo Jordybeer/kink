@@ -84,13 +84,13 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "rimmen", "anale_training",
   ],
   foot_worship: [
-    "feet", "hoge_hakken_aanbidding", "footjob", "voetgeur", "trampling_voeten",
+    "feet", "hoge_hakken_aanbidding", "footjob", "voetgeur",
     "voeten_in_gezicht", "voeten_in_mond", "voet_vernedering", "voetslaaf", "laarzen_aanbidding",
   ],
   scent: ["geur_scent_fetish", "voetgeur", "panty_sniffing"],
   little_ageplay: [
     "little_speelgoed", "ddlg_mdlb_dynamiek", "little_space", "baby_infantiliteit",
-    "fopspeen_fles", "luiers_dragen", "luiers_gebruik",
+    "fopspeen_fles", "luiers_dragen",
   ],
   pet_play: [
     "furry", "petplay_collar_id", "petplay_puppy", "petplay_kitten", "petplay_pony",
