@@ -43,13 +43,13 @@ const DIRECTIONS: Array<{
   {
     value: "dominant",
     label: "Dominant",
-    description: "Dit profiel beschrijft mijn leidende of gevende kant.",
+    description: "Antwoord vanuit mijn dominante dynamiek.",
     icon: Crown,
   },
   {
     value: "submissive",
     label: "Submissive",
-    description: "Dit profiel beschrijft mijn ontvangende of volgende kant.",
+    description: "Antwoord vanuit mijn submissieve dynamiek.",
     icon: Heart,
   },
   {

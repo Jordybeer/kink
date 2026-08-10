@@ -41,16 +41,15 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     expect(overflow).toBe(false);
   });
 
-  test("Impact Play categorie is zichtbaar in lijst", async ({ page }) => {
-    await expect(page.locator("text=Impact Play").first()).toBeVisible();
+  test("Impact Play categorie is zichtbaar in de bewerkmodus", async ({ page }) => {
+    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await expect(page.getByText("Impact Play", { exact: true }).first()).toBeVisible();
   });
 
   test("tabblad 'Bewerken' opent bewerkingsmodus", async ({ page }) => {
     const editTab = page.getByRole("tab", { name: "Bewerken" });
-    if (await editTab.count() > 0) {
-      await editTab.first().click();
-      await expect(page.locator("text=Impact Play").first()).toBeVisible();
-    }
+    await editTab.click();
+    await expect(page.locator("button[aria-pressed]").first()).toBeVisible();
   });
 
   test("kink-status instellen via de triage-stapel", async ({ page }) => {

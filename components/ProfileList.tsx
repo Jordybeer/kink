@@ -15,7 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
-import { getQuestionnaireKinks } from "@/lib/questionnaire";
+import { getQuestionnaireRuntime } from "@/lib/questionnaire";
 import { getProfileType } from "@/lib/profileType";
 import { avatarStyle } from "@/lib/avatar";
 import Sheet, { SheetContent } from "@/components/Sheet";
@@ -310,9 +310,12 @@ function ProfileRow({
   onPin: () => void;
   onDelete: () => void;
 }) {
-  const questionnaireKinks = getQuestionnaireKinks(profile);
-  const questionnaireTotal = questionnaireKinks.length;
-  const ratedCount = questionnaireKinks.filter((kink) => profile.entries[kink.id]?.status).length;
+  const runtime = getQuestionnaireRuntime(profile);
+  const deepDive = runtime.intent.kind === "deepDive";
+  const questionnaireTotal = deepDive ? runtime.visibleKinks.length : runtime.coverage.total;
+  const ratedCount = deepDive
+    ? runtime.visibleKinks.filter((kink) => profile.entries[kink.id]?.status).length
+    : runtime.coverage.answered;
   const progress = questionnaireTotal > 0 ? Math.min(100, Math.round((ratedCount / questionnaireTotal) * 100)) : 0;
   const shared = getProfileType(profile, pinnedProfileId) === "partner";
 
