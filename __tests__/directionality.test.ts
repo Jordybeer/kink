@@ -19,6 +19,7 @@ import {
 } from "@/lib/questionnaireEngine";
 import { encodeProfile, decodeAny } from "@/lib/shareProfile";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
+import { migrateStoredDirectionalityV20, STORE_PERSIST_VERSION } from "@/lib/storeCore";
 import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
 
 function ownProfile(perspective: ProfilePerspective, entries: Record<string, KinkEntry> = {}): Profile {
@@ -170,6 +171,30 @@ describe("directionele kinkvragen", () => {
     expect(roleRetired.spanking_hand_give).toBeUndefined();
     expect(roleRetired.spanking_hand_receive).toBeUndefined();
     expect(roleRetired.sound_deprivation).toBeUndefined();
+  });
+
+  it("migreert een bestaande v19 store naar v20 zonder ambigue directionality te behouden", () => {
+    expect(STORE_PERSIST_VERSION).toBe(20);
+    const profile = ownProfile("dominant", {
+      spanking_hand: { status: "yes", comment: "oud C" },
+      anal_sex: { status: "willing", comment: "oud B" },
+      praise_kink: { status: "maybe", comment: "blijft" },
+    });
+    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 19);
+
+    expect(migrated.profiles?.[0].entries.spanking_hand).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.anal_sex).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.spanking_hand_give).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.spanking_hand_receive).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");
+  });
+
+  it("laat v20 state ongemoeid door dezelfde migratieboundary", () => {
+    const profile = ownProfile("dominant", {
+      spanking_hand_give: { status: "yes", comment: "expliciet" },
+    });
+    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);
+    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");
   });
 
   it("sanitizes and shares both explicit directions independently", () => {

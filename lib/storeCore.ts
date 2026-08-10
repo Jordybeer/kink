@@ -86,6 +86,18 @@ const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 // and the 30-cap becomes a rolling month instead of a burst of noise.
 const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
+export const STORE_PERSIST_VERSION = 20;
+
+export function migrateStoredDirectionalityV20<T extends { profiles?: Profile[] }>(
+  state: T,
+  version: number,
+): T {
+  if (version < STORE_PERSIST_VERSION && state.profiles) {
+    state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);
+  }
+  return state;
+}
+
 export const useStore = create<State>()(
   persist(
     (set, get) => {
@@ -576,7 +588,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 19,
+      version: STORE_PERSIST_VERSION,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -684,9 +696,7 @@ export const useStore = create<State>()(
         if (version < 18 && state.profiles) {
           state.profiles = normalizeStoredQuestionnaireProfiles(state.profiles);
         }
-        if (version < 19 && state.profiles) {
-          state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);
-        }
+        migrateStoredDirectionalityV20(state, version);
         return state;
       },
     }
