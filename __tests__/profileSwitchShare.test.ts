@@ -99,9 +99,12 @@ describe("Switch profile sharing", () => {
     expect(dominant.perspective).toBe("dominant");
     expect(submissive.role).toBe("Submissive");
     expect(submissive.perspective).toBe("submissive");
-    expect(dominant.personGroupId).toBe(GROUP_ID);
-    expect(submissive.personGroupId).toBe(GROUP_ID);
+    expect(dominant.personGroupId).toBeTruthy();
+    expect(dominant.personGroupId).toBe(submissive.personGroupId);
+    expect(dominant.personGroupId).not.toBe(GROUP_ID);
+    expect(dominant.personGroupId).toMatch(/^shared-switch:/);
     expect(dominant.switchShareProof).toEqual(submissive.switchShareProof);
+    expect(dominant.switchShareProof).not.toHaveProperty("groupId");
     expect(dominant.entries.pegging_give?.status).toBe("yes");
     expect(dominant.entries.pegging_receive).toBeUndefined();
     expect(submissive.entries.pegging_receive?.status).toBe("willing");
@@ -122,6 +125,7 @@ describe("Switch profile sharing", () => {
     const decodedAgain = await decodeSwitchProfileShare(second.encoded);
 
     expect(decodedAgain.map((profile) => profile.perspective)).toEqual(["dominant", "submissive"]);
+    expect(decodedAgain[0].personGroupId).toBe(imported[0].personGroupId);
     expect(decodedAgain[0].entries.pegging_give?.status).toBe("yes");
     expect(decodedAgain[1].entries.pegging_receive?.status).toBe("willing");
   });
@@ -177,7 +181,7 @@ describe("Switch profile sharing", () => {
     await expect(decodeSwitchProfileShare(tampered)).rejects.toThrow("Switch-koppeling");
   });
 
-  it("survives backup sanitization without allowing an unsigned local group injection", async () => {
+  it("restores only a locally derived group id after backup sanitization", async () => {
     const source = await sealedSwitch();
     const transport = await encodeSwitchProfileShareTransport(
       source.dominant,
@@ -185,11 +189,14 @@ describe("Switch profile sharing", () => {
       { ownerKeys: source.ownerKeys },
     );
     const imported = await decodeSwitchProfileShare(transport.encoded);
+    const importedGroupId = imported[0].personGroupId;
     const restored = await prepareBackupRestore({ source: "shared", profiles: imported });
 
+    expect(importedGroupId).toBeTruthy();
+    expect(importedGroupId).not.toBe(GROUP_ID);
     expect(restored.profiles).toHaveLength(2);
-    expect(restored.profiles[0].personGroupId).toBe(GROUP_ID);
-    expect(restored.profiles[1].personGroupId).toBe(GROUP_ID);
+    expect(restored.profiles[0].personGroupId).toBe(importedGroupId);
+    expect(restored.profiles[1].personGroupId).toBe(importedGroupId);
     expect(restored.profiles.map((profile) => profile.perspective)).toEqual(["dominant", "submissive"]);
   });
 
