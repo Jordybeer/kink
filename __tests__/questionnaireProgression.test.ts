@@ -6,6 +6,7 @@ import {
   unansweredQuestionnaireProgressionParents,
 } from "@/lib/questionnaireProgression";
 import {
+  rankQuestionnaireCandidates,
   selectConversationQuestion,
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
@@ -25,6 +26,12 @@ function item(kinkId: string): QuestionnaireQueueItem {
   };
 }
 
+function kinkAtForcedLevel(kinkId: string, level: Kink["level"]): Kink {
+  const kink = BY_ID.get(kinkId);
+  if (!kink) throw new Error(`Missing catalog kink ${kinkId}`);
+  return { ...kink, level };
+}
+
 describe("questionnaire progression gates", () => {
   it("verwijst alleen naar bestaande catalogusitems en klimt niet naar een lager catalogusniveau", () => {
     for (const [parentId, childId] of QUESTIONNAIRE_PROGRESSION_EDGES) {
@@ -36,12 +43,57 @@ describe("questionnaire progression gates", () => {
     }
   });
 
+  it("bevat geen progression-cyclus", () => {
+    const childrenByParent = new Map<string, string[]>();
+    const indegree = new Map<string, number>();
+
+    for (const [parentId, childId] of QUESTIONNAIRE_PROGRESSION_EDGES) {
+      indegree.set(parentId, indegree.get(parentId) ?? 0);
+      indegree.set(childId, (indegree.get(childId) ?? 0) + 1);
+      childrenByParent.set(parentId, [...(childrenByParent.get(parentId) ?? []), childId]);
+    }
+
+    const ready = [...indegree]
+      .filter(([, degree]) => degree === 0)
+      .map(([kinkId]) => kinkId);
+    let visited = 0;
+
+    while (ready.length > 0) {
+      const parentId = ready.shift()!;
+      visited += 1;
+      for (const childId of childrenByParent.get(parentId) ?? []) {
+        const nextDegree = (indegree.get(childId) ?? 0) - 1;
+        indegree.set(childId, nextDegree);
+        if (nextDegree === 0) ready.push(childId);
+      }
+    }
+
+    expect(visited).toBe(indegree.size);
+  });
+
   it("vraagt golden shower ontvangen vóór urine in mond wanneer beide klaarstaan", () => {
     const child = item("urine_intiem");
     const parent = item("watersports_ontvangen");
 
     const selected = selectConversationQuestion([child, parent], KINKS);
     expect(selected?.kink.id).toBe("watersports_ontvangen");
+  });
+
+  it("herstelt na ranking en diversiteit ook een volledige drie-staps waterval", () => {
+    const adultContent = kinkAtForcedLevel("adult_content_creation", 1);
+    const recording = kinkAtForcedLevel("recording", 1);
+    const photography = kinkAtForcedLevel("nude_photography", 4);
+
+    const ranked = rankQuestionnaireCandidates(
+      [adultContent, recording, photography],
+      {},
+    );
+
+    expect(ranked.map((kink) => kink.id)).toEqual([
+      "nude_photography",
+      "recording",
+      "adult_content_creation",
+    ]);
   });
 
   it("maakt de verdieping weer vrij zodra de ingang expliciet beantwoord is, ongeacht het antwoord", () => {
