@@ -77,9 +77,7 @@ mapping version 2 while preserving every @1 source-target pair, and documents
 rejected suggestive associations. “Auto masturbation” was explicitly dropped
 from scope; it is not an open gate.
 
-One product gate remains before its specific code lands: how explicit
-pegging-giving/receiving IDs should take part in complementary matching without
-using Dominant/Submissive as an answer proxy.
+The original Pegging product gate is shipped. Directionality Release B now audits the catalog with the same anti-inference contract: high-confidence role-neutral sexual actions become explicit complementary pairs, while impact/bondage stay deferred behind a role-affinity eligibility pass so Dynamic does not balloon.
 
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 

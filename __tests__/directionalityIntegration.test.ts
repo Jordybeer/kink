@@ -44,6 +44,12 @@ describe("directionality consumer contract", () => {
     expect(pegging.sourceEntry.status).toBe("yes");
     expect(pegging.partnerEntry.status).toBe("maybe");
 
+    const goldenA = { watersports_geven: entry("yes") };
+    const goldenB = { watersports_ontvangen: entry("willing") };
+    const golden = directionalComparisonEntries(goldenA, goldenB, "watersports_geven");
+    expect(golden.partnerKinkId).toBe("watersports_ontvangen");
+    expect(golden.partnerEntry.status).toBe("willing");
+
     const spanking = directionalComparisonEntries(a, b, "spanking_hand");
     expect(spanking.partnerKinkId).toBe("spanking_hand");
     expect(spanking.partnerEntry.status).toBe("yes");
@@ -65,23 +71,27 @@ describe("directionality consumer contract", () => {
     expect(snapshot.entries.pegging).toBeUndefined();
   });
 
-  it("records scene usage on A's concrete direction and B's complementary direction", () => {
-    const aId = useStore.getState().createProfile("A", "Dominant");
-    const bId = useStore.getState().createProfile("B", "Submissive");
-    const sceneId = useStore.getState().saveScene({
-      title: "Directionele scène",
-      profileAId: aId, profileBId: bId, profileAName: "A", profileBName: "B",
-      items: [{ id: "peg", name: "Pegging — geven ↔ ontvangen", kinkId: "pegging_give", intensity: "midden", duration: "", note: "", fromKink: true }],
-      status: "planned",
-    });
-    useStore.getState().completeScene(sceneId, { completedAt: Date.now(), trafficLight: "green", wentWell: "", remember: "" });
+  it("records scene usage on A's concrete direction and B's complementary direction generically", () => {
+    for (const [kinkId, partnerId] of [
+      ["pegging_give", "pegging_receive"],
+      ["fisting_anal_give", "fisting_anal_receive"],
+    ] as const) {
+      useStore.setState(useStore.getInitialState());
+      const aId = useStore.getState().createProfile("A", "Dominant");
+      const bId = useStore.getState().createProfile("B", "Submissive");
+      const sceneId = useStore.getState().saveScene({
+        title: "Directionele scène",
+        profileAId: aId, profileBId: bId, profileAName: "A", profileBName: "B",
+        items: [{ id: kinkId, name: kinkId, kinkId, intensity: "midden", duration: "", note: "", fromKink: true }],
+        status: "planned",
+      });
+      useStore.getState().completeScene(sceneId, { completedAt: Date.now(), trafficLight: "green", wentWell: "", remember: "" });
 
-    const a = useStore.getState().profiles.find((candidate) => candidate.id === aId)!;
-    const b = useStore.getState().profiles.find((candidate) => candidate.id === bId)!;
-    expect(a.entries.pegging_give?.usedInScene).toBe(1);
-    expect(a.entries.pegging_receive?.usedInScene).toBeUndefined();
-    expect(b.entries.pegging_receive?.usedInScene).toBe(1);
-    expect(b.entries.pegging_give?.usedInScene).toBeUndefined();
+      const a = useStore.getState().profiles.find((candidate) => candidate.id === aId)!;
+      const b = useStore.getState().profiles.find((candidate) => candidate.id === bId)!;
+      expect(a.entries[kinkId]?.usedInScene, kinkId).toBe(1);
+      expect(b.entries[partnerId]?.usedInScene, partnerId).toBe(1);
+    }
   });
 
   it("keeps both concrete directions separate in a signed consent snapshot", async () => {
@@ -101,6 +111,8 @@ describe("directionality consumer contract", () => {
     const original = profile("qr-owner", {
       pegging_give: entry("yes", { comment: "geven" }),
       pegging_receive: entry("hard_no", { comment: "ontvangen grens" }),
+      fisting_anal_give: entry("willing", { comment: "fisten geven" }),
+      fisting_anal_receive: entry("maybe", { comment: "fisten ontvangen" }),
       spanking_hand: entry("maybe", { comment: noise(9000) }),
     });
     const encoded = await encodeProfileV3(original);
@@ -125,7 +137,10 @@ describe("directionality consumer contract", () => {
     const decoded = await decodeSharedProfile(payload!);
     expect(decoded.entries.pegging_give?.status).toBe("yes");
     expect(decoded.entries.pegging_receive?.status).toBe("hard_no");
+    expect(decoded.entries.fisting_anal_give?.status).toBe("willing");
+    expect(decoded.entries.fisting_anal_receive?.status).toBe("maybe");
     expect(decoded.entries.pegging).toBeUndefined();
+    expect(decoded.entries.fisting_anal).toBeUndefined();
   });
 
   it("does not leak or synthesize the private sibling during profile sharing", async () => {

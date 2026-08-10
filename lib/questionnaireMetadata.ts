@@ -84,11 +84,12 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "plas_desperation", "buiten_plassen", "plas_in_kleding", "plas_slaaf",
   ],
   anal: [
-    "anal_sex", "anal_fingering", "pegging_give", "pegging_receive", "butt_plug", "anal_beads", "fisting_anal",
-    "rimmen", "anale_training",
+    "anal_sex_give", "anal_sex_receive", "anal_fingering_give", "anal_fingering_receive",
+    "pegging_give", "pegging_receive", "butt_plug", "anal_beads",
+    "fisting_anal_give", "fisting_anal_receive", "rimming_give", "rimming_receive", "anale_training",
   ],
   foot_focus: [
-    "feet", "hoge_hakken_aanbidding", "footjob", "voetgeur",
+    "feet", "hoge_hakken_aanbidding", "footjob_give", "footjob_receive", "voetgeur",
     "voeten_in_gezicht", "voeten_in_mond", "voet_vernedering", "voetslaaf", "laarzen_aanbidding",
   ],
   scent: ["geur_scent_fetish", "voetgeur", "panty_sniffing"],
@@ -146,9 +147,9 @@ export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
   body_focus: ["thigh_focus", "feet"],
   materials_scent: ["lingerie", "geur_scent_fetish"],
   pet_play: ["petplay_collar_id", "petplay_puppy"],
-  fluids: ["cum_play", "watersports_geven", "spitting"],
+  fluids: ["cum_play", "drool_play", "spitting"],
   toys: ["vibration_play", "remote_toy"],
-  penetration: ["anal_fingering", "pegging_give", "pegging_receive"],
+  penetration: ["butt_plug", "pegging_give", "pegging_receive"],
   aftercare: ["aftercare_physical", "aftercare_alone", "next_day_check_in"],
   appearance: ["hoge_hakken_dragen", "smeared_makeup"],
   adult_ageplay: ["little_speelgoed", "ddlg_mdlb_dynamiek", "luiers_dragen"],
@@ -190,9 +191,9 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["orgasm_control", "orgasm_denial"],
   ["exhibitionism", "being_watched"],
   ["voyeurism", "watching_others"],
-  ["watersports_geven", "watersports_ontvangen"],
   ["watersports_ontvangen", "urine_intiem"],
-  ["anal_fingering", "anal_sex"],
+  ["anal_fingering_give", "anal_sex_give"],
+  ["anal_fingering_receive", "anal_sex_receive"],
   ["geur_scent_fetish", "panty_sniffing"],
   ["little_speelgoed", "little_space"],
   ["petplay_puppy", "petplay_harnas"],
@@ -226,7 +227,6 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
   orgasm_control: ["orgasm_denial"],
   exhibitionism: ["being_watched"],
   voyeurism: ["watching_others"],
-  watersports_geven: ["watersports_ontvangen"],
   watersports_ontvangen: ["urine_intiem"],
   geur_scent_fetish: ["panty_sniffing"],
   petplay_puppy: ["petplay_harnas"],
@@ -237,7 +237,8 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
   nude_photography: ["recording"],
   recording: ["adult_content_creation"],
   partner_masturbation_watch: ["mutual_masturbation"],
-  anal_fingering: ["anal_sex"],
+  anal_fingering_give: ["anal_sex_give"],
+  anal_fingering_receive: ["anal_sex_receive"],
   luiers_dragen: ["diaper_wetting"],
   diaper_wetting: ["diaper_changing"],
   diaper_messing: ["diaper_changing"],
@@ -252,7 +253,7 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
  * blijft vastgepind, zodat reloads of catalogusherschikking een oud positief
  * antwoord nooit een tweede expansionbeurt geven. Er is bewust geen fallback.
  */
-export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 2;
+export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 3;
 
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
   spanking_hand: "spanking_implement",
@@ -263,7 +264,6 @@ export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, stri
   orgasm_control: "orgasm_denial",
   exhibitionism: "being_watched",
   voyeurism: "watching_others",
-  watersports_geven: "watersports_ontvangen",
   watersports_ontvangen: "urine_intiem",
   geur_scent_fetish: "panty_sniffing",
   petplay_puppy: "petplay_harnas",
@@ -274,7 +274,8 @@ export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, stri
   nude_photography: "recording",
   recording: "adult_content_creation",
   partner_masturbation_watch: "mutual_masturbation",
-  anal_fingering: "anal_sex",
+  anal_fingering_give: "anal_sex_give",
+  anal_fingering_receive: "anal_sex_receive",
   luiers_dragen: "diaper_wetting",
   diaper_wetting: "diaper_changing",
   diaper_messing: "diaper_changing",
