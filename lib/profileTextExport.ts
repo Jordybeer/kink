@@ -1,5 +1,5 @@
 import type { Profile } from "@/types";
-import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
+import { CATEGORIES, getKinksByCategoryAndLevel, kinkCategoryLabel } from "@/lib/kinks";
 import { profileExportResponse } from "@/lib/privateResponses";
 
 interface ProfileTextExportOptions {
@@ -30,7 +30,7 @@ export function buildProfileTextExport(
     });
 
     if (!rows.length) continue;
-    lines.push(`## ${category}`, ...rows, "");
+    lines.push(`## ${kinkCategoryLabel(category)}`, ...rows, "");
   }
 
   const customRows = (profile.customKinks ?? []).flatMap((custom) => {

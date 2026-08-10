@@ -13,7 +13,7 @@ import {
   UserMinus,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { CATEGORIES, KINKS, LEVEL_MAX } from "@/lib/kinks";
+import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
 import {
   buildQuestionnaireDiscoveryWave,
   getQuestionnaireRuntime,
@@ -27,7 +27,7 @@ import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
-import type { Kink, KinkStatus } from "@/types";
+import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
@@ -81,9 +81,9 @@ export default function ProfilePage({ params }: Props) {
 
   const [activeTab, setActiveTab] = useState<ProfileTab | null>(null);
   const [tabDirection, setTabDirection] = useState<1 | -1>(1);
-  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
+  const [activeCategory, setActiveCategory] = useState<KinkCategoryId>(CATEGORIES[0]);
   const [search, setSearch] = useState("");
-  const [deckFocus, setDeckFocus] = useState<string | null>(null);
+  const [deckFocus, setDeckFocus] = useState<KinkCategoryId | null>(null);
   const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>("dynamic");
   const [discoveryWaveIds, setDiscoveryWaveIds] = useState<string[]>([]);
   const [customInput, setCustomInput] = useState("");
@@ -112,8 +112,9 @@ export default function ProfilePage({ params }: Props) {
   );
   const visibleKinks = questionnaireRuntime?.visibleKinks ?? EMPTY_KINKS;
   const kinksByCategory = useMemo(() => {
-    const groups = new Map<string, Kink[]>();
+    const groups = new Map<KinkCategoryId, Kink[]>();
     for (const kink of visibleKinks) {
+      if (kink.category === "custom") continue;
       const group = groups.get(kink.category) ?? [];
       group.push(kink);
       groups.set(kink.category, group);
@@ -461,7 +462,7 @@ export default function ProfilePage({ params }: Props) {
                             ? { background: "var(--accent)", color: "var(--on-accent)" }
                             : { border: "1px solid var(--border)", color: "var(--text2)" }}
                         >
-                          {category}
+                          {kinkCategoryLabel(category)}
                         </button>
                       ))}
                     </div>
@@ -563,7 +564,7 @@ export default function ProfilePage({ params }: Props) {
                           const customAsKink: Kink = {
                             id: custom.id,
                             name: custom.name,
-                            category: "Meer",
+                            category: "custom",
                             level: 1,
                           };
                           return (

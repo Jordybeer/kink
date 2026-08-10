@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowUp, FileText, FilmSlate } from "@phosphor-icons/react";
 import CompareKinkRow from "@/components/CompareKinkRow";
-import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
+import { CATEGORIES, getKinksByCategory, kinkCategoryLabel } from "@/lib/kinks";
 import {
   getCompareEntry,
   mergeCustomKinks,
@@ -77,7 +77,7 @@ export default function CompareResults({
                 color: "var(--text)",
               }}
             >
-              {category}
+              {kinkCategoryLabel(category)}
             </h2>
             <div className="flex flex-col gap-2">
               {kinks.map((kink) => {

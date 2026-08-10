@@ -8,7 +8,7 @@ import {
   MAX_KINK_MATCH_SCORE,
   profileMatchScore,
 } from "@/lib/matching";
-import type { KinkEntry, Profile } from "@/types";
+import type { KinkCategoryId, KinkEntry, Profile } from "@/types";
 
 export const PROFILE_COLOUR_A = "var(--identity-a)";
 export const PROFILE_COLOUR_B = "var(--identity-b)";
@@ -16,7 +16,7 @@ export const PROFILE_COLOUR_B = "var(--identity-b)";
 export type CompareFilterMode = "all" | "match" | "conflict" | "hardno";
 
 export interface CompareCategoryScore {
-  category: string;
+  category: KinkCategoryId;
   rated: number;
   compared: number;
   rate: number | null;

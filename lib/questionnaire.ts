@@ -1,4 +1,5 @@
 import { KINKS, LEVEL_MAX } from "@/lib/kinks";
+import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
 import {
   derivePendingExpansionProbes,
   rankQuestionnaireCandidates,
@@ -16,6 +17,7 @@ import {
 import type {
   DynamicQuestionnaireSetup,
   Kink,
+  KinkCategory,
   Profile,
   QuestionnaireInterest,
   QuestionnaireMode,
@@ -184,11 +186,21 @@ const INTEREST_TERMS: Record<QuestionnaireInterest, string[]> = {
 };
 
 function searchable(kink: Kink): string {
-  return `${kink.name} ${kink.category} ${kink.description ?? ""}`.toLowerCase();
+  return [
+    kink.name,
+    ...(kink.aliases ?? []),
+    ...kinkCategorySearchTerms(kink.category),
+    kink.description ?? "",
+    kink.safetyNote ?? "",
+  ].join(" ").toLowerCase();
 }
 
 function labelSearchable(kink: Kink): string {
-  return `${kink.name} ${kink.category}`.toLowerCase();
+  return [
+    kink.name,
+    ...(kink.aliases ?? []),
+    ...kinkCategorySearchTerms(kink.category),
+  ].join(" ").toLowerCase();
 }
 
 function matchesTerms(kink: Kink, terms: string[]): boolean {
@@ -422,7 +434,7 @@ export function getAdaptiveQuestionQueue(profile: Profile): Kink[] {
   return getQuestionnaireRuntime(profile).queue.map((item) => item.kink);
 }
 
-export function getQuestionnaireKinksByCategory(profile: Profile, category: string): Kink[] {
+export function getQuestionnaireKinksByCategory(profile: Profile, category: KinkCategory): Kink[] {
   return getQuestionnaireKinks(profile).filter((kink) => kink.category === category);
 }
 

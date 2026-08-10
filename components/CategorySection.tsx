@@ -3,11 +3,12 @@ import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { ArrowUp, CaretDown, CaretRight } from "@phosphor-icons/react";
-import type { Kink, KinkEntry } from "@/types";
+import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
+import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import KinkListRow from "./KinkListRow";
 
 interface Props {
-  category: string;
+  category: KinkCategoryId;
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onEdit: (kink: Kink) => void;
@@ -37,7 +38,8 @@ export default function CategorySection({
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
   const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
-  const headingId = `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const label = kinkCategoryLabel(category);
+  const headingId = `category-${category}`;
 
   return (
     <section className="mb-3" aria-labelledby={headingId}>
@@ -65,7 +67,7 @@ export default function CategorySection({
             className="text-base flex-1 text-left truncate"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
           >
-            {category}
+            {label}
           </h2>
           <div className="flex items-center gap-1.5 flex-none" aria-label={`${filled} van ${kinks.length} beoordeeld`}>
             <div className="flex gap-0.5 items-center" aria-hidden="true">
@@ -94,7 +96,7 @@ export default function CategorySection({
             if (undoTimer.current) clearTimeout(undoTimer.current);
             undoTimer.current = setTimeout(() => setUndoPending(false), 3000);
           }}
-          aria-label={`Alle kinks in ${category} overslaan`}
+          aria-label={`Alle kinks in ${label} overslaan`}
           className="focus-ring mr-2 min-h-11 flex-none rounded-full px-3 text-xs transition-colors"
           style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
           onMouseEnter={(event) => {

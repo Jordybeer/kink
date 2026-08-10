@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { encodeProfile, decodeProfile, encodeProfileCompact, decodeProfileCompact, decodeAny } from "@/lib/shareProfile";
-import type { Profile } from "@/types";
+import { encodeProfile, decodeProfile, decodeProfileCompact, decodeAny } from "@/lib/shareProfile";
+import { LEGACY_COMPACT_KINK_IDS_V2 } from "@/lib/legacyCompactCatalog";
+import type { KinkEntry, Profile } from "@/types";
 
 const BASE_PROFILE: Profile = {
   id: "test-id",
@@ -18,6 +19,56 @@ const BASE_PROFILE: Profile = {
     flogging: { status: "maybe", desire: 3, experienced: null, score: null, comment: "" },
   },
 };
+
+const LEGACY_STATUS_ENC: Record<NonNullable<KinkEntry["status"]>, string> = {
+  yes: "y",
+  willing: "g",
+  maybe: "m",
+  no: "n",
+  hard_no: "H",
+};
+
+function legacyV2Fixture(
+  profile: Profile,
+  options: { includePrivateResponses?: boolean; includeFetLife?: boolean } = {},
+): string {
+  const mayShare = (entry: KinkEntry | undefined) =>
+    options.includePrivateResponses === true || entry?.privateResponse !== true;
+  const statusChars = LEGACY_COMPACT_KINK_IDS_V2.map((id) => {
+    const entry = profile.entries[id];
+    return mayShare(entry) && entry?.status ? LEGACY_STATUS_ENC[entry.status] : " ";
+  }).join("");
+  const privateChars = options.includePrivateResponses
+    ? LEGACY_COMPACT_KINK_IDS_V2.map((id) => profile.entries[id]?.privateResponse ? "1" : " ").join("")
+    : "";
+  const customKinks = (profile.customKinks ?? []).filter((kink) => mayShare(profile.entries[kink.id]));
+  const payload: Record<string, unknown> = {
+    v: 2,
+    id: profile.id,
+    n: profile.name,
+    r: profile.role,
+    e: profile.experienceLevel,
+    ca: profile.createdAt,
+    ua: profile.updatedAt,
+    s: statusChars,
+  };
+  if (privateChars.includes("1")) payload.p = privateChars;
+  if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
+  if (options.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
+  if (customKinks.length) {
+    payload.ck = customKinks.map((kink) => {
+      const status = profile.entries[kink.id]?.status;
+      return [kink.id, kink.name, status ? LEGACY_STATUS_ENC[status] : " "];
+    });
+  }
+  if (options.includePrivateResponses) {
+    const privateCustomIds = customKinks
+      .filter((kink) => profile.entries[kink.id]?.privateResponse)
+      .map((kink) => kink.id);
+    if (privateCustomIds.length) payload.pk = privateCustomIds;
+  }
+  return btoa(JSON.stringify(payload));
+}
 
 describe("encodeProfile / decodeProfile", () => {
   it("round-trips a safe profile share (avatar, FL and private answers stripped by default)", () => {
@@ -113,9 +164,9 @@ describe("encodeProfile / decodeProfile", () => {
   });
 });
 
-describe("encodeProfileCompact / decodeProfileCompact", () => {
+describe("legacy v2 compact decoder", () => {
   it("round-trips name, role, and experienceLevel", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
+    const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
     expect(decoded.role).toBe("Switch");
     expect(decoded.experienceLevel).toBe("gevorderd");
@@ -132,7 +183,7 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
         spanking_implement: { status: "hard_no", desire: null, experienced: null, score: null, comment: "" },
       },
     };
-    const decoded = decodeProfileCompact(encodeProfileCompact(profile));
+    const decoded = decodeProfileCompact(legacyV2Fixture(profile));
     expect(decoded.entries.spanking_hand.status).toBe("yes");
     expect(decoded.entries.flogging.status).toBe("willing");
     expect(decoded.entries.caning.status).toBe("maybe");
@@ -148,7 +199,7 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
         custom_1: { status: "willing", comment: "", privateResponse: true },
       },
     };
-    const decoded = decodeProfileCompact(encodeProfileCompact(profile));
+    const decoded = decodeProfileCompact(legacyV2Fixture(profile));
     expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.custom_1).toBeUndefined();
     expect(decoded.customKinks).toEqual([]);
@@ -162,20 +213,20 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
         custom_1: { status: "willing", comment: "", privateResponse: true },
       },
     };
-    const decoded = decodeProfileCompact(encodeProfileCompact(profile, { includePrivateResponses: true }));
+    const decoded = decodeProfileCompact(legacyV2Fixture(profile, { includePrivateResponses: true }));
     expect(decoded.entries.spanking_hand.privateResponse).toBe(true);
     expect(decoded.entries.custom_1.privateResponse).toBe(true);
     expect(decoded.customKinks[0].name).toBe("Eigen ding");
   });
 
   it("drops desire and experienced to keep QR url short", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
+    const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.flogging.desire).toBeNull();
   });
 
   it("strips comments and tags from visible QR answers", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
+    const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.entries.flogging.comment).toBe("");
     expect(decoded.entries.flogging.tags).toBeUndefined();
   });
@@ -188,30 +239,30 @@ describe("encodeProfileCompact / decodeProfileCompact", () => {
         custom_1: { status: "willing", comment: "" },
       },
     };
-    const decoded = decodeProfileCompact(encodeProfileCompact(profile));
+    const decoded = decodeProfileCompact(legacyV2Fixture(profile));
     expect(decoded.customKinks).toHaveLength(1);
     expect(decoded.customKinks[0].name).toBe("Eigen ding");
     expect(decoded.entries.custom_1.status).toBe("willing");
   });
 
   it("marks decoded profile as imported", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
+    const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.isImported).toBe(true);
   });
 
   it("includes fetLifeUsername when includeFetLife is true", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE, { includeFetLife: true }));
+    const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE, { includeFetLife: true }));
     expect(decoded.fetLifeUsername).toBe("jordybeer");
   });
 
   it("strips fetLifeUsername by default", () => {
-    const decoded = decodeProfileCompact(encodeProfileCompact(BASE_PROFILE));
+    const decoded = decodeProfileCompact(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.fetLifeUsername).toBeUndefined();
   });
 
   it("preserves null statuses as absent entries", () => {
     const profile: Profile = { ...BASE_PROFILE, entries: {} };
-    const decoded = decodeProfileCompact(encodeProfileCompact(profile));
+    const decoded = decodeProfileCompact(legacyV2Fixture(profile));
     expect(Object.keys(decoded.entries)).toHaveLength(0);
   });
 });
@@ -224,7 +275,7 @@ describe("decodeAny", () => {
   });
 
   it("decodes safe v2 compact profiles without private answers", () => {
-    const decoded = decodeAny(encodeProfileCompact(BASE_PROFILE));
+    const decoded = decodeAny(legacyV2Fixture(BASE_PROFILE));
     expect(decoded.name).toBe("Jordybeer");
     expect(decoded.entries.spanking_hand).toBeUndefined();
     expect(decoded.entries.flogging.status).toBe("maybe");
@@ -253,11 +304,18 @@ describe("legacy give/receive backward compat", () => {
     expect(decoded.entries[Object.keys(decoded.entries)[0]]?.status).toBe("no");
   });
 
-  it("v2: omits sg/sr arrays in new encodes", () => {
-    const encoded = encodeProfileCompact(BASE_PROFILE);
-    const raw = JSON.parse(atob(encoded));
-    expect(raw.sg).toBeUndefined();
-    expect(raw.sr).toBeUndefined();
-    expect(raw.dr).toBeUndefined();
+  it("pins historic positions without consulting the active catalog", () => {
+    expect(LEGACY_COMPACT_KINK_IDS_V2).toHaveLength(266);
+    expect(new Set(LEGACY_COMPACT_KINK_IDS_V2).size).toBe(266);
+    expect(LEGACY_COMPACT_KINK_IDS_V2[0]).toBe("spanking_hand");
+    expect(LEGACY_COMPACT_KINK_IDS_V2.at(-1)).toBe("orgasme_op_commando");
+
+    const historicalId = "filmen_prive";
+    const index = LEGACY_COMPACT_KINK_IDS_V2.indexOf(historicalId);
+    const statuses = `${" ".repeat(index)}H`;
+    const encoded = btoa(JSON.stringify({
+      v: 2, id: "historic", n: "Archive", r: "", e: "beginner", ca: 0, ua: 0, s: statuses,
+    }));
+    expect(decodeProfileCompact(encoded).entries[historicalId]?.status).toBe("hard_no");
   });
 });

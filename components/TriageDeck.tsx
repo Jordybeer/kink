@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Circle, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
-import type { Kink, KinkEntry, KinkStatus } from "@/types";
-import { KINKS } from "@/lib/kinks";
+import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
+import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import {
   selectConversationQuestion,
   type QuestionnaireQueueItem,
@@ -23,7 +23,7 @@ interface Props {
   kinks: Kink[];
   queueItems?: QuestionnaireQueueItem[];
   entries: Record<string, KinkEntry>;
-  focusCategory?: string | null;
+  focusCategory?: KinkCategoryId | null;
   progressLabel?: string;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange: (kinkId: string, v: boolean) => void;
@@ -146,7 +146,7 @@ export default function TriageDeck({
           >
             <div className="flex items-center gap-1.5">
               <p className="flex-1 text-xs truncate" style={{ color: "var(--text2)" }}>
-                {current.category} · <span className="tabular-nums">nog {remainingInCat}</span>
+                {kinkCategoryLabel(current.category)} · <span className="tabular-nums">nog {remainingInCat}</span>
               </p>
               <button
                 data-tour="curious"

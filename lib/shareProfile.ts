@@ -1,8 +1,8 @@
 import type { Profile, KinkEntry, KinkStatus, CustomKink } from "@/types";
-import { KINKS } from "@/lib/kinks";
+import { LEGACY_COMPACT_KINK_IDS_V2 } from "@/lib/legacyCompactCatalog";
 import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/profileSanitizePrimitives";
-import { deriveProfileVerificationCode, getProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
+import { deriveProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
 
 interface ShareProfileOptions {
   includeFetLife?: boolean;
@@ -63,69 +63,15 @@ export function decodeProfile(encoded: string): Profile {
 
 // ── v2 encoding (compact fixed-position, used for QR codes) ──────────────────
 
-const S_ENC: Partial<Record<NonNullable<KinkStatus>, string>> = {
-  yes: "y", willing: "g", maybe: "m", no: "n", hard_no: "H",
-};
 const S_DEC: Record<string, KinkStatus> = {
   y: "yes", g: "willing", c: "maybe", m: "maybe", n: "no", H: "hard_no",
 };
-
-export function encodeProfileCompact(profile: Profile, opts?: ShareProfileOptions): string {
-  const includePrivateResponses = opts?.includePrivateResponses === true;
-  const mayShare = (entry: KinkEntry | undefined) =>
-    includePrivateResponses || entry?.privateResponse !== true;
-
-  // One char per kink in KINKS order — status only (desire/experienced omitted to keep QR scannable)
-  const s = KINKS.map(k => {
-    const entry = profile.entries[k.id];
-    if (!mayShare(entry)) return " ";
-    const status = entry?.status;
-    return (status ? S_ENC[status] : undefined) ?? " ";
-  }).join("");
-  const p = includePrivateResponses
-    ? KINKS.map(k => profile.entries[k.id]?.privateResponse ? "1" : " ").join("")
-    : "";
-
-  const shareableCustomKinks = (profile.customKinks ?? []).filter(
-    (custom) => mayShare(profile.entries[custom.id]),
-  );
-  const ck = shareableCustomKinks.map(c => {
-    const entry = profile.entries[c.id];
-    const statusCode = (entry?.status ? S_ENC[entry.status] : undefined) ?? " ";
-    return [c.id, c.name, statusCode];
-  });
-  const pk = includePrivateResponses
-    ? shareableCustomKinks
-        .filter(c => profile.entries[c.id]?.privateResponse)
-        .map(c => c.id)
-    : [];
-
-  const payload: Record<string, unknown> = {
-    v: 2,
-    id: profile.id,
-    vc: getProfileVerificationCode(profile),
-    n: profile.name,
-    r: profile.role,
-    e: profile.experienceLevel,
-    ca: profile.createdAt,
-    ua: profile.updatedAt,
-    s,
-  };
-  if (p.includes("1")) payload.p = p;
-  if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
-  if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
-  if (ck.length) payload.ck = ck;
-  if (pk.length) payload.pk = pk;
-  if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
-
-  return toBase64Url(JSON.stringify(payload));
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
   const entries: Record<string, KinkEntry> = {};
 
-  for (let i = 0; i < KINKS.length; i++) {
+  for (let i = 0; i < LEGACY_COMPACT_KINK_IDS_V2.length; i++) {
     let status = S_DEC[p.s?.[i] ?? ""] ?? null;
     // Legacy QR codes may encode sg/sr/dr — collapse into status for backward compat
     const statusGive = S_DEC[p.sg?.[i] ?? ""] ?? null;
@@ -138,7 +84,7 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     const experienced = p.x?.[i] === "1" ? true : p.x?.[i] === "0" ? false : null;
     const privateResponse = p.p?.[i] === "1";
     if (status !== null || desire !== null || experienced !== null || privateResponse) {
-      entries[KINKS[i].id] = {
+      entries[LEGACY_COMPACT_KINK_IDS_V2[i]] = {
         status,
         desire,
         experienced,

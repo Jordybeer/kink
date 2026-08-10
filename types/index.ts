@@ -13,6 +13,29 @@ export type QuestionnaireInterest =
   | "humiliation"
   | "sexual_social";
 
+export type KinkCategoryId =
+  | "impact"
+  | "bondage"
+  | "power"
+  | "rituals"
+  | "discipline"
+  | "roleplay"
+  | "sensation"
+  | "exhibition"
+  | "media"
+  | "group_partner"
+  | "body_focus"
+  | "materials_scent"
+  | "pet_play"
+  | "fluids"
+  | "toys"
+  | "penetration"
+  | "aftercare"
+  | "appearance"
+  | "adult_ageplay";
+
+export type KinkCategory = KinkCategoryId | "custom";
+
 export interface LegacyQuestionnaireSetup {
   preset: QuestionnairePreset;
   interests: QuestionnaireInterest[];
@@ -35,9 +58,15 @@ export interface CustomKink {
 export interface Kink {
   id: string;
   name: string;
-  category: string;
+  aliases?: readonly string[];
+  category: KinkCategory;
   level: 1 | 2 | 3 | 4;
   description?: string;
+  safetyNote?: string;
+}
+
+export interface CatalogKink extends Kink {
+  category: KinkCategoryId;
 }
 
 export interface KinkEntry {

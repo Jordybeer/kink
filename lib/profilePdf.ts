@@ -1,6 +1,6 @@
 import type { jsPDF as JsPdfType } from "jspdf";
 import type { Profile } from "@/types";
-import { CATEGORIES, getKinksByCategoryAndLevel } from "@/lib/kinks";
+import { CATEGORIES, getKinksByCategoryAndLevel, kinkCategoryLabel } from "@/lib/kinks";
 import { STATUS_LABEL, STATUS_ORDER } from "@/lib/statusLabels";
 import { profileExportResponse, type ProfileExportResponse } from "@/lib/privateResponses";
 import { hexToRgb, PDF_DARK_PAGE, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
@@ -123,7 +123,7 @@ export async function buildProfilePdf(
     doc.setFont("body", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...accent);
-    doc.text(cat.toUpperCase(), margin, y);
+    doc.text(kinkCategoryLabel(cat).toUpperCase(), margin, y);
     y += 5;
     rows.forEach(printRow);
     y += 3;
