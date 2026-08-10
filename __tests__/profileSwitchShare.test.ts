@@ -126,6 +126,38 @@ describe("Switch profile sharing", () => {
     expect(decodedAgain[1].entries.pegging_receive?.status).toBe("willing");
   });
 
+  it("keeps the Switch identity proof valid when only one perspective gets a newer signed version", async () => {
+    const source = await sealedSwitch();
+    const first = await encodeSwitchProfileShareTransport(
+      source.dominant,
+      source.submissive,
+      { ownerKeys: source.ownerKeys },
+    );
+    const dominantKey = source.ownerKeys.find((key) => key.profileId === source.dominant.id);
+    expect(dominantKey).toBeDefined();
+    const changedDominant = {
+      ...source.dominant,
+      updatedAt: source.dominant.updatedAt + 1,
+      entries: {
+        ...source.dominant.entries,
+        pegging_give: { status: "willing" as const, comment: "nieuwe Dom-versie" },
+      },
+    };
+    const resealed = await signProfileConsent(changedDominant, dominantKey!);
+    const updatedDominant = { ...changedDominant, consentProof: resealed.proof };
+
+    const second = await encodeSwitchProfileShareTransport(
+      updatedDominant,
+      source.submissive,
+      { linkProof: first.linkProof },
+    );
+    const decoded = await decodeSwitchProfileShare(second.encoded);
+
+    expect(second.linkProof).toEqual(first.linkProof);
+    expect(decoded[0].entries.pegging_give?.status).toBe("willing");
+    expect(decoded[1].entries.pegging_receive?.status).toBe("willing");
+  });
+
   it("rejects a valid but unrelated submissive profile spliced into the Switch envelope", async () => {
     const source = await sealedSwitch();
     const transport = await encodeSwitchProfileShareTransport(
