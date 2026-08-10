@@ -1,0 +1,35 @@
+name: Forge Release C closeout
+
+on:
+  push:
+    branches:
+      - feature/directionality-role-affinity
+
+permissions:
+  contents: write
+
+jobs:
+  forge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: node scripts/forge-release-c-closeout.mjs
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Commit verified closeout
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/storeCore.ts __tests__/directionality.test.ts e2e/private-responses.spec.ts e2e/compare.spec.ts planned-changes.md
+          git diff --cached --quiet && exit 0
+          git commit -m "Sluit Release C migratie en regressies af"
+          git push
