@@ -20,7 +20,7 @@ import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
 import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
-import { visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
+import { comparableEntry, visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
 import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
 
 function uid() {
@@ -471,7 +471,9 @@ function ScenePage() {
   function addFromKink(kinkName: string, kinkId: string) {
     if (isConsentLocked) return;
     const pair = directionalComparisonEntries(profileA?.entries, profileB?.entries, kinkId);
-    const tags = [...new Set([...(pair.sourceEntry.tags ?? []), ...(pair.partnerEntry.tags ?? [])])];
+    const sourceEntry = comparableEntry(pair.sourceEntry);
+    const partnerEntry = comparableEntry(pair.partnerEntry);
+    const tags = [...new Set([...(sourceEntry.tags ?? []), ...(partnerEntry.tags ?? [])])];
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true, tags }]);
     setSaved(false); setSavedStatus(null);
   }

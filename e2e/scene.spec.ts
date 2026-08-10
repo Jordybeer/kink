@@ -129,3 +129,34 @@ test.describe("Scene planner — directionele pairing", () => {
     await expect(page.getByRole("button", { name: "Pegging — geven ↔ ontvangen" })).toHaveCount(0);
   });
 });
+
+test("houdt tags van een private directionele counterpart verborgen", async ({ page }) => {
+  const privateA = {
+    ...DIRECTIONAL_SCENE_A,
+    entries: {
+      ...DIRECTIONAL_SCENE_A.entries,
+      pegging_give: { status: "yes", comment: "", tags: ["publiek"], usedInScene: 1 },
+    },
+  } satisfies typeof PROFILE_ALEX;
+  const privateB = {
+    ...DIRECTIONAL_SCENE_B_RECEIVE,
+    entries: {
+      ...DIRECTIONAL_SCENE_B_RECEIVE.entries,
+      pegging_receive: {
+        status: "yes", comment: "", tags: ["GEHEIME-PARTNER-TAG"], privateResponse: true,
+      },
+    },
+  } satisfies typeof PROFILE_SAM;
+
+  await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [privateA, privateB], {
+    contracts: [CONTRACT_ALEX_SAM],
+    contractSeries: [CONTRACT_SERIES_ALEX_SAM],
+  });
+  await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+  const mostUsed = page.getByText("Meest gebruikt", { exact: true }).locator("..");
+  await mostUsed.getByRole("button", { name: "Pegging — geven ↔ ontvangen" }).click();
+  await page.getByRole("button", { name: "Sluiten" }).click();
+
+  await expect(page.getByText("publiek", { exact: true })).toBeVisible();
+  await expect(page.getByText("GEHEIME-PARTNER-TAG", { exact: true })).toHaveCount(0);
+});
