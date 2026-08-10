@@ -14,41 +14,61 @@ function replaceAllExact(path, before, after) {
   fs.writeFileSync(path, source.split(before).join(after));
 }
 
-// Zustand persist: v19-installaties moeten ook alle later retired directionality IDs opschonen.
-replaceOnce("lib/storeCore.ts", "      version: 19,", "      version: 20,");
+// Maak de nieuwe schema-boundary expliciet en puur testbaar; persist gebruikt exact deze helper.
+replaceOnce(
+  "lib/storeCore.ts",
+  `export const useStore = create<State>()(`,
+  `export const STORE_PERSIST_VERSION = 20;
+
+export function migrateStoredDirectionalityV20<T extends { profiles?: Profile[] }>(
+  state: T,
+  version: number,
+): T {
+  if (version < STORE_PERSIST_VERSION && state.profiles) {
+    state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);
+  }
+  return state;
+}
+
+export const useStore = create<State>()(`,
+);
+replaceOnce("lib/storeCore.ts", "      version: 19,", "      version: STORE_PERSIST_VERSION,");
 replaceOnce(
   "lib/storeCore.ts",
   "        if (version < 19 && state.profiles) {\n          state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);\n        }",
-  "        if (version < 20 && state.profiles) {\n          state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);\n        }",
+  "        migrateStoredDirectionalityV20(state, version);",
 );
 
-// Unit-regressie op de echte core persist migrate hook, niet op de guarded facade.
 replaceOnce(
   "__tests__/directionality.test.ts",
   `import { sanitizeProfileFull } from "@/lib/sanitizeProfile";\nimport type { KinkEntry, Profile, ProfilePerspective } from "@/types";`,
-  `import { sanitizeProfileFull } from "@/lib/sanitizeProfile";\nimport { useStore as coreUseStore } from "@/lib/storeCore";\nimport type { KinkEntry, Profile, ProfilePerspective } from "@/types";`,
+  `import { sanitizeProfileFull } from "@/lib/sanitizeProfile";\nimport { migrateStoredDirectionalityV20, STORE_PERSIST_VERSION } from "@/lib/storeCore";\nimport type { KinkEntry, Profile, ProfilePerspective } from "@/types";`,
 );
 replaceOnce(
   "__tests__/directionality.test.ts",
   `  it("sanitizes and shares both explicit directions independently", () => {`,
-  `  it("migreert een bestaande v19 store naar v20 zonder ambigue directionality te behouden", async () => {
-    const options = coreUseStore.persist.getOptions();
-    expect(options.version).toBe(20);
-    expect(options.migrate).toBeDefined();
-
+  `  it("migreert een bestaande v19 store naar v20 zonder ambigue directionality te behouden", () => {
+    expect(STORE_PERSIST_VERSION).toBe(20);
     const profile = ownProfile("dominant", {
       spanking_hand: { status: "yes", comment: "oud C" },
       anal_sex: { status: "willing", comment: "oud B" },
       praise_kink: { status: "maybe", comment: "blijft" },
     });
-    const migrated = await Promise.resolve(options.migrate!({ profiles: [profile] }, 19));
-    const profiles = (migrated as unknown as { profiles: Profile[] }).profiles;
+    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 19);
 
-    expect(profiles[0].entries.spanking_hand).toBeUndefined();
-    expect(profiles[0].entries.anal_sex).toBeUndefined();
-    expect(profiles[0].entries.spanking_hand_give).toBeUndefined();
-    expect(profiles[0].entries.spanking_hand_receive).toBeUndefined();
-    expect(profiles[0].entries.praise_kink?.status).toBe("maybe");
+    expect(migrated.profiles?.[0].entries.spanking_hand).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.anal_sex).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.spanking_hand_give).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.spanking_hand_receive).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");
+  });
+
+  it("laat v20 state ongemoeid door dezelfde migratieboundary", () => {
+    const profile = ownProfile("dominant", {
+      spanking_hand_give: { status: "yes", comment: "expliciet" },
+    });
+    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);
+    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");
   });
 
   it("sanitizes and shares both explicit directions independently", () => {`,
@@ -84,8 +104,7 @@ for (const [oldId, newId] of [
 
 replaceAllExact("e2e/scene.spec.ts", `spanking_hand: { status: "yes", comment: "" }`, `spanking_hand_give: { status: "yes", comment: "" }`);
 let scene = fs.readFileSync("e2e/scene.spec.ts", "utf8");
-const receiveBlocks = ["DIRECTIONAL_SCENE_B_RECEIVE", "DIRECTIONAL_SCENE_B_GIVE"];
-for (const marker of receiveBlocks) {
+for (const marker of ["DIRECTIONAL_SCENE_B_RECEIVE", "DIRECTIONAL_SCENE_B_GIVE"]) {
   const start = scene.indexOf(`const ${marker} = {`);
   if (start < 0) throw new Error(`${marker} ontbreekt`);
   const nextConst = scene.indexOf("\nconst ", start + 1);
