@@ -22,6 +22,7 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
+      - run: node scripts/directionality-consumer-closeout-fix.mjs
       - run: node scripts/directionality-consumer-closeout.mjs
       - run: npm run lint
       - run: npm test
