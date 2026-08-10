@@ -5,6 +5,7 @@ import {
   questionnaireRelatedIds,
   questionnaireTopicsFor,
 } from "@/lib/questionnaireMetadata";
+import { questionnaireProgressionParentIds } from "@/lib/questionnaireProgression";
 import { directionalSiblingId } from "@/lib/directionality";
 import type { Kink, KinkEntry } from "@/types";
 
@@ -217,6 +218,40 @@ function diversify<T extends { kink: Kink }>(
   return result;
 }
 
+/**
+ * Laat ritme/diversiteit nooit een expliciete verdiepingsdeur inhalen. De
+ * topologische herschikking is stabiel: alleen een child die vóór haar nog
+ * onbeantwoorde parent staat, schuift naar achter. Een metadata-cycle faalt
+ * open zodat de UI nooit vastloopt; de catalogustest bewaakt dat zo'n cycle
+ * niet kan landen.
+ */
+function enforceProgressionOrder<T extends { kink: Kink }>(
+  items: readonly T[],
+  entries: Record<string, KinkEntry>,
+): T[] {
+  const remaining = [...items];
+  const result: T[] = [];
+
+  while (remaining.length > 0) {
+    const remainingIds = new Set(remaining.map((item) => item.kink.id));
+    const index = remaining.findIndex(({ kink }) =>
+      questionnaireProgressionParentIds(kink.id).every(
+        (parentId) => entries[parentId]?.status != null || !remainingIds.has(parentId),
+      ),
+    );
+
+    if (index < 0) {
+      result.push(...remaining);
+      break;
+    }
+
+    const [next] = remaining.splice(index, 1);
+    result.push(next);
+  }
+
+  return result;
+}
+
 /** De lanes houden de teugels: geen vurige score mag coverage onder de voet lopen. */
 export function rankQuestionnaireQueueItems(
   items: readonly QuestionnaireQueueItem[],
@@ -279,7 +314,7 @@ export function rankQuestionnaireQueueItems(
   for (const laneItems of itemsByLane.values()) {
     diversified.push(...diversify(laneItems, diversified.map((item) => item.kink)));
   }
-  return diversified;
+  return enforceProgressionOrder(diversified, entries);
 }
 
 /**
@@ -327,6 +362,15 @@ export function selectConversationQuestion(
 ): QuestionnaireQueueItem | null {
   if (queue.length === 0) return null;
   let candidates = [...queue];
+
+  // Een expliciete progression-parent die nog in dezelfde wachtrij staat,
+  // houdt haar child nog even achter de gordijnrand. Dit filtert alleen de
+  // volgende kaart; eligibility en antwoorden blijven onaangeraakt.
+  const queuedIds = new Set(queue.map((item) => item.kink.id));
+  const progressionReady = candidates.filter(({ kink }) =>
+    questionnaireProgressionParentIds(kink.id).every((parentId) => !queuedIds.has(parentId)),
+  );
+  if (progressionReady.length > 0) candidates = progressionReady;
 
   if (context.requireNonProbe) {
     const nonProbes = candidates.filter((item) => !item.isProbe);

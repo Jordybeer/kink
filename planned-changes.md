@@ -78,6 +78,8 @@ mappings. “Auto masturbation” remains explicitly out of scope.
 
 The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C now proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. Remaining impact/bondage candidates stay item-by-item work, not a bulk split.
 
+Question progression is now a separate explicit ordering contract. High-confidence parent → child doors make broad/light cards precede true deepenings when both are queued (for example Golden Shower ontvangen → urine in mond/slikken), without turning catalog `level` into a universal ladder. Progression never copies an answer, never suppresses a child after a neutral/negative answer in exhaustive flows, and never converts related siblings such as impact instruments, gag types or anal acts into inferred escalation. Source of truth: `docs/questionnaire-progression-gates.md`.
+
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 
 Verdict: v5 improves or holds every surface; zero code regressions. Two rot
