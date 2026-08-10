@@ -87,3 +87,45 @@ test.describe("Scene planner — zonder URL-params", () => {
     expect(overflow).toBe(false);
   });
 });
+
+const DIRECTIONAL_SCENE_A = {
+  ...PROFILE_ALEX,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_give: { status: "yes", comment: "geven", tags: ["rustig"] },
+  },
+} satisfies typeof PROFILE_ALEX;
+
+const DIRECTIONAL_SCENE_B_RECEIVE = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_receive: { status: "yes", comment: "ontvangen", tags: ["veel glijmiddel"] },
+  },
+} satisfies typeof PROFILE_SAM;
+
+const DIRECTIONAL_SCENE_B_GIVE = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_give: { status: "yes", comment: "ook geven" },
+  },
+} satisfies typeof PROFILE_SAM;
+
+test.describe("Scene planner — directionele pairing", () => {
+  const extras = { contracts: [CONTRACT_ALEX_SAM], contractSeries: [CONTRACT_SERIES_ALEX_SAM] };
+
+  test("toont geven plus ontvangen als wederzijdse Pegging-suggestie", async ({ page }) => {
+    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [DIRECTIONAL_SCENE_A, DIRECTIONAL_SCENE_B_RECEIVE], extras);
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    const mutual = page.getByText("Wederzijds", { exact: true }).locator("..");
+    await expect(mutual.getByRole("button", { name: "Pegging — geven ↔ ontvangen" })).toBeVisible();
+  });
+
+  test("toont geven plus geven niet als wederzijdse Pegging-suggestie", async ({ page }) => {
+    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [DIRECTIONAL_SCENE_A, DIRECTIONAL_SCENE_B_GIVE], extras);
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    await expect(page.getByRole("button", { name: "Spanking (hand)" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pegging — geven ↔ ontvangen" })).toHaveCount(0);
+  });
+});

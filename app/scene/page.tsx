@@ -21,6 +21,7 @@ import DurationStepper from "@/components/DurationStepper";
 import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 import { visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
+import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
 
 function uid() {
   return crypto.randomUUID();
@@ -469,7 +470,8 @@ function ScenePage() {
 
   function addFromKink(kinkName: string, kinkId: string) {
     if (isConsentLocked) return;
-    const tags = [...new Set([...(profileA?.entries[kinkId]?.tags ?? []), ...(profileB?.entries[kinkId]?.tags ?? [])])];
+    const pair = directionalComparisonEntries(profileA?.entries, profileB?.entries, kinkId);
+    const tags = [...new Set([...(pair.sourceEntry.tags ?? []), ...(pair.partnerEntry.tags ?? [])])];
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true, tags }]);
     setSaved(false); setSavedStatus(null);
   }
@@ -547,23 +549,31 @@ function ScenePage() {
   const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
+  const comparisonEntries = (kinkId: string) =>
+    directionalComparisonEntries(profileA?.entries, profileB?.entries, kinkId);
+
   const topKinks = profileA
-    ? KINKS.filter((k) => visibleUsedInScene(profileA.entries[k.id]) > 0)
-        .sort((a, b) =>
-          (visibleUsedInScene(profileB?.entries[b.id]) + visibleUsedInScene(profileA.entries[b.id])) -
-          (visibleUsedInScene(profileB?.entries[a.id]) + visibleUsedInScene(profileA.entries[a.id])))
+    ? KINKS.filter((k) => visibleUsedInScene(comparisonEntries(k.id).sourceEntry) > 0)
+        .sort((a, b) => {
+          const pairA = comparisonEntries(a.id);
+          const pairB = comparisonEntries(b.id);
+          return (visibleUsedInScene(pairB.partnerEntry) + visibleUsedInScene(pairB.sourceEntry)) -
+            (visibleUsedInScene(pairA.partnerEntry) + visibleUsedInScene(pairA.sourceEntry));
+        })
         .slice(0, 5)
     : [];
 
   const mutualKinks = KINKS.filter((k) => {
-    const a = visibleStatus(profileA?.entries[k.id]);
-    const b = visibleStatus(profileB?.entries[k.id]);
+    const pair = comparisonEntries(k.id);
+    const a = visibleStatus(pair.sourceEntry);
+    const b = visibleStatus(pair.partnerEntry);
     return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
   });
 
   const spanningKinks = KINKS.filter((k) => {
-    const a = visibleStatus(profileA?.entries[k.id]);
-    const b = visibleStatus(profileB?.entries[k.id]);
+    const pair = comparisonEntries(k.id);
+    const a = visibleStatus(pair.sourceEntry);
+    const b = visibleStatus(pair.partnerEntry);
     if (!a || !b || a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
     return !((a === "yes" || a === "willing") && (b === "yes" || b === "willing")) && (a === "maybe" || b === "maybe");
   });
@@ -813,7 +823,7 @@ function ScenePage() {
               <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent2)" }}>Meest gebruikt</p>
               <div className="flex flex-wrap gap-2">
                 {topKinks.map((k) => (
-                  <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(k.name, k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </div>
@@ -824,7 +834,7 @@ function ScenePage() {
               <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--yes)" }}>Wederzijds</p>
               <div className="flex flex-wrap gap-2">
                 {mutualKinks.map((k) => (
-                  <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(k.name, k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </div>
@@ -835,7 +845,7 @@ function ScenePage() {
               <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--no)" }}>Spanning</p>
               <div className="flex flex-wrap gap-2">
                 {spanningKinks.map((k) => (
-                  <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(k.name, k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </div>
