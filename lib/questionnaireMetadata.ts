@@ -75,6 +75,10 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   ],
   exhibition: ["exhibitionism", "being_watched", "public_play", "dogging", "webcam", "remote_toy_publiek"],
   voyeurism: ["voyeurism", "watching_others"],
+  media_capture: ["nude_photography", "recording", "webcam", "adult_content_creation"],
+  masturbation: ["mutual_masturbation", "partner_masturbation_watch", "joi"],
+  remote_toys: ["remote_toy", "remote_toy_publiek"],
+  sensory_deprivation: ["blindfold", "hood", "sound_deprivation"],
   watersports: [
     "watersports_geven", "watersports_ontvangen", "urine_intiem", "plas_merken",
     "plas_desperation", "buiten_plassen", "plas_in_kleding", "plas_slaaf",
@@ -83,20 +87,26 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "anal_sex", "anal_fingering", "pegging", "butt_plug", "anal_beads", "fisting_anal",
     "rimmen", "anale_training",
   ],
-  foot_worship: [
+  foot_focus: [
     "feet", "hoge_hakken_aanbidding", "footjob", "voetgeur",
     "voeten_in_gezicht", "voeten_in_mond", "voet_vernedering", "voetslaaf", "laarzen_aanbidding",
   ],
   scent: ["geur_scent_fetish", "voetgeur", "panty_sniffing"],
   little_ageplay: [
     "little_speelgoed", "ddlg_mdlb_dynamiek", "little_space", "baby_infantiliteit",
-    "fopspeen_fles", "luiers_dragen",
+    "fopspeen_fles",
   ],
+  diaper_play: ["luiers_dragen", "diaper_wetting", "diaper_messing", "diaper_changing"],
   pet_play: [
     "furry", "petplay_collar_id", "petplay_puppy", "petplay_kitten", "petplay_pony",
     "petplay_harnas", "petplay_oortjes", "petplay_leiband", "petplay_geluiden", "petplay_kom",
-    "fox_tail_plug", "petplay_kooi", "petplay_kattenbak",
+    "fox_tail_plug", "petplay_kooi", "petplay_kattenbak", "pet_training", "pet_grooming",
   ],
+  aftercare: [
+    "aftercare_physical", "aftercare_verbal", "aftercare_alone", "aftercare_food",
+    "aftercare_journaling", "next_day_check_in", "aftercare_cleanup",
+  ],
+  breeding: ["breeding_fantasy", "creampie"],
 } as const;
 
 export type QuestionnaireTopic = keyof typeof QUESTIONNAIRE_TOPIC_IDS;
@@ -181,12 +191,26 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["exhibitionism", "being_watched"],
   ["voyeurism", "watching_others"],
   ["watersports_geven", "watersports_ontvangen"],
+  ["watersports_ontvangen", "urine_intiem"],
   ["anal_fingering", "anal_sex"],
-  ["feet", "hoge_hakken_aanbidding"],
   ["geur_scent_fetish", "panty_sniffing"],
   ["little_speelgoed", "little_space"],
   ["petplay_puppy", "petplay_harnas"],
+  ["petplay_puppy", "pet_training"],
   ["aftercare_physical", "aftercare_verbal"],
+  ["aftercare_physical", "aftercare_cleanup"],
+  ["aftercare_verbal", "next_day_check_in"],
+  ["blindfold", "sound_deprivation"],
+  ["shibari", "suspension_rechtop"],
+  ["being_watched", "public_play"],
+  ["remote_toy", "remote_toy_publiek"],
+  ["nude_photography", "recording"],
+  ["recording", "adult_content_creation"],
+  ["mutual_masturbation", "partner_masturbation_watch"],
+  ["luiers_dragen", "diaper_wetting"],
+  ["diaper_wetting", "diaper_changing"],
+  ["diaper_messing", "diaper_changing"],
+  ["breeding_fantasy", "creampie"],
 ] as const satisfies readonly (readonly [string, string])[];
 
 /**
@@ -203,8 +227,21 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
   exhibitionism: ["being_watched"],
   voyeurism: ["watching_others"],
   watersports_geven: ["watersports_ontvangen"],
+  watersports_ontvangen: ["urine_intiem"],
   geur_scent_fetish: ["panty_sniffing"],
   petplay_puppy: ["petplay_harnas"],
+  shibari: ["suspension_rechtop"],
+  blindfold: ["sound_deprivation"],
+  being_watched: ["public_play"],
+  remote_toy: ["remote_toy_publiek"],
+  nude_photography: ["recording"],
+  recording: ["adult_content_creation"],
+  partner_masturbation_watch: ["mutual_masturbation"],
+  anal_fingering: ["anal_sex"],
+  luiers_dragen: ["diaper_wetting"],
+  diaper_wetting: ["diaper_changing"],
+  diaper_messing: ["diaper_changing"],
+  breeding_fantasy: ["creampie"],
 };
 
 /**
@@ -215,6 +252,8 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
  * blijft vastgepind, zodat reloads of catalogusherschikking een oud positief
  * antwoord nooit een tweede expansionbeurt geven. Er is bewust geen fallback.
  */
+export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 2;
+
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
   spanking_hand: "spanking_implement",
   rope_bondage: "shibari",
@@ -225,8 +264,21 @@ export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, stri
   exhibitionism: "being_watched",
   voyeurism: "watching_others",
   watersports_geven: "watersports_ontvangen",
+  watersports_ontvangen: "urine_intiem",
   geur_scent_fetish: "panty_sniffing",
   petplay_puppy: "petplay_harnas",
+  shibari: "suspension_rechtop",
+  blindfold: "sound_deprivation",
+  being_watched: "public_play",
+  remote_toy: "remote_toy_publiek",
+  nude_photography: "recording",
+  recording: "adult_content_creation",
+  partner_masturbation_watch: "mutual_masturbation",
+  anal_fingering: "anal_sex",
+  luiers_dragen: "diaper_wetting",
+  diaper_wetting: "diaper_changing",
+  diaper_messing: "diaper_changing",
+  breeding_fantasy: "creampie",
 };
 
 const RELATED_BY_ID = new Map<string, string[]>();

@@ -17,6 +17,7 @@ import {
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import {
+  QUESTIONNAIRE_CANONICAL_MAPPING_VERSION,
   QUESTIONNAIRE_CANONICAL_PROBE_TARGETS,
   QUESTIONNAIRE_CATEGORY_ANCHOR_IDS,
   QUESTIONNAIRE_CATEGORY_CLUSTERS,
@@ -27,6 +28,7 @@ import {
   QUESTIONNAIRE_RELATED_PAIRS,
   QUESTIONNAIRE_TOPIC_IDS,
   questionnairePrimaryCluster,
+  questionnaireTopicsFor,
 } from "@/lib/questionnaireMetadata";
 import type {
   Kink,
@@ -144,14 +146,42 @@ describe("adaptive questionnaire", () => {
       ))).toBe(true);
   });
 
-  it("gives every new catalog item zero answer-propagation metadata by default", () => {
-    const explicitMetadataIds = new Set([
-      ...Object.values(QUESTIONNAIRE_TOPIC_IDS).flat(),
-      ...QUESTIONNAIRE_RELATED_PAIRS.flat(),
-      ...Object.entries(QUESTIONNAIRE_FOLLOW_UPS).flatMap(([source, targets]) => [source, ...targets]),
-      ...Object.entries(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).flat(),
-    ]);
-    expect(CATALOG_V2_RELEASE_A_IDS.filter((id) => explicitMetadataIds.has(id))).toEqual([]);
+  it("keeps sparse relation declarations unique and free of self-edges", () => {
+    const normalizedRelated = QUESTIONNAIRE_RELATED_PAIRS.map(([left, right]) =>
+      [left, right].sort().join("->"));
+    expect(new Set(normalizedRelated).size).toBe(normalizedRelated.length);
+    expect(QUESTIONNAIRE_RELATED_PAIRS.filter(([left, right]) => left === right)).toEqual([]);
+
+    for (const [source, targets] of Object.entries(QUESTIONNAIRE_FOLLOW_UPS)) {
+      expect(new Set(targets).size, source).toBe(targets.length);
+      expect(targets, source).not.toContain(source);
+    }
+  });
+
+  it("keeps new expansion sparse and explicit instead of falling back from catalog membership", () => {
+    const releaseIds = new Set<string>(CATALOG_V2_RELEASE_A_IDS);
+    const releaseSources = Object.fromEntries(
+      Object.entries(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS)
+        .filter(([source]) => releaseIds.has(source)),
+    );
+    expect(releaseSources).toEqual({
+      remote_toy: "remote_toy_publiek",
+      nude_photography: "recording",
+      partner_masturbation_watch: "mutual_masturbation",
+      diaper_wetting: "diaper_changing",
+      diaper_messing: "diaper_changing",
+      breeding_fantasy: "creampie",
+    });
+
+    for (const id of [
+      "thigh_focus", "muscle_focus", "pregnancy_attraction", "smeared_makeup",
+      "crying_tears", "vampire_fangs", "erotic_massage", "vibration_play",
+      "wetlook", "prostate_massage", "sex_machine", "drool_play", "being_heard",
+      "play_party", "next_day_check_in", "aftercare_cleanup", "dollification",
+      "pet_training", "pet_grooming", "diaper_changing", "creampie",
+    ]) {
+      expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS[id], id).toBeUndefined();
+    }
   });
 
   it("covers every catalog broad cluster in the fixed Dynamic plan", () => {
@@ -181,6 +211,7 @@ describe("adaptive questionnaire", () => {
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(2);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).toEqual({
       spanking_hand: "spanking_implement",
       rope_bondage: "shibari",
@@ -191,8 +222,21 @@ describe("adaptive questionnaire", () => {
       exhibitionism: "being_watched",
       voyeurism: "watching_others",
       watersports_geven: "watersports_ontvangen",
+      watersports_ontvangen: "urine_intiem",
       geur_scent_fetish: "panty_sniffing",
       petplay_puppy: "petplay_harnas",
+      shibari: "suspension_rechtop",
+      blindfold: "sound_deprivation",
+      being_watched: "public_play",
+      remote_toy: "remote_toy_publiek",
+      nude_photography: "recording",
+      recording: "adult_content_creation",
+      partner_masturbation_watch: "mutual_masturbation",
+      anal_fingering: "anal_sex",
+      luiers_dragen: "diaper_wetting",
+      diaper_wetting: "diaper_changing",
+      diaper_messing: "diaper_changing",
+      breeding_fantasy: "creampie",
     });
     for (const [source, target] of Object.entries(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS)) {
       expect(QUESTIONNAIRE_FOLLOW_UPS[source]).toContain(target);
@@ -335,6 +379,26 @@ describe("adaptive questionnaire", () => {
     expect(current.entries.urine_intiem.status).toBe("hard_no");
   });
 
+  it("opens ingestion only from an explicit positive receiving answer, never in reverse", () => {
+    const receiving = dynamicProfile();
+    receiving.entries.watersports_ontvangen = { status: "yes", comment: "expliciet" };
+    expect(getQuestionnaireRuntime(receiving).pendingProbes).toEqual([
+      {
+        targetKinkId: "urine_intiem",
+        reasons: [{
+          sourceKinkId: "watersports_ontvangen",
+          targetKinkId: "urine_intiem",
+          relationType: "followUp",
+          status: "yes",
+        }],
+      },
+    ]);
+
+    const ingestionLimit = dynamicProfile();
+    ingestionLimit.entries.urine_intiem = { status: "hard_no", comment: "grens" };
+    expect(getQuestionnaireRuntime(ingestionLimit).pendingProbes).toEqual([]);
+  });
+
   it("uses no same-topic fallback when metadata has no direct edge", () => {
     const catalog = catalogSlice("watersports_geven", "urine_intiem", "doctor_patient");
     const neutral = rankQuestionnaireCandidates(catalog, entriesWith({ watersports_geven: "maybe" })).map((kink) => kink.id);
@@ -365,6 +429,85 @@ describe("adaptive questionnaire", () => {
     expect(positive.indexOf("little_space")).toBeLessThan(neutral.indexOf("little_space"));
     expect(positive.indexOf("petplay_puppy") < positive.indexOf("uniforms"))
       .toBe(neutral.indexOf("petplay_puppy") < neutral.indexOf("uniforms"));
+  });
+
+  it("keeps diaper play separate from Little headspace and from watersports spacing", () => {
+    const [little, diaper, goldenShower] = catalogSlice(
+      "little_space",
+      "diaper_wetting",
+      "watersports_ontvangen",
+    );
+    expect(questionnaireTopicsFor(little)).toContain("little_ageplay");
+    expect(questionnaireTopicsFor(little)).not.toContain("diaper_play");
+    expect(questionnaireTopicsFor(diaper)).toContain("diaper_play");
+    expect(questionnaireTopicsFor(diaper)).not.toContain("little_ageplay");
+    expect(questionnaireTopicsFor(diaper)).not.toContain("watersports");
+    expect(questionnaireTopicsFor(goldenShower)).toContain("watersports");
+  });
+
+  it("does not turn general foot focus into worship relevance", () => {
+    const catalog = catalogSlice("feet", "hoge_hakken_aanbidding", "doctor_patient");
+    const neutral = rankQuestionnaireCandidates(catalog, entriesWith({ feet: "maybe" }))
+      .map((kink) => kink.id);
+    const positive = rankQuestionnaireCandidates(catalog, entriesWith({ feet: "yes" }))
+      .map((kink) => kink.id);
+    expect(positive).toEqual(neutral);
+  });
+
+  it("keeps suggestive visual combinations out of propagation metadata", () => {
+    for (const [source, target] of [
+      ["pregnancy_attraction", "breeding_fantasy"],
+      ["smeared_makeup", "crying_tears"],
+      ["vampire_fangs", "biting"],
+    ] as const) {
+      const catalog = catalogSlice(source, target, "doctor_patient");
+      const neutral = rankQuestionnaireCandidates(catalog, entriesWith({ [source]: "maybe" }))
+        .map((kink) => kink.id);
+      const positive = rankQuestionnaireCandidates(catalog, entriesWith({ [source]: "yes" }))
+        .map((kink) => kink.id);
+      expect(positive, `${source} -> ${target}`).toEqual(neutral);
+      expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS[source]).toBeUndefined();
+    }
+  });
+
+  it("opens only the first explicit media boundary at a time", () => {
+    const photography = dynamicProfile();
+    photography.entries.nude_photography = { status: "yes", comment: "foto is expliciet" };
+    expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))
+      .toEqual(["recording"]);
+
+    photography.entries.recording = { status: "yes", comment: "privé-opname is expliciet" };
+    expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))
+      .toEqual(["adult_content_creation"]);
+  });
+
+  it("opens local toy, masturbation, anal and diaper follow-ups without cross-propagation", () => {
+    const cases = [
+      ["remote_toy", "remote_toy_publiek"],
+      ["partner_masturbation_watch", "mutual_masturbation"],
+      ["anal_fingering", "anal_sex"],
+      ["luiers_dragen", "diaper_wetting"],
+      ["breeding_fantasy", "creampie"],
+    ] as const;
+
+    for (const [source, target] of cases) {
+      const current = dynamicProfile();
+      current.entries[source] = { status: "yes", comment: "expliciet" };
+      const probes = getQuestionnaireRuntime(current).pendingProbes;
+      expect(probes.map((probe) => probe.targetKinkId), source).toEqual([target]);
+      expect(probes[0].reasons[0].sourceKinkId).toBe(source);
+    }
+  });
+
+  it("deduplicates diaper changing when either explicit use answer nominates it", () => {
+    const current = dynamicProfile();
+    current.entries.diaper_wetting = { status: "yes", comment: "" };
+    current.entries.diaper_messing = { status: "willing", comment: "" };
+    const probes = getQuestionnaireRuntime(current).pendingProbes;
+    expect(probes).toHaveLength(1);
+    expect(probes[0].targetKinkId).toBe("diaper_changing");
+    expect(probes[0].reasons.map((reason) => reason.sourceKinkId).sort())
+      .toEqual(["diaper_messing", "diaper_wetting"]);
   });
 
   it("does not synthesize humiliation from Golden Shower + Trampling enthusiasm", () => {

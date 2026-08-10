@@ -39,5 +39,6 @@ tekst algemener of landt de kink nog niet.
   daarom niet als universele rechtsregel geformuleerd;
 - Release-B-kandidaten met nieuw of lastig af te bakenen risico blijven buiten
   de actieve catalogus tot een afzonderlijke inhoudelijke review;
-- `Auto masturbation` en complementaire pegging-matching blijven expliciete
-  ownerbeslissingen en zijn niet door safety-copy ingevuld.
+- `Auto masturbation` is door de eigenaar geschrapt; complementaire
+  pegging-matching blijft een expliciete ownerbeslissing en is niet door
+  safety-copy ingevuld.
