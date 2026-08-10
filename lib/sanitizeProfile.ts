@@ -15,6 +15,7 @@ import {
 import { sanitizeProfileConsentProof } from "@/lib/consentProof";
 import { normalizeQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { stripDeprecatedDirectionalEntries } from "@/lib/directionality";
+import { sanitizeSwitchShareProof } from "@/lib/switchProfileProof";
 import {
   clamp,
   MAX_CUSTOM_KINKS,
@@ -168,6 +169,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
   if (lockedAt !== undefined) profile.lockedAt = lockedAt;
   const consentProof = sanitizeProfileConsentProof(r.consentProof);
   if (consentProof) profile.consentProof = consentProof;
+  const switchShareProof = sanitizeSwitchShareProof(r.switchShareProof);
+  if (switchShareProof) profile.switchShareProof = switchShareProof;
 
   const isOwnBackupProfile = profile.origin === "own" && profile.isImported !== true;
   if (isOwnBackupProfile) {

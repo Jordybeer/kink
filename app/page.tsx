@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import type { Profile } from "@/types";
 import type { EncryptedBackup } from "@/lib/crypto";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { decodeSharedProfile } from "@/lib/profileShareV3";
+import { decodeSharedProfileTransfer } from "@/lib/profileSwitchShare";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
 import { profileConsentAlias } from "@/lib/consentProof";
@@ -67,9 +67,25 @@ function HomeContent() {
 
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [importPreview, setImportPreview] = useState<Profile | null>(null);
+  const [importTransfer, setImportTransfer] = useState<Profile[] | null>(null);
   const [importDone, setImportDone] = useState(false);
-  const importIdentity = importPreview ? classifyProfileImport(profiles, importPreview) : null;
+  const importPreview = importTransfer?.[0] ?? null;
+  const importIdentities = importTransfer?.map((candidate) => classifyProfileImport(profiles, candidate)) ?? [];
+  const importIdentity = (() => {
+    const sourceConflict = importIdentities.find((identity) => identity.kind === "source-conflict");
+    if (sourceConflict) return sourceConflict;
+    if (importIdentities.length > 0 && importIdentities.every((identity) => identity.kind === "same-code")) {
+      return importIdentities[0];
+    }
+    return importIdentities.find((identity) => identity.kind === "signed-update")
+      ?? importIdentities.find((identity) => identity.kind === "same-name-role")
+      ?? importIdentities.find((identity) => identity.kind === "new")
+      ?? null;
+  })();
+  const isSwitchImport = importTransfer?.length === 2
+    && !!importTransfer[0].switchShareProof
+    && importTransfer.every((candidate) =>
+      candidate.switchShareProof?.groupId === importTransfer[0].switchShareProof?.groupId);
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
@@ -92,8 +108,8 @@ function HomeContent() {
       const parsed = parseSharePaste(window.location.href);
       if (parsed.kind !== "profile") return;
       try {
-        const decoded = await decodeSharedProfile(parsed.encoded);
-        if (!cancelled) setImportPreview(decoded);
+        const decoded = await decodeSharedProfileTransfer(parsed.encoded);
+        if (!cancelled) setImportTransfer(decoded.profiles);
       } catch {
         // Beschadigde of ongeldige deelcodes komen niet in de store.
       }
@@ -430,7 +446,7 @@ function HomeContent() {
           open={scanOpen}
           onResult={async (payload) => {
             try {
-              setImportPreview(await decodeSharedProfile(payload));
+              setImportTransfer((await decodeSharedProfileTransfer(payload)).profiles);
               setScanError(null);
             } catch {
               setScanError("Profielcode is ongeldig of beschadigd.");
@@ -461,8 +477,8 @@ function HomeContent() {
 
       <Sheet
         open={!!importPreview}
-        onClose={() => setImportPreview(null)}
-        title="Profiel importeren?"
+        onClose={() => setImportTransfer(null)}
+        title={isSwitchImport ? "Switch-profiel importeren?" : "Profiel importeren?"}
         aria-label="Profiel importeren"
       >
         {importPreview && (
@@ -481,17 +497,17 @@ function HomeContent() {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold truncate">{importPreview.name}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-                  {importPreview.role}
+                  {isSwitchImport ? "Switch" : importPreview.role}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}>
                   {importPreview.experienceLevel}
                 </span>
               </div>
               <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
-                {Object.values(importPreview.entries).filter((entry) => entry.status).length} kinks beoordeeld
+                {(importTransfer ?? [importPreview]).reduce((total, candidate) => total + Object.values(candidate.entries).filter((entry) => entry.status).length, 0)} kinks beoordeeld{isSwitchImport ? " · 2 perspectieven" : ""}
               </div>
               <div className="text-xs mt-1" style={{ color: importPreview.consentProof ? "var(--yes)" : "var(--text2)" }}>
-                {importPreview.consentProof ? "Bron bevestigd" : "Niet ondertekend"} · {profileConsentAlias(importPreview)}
+                {isSwitchImport ? "Switch-koppeling bevestigd" : `${importPreview.consentProof ? "Bron bevestigd" : "Niet ondertekend"} · ${profileConsentAlias(importPreview)}`}
               </div>
             </div>
           </div>
@@ -521,13 +537,13 @@ function HomeContent() {
         <div className="flex flex-col gap-3">
           {importDone ? (
             <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
-              Profiel geïmporteerd
+              {isSwitchImport ? "Switch-profiel geïmporteerd" : "Profiel geïmporteerd"}
             </p>
           ) : importIdentity?.kind === "same-code" || importIdentity?.kind === "source-conflict" ? (
             <button
               type="button"
               onClick={() => {
-                setImportPreview(null);
+                setImportTransfer(null);
                 router.push(`/profile/${importIdentity.profile.id}`);
               }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
@@ -539,35 +555,39 @@ function HomeContent() {
             <button
               type="button"
               onClick={() => {
-                if (!importPreview) return;
-                importProfiles([{
-                  ...importPreview,
-                  verificationCode: getProfileVerificationCode(importPreview),
+                if (!importTransfer?.length) return;
+                importProfiles(importTransfer.map((candidate) => ({
+                  ...candidate,
+                  verificationCode: getProfileVerificationCode(candidate),
                   isImported: true,
-                  origin: "shared",
+                  origin: "shared" as const,
                   lockedAt: Date.now(),
-                }]);
+                })));
                 setImportDone(true);
                 router.replace("/");
                 window.setTimeout(() => {
-                  setImportPreview(null);
+                  setImportTransfer(null);
                   setImportDone(false);
                 }, 1500);
               }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              {importIdentity?.kind === "signed-update"
-                ? "Bevestigde update importeren"
-                : importIdentity?.kind === "same-name-role"
-                  ? "Importeer als apart profiel"
-                  : "Importeer profiel"}
+              {isSwitchImport
+                ? importIdentity?.kind === "signed-update"
+                  ? "Bevestigde Switch-update importeren"
+                  : "Importeer Switch-profiel"
+                : importIdentity?.kind === "signed-update"
+                  ? "Bevestigde update importeren"
+                  : importIdentity?.kind === "same-name-role"
+                    ? "Importeer als apart profiel"
+                    : "Importeer profiel"}
             </button>
           )}
           <button
             type="button"
             onClick={() => {
-              setImportPreview(null);
+              setImportTransfer(null);
               router.replace("/");
             }}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"

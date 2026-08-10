@@ -49,7 +49,7 @@ export function parseSharePaste(raw: string): ParsedShare {
   const hashOnly = input.startsWith("#") ? parseHash(input) : null;
   if (hashOnly) return hashOnly;
 
-  if (input.startsWith("3d.") || input.startsWith("3r.") || input.startsWith("4r.")) {
+  if (input.startsWith("3d.") || input.startsWith("3r.") || input.startsWith("4r.") || input.startsWith("5r.")) {
     return { kind: "profile", encoded: input };
   }
 

@@ -17,6 +17,7 @@ import {
   verifyProfileConsent,
   verifyProfileOwnerKey,
 } from "@/lib/consentProof";
+import { relinkVerifiedSwitchProfiles } from "@/lib/switchProfileProof";
 
 
 const CONTRACT_STATUSES = new Set<ContractSeries["status"]>([
@@ -326,9 +327,10 @@ export async function prepareBackupRestore(raw: unknown): Promise<PreparedBackup
   if (!Array.isArray(parsed.profiles)) throw new Error("Geen geldige profielen gevonden");
 
   const source = parsed.source === "backup" ? "backup" : "shared";
-  const sanitizedProfiles = parsed.profiles
+  const rawSanitizedProfiles = parsed.profiles
     .map((profile) => sanitizeProfileFull(profile))
     .filter((profile): profile is Profile => profile !== null);
+  const sanitizedProfiles = await relinkVerifiedSwitchProfiles(rawSanitizedProfiles);
   const contracts = (Array.isArray(parsed.contracts) ? parsed.contracts : [])
     .map((contract) => sanitizeContractSnapshot(contract))
     .filter((contract): contract is ContractSnapshot => contract !== null);

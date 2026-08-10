@@ -3,6 +3,23 @@ export type KinkStatus = "yes" | "willing" | "maybe" | "no" | "hard_no" | null;
 export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand";
 
 export type ProfilePerspective = "dominant" | "submissive";
+
+export interface SwitchShareMemberProof {
+  profileId: string;
+  keyId: string;
+  proofHash: string;
+}
+
+export interface SwitchShareProof {
+  schema: 1;
+  algorithm: "ECDSA-P256-SHA256";
+  groupId: string;
+  name: string;
+  dominant: SwitchShareMemberProof;
+  submissive: SwitchShareMemberProof;
+  dominantSignature: string;
+  submissiveSignature: string;
+}
 export type QuestionnaireMode = "dynamic" | "deepDive";
 export type QuestionnaireInterest =
   | "power"
@@ -250,6 +267,8 @@ export interface Profile {
   personGroupId?: string;
   /** Primary perspective represented by this answer set. */
   perspective?: ProfilePerspective;
+  /** Verified proof that two shared perspective records belong to one Switch identity. */
+  switchShareProof?: SwitchShareProof;
   /** Local questionnaire selection. Missing pre-launch data defaults to Dynamic. */
   questionnaireSetup?: QuestionnaireSetup;
   relationshipStatus?: string;
