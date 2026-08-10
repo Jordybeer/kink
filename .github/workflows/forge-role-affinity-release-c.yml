@@ -21,7 +21,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: node scripts/forge-role-affinity-release-c-v2.mjs
+      - run: node scripts/forge-role-affinity-release-c-v3.mjs
       - run: npm run lint
       - run: npm test
       - run: npm run build
@@ -29,7 +29,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/kinks.ts lib/directionality.ts lib/questionnaireMetadata.ts lib/questionnaire.ts __tests__/kinks.test.ts __tests__/directionality.test.ts __tests__/directionalMatching.test.ts __tests__/questionnaire.test.ts directie.md docs/directionality-role-affinity.md planned-changes.md
+          git add lib/kinks.ts lib/directionality.ts lib/questionnaireMetadata.ts lib/questionnaire.ts __tests__/kinks.test.ts __tests__/directionality.test.ts __tests__/directionalMatching.test.ts __tests__/questionnaire.test.ts __tests__/shareProfile.test.ts __tests__/sanitizeProfile.test.ts __tests__/profileTextExport.test.ts __tests__/matchingScore.test.ts directie.md docs/directionality-role-affinity.md planned-changes.md
           git diff --cached --quiet && exit 0
           git commit -m "Voeg compacte role-affinity directionality toe"
           git push
