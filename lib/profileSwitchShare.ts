@@ -12,6 +12,7 @@ import {
 } from "@/lib/profileShareV3";
 import {
   createSwitchShareProof,
+  deriveSharedSwitchGroupId,
   sanitizeSwitchShareProof,
   verifySwitchShareProof,
 } from "@/lib/switchProfileProof";
@@ -177,13 +178,14 @@ export async function decodeSwitchProfileShare(encoded: string): Promise<Profile
     throw new Error("De Switch-koppeling kon niet worden bevestigd");
   }
 
+  const groupId = await deriveSharedSwitchGroupId(proof);
   const sharedAvatar = dominant.avatarDataUrl ?? submissive.avatarDataUrl;
   const now = Date.now();
   return [
     {
       ...dominant,
       role: "Dominant",
-      personGroupId: proof.groupId,
+      personGroupId: groupId,
       perspective: "dominant",
       switchShareProof: proof,
       ...(sharedAvatar ? { avatarDataUrl: sharedAvatar } : {}),
@@ -194,7 +196,7 @@ export async function decodeSwitchProfileShare(encoded: string): Promise<Profile
     {
       ...submissive,
       role: "Submissive",
-      personGroupId: proof.groupId,
+      personGroupId: groupId,
       perspective: "submissive",
       switchShareProof: proof,
       ...(sharedAvatar ? { avatarDataUrl: sharedAvatar } : {}),
