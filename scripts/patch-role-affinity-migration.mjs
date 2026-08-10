@@ -22,17 +22,17 @@ replaceOnce(
   "        if (version < 20 && state.profiles) {\n          state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);\n        }",
 );
 
-// Unit-regressie op de echte persist migrate hook, niet alleen op de helper.
+// Unit-regressie op de echte core persist migrate hook, niet op de guarded facade.
 replaceOnce(
   "__tests__/directionality.test.ts",
   `import { sanitizeProfileFull } from "@/lib/sanitizeProfile";\nimport type { KinkEntry, Profile, ProfilePerspective } from "@/types";`,
-  `import { sanitizeProfileFull } from "@/lib/sanitizeProfile";\nimport { useStore } from "@/lib/store";\nimport type { KinkEntry, Profile, ProfilePerspective } from "@/types";`,
+  `import { sanitizeProfileFull } from "@/lib/sanitizeProfile";\nimport { useStore as coreUseStore } from "@/lib/storeCore";\nimport type { KinkEntry, Profile, ProfilePerspective } from "@/types";`,
 );
 replaceOnce(
   "__tests__/directionality.test.ts",
   `  it("sanitizes and shares both explicit directions independently", () => {`,
   `  it("migreert een bestaande v19 store naar v20 zonder ambigue directionality te behouden", async () => {
-    const options = useStore.persist.getOptions();
+    const options = coreUseStore.persist.getOptions();
     expect(options.version).toBe(20);
     expect(options.migrate).toBeDefined();
 
@@ -57,7 +57,6 @@ replaceOnce(
 // Browserfixtures zaaien de actuele v20 schema en concrete counterparts.
 const fixtures = "e2e/fixtures.ts";
 replaceAllExact(fixtures, "spanking_hand:", "spanking_hand_give:");
-// Sam moet de complementaire receive-zijde krijgen; corrigeer de tweede occurrence na bulk Alex-migratie.
 let fixtureSource = fs.readFileSync(fixtures, "utf8");
 const samMarker = "export const PROFILE_SAM: Profile = {";
 const samStart = fixtureSource.indexOf(samMarker);
@@ -75,7 +74,6 @@ fixtureSource = fixtureSource
   .replace("    version: 18,", "    version: 20,");
 fs.writeFileSync(fixtures, fixtureSource);
 
-// UI-auditprofiel is Dominant en gebruikt dus concrete give fixtures.
 for (const [oldId, newId] of [
   ["spanking_hand", "spanking_hand_give"],
   ["spanking_implement", "spanking_implement_give"],
@@ -84,7 +82,6 @@ for (const [oldId, newId] of [
   replaceAllExact("e2e/ui-audit.spec.ts", oldId, newId);
 }
 
-// Scene e2e: het basispaar blijft complementair; Pegging-specific tests behouden hun eigen richting.
 replaceAllExact("e2e/scene.spec.ts", `spanking_hand: { status: "yes", comment: "" }`, `spanking_hand_give: { status: "yes", comment: "" }`);
 let scene = fs.readFileSync("e2e/scene.spec.ts", "utf8");
 const receiveBlocks = ["DIRECTIONAL_SCENE_B_RECEIVE", "DIRECTIONAL_SCENE_B_GIVE"];
@@ -97,8 +94,10 @@ for (const marker of receiveBlocks) {
   const block = scene.slice(start, end).replace("spanking_hand_give:", "spanking_hand_receive:");
   scene = scene.slice(0, start) + block + scene.slice(end);
 }
-scene = scene
-  .replaceAll(`getByRole("button", { name: "Spanking (hand)" })`, `getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen" })`);
+scene = scene.replaceAll(
+  `getByRole("button", { name: "Spanking (hand)" })`,
+  `getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen" })`,
+);
 fs.writeFileSync("e2e/scene.spec.ts", scene);
 
 replaceOnce(
