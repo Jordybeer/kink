@@ -1,105 +1,168 @@
-# Dynamic Questionnaire — motorcontract en catalogusverdieping
+# Dynamic Questionnaire — motorcontract v2
 
-> Status: vastgesteld ontwerp voor vervolgwerk. De motor uit PR #299 blijft de
-> basis; catalogusuitbreiding en de UX-correcties hieronder zijn niet stilletjes
-> onderdeel van die reeds gebouwde implementatie.
+> Status: PR #299 leverde runtime v1 van de adaptieve motor. Dit document legt
+> het doelcontract vast voor de vervolgstappen. De volledige catalogusaudit,
+> beslismatrix en toevoegingen staan in
+> [`docs/catalog-v2-contract.md`](docs/catalog-v2-contract.md).
 
 ## Hoogste invariant
 
 **KinkSync mag slim zijn over welke vraag volgt. Nooit over welk antwoord
 waarschijnlijk volgt.**
 
-Daarom bestaan er vier gescheiden verantwoordelijkheden:
+Daaruit volgen vier strikt gescheiden verantwoordelijkheden:
 
-- **Coverage** meet uitsluitend wat expliciet gevraagd en beantwoord is.
-- **Conversation** vlecht vragen prettig en gevarieerd door elkaar.
-- **Expansion** opent één lokale deur na een expliciet positief antwoord.
-- **Prediction** bestaat niet. Die kamer blijft op slot en de sleutel gaat niet
-  onder de deurmat.
+- **Coverage** meet wat expliciet gevraagd en beantwoord is.
+- **Conversation** kiest een prettig, gevarieerd moment voor iedere vraag.
+- **Expansion** opent één lokale vraag na één expliciet positief antwoord.
+- **Prediction** bestaat niet.
+
+Geen combinatie van antwoorden, role, perspective, BDSMtest-score, category,
+topic of cluster mag een verborgen voorkeur, identiteit, motivatie of volgend
+antwoord produceren.
+
+## Huidige runtime versus doelcontract
+
+PR #299 heeft de juiste pure selectieonderdelen, statussemantiek, pinned
+canonical probes, provenance en anti-monopoly geleverd. De audit toont vier
+productgaten die bewust in vervolg-PR's worden opgelost:
+
+1. Dynamic gebruikt nu 20 vaste coverage-anchors en kan daardoor erg kort
+   aanvoelen.
+2. `Meer ontdekken` is nog een micro-wave van maximaal één anchor per broad
+   cluster; na een afgeronde basis blijven maximaal zeven en vaak slechts twee
+   of drie kaarten over.
+3. de category-bulkactie met label `Sla over` schrijft nu ten onrechte
+   `no / Voor hen` als antwoord;
+4. de volledige beschrijving opent via een onzichtbaar tikvlak een Sheet in
+   plaats van een duidelijke inline `Lees meer`-actie.
+
+Dit zijn aantoonbare runtime/UX-gaten. Ze veranderen niets aan de causale
+veiligheidsgrens van de engine.
+
+## Canonieke statussemantiek
+
+| Status | Betekenis | Coverage | Expansion | Negatief signaal |
+| --- | --- | --- | --- | --- |
+| `yes` | Heel graag | telt | sterk positief | nee |
+| `willing` | Ja | telt | positief | nee |
+| `maybe` | Misschien | telt | geen | nee |
+| `no` | Voor hen | telt | geen | nee |
+| `hard_no` | Harde grens | telt | geen | ja, uitsluitend lokaal |
+| skip / Later | Nog niet beantwoord | telt niet | geen | nee |
+
+`no / Voor hen` is bereidheid voor de partner, geen afwijzing. Het sluit niets,
+vertraagt niets en wordt nooit door een bulk-skip ingevuld.
+
+Een `hard_no` mag alleen een expliciet directioneel target beïnvloeden. Eén hard
+limit blijft neutraal voor ordering. Pas twee of meer hard limits waarvan de
+expliciete follow-up-edges op exact hetzelfde target uitkomen mogen dat target
+later zetten via `Math.max(0, count - 1)`. Topic-, category-, related- en
+broad-cluster-metadata doen niet mee aan deze negatieve telling.
 
 ## Productmodel
 
 ### Dynamic
 
-Dynamic bouwt een vooraf bepaald, monotone basisprofiel zonder vast
-vragenbudget. De basis is klaar wanneer:
+Dynamic is de standaard en heeft geen vooraf beloofd vragenaantal.
 
-1. alle IDs uit het vaste `CoveragePlan` expliciet beantwoord zijn;
-2. alle nog geldige canonical probes afgehandeld zijn;
-3. een verplichte interleave-vraag tussen twee probes is afgehandeld wanneer er
-   zo'n niet-probe beschikbaar is.
+Bij het starten wordt één deterministisch `CoveragePlan` gebouwd uit:
 
-Iedere expliciete status telt als coverage. Skip telt niet. Een positief
-antwoord kan één lokale vervolgdeur openen, maar verandert de denominator
-nooit.
+1. een kleine vaste core/safety-set;
+2. de vaste basisanchors van de actieve catalogus;
+3. extra anchors voor interests die de gebruiker zelf heeft gekozen.
 
-De eindtekst spreekt daarom over **basis gelegd** of **brede dekking**, nooit
-over een compleet mens of een volledig kinkprofiel.
+De denominator verandert daarna niet door antwoorden. Een `yes` kan een probe
+openen, maar voegt geen coverage-anchor toe. Iedere expliciete status telt
+gelijkwaardig als coverage; skip niet.
 
-### Verder ontdekken
+Dynamic is klaar wanneer:
 
-`Meer ontdekken` wordt uiteindelijk een tijdelijke doorlopende Discover-intent,
-geen micro-wave van soms maar twee of drie kaarten.
+1. alle IDs in het `CoveragePlan` een expliciete status hebben;
+2. alle geldige canonical probes afgehandeld zijn;
+3. een verplichte interleave tussen twee probes voldaan is wanneer een geldige
+   non-probe beschikbaar is.
 
-- alle nog onbeantwoorde, expliciet aangewezen discovery-anchors zijn kandidaat;
-- broad clusters en topics houden de stapel gevarieerd;
-- echte probes worden ertussen gevlochten;
-- de gebruiker kan altijd stoppen;
-- wanneer de discovery-pool op is, verschijnt opnieuw het checkpoint.
+Geen confidence-score, “engine weet genoeg”-model of bewegende denominator.
 
-Er komt geen verborgen confidence-score en geen willekeurig budget van acht of
-twaalf vragen. De gebruiker bepaalt hoe lang de ontdekking duurt; de motor
-bepaalt alleen de prettigste volgorde.
+Na de cataloguscorrectie wordt de huidige set van 20 anchors opnieuw inhoudelijk
+geselecteerd. De doelset raakt minimaal iedere user-facing categorie en de
+aparte core/safetygebieden. Het aantal volgt uit die controlelijst, niet uit een
+marketingbudget.
+
+### Discover
+
+Discover wordt een tijdelijke doorlopende intent, geen micro-wave.
+
+- alle actieve, nog onbeantwoorde catalogusitems zijn kandidaat;
+- onderverkende categorieën en broad clusters krijgen eerst ruimte;
+- Conversation blijft topical echo en cluster-monopolie voorkomen;
+- expliciete lokale relaties mogen kandidaten rangschikken;
+- de gebruiker ziet altijd `Genoeg voor nu`;
+- de flow stopt pas wanneer de gebruiker uitstapt of de actieve catalogus op is;
+- er wordt geen interest-, confidence- of predictionstate bewaard.
+
+Discover kan dus dezelfde totale pool bereiken als Deep Dive. Het contract is
+anders: Discover stuurt op breadth met een vrije uitgang; Deep Dive belooft
+exhaustiviteit.
 
 ### Deep Dive
 
-Deep Dive belooft letterlijk de volledige actieve catalogus. Ordering mag slim
-zijn, maar geen enkele kink wordt door antwoorden, perspectief, topics, clusters
-of hard limits onbereikbaar.
+Deep Dive betekent letterlijk:
 
-Deep Dive toont de objectieve teller `Catalogus: X / Y beoordeeld`. Alleen hier
-betekent het einde werkelijk dat iedere actieve catalogus-ID expliciet langs is
-geweest.
+> Toon uiteindelijk iedere actieve catalogus-ID.
 
-## Canonieke statussemantiek
+Ordering blijft deterministisch, adaptief en gevarieerd. Geen hard limit,
+perspective, topic, cluster, ontbrekende metadata of eerder antwoord mag een ID
+onbereikbaar maken.
 
-| Status | Betekenis | Coverage | Expansion |
-| --- | --- | --- | --- |
-| `yes` | Heel graag | telt | sterk positief |
-| `willing` | Ja | telt | positief |
-| `maybe` | Misschien | telt | neutraal |
-| `no` | Voor hen | telt | neutraal |
-| `hard_no` | Harde grens | telt | enige negatieve status |
-| skip | Later | telt niet | geen |
+De teller is feitelijk: `Catalogus: X / Y beoordeeld`.
 
-`no / Voor hen` is nooit een afwijzing en sluit geen branch. Voor ieder vast
-target telt de engine uitsluitend `hard_no`-antwoorden op expliciete
-directionele `source -> target`-edges. Eén zo'n antwoord is neutraal voor de
-volgorde; de effectieve penalty is `Math.max(0, count - 1)`. Topic-, related- en
-broad-cluster-metadata doen niet mee aan die targetgebonden telling.
+### Meer uit deze categorie
 
-## Metadata: dun en streng
+Een user-facing categorie krijgt een expliciete lokale ontsnappingsroute. Deze
+intent is ephemeral en maakt geen antwoord of verborgen interest aan.
 
-`lib/kinks.ts` blijft de catalogus, geen gigantische psychologie-ontology.
+```ts
+type QuestionnaireIntent =
+  | { kind: "dynamic" }
+  | { kind: "discover" }
+  | { kind: "category"; category: string }
+  | { kind: "deepDive" };
+```
+
+De category-pool bevat alle actieve, nog onbeantwoorde IDs uit die categorie.
+Een buiten-categorie probe blijft geldig, maar wacht tot de gebruiker terugkeert
+naar Dynamic, Discover of Deep Dive. Zo doet `Meer uit deze categorie` precies
+wat het label belooft.
+
+## Metadata: dun, expliciet en sparse
+
+`lib/kinks.ts` blijft de catalogus en wordt geen psychologie-ontology.
+
+### User-facing category
+
+Alleen voor browse en de lokale category-intent. Een antwoord propageert er
+nooit over.
 
 ### Broad cluster
 
-Alleen voor conversation diversity en anti-monopoly. Een antwoord propageert
-nooit automatisch over een cluster.
+Alleen voor Conversation diversity en anti-monopoly.
 
 ### Topic
 
-Alleen voor spacing. Het voorkomt dat drie bijna gelijke kaarten als een
-seksuele mitrailleur achter elkaar afgaan.
+Alleen voor spacing. Het voorkomt dat bijna dezelfde kaarten direct achter
+elkaar komen. Zelfde topic betekent nooit automatisch related.
 
 ### Related
 
-Expliciete symmetrische inhoudelijke nabijheid. Alleen positieve antwoorden
-mogen hiermee ordering beïnvloeden. Een hard limit propageert er nooit over.
+Een expliciete symmetrische inhoudelijke nabijheid. Positieve antwoorden mogen
+hiermee lokale ordering ondersteunen. Related opent geen probe en draagt nooit
+een hard limit over.
 
 ### Follow-up
 
-Expliciete directionele inhoudelijke voortzetting `A -> B`. De toets is:
+Een expliciete directionele inhoudelijke voortzetting `A -> B`. De toets is:
 
 > Kan B zonder uitspraak over de gebruiker inhoudelijk als verdere vraag na A
 > worden uitgelegd?
@@ -108,21 +171,23 @@ Bij twijfel bestaat de edge niet.
 
 ### Canonical follow-up
 
-Iedere positieve source heeft deterministisch hoogstens één pinned target.
+Iedere positieve source heeft hoogstens één pinned target, ooit.
 
-- maximaal één target per source, ooit;
 - geen fallback naar een tweede neighbor;
 - target al beantwoord betekent capaciteit opgebruikt;
 - meerdere sources mogen hetzelfde target nomineren;
 - één target verschijnt maximaal één keer als pending probe;
 - runtime provenance bewaart alle geldige sources;
-- ontbrekende of ongeldige metadata betekent nul propagation.
+- ontbrekende of ongeldige metadata betekent propagation nul;
+- runtime-score, catalogusvolgorde en later toegevoegde edges veranderen de
+  mapping nooit.
 
-Een bestaande canonical mapping wijzigen is een semantische datamigratie, geen
-onschuldig metadatafeestje. Nieuwe mappings vanaf bestaande oude sources krijgen
-dezelfde zware review, omdat ze afgeronde profielen opnieuw kunnen openen.
+Een bestaande mapping wijzigen is een semantische datamigratie, geen metadata-
+opruiming. Nieuwe catalogusitems landen standaard zonder propagation.
 
-De huidige allowlist heet `canonical-follow-ups@1` en is exact:
+## Canonical allowlist @1
+
+De huidige pinned set blijft exact:
 
 ```text
 spanking_hand             -> spanking_implement
@@ -138,336 +203,201 @@ geur_scent_fetish         -> panty_sniffing
 petplay_puppy             -> petplay_harnas
 ```
 
-Een source die niet in deze versie staat heeft geen canonical target. Een nieuwe
-catalogusentry mag dus wel zonder edge landen, maar kan probes, provenance of de
-heropening van een afgerond profiel pas beïnvloeden nadat een nieuwe mapping
-expliciet is vastgepind, gereviewd en geversioneerd. Ook vóór een nieuwe chain
-wordt toegevoegd geldt die poort; catalogusvolgorde of runtime-score kiest nooit
-een vervangend target.
-
-## Gespreksritme
-
-De scheduler bekijkt na ieder antwoord opnieuw alle open verplichtingen:
-coverage, gekozen interests, discovery en geldige probes uit alle eerdere
-expliciete antwoorden.
-
-Globaal geheugen, lokale oorzaak:
+Nieuwe relaties worden eerst edge voor edge gereviewd en daarna als nieuwe
+versioned allowlist vastgepind. Een mogelijke chain is pas geldig wanneer iedere
+stap zelfstandig expliciet positief is. Dat maakt bijvoorbeeld mogelijk:
 
 ```text
-Golden shower = yes
-Trampling = maybe
-Safety/core-vraag
-Watersports-probe
-Andere cluster
+vraag A = yes -> canonical probe B
+andere category/core-vraag
+probe B = yes -> canonical probe C
 ```
 
 Niet toegestaan:
 
 ```text
 Golden shower = yes + Trampling = yes
-=> waarschijnlijk vernedering
+=> waarschijnlijk humiliation
 ```
 
-Een positieve probe mag zelf één canonical target nomineren. Die nieuwe probe
-wordt pas getoond nadat minimaal één geldige niet-probe is getoond, tenzij geen
-geldige niet-probe meer bestaat.
+Globaal geheugen, lokale oorzaak: iedere expansion-vraag moet naar één concrete
+positieve source en één expliciete metadata-edge herleidbaar zijn.
+
+## Conversation-regels
+
+De scheduler bekijkt na ieder antwoord alle open obligations opnieuw: core,
+interests, coverage, discovery en geldige probes uit eerdere antwoorden.
+
+- maximaal twee vragen uit hetzelfde broad cluster na elkaar wanneer een geldig
+  alternatief bestaat;
+- geen directe topical echo wanneer een alternatief bestaat;
+- na een positieve probe minstens één geldige non-probe vóór de volgende probe,
+  tenzij geen non-probe beschikbaar is;
+- één lane mag een andere lane niet verhongeren;
+- safety/core en expliciet gekozen interests blijven vóór losse relevantie;
+- identieke input, metadata en catalogusversie leveren identieke ordering.
+
+Conversation verandert alleen timing. Het creëert geen eligibility, antwoord of
+profielentry.
 
 ## Perspective
 
 Dominant en Submissive zijn expliciet gekozen antwoordperspectieven, geen
 voorkeurssignalen.
 
-Perspective mag formulering of een ondubbelzinnig directionele tie-break
-beïnvloeden. Het mag nooit kinks verwijderen, dekking verkleinen, antwoorden
-invullen of aannemen dat een Dominant of Submissive bepaalde activiteiten wil.
-De twee profielentries blijven volledig onafhankelijk.
+Perspective mag:
 
-## Cataloguscontract
+- formulering aanpassen waar dezelfde vraag vanuit een andere stoel gelezen
+  wordt;
+- een ondubbelzinnig directionele tie-break ondersteunen.
 
-De huidige catalogus telt 266 kinks. De funnel maakt een grotere catalogus
-bruikbaar, maar is geen vrijbrief voor catalogusconfetti.
+Perspective mag niet:
 
-Een nieuwe kink wordt alleen toegelaten wanneer:
+- geven/ontvangen invullen;
+- kinks verwijderen;
+- coverage verkleinen;
+- `Dominant -> vermoedelijk impact` of een andere verborgen voorkeur maken;
+- entries tussen de twee profielen delen.
 
-1. iemand redelijkerwijs anders kan antwoorden dan op het dichtstbijzijnde
-   bestaande item;
-2. dat verschil een werkelijk gesprek, grens of verwachting verandert;
-3. de activiteit neutraal beschreven kan worden zonder motivatie, identiteit of
-   psychologie toe te schrijven;
-4. de entry uitsluitend volwassen en consensueel geformuleerd kan worden;
-5. het meer is dan een cosmetische materiaal- of instrumentvariant.
+Directionele catalogussplits zoals pegging geven/ontvangen vereisen expliciete
+vragen. Complementary matching is een apart productbesluit en wordt niet in de
+ranking verstopt.
 
-De praktische lakmoesproef:
+## Pure engine-API
 
-> Kan iemand hier `yes` op antwoorden en op het dichtstbijzijnde bestaande item
-> `hard_no`, zonder zichzelf tegen te spreken?
+Het grootste deel blijft pure `lib/`-code:
 
-Golden shower ontvangen versus urine inslikken slaagt. Rode versus zwarte leren
-polsboeien krijgt geen eigen troon.
-
-## Bestaande overlap eerst bewaken
-
-De catalogus heeft enkele inhoudelijke doublures of samengestelde labels:
-
-- `deep_throat` en `deepthroat`;
-- `recording` en `filmen_prive`;
-- `cuckolding / hotwifing` mengt vernederende en niet-vernederende partnerdeling;
-- `sharing / group play` overlapt met `trio / groepsseks`;
-- sommige brede entries combineren handelingen waarop grenzen sterk kunnen
-  verschillen.
-
-Bestaande IDs worden niet verwijderd, samengevoegd of stilletjes herdoopt. Oude
-antwoorden behouden hun betekenis. Overlap krijgt spacing en redactionele
-review; geen dubbel wordt plots een verplicht Dynamic-anchor.
-
-## Eerste hoogvertrouwen-uitbreiding
-
-Deze 31 kandidaten voegen zelfstandig bespreekbare grenzen toe en verdienen een
-eerste inhoudelijke catalogusreview.
-
-### Sensation en materiaal
-
-1. Erotische massage zonder rollenspel
-2. Zachte aanraking / veren
-3. Vibratiespel
-4. Geluidsdeprivatie
-5. Wetlook / natte kleding zonder urinecomponent
-6. Borst- of tepelpumping
-7. Genitale pumping
-
-### Toys en penetratie
-
-8. Prostaatmassage
-9. Prostaatmilking
-10. Seksmachine / fucking machine
-11. Plug langdurig dragen
-
-### Worship en geur
-
-12. Breast worship
-13. Hand worship
-14. Armpit worship
-15. Zweet / lichaamsgeur
-16. Gedragen ondergoed aanbidden, los van alleen ruiken
-
-### Fluid en social
-
-17. Speeksel / drool play, los van spugen als machtsdaad
-18. Gehoord worden
-19. Seksclub / play-party bezoeken
-20. Swinging / partnerruil
-21. Partner zien masturberen
-
-### Aftercare
-
-22. Aftercare voor top/Dom
-23. Check-in de volgende dag
-24. Samen douchen / praktisch opruimen
-25. Striemen en gevoelige plekken verzorgen
-
-### Role, pet en adult ageplay
-
-26. Dollification / mannequin play
-27. Pettraining / trucjes
-28. Pet grooming / borstelen / verzorgen
-29. Luier natmaken
-30. Luier gebruiken voor ontlasting
-31. Luier verschonen
-
-Alle ageplay-items zeggen expliciet dat het uitsluitend om instemmende
-volwassenen gaat. Luierplassen en ontlasting blijven apart: een positief antwoord
-op het ene zegt niets over het andere.
-
-## Kandidaten voor een tweede review
-
-Niet afgeschoten, wel eerst scherper afbakenen tegen bestaande entries:
-
-- sensorische overbelasting versus seksuele overstimulatie;
-- dildo-spel buiten pegging;
-- een live publiek versus algemeen bekeken worden;
-- partnerdeling zonder vernedering;
-- partnerdeling met expliciete vernedering;
-- bodypainting versus body writing;
-- PVC/vinyl versus latex/rubber;
-- hair- en muscle-worship;
-- mutual masturbation;
-- balloon fetish, giant/microfantasie en zwangerschapsfetisj;
-- tranen/crying play, flatulentie, emetofilie en feeder/feedee.
-
-Extremere of gezondheidsgevoelige niches krijgen eerst een afzonderlijke
-redactionele en veiligheidsreview. Een funnel kan een slechte vraag verstoppen,
-maar maakt haar nog niet goed.
-
-## Funnelplaatsing van nieuwe entries
-
-### Basisdekking
-
-De bestaande denominator groeit niet door een catalogusrelease. Een profiel mag
-na een update nooit van 100% naar 76% dekking tuimelen omdat de app nieuwe
-zwepen in de kast vond.
-
-### Discovery
-
-Een gespreide subset kan expliciet discovery-anchor worden, bijvoorbeeld
-erotische massage, vibratiespel, breast worship, lichaamsgeur, gehoord worden,
-play-party, top-aftercare, dollification, pettraining en luier natmaken.
-
-### Expansion
-
-Nieuwe entries krijgen standaard geen edge. Kandidaten voor een volgende,
-expliciet gereviewde mappingversie zijn bijvoorbeeld:
-
-```text
-prostaatmassage -> prostaatmilking
-luier natmaken -> luier verschonen
+```ts
+buildCoveragePlan(...)
+derivePendingExpansionProbes(...)
+deriveDiscoverCandidates(...)
+deriveCategoryCandidates(...)
+rankConversation(...)
+selectConversationQuestion(...)
+getQuestionnaireRuntime(...)
 ```
 
-De rest blijft discovery-, zoek- of Deep-Dive-materiaal totdat iedere relatie
-afzonderlijk verdedigd is.
+Input:
 
-### Lokale gebruikerscontrole
+- actieve catalogus en sparse metadata;
+- expliciete bestaande entries van één profiel;
+- expliciet gekozen interests en perspective;
+- ephemeral intent/conversationcontext.
 
-Een categorie mag later `Meer uit deze categorie` aanbieden. Dat is een
-expliciete gebruikerskeuze, geen inferred interest. De actie maakt geen antwoord
-aan en bewaart geen verborgen psychologisch profiel.
+Output is een queue met lanes en provenance. Geen selector muteert het profiel.
 
-## Legacy en catalogusgeneraties
+## Session state
 
-Nieuwe IDs kunnen v1 Quick/Balanced ook zonder tellerwijziging van samenstelling
-laten veranderen. Daarom wordt het oude selectie-universum bevroren, niet alleen
-het getal 52/104.
+Geen persistent “AI-model” en geen expansion-ledger. Canonical probes blijven
+stateless afleidbaar uit source-status + pinned target + target-status.
 
-- bestaande catalogus-IDs vormen generation 1;
-- nieuwe IDs vormen generation 2;
-- v1 Quick/Balanced/Full en profielen zonder setup blijven generation 1 gebruiken;
-- v2 Deep Dive en full-catalog search bereiken iedere actieve generation;
-- iedere reeds beantwoorde entry blijft zichtbaar;
-- bestaande IDs en profielentries blijven byte-compatibel.
+Alleen ephemeral Conversation/UX-state is toegestaan, bijvoorbeeld:
 
-Dit hoort in een dunne metadata-map buiten `lib/kinks.ts`, niet in een nieuwe
-profielontology.
-
-## UX-contract rond de kaart
-
-De huidige kaart blijft visueel herkenbaar en één tik blijft voldoende om een
-antwoord vast te leggen. Correcties richten zich op eerlijkheid en herstel:
-
-- categorie-bulk-skip mag nooit `no / Voor hen` invullen;
-- kaart-skip heet `Later` en maakt geen entry;
-- subsetcategorieën tonen geen misleidende `X / X compleet`;
-- de beschrijving krijgt een zichtbare `Lees meer`-affordance;
-- antwoordfeedback moet aantoonbaar zichtbaar zijn vóór de volgende kaart;
-- snelle correctie laat de laatste tik winnen;
-- secundaire tikdoelen halen minimaal 44 px;
-- scroll en focus worden op korte iPhones conditioneel hersteld;
-- technische lane-labels komen alleen als dogfooding bewijst dat stille
-  adaptiviteit nog onbegrijpelijk blijft.
-
-## Backwards compatibility
-
-Geen destructieve migratie. Bestaande v1-setups blijven:
-
-```text
-version: 1
-preset: quick | balanced | full
+```ts
+lastShownId
+lastWasProbe
+skippedThisSession
+questionnaireIntent
 ```
 
-V2 blijft additief:
+Deze state voorspelt niets en overleeft geen noodzakelijke recompute.
 
-```text
-version: 2
-mode: dynamic | deepDive
-```
+## Catalogus- en antwoordmigratie vóór launch
 
-Alle bestaande kink-IDs, entries, sharing, QR, verification, consent, scenes,
-contracts, snapshots, localStorage/Zustand en offline-first gedrag blijven
-staan. Compatibility scoring en BDSMtest-signalen veranderen niet.
+Er komt één actieve catalogus, geen catalogusgenerations.
 
-## Releasepoorten
+- ongewijzigde betekenissen behouden ID en antwoord;
+- renames en category moves zijn antwoordneutraal;
+- echte splits krijgen nieuwe IDs en starten onbeantwoord;
+- een oud samengesteld antwoord wordt nooit naar meerdere nieuwe antwoorden
+  gekopieerd;
+- duplicate/gepensioneerde entry-IDs mogen rauw bewaard blijven, maar zijn niet
+  actief of scorebaar;
+- de storemigratie zet v1 Full om naar v2 Deep Dive en v1 Quick/Balanced of een
+  ontbrekende setup naar v2 Dynamic; interests en entries blijven staan, waarna
+  de v1-types en dubbele runtime verdwijnen;
+- de oude positional v2 QR-decoder gebruikt één immutable
+  `LEGACY_COMPACT_KINK_IDS_V2`-volgorde; de ongebruikte encoder verdwijnt en
+  nieuwe shares blijven ID-gebaseerde v3 payloads;
+- huidige v3 sharing/import/sanitize, consent, scenes, contracts en snapshots
+  blijven ID-gebaseerd.
 
-### Catalogus
+Compatibility scoring verandert niet in catalogus- of questionnairewerk.
 
-- iedere actieve, zoekbare ID heeft een stabiele unieke `id`, niet-lege `name`,
-  geldige `category`, `level` 1–4 en een neutrale niet-lege `description`;
-- zodra catalogusgeneraties landen, is `generation` eveneens verplichte
-  routingmetadata voor iedere actieve ID;
-- genormaliseerde naamdoublures falen of staan op een expliciete allowlist;
-- iedere nieuwe ID is via search en Deep Dive bereikbaar;
-- geen bestaande entry wordt verwijderd of geherinterpreteerd.
+## Kaart-UX
 
-Propagation-metadata is afzonderlijk en optioneel: topic, related, follow-up,
-canonical target, anchor en direction. Ontbreekt die laag, dan blijft de ID
-zichtbaar en zoekbaar, maar veroorzaakt hij exact nul propagation. Een
-generation-1-ID blijft bereikbaar via v1 Full, search en v2 Deep Dive; een latere
-generation blijft bereikbaar via search en v2 Deep Dive en wordt niet
-stilletjes in het bevroren v1 Full-universum geschoven.
+De huidige antwoordfeedback van 200 ms en fade van 170 ms blijft voorlopig
+staan; opnieuw tunen gebeurt alleen na device-dogfood.
 
-### Engine
+De doelcorrecties zijn:
 
+- zichtbare `Lees meer` klapt de Nederlandse uitleg inline open;
+- een optionele `safetyNote` krijgt een apart sober blok;
+- geen Sheet/contextwissel midden in de antwoordflow;
+- één tik blijft voldoende om een status op te slaan;
+- `Later` maakt geen entry;
+- category bulk-skip maakt geen `Voor hen`-entries;
+- tijdelijke subsets tonen geen misleidende volledigheid;
+- `Meer uit deze categorie`, `Genoeg voor nu` en terugkeer naar de globale flow
+  blijven expliciet;
+- een nieuw profiel met `focus=questionnaire` scrollt ook vóór tour completion
+  naar de kaart;
+- korte iPhones mogen natuurlijk verticaal scrollen; geen kaart wordt in een te
+  klein intern scrollvak geperst.
+
+## Acceptatietests
+
+### Causaliteit
+
+- ranking creëert of muteert geen profile entry;
+- `yes` en `willing` kunnen uitsluitend een pinned target openen;
+- `maybe` en `Voor hen` openen of sluiten niets;
+- één `hard_no` werkt niet als herhaalde branchafwijzing;
+- hard limits onderdrukken geen topical siblings;
 - ontbrekende metadata geeft exact nul propagation;
-- `no / Voor hen` remt niets;
-- één `hard_no` remt nog geen branch alsof het herhaling is;
-- herhaalde harde grenzen werken alleen op een expliciet gedeeld target;
-- één positive source geeft maximaal één canonical probe;
-- broad-cluster anti-monopoly en determinisme blijven groen;
-- ranking creëert of muteert nooit een profielentry.
+- answered/invalid canonical target geeft geen fallback;
+- meerdere sources naar één target dedupliceren met volledige provenance.
 
-### Legacy en integraties
+### Coverage en intents
 
-- v1 Quick blijft 52 en behoudt zijn selectie-universum;
-- Balanced blijft 104 en behoudt zijn selectie-universum;
-- v1 Full blijft exhaustief binnen generation 1;
-- v2 Deep Dive bereikt de volledige uitgebreide catalogus over alle actieve
-  generations;
+- alle expliciete statuses tellen als coverage; skip niet;
+- denominator beweegt niet door positieve antwoorden;
+- Dynamic stopt exact op anchors + probes + geldige interleave;
+- Discover blijft kandidaten geven zolang een actieve onbeantwoorde ID bestaat;
+- category-intent bevat alleen die categorie en schrijft geen interest;
+- Deep Dive bereikt iedere actieve catalogus-ID;
+- full-catalog search blijft intent-onafhankelijk.
+
+### Conversation
+
+- non-probe tussen probes waar beschikbaar;
+- geen topical echo waar een alternatief bestaat;
+- broad-cluster anti-monopoly;
+- lane starvation onmogelijk;
+- deterministische ordering.
+
+### Integraties
+
 - perspective-profielen blijven onafhankelijk;
-- export/import/sanitize/sharing/QR verwerken nieuwe IDs;
-- een maximaal ingevuld profiel blijft deelbaar via multi-QR;
-- offline search en Deep Dive bevatten de uitbreiding.
+- splitmigraties infereren geen antwoord;
+- Engelse naam en Nederlandse alias zijn zoekbaar;
+- sharing/import/sanitize/QR behouden ID-gebaseerde entries;
+- maximale catalogus blijft binnen multi-QR-limieten;
+- offline Dynamic, Discover, category-intent, Deep Dive en search werken;
+- matching en BDSMtest-signalen blijven onveranderd.
 
-### UX en toestellen
+## Releasevolgorde
 
-- dogfood paden met veel `maybe`, veel enthousiasme, veel `hard_no` en gemengde
-  topics;
-- snelle dubbele statustik is deterministisch;
-- beschrijving, modifiers en `Later` zijn begrijpelijk;
-- viewportchecks op 320x568, 375x667, 390x844 en 430x932;
-- focus, screenreader en reduced motion blijven bruikbaar.
+1. Catalogusmodel, aliases, categoryconstanten en QR-orderontkoppeling.
+2. Bestaande catalogus opschonen en hoogvertrouwen-items zonder propagation.
+3. Doorlopende Discover, category-intent, eerlijke skip en inline uitleg.
+4. Coverage-anchor audit op de definitieve categorieën.
+5. Topics en related edges conservatief toevoegen.
+6. Nieuwe canonical allowlist pas na volledige edge-audit.
+7. Targeted tests, volledige `npm test`, `npm run build`, device-dogfood.
 
-## Aanbevolen releasevolgorde
-
-1. Rond PR #299 af met zijn huidige enginecontract en geldige reviewfixes.
-2. Herstel de eerlijke checkpoint-, skip- en categoriebetekenis.
-3. Maak Discover doorlopend en gebruikersgestuurd.
-4. Bevries het legacy-selectieuniversum.
-5. Voeg de hoogvertrouwen-items eerst zonder propagation toe.
-6. Audit namen, beschrijvingen, categorieën en veiligheidsframing.
-7. Voeg topics en related edges conservatief toe.
-8. Voeg uitsluitend onbetwistbare canonical chains toe.
-9. Test volledige profielen, sharing, QR en offline.
-10. Behandel de tweede kandidatenlijst in een aparte catalogusreview.
-
-## Kritische zelfaudit
-
-Meer catalogus is niet automatisch meer kwaliteit. De funnel verbergt
-keuzebelasting, maar elimineert onderhoud, privacygevoeligheid, zoekruis of een
-grotere Deep Dive niet.
-
-De eerste brainstorm overschatte bovendien enkele gaten: tentakels, babytaal,
-zweet, massage en sploshing zijn al deels in brede entries aanwezig. Verfijning
-is alleen gerechtvaardigd wanneer verschillende expliciete statussen zinvol
-zijn.
-
-Nieuwe canonical mappings vanaf bestaande oude sources kunnen afgeronde
-profielen opnieuw openen. Daarom starten catalogusitems zonder propagation en
-krijgt iedere latere edge migratieachtige review.
-
-De eindbeslissing blijft dus bewust saai en veilig:
-
-- eerst 31 inhoudelijk verdedigbare kandidaten reviewen;
-- basisdekking niet laten terugvallen;
-- Discover rijker maken zonder voorspelling;
-- extreme niches pas na afzonderlijke veiligheidsredactie;
-- twijfel betekent geen entry of geen edge.
+Niet bouwen: predictive mode, backend, authwijziging, nieuw package, giant
+ontology, BDSMtest-signalen of stilzwijgende compatibilitywijziging.
 
 **Coverage meet wat gevraagd is. Expansion volgt wat expliciet gezegd is.
 Prediction bestaat niet.**

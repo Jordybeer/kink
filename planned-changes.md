@@ -25,6 +25,40 @@ editable and unmigrated until the user explicitly switches flow. Changing an
 existing canonical source → target mapping is a semantic data migration, not a
 metadata tidy-up.
 
+### Catalogus v2 + funnel completion [ACTIVE — contract audited 2026-08-09]
+
+Plan of record: `docs/catalog-v2-contract.md`; runtime invariants:
+`engine.md`.
+
+The audit covers all 266 current IDs and found why the funnel still feels
+abrupt: Dynamic has 20 fixed anchors and Discover is a one-per-broad-cluster
+micro-wave, leaving at most seven and often only two or three cards after the
+basis. The target is one clean pre-launch active catalog, English community
+names with Dutch descriptions/aliases, continuous user-exitable Discover,
+exhaustive Deep Dive, and an ephemeral `Meer uit deze categorie` intent.
+
+Work is split into independently reviewable slices:
+
+1. thin catalog fields (`aliases`, optional `safetyNote`), explicit category
+   constants, alias search and positional-QR order decoupling;
+2. catalog corrections plus high-confidence additions with zero propagation by
+   default;
+3. continuous Discover, local category intent, honest skip semantics, inline
+   `Lees meer`, and new-profile card focus;
+4. coverage/topic/related audit, followed only then by a separately versioned
+   canonical allowlist.
+
+No catalog generations or permanent v1/v2 dual engine: there is no public
+legacy population to justify that complexity. The pre-launch migration maps v1
+Full to Deep Dive and Quick/Balanced/no-setup to Dynamic while preserving
+interests and entries. Preserve unchanged kink IDs and answers; semantic splits
+start unanswered and never copy one old answer into multiple new meanings.
+
+Two gates remain before their specific code lands: what the owner meant by
+“Auto masturbation”, and how explicit pegging-giving/receiving IDs should take
+part in complementary matching without using Dominant/Submissive as an answer
+proxy.
+
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 
 Verdict: v5 improves or holds every surface; zero code regressions. Two rot
@@ -47,9 +81,16 @@ Each item needs its own design pass before code.
 - **Dupe matching** — `lib/kinkAliases.ts` of common alternative spellings.
 - **Identity-vs-dynamic split** — `category: "identity"` flag in `lib/kinks.ts`, surface in a separate ProfileHero strip.
 
-### Phase — Role-aware complementary matching (deferred, post direction-kill)
+### Phase — Explicit complementary matching (deferred, design gate)
 
-Per-kink give/receive direction was killed in `629419b`. The right approach: use `profile.role` at the `profileMatchScore` level to infer give/receive intent for the pair and weight scores accordingly. A Dom + Sub pair scoring "yes + yes" on spanking should resolve role complementarity without either user touching per-kink toggles. **Write a design doc before coding.** Touches `lib/matching.ts` and possibly `lib/roles.ts`.
+Per-kink give/receive direction was killed in `629419b`. Do **not** infer it
+from `profile.role` or Dominant/Submissive perspective: perspective says from
+which chair a question is answered, not which act someone wants to give or
+receive. Directional catalog items such as a future pegging-giving and
+pegging-receiving pair need explicit answers plus an independently reviewed
+complement relation at matching time. **Write a design doc and obtain an owner
+decision before coding.** Touches `lib/matching.ts`; must not hide preference
+inference in `lib/roles.ts`.
 
 ### Phase — Pair-scoped kink overlay (deferred, design doc first)
 
