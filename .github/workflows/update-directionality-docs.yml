@@ -1,0 +1,30 @@
+name: Update directionality docs status
+
+on:
+  push:
+    branches:
+      - docs/directionality-pegging-status
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.event.head_commit.message == 'Werk directionality-status bij'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/update-directie-implemented.mjs
+      - name: Commit docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add directie.md
+          git diff --cached --check
+          git commit -m "Markeer de Pegging-vertical-slice als uitgevoerd"
+          git push origin HEAD:docs/directionality-pegging-status
