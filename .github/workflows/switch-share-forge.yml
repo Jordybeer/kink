@@ -23,6 +23,10 @@ jobs:
       - run: npm ci
       - run: sed -i 's/"setImportPreview(null)", "setImportTransfer(null)", 5)/"setImportPreview(null)", "setImportTransfer(null)", 4)/' scripts/forge-switch-share.mjs
       - run: node scripts/forge-switch-share.mjs
+      - name: Narrow Switch QR profile type
+        run: |
+          test "$(grep -c 'let ready: Profile;' components/QRModal.tsx)" -eq 1
+          sed -i 's/let ready: Profile;/let ready: Profile | null;/' components/QRModal.tsx
       - run: npm run lint
       - run: npm test
       - run: npm run build
