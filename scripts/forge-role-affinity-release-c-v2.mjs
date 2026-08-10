@@ -14,30 +14,31 @@ function patchOnce(before, after, label) {
 // RELEASE_A_IDS staat één ID per regel; maak deze assertie niet formatting-afhankelijk.
 patchOnce(
   'replaceOnce(kinkTest, `  "sound_deprivation", "wetlook",`, `  "wetlook",`);',
-  'replaceOnce(kinkTest, `  "sound_deprivation",\\n`, ``);',
+  'replaceOnce(kinkTest, `  "sound_deprivation",\n`, ``);',
   "sound deprivation Release-A retirement",
 );
 
-// Shibari is directioneel, suspension nog niet. Geen directionele source naar een ambigue target sturen.
+// Shibari is directioneel, suspension nog niet. Verwijder alleen de nieuwe ambigue outputregel;
+// de oorspronkelijke shibari -> suspension source wordt door dezelfde migratie bewust verwijderd.
 patchOnce(
-  'replaceOnce(meta,\n  `  ["blindfold", "sound_deprivation"],\\n  ["shibari", "suspension_rechtop"],`,\n  `  ["blindfold_give", "sound_deprivation_give"],\\n  ["blindfold_receive", "sound_deprivation_receive"],\\n  ["shibari_give", "suspension_rechtop"],`);',
-  'replaceOnce(meta,\n  `  ["blindfold", "sound_deprivation"],\\n  ["shibari", "suspension_rechtop"],`,\n  `  ["blindfold_give", "sound_deprivation_give"],\\n  ["blindfold_receive", "sound_deprivation_receive"],`);',
-  "related shibari suspension edge",
+  '  ["shibari_give", "suspension_rechtop"],`);',
+  '`);',
+  "related shibari suspension output",
 );
 patchOnce(
-  'replaceOnce(meta,\n  `  shibari: ["suspension_rechtop"],\\n  blindfold: ["sound_deprivation"],`,\n  `  shibari_give: ["suspension_rechtop"],\\n  blindfold_give: ["sound_deprivation_give"],\\n  blindfold_receive: ["sound_deprivation_receive"],`);',
-  'replaceOnce(meta,\n  `  shibari: ["suspension_rechtop"],\\n  blindfold: ["sound_deprivation"],`,\n  `  blindfold_give: ["sound_deprivation_give"],\\n  blindfold_receive: ["sound_deprivation_receive"],`);',
-  "follow-up shibari suspension edge",
+  '  `  shibari_give: ["suspension_rechtop"],\n  blindfold_give:',
+  '  `  blindfold_give:',
+  "follow-up shibari suspension output",
 );
 patchOnce(
-  'replaceOnce(meta,\n  `  shibari: "suspension_rechtop",\\n  blindfold: "sound_deprivation",`,\n  `  shibari_give: "suspension_rechtop",\\n  blindfold_give: "sound_deprivation_give",\\n  blindfold_receive: "sound_deprivation_receive",`);',
-  'replaceOnce(meta,\n  `  shibari: "suspension_rechtop",\\n  blindfold: "sound_deprivation",`,\n  `  blindfold_give: "sound_deprivation_give",\\n  blindfold_receive: "sound_deprivation_receive",`);',
-  "canonical shibari suspension edge",
+  '  `  shibari_give: "suspension_rechtop",\n  blindfold_give:',
+  '  `  blindfold_give:',
+  "canonical shibari suspension output",
 );
 patchOnce(
-  'replaceOnce(questionnaireTest,\n  `      shibari: "suspension_rechtop",\\n      blindfold: "sound_deprivation",`,\n  `      shibari_give: "suspension_rechtop",\\n      blindfold_give: "sound_deprivation_give",\\n      blindfold_receive: "sound_deprivation_receive",`);',
-  'replaceOnce(questionnaireTest,\n  `      shibari: "suspension_rechtop",\\n      blindfold: "sound_deprivation",`,\n  `      blindfold_give: "sound_deprivation_give",\\n      blindfold_receive: "sound_deprivation_receive",`);',
-  "canonical mapping test shibari suspension edge",
+  '  `      shibari_give: "suspension_rechtop",\n      blindfold_give:',
+  '  `      blindfold_give:',
+  "canonical mapping test shibari suspension output",
 );
 
 const fixedPath = "/tmp/forge-role-affinity-release-c-fixed.mjs";
