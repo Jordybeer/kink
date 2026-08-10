@@ -21,6 +21,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: sed -i 's/"setImportPreview(null)", "setImportTransfer(null)", 5)/"setImportPreview(null)", "setImportTransfer(null)", 4)/' scripts/forge-switch-share.mjs
       - run: node scripts/forge-switch-share.mjs
       - run: npm run lint
       - run: npm test
