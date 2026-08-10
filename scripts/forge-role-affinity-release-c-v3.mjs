@@ -17,10 +17,7 @@ function replaceAllExact(path, before, after) {
   fs.writeFileSync(path, source.split(before).join(after));
 }
 
-// ---------------------------------------------------------------------------
-// Generic share/sanitize/export tests moeten geen kink-ID gebruiken die bewust
-// een semantische directionality-migratie ondergaat.
-// ---------------------------------------------------------------------------
+// Generic share/sanitize/export tests mogen niet op IDs hangen die semantisch gesplitst worden.
 const share = "__tests__/shareProfile.test.ts";
 replaceAllExact(share, "spanking_hand", "latex_rubber");
 replaceAllExact(share, "flogging", "lingerie");
@@ -62,7 +59,7 @@ replaceOnce(
   `  it("v2: collapses legacy sg/sr into status (worst-of logic) on an active historical ID", () => {
     const historicalId = "latex_rubber";
     const index = LEGACY_COMPACT_KINK_IDS_V2.indexOf(historicalId);
-    const at = (char: string) => `${" ".repeat(index)}${char}`;
+    const at = (char: string) => " ".repeat(index) + char;
     const legacyPayload = { v: 2, id: "x", n: "n", r: "r", e: "beginner", ca: 0, ua: 0,
       s: " ".repeat(index + 1), sg: at("y"), sr: at("n") };
     const encoded = btoa(JSON.stringify(legacyPayload)).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
@@ -76,61 +73,29 @@ replaceAllExact(sanitize, "spanking_hand", "latex_rubber");
 replaceAllExact(sanitize, "flogging", "lingerie");
 
 const textExport = "__tests__/profileTextExport.test.ts";
-replaceOnce(
-  textExport,
-  `import { buildProfileTextExport } from "@/lib/profileTextExport";`,
-  `import { KINKS } from "@/lib/kinks";
-import { buildProfileTextExport } from "@/lib/profileTextExport";`,
-);
+replaceOnce(textExport, `import { buildProfileTextExport } from "@/lib/profileTextExport";`, `import { KINKS } from "@/lib/kinks";\nimport { buildProfileTextExport } from "@/lib/profileTextExport";`);
 replaceAllExact(textExport, "spanking_hand", "ice_play");
 replaceAllExact(textExport, "flogging", "latex_rubber");
-replaceOnce(
-  textExport,
-  `describe("profile text export", () => {`,
-  `const ICE_PLAY_NAME = KINKS.find((kink) => kink.id === "ice_play")!.name;
-const LATEX_NAME = KINKS.find((kink) => kink.id === "latex_rubber")!.name;
-
-describe("profile text export", () => {`,
-);
+replaceOnce(textExport, `describe("profile text export", () => {`, `const ICE_PLAY_NAME = KINKS.find((kink) => kink.id === "ice_play")!.name;\nconst LATEX_NAME = KINKS.find((kink) => kink.id === "latex_rubber")!.name;\n\ndescribe("profile text export", () => {`);
 replaceAllExact(textExport, `expect(text).toContain("Spanking (hand)");`, `expect(text).toContain(ICE_PLAY_NAME);`);
 replaceAllExact(textExport, `expect(text).not.toContain("Flogging");`, `expect(text).not.toContain(LATEX_NAME);`);
 replaceAllExact(textExport, `expect(text).toContain("Flogging");`, `expect(text).toContain(LATEX_NAME);`);
 
 const matching = "__tests__/matchingScore.test.ts";
-replaceOnce(
-  matching,
-  `  const [k0, k1, k2, k3] = KINKS;`,
-  `  const [k0, k1, k2, k3] = ["latex_rubber", "lingerie", "uniforms", "feet"]
-    .map((id) => KINKS.find((kink) => kink.id === id)!);`,
-);
+replaceOnce(matching, `  const [k0, k1, k2, k3] = KINKS;`, `  const [k0, k1, k2, k3] = ["latex_rubber", "lingerie", "uniforms", "feet"]\n    .map((id) => KINKS.find((kink) => kink.id === id)!);`);
 
-// ---------------------------------------------------------------------------
-// Questionnaire tests: oude single IDs zijn niet langer geldige fixtures.
-// De give-kant is de canonical metadata-source; receive krijgt eigen same-side
-// mappings. Daarna herschrijven we de perspective-regressie expliciet.
-// ---------------------------------------------------------------------------
+// Questionnaire tests: old single IDs worden expliciete canonical give-fixtures.
 const questionnaire = "__tests__/questionnaire.test.ts";
 for (const [oldId, giveId] of [
-  ["spanking_hand", "spanking_hand_give"],
-  ["spanking_implement", "spanking_implement_give"],
-  ["flogging", "flogging_give"],
-  ["rope_bondage", "rope_bondage_give"],
-  ["shibari", "shibari_give"],
-  ["handcuffs", "handcuffs_give"],
-  ["leather_cuffs", "leather_cuffs_give"],
-  ["gag_ball", "gag_ball_give"],
-  ["gag_bit", "gag_bit_give"],
-  ["blindfold", "blindfold_give"],
+  ["spanking_hand", "spanking_hand_give"], ["spanking_implement", "spanking_implement_give"],
+  ["flogging", "flogging_give"], ["rope_bondage", "rope_bondage_give"],
+  ["shibari", "shibari_give"], ["handcuffs", "handcuffs_give"],
+  ["leather_cuffs", "leather_cuffs_give"], ["gag_ball", "gag_ball_give"],
+  ["gag_bit", "gag_bit_give"], ["blindfold", "blindfold_give"],
   ["sound_deprivation", "sound_deprivation_give"],
-]) {
-  replaceAllExact(questionnaire, `"${oldId}"`, `"${giveId}"`);
-}
-replaceOnce(
-  questionnaire,
-  `import { CATEGORIES, KINKS } from "@/lib/kinks";`,
-  `import { directionalPairForKinkId } from "@/lib/directionality";
-import { CATEGORIES, KINKS } from "@/lib/kinks";`,
-);
+]) replaceAllExact(questionnaire, `"${oldId}"`, `"${giveId}"`);
+
+replaceOnce(questionnaire, `import { CATEGORIES, KINKS } from "@/lib/kinks";`, `import { directionalPairForKinkId } from "@/lib/directionality";\nimport { CATEGORIES, KINKS } from "@/lib/kinks";`);
 replaceOnce(
   questionnaire,
   `  it("does not treat perspective itself as a hidden preference signal", () => {
