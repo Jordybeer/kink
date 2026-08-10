@@ -7,7 +7,6 @@ export type ProfilePerspective = "dominant" | "submissive";
 export interface SwitchShareMemberProof {
   profileId: string;
   keyId: string;
-  proofHash: string;
 }
 
 export interface SwitchShareProof {
