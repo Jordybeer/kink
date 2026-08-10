@@ -22,17 +22,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
-      - name: Run e2e and capture output
+      - name: Run changed e2e surfaces and capture output
         shell: bash
         run: |
           set +e
-          npm run test:e2e 2>&1 | tee debug-role-affinity-e2e.log
+          npx playwright test e2e/compare.spec.ts e2e/scene.spec.ts e2e/ui-audit.spec.ts --reporter=line 2>&1 | tee debug-role-affinity-e2e.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add debug-role-affinity-e2e.log
-            git commit -m "Capture Release C e2e failure" || true
+            git commit -m "Capture Release C focused e2e failure" || true
             git push
           fi
           exit "$status"
