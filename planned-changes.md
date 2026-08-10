@@ -65,16 +65,21 @@ Full to Deep Dive and Quick/Balanced/no-setup to Dynamic while preserving
 interests and entries. Preserve unchanged kink IDs and answers; semantic splits
 start unanswered and never copy one old answer into multiple new meanings.
 
-The questionnaire/UX slice is in progress on `feature/questionnaire-ux-v2`.
+The questionnaire/UX slice is ready as draft PR #304 on `feature/questionnaire-ux-v2`.
 It replaces the micro-wave with continuous Discover, adds category-local
 exploration and honest `Later`, expands descriptions inline, fixes new-profile
 card focus, and ships store v18 normalization so the runtime has no permanent
 v1 budget branch.
 
-Two gates remain before their specific code lands: what the owner meant by
-“Auto masturbation”, and how explicit pegging-giving/receiving IDs should take
-part in complementary matching without using Dominant/Submissive as an answer
-proxy.
+The final metadata slice is in progress on `feature/questionnaire-metadata-v2`.
+It audits topics and every canonical edge separately, pins the allowlist as
+mapping version 2 while preserving every @1 source-target pair, and documents
+rejected suggestive associations. “Auto masturbation” was explicitly dropped
+from scope; it is not an open gate.
+
+One product gate remains before its specific code lands: how explicit
+pegging-giving/receiving IDs should take part in complementary matching without
+using Dominant/Submissive as an answer proxy.
 
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 

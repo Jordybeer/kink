@@ -183,9 +183,15 @@ Iedere positieve source heeft hoogstens één pinned target, ooit.
 Een bestaande mapping wijzigen is een semantische datamigratie, geen metadata-
 opruiming. Nieuwe catalogusitems landen standaard zonder propagation.
 
-## Canonical allowlist @1
+## Canonical allowlist @2
 
-De huidige pinned set blijft exact:
+De actieve formeel geaudite mapping is vastgelegd als
+`QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 2`. De elf mappings uit @1 blijven
+exact staan; @2 voegt alleen nieuwe sources toe. De volledige edge-voor-edge
+onderbouwing en expliciet verworpen associaties staan in
+[`docs/questionnaire-metadata-audit.md`](docs/questionnaire-metadata-audit.md).
+
+De pinned set is:
 
 ```text
 spanking_hand             -> spanking_implement
@@ -197,13 +203,26 @@ orgasm_control            -> orgasm_denial
 exhibitionism             -> being_watched
 voyeurism                 -> watching_others
 watersports_geven         -> watersports_ontvangen
+watersports_ontvangen     -> urine_intiem
 geur_scent_fetish         -> panty_sniffing
 petplay_puppy             -> petplay_harnas
+shibari                    -> suspension_rechtop
+blindfold                  -> sound_deprivation
+being_watched              -> public_play
+remote_toy                 -> remote_toy_publiek
+nude_photography           -> recording
+recording                  -> adult_content_creation
+partner_masturbation_watch -> mutual_masturbation
+anal_fingering             -> anal_sex
+luiers_dragen              -> diaper_wetting
+diaper_wetting             -> diaper_changing
+diaper_messing             -> diaper_changing
+breeding_fantasy           -> creampie
 ```
 
-Nieuwe relaties worden eerst edge voor edge gereviewd en daarna als nieuwe
-versioned allowlist vastgepind. Een mogelijke chain is pas geldig wanneer iedere
-stap zelfstandig expliciet positief is. Dat maakt bijvoorbeeld mogelijk:
+Nieuwe relaties worden edge voor edge gereviewd en daarna versioned
+vastgepind. Een mogelijke chain is pas geldig wanneer iedere stap zelfstandig
+expliciet positief is. Dat maakt bijvoorbeeld mogelijk:
 
 ```text
 vraag A = yes -> canonical probe B

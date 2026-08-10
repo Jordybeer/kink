@@ -529,23 +529,23 @@ audit. Ze worden niet gedupliceerd.
 | Voorstel | Besluit |
 | --- | --- |
 | Mind tricks | Door eigenaar geschrapt |
+| Auto masturbation | Door eigenaar geschrapt; geen ID en geen open interpretatiepoort |
 | ENM | Relatie-/afsprakenmodel, geen kink-answer; eventueel als profielterm naast Open relatie/Polyamoreus |
 | Long-term butt-plug wear | Bestaande `butt_plug`-copy omvat kort en langdurig dragen; eerst die vraag verbeteren |
 | Sweat / body scent | Bestaande brede `geur_scent_fetish` omvat dit al |
 | Worn-underwear worship | Huidige lingerie-, stocking- en panty-scent-items eerst ontvlechten |
 | Urban-exploring sex | Voorlopig geen aparte ID: te veel overlap met outdoor/public play en locatie/legaliteit is geen voorkeurssignaal |
 
-### Twee echte beslispoorten
+### Eén echte beslispoort
 
 1. **Pegging giving/receiving.** De splitsing is inhoudelijk juist en perspective
    mag de richting niet invullen. De huidige matching vergelijkt echter alleen
    dezelfde IDs. Zonder complementmodel ziet `giving=yes` tegenover
    `receiving=yes` geen match. Dit wordt niet stilletjes opgelost in de
    catalogus-PR.
-2. **“Auto masturbation”.** De term is niet scherp genoeg om autonoom te
-   implementeren: solo masturbation, automated masturbator/toy en autofellatio
-   zijn drie andere vragen. Er komt geen ID tot de bedoelde betekenis bevestigd
-   is.
+
+“Auto masturbation” is niet langer een beslispoort: de eigenaar heeft het
+voorstel geschrapt. Er komt geen ID.
 
 ## 7. Funnelcontract na de catalogusaudit
 
@@ -697,14 +697,17 @@ publiek legacyprobleem op met permanente complexiteit.
 
 ### PR D — propagation metadata
 
-Pas nadat de actieve catalogus inhoudelijk staat:
+Nadat de actieve catalogus inhoudelijk staat:
 
 1. topics voor spacing;
 2. related pairs voor positieve lokale ordering;
 3. afzonderlijk gereviewde follow-ups;
-4. een nieuwe versioned canonical allowlist;
+4. de geaudite canonical allowlist @2, met alle @1-mappings ongewijzigd;
 5. edge-by-edge audit: iedere edge moet verdedigbaar zijn zonder uitspraak over
    de persoon achter het antwoord.
+
+De uitgewerkte set en verworpen associaties staan in
+[`questionnaire-metadata-audit.md`](questionnaire-metadata-audit.md).
 
 ### Harde tests
 
