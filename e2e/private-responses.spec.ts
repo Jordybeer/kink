@@ -40,8 +40,8 @@ test("scene suggestions ignore concealed status and usage history", async ({ pag
     ...PROFILE_ALEX,
     entries: {
       ...PROFILE_ALEX.entries,
-      spanking_hand: {
-        ...PROFILE_ALEX.entries.spanking_hand,
+      spanking_hand_give: {
+        ...PROFILE_ALEX.entries.spanking_hand_give,
         usedInScene: 7,
         privateResponse: true,
       },
@@ -51,8 +51,8 @@ test("scene suggestions ignore concealed status and usage history", async ({ pag
     ...PROFILE_SAM,
     entries: {
       ...PROFILE_SAM.entries,
-      spanking_hand: {
-        ...PROFILE_SAM.entries.spanking_hand,
+      spanking_hand_receive: {
+        ...PROFILE_SAM.entries.spanking_hand_receive,
         usedInScene: 4,
       },
     },

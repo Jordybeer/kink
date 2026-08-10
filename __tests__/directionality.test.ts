@@ -4,6 +4,7 @@ import {
   DIRECTIONAL_KINK_PAIRS,
   directionalSiblingId,
   partnerDirectionalKinkId,
+  questionnaireDirectionalKinkIdForPerspective,
   stripDeprecatedDirectionalEntries,
 } from "@/lib/directionality";
 import {
@@ -17,7 +18,9 @@ import {
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import { encodeProfile, decodeAny } from "@/lib/shareProfile";
+import { generateProfileOwnerKey, signProfileConsent, verifyProfileConsent } from "@/lib/consentProof";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
+import { migrateStoredDirectionalityV20, STORE_PERSIST_VERSION } from "@/lib/storeCore";
 import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
 
 function ownProfile(perspective: ProfilePerspective, entries: Record<string, KinkEntry> = {}): Profile {
@@ -45,7 +48,7 @@ function queueItem(id: string): QuestionnaireQueueItem {
 describe("directionele kinkvragen", () => {
   it("models pegging as two flat explicit IDs and retires the ambiguous combined ID", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
-    expect(DIRECTIONAL_KINK_PAIRS).toEqual([
+    expect(DIRECTIONAL_KINK_PAIRS.slice(0, 9)).toEqual([
       { conceptId: "pegging", giveId: "pegging_give", receiveId: "pegging_receive" },
       { conceptId: "golden_shower", giveId: "watersports_geven", receiveId: "watersports_ontvangen" },
       { conceptId: "anal_sex", giveId: "anal_sex_give", receiveId: "anal_sex_receive" },
@@ -56,6 +59,11 @@ describe("directionele kinkvragen", () => {
       { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
       { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
     ]);
+    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(20);
+    expect(DIRECTIONAL_KINK_PAIRS.slice(9).every((pair) =>
+      "questionnaireAffinity" in pair
+      && pair.questionnaireAffinity.dominant === "give"
+      && pair.questionnaireAffinity.submissive === "receive")).toBe(true);
     expect(ids.has("pegging")).toBe(false);
     expect(ids.has("pegging_give")).toBe(true);
     expect(ids.has("pegging_receive")).toBe(true);
@@ -63,25 +71,47 @@ describe("directionele kinkvragen", () => {
       expect(ids.has(pair.giveId), pair.giveId).toBe(true);
       expect(ids.has(pair.receiveId), pair.receiveId).toBe(true);
     }
-    for (const retired of ["anal_sex", "anal_fingering", "fisting_anal", "fisting_vaginal", "deep_throat", "rimmen", "footjob"]) {
+    for (const retired of [
+      "anal_sex", "anal_fingering", "fisting_anal", "fisting_vaginal", "deep_throat", "rimmen", "footjob",
+      "spanking_hand", "spanking_implement", "flogging", "rope_bondage", "shibari", "handcuffs",
+      "leather_cuffs", "gag_ball", "gag_bit", "blindfold", "sound_deprivation",
+    ]) {
       expect(ids.has(retired), retired).toBe(false);
     }
   });
 
-  it("keeps both directions independently eligible in Dynamic for every perspective", () => {
-    const plan = buildQuestionnaireCoveragePlan([]);
-    expect(plan.anchorIds).toContain("pegging_give");
-    expect(plan.anchorIds).toContain("pegging_receive");
-
+  it("keeps neutral pairs role-independent while compact Dynamic aligns strong role-affinity anchors", () => {
     for (const perspective of ["dominant", "submissive"] as const) {
+      const plan = buildQuestionnaireCoveragePlan([], perspective);
+      expect(plan.anchorIds).toHaveLength(45);
+      expect(plan.anchorIds).toContain("pegging_give");
+      expect(plan.anchorIds).toContain("pegging_receive");
+      expect(plan.anchorIds).toContain(perspective === "dominant" ? "spanking_hand_give" : "spanking_hand_receive");
+      expect(plan.anchorIds).not.toContain(perspective === "dominant" ? "spanking_hand_receive" : "spanking_hand_give");
+
       const ids = getQuestionnaireRuntime(ownProfile(perspective)).queue.map((item) => item.kink.id);
       expect(ids).toContain("pegging_give");
       expect(ids).toContain("pegging_receive");
+      expect(ids).toContain(perspective === "dominant" ? "rope_bondage_give" : "rope_bondage_receive");
+      expect(ids).not.toContain(perspective === "dominant" ? "rope_bondage_receive" : "rope_bondage_give");
     }
   });
 
+  it("uses role affinity only for questionnaire eligibility, never as an answer", () => {
+    expect(questionnaireDirectionalKinkIdForPerspective("spanking_hand_give", "submissive"))
+      .toBe("spanking_hand_receive");
+    expect(questionnaireDirectionalKinkIdForPerspective("spanking_hand_receive", "dominant"))
+      .toBe("spanking_hand_give");
+    expect(questionnaireDirectionalKinkIdForPerspective("pegging_give", "submissive"))
+      .toBe("pegging_give");
+    const sub = ownProfile("submissive");
+    getQuestionnaireRuntime(sub);
+    expect(sub.entries.spanking_hand_give).toBeUndefined();
+    expect(sub.entries.spanking_hand_receive).toBeUndefined();
+  });
+
   it("asks an independently eligible sibling directly after an explicit answer", () => {
-    const queue = [queueItem("spanking_hand"), queueItem("pegging_receive")];
+    const queue = [queueItem("ice_play"), queueItem("pegging_receive")];
     expect(selectConversationQuestion(queue, KINKS, {
       lastKinkId: "pegging_give",
       preferDirectionalSibling: true,
@@ -90,7 +120,7 @@ describe("directionele kinkvragen", () => {
     expect(selectConversationQuestion(queue, KINKS, {
       lastKinkId: "pegging_give",
       preferDirectionalSibling: false,
-    })?.kink.id).toBe("spanking_hand");
+    })?.kink.id).toBe("ice_play");
   });
 
   it("never turns pairflow into an expansion probe", () => {
@@ -108,7 +138,8 @@ describe("directionele kinkvragen", () => {
     expect(partnerDirectionalKinkId("watersports_geven")).toBe("watersports_ontvangen");
     expect(partnerDirectionalKinkId("fisting_anal_give")).toBe("fisting_anal_receive");
     expect(partnerDirectionalKinkId("deep_throat_receive")).toBe("deep_throat_give");
-    expect(partnerDirectionalKinkId("spanking_hand")).toBe("spanking_hand");
+    expect(partnerDirectionalKinkId("spanking_hand_give")).toBe("spanking_hand_receive");
+    expect(partnerDirectionalKinkId("spanking_hand_receive")).toBe("spanking_hand_give");
   });
 
   it("searches both variants through the shared concept vocabulary", () => {
@@ -133,6 +164,67 @@ describe("directionele kinkvragen", () => {
     expect(retired.deep_throat).toBeUndefined();
     expect(retired.anal_sex_give).toBeUndefined();
     expect(retired.anal_sex_receive).toBeUndefined();
+    const roleRetired = stripDeprecatedDirectionalEntries({
+      spanking_hand: { status: "yes", comment: "ambigue oud antwoord" },
+      sound_deprivation: { status: "maybe", comment: "ambigue oud antwoord" },
+    });
+    expect(roleRetired.spanking_hand).toBeUndefined();
+    expect(roleRetired.spanking_hand_give).toBeUndefined();
+    expect(roleRetired.spanking_hand_receive).toBeUndefined();
+    expect(roleRetired.sound_deprivation).toBeUndefined();
+  });
+
+  it("migreert v19 profielen en snapshots en bewaart de consent chain-anchor", async () => {
+    expect(STORE_PERSIST_VERSION).toBe(20);
+    const profile = ownProfile("dominant", {
+      spanking_hand: { status: "yes", comment: "oud C" },
+      anal_sex: { status: "willing", comment: "oud B" },
+      praise_kink: { status: "maybe", comment: "blijft" },
+    });
+    const ownerKey = await generateProfileOwnerKey(profile.id);
+    const signed = await signProfileConsent(profile, ownerKey);
+    profile.consentProof = signed.proof;
+    const migrated = migrateStoredDirectionalityV20({
+      profiles: [profile],
+      profileSnapshots: [{
+        id: "snapshot-legacy",
+        profileId: profile.id,
+        date: 1,
+        entries: {
+          spanking_hand: { status: "yes", comment: "oud snapshotantwoord" },
+          praise_kink: { status: "maybe", comment: "blijft" },
+        },
+        customKinks: [],
+        counts: { yes: 1, willing: 0, maybe: 1, no: 0, hard_no: 0 },
+      }],
+    }, 19);
+
+    const migratedProfile = migrated.profiles?.[0];
+    expect(migratedProfile?.entries.spanking_hand).toBeUndefined();
+    expect(migratedProfile?.entries.anal_sex).toBeUndefined();
+    expect(migratedProfile?.entries.spanking_hand_give).toBeUndefined();
+    expect(migratedProfile?.entries.spanking_hand_receive).toBeUndefined();
+    expect(migratedProfile?.entries.praise_kink?.status).toBe("maybe");
+    expect(migratedProfile?.consentProof?.proofHash).toBe(signed.proof.proofHash);
+    expect((await verifyProfileConsent(migratedProfile!)).status).toBe("invalid");
+
+    const resealed = await signProfileConsent(migratedProfile!, signed.ownerKey);
+    expect(resealed.proof.previousProofHash).toBe(signed.proof.proofHash);
+    expect((await verifyProfileConsent({ ...migratedProfile!, consentProof: resealed.proof })).status).toBe("valid");
+
+    expect(migrated.profileSnapshots?.[0].entries.spanking_hand).toBeUndefined();
+    expect(migrated.profileSnapshots?.[0].entries.praise_kink?.status).toBe("maybe");
+    expect(migrated.profileSnapshots?.[0].counts).toEqual({
+      yes: 0, willing: 0, maybe: 1, no: 0, hard_no: 0,
+    });
+  });
+
+  it("laat v20 state ongemoeid door dezelfde migratieboundary", () => {
+    const profile = ownProfile("dominant", {
+      spanking_hand_give: { status: "yes", comment: "expliciet" },
+    });
+    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);
+    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");
   });
 
   it("sanitizes and shares both explicit directions independently", () => {

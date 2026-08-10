@@ -19,8 +19,8 @@ const HONEST_PROFILE: Profile = {
   createdAt: 1716000000000,
   updatedAt: 1716000000001,
   entries: {
-    spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true },
-    flogging: { status: "maybe", desire: 3, comment: "" },
+    latex_rubber: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true },
+    lingerie: { status: "maybe", desire: 3, comment: "" },
     custom_1: { status: "willing", comment: "" },
   },
   bdsmtestScores: [{ role: "Dominant", pct: 97 }],
@@ -34,7 +34,7 @@ describe("sanitizeProfileFull", () => {
     expect(clean!.role).toBe("Domme");
     expect(clean!.experienceLevel).toBe("ervaren");
     expect(clean!.relationshipStatus).toBe("Gecollared");
-    expect(clean!.entries.spanking_hand).toEqual({
+    expect(clean!.entries.latex_rubber).toEqual({
       status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true,
     });
     expect(clean!.customKinks).toEqual([{ id: "custom_1", name: "Eigen ding" }]);
@@ -239,10 +239,10 @@ describe("decodeAny — v1 door now frisked", () => {
     expect(decoded.name).toBe("Val");
     expect(decoded.role).toBe("Domme");
     expect(decoded.relationshipStatus).toBe("Gecollared");
-    expect(decoded.entries.spanking_hand).toEqual({
+    expect(decoded.entries.latex_rubber).toEqual({
       status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true,
     });
-    expect(decoded.entries.flogging).toEqual({ status: "maybe", desire: 3, comment: "" });
+    expect(decoded.entries.lingerie).toEqual({ status: "maybe", desire: 3, comment: "" });
     expect(decoded.customKinks).toEqual([{ id: "custom_1", name: "Eigen ding" }]);
     expect(decoded.bdsmtestScores).toEqual([{ role: "Dominant", pct: 97 }]);
     expect(decoded.isImported).toBe(true);

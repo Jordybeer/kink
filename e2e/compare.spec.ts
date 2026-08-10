@@ -28,9 +28,9 @@ test.describe("Vergelijkingspagina", () => {
     expect(overflow).toBe(false);
   });
 
-  test("match-indicatie is zichtbaar (spanking_hand = yes/yes)", async ({ page }) => {
+  test("match-indicatie is zichtbaar voor complementaire spanking give/receive", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/match|Heel graag|overeenkomst/i);
+    expect(text).toContain("Spanking (hand) — geven ↔ ontvangen");
   });
 
   test("harde grens badge is zichtbaar (humiliation_verbal = no/hard_no)", async ({ page }) => {

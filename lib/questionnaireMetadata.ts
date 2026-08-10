@@ -52,19 +52,22 @@ export function questionnairePrimaryCluster(kink: Kink): QuestionnaireCluster {
  */
 export const QUESTIONNAIRE_TOPIC_IDS = {
   impact: [
-    "spanking_hand", "spanking_implement", "flogging", "caning", "cropping", "paddling",
+    "spanking_hand_give", "spanking_hand_receive", "spanking_implement_give", "spanking_implement_receive",
+    "flogging_give", "flogging_receive", "caning", "cropping", "paddling",
     "whipping", "belt", "slapping_face", "punching", "trampling", "over_de_knie",
     "rubber_zweep_slapper", "fire_flogger", "bullwhip", "body_slapping", "strafspanking",
   ],
   rope: [
-    "rope_bondage", "shibari", "suspension_rechtop", "suspension_ondersteboven",
+    "rope_bondage_give", "rope_bondage_receive", "shibari_give", "shibari_receive",
+    "suspension_rechtop", "suspension_ondersteboven",
     "suspension_horizontaal",
   ],
   restraints: [
-    "handcuffs", "leather_cuffs", "spreader_bar", "hogtie", "mummification", "straitjacket",
+    "handcuffs_give", "handcuffs_receive", "leather_cuffs_give", "leather_cuffs_receive",
+    "spreader_bar", "hogtie", "mummification", "straitjacket",
     "borsten_afbinden", "sleepsack", "predicament_bondage", "vacuumbed",
   ],
-  gags: ["gag_ball", "gag_bit", "gag_tape", "gag_opblaasbaar", "gag_penisvorm", "gag_rubber"],
+  gags: ["gag_ball_give", "gag_ball_receive", "gag_bit_give", "gag_bit_receive", "gag_tape", "gag_opblaasbaar", "gag_penisvorm", "gag_rubber"],
   protocols: [
     "rules_protocols", "rituelen_protocols", "toestemmingsprotocol", "spraakprotocol",
     "hoog_protocol",
@@ -78,7 +81,7 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   media_capture: ["nude_photography", "recording", "webcam", "adult_content_creation"],
   masturbation: ["mutual_masturbation", "partner_masturbation_watch", "joi"],
   remote_toys: ["remote_toy", "remote_toy_publiek"],
-  sensory_deprivation: ["blindfold", "hood", "sound_deprivation"],
+  sensory_deprivation: ["blindfold_give", "blindfold_receive", "hood", "sound_deprivation_give", "sound_deprivation_receive"],
   watersports: [
     "watersports_geven", "watersports_ontvangen", "urine_intiem", "plas_merken",
     "plas_desperation", "buiten_plassen", "plas_in_kleding", "plas_slaaf",
@@ -134,8 +137,8 @@ export function questionnaireTopicsFor(kink: Kink): readonly QuestionnaireTopic[
  * dragen nooit antwoorden of relevantie over.
  */
 export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
-  impact: ["spanking_hand", "flogging"],
-  bondage: ["handcuffs", "rope_bondage", "gag_ball", "blindfold"],
+  impact: ["spanking_hand_give", "flogging_give"],
+  bondage: ["handcuffs_give", "rope_bondage_give", "gag_ball_give", "blindfold_give"],
   power: ["dominance_submission", "praise_kink", "humiliation_verbal", "orgasm_control"],
   rituals: ["rules_protocols"],
   discipline: ["punishment"],
@@ -171,8 +174,8 @@ export const QUESTIONNAIRE_CORE_ANCHOR_IDS = [
 /** Extra anchors die alleen door zelfgekozen interesses op de gastenlijst komen. */
 export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, readonly string[]> = {
   power: ["service", "rules_protocols", "orgasm_control"],
-  impact: ["spanking_hand", "flogging"],
-  bondage: ["handcuffs", "rope_bondage", "gag_ball"],
+  impact: ["spanking_hand_give", "flogging_give"],
+  bondage: ["handcuffs_give", "rope_bondage_give", "gag_ball_give"],
   sensation: ["ice_play", "tickling", "geur_scent_fetish"],
   humiliation: ["humiliation_verbal", "service"],
   sexual_social: ["being_watched", "voyeur_sharing", "butt_plug"],
@@ -183,10 +186,14 @@ export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, re
  * volgorde. Ze opent geen probe en draagt nooit een harde grens mee.
  */
 export const QUESTIONNAIRE_RELATED_PAIRS = [
-  ["spanking_hand", "spanking_implement"],
-  ["rope_bondage", "shibari"],
-  ["handcuffs", "leather_cuffs"],
-  ["gag_ball", "gag_bit"],
+  ["spanking_hand_give", "spanking_implement_give"],
+  ["spanking_hand_receive", "spanking_implement_receive"],
+  ["rope_bondage_give", "shibari_give"],
+  ["rope_bondage_receive", "shibari_receive"],
+  ["handcuffs_give", "leather_cuffs_give"],
+  ["handcuffs_receive", "leather_cuffs_receive"],
+  ["gag_ball_give", "gag_bit_give"],
+  ["gag_ball_receive", "gag_bit_receive"],
   ["rules_protocols", "rituelen_protocols"],
   ["orgasm_control", "orgasm_denial"],
   ["exhibitionism", "being_watched"],
@@ -201,8 +208,9 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["aftercare_physical", "aftercare_verbal"],
   ["aftercare_physical", "aftercare_cleanup"],
   ["aftercare_verbal", "next_day_check_in"],
-  ["blindfold", "sound_deprivation"],
-  ["shibari", "suspension_rechtop"],
+  ["blindfold_give", "sound_deprivation_give"],
+  ["blindfold_receive", "sound_deprivation_receive"],
+
   ["being_watched", "public_play"],
   ["remote_toy", "remote_toy_publiek"],
   ["nude_photography", "recording"],
@@ -219,9 +227,12 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
  * zonder expliciete edge is de propagation precies nul.
  */
 export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]>> = {
-  spanking_hand: ["spanking_implement", "flogging"],
-  rope_bondage: ["shibari"],
-  handcuffs: ["leather_cuffs"],
+  spanking_hand_give: ["spanking_implement_give", "flogging_give"],
+  spanking_hand_receive: ["spanking_implement_receive", "flogging_receive"],
+  rope_bondage_give: ["shibari_give"],
+  rope_bondage_receive: ["shibari_receive"],
+  handcuffs_give: ["leather_cuffs_give"],
+  handcuffs_receive: ["leather_cuffs_receive"],
   rules_protocols: ["rituelen_protocols"],
   ochtend_avondritueel: ["rituelen_protocols"],
   orgasm_control: ["orgasm_denial"],
@@ -230,8 +241,8 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
   watersports_ontvangen: ["urine_intiem"],
   geur_scent_fetish: ["panty_sniffing"],
   petplay_puppy: ["petplay_harnas"],
-  shibari: ["suspension_rechtop"],
-  blindfold: ["sound_deprivation"],
+  blindfold_give: ["sound_deprivation_give"],
+  blindfold_receive: ["sound_deprivation_receive"],
   being_watched: ["public_play"],
   remote_toy: ["remote_toy_publiek"],
   nude_photography: ["recording"],
@@ -246,19 +257,20 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
 };
 
 /**
- * APPEND-ONLY CONTRACT — dit slot gaat niet stiekem van sleutel wisselen.
- *
- * Een bestaande source -> target wijzigen of wissen is een semantische migratie,
- * geen onschuldige metadata-opruimbeurt. Nieuwe sources mogen erbij. Het target
- * blijft vastgepind, zodat reloads of catalogusherschikking een oud positief
- * antwoord nooit een tweede expansionbeurt geven. Er is bewust geen fallback.
+ * VERSIONED CONTRACT — een source -> target wijziging is een semantische migratie.
+ * Nieuwe mappings mogen alleen met expliciete audit; bestaande mappings wijzigen
+ * uitsluitend samen met een version bump en bijbehorende pre-launch cleanup.
+ * Er is bewust geen fallback of automatische sibling-propagatie.
  */
-export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 3;
+export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 4;
 
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
-  spanking_hand: "spanking_implement",
-  rope_bondage: "shibari",
-  handcuffs: "leather_cuffs",
+  spanking_hand_give: "spanking_implement_give",
+  spanking_hand_receive: "spanking_implement_receive",
+  rope_bondage_give: "shibari_give",
+  rope_bondage_receive: "shibari_receive",
+  handcuffs_give: "leather_cuffs_give",
+  handcuffs_receive: "leather_cuffs_receive",
   rules_protocols: "rituelen_protocols",
   ochtend_avondritueel: "rituelen_protocols",
   orgasm_control: "orgasm_denial",
@@ -267,8 +279,8 @@ export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, stri
   watersports_ontvangen: "urine_intiem",
   geur_scent_fetish: "panty_sniffing",
   petplay_puppy: "petplay_harnas",
-  shibari: "suspension_rechtop",
-  blindfold: "sound_deprivation",
+  blindfold_give: "sound_deprivation_give",
+  blindfold_receive: "sound_deprivation_receive",
   being_watched: "public_play",
   remote_toy: "remote_toy_publiek",
   nude_photography: "recording",

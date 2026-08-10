@@ -1,5 +1,6 @@
 import { KINKS } from "@/lib/kinks";
 import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
+import { questionnaireDirectionalKinkIdForPerspective } from "@/lib/directionality";
 import {
   derivePendingExpansionProbes,
   rankQuestionnaireQueueItems,
@@ -17,6 +18,7 @@ import type {
   KinkCategory,
   KinkCategoryId,
   Profile,
+  ProfilePerspective,
   QuestionnaireInterest,
   QuestionnaireMode,
   QuestionnaireSetup,
@@ -123,19 +125,22 @@ function explicitlyAnswered(profile: Profile, kinkId: string): boolean {
 
 export function buildQuestionnaireCoveragePlan(
   interests: readonly QuestionnaireInterest[],
+  perspective?: ProfilePerspective,
 ): QuestionnaireCoveragePlan {
   const catalogIds = new Set(KINKS.map((kink) => kink.id));
   const anchorIds: string[] = [];
   const interestAnchorIds: string[] = [];
   const seen = new Set<string>();
 
-  for (const kinkId of QUESTIONNAIRE_COVERAGE_ANCHOR_IDS) {
+  for (const sourceId of QUESTIONNAIRE_COVERAGE_ANCHOR_IDS) {
+    const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);
     if (!catalogIds.has(kinkId) || seen.has(kinkId)) continue;
     seen.add(kinkId);
     anchorIds.push(kinkId);
   }
   for (const interest of interests) {
-    for (const kinkId of QUESTIONNAIRE_INTEREST_ANCHOR_IDS[interest]) {
+    for (const sourceId of QUESTIONNAIRE_INTEREST_ANCHOR_IDS[interest]) {
+      const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);
       if (!catalogIds.has(kinkId)) continue;
       if (!interestAnchorIds.includes(kinkId)) interestAnchorIds.push(kinkId);
       if (seen.has(kinkId)) continue;
@@ -147,9 +152,18 @@ export function buildQuestionnaireCoveragePlan(
   return { anchorIds, interestAnchorIds };
 }
 
+function questionnairePerspective(profile: Profile): ProfilePerspective | undefined {
+  if (profile.perspective) return profile.perspective;
+  const role = profile.role.trim().toLowerCase();
+  return role === "dominant" || role === "submissive" ? role : undefined;
+}
+
 export function questionnaireCoverage(
   profile: Profile,
-  plan: QuestionnaireCoveragePlan = buildQuestionnaireCoveragePlan(profile.questionnaireSetup?.interests ?? []),
+  plan: QuestionnaireCoveragePlan = buildQuestionnaireCoveragePlan(
+    profile.questionnaireSetup?.interests ?? [],
+    questionnairePerspective(profile),
+  ),
 ): QuestionnaireCoverage {
   const answered = plan.anchorIds.filter((kinkId) => explicitlyAnswered(profile, kinkId)).length;
   const total = plan.anchorIds.length;
@@ -177,7 +191,7 @@ export function getQuestionnaireRuntime(
     : setup.mode === "deepDive"
       ? { kind: "deepDive" }
       : requestedIntent;
-  const coveragePlan = buildQuestionnaireCoveragePlan(setup.interests);
+  const coveragePlan = buildQuestionnaireCoveragePlan(setup.interests, questionnairePerspective(profile));
   const coverage = questionnaireCoverage(profile, coveragePlan);
   const coverageIds = new Set(coveragePlan.anchorIds);
   const coreIds = new Set<string>(QUESTIONNAIRE_CORE_ANCHOR_IDS);

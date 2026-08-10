@@ -103,7 +103,7 @@ Iedere directionele kant blijft een zelfstandig mogelijk antwoord. Dominant of S
 
 Voor **rol-neutrale** directionele concepten (zoals Pegging, fisting of rimming) mag perspective geen kant wegfilteren. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden.
 
-Voor een latere **sterk rol-geassocieerde** pair (bijvoorbeeld bepaalde impact- of bondagehandelingen) mag Dynamic één rol-aligned kant als basisvraag kiezen om de standaardflow niet kunstmatig te verdubbelen. De andere kant blijft dan **onbekend**, niet negatief, en blijft bereikbaar via Discover, Deep Dive, categorie-exploratie of gericht zoeken. Een Switch behoudt twee perspectieven; ieder perspectief krijgt zijn eigen zuinige basisflow.
+Voor een **sterk rol-geassocieerde** pair (zoals de Release C impact- en bondageverticals) mag Dynamic één rol-aligned kant als basisvraag kiezen om de standaardflow niet kunstmatig te verdubbelen. De andere kant blijft **onbekend**, niet negatief, en blijft bereikbaar via Discover, Deep Dive, categorie-exploratie of gericht zoeken. Een Switch behoudt twee perspectieven; ieder perspectief krijgt zijn eigen zuinige basisflow.
 
 Role affinity is dus uitsluitend een eligibility/prioriteitsregel en nooit een voorkeurssignaal. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.
 
@@ -178,7 +178,7 @@ Waarom:
 
 De eerste catalogusaudit daarna splitst uitsluitend high-confidence rol-neutrale handelingen: Golden shower (bestaande twee IDs worden nu echt complementair), anal sex, anal fingering, anal/vaginal fisting, deep throat, rimming en footjob. De oude enkelvoudige IDs starten pre-launch bewust onbeantwoord; er wordt niets naar siblings gekopieerd.
 
-Impact, bondage en andere sterk rol-geassocieerde handelingen worden **niet** in deze release gebulksplitst. Ze wachten op item-per-item role-affinity-audit zodat Dynamic niet onnodig verdubbelt. Worship, toys en anatomy/equipment-gevoelige gevallen blijven eveneens apart staan totdat de labels ondubbelzinnig zijn.
+Release C bewijst role-affinity op een beperkte keten van bestaande Dynamic-anchors en directe semantische vervolgen: hand-spanking, implement-spanking, flogging, rope bondage, shibari, handcuffs, leather cuffs, ball/bit gag, blindfold en sound deprivation. Alleen de compacte Dynamic-anchor kiest per perspective een geassocieerde kant; alle andere productpaden blijven beide richtingen expliciet behandelen. Overige impact/bondage-items wachten nog steeds op item-per-item audit. Worship, toys en anatomy/equipment-gevoelige gevallen blijven apart staan totdat de labels ondubbelzinnig zijn.
 
 ## Pre-launch migratie
 

@@ -76,7 +76,7 @@ mapping version 3 for the explicit Release B semantic migration. The Golden Show
 inference is removed and retired anal source IDs are replaced by explicit same-side directional
 mappings. “Auto masturbation” remains explicitly out of scope.
 
-The original Pegging product gate is shipped. Directionality Release B now audits the catalog with the same anti-inference contract: high-confidence role-neutral sexual actions become explicit complementary pairs, while impact/bondage stay deferred behind a role-affinity eligibility pass so Dynamic does not balloon.
+The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C now proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. Remaining impact/bondage candidates stay item-by-item work, not a bulk split.
 
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 
@@ -100,16 +100,15 @@ Each item needs its own design pass before code.
 - **Dupe matching** — `lib/kinkAliases.ts` of common alternative spellings.
 - **Identity-vs-dynamic split** — `category: "identity"` flag in `lib/kinks.ts`, surface in a separate ProfileHero strip.
 
-### Phase — Explicit complementary matching (deferred, design gate)
+### Phase — Explicit complementary matching [FOUNDATION SHIPPED; CATALOG AUDIT ONGOING]
 
-Per-kink give/receive direction was killed in `629419b`. Do **not** infer it
-from `profile.role` or Dominant/Submissive perspective: perspective says from
-which chair a question is answered, not which act someone wants to give or
-receive. Directional catalog items such as a future pegging-giving and
-pegging-receiving pair need explicit answers plus an independently reviewed
-complement relation at matching time. **Write a design doc and obtain an owner
-decision before coding.** Touches `lib/matching.ts`; must not hide preference
-inference in `lib/roles.ts`.
+The original deferred gate is superseded. Pegging and the reviewed Release B/C
+concepts now use explicit give/receive IDs plus a central complement relation at
+matching time. Dominant/Submissive perspective still never supplies an answer:
+Release C role affinity may only choose the compact Dynamic coverage sibling;
+the opposite side remains unknown and independently answerable. Remaining
+directional candidates stay item-by-item editorial work and must not be bulk
+split or inferred from `profile.role`.
 
 ### Phase — Pair-scoped kink overlay (deferred, design doc first)
 
