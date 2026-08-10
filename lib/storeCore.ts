@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
 import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from "@/lib/questionnaireSetup";
-import { partnerDirectionalKinkId, stripDeprecatedDirectionalProfile } from "@/lib/directionality";
+import { partnerDirectionalKinkId, stripDeprecatedDirectionalEntries, stripDeprecatedDirectionalProfile } from "@/lib/directionality";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   createConsentLedgerEvent,
@@ -88,13 +88,32 @@ const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 export const STORE_PERSIST_VERSION = 20;
 
-export function migrateStoredDirectionalityV20<T extends { profiles?: Profile[] }>(
+export function migrateStoredDirectionalityV20<T extends {
+  profiles?: Profile[];
+  profileSnapshots?: ProfileSnapshot[];
+}>(
   state: T,
   version: number,
 ): T {
-  if (version < STORE_PERSIST_VERSION && state.profiles) {
+  if (version >= STORE_PERSIST_VERSION) return state;
+
+  if (state.profiles) {
+    // Preserve the previous proof as a cryptographic chain anchor. Because the
+    // projected entries changed, verifyProfileConsent will reject it until the
+    // source profile is re-sealed/re-shared; keeping the proof hash lets that
+    // next proof link to the same identity instead of weakening continuity.
     state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);
   }
+
+  if (state.profileSnapshots) {
+    state.profileSnapshots = state.profileSnapshots.map((snapshot) => {
+      const entries = stripDeprecatedDirectionalEntries(snapshot.entries);
+      return entries === snapshot.entries
+        ? snapshot
+        : { ...snapshot, entries, counts: deriveCounts(entries) };
+    });
+  }
+
   return state;
 }
 

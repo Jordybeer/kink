@@ -18,6 +18,7 @@ import {
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import { encodeProfile, decodeAny } from "@/lib/shareProfile";
+import { generateProfileOwnerKey, signProfileConsent, verifyProfileConsent } from "@/lib/consentProof";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { migrateStoredDirectionalityV20, STORE_PERSIST_VERSION } from "@/lib/storeCore";
 import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
@@ -173,20 +174,49 @@ describe("directionele kinkvragen", () => {
     expect(roleRetired.sound_deprivation).toBeUndefined();
   });
 
-  it("migreert een bestaande v19 store naar v20 zonder ambigue directionality te behouden", () => {
+  it("migreert v19 profielen en snapshots en bewaart de consent chain-anchor", async () => {
     expect(STORE_PERSIST_VERSION).toBe(20);
     const profile = ownProfile("dominant", {
       spanking_hand: { status: "yes", comment: "oud C" },
       anal_sex: { status: "willing", comment: "oud B" },
       praise_kink: { status: "maybe", comment: "blijft" },
     });
-    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 19);
+    const ownerKey = await generateProfileOwnerKey(profile.id);
+    const signed = await signProfileConsent(profile, ownerKey);
+    profile.consentProof = signed.proof;
+    const migrated = migrateStoredDirectionalityV20({
+      profiles: [profile],
+      profileSnapshots: [{
+        id: "snapshot-legacy",
+        profileId: profile.id,
+        date: 1,
+        entries: {
+          spanking_hand: { status: "yes", comment: "oud snapshotantwoord" },
+          praise_kink: { status: "maybe", comment: "blijft" },
+        },
+        customKinks: [],
+        counts: { yes: 1, willing: 0, maybe: 1, no: 0, hard_no: 0 },
+      }],
+    }, 19);
 
-    expect(migrated.profiles?.[0].entries.spanking_hand).toBeUndefined();
-    expect(migrated.profiles?.[0].entries.anal_sex).toBeUndefined();
-    expect(migrated.profiles?.[0].entries.spanking_hand_give).toBeUndefined();
-    expect(migrated.profiles?.[0].entries.spanking_hand_receive).toBeUndefined();
-    expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");
+    const migratedProfile = migrated.profiles?.[0];
+    expect(migratedProfile?.entries.spanking_hand).toBeUndefined();
+    expect(migratedProfile?.entries.anal_sex).toBeUndefined();
+    expect(migratedProfile?.entries.spanking_hand_give).toBeUndefined();
+    expect(migratedProfile?.entries.spanking_hand_receive).toBeUndefined();
+    expect(migratedProfile?.entries.praise_kink?.status).toBe("maybe");
+    expect(migratedProfile?.consentProof?.proofHash).toBe(signed.proof.proofHash);
+    expect((await verifyProfileConsent(migratedProfile!)).status).toBe("invalid");
+
+    const resealed = await signProfileConsent(migratedProfile!, signed.ownerKey);
+    expect(resealed.proof.previousProofHash).toBe(signed.proof.proofHash);
+    expect((await verifyProfileConsent({ ...migratedProfile!, consentProof: resealed.proof })).status).toBe("valid");
+
+    expect(migrated.profileSnapshots?.[0].entries.spanking_hand).toBeUndefined();
+    expect(migrated.profileSnapshots?.[0].entries.praise_kink?.status).toBe("maybe");
+    expect(migrated.profileSnapshots?.[0].counts).toEqual({
+      yes: 0, willing: 0, maybe: 1, no: 0, hard_no: 0,
+    });
   });
 
   it("laat v20 state ongemoeid door dezelfde migratieboundary", () => {

@@ -100,16 +100,15 @@ Each item needs its own design pass before code.
 - **Dupe matching** — `lib/kinkAliases.ts` of common alternative spellings.
 - **Identity-vs-dynamic split** — `category: "identity"` flag in `lib/kinks.ts`, surface in a separate ProfileHero strip.
 
-### Phase — Explicit complementary matching (deferred, design gate)
+### Phase — Explicit complementary matching [FOUNDATION SHIPPED; CATALOG AUDIT ONGOING]
 
-Per-kink give/receive direction was killed in `629419b`. Do **not** infer it
-from `profile.role` or Dominant/Submissive perspective: perspective says from
-which chair a question is answered, not which act someone wants to give or
-receive. Directional catalog items such as a future pegging-giving and
-pegging-receiving pair need explicit answers plus an independently reviewed
-complement relation at matching time. **Write a design doc and obtain an owner
-decision before coding.** Touches `lib/matching.ts`; must not hide preference
-inference in `lib/roles.ts`.
+The original deferred gate is superseded. Pegging and the reviewed Release B/C
+concepts now use explicit give/receive IDs plus a central complement relation at
+matching time. Dominant/Submissive perspective still never supplies an answer:
+Release C role affinity may only choose the compact Dynamic coverage sibling;
+the opposite side remains unknown and independently answerable. Remaining
+directional candidates stay item-by-item editorial work and must not be bulk
+split or inferred from `profile.role`.
 
 ### Phase — Pair-scoped kink overlay (deferred, design doc first)
 
