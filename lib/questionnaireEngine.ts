@@ -55,14 +55,6 @@ interface DirectSupport {
   hardLimits: number;
 }
 
-interface RankedKink {
-  kink: Kink;
-  support: DirectSupport;
-  safety: boolean;
-  preferred: boolean;
-  catalogIndex: number;
-}
-
 const MAX_CLUSTER_RUN = 2;
 const DISCOVERY_INTERVAL = 5;
 
@@ -222,39 +214,6 @@ function diversify<T extends { kink: Kink }>(
   return result;
 }
 
-/**
- * Alleen expliciete, schaarse relaties mogen vonken. Safety en gekozen
- * interesses staan vooraan;
- * yes verleidt sterker dan willing; pas herhaalde hard_no's vertragen een edge.
- */
-export function rankQuestionnaireCandidates(
-  catalog: readonly Kink[],
-  entries: Record<string, KinkEntry>,
-  options: RankOptions = {},
-): Kink[] {
-  const support = directSignals(catalog, entries);
-  const ranked = catalog
-    .map((kink, catalogIndex): RankedKink => ({
-      kink,
-      catalogIndex,
-      support: support.get(kink.id) ?? { strongest: 0, sources: 0, hardLimits: 0 },
-      safety: options.safetyIds?.has(kink.id) ?? false,
-      preferred: options.preferredIds?.has(kink.id) ?? false,
-    }))
-    .filter(({ kink }) => entries[kink.id]?.status == null)
-    .sort((left, right) =>
-      Number(right.safety) - Number(left.safety)
-      || Number(right.preferred) - Number(left.preferred)
-      || right.support.strongest - left.support.strongest
-      || right.support.sources - left.support.sources
-      || repeatedHardLimitPenalty(left.support.hardLimits)
-        - repeatedHardLimitPenalty(right.support.hardLimits)
-      || left.kink.level - right.kink.level
-      || left.catalogIndex - right.catalogIndex);
-
-  return diversify(ranked).map(({ kink }) => kink);
-}
-
 /** De lanes houden de teugels: geen vurige score mag coverage onder de voet lopen. */
 export function rankQuestionnaireQueueItems(
   items: readonly QuestionnaireQueueItem[],
@@ -318,6 +277,33 @@ export function rankQuestionnaireQueueItems(
     diversified.push(...diversify(laneItems, diversified.map((item) => item.kink)));
   }
   return diversified;
+}
+
+/**
+ * Compatibiliteitsadapter voor gerichte unit-tests. Hij heeft bewust géén eigen
+ * rankingformule: safety/interests worden naar dezelfde lanes vertaald en gaan
+ * daarna door exact dezelfde queue-ranker als de live questionnaire.
+ */
+export function rankQuestionnaireCandidates(
+  catalog: readonly Kink[],
+  entries: Record<string, KinkEntry>,
+  options: RankOptions = {},
+): Kink[] {
+  const items: QuestionnaireQueueItem[] = catalog
+    .filter((kink) => entries[kink.id]?.status == null)
+    .map((kink) => ({
+      kink,
+      lane: options.safetyIds?.has(kink.id)
+        ? "core"
+        : options.preferredIds?.has(kink.id)
+          ? "interest"
+          : "coverage",
+      isProbe: false,
+      coversAnchor: options.safetyIds?.has(kink.id) || options.preferredIds?.has(kink.id) || false,
+      reasons: [],
+    }));
+
+  return rankQuestionnaireQueueItems(items, catalog, entries).map((item) => item.kink);
 }
 
 function sharesTopic(left: Kink, right: Kink): boolean {
