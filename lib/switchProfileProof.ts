@@ -6,6 +6,7 @@ import type {
 } from "@/types";
 import {
   canonicalJson,
+  sha256Base64Url,
   verifyProfileConsent,
   verifyProfileOwnerKey,
 } from "@/lib/consentProof";
@@ -14,13 +15,11 @@ const ALGORITHM = "ECDSA-P256-SHA256" as const;
 const CURVE = "P-256";
 const TEXT = new TextEncoder();
 const MAX_PROOF_STRING = 512;
-const MAX_GROUP_ID = 128;
 const MAX_NAME = 160;
 
 interface UnsignedSwitchShareProof {
   schema: 1;
   algorithm: typeof ALGORITHM;
-  groupId: string;
   name: string;
   dominant: SwitchShareMemberProof;
   submissive: SwitchShareMemberProof;
@@ -52,13 +51,12 @@ export function sanitizeSwitchShareProof(raw: unknown): SwitchShareProof | undef
   if (!raw || typeof raw !== "object") return undefined;
   const proof = raw as Record<string, unknown>;
   if (proof.schema !== 1 || proof.algorithm !== ALGORITHM) return undefined;
-  const groupId = cleanBoundedString(proof.groupId, MAX_GROUP_ID);
   const name = cleanBoundedString(proof.name, MAX_NAME);
   const dominant = sanitizeMember(proof.dominant);
   const submissive = sanitizeMember(proof.submissive);
   const dominantSignature = cleanBoundedString(proof.dominantSignature, MAX_PROOF_STRING);
   const submissiveSignature = cleanBoundedString(proof.submissiveSignature, MAX_PROOF_STRING);
-  if (!groupId || !name || !dominant || !submissive || !dominantSignature || !submissiveSignature) {
+  if (!name || !dominant || !submissive || !dominantSignature || !submissiveSignature) {
     return undefined;
   }
   if (dominant.profileId === submissive.profileId || dominant.keyId === submissive.keyId) {
@@ -67,7 +65,6 @@ export function sanitizeSwitchShareProof(raw: unknown): SwitchShareProof | undef
   return {
     schema: 1,
     algorithm: ALGORITHM,
-    groupId,
     name,
     dominant,
     submissive,
@@ -80,11 +77,22 @@ function unsignedProof(proof: SwitchShareProof): UnsignedSwitchShareProof {
   return {
     schema: 1,
     algorithm: ALGORITHM,
-    groupId: proof.groupId,
     name: proof.name,
     dominant: proof.dominant,
     submissive: proof.submissive,
   };
+}
+
+function switchIdentityKey(proof: SwitchShareProof): string {
+  return canonicalJson({
+    dominant: proof.dominant,
+    submissive: proof.submissive,
+  });
+}
+
+export async function deriveSharedSwitchGroupId(proof: SwitchShareProof): Promise<string> {
+  const fingerprint = await sha256Base64Url(switchIdentityKey(proof));
+  return `shared-switch:${fingerprint}`;
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
@@ -188,7 +196,6 @@ export async function createSwitchShareProof(
   const unsigned: UnsignedSwitchShareProof = {
     schema: 1,
     algorithm: ALGORITHM,
-    groupId: dominant.personGroupId,
     name: dominant.name.trim(),
     dominant: dominantMember,
     submissive: submissiveMember,
@@ -236,7 +243,7 @@ export async function relinkVerifiedSwitchProfiles(profiles: Profile[]): Promise
   const proofs = new Map<string, SwitchShareProof>();
   for (const profile of profiles) {
     const proof = sanitizeSwitchShareProof(profile.switchShareProof);
-    if (proof) proofs.set(proof.groupId, proof);
+    if (proof) proofs.set(switchIdentityKey(proof), proof);
   }
 
   for (const proof of proofs.values()) {
@@ -246,8 +253,9 @@ export async function relinkVerifiedSwitchProfiles(profiles: Profile[]): Promise
     const bothShared = (dominant.origin === "shared" || dominant.isImported === true)
       && (submissive.origin === "shared" || submissive.isImported === true);
     if (!bothShared || !await verifySwitchShareProof(proof, dominant, submissive)) continue;
-    patches.set(dominant.id, { groupId: proof.groupId, perspective: "dominant", proof });
-    patches.set(submissive.id, { groupId: proof.groupId, perspective: "submissive", proof });
+    const groupId = await deriveSharedSwitchGroupId(proof);
+    patches.set(dominant.id, { groupId, perspective: "dominant", proof });
+    patches.set(submissive.id, { groupId, perspective: "submissive", proof });
   }
 
   return profiles.map((profile) => {
