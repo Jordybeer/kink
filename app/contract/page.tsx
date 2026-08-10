@@ -20,6 +20,7 @@ import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
 import { buildContractPdf, isKinkDetail, DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
 import type { ContractItem, KinkDetailItem, Signals } from "@/lib/contractPdf";
 import { comparableEntry } from "@/lib/privateResponses";
+import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 
@@ -94,13 +95,14 @@ function ContractPage() {
   const EMPTY: KinkEntry = { status: null, comment: "" };
 
   for (const kink of KINKS) {
-    const entryA = comparableEntry(profileA.entries[kink.id]);
-    const entryB = comparableEntry(profileB.entries[kink.id]);
+    const pair = directionalComparisonEntries(profileA.entries, profileB.entries, kink.id);
+    const entryA = comparableEntry(pair.sourceEntry);
+    const entryB = comparableEntry(pair.partnerEntry);
     const hasA = entryA.status;
     const hasB = entryB.status;
     if (!hasA && !hasB) continue;
     const detail: KinkDetail = {
-      name: kink.name,
+      name: directionalCompareLabel(kink.id, kink.name),
       statusA: entryA.status, statusB: entryB.status,
       commentA: entryA.comment || undefined,
       commentB: entryB.comment || undefined,
@@ -111,7 +113,7 @@ function ContractPage() {
       const aHard = entryA.status === "hard_no";
       const bHard = entryB.status === "hard_no";
       const who = aHard && bHard ? "beiden" : aHard ? profileA.name : profileB.name;
-      hardLimits.push({ name: kink.name, who });
+      hardLimits.push({ name: detail.name, who });
       hardLimitDetails.push(detail);
     } else if (isKinkMatch(entryA, entryB)) {
       shared.push(detail);

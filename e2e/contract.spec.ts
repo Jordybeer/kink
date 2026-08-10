@@ -76,3 +76,54 @@ test.describe("Contractpagina — handtekening canvas", () => {
     expect(await wisBtn.count()).toBeGreaterThan(0);
   });
 });
+
+const DIRECTIONAL_CONTRACT_A = {
+  ...PROFILE_ALEX,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_give: { status: "yes", comment: "geven" },
+  },
+} satisfies typeof PROFILE_ALEX;
+
+const DIRECTIONAL_CONTRACT_B_RECEIVE = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_receive: { status: "yes", comment: "ontvangen" },
+  },
+} satisfies typeof PROFILE_SAM;
+
+const DIRECTIONAL_CONTRACT_B_GIVE = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_give: { status: "yes", comment: "ook geven" },
+  },
+} satisfies typeof PROFILE_SAM;
+
+const DIRECTIONAL_CONTRACT_B_LIMIT = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand: { status: "yes", comment: "" },
+    pegging_receive: { status: "hard_no", comment: "grens" },
+  },
+} satisfies typeof PROFILE_SAM;
+
+test.describe("Contractpagina — directionele pairing", () => {
+  test("zet geven tegenover ontvangen in gedeelde verlangens", async ({ page }) => {
+    await seedAndGo(page, URL, [DIRECTIONAL_CONTRACT_A, DIRECTIONAL_CONTRACT_B_RECEIVE]);
+    const shared = page.getByText("Gedeelde verlangens", { exact: true }).locator("..");
+    await expect(shared.getByText("Pegging — geven ↔ ontvangen", { exact: true })).toBeVisible();
+  });
+
+  test("behandelt geven plus geven niet als gedeeld verlangen", async ({ page }) => {
+    await seedAndGo(page, URL, [DIRECTIONAL_CONTRACT_A, DIRECTIONAL_CONTRACT_B_GIVE]);
+    await expect(page.getByText("Pegging — geven ↔ ontvangen", { exact: true })).toHaveCount(0);
+  });
+
+  test("plaatst een hard_no op de complementaire ontvangstrichting bij harde grenzen", async ({ page }) => {
+    await seedAndGo(page, URL, [DIRECTIONAL_CONTRACT_A, DIRECTIONAL_CONTRACT_B_LIMIT]);
+    const limits = page.getByText("Harde grenzen", { exact: true }).locator("..");
+    await expect(limits.getByText(/Pegging — geven ↔ ontvangen/)).toBeVisible();
+  });
+});

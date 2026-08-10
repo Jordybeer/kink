@@ -47,6 +47,34 @@ export function partnerDirectionalKinkId(kinkId: string): string {
   return directionalSiblingId(kinkId) ?? kinkId;
 }
 
+const EMPTY_DIRECTIONAL_ENTRY: KinkEntry = { status: null, comment: "" };
+
+export interface DirectionalComparisonEntries {
+  sourceKinkId: string;
+  partnerKinkId: string;
+  sourceEntry: KinkEntry;
+  partnerEntry: KinkEntry;
+}
+
+/**
+ * Eén bron van waarheid voor consumers die A's concrete kink tegenover de
+ * complementaire kant van B zetten. De helper verandert nooit eligibility,
+ * status of privacy; hij kiest alleen de expliciete IDs die al bestaan.
+ */
+export function directionalComparisonEntries(
+  sourceEntries: Readonly<Record<string, KinkEntry>> | undefined,
+  partnerEntries: Readonly<Record<string, KinkEntry>> | undefined,
+  kinkId: string,
+): DirectionalComparisonEntries {
+  const partnerKinkId = partnerDirectionalKinkId(kinkId);
+  return {
+    sourceKinkId: kinkId,
+    partnerKinkId,
+    sourceEntry: sourceEntries?.[kinkId] ?? EMPTY_DIRECTIONAL_ENTRY,
+    partnerEntry: partnerEntries?.[partnerKinkId] ?? EMPTY_DIRECTIONAL_ENTRY,
+  };
+}
+
 /**
  * Vergelijkrijen maken de richting expliciet zonder de rollen van de profielen
  * te interpreteren. Voor niet-directionele kinks blijft de catalogusnaam intact.

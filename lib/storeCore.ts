@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
 import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from "@/lib/questionnaireSetup";
-import { stripDeprecatedDirectionalProfile } from "@/lib/directionality";
+import { partnerDirectionalKinkId, stripDeprecatedDirectionalProfile } from "@/lib/directionality";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   createConsentLedgerEvent,
@@ -339,8 +339,18 @@ export const useStore = create<State>()(
             const kinkId = item.kinkId;
             profiles = profiles.map((p) => {
               if (p.id !== scene.profileAId && p.id !== scene.profileBId) return p;
-              const prev = p.entries[kinkId] ?? { status: null, comment: "" };
-              return { ...p, entries: { ...p.entries, [kinkId]: { ...prev, usedInScene: (prev.usedInScene ?? 0) + 1 } } };
+              // Scene kinkId is anchored to profile A; profile B records the explicit counterpart.
+              const participantKinkId = p.id === scene.profileBId
+                ? partnerDirectionalKinkId(kinkId)
+                : kinkId;
+              const prev = p.entries[participantKinkId] ?? { status: null, comment: "" };
+              return {
+                ...p,
+                entries: {
+                  ...p.entries,
+                  [participantKinkId]: { ...prev, usedInScene: (prev.usedInScene ?? 0) + 1 },
+                },
+              };
             });
           }
           return {
