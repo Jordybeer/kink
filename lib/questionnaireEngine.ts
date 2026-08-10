@@ -5,6 +5,7 @@ import {
   questionnaireRelatedIds,
   questionnaireTopicsFor,
 } from "@/lib/questionnaireMetadata";
+import { directionalSiblingId } from "@/lib/directionality";
 import type { Kink, KinkEntry } from "@/types";
 
 interface RankOptions {
@@ -45,6 +46,8 @@ export interface QuestionnaireQueueItem {
 export interface ConversationContext {
   /** Een positieve probe krijgt ademruimte voor de volgende zich aandient. */
   requireNonProbe?: boolean;
+  /** Alleen een expliciet antwoord mag een zelfstandig eligible sibling direct uitnodigen. */
+  preferDirectionalSibling?: boolean;
   /** Een spacing-lijntje, nooit een fluistering over het volgende antwoord. */
   lastKinkId?: string | null;
 }
@@ -331,6 +334,14 @@ export function selectConversationQuestion(
   }
 
   if (context.lastKinkId) {
+    if (context.preferDirectionalSibling) {
+      const siblingId = directionalSiblingId(context.lastKinkId);
+      const sibling = siblingId
+        ? candidates.find((item) => item.kink.id === siblingId)
+        : undefined;
+      if (sibling) return sibling;
+    }
+
     const last = catalog.find((kink) => kink.id === context.lastKinkId);
     if (last) {
       const differentTopic = candidates.find((item) => !sharesTopic(last, item.kink));

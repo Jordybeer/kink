@@ -44,12 +44,15 @@ const RELEASE_A_IDS = [
   "creampie",
 ] as const;
 
+const DIRECTIONAL_RELEASE_IDS = ["pegging_give", "pegging_receive"] as const;
+
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
   "filmen_prive",
   "trampling_voeten",
   "breeding_creampie",
   "luiers_gebruik",
   "deepthroat",
+  "pegging",
 ] as const;
 
 describe("kink database integrity", () => {
@@ -106,14 +109,13 @@ describe("kink database integrity", () => {
     }
   });
 
-  it("lands the reviewed Release A set without silently deciding the two owner gates", () => {
+  it("lands Release A plus explicit pegging directionality without deciding auto-masturbation", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(291);
+    expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
+    expect(KINKS).toHaveLength(292);
 
-    expect(KINKS.find((kink) => kink.id === "pegging")?.name).toBe("Pegging / strap-on");
-    expect(ids.has("pegging_giving")).toBe(false);
-    expect(ids.has("pegging_receiving")).toBe(false);
+    expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
   });
 
@@ -134,7 +136,7 @@ describe("kink database integrity", () => {
     const added = [...activeIds].filter((id) => !historicalIds.has(id)).sort();
 
     expect(retired).toEqual([...RETIRED_COMPOSITE_OR_DUPLICATE_IDS].sort());
-    expect(added).toEqual([...RELEASE_A_IDS].sort());
+    expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());
   });
 
   it("separates definitions from a conservative safety note where reviewed", () => {

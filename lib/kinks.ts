@@ -677,11 +677,20 @@ export const KINKS: CatalogKink[] = [
     description: "Anale penetratie met vingers als verkenning of voorbereiding. Altijd korte nagels en glijmiddel gebruiken.",
   },
   {
-    id: "pegging",
-    name: "Pegging / strap-on",
+    id: "pegging_give",
+    name: "Pegging — giving",
+    aliases: ["Pegging geven", "Peggen geven", "Strap-on geven", "Pegging / strap-on"],
     category: "penetration",
     level: 2,
-    description: "Penetratie van de man (of partner zonder penis) met een strap-on door de partner. Communiceer over maat, snelheid en positie.",
+    description: "Een partner anaal penetreren met een strap-on. Bespreek maat, glijmiddel, tempo, positie en stopsignalen zonder een dominante of submissieve rol te veronderstellen.",
+  },
+  {
+    id: "pegging_receive",
+    name: "Pegging — receiving",
+    aliases: ["Pegging ontvangen", "Peggen ontvangen", "Strap-on ontvangen"],
+    category: "penetration",
+    level: 2,
+    description: "Anale penetratie ontvangen met een strap-on. Bespreek maat, glijmiddel, tempo, positie en stopsignalen zonder een dominante of submissieve rol te veronderstellen.",
   },
   {
     id: "butt_plug",
