@@ -15,6 +15,10 @@ De Pegging-vertical-slice staat op `dev`:
 
 Nog niet automatisch uitgerold naar andere kinks: iedere volgende directionele kandidaat vereist dezelfde item-per-item audit.
 
+### Switch delen
+
+Een Switch blijft intern twee onafhankelijke answer maps houden, maar is extern één identiteit. Delen/exporteren bundelt daarom het Dominant- en Submissive-perspectief in één overdracht. De koppeling wordt door beide bestaande profieleigendomssleutels ondertekend; twee losse geldige profielen mogen nooit achteraf als één Switch kunnen worden samengeplakt. De interne `personGroupId` reist niet mee. Import leidt een eigen lokale group-ID af uit de bevestigde profiel-ID's en sleutels, en herstelt daarmee de twee perspectieven als één lokaal gegroepeerde persoon zonder antwoorden tussen de kanten te kopiëren.
+
 ## Waarom dit nodig is
 
 `Dominant`, `Submissive` en `Beide kanten` zijn expliciete profielperspectieven. Ze zeggen iets over de context waarin de gebruiker het profiel invult, maar niet over de fysieke richting van iedere handeling.

@@ -3,7 +3,8 @@ import { ArrowLeft, ArrowRight, Check, CopySimple } from "@phosphor-icons/react"
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
-import { encodeProfileShareTransport } from "@/lib/profileShareV3";
+import { encodeProfileShareTransport, type ProfileShareTransport } from "@/lib/profileShareV3";
+import { encodeSwitchProfileShareTransport, getSwitchProfilePair } from "@/lib/profileSwitchShare";
 import {
   buildProfileQrBundleSet,
   nextProfileQrIndex,
@@ -23,6 +24,7 @@ interface Props {
 
 export default function QRModal({ profile, onClose }: Props) {
   const sealProfileConsent = useStore((state) => state.sealProfileConsent);
+  const profiles = useStore((state) => state.profiles);
   const [preparedProfile, setPreparedProfile] = useState<Profile | null>(null);
   const [qrValues, setQrValues] = useState<string[]>([]);
   const [qrFrames, setQrFrames] = useState<ProfileQrFrame[]>([]);
@@ -41,10 +43,17 @@ export default function QRModal({ profile, onClose }: Props) {
   const [avatarLinkOnly, setAvatarLinkOnly] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
-  const ownsProfile = !!profile && profile.origin !== "shared" && profile.isImported !== true;
-  const canShareAvatar = ownsProfile && !!profile?.avatarDataUrl;
+  const switchPair = profile ? getSwitchProfilePair(profile, profiles) : null;
+  const shareMembers = switchPair ?? (profile ? [profile] : []);
+  const ownsProfile = shareMembers.length > 0
+    && shareMembers.every((member) => member.origin !== "shared" && member.isImported !== true);
+  const avatarSource = ownsProfile ? shareMembers.find((member) => !!member.avatarDataUrl) : undefined;
+  const canShareAvatar = !!avatarSource;
+  const switchVersionKey = switchPair
+    ? switchPair.map((member) => `${member.id}:${member.updatedAt}:${member.avatarDataUrl ? "avatar" : "none"}`).join("|")
+    : "single";
   const preferenceKey = profile
-    ? `${profile.id}:${profile.avatarDataUrl ? "avatar" : "none"}:${ownsProfile ? "own" : "shared"}`
+    ? `${profile.id}:${profile.avatarDataUrl ? "avatar" : "none"}:${ownsProfile ? "own" : "shared"}:${switchVersionKey}`
     : null;
 
   useEffect(() => {
@@ -90,15 +99,55 @@ export default function QRModal({ profile, onClose }: Props) {
 
     void (async () => {
       try {
-        const ready = profile.origin === "shared" || profile.isImported
-          ? profile
-          : await sealProfileConsent(profile.id);
-        if (!ready) throw new Error("Profiel kon niet worden bevestigd");
+        let ready: Profile;
+        let transport: ProfileShareTransport;
+        let sharedAvatar = false;
 
-        const avatarOwnerKey = includeAvatar
-          ? useStore.getState().profileOwnerKeys.find((key) => key.profileId === ready.id)
-          : undefined;
-        const transport = await encodeProfileShareTransport(ready, { includeFetLife, includeAvatar, avatarOwnerKey });
+        if (switchPair) {
+          const readyMembers: Profile[] = [];
+          for (const member of switchPair) {
+            const sealed = member.origin === "shared" || member.isImported
+              ? member
+              : await sealProfileConsent(member.id);
+            if (!sealed) throw new Error("Switch-profiel kon niet volledig worden bevestigd");
+            readyMembers.push(sealed);
+          }
+          const [readyDominant, readySubmissive] = readyMembers as [Profile, Profile];
+          const avatarMember = includeAvatar
+            ? readyMembers.find((member) => !!member.avatarDataUrl)
+            : undefined;
+          const switchTransport = await encodeSwitchProfileShareTransport(
+            readyDominant,
+            readySubmissive,
+            {
+              includeFetLife,
+              includeAvatar,
+              avatarProfileId: avatarMember?.id,
+              ownerKeys: useStore.getState().profileOwnerKeys,
+              linkProof: ownsProfile
+                ? undefined
+                : readyDominant.switchShareProof ?? readySubmissive.switchShareProof,
+            },
+          );
+          ready = readyMembers.find((member) => member.id === profile.id) ?? readyDominant;
+          transport = switchTransport;
+          sharedAvatar = switchTransport.avatarEmbedded;
+        } else {
+          ready = profile.origin === "shared" || profile.isImported
+            ? profile
+            : (await sealProfileConsent(profile.id))!;
+          if (!ready) throw new Error("Profiel kon niet worden bevestigd");
+          const avatarOwnerKey = includeAvatar
+            ? useStore.getState().profileOwnerKeys.find((key) => key.profileId === ready.id)
+            : undefined;
+          transport = await encodeProfileShareTransport(ready, {
+            includeFetLife,
+            includeAvatar,
+            avatarOwnerKey,
+          });
+          sharedAvatar = !!transport.avatarPayload;
+        }
+
         let share = buildProfileQrBundleSet(
           window.location.origin,
           transport.profilePayload,
@@ -121,7 +170,7 @@ export default function QRModal({ profile, onClose }: Props) {
 
         if (cancelled) return;
         setPreparedProfile(ready);
-        setAvatarSkipped(includeAvatar && !!ready.avatarDataUrl && !transport.avatarPayload);
+        setAvatarSkipped(includeAvatar && canShareAvatar && !sharedAvatar);
         setAvatarLinkOnly(linkOnly);
         setUrl(share.shareUrl);
         setQrValues(share.qrValues);
@@ -201,7 +250,7 @@ export default function QRModal({ profile, onClose }: Props) {
   const qrDataUrl = qrDataUrls[qrIndex] ?? null;
   const currentFrame = qrFrames[qrIndex] ?? null;
   const readableAlias = preparedProfile?.consentProof ? profileConsentAlias(preparedProfile) : null;
-  const avatarIncluded = !!preparedProfile?.avatarDataUrl && includeAvatar && !avatarSkipped;
+  const avatarIncluded = canShareAvatar && includeAvatar && !avatarSkipped;
   const avatarInQrSequence = avatarIncluded && !avatarLinkOnly;
 
   return (
@@ -214,7 +263,7 @@ export default function QRModal({ profile, onClose }: Props) {
         {profile && (
           <div className="text-center mb-3">
             <p className="text-sm" style={{ color: "var(--accent-text)" }}>{profile.name}</p>
-            {readableAlias && <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>Bron bevestigd · {readableAlias}</p>}
+            {readableAlias && <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>{switchPair ? "Switch-koppeling bevestigd" : `Bron bevestigd · ${readableAlias}`}</p>}
           </div>
         )}
 
@@ -265,9 +314,9 @@ export default function QRModal({ profile, onClose }: Props) {
         )}
 
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
-          Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze profielversie wordt door jouw eigendomssleutel bevestigd.
+          {switchPair ? "Deelt beide Switch-perspectieven samen, met aparte antwoorden en zonder verborgen reacties." : "Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze profielversie wordt door jouw eigendomssleutel bevestigd."}
         </p>
-        {avatarInQrSequence && <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>De profielfoto volgt na het profiel en is met dezelfde eigendomssleutel bevestigd.</p>}
+        {avatarInQrSequence && <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>{switchPair ? "De profielfoto reist mee in dezelfde bevestigde Switch-overdracht." : "De profielfoto volgt na het profiel en is met dezelfde eigendomssleutel bevestigd."}</p>}
         {avatarLinkOnly && <p className="text-xs text-center mb-2" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
         {multi && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent-text)" }}>
