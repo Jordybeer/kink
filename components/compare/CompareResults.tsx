@@ -6,6 +6,9 @@ import CompareKinkRow from "@/components/CompareKinkRow";
 import { CATEGORIES, getKinksByCategory, kinkCategoryLabel } from "@/lib/kinks";
 import {
   getCompareEntry,
+  getCompareKinkLabel,
+  getComparePartnerEntry,
+  getComparePartnerKinkId,
   mergeCustomKinks,
   passesCompareFilter,
   PROFILE_COLOUR_A,
@@ -54,7 +57,7 @@ export default function CompareResults({
           if (hideDiscussed && discussed.has(kink.id)) return false;
           return passesCompareFilter(
             getCompareEntry(profileA, kink.id),
-            getCompareEntry(profileB, kink.id),
+            getComparePartnerEntry(profileB, kink.id),
             filterMode,
           );
         });
@@ -82,13 +85,14 @@ export default function CompareResults({
             <div className="flex flex-col gap-2">
               {kinks.map((kink) => {
                 const entryA = getCompareEntry(profileA, kink.id);
-                const entryB = getCompareEntry(profileB, kink.id);
+                const partnerKinkId = getComparePartnerKinkId(kink.id);
+                const entryB = getCompareEntry(profileB, partnerKinkId);
 
                 return (
                   <CompareKinkRow
                     key={kink.id}
                     rowKey={kink.id}
-                    name={kink.name}
+                    name={getCompareKinkLabel(kink.id, kink.name)}
                     entryA={entryA}
                     entryB={entryB}
                     profileA={profileA}
@@ -101,7 +105,7 @@ export default function CompareResults({
                       ? (comment) => onComment(profileA.id, kink.id, comment)
                       : undefined}
                     onCommentB={!profileB.isImported
-                      ? (comment) => onComment(profileB.id, kink.id, comment)
+                      ? (comment) => onComment(profileB.id, partnerKinkId, comment)
                       : undefined}
                   />
                 );

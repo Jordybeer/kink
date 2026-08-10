@@ -1,5 +1,9 @@
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import {
+  directionalCompareLabel,
+  partnerDirectionalKinkId,
+} from "@/lib/directionality";
+import {
   hasRating,
   isConflict,
   isHardLimit,
@@ -44,6 +48,19 @@ export function cleanCompareParam(value: string | null): string {
 
 export function getCompareEntry(profile: Profile | undefined, kinkId: string): KinkEntry {
   return profile?.entries[kinkId] ?? EMPTY_ENTRY;
+}
+
+/** De concrete partner-ID die bij de A-richting hoort. */
+export function getComparePartnerKinkId(kinkId: string): string {
+  return partnerDirectionalKinkId(kinkId);
+}
+
+export function getComparePartnerEntry(profile: Profile | undefined, kinkId: string): KinkEntry {
+  return getCompareEntry(profile, getComparePartnerKinkId(kinkId));
+}
+
+export function getCompareKinkLabel(kinkId: string, fallbackName: string): string {
+  return directionalCompareLabel(kinkId, fallbackName);
 }
 
 export function passesCompareFilter(
@@ -91,7 +108,7 @@ export function getCompareCategoryScores(
 
     for (const kink of kinks) {
       const entryA = getCompareEntry(profileA, kink.id);
-      const entryB = getCompareEntry(profileB, kink.id);
+      const entryB = getComparePartnerEntry(profileB, kink.id);
       if (hasRating(entryA) || hasRating(entryB)) rated += 1;
       if (!hasRating(entryA) || !hasRating(entryB)) continue;
       scoreSum += kinkMatchScore(entryA, entryB).score;

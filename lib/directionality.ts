@@ -16,6 +16,10 @@ export const DIRECTIONAL_KINK_PAIRS = [
   { conceptId: "pegging", giveId: "pegging_give", receiveId: "pegging_receive" },
 ] as const satisfies readonly DirectionalKinkPair[];
 
+const DIRECTIONAL_CONCEPT_LABELS: Readonly<Record<string, string>> = {
+  pegging: "Pegging",
+};
+
 const PAIR_BY_KINK_ID = new Map<string, DirectionalKinkPair>();
 for (const pair of DIRECTIONAL_KINK_PAIRS) {
   PAIR_BY_KINK_ID.set(pair.giveId, pair);
@@ -41,6 +45,19 @@ export function directionalSiblingId(kinkId: string): string | null {
 /** De partnerkant voor complementaire matching; niet-directionele IDs blijven zichzelf. */
 export function partnerDirectionalKinkId(kinkId: string): string {
   return directionalSiblingId(kinkId) ?? kinkId;
+}
+
+/**
+ * Vergelijkrijen maken de richting expliciet zonder de rollen van de profielen
+ * te interpreteren. Voor niet-directionele kinks blijft de catalogusnaam intact.
+ */
+export function directionalCompareLabel(kinkId: string, fallbackName: string): string {
+  const pair = directionalPairForKinkId(kinkId);
+  if (!pair) return fallbackName;
+  const conceptLabel = DIRECTIONAL_CONCEPT_LABELS[pair.conceptId] ?? fallbackName;
+  return pair.giveId === kinkId
+    ? `${conceptLabel} — geven ↔ ontvangen`
+    : `${conceptLabel} — ontvangen ↔ geven`;
 }
 
 const DEPRECATED_DIRECTIONAL_KINK_IDS = new Set<string>(["pegging"]);
