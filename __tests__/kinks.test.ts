@@ -9,6 +9,48 @@ import {
   kinkCategoryLabel,
 } from "@/lib/kinks";
 import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
+import { LEGACY_COMPACT_KINK_IDS_V2 } from "@/lib/legacyCompactCatalog";
+
+const RELEASE_A_IDS = [
+  "remote_toy",
+  "nude_photography",
+  "adult_content_creation",
+  "mutual_masturbation",
+  "partner_masturbation_watch",
+  "thigh_focus",
+  "muscle_focus",
+  "pregnancy_attraction",
+  "smeared_makeup",
+  "crying_tears",
+  "vampire_fangs",
+  "erotic_massage",
+  "vibration_play",
+  "sound_deprivation",
+  "wetlook",
+  "prostate_massage",
+  "sex_machine",
+  "drool_play",
+  "being_heard",
+  "play_party",
+  "next_day_check_in",
+  "aftercare_cleanup",
+  "dollification",
+  "pet_training",
+  "pet_grooming",
+  "diaper_wetting",
+  "diaper_messing",
+  "diaper_changing",
+  "breeding_fantasy",
+  "creampie",
+] as const;
+
+const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
+  "filmen_prive",
+  "trampling_voeten",
+  "breeding_creampie",
+  "luiers_gebruik",
+  "deepthroat",
+] as const;
 
 describe("kink database integrity", () => {
   it("every kink has a unique id", () => {
@@ -41,6 +83,10 @@ describe("kink database integrity", () => {
     expect(KINKS.filter((kink) => !kink.description?.trim())).toHaveLength(0);
   });
 
+  it("keeps every user-facing category populated", () => {
+    expect(CATEGORIES.filter((category) => getKinksByCategory(category).length === 0)).toEqual([]);
+  });
+
   it("keeps stable category ids separate from unique display labels", () => {
     expect(KINK_CATEGORY_DEFINITIONS.map(({ id }) => id)).toEqual(CATEGORIES);
     expect(new Set(CATEGORIES).size).toBe(CATEGORIES.length);
@@ -58,6 +104,57 @@ describe("kink database integrity", () => {
       const normalized = [kink.name, ...aliases].map((value) => value.trim().toLowerCase());
       expect(new Set(normalized).size).toBe(normalized.length);
     }
+  });
+
+  it("lands the reviewed Release A set without silently deciding the two owner gates", () => {
+    const ids = new Set(KINKS.map((kink) => kink.id));
+    expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
+    expect(KINKS).toHaveLength(291);
+
+    expect(KINKS.find((kink) => kink.id === "pegging")?.name).toBe("Pegging / strap-on");
+    expect(ids.has("pegging_giving")).toBe(false);
+    expect(ids.has("pegging_receiving")).toBe(false);
+    expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
+  });
+
+  it("retires composite or duplicate questions instead of copying their answer meaning", () => {
+    const ids = new Set(KINKS.map((kink) => kink.id));
+    expect(RETIRED_COMPOSITE_OR_DUPLICATE_IDS.filter((id) => ids.has(id))).toEqual([]);
+    expect(ids.has("breeding_fantasy")).toBe(true);
+    expect(ids.has("creampie")).toBe(true);
+    expect(ids.has("diaper_wetting")).toBe(true);
+    expect(ids.has("diaper_messing")).toBe(true);
+    expect(ids.has("diaper_changing")).toBe(true);
+  });
+
+  it("changes the historical catalog only through the reviewed retire/add sets", () => {
+    const activeIds = new Set(KINKS.map((kink) => kink.id));
+    const historicalIds = new Set<string>(LEGACY_COMPACT_KINK_IDS_V2);
+    const retired = [...historicalIds].filter((id) => !activeIds.has(id)).sort();
+    const added = [...activeIds].filter((id) => !historicalIds.has(id)).sort();
+
+    expect(retired).toEqual([...RETIRED_COMPOSITE_OR_DUPLICATE_IDS].sort());
+    expect(added).toEqual([...RELEASE_A_IDS].sort());
+  });
+
+  it("separates definitions from a conservative safety note where reviewed", () => {
+    const safetyReviewedIds = [
+      "bullwhip", "gag_opblaasbaar", "gag_rubber", "borsten_afbinden", "gasmasker",
+      "suspension_rechtop", "suspension_ondersteboven", "suspension_horizontaal",
+      "opsluiting_kooi", "opsluiting_donker", "opsluiting_kleine_ruimte", "vacuumbed",
+      "forced_orgasm", "facesitting", "badkamer_controle", "dienen_asbak", "lifestyle_247",
+      "free_use", "erotische_hypnose", "toestemmingsprotocol", "punishment",
+      "strafoefeningen", "mondzeep", "somnofilie", "choking", "scarification",
+      "naaldjes_borst_buik", "naaldjes_intiem", "artistiek_snijden", "powerbox_basis",
+      "powerbox_intiem", "dogging", "recording", "webcam", "remote_toy_publiek",
+      "petplay_kooi", "urine_intiem", "plas_desperation", "bloed_play",
+      "katheters_urethral", "klysma_reiniging", "klysma_straf", "penisring_cockring",
+      "rubber_latex_kleding", "korset_middelafname", "luiers_dragen", "adult_content_creation",
+      "crying_tears", "sound_deprivation", "prostate_massage", "sex_machine",
+      "play_party", "diaper_messing", "breeding_fantasy", "creampie",
+    ];
+    const byId = new Map(KINKS.map((kink) => [kink.id, kink]));
+    expect(safetyReviewedIds.filter((id) => !byId.get(id)?.safetyNote?.trim())).toEqual([]);
   });
 });
 

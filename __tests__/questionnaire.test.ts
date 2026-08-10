@@ -37,6 +37,16 @@ import type {
   QuestionnaireSetup,
 } from "@/types";
 
+const CATALOG_V2_RELEASE_A_IDS = [
+  "remote_toy", "nude_photography", "adult_content_creation", "mutual_masturbation",
+  "partner_masturbation_watch", "thigh_focus", "muscle_focus", "pregnancy_attraction",
+  "smeared_makeup", "crying_tears", "vampire_fangs", "erotic_massage", "vibration_play",
+  "sound_deprivation", "wetlook", "prostate_massage", "sex_machine", "drool_play",
+  "being_heard", "play_party", "next_day_check_in", "aftercare_cleanup", "dollification",
+  "pet_training", "pet_grooming", "diaper_wetting", "diaper_messing", "diaper_changing",
+  "breeding_fantasy", "creampie",
+] as const;
+
 function profile(setup: QuestionnaireSetup): Profile {
   return {
     id: "questionnaire-test",
@@ -139,6 +149,16 @@ describe("adaptive questionnaire", () => {
       QUESTIONNAIRE_COVERAGE_ANCHOR_IDS.includes(
         id as (typeof QUESTIONNAIRE_COVERAGE_ANCHOR_IDS)[number],
       ))).toBe(true);
+  });
+
+  it("gives every new catalog item zero answer-propagation metadata by default", () => {
+    const explicitMetadataIds = new Set([
+      ...Object.values(QUESTIONNAIRE_TOPIC_IDS).flat(),
+      ...QUESTIONNAIRE_RELATED_PAIRS.flat(),
+      ...Object.entries(QUESTIONNAIRE_FOLLOW_UPS).flatMap(([source, targets]) => [source, ...targets]),
+      ...Object.entries(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).flat(),
+    ]);
+    expect(CATALOG_V2_RELEASE_A_IDS.filter((id) => explicitMetadataIds.has(id))).toEqual([]);
   });
 
   it("covers every catalog broad cluster in the fixed Dynamic plan", () => {
@@ -571,6 +591,15 @@ describe("adaptive questionnaire", () => {
   it("keeps every active catalog item reachable through its canonical name", () => {
     for (const kink of KINKS) {
       expect(searchAllKinks(kink.name).some((result) => result.id === kink.id), kink.id).toBe(true);
+    }
+  });
+
+  it("keeps every declared alias searchable without turning it into an answer", () => {
+    for (const kink of KINKS) {
+      for (const alias of kink.aliases ?? []) {
+        expect(searchAllKinks(alias).some((result) => result.id === kink.id), `${kink.id}: ${alias}`)
+          .toBe(true);
+      }
     }
   });
 

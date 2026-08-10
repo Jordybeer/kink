@@ -55,6 +55,25 @@ describe("sanitizeProfileFull", () => {
     });
   });
 
+  it("preserves retired raw answers without inferring statuses for their split replacements", () => {
+    const clean = sanitizeProfileFull({
+      id: "pre-split",
+      name: "Pre-split",
+      entries: {
+        breeding_creampie: { status: "yes", comment: "mijn oude antwoord" },
+        luiers_gebruik: { status: "hard_no", comment: "oude samengestelde grens" },
+      },
+    });
+
+    expect(clean?.entries.breeding_creampie?.status).toBe("yes");
+    expect(clean?.entries.luiers_gebruik?.status).toBe("hard_no");
+    for (const inferredId of [
+      "breeding_fantasy", "creampie", "diaper_wetting", "diaper_messing", "diaper_changing",
+    ]) {
+      expect(clean?.entries[inferredId]).toBeUndefined();
+    }
+  });
+
   it("rejects payloads without id or name", () => {
     expect(sanitizeProfileFull(null)).toBeNull();
     expect(sanitizeProfileFull("string")).toBeNull();
