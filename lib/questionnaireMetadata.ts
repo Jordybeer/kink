@@ -84,7 +84,7 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "plas_desperation", "buiten_plassen", "plas_in_kleding", "plas_slaaf",
   ],
   anal: [
-    "anal_sex", "anal_fingering", "pegging", "butt_plug", "anal_beads", "fisting_anal",
+    "anal_sex", "anal_fingering", "pegging_give", "pegging_receive", "butt_plug", "anal_beads", "fisting_anal",
     "rimmen", "anale_training",
   ],
   foot_focus: [
@@ -148,7 +148,7 @@ export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
   pet_play: ["petplay_collar_id", "petplay_puppy"],
   fluids: ["cum_play", "watersports_geven", "spitting"],
   toys: ["vibration_play", "remote_toy"],
-  penetration: ["anal_fingering", "pegging"],
+  penetration: ["anal_fingering", "pegging_give", "pegging_receive"],
   aftercare: ["aftercare_physical", "aftercare_alone", "next_day_check_in"],
   appearance: ["hoge_hakken_dragen", "smeared_makeup"],
   adult_ageplay: ["little_speelgoed", "ddlg_mdlb_dynamiek", "luiers_dragen"],

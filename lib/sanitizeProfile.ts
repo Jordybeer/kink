@@ -14,6 +14,7 @@ import {
 } from "@/lib/profileVerification";
 import { sanitizeProfileConsentProof } from "@/lib/consentProof";
 import { normalizeQuestionnaireSetup } from "@/lib/questionnaireSetup";
+import { stripDeprecatedDirectionalEntries } from "@/lib/directionality";
 import {
   clamp,
   MAX_CUSTOM_KINKS,
@@ -142,7 +143,7 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
     customKinks: sanitizeCustomKinks(r.customKinks),
     createdAt: asFiniteNumber(r.createdAt) ?? now,
     updatedAt: asFiniteNumber(r.updatedAt) ?? now,
-    entries,
+    entries: stripDeprecatedDirectionalEntries(entries),
   };
 
   if (typeof r.relationshipStatus === "string" && r.relationshipStatus.trim()) {

@@ -46,6 +46,7 @@ export default function TriageDeck({
   const [holding, setHolding] = useState<string | null>(null);
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
   const [requireNonProbe, setRequireNonProbe] = useState(false);
+  const [preferDirectionalSibling, setPreferDirectionalSibling] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const fadeTransition = reducedMotion
@@ -82,6 +83,7 @@ export default function TriageDeck({
   }
   const currentItem = selectConversationQuestion(queue, KINKS, {
     requireNonProbe,
+    preferDirectionalSibling,
     lastKinkId: lastAnsweredId,
   });
   const held = holding ? kinks.find((kink) => kink.id === holding) : null;
@@ -93,10 +95,12 @@ export default function TriageDeck({
     if (holdTimer.current) clearTimeout(holdTimer.current);
     if (status == null) {
       setHolding(null);
+      setPreferDirectionalSibling(false);
       return;
     }
     setLastAnsweredId(kink.id);
     setRequireNonProbe(answeredWasProbe);
+    setPreferDirectionalSibling(true);
     setHolding(kink.id);
     holdTimer.current = setTimeout(() => setHolding(null), CARD_FEEDBACK_MS);
   }
@@ -115,6 +119,7 @@ export default function TriageDeck({
   function skip(kink: Kink) {
     setHolding(null);
     setLastAnsweredId(kink.id);
+    setPreferDirectionalSibling(false);
     if (currentItem?.kink.id === kink.id && !currentItem.isProbe) setRequireNonProbe(false);
     setSkipped((previous) => new Set(previous).add(kink.id));
   }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
 import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from "@/lib/questionnaireSetup";
+import { stripDeprecatedDirectionalProfile } from "@/lib/directionality";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   createConsentLedgerEvent,
@@ -565,7 +566,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 18,
+      version: 19,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -672,6 +673,9 @@ export const useStore = create<State>()(
         }
         if (version < 18 && state.profiles) {
           state.profiles = normalizeStoredQuestionnaireProfiles(state.profiles);
+        }
+        if (version < 19 && state.profiles) {
+          state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);
         }
         return state;
       },

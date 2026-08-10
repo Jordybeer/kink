@@ -3,6 +3,7 @@ import { LEGACY_COMPACT_KINK_IDS_V2 } from "@/lib/legacyCompactCatalog";
 import { sanitizeBdsmtestScores, sanitizeProfileFull } from "@/lib/sanitizeProfile";
 import { clamp, MAX_CUSTOM_KINKS, MAX_ID_LEN, MAX_KINK_ID_LEN, MAX_KINK_NAME_LEN, MAX_NAME_LEN, MAX_ROLE_LEN, VALID_LEVELS } from "@/lib/profileSanitizePrimitives";
 import { deriveProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
+import { stripDeprecatedDirectionalEntries } from "@/lib/directionality";
 
 interface ShareProfileOptions {
   includeFetLife?: boolean;
@@ -147,7 +148,7 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
     customKinks,
     createdAt: typeof p.ca === "number" && Number.isFinite(p.ca) ? p.ca : Date.now(),
     updatedAt: typeof p.ua === "number" && Number.isFinite(p.ua) ? p.ua : Date.now(),
-    entries,
+    entries: stripDeprecatedDirectionalEntries(entries),
     isImported: true,
   };
 }

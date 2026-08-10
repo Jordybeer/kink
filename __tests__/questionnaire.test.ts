@@ -99,7 +99,7 @@ function queueItem(id: string, isProbe = false): QuestionnaireQueueItem {
 
 describe("adaptive questionnaire", () => {
   it("uses one Dynamic/Deep Dive runtime and defaults missing pre-launch setup to Dynamic", () => {
-    expect(questionnaireCount({ mode: "dynamic", interests: [], version: 2 })).toBe(44);
+    expect(questionnaireCount({ mode: "dynamic", interests: [], version: 2 })).toBe(45);
     expect(questionnaireCount({ mode: "deepDive", interests: [], version: 2 })).toBe(KINKS.length);
 
     const withoutSetup: Profile = {
@@ -114,7 +114,7 @@ describe("adaptive questionnaire", () => {
     };
     const runtime = getQuestionnaireRuntime(withoutSetup);
     expect(runtime.intent).toEqual({ kind: "dynamic" });
-    expect(runtime.coverage?.total).toBe(44);
+    expect(runtime.coverage?.total).toBe(45);
   });
 
   it("never hides an existing answer outside the Dynamic plan", () => {
@@ -193,7 +193,7 @@ describe("adaptive questionnaire", () => {
     expect([...planClusters].sort()).toEqual([...catalogClusters].sort());
   });
 
-  it("pins a transparent 44-question base plan across every user-facing category", () => {
+  it("pins a transparent 45-question base plan across every user-facing category", () => {
     const catalogById = new Map(KINKS.map((kink) => [kink.id, kink]));
     const configuredCategories = Object.keys(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS).sort();
     expect(configuredCategories).toEqual([...CATEGORIES].sort());
@@ -207,7 +207,7 @@ describe("adaptive questionnaire", () => {
     const flattened = Object.values(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS).flat();
     expect(QUESTIONNAIRE_COVERAGE_ANCHOR_IDS).toEqual(flattened);
     expect(new Set(flattened).size).toBe(flattened.length);
-    expect(buildQuestionnaireCoveragePlan([]).anchorIds).toHaveLength(44);
+    expect(buildQuestionnaireCoveragePlan([]).anchorIds).toHaveLength(45);
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
