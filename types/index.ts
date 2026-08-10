@@ -12,7 +12,6 @@ export interface SwitchShareMemberProof {
 export interface SwitchShareProof {
   schema: 1;
   algorithm: "ECDSA-P256-SHA256";
-  groupId: string;
   name: string;
   dominant: SwitchShareMemberProof;
   submissive: SwitchShareMemberProof;
