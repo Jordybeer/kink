@@ -7,16 +7,13 @@ import type {
   KinkStatus,
   Profile,
   ProfilePerspective,
-  QuestionnaireInterest,
-  QuestionnaireMode,
-  QuestionnairePreset,
-  QuestionnaireSetup,
 } from "@/types";
 import {
   deriveProfileVerificationCode,
   normalizeProfileVerificationCode,
 } from "@/lib/profileVerification";
 import { sanitizeProfileConsentProof } from "@/lib/consentProof";
+import { normalizeQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import {
   clamp,
   MAX_CUSTOM_KINKS,
@@ -31,16 +28,6 @@ import {
 
 const VALID_STATUSES: readonly NonNullable<KinkStatus>[] = ["yes", "willing", "maybe", "no", "hard_no"];
 const VALID_PERSPECTIVES: readonly ProfilePerspective[] = ["dominant", "submissive"];
-const VALID_PRESETS: readonly QuestionnairePreset[] = ["quick", "balanced", "full"];
-const VALID_QUESTIONNAIRE_MODES: readonly QuestionnaireMode[] = ["dynamic", "deepDive"];
-const VALID_INTERESTS: readonly QuestionnaireInterest[] = [
-  "power",
-  "impact",
-  "bondage",
-  "sensation",
-  "humiliation",
-  "sexual_social",
-];
 
 const MAX_COMMENT_LEN = 2_000;
 const MAX_TAGS = 20;
@@ -119,29 +106,6 @@ function sanitizeCustomKinks(raw: unknown): CustomKink[] {
     .slice(0, MAX_CUSTOM_KINKS);
 }
 
-function sanitizeQuestionnaireSetup(raw: unknown): QuestionnaireSetup | undefined {
-  if (!raw || typeof raw !== "object") return undefined;
-  const record = raw as Record<string, unknown>;
-  const interests = Array.isArray(record.interests)
-    ? [...new Set(record.interests.filter(
-        (interest): interest is QuestionnaireInterest =>
-          typeof interest === "string" && (VALID_INTERESTS as readonly string[]).includes(interest),
-      ))]
-    : [];
-  if (record.version === 1) {
-    if (typeof record.preset !== "string" || !(VALID_PRESETS as readonly string[]).includes(record.preset)) {
-      return undefined;
-    }
-    return { preset: record.preset as QuestionnairePreset, interests, version: 1 };
-  }
-  if (record.version === 2) {
-    if (typeof record.mode !== "string"
-      || !(VALID_QUESTIONNAIRE_MODES as readonly string[]).includes(record.mode)) return undefined;
-    return { mode: record.mode as QuestionnaireMode, interests, version: 2 };
-  }
-  return undefined;
-}
-
 /**
  * Full Profile sanitizer for untrusted JSON. Local perspective fields are only
  * restored for own profiles; shared payloads cannot inject a local group.
@@ -216,7 +180,7 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
     if (typeof r.perspective === "string" && (VALID_PERSPECTIVES as readonly string[]).includes(r.perspective)) {
       profile.perspective = r.perspective as ProfilePerspective;
     }
-    const questionnaireSetup = sanitizeQuestionnaireSetup(r.questionnaireSetup);
+    const questionnaireSetup = normalizeQuestionnaireSetup(r.questionnaireSetup);
     if (questionnaireSetup) profile.questionnaireSetup = questionnaireSetup;
   }
 

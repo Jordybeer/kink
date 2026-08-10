@@ -27,9 +27,9 @@ describe("profile perspective backup sanitizing", () => {
     expect(profile.personGroupId).toBe("person-group-1");
     expect(profile.perspective).toBe("dominant");
     expect(profile.questionnaireSetup).toEqual({
-      preset: "balanced",
+      mode: "dynamic",
       interests: ["power", "bondage"],
-      version: 1,
+      version: 2,
     });
   });
 

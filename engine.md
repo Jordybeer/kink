@@ -1,7 +1,7 @@
 # Dynamic Questionnaire — motorcontract v2
 
-> Status: PR #299 leverde runtime v1 van de adaptieve motor. Dit document legt
-> het doelcontract vast voor de vervolgstappen. De volledige catalogusaudit,
+> Status: PR #299 leverde de causale motorkern. De gestapelde catalogus- en
+> funnel-PR's voeren dit contract nu uit. De volledige catalogusaudit,
 > beslismatrix en toevoegingen staan in
 > [`docs/catalog-v2-contract.md`](docs/catalog-v2-contract.md).
 
@@ -21,24 +21,21 @@ Geen combinatie van antwoorden, role, perspective, BDSMtest-score, category,
 topic of cluster mag een verborgen voorkeur, identiteit, motivatie of volgend
 antwoord produceren.
 
-## Huidige runtime versus doelcontract
+## Implementatiestatus
 
-PR #299 heeft de juiste pure selectieonderdelen, statussemantiek, pinned
-canonical probes, provenance en anti-monopoly geleverd. De audit toont vier
-productgaten die bewust in vervolg-PR's worden opgelost:
+PR #299 leverde de pure selectieonderdelen, statussemantiek, pinned canonical
+probes, provenance en anti-monopoly. De funnel-slice bouwt daarop zonder de
+causale veiligheidsgrens te veranderen:
 
-1. Dynamic gebruikt nu 20 vaste coverage-anchors en kan daardoor erg kort
-   aanvoelen.
-2. `Meer ontdekken` is nog een micro-wave van maximaal één anchor per broad
-   cluster; na een afgeronde basis blijven maximaal zeven en vaak slechts twee
-   of drie kaarten over.
-3. de category-bulkactie met label `Sla over` schrijft nu ten onrechte
-   `no / Voor hen` als antwoord;
-4. de volledige beschrijving opent via een onzichtbaar tikvlak een Sheet in
-   plaats van een duidelijke inline `Lees meer`-actie.
-
-Dit zijn aantoonbare runtime/UX-gaten. Ze veranderen niets aan de causale
-veiligheidsgrens van de engine.
+1. Dynamic heeft een inspecteerbaar basisplan van 44 anchors over alle 19
+   user-facing categorieën;
+2. Discover gebruikt de volledige actieve onbeantwoorde catalogus als
+   doorlopende, user-exitable pool;
+3. `Meer uit deze categorie` is een ephemeral lokale intent;
+4. `Later` en category-navigatie schrijven geen status;
+5. volledige uitleg en `safetyNote` openen inline op dezelfde kaart;
+6. de pre-launch store normaliseert het oude budgetmodel naar één
+   Dynamic/Deep Dive-runtime zonder entries te wijzigen.
 
 ## Canonieke statussemantiek
 
@@ -85,10 +82,11 @@ Dynamic is klaar wanneer:
 
 Geen confidence-score, “engine weet genoeg”-model of bewegende denominator.
 
-Na de cataloguscorrectie wordt de huidige set van 20 anchors opnieuw inhoudelijk
-geselecteerd. De doelset raakt minimaal iedere user-facing categorie en de
-aparte core/safetygebieden. Het aantal volgt uit die controlelijst, niet uit een
-marketingbudget.
+De basisset bevat 44 expliciete anchors over alle 19 user-facing categorieën.
+Meerdere anchors bestaan alleen waar één kaart aantoonbaar een te brede kamer
+zou vertegenwoordigen. Het aantal volgt uit die controlelijst, niet uit een
+marketingbudget. Zelfgekozen interests kunnen vooraf vastgelegde extra anchors
+toevoegen; antwoorden nooit.
 
 ### Discover
 
@@ -313,9 +311,10 @@ Er komt één actieve catalogus, geen catalogusgenerations.
   gekopieerd;
 - duplicate/gepensioneerde entry-IDs mogen rauw bewaard blijven, maar zijn niet
   actief of scorebaar;
-- de storemigratie zet v1 Full om naar v2 Deep Dive en v1 Quick/Balanced of een
-  ontbrekende setup naar v2 Dynamic; interests en entries blijven staan, waarna
-  de v1-types en dubbele runtime verdwijnen;
+- storeversie 18 zet pre-launch Full om naar Deep Dive en Quick/Balanced of een
+  ontbrekende setup naar Dynamic; interests en entries blijven staan;
+- sanitizer/import normaliseert dezelfde oude setupvorm aan de grens; runtime,
+  types en instellingen-UI bevatten geen dubbele budgetengine meer;
 - de oude positional v2 QR-decoder gebruikt één immutable
   `LEGACY_COMPACT_KINK_IDS_V2`-volgorde; de ongebruikte encoder verdwijnt en
   nieuwe shares blijven ID-gebaseerde v3 payloads;
@@ -329,7 +328,7 @@ Compatibility scoring verandert niet in catalogus- of questionnairewerk.
 De huidige antwoordfeedback van 200 ms en fade van 170 ms blijft voorlopig
 staan; opnieuw tunen gebeurt alleen na device-dogfood.
 
-De doelcorrecties zijn:
+De funnel-slice bewaakt:
 
 - zichtbare `Lees meer` klapt de Nederlandse uitleg inline open;
 - een optionele `safetyNote` krijgt een apart sober blok;

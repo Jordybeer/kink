@@ -148,7 +148,7 @@ describe("sanitizeProfileFull", () => {
     expect(evil!.avatarDataUrl).toBeUndefined();
   });
 
-  it("restores trusted local perspective metadata including a legacy role", () => {
+  it("normalizes pre-launch questionnaire settings while preserving local identity metadata", () => {
     const clean = sanitizeProfileFull({
       id: "own-1",
       name: "Nova",
@@ -166,7 +166,7 @@ describe("sanitizeProfileFull", () => {
     expect(clean?.legacyRole).toBe("Rigger");
     expect(clean?.personGroupId).toBe("person-1");
     expect(clean?.perspective).toBe("dominant");
-    expect(clean?.questionnaireSetup).toEqual({ preset: "quick", interests: ["bondage"], version: 1 });
+    expect(clean?.questionnaireSetup).toEqual({ mode: "dynamic", interests: ["bondage"], version: 2 });
   });
 
   it("drops local grouping metadata from shared or imported payloads", () => {

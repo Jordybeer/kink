@@ -18,9 +18,9 @@ describe("profile perspectives", () => {
       name: "Nova",
       direction: "both",
       questionnaireSetup: {
-        preset: "balanced",
+        mode: "dynamic",
         interests: ["power"],
-        version: 1,
+        version: 2,
       },
     });
 
@@ -58,7 +58,7 @@ describe("profile perspectives", () => {
     const created = createPerspectiveProfiles({
       name: "Nova",
       direction: "both",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
     const [dominantId, submissiveId] = created.profileIds;
 
@@ -75,7 +75,7 @@ describe("profile perspectives", () => {
     const created = createPerspectiveProfiles({
       name: "Nova",
       direction: "both",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
     const [dominantId, submissiveId] = created.profileIds;
 
@@ -102,12 +102,12 @@ describe("profile perspectives", () => {
     const nova = createPerspectiveProfiles({
       name: "Nova",
       direction: "both",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
     createPerspectiveProfiles({
       name: "Mira",
       direction: "dominant",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
 
     expect(() => updateProfileIdentity(nova.primaryId, { name: " mira " }))
@@ -139,7 +139,7 @@ describe("profile perspectives", () => {
     expect(() => createPerspectiveProfiles({
       name: "Nova",
       direction: "submissive",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     })).not.toThrow();
   });
 
@@ -147,22 +147,22 @@ describe("profile perspectives", () => {
     const created = createPerspectiveProfiles({
       name: "Nova",
       direction: "both",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
     const [dominantId, submissiveId] = created.profileIds;
 
     updateProfileQuestionnaire(dominantId, {
-      preset: "full",
+      mode: "deepDive",
       interests: ["impact"],
-      version: 1,
+      version: 2,
     });
 
     const dominant = useStore.getState().profiles.find((profile) => profile.id === dominantId)!;
     const submissive = useStore.getState().profiles.find((profile) => profile.id === submissiveId)!;
-    expect(dominant.questionnaireSetup).toEqual({ preset: "full", interests: ["impact"], version: 1 });
+    expect(dominant.questionnaireSetup).toEqual({ mode: "deepDive", interests: ["impact"], version: 2 });
     expect(dominant.experienceLevel).toBe("diepgaand");
-    expect(submissive.questionnaireSetup).toEqual({ preset: "quick", interests: [], version: 1 });
-    expect(submissive.experienceLevel).toBe("beginner");
+    expect(submissive.questionnaireSetup).toEqual({ mode: "dynamic", interests: [], version: 2 });
+    expect(submissive.experienceLevel).toBe("gevorderd");
   });
 
   it("switches only the selected perspective from Dynamic to Deep Dive", () => {
@@ -186,18 +186,18 @@ describe("profile perspectives", () => {
     expect(submissive.entries.handcuffs).toBeUndefined();
   });
 
-  it("never narrows existing experience metadata when a shorter preset is chosen", () => {
+  it("never narrows existing experience metadata when Dynamic is chosen", () => {
     const id = useStore.getState().createProfile("Expert", "Dominant", "diepgaand");
 
     updateProfileQuestionnaire(id, {
-      preset: "quick",
+      mode: "dynamic",
       interests: [],
-      version: 1,
+      version: 2,
     });
 
     const profile = useStore.getState().profiles.find((candidate) => candidate.id === id)!;
     expect(profile.experienceLevel).toBe("diepgaand");
-    expect(profile.questionnaireSetup).toEqual({ preset: "quick", interests: [], version: 1 });
+    expect(profile.questionnaireSetup).toEqual({ mode: "dynamic", interests: [], version: 2 });
   });
 
   it("preserves a specialist legacy role when adopting a primary perspective", () => {
@@ -215,7 +215,7 @@ describe("profile perspectives", () => {
     const created = createPerspectiveProfiles({
       name: "Nova",
       direction: "both",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
     const [dominantId] = created.profileIds;
 
@@ -230,13 +230,13 @@ describe("profile perspectives", () => {
     createPerspectiveProfiles({
       name: "Nova",
       direction: "dominant",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     });
 
     expect(() => createPerspectiveProfiles({
       name: " nova ",
       direction: "submissive",
-      questionnaireSetup: { preset: "quick", interests: [], version: 1 },
+      questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
     })).toThrow("Er bestaat al een profiel met deze naam");
   });
 });

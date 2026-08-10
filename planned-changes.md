@@ -30,12 +30,12 @@ metadata tidy-up.
 Plan of record: `docs/catalog-v2-contract.md`; runtime invariants:
 `engine.md`.
 
-The audit covers all 266 current IDs and found why the funnel still feels
-abrupt: Dynamic has 20 fixed anchors and Discover is a one-per-broad-cluster
-micro-wave, leaving at most seven and often only two or three cards after the
-basis. The target is one clean pre-launch active catalog, English community
-names with Dutch descriptions/aliases, continuous user-exitable Discover,
-exhaustive Deep Dive, and an ephemeral `Meer uit deze categorie` intent.
+The audit covered the historical 266 IDs and found why the funnel felt abrupt:
+Dynamic had 20 fixed anchors and Discover was a one-per-broad-cluster
+micro-wave. The active stacked work now has 291 catalog IDs, a 44-anchor
+Dynamic plan spanning all 19 user-facing categories, continuous user-exitable
+Discover, exhaustive Deep Dive, and an ephemeral `Meer uit deze categorie`
+intent.
 
 Work is split into independently reviewable slices:
 
@@ -48,13 +48,12 @@ Work is split into independently reviewable slices:
 4. coverage/topic/related audit, followed only then by a separately versioned
    canonical allowlist.
 
-The catalog-foundation slice is now in progress on
+The catalog-foundation slice is ready as draft PR #302 on
 `feature/catalog-foundation-v2`: stable category keys are separated from their
 display copy, Dutch aliases join full-catalog search, and the retired positional
-v2 QR decoder is pinned to its own immutable historical ID order before the
-active catalog changes.
+v2 QR decoder is pinned to its own immutable historical ID order.
 
-The stacked content slice is in progress on `feature/catalog-content-v2`. It
+The stacked content slice is ready as draft PR #303 on `feature/catalog-content-v2`. It
 applies all 155 audited change rows except the explicit pegging gate, retires
 five composite/duplicate questions without copying answers, and adds the 30
 reviewed Release-A questions with zero propagation metadata. “Auto
@@ -65,6 +64,12 @@ legacy population to justify that complexity. The pre-launch migration maps v1
 Full to Deep Dive and Quick/Balanced/no-setup to Dynamic while preserving
 interests and entries. Preserve unchanged kink IDs and answers; semantic splits
 start unanswered and never copy one old answer into multiple new meanings.
+
+The questionnaire/UX slice is in progress on `feature/questionnaire-ux-v2`.
+It replaces the micro-wave with continuous Discover, adds category-local
+exploration and honest `Later`, expands descriptions inline, fixes new-profile
+card focus, and ships store v18 normalization so the runtime has no permanent
+v1 budget branch.
 
 Two gates remain before their specific code lands: what the owner meant by
 “Auto masturbation”, and how explicit pegging-giving/receiving IDs should take

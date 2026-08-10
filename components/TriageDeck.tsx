@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Circle, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretUp, Check, Circle, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import {
@@ -9,7 +9,6 @@ import {
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
-import InfoSheet from "./InfoSheet";
 
 const AGREEMENTS = [
   { value: "vraag eerst", label: "Eerst vragen", emphasized: true },
@@ -48,7 +47,7 @@ export default function TriageDeck({
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
   const [requireNonProbe, setRequireNonProbe] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [infoOpen, setInfoOpen] = useState<Kink | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const fadeTransition = reducedMotion
     ? { duration: 0 }
     : { duration: CARD_FADE_SECONDS, ease: "easeOut" as const };
@@ -61,7 +60,7 @@ export default function TriageDeck({
 
   const sourceItems = queueItems ?? kinks.map((kink): QuestionnaireQueueItem => ({
     kink,
-    lane: "legacy",
+    lane: "coverage",
     isProbe: false,
     coversAnchor: false,
     reasons: [],
@@ -73,7 +72,7 @@ export default function TriageDeck({
     ? unskipped.filter((item) => item.kink.category === focusCategory)
     : [];
   let queue = focused.length ? focused : unskipped;
-  // "Sla over" means later, not never. Once everything else has had a turn,
+  // "Later" means later, not never. Once everything else has had a turn,
   // skipped cards become eligible again instead of deadlocking Dynamic coverage.
   if (queue.length === 0 && unanswered.length > 0) {
     const deferredFocus = focusCategory
@@ -125,6 +124,8 @@ export default function TriageDeck({
     : 0;
   const totalDone = kinks.filter((kink) => entries[kink.id]?.status != null).length;
   const currentEntry = current ? entries[current.id] : undefined;
+  const detailsExpanded = current != null && expandedId === current.id;
+  const detailsId = current ? `triage-details-${current.id}` : undefined;
 
   return (
     <div aria-live="polite">
@@ -179,13 +180,7 @@ export default function TriageDeck({
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setInfoOpen(current)}
-              aria-label={`Informatie over ${current.name}`}
-              aria-haspopup="dialog"
-              className="focus-ring block w-full text-left rounded-lg mt-1"
-            >
+            <div className="mt-1">
               <h3
                 className="text-2xl leading-tight"
                 style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
@@ -193,13 +188,41 @@ export default function TriageDeck({
                 {current.name}
               </h3>
               {current.description ? (
-                <p className="text-sm mt-1 mb-3 line-clamp-2" style={{ color: "var(--text2)" }}>
+                <p
+                  id={detailsId}
+                  className={`text-sm mt-1 leading-relaxed ${detailsExpanded ? "" : "line-clamp-2"}`}
+                  style={{ color: "var(--text2)" }}
+                >
                   {current.description}
                 </p>
               ) : (
-                <div className="mb-3" />
+                <div />
               )}
-            </button>
+              {current.safetyNote && (
+                <aside
+                  className="mt-2 rounded-xl px-3 py-2 text-xs leading-relaxed"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+                >
+                  <span className="font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
+                  <span className={detailsExpanded ? "block mt-0.5" : "block mt-0.5 line-clamp-2"}>
+                    {current.safetyNote}
+                  </span>
+                </aside>
+              )}
+              {(current.description || current.safetyNote) && (
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(detailsExpanded ? null : current.id)}
+                  aria-expanded={detailsExpanded}
+                  aria-controls={current.description ? detailsId : undefined}
+                  className="focus-ring min-h-9 mt-1.5 rounded-lg px-1 text-xs font-semibold inline-flex items-center gap-1"
+                  style={{ color: "var(--accent-text)" }}
+                >
+                  {detailsExpanded ? <CaretUp size={13} aria-hidden="true" /> : <CaretDown size={13} aria-hidden="true" />}
+                  {detailsExpanded ? "Minder tonen" : "Lees meer"}
+                </button>
+              )}
+            </div>
 
             <StatusOptionRows
               current={currentEntry?.status ?? null}
@@ -248,7 +271,7 @@ export default function TriageDeck({
                 className="focus-ring h-9 px-3 rounded-lg text-xs transition-colors inline-flex items-center gap-1"
                 style={{ color: "var(--text2)" }}
               >
-                Sla over <ArrowRight size={13} aria-hidden="true" />
+                Later <ArrowRight size={13} aria-hidden="true" />
               </button>
             </div>
           </motion.div>
@@ -282,7 +305,6 @@ export default function TriageDeck({
           )}
         </motion.div>
       )}
-      <InfoSheet kink={infoOpen} onClose={() => setInfoOpen(null)} />
     </div>
   );
 }

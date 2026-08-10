@@ -115,31 +115,38 @@ export function questionnaireTopicsFor(kink: Kink): readonly QuestionnaireTopic[
 }
 
 /**
- * De vaste Dynamic-meetlat. Een anchor zegt alleen: "dit is expliciet gevraagd".
- * Elke echte status gespt hem vast; overslaan doet dat niet.
+ * De vaste Dynamic-meetlat per user-facing cataloguskamer. Een anchor zegt
+ * alleen: "dit is expliciet gevraagd". Elke echte status telt; Later niet.
+ *
+ * Meerdere anchors binnen een categorie bestaan alleen waar één kaart een
+ * aantoonbaar te brede kamer zou vertegenwoordigen. Ze zijn geen taxonomy en
+ * dragen nooit antwoorden of relevantie over.
  */
-export const QUESTIONNAIRE_COVERAGE_ANCHOR_IDS = [
-  "aftercare_physical",
-  "dominance_submission",
-  "spanking_hand",
-  "handcuffs",
-  "rope_bondage",
-  "gag_ball",
-  "ice_play",
-  "geur_scent_fetish",
-  "feet",
-  "lingerie",
-  "little_speelgoed",
-  "petplay_collar_id",
-  "masseur_client",
-  "exhibitionism",
-  "voyeurism",
-  "watersports_geven",
-  "anal_fingering",
-  "cum_play",
-  "orgasm_control",
-  "rules_protocols",
-] as const;
+export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
+  impact: ["spanking_hand", "flogging"],
+  bondage: ["handcuffs", "rope_bondage", "gag_ball", "blindfold"],
+  power: ["dominance_submission", "praise_kink", "humiliation_verbal", "orgasm_control"],
+  rituals: ["rules_protocols"],
+  discipline: ["punishment"],
+  roleplay: ["masseur_client", "cnc"],
+  sensation: ["ice_play", "tickling", "choking"],
+  exhibition: ["exhibitionism", "voyeurism"],
+  media: ["nude_photography", "recording"],
+  group_partner: ["partner_masturbation_watch", "trio_groepsseks"],
+  body_focus: ["thigh_focus", "feet"],
+  materials_scent: ["lingerie", "geur_scent_fetish"],
+  pet_play: ["petplay_collar_id", "petplay_puppy"],
+  fluids: ["cum_play", "watersports_geven", "spitting"],
+  toys: ["vibration_play", "remote_toy"],
+  penetration: ["anal_fingering", "pegging"],
+  aftercare: ["aftercare_physical", "aftercare_alone", "next_day_check_in"],
+  appearance: ["hoge_hakken_dragen", "smeared_makeup"],
+  adult_ageplay: ["little_speelgoed", "ddlg_mdlb_dynamiek", "luiers_dragen"],
+} as const satisfies Record<KinkCategoryId, readonly string[]>;
+
+export const QUESTIONNAIRE_COVERAGE_ANCHOR_IDS = Object.values(
+  QUESTIONNAIRE_CATEGORY_ANCHOR_IDS,
+).flat();
 
 /**
  * Klein voorste rijtje vóór interesses of expansion. Core betekent fundamentele
@@ -159,34 +166,6 @@ export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, re
   humiliation: ["humiliation_verbal", "service"],
   sexual_social: ["being_watched", "voyeur_sharing", "butt_plug"],
 };
-
-/**
- * Optionele smaakmakers voor "Meer ontdekken". Elke wave pakt hoogstens één
- * onbeantwoorde anchor per brede kamer, zonder discovery in een nieuw korset te
- * dwingen.
- */
-export const QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS = [
-  "service",
-  "flogging",
-  "leather_cuffs",
-  "shibari",
-  "blindfold",
-  "tickling",
-  "wax_play",
-  "body_worship",
-  "little_space",
-  "petplay_puppy",
-  "doctor_patient",
-  "being_watched",
-  "watersports_ontvangen",
-  "butt_plug",
-  "swallowing",
-  "aftercare_verbal",
-  "humiliation_verbal",
-  "voyeur_sharing",
-  "ochtend_avondritueel",
-  "dirty_talk",
-] as const;
 
 /**
  * Symmetrische inhoudelijke nabijheid: alleen een positieve fluistering voor de

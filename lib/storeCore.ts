@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useState, useEffect } from "react";
-import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
+import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
+import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from "@/lib/questionnaireSetup";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   createConsentLedgerEvent,
@@ -140,6 +141,7 @@ export const useStore = create<State>()(
               name,
               role,
               experienceLevel,
+              questionnaireSetup: defaultQuestionnaireSetup(),
               relationshipStatus: relationshipStatus || undefined,
               origin: "own" as const,
               customKinks: [],
@@ -563,7 +565,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 17,
+      version: 18,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -667,6 +669,9 @@ export const useStore = create<State>()(
         }
         if (version < 17) {
           state.profileOwnerKeys = [];
+        }
+        if (version < 18 && state.profiles) {
+          state.profiles = normalizeStoredQuestionnaireProfiles(state.profiles);
         }
         return state;
       },

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { KINKS } from "@/lib/kinks";
+import { CATEGORIES, KINKS } from "@/lib/kinks";
 import {
   buildQuestionnaireCoveragePlan,
-  buildQuestionnaireDiscoveryWave,
   getAdaptiveQuestionQueue,
   getQuestionnaireKinks,
   getQuestionnaireRuntime,
@@ -19,10 +18,10 @@ import {
 } from "@/lib/questionnaireEngine";
 import {
   QUESTIONNAIRE_CANONICAL_PROBE_TARGETS,
+  QUESTIONNAIRE_CATEGORY_ANCHOR_IDS,
   QUESTIONNAIRE_CATEGORY_CLUSTERS,
   QUESTIONNAIRE_COVERAGE_ANCHOR_IDS,
   QUESTIONNAIRE_CORE_ANCHOR_IDS,
-  QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
   QUESTIONNAIRE_FOLLOW_UPS,
   QUESTIONNAIRE_INTEREST_ANCHOR_IDS,
   QUESTIONNAIRE_RELATED_PAIRS,
@@ -53,11 +52,7 @@ function profile(setup: QuestionnaireSetup): Profile {
     name: "Nova",
     role: "Dominant",
     perspective: "dominant",
-    experienceLevel: setup.version === 1 && setup.preset === "full"
-      ? "diepgaand"
-      : setup.version === 2 && setup.mode === "deepDive"
-        ? "diepgaand"
-        : "beginner",
+    experienceLevel: setup.mode === "deepDive" ? "diepgaand" : "gevorderd",
     questionnaireSetup: setup,
     customKinks: [],
     createdAt: 1,
@@ -101,16 +96,13 @@ function queueItem(id: string, isProbe = false): QuestionnaireQueueItem {
 }
 
 describe("adaptive questionnaire", () => {
-  it("keeps legacy quick/balanced/full and no-setup behavior intact", () => {
-    expect(questionnaireCount({ preset: "quick", interests: ["power"], version: 1 })).toBe(52);
-    expect(questionnaireCount({ preset: "balanced", interests: ["sexual_social"], version: 1 })).toBe(104);
+  it("uses one Dynamic/Deep Dive runtime and defaults missing pre-launch setup to Dynamic", () => {
+    expect(questionnaireCount({ mode: "dynamic", interests: [], version: 2 })).toBe(44);
+    expect(questionnaireCount({ mode: "deepDive", interests: [], version: 2 })).toBe(KINKS.length);
 
-    const full = getQuestionnaireKinks(profile({ preset: "full", interests: [], version: 1 }));
-    expect(full.map((kink) => kink.id)).toEqual(KINKS.map((kink) => kink.id));
-
-    const legacy: Profile = {
-      id: "legacy",
-      name: "Legacy",
+    const withoutSetup: Profile = {
+      id: "prelaunch",
+      name: "Prelaunch",
       role: "Switch",
       experienceLevel: "beginner",
       customKinks: [],
@@ -118,16 +110,18 @@ describe("adaptive questionnaire", () => {
       updatedAt: 1,
       entries: {},
     };
-    expect(getQuestionnaireKinks(legacy).every((kink) => kink.level <= 1)).toBe(true);
+    const runtime = getQuestionnaireRuntime(withoutSetup);
+    expect(runtime.intent).toEqual({ kind: "dynamic" });
+    expect(runtime.coverage?.total).toBe(44);
   });
 
-  it("never hides an existing legacy answer when a v1 budget is shorter", () => {
+  it("never hides an existing answer outside the Dynamic plan", () => {
     const lastKink = KINKS[KINKS.length - 1];
-    const quick = profile({ preset: "quick", interests: [], version: 1 });
-    expect(getQuestionnaireKinks(quick).some((kink) => kink.id === lastKink.id)).toBe(false);
-    quick.entries[lastKink.id] = { status: "yes", comment: "bewaar mij" };
-    expect(getQuestionnaireKinks(quick).some((kink) => kink.id === lastKink.id)).toBe(true);
-    expect(getQuestionnaireKinks(quick).length).toBeGreaterThanOrEqual(52);
+    const current = dynamicProfile();
+    expect(getQuestionnaireKinks(current).some((kink) => kink.id === lastKink.id)).toBe(false);
+    current.entries[lastKink.id] = { status: "yes", comment: "bewaar mij" };
+    expect(getQuestionnaireKinks(current).some((kink) => kink.id === lastKink.id)).toBe(true);
+    expect(current.entries[lastKink.id].comment).toBe("bewaar mij");
   });
 
   it("keeps every metadata reference on a real catalog kink", () => {
@@ -135,7 +129,6 @@ describe("adaptive questionnaire", () => {
     const referenced = [
       ...QUESTIONNAIRE_COVERAGE_ANCHOR_IDS,
       ...QUESTIONNAIRE_CORE_ANCHOR_IDS,
-      ...QUESTIONNAIRE_DISCOVERY_ANCHOR_IDS,
       ...Object.values(QUESTIONNAIRE_INTEREST_ANCHOR_IDS).flat(),
       ...Object.values(QUESTIONNAIRE_TOPIC_IDS).flat(),
       ...QUESTIONNAIRE_RELATED_PAIRS.flat(),
@@ -168,6 +161,23 @@ describe("adaptive questionnaire", () => {
     );
     const catalogClusters = new Set(KINKS.map(questionnairePrimaryCluster));
     expect([...planClusters].sort()).toEqual([...catalogClusters].sort());
+  });
+
+  it("pins a transparent 44-question base plan across every user-facing category", () => {
+    const catalogById = new Map(KINKS.map((kink) => [kink.id, kink]));
+    const configuredCategories = Object.keys(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS).sort();
+    expect(configuredCategories).toEqual([...CATEGORIES].sort());
+
+    for (const category of CATEGORIES) {
+      const anchors = QUESTIONNAIRE_CATEGORY_ANCHOR_IDS[category];
+      expect(anchors.length, category).toBeGreaterThan(0);
+      expect(anchors.every((id) => catalogById.get(id)?.category === category), category).toBe(true);
+    }
+
+    const flattened = Object.values(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS).flat();
+    expect(QUESTIONNAIRE_COVERAGE_ANCHOR_IDS).toEqual(flattened);
+    expect(new Set(flattened).size).toBe(flattened.length);
+    expect(buildQuestionnaireCoveragePlan([]).anchorIds).toHaveLength(44);
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
@@ -427,24 +437,50 @@ describe("adaptive questionnaire", () => {
     expect(getQuestionnaireRuntime(current).complete).toBe(true);
   });
 
-  it("builds deterministic discovery waves with at most one anchor per broad cluster", () => {
-    const current = dynamicProfile();
-    const first = buildQuestionnaireDiscoveryWave(current);
-    const second = buildQuestionnaireDiscoveryWave(structuredClone(current));
-    expect(second).toEqual(first);
-    const clusters = first.map((id) => questionnairePrimaryCluster(catalogSlice(id)[0]));
-    expect(new Set(clusters).size).toBe(clusters.length);
-  });
-
-  it("treats Meer ontdekken as its own lane and finishes that explicit wave", () => {
+  it("keeps Discover continuous instead of ending after a micro-wave", () => {
     const current = dynamicProfile();
     answerIds(current, buildQuestionnaireCoveragePlan([]).anchorIds);
-    const wave = buildQuestionnaireDiscoveryWave(current);
-    const exploring = getQuestionnaireRuntime(current, { intent: "discover", discoveryWaveIds: wave });
+    const exploring = getQuestionnaireRuntime(current, { intent: { kind: "discover" } });
     expect(exploring.complete).toBe(false);
     expect(exploring.queue.some((item) => item.lane === "discovery")).toBe(true);
-    answerIds(current, wave);
-    expect(getQuestionnaireRuntime(current, { intent: "discover", discoveryWaveIds: wave }).complete).toBe(true);
+    expect(exploring.queue.length).toBe(KINKS.length - Object.keys(current.entries).length);
+
+    answerIds(current, exploring.queue.slice(0, 3).map((item) => item.kink.id));
+    const continued = getQuestionnaireRuntime(current, { intent: { kind: "discover" } });
+    expect(continued.complete).toBe(false);
+    expect(continued.queue.length).toBe(exploring.queue.length - 3);
+
+    answerIds(current, continued.queue.map((item) => item.kink.id));
+    expect(getQuestionnaireRuntime(current, { intent: { kind: "discover" } }).complete).toBe(true);
+  });
+
+  it("keeps category exploration local without creating answers or consuming outside probes", () => {
+    const current = dynamicProfile();
+    current.entries.handcuffs = { status: "yes", comment: "expliciet" };
+    const before = structuredClone(current.entries);
+    const local = getQuestionnaireRuntime(current, {
+      intent: { kind: "category", category: "fluids" },
+    });
+
+    expect(local.queue.length).toBeGreaterThan(0);
+    expect(local.queue.every((item) => item.kink.category === "fluids")).toBe(true);
+    expect(local.queue.some((item) => item.kink.id === "leather_cuffs")).toBe(false);
+    expect(local.pendingProbes.map((probe) => probe.targetKinkId)).toContain("leather_cuffs");
+    expect(current.entries).toEqual(before);
+
+    const global = getQuestionnaireRuntime(current);
+    expect(global.queue.some((item) => item.kink.id === "leather_cuffs")).toBe(true);
+  });
+
+  it("finishes category exploration only when that category is explicitly answered", () => {
+    const current = dynamicProfile();
+    const fluids = KINKS.filter((kink) => kink.category === "fluids").map((kink) => kink.id);
+    const intent = { kind: "category", category: "fluids" } as const;
+    answerIds(current, fluids.slice(0, -1));
+    expect(getQuestionnaireRuntime(current, { intent }).complete).toBe(false);
+    answerIds(current, fluids.slice(-1));
+    expect(getQuestionnaireRuntime(current, { intent }).complete).toBe(true);
+    expect(KINKS.some((kink) => current.entries[kink.id]?.status == null)).toBe(true);
   });
 
   it("keeps an explicit non-probe between probes when one is available", () => {
@@ -552,6 +588,16 @@ describe("adaptive questionnaire", () => {
     current.entries.handcuffs = { status: "no", comment: "" };
     const first = getQuestionnaireRuntime(current).queue.map((item) => item.kink.id);
     const second = getQuestionnaireRuntime(structuredClone(current)).queue.map((item) => item.kink.id);
+    expect(second).toEqual(first);
+  });
+
+  it("produces deterministic breadth-first ordering for identical Discover inputs", () => {
+    const current = dynamicProfile();
+    answerIds(current, buildQuestionnaireCoveragePlan([]).anchorIds);
+    const first = getQuestionnaireRuntime(current, { intent: { kind: "discover" } })
+      .queue.map((item) => item.kink.id);
+    const second = getQuestionnaireRuntime(structuredClone(current), { intent: { kind: "discover" } })
+      .queue.map((item) => item.kink.id);
     expect(second).toEqual(first);
   });
 

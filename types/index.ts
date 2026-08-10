@@ -3,7 +3,6 @@ export type KinkStatus = "yes" | "willing" | "maybe" | "no" | "hard_no" | null;
 export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand";
 
 export type ProfilePerspective = "dominant" | "submissive";
-export type QuestionnairePreset = "quick" | "balanced" | "full";
 export type QuestionnaireMode = "dynamic" | "deepDive";
 export type QuestionnaireInterest =
   | "power"
@@ -36,19 +35,11 @@ export type KinkCategoryId =
 
 export type KinkCategory = KinkCategoryId | "custom";
 
-export interface LegacyQuestionnaireSetup {
-  preset: QuestionnairePreset;
-  interests: QuestionnaireInterest[];
-  version: 1;
-}
-
-export interface DynamicQuestionnaireSetup {
+export interface QuestionnaireSetup {
   mode: QuestionnaireMode;
   interests: QuestionnaireInterest[];
   version: 2;
 }
-
-export type QuestionnaireSetup = LegacyQuestionnaireSetup | DynamicQuestionnaireSetup;
 
 export interface CustomKink {
   id: string;
@@ -259,7 +250,7 @@ export interface Profile {
   personGroupId?: string;
   /** Primary perspective represented by this answer set. */
   perspective?: ProfilePerspective;
-  /** Local start selection; omitted on legacy profiles to preserve old behavior. */
+  /** Local questionnaire selection. Missing pre-launch data defaults to Dynamic. */
   questionnaireSetup?: QuestionnaireSetup;
   relationshipStatus?: string;
   fetLifeUsername?: string;
