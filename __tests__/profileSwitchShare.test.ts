@@ -161,6 +161,22 @@ describe("Switch profile sharing", () => {
     expect(restored.profiles.map((profile) => profile.perspective)).toEqual(["dominant", "submissive"]);
   });
 
+  it("drops an orphan Switch proof instead of preserving unverified linkage metadata", async () => {
+    const source = await sealedSwitch();
+    const transport = await encodeSwitchProfileShareTransport(
+      source.dominant,
+      source.submissive,
+      { ownerKeys: source.ownerKeys },
+    );
+    const [dominantOnly] = await decodeSwitchProfileShare(transport.encoded);
+    const restored = await prepareBackupRestore({ source: "shared", profiles: [dominantOnly] });
+
+    expect(restored.profiles).toHaveLength(1);
+    expect(restored.profiles[0].personGroupId).toBeUndefined();
+    expect(restored.profiles[0].perspective).toBeUndefined();
+    expect(restored.profiles[0].switchShareProof).toBeUndefined();
+  });
+
   it("keeps the Switch payload opaque through multi-QR reassembly", async () => {
     const source = await sealedSwitch();
     const transport = await encodeSwitchProfileShareTransport(
