@@ -1,4 +1,4 @@
-import type { Kink, QuestionnaireInterest } from "@/types";
+import type { Kink, KinkCategoryId, QuestionnaireInterest } from "@/types";
 
 export type QuestionnaireCluster =
   | "power"
@@ -11,29 +11,34 @@ export type QuestionnaireCluster =
   | "discovery";
 
 /** Brede speelkamers voor variatie; ze sturen het ritme, nooit iemands verlangen. */
-export const QUESTIONNAIRE_CATEGORY_CLUSTERS: Record<string, readonly QuestionnaireCluster[]> = {
-  "Impact Play": ["impact"],
-  Bondage: ["bondage"],
-  "Power Exchange": ["power"],
-  "Rituelen & Training": ["power"],
-  "Straf & Correctie": ["power", "impact"],
-  "Sensation Play": ["sensation"],
-  "Materiaal & Geur": ["sensation"],
-  "Aanbidding & Worship": ["role_expression", "power"],
-  "Uiterlijk & Kleding": ["role_expression"],
-  "Role Play": ["role_expression"],
-  "Pet Play": ["role_expression", "power"],
-  "Ageplay & Little Space": ["role_expression"],
-  "Exhibition & Voyeurism": ["sexual_social"],
-  "Fluid & Bodily": ["sexual_social"],
-  "Anal & Penetration": ["sexual_social"],
-  Aftercare: ["care"],
+export const QUESTIONNAIRE_CATEGORY_CLUSTERS: Record<KinkCategoryId, readonly QuestionnaireCluster[]> = {
+  impact: ["impact"],
+  bondage: ["bondage"],
+  power: ["power"],
+  rituals: ["power"],
+  discipline: ["power", "impact"],
+  roleplay: ["role_expression"],
+  sensation: ["sensation"],
+  exhibition: ["sexual_social"],
+  media: ["sexual_social"],
+  group_partner: ["sexual_social"],
+  body_focus: ["role_expression", "power"],
+  materials_scent: ["sensation"],
+  pet_play: ["role_expression", "power"],
+  fluids: ["sexual_social"],
+  toys: ["sexual_social", "sensation"],
+  penetration: ["sexual_social"],
+  aftercare: ["care"],
+  appearance: ["role_expression"],
+  adult_ageplay: ["role_expression"],
 };
 
 const DISCOVERY_CLUSTER: readonly QuestionnaireCluster[] = ["discovery"];
 
 export function questionnaireClustersFor(kink: Kink): readonly QuestionnaireCluster[] {
-  return QUESTIONNAIRE_CATEGORY_CLUSTERS[kink.category] ?? DISCOVERY_CLUSTER;
+  return kink.category === "custom"
+    ? DISCOVERY_CLUSTER
+    : QUESTIONNAIRE_CATEGORY_CLUSTERS[kink.category];
 }
 
 export function questionnairePrimaryCluster(kink: Kink): QuestionnaireCluster {

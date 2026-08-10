@@ -564,6 +564,14 @@ describe("adaptive questionnaire", () => {
     expect(getQuestionnaireRuntime(scored).queue.map((item) => item.kink.id))
       .toEqual(getQuestionnaireRuntime(neutral).queue.map((item) => item.kink.id));
     expect(searchAllKinks("Shibari").some((kink) => kink.id === "shibari")).toBe(true);
+    expect(searchAllKinks("vastbinden met touw").some((kink) => kink.id === "rope_bondage")).toBe(true);
+    expect(searchAllKinks("Nazorg").some((kink) => kink.id === "aftercare_physical")).toBe(true);
+  });
+
+  it("keeps every active catalog item reachable through its canonical name", () => {
+    for (const kink of KINKS) {
+      expect(searchAllKinks(kink.name).some((result) => result.id === kink.id), kink.id).toBe(true);
+    }
   });
 
   it("lets an unexpected positive found through search open only its canonical local door", () => {

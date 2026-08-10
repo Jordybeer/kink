@@ -48,6 +48,12 @@ Work is split into independently reviewable slices:
 4. coverage/topic/related audit, followed only then by a separately versioned
    canonical allowlist.
 
+The catalog-foundation slice is now in progress on
+`feature/catalog-foundation-v2`: stable category keys are separated from their
+display copy, Dutch aliases join full-catalog search, and the retired positional
+v2 QR decoder is pinned to its own immutable historical ID order before the
+active catalog changes.
+
 No catalog generations or permanent v1/v2 dual engine: there is no public
 legacy population to justify that complexity. The pre-launch migration maps v1
 Full to Deep Dive and Quick/Balanced/no-setup to Dynamic while preserving

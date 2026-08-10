@@ -2,10 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   KINKS,
   CATEGORIES,
+  KINK_CATEGORY_DEFINITIONS,
   LEVEL_MAX,
   getKinksByCategory,
   getKinksByCategoryAndLevel,
+  kinkCategoryLabel,
 } from "@/lib/kinks";
+import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
 
 describe("kink database integrity", () => {
   it("every kink has a unique id", () => {
@@ -22,6 +25,39 @@ describe("kink database integrity", () => {
     const catSet = new Set(CATEGORIES);
     const bad = KINKS.filter((k) => !catSet.has(k.category));
     expect(bad).toHaveLength(0);
+  });
+
+  it("keeps canonical names unique after normalization", () => {
+    const normalizedNames = KINKS.map((kink) => kink.name
+      .normalize("NFKD")
+      .replace(/\p{Diacritic}/gu, "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ""));
+    expect(new Set(normalizedNames).size).toBe(normalizedNames.length);
+  });
+
+  it("gives every active kink an explanation", () => {
+    expect(KINKS.filter((kink) => !kink.description?.trim())).toHaveLength(0);
+  });
+
+  it("keeps stable category ids separate from unique display labels", () => {
+    expect(KINK_CATEGORY_DEFINITIONS.map(({ id }) => id)).toEqual(CATEGORIES);
+    expect(new Set(CATEGORIES).size).toBe(CATEGORIES.length);
+    expect(new Set(KINK_CATEGORY_DEFINITIONS.map(({ label }) => label)).size)
+      .toBe(KINK_CATEGORY_DEFINITIONS.length);
+    expect(CATEGORIES.every((category) => kinkCategoryLabel(category).length > 0)).toBe(true);
+    expect(KINK_CATEGORY_DEFINITIONS.every(({ aliases }) => aliases.length > 0)).toBe(true);
+    expect(kinkCategorySearchTerms("aftercare")).toContain("Nazorg");
+  });
+
+  it("keeps aliases non-empty and distinct from their canonical name", () => {
+    for (const kink of KINKS) {
+      const aliases = kink.aliases ?? [];
+      expect(aliases.every((alias) => alias.trim().length > 0)).toBe(true);
+      const normalized = [kink.name, ...aliases].map((value) => value.trim().toLowerCase());
+      expect(new Set(normalized).size).toBe(normalized.length);
+    }
   });
 });
 
@@ -73,13 +109,15 @@ describe("intensity ordering (juli 2026 uitbreiding)", () => {
   });
 
   it("straf corrigeert, rituelen trainen — the two new houses stand", () => {
-    expect(CATEGORIES).toContain("Straf & Correctie");
-    expect(CATEGORIES).toContain("Rituelen & Training");
+    expect(CATEGORIES).toContain("discipline");
+    expect(CATEGORIES).toContain("rituals");
+    expect(kinkCategoryLabel("discipline")).toBe("Discipline & Correction");
+    expect(kinkCategoryLabel("rituals")).toBe("Rituals & Protocols");
     // the umbrella entries moved into their new homes, ids intact
-    expect(KINKS.find((k) => k.id === "punishment")?.category).toBe("Straf & Correctie");
-    expect(KINKS.find((k) => k.id === "collaring")?.category).toBe("Rituelen & Training");
-    expect(getKinksByCategoryAndLevel("Straf & Correctie", 4).length).toBeGreaterThanOrEqual(15);
-    expect(getKinksByCategoryAndLevel("Rituelen & Training", 4).length).toBeGreaterThanOrEqual(16);
+    expect(KINKS.find((k) => k.id === "punishment")?.category).toBe("discipline");
+    expect(KINKS.find((k) => k.id === "collaring")?.category).toBe("rituals");
+    expect(getKinksByCategoryAndLevel("discipline", 4).length).toBeGreaterThanOrEqual(15);
+    expect(getKinksByCategoryAndLevel("rituals", 4).length).toBeGreaterThanOrEqual(16);
   });
 });
 

@@ -1,7 +1,9 @@
 "use client";
 
 import DiscussedToggle from "@/components/DiscussedToggle";
+import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import type { CompareCategoryScore, CompareFilterMode } from "@/lib/compare";
+import type { KinkCategoryId } from "@/types";
 
 interface CompareToolbarProps {
   categoryScores: CompareCategoryScore[];
@@ -33,7 +35,7 @@ export default function CompareToolbar({
   onFilterChange,
   onToggleHideDiscussed,
 }: CompareToolbarProps) {
-  const scrollToCategory = (category: string) => {
+  const scrollToCategory = (category: KinkCategoryId) => {
     document.getElementById(`cat-${category}`)?.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -50,14 +52,15 @@ export default function CompareToolbar({
           .filter(({ rated }) => rated > 0)
           .map(({ category, rate, compared }) => {
             const score = rate === null ? null : Math.round(rate * 100);
+            const label = kinkCategoryLabel(category);
             return (
               <button
                 key={category}
                 type="button"
                 onClick={() => scrollToCategory(category)}
                 aria-label={score === null
-                  ? `${category}, nog geen gezamenlijke score`
-                  : `${category}, ${score} procent compatibiliteit over ${compared} gezamenlijke beoordelingen`}
+                  ? `${label}, nog geen gezamenlijke score`
+                  : `${label}, ${score} procent compatibiliteit over ${compared} gezamenlijke beoordelingen`}
                 className="focus-ring flex-none min-h-11 rounded-full px-3 text-xs whitespace-nowrap"
                 style={{
                   color: "var(--text)",
@@ -65,7 +68,7 @@ export default function CompareToolbar({
                   border: "1px solid var(--border)",
                 }}
               >
-                {category}{score === null ? "" : ` · ${score}%`}
+                {label}{score === null ? "" : ` · ${score}%`}
               </button>
             );
           })}

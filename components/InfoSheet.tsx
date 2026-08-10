@@ -1,5 +1,6 @@
 "use client";
 import type { Kink } from "@/types";
+import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import Sheet, { SheetContent } from "./Sheet";
 
 interface Props {
@@ -11,7 +12,9 @@ export default function InfoSheet({ kink, onClose }: Props) {
   return (
     <Sheet open={kink !== null} onClose={onClose} aria-label={kink?.name ?? "Kink informatie"}>
       <SheetContent>
-        <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>{kink?.category ?? ""}</p>
+        <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>
+          {kink ? kinkCategoryLabel(kink.category) : ""}
+        </p>
         <h2
           className="text-xl italic leading-tight mb-2"
           style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}

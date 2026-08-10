@@ -1,6 +1,7 @@
 "use client";
 import { Check, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
+import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import { STATUS_LABEL } from "@/lib/statusLabels";
 import Sheet, { SheetContent } from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
@@ -52,7 +53,9 @@ export default function KinkEditSheet({
   return (
     <Sheet open={kink !== null} onClose={onClose} scrollable aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}>
       <SheetContent className="max-h-[88dvh] overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
-        <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>{kink?.category}</p>
+        <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>
+          {kink ? kinkCategoryLabel(kink.category) : ""}
+        </p>
         <h2
           className="text-xl leading-tight mb-1"
           style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
