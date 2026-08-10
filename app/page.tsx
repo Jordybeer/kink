@@ -84,8 +84,9 @@ function HomeContent() {
   })();
   const isSwitchImport = importTransfer?.length === 2
     && !!importTransfer[0].switchShareProof
+    && !!importTransfer[0].personGroupId
     && importTransfer.every((candidate) =>
-      candidate.switchShareProof?.groupId === importTransfer[0].switchShareProof?.groupId);
+      candidate.personGroupId === importTransfer[0].personGroupId);
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
