@@ -1,0 +1,35 @@
+name: Forge role-affinity Release C
+
+on:
+  push:
+    branches:
+      - feature/directionality-role-affinity
+
+permissions:
+  contents: write
+
+jobs:
+  forge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node scripts/forge-role-affinity-release-c.mjs
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Commit bewezen productwerk
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/kinks.ts lib/directionality.ts lib/questionnaireMetadata.ts lib/questionnaire.ts __tests__/kinks.test.ts __tests__/directionality.test.ts __tests__/directionalMatching.test.ts __tests__/questionnaire.test.ts directie.md docs/directionality-role-affinity.md planned-changes.md
+          git diff --cached --quiet && exit 0
+          git commit -m "Voeg compacte role-affinity directionality toe"
+          git push
