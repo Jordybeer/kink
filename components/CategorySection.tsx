@@ -1,7 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
+import { useState } from "react";
 import { ArrowUp, CaretDown, CaretRight } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
@@ -12,9 +10,7 @@ interface Props {
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onEdit: (kink: Kink) => void;
-  onTriage: () => void;
-  onBulkSkip: () => void;
-  onBulkRestore?: (snapshot: Record<string, KinkEntry>) => void;
+  onExplore: () => void;
 }
 
 const MAX_PIPS = 12;
@@ -25,15 +21,10 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 
 export default function CategorySection({
   category, kinks, entries,
-  onEdit, onTriage,
-  onBulkSkip, onBulkRestore,
+  onEdit, onExplore,
 }: Props) {
-  const t = useMotionSafe();
-  const [open, setOpen] = useState(true);
-  const [undoPending, setUndoPending] = useState(false);
-  const undoSnapshot = useRef<Record<string, KinkEntry>>({});
-  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filled = countFilled(kinks, entries);
+  const [open, setOpen] = useState(() => filled > 0);
   const unratedCount = kinks.length - filled;
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
@@ -85,60 +76,26 @@ export default function CategorySection({
             </span>
           </div>
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            const snapshot: Record<string, KinkEntry> = {};
-            for (const kink of kinks) snapshot[kink.id] = entries[kink.id] ?? { status: null, comment: "" };
-            undoSnapshot.current = snapshot;
-            onBulkSkip();
-            setUndoPending(true);
-            if (undoTimer.current) clearTimeout(undoTimer.current);
-            undoTimer.current = setTimeout(() => setUndoPending(false), 3000);
-          }}
-          aria-label={`Alle kinks in ${label} overslaan`}
-          className="focus-ring mr-2 min-h-11 flex-none rounded-full px-3 text-xs transition-colors"
-          style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.borderColor = "var(--accent)";
-            event.currentTarget.style.color = "var(--accent-text)";
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.borderColor = "var(--border)";
-            event.currentTarget.style.color = "var(--text2)";
-          }}
-        >
-          Sla over
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {undoPending && onBulkRestore && (
-          <motion.div
-            initial={{ y: 24, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 24, opacity: 0 }}
-            transition={t.fast}
-            className="fixed bottom-20 left-4 right-4 z-[300] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", maxWidth: "28rem", margin: "0 auto" }}
+        {unratedCount > 0 && (
+          <button
+            type="button"
+            onClick={onExplore}
+            aria-label={`Meer uit ${label} beoordelen`}
+            className="focus-ring mr-2 min-h-11 flex-none rounded-full px-3 text-xs transition-colors"
+            style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.borderColor = "var(--accent)";
+              event.currentTarget.style.color = "var(--accent-text)";
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.borderColor = "var(--border)";
+              event.currentTarget.style.color = "var(--text2)";
+            }}
           >
-            <span className="flex-1 text-sm" style={{ color: "var(--text2)" }}>Categorie overgeslagen.</span>
-            <motion.button
-              type="button"
-              onClick={() => {
-                onBulkRestore(undoSnapshot.current);
-                setUndoPending(false);
-                if (undoTimer.current) clearTimeout(undoTimer.current);
-              }}
-              whileTap={TAP_SPRING}
-              className="focus-ring min-h-11 flex-none px-2 text-sm font-semibold"
-              style={{ color: "var(--accent-text)" }}
-            >
-              Ongedaan maken
-            </motion.button>
-          </motion.div>
+            Meer
+          </button>
         )}
-      </AnimatePresence>
+      </div>
 
       <div id={`${headingId}-content`} className={`accordion-content ${open ? "open" : ""}`}>
         <div className="accordion-inner">
@@ -156,7 +113,7 @@ export default function CategorySection({
             {unratedCount > 0 && (
               <button
                 type="button"
-                onClick={onTriage}
+                onClick={onExplore}
                 className="focus-ring w-full min-h-12 rounded-xl mb-1 px-3 flex items-center gap-2 text-left transition-colors"
                 style={{
                   border: "1px dashed color-mix(in srgb, var(--accent) 45%, transparent)",
@@ -165,9 +122,9 @@ export default function CategorySection({
                 }}
               >
                 <span className="flex-1 text-xs font-medium">
-                  Nog <span className="tabular-nums">{unratedCount}</span> te beoordelen
+                  Nog <span className="tabular-nums">{unratedCount}</span> onbeantwoord
                 </span>
-                <span className="inline-flex items-center gap-1 text-xs"><ArrowUp size={12} aria-hidden="true" />verder in de stapel</span>
+                <span className="inline-flex items-center gap-1 text-xs"><ArrowUp size={12} aria-hidden="true" />meer uit deze categorie</span>
               </button>
             )}
           </div>

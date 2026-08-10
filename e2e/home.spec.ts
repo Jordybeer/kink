@@ -42,7 +42,7 @@ test.describe("Home page — profielen aanwezig", () => {
 
 test.describe("Profiel aanmaken via UI", () => {
   test("opent het formulier en maakt een nieuw profiel aan", async ({ page }) => {
-    await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
+    await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
     await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
     await expect(page.getByRole("dialog", { name: "Nieuw profiel maken" })).toBeVisible();
@@ -57,5 +57,24 @@ test.describe("Profiel aanmaken via UI", () => {
     await expect(page).not.toHaveURL(/focus=questionnaire/);
     await expect(page.locator('[data-tour="kink-card"]')).toBeInViewport();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+
+    const readMore = page.getByRole("button", { name: "Lees meer" });
+    await expect(readMore).toBeVisible();
+    await readMore.click();
+    await expect(page.getByRole("button", { name: "Minder tonen" })).toHaveAttribute("aria-expanded", "true");
+
+    await page.waitForTimeout(1700);
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.locator('[data-tour="kink-card"]')).toBeInViewport();
+
+    await page.getByRole("button", { name: "Meer uit Impact Play beoordelen" }).click();
+    await expect(page.getByText("Alle nog onbeantwoorde onderwerpen uit Impact Play.")).toBeVisible();
+    const entries = await page.evaluate(() => {
+      const raw = localStorage.getItem("kink-profiles");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; entries?: unknown }> } };
+      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon")?.entries ?? null;
+    });
+    expect(entries).toEqual({});
   });
 });

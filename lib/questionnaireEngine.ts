@@ -19,8 +19,8 @@ export type QuestionnaireLane =
   | "expansion"
   | "coverage"
   | "discovery"
-  | "deepDive"
-  | "legacy";
+  | "category"
+  | "deepDive";
 
 export interface ExpansionReason {
   sourceKinkId: string;
@@ -71,9 +71,9 @@ const LANE_RANK: Record<QuestionnaireLane, number> = {
   interest: 1,
   expansion: 2,
   discovery: 3,
+  category: 3,
   coverage: 4,
   deepDive: 5,
-  legacy: 5,
 };
 
 function positiveStatus(status: KinkEntry["status"]): PositiveQuestionnaireStatus | null {
@@ -223,8 +223,8 @@ function diversify<T extends { kink: Kink }>(
 }
 
 /**
- * Legacy v1 houdt zijn vertrouwde budgetkorset, terwijl alleen expliciete,
- * schaarse relaties mogen vonken. Safety en gekozen interesses staan vooraan;
+ * Alleen expliciete, schaarse relaties mogen vonken. Safety en gekozen
+ * interesses staan vooraan;
  * yes verleidt sterker dan willing; pas herhaalde hard_no's vertragen een edge.
  */
 export function rankQuestionnaireCandidates(
@@ -263,6 +263,14 @@ export function rankQuestionnaireQueueItems(
 ): QuestionnaireQueueItem[] {
   const catalogIndex = new Map(catalog.map((kink, index) => [kink.id, index]));
   const support = directSignals(catalog, entries);
+  const answeredByCategory = new Map<string, number>();
+  const answeredByCluster = new Map<string, number>();
+  for (const kink of catalog) {
+    if (entries[kink.id]?.status == null) continue;
+    answeredByCategory.set(kink.category, (answeredByCategory.get(kink.category) ?? 0) + 1);
+    const cluster = questionnairePrimaryCluster(kink);
+    answeredByCluster.set(cluster, (answeredByCluster.get(cluster) ?? 0) + 1);
+  }
   const ranked = [...items].sort((left, right) => {
     const leftSupport = support.get(left.kink.id) ?? { strongest: 0, sources: 0, hardLimits: 0 };
     const rightSupport = support.get(right.kink.id) ?? { strongest: 0, sources: 0, hardLimits: 0 };
@@ -272,9 +280,24 @@ export function rankQuestionnaireQueueItems(
     const rightProbeStrength = right.reasons.length
       ? Math.max(...right.reasons.map((reason) => statusStrength(reason.status)))
       : 0;
+    const breadthFirst = left.lane === "discovery" || left.lane === "deepDive";
+    const leftCategoryCoverage = breadthFirst
+      ? answeredByCategory.get(left.kink.category) ?? 0
+      : 0;
+    const rightCategoryCoverage = breadthFirst
+      ? answeredByCategory.get(right.kink.category) ?? 0
+      : 0;
+    const leftClusterCoverage = breadthFirst
+      ? answeredByCluster.get(questionnairePrimaryCluster(left.kink)) ?? 0
+      : 0;
+    const rightClusterCoverage = breadthFirst
+      ? answeredByCluster.get(questionnairePrimaryCluster(right.kink)) ?? 0
+      : 0;
     return LANE_RANK[left.lane] - LANE_RANK[right.lane]
       || rightProbeStrength - leftProbeStrength
       || right.reasons.length - left.reasons.length
+      || leftCategoryCoverage - rightCategoryCoverage
+      || leftClusterCoverage - rightClusterCoverage
       || rightSupport.strongest - leftSupport.strongest
       || rightSupport.sources - leftSupport.sources
       || repeatedHardLimitPenalty(leftSupport.hardLimits)

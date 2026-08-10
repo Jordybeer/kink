@@ -15,12 +15,12 @@ import {
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
 import {
-  buildQuestionnaireDiscoveryWave,
   getQuestionnaireRuntime,
   searchAllKinks,
   type QuestionnaireIntent,
 } from "@/lib/questionnaire";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
+import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { useMotionSafe } from "@/lib/motion";
 import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
@@ -56,6 +56,15 @@ const TAB_VARIANTS = {
   exit: (direction: number) => ({ opacity: 0, x: direction > 0 ? -28 : 28 }),
 };
 const EMPTY_KINKS: Kink[] = [];
+const DYNAMIC_INTENT = { kind: "dynamic" } as const satisfies QuestionnaireIntent;
+type GlobalQuestionnaireIntent = Exclude<QuestionnaireIntent, { kind: "category" }>;
+
+const CATALOG_KINKS_BY_CATEGORY = new Map<KinkCategoryId, Kink[]>();
+for (const kink of KINKS) {
+  const categoryKinks = CATALOG_KINKS_BY_CATEGORY.get(kink.category) ?? [];
+  categoryKinks.push(kink);
+  CATALOG_KINKS_BY_CATEGORY.set(kink.category, categoryKinks);
+}
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
@@ -78,20 +87,21 @@ export default function ProfilePage({ params }: Props) {
     saveProfileSnapshot,
   } = useStore();
   const profile = profiles.find((candidate) => candidate.id === id);
+  const profileQuestionnaireMode = profile?.questionnaireSetup?.mode;
 
   const [activeTab, setActiveTab] = useState<ProfileTab | null>(null);
   const [tabDirection, setTabDirection] = useState<1 | -1>(1);
   const [activeCategory, setActiveCategory] = useState<KinkCategoryId>(CATEGORIES[0]);
   const [search, setSearch] = useState("");
-  const [deckFocus, setDeckFocus] = useState<KinkCategoryId | null>(null);
-  const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>("dynamic");
-  const [discoveryWaveIds, setDiscoveryWaveIds] = useState<string[]>([]);
+  const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>(DYNAMIC_INTENT);
+  const [categoryReturnIntent, setCategoryReturnIntent] = useState<GlobalQuestionnaireIntent>(DYNAMIC_INTENT);
   const [customInput, setCustomInput] = useState("");
   const [editKink, setEditKink] = useState<Kink | null>(null);
   const [editing, setEditing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
   const [tourVisible, setTourVisible] = useState(false);
+  const [questionnaireLanding, setQuestionnaireLanding] = useState(false);
   const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
@@ -103,35 +113,32 @@ export default function ProfilePage({ params }: Props) {
 
   const questionnaireRuntime = useMemo(
     () => profile
-      ? getQuestionnaireRuntime(profile, {
-          intent: questionnaireIntent,
-          discoveryWaveIds,
-        })
+      ? getQuestionnaireRuntime(profile, { intent: questionnaireIntent })
       : null,
-    [profile, questionnaireIntent, discoveryWaveIds],
+    [profile, questionnaireIntent],
   );
   const visibleKinks = questionnaireRuntime?.visibleKinks ?? EMPTY_KINKS;
-  const kinksByCategory = useMemo(() => {
-    const groups = new Map<KinkCategoryId, Kink[]>();
-    for (const kink of visibleKinks) {
-      if (kink.category === "custom") continue;
-      const group = groups.get(kink.category) ?? [];
-      group.push(kink);
-      groups.set(kink.category, group);
-    }
-    return groups;
-  }, [visibleKinks]);
 
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
     setIncludePrivateExports(false);
     setEditing(false);
-    setQuestionnaireIntent("dynamic");
-    setDiscoveryWaveIds([]);
+    setQuestionnaireIntent(DYNAMIC_INTENT);
+    setCategoryReturnIntent(DYNAMIC_INTENT);
+    setQuestionnaireLanding(false);
     initializedProfileId.current = null;
     editQueryConsumed.current = false;
     questionnaireFocusConsumed.current = false;
   }, [id]);
+
+  useEffect(() => {
+    if (!profileQuestionnaireMode) return;
+    const storedIntent: GlobalQuestionnaireIntent = profileQuestionnaireMode === "deepDive"
+      ? { kind: "deepDive" }
+      : DYNAMIC_INTENT;
+    setQuestionnaireIntent((current) => current.kind === "category" ? current : storedIntent);
+    setCategoryReturnIntent(storedIntent);
+  }, [id, profileQuestionnaireMode]);
 
   useEffect(() => {
     if (!hydrated || !profile || initializedProfileId.current === profile.id) return;
@@ -153,10 +160,11 @@ export default function ProfilePage({ params }: Props) {
   }, [hydrated, profile, router, searchParams]);
 
   useEffect(() => {
-    if (!hydrated || !profile || !profileTourComplete || activeTab !== "bewerken") return;
+    if (!hydrated || !profile || activeTab !== "bewerken") return;
     if (questionnaireFocusConsumed.current || searchParams.get("focus") !== "questionnaire") return;
     const target = deckRef.current;
     if (!target) return;
+    setQuestionnaireLanding(true);
 
     const frame = window.requestAnimationFrame(() => {
       if (!target.isConnected) return;
@@ -173,17 +181,17 @@ export default function ProfilePage({ params }: Props) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [activeTab, hydrated, pathname, profile, profileTourComplete, router, searchParams]);
+  }, [activeTab, hydrated, pathname, profile, router, searchParams]);
 
   useEffect(() => {
     const sharedProfile = profile?.origin === "shared" || profile?.isImported === true;
-    if (profileTourComplete || activeTab !== "bewerken" || sharedProfile) {
+    if (profileTourComplete || questionnaireLanding || activeTab !== "bewerken" || sharedProfile) {
       setTourVisible(false);
       return;
     }
     const timer = window.setTimeout(() => setTourVisible(true), 1500);
     return () => window.clearTimeout(timer);
-  }, [profileTourComplete, activeTab, profile]);
+  }, [profileTourComplete, questionnaireLanding, activeTab, profile]);
 
   if (!hydrated) return <PageShell loading width="2xl" />;
 
@@ -203,29 +211,58 @@ export default function ProfilePage({ params }: Props) {
 
   const currentProfile = profile;
   const runtime = questionnaireRuntime!;
-  const questionnaireV2 = currentProfile.questionnaireSetup?.version === 2
-    ? currentProfile.questionnaireSetup
-    : null;
+  const questionnaireSetup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
   const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   const effectiveTab = shared ? "overzicht" : activeTab;
-  const visibleCategories = CATEGORIES.filter((category) => kinksByCategory.has(category));
-  const maxLevel = LEVEL_MAX[currentProfile.experienceLevel ?? "beginner"];
-  const exportMaxLevel = questionnaireV2 ? LEVEL_MAX.diepgaand : maxLevel;
+  const visibleCategories = CATEGORIES;
+  const exportMaxLevel = LEVEL_MAX.diepgaand;
   const searchTerm = search.trim();
   const searchResults = searchTerm ? searchAllKinks(searchTerm) : [];
   const customKinks = currentProfile.customKinks ?? [];
-  const totalRated = visibleKinks.filter((kink) => currentProfile.entries[kink.id]?.status).length;
   const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
-  const deepDiveMode = questionnaireV2?.mode === "deepDive";
-  const progressPercent = deepDiveMode
-    ? Math.round((catalogRated / KINKS.length) * 100)
-    : runtime.coverage?.percent ?? 0;
-  const nextDiscoveryWave = questionnaireV2?.mode === "dynamic" && runtime.complete
-    ? buildQuestionnaireDiscoveryWave(currentProfile)
+  const totalRated = catalogRated;
+  const runtimeKind = runtime.intent.kind;
+  const activeCategoryKinks = runtimeKind === "category"
+    ? CATALOG_KINKS_BY_CATEGORY.get(runtime.intent.category) ?? []
     : [];
+  const activeCategoryRated = activeCategoryKinks.filter(
+    (kink) => currentProfile.entries[kink.id]?.status != null,
+  ).length;
+  const catalogProgress = runtimeKind === "deepDive" || runtimeKind === "discover";
+  const progressPercent = runtimeKind === "category"
+    ? Math.round((activeCategoryRated / Math.max(1, activeCategoryKinks.length)) * 100)
+    : catalogProgress
+      ? Math.round((catalogRated / KINKS.length) * 100)
+      : runtime.coverage.percent;
   const hasPrivateResponses = Object.values(currentProfile.entries).some(
     (entry) => entry.status && entry.privateResponse,
   );
+  const activeCategoryLabel = runtimeKind === "category"
+    ? kinkCategoryLabel(runtime.intent.category)
+    : null;
+  const progressAriaLabel = runtimeKind === "category"
+    ? `${activeCategoryLabel} voortgang`
+    : catalogProgress
+      ? "Catalogusvoortgang"
+      : "Profieldekking";
+  const progressCopy = runtimeKind === "category"
+    ? `${activeCategoryLabel}: ${activeCategoryRated} / ${activeCategoryKinks.length} beoordeeld.`
+    : catalogProgress
+      ? `${runtimeKind === "discover" ? "Discover" : "Catalogus"}: ${catalogRated} / ${KINKS.length} beoordeeld.`
+      : `Profieldekking ${runtime.coverage.percent}% · ${runtime.coverage.answered} / ${runtime.coverage.total} dekkingsvragen expliciet beantwoord.`;
+  const deckProgressLabel = runtimeKind === "category"
+    ? `${activeCategoryLabel}: ${activeCategoryRated} / ${activeCategoryKinks.length}`
+    : catalogProgress
+      ? `${runtimeKind === "discover" ? "Discover" : "Catalogus"}: ${catalogRated} / ${KINKS.length}`
+      : `Profieldekking ${runtime.coverage.percent}%`;
+  const intentKey = runtimeKind === "category"
+    ? `category:${runtime.intent.category}`
+    : runtimeKind;
+  const categoryReturnLabel = categoryReturnIntent.kind === "discover"
+    ? "Discover"
+    : categoryReturnIntent.kind === "deepDive"
+      ? "Deep Dive"
+      : "Dynamic";
 
   const statusSegments = STATUS_ORDER.map((status) => ({
     status,
@@ -237,7 +274,7 @@ export default function ProfilePage({ params }: Props) {
 
   const ratedByCategory = visibleCategories.map((category) => ({
     category,
-    kinks: (kinksByCategory.get(category) ?? []).filter(
+    kinks: (CATALOG_KINKS_BY_CATEGORY.get(category) ?? []).filter(
       (kink) => currentProfile.entries[kink.id]?.status,
     ),
   })).filter((section) => section.kinks.length > 0);
@@ -255,24 +292,32 @@ export default function ProfilePage({ params }: Props) {
   }
 
   function startDiscovery() {
-    const wave = buildQuestionnaireDiscoveryWave(currentProfile);
-    if (wave.length === 0) return;
-    setDiscoveryWaveIds(wave);
-    setQuestionnaireIntent("discover");
-    setDeckFocus(null);
+    if (catalogRated === KINKS.length) return;
+    setQuestionnaireIntent({ kind: "discover" });
+    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function startCategory(category: KinkCategoryId) {
+    if (runtimeKind !== "category") {
+      setCategoryReturnIntent(runtime.intent);
+    }
+    setActiveCategory(category);
+    setQuestionnaireIntent({ kind: "category", category });
+    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function leaveTemporaryIntent() {
+    setQuestionnaireIntent(runtimeKind === "category" ? categoryReturnIntent : DYNAMIC_INTENT);
     deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function startDeepDive() {
-    if (!questionnaireV2) return;
     updateProfileQuestionnaire(currentProfile.id, {
       mode: "deepDive",
-      interests: [...questionnaireV2.interests],
+      interests: [...questionnaireSetup.interests],
       version: 2,
     });
-    setQuestionnaireIntent("deepDive");
-    setDiscoveryWaveIds([]);
-    setDeckFocus(null);
+    setQuestionnaireIntent({ kind: "deepDive" });
   }
 
   function privateResponseRevealed(kinkId: string): boolean {
@@ -393,38 +438,29 @@ export default function ProfilePage({ params }: Props) {
                   className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
-                {currentProfile.questionnaireSetup && !searchTerm && (
-                  questionnaireV2 && runtime.coverage ? (
-                    <div className="mt-2">
+                {!searchTerm && (
+                  <div className="mt-2">
+                    <div
+                      role="progressbar"
+                      aria-label={progressAriaLabel}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={progressPercent}
+                      className="h-1.5 rounded-full overflow-hidden"
+                      style={{ background: "var(--surface2)" }}
+                    >
                       <div
-                        role="progressbar"
-                        aria-label={deepDiveMode ? "Catalogusvoortgang" : "Profieldekking"}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={progressPercent}
-                        className="h-1.5 rounded-full overflow-hidden"
-                        style={{ background: "var(--surface2)" }}
-                      >
-                        <div
-                          className="h-full rounded-full transition-[width]"
-                          style={{
-                            width: `${progressPercent}%`,
-                            background: "var(--accent)",
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                        {deepDiveMode
-                          ? `Catalogus: ${catalogRated} / ${KINKS.length} beoordeeld.`
-                          : `Profieldekking ${runtime.coverage.percent}% · ${runtime.coverage.answered} / ${runtime.coverage.total} kernvragen expliciet beantwoord.`}
-                        {" "}Zoeken toont altijd alles.
-                      </p>
+                        className="h-full rounded-full transition-[width]"
+                        style={{
+                          width: `${progressPercent}%`,
+                          background: "var(--accent)",
+                        }}
+                      />
                     </div>
-                  ) : (
                     <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                      {visibleKinks.length} onderwerpen in deze ronde. De stapel past zich aan op je eigen antwoorden; niets wordt voor je ingevuld. Zoeken toont altijd alles.
+                      {progressCopy} Zoeken toont altijd alles.
                     </p>
-                  )
+                  </div>
                 )}
               </div>
 
@@ -452,13 +488,9 @@ export default function ProfilePage({ params }: Props) {
                         <button
                           key={category}
                           type="button"
-                          onClick={() => {
-                            setActiveCategory(category);
-                            setDeckFocus(category);
-                            deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }}
+                          onClick={() => startCategory(category)}
                           className="focus-ring flex-none px-3 min-h-9 rounded-full text-xs font-semibold"
-                          style={activeCategory === category
+                          style={runtimeKind === "category" && activeCategory === category
                             ? { background: "var(--accent)", color: "var(--on-accent)" }
                             : { border: "1px solid var(--border)", color: "var(--text2)" }}
                         >
@@ -469,7 +501,32 @@ export default function ProfilePage({ params }: Props) {
                   </div>
 
                   <div ref={deckRef} className="px-4 mb-4" style={{ scrollMarginTop: "calc(var(--nav-h) + 12px)" }}>
-                    {questionnaireV2 && runtime.complete ? (
+                    {!runtime.complete && (runtimeKind === "discover" || runtimeKind === "category") && (
+                      <div
+                        className="mb-2 rounded-xl px-3 py-2.5 flex items-center gap-3"
+                        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
+                            {runtimeKind === "discover" ? "Discover" : activeCategoryLabel}
+                          </p>
+                          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                            {runtimeKind === "discover"
+                              ? "Doorlopend nieuwe gebieden verkennen; je bepaalt zelf wanneer het genoeg is."
+                              : `Alle nog onbeantwoorde onderwerpen uit ${activeCategoryLabel}.`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={leaveTemporaryIntent}
+                          className="focus-ring min-h-10 flex-none rounded-lg px-3 text-xs font-semibold"
+                          style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
+                        >
+                          {runtimeKind === "discover" ? "Genoeg voor nu" : `Terug naar ${categoryReturnLabel}`}
+                        </button>
+                      </div>
+                    )}
+                    {runtime.complete ? (
                       <div
                         className="rounded-2xl p-5 text-center"
                         style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
@@ -478,27 +535,29 @@ export default function ProfilePage({ params }: Props) {
                           className="text-xl"
                           style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}
                         >
-                          {questionnaireV2.mode === "deepDive"
+                          {runtimeKind === "deepDive" || runtimeKind === "discover"
                             ? "De hele catalogus ligt open op tafel."
-                            : runtime.intent === "discover"
-                              ? "Dit ontdekrondje is rond."
+                            : runtimeKind === "category"
+                              ? `${activeCategoryLabel} is rond.`
                               : "Brede profieldekking bereikt."}
                         </p>
                         <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text2)" }}>
-                          {questionnaireV2.mode === "deepDive"
+                          {runtimeKind === "deepDive" || runtimeKind === "discover"
                             ? `${catalogRated} van ${KINKS.length} onderwerpen expliciet beoordeeld.`
-                            : "Geen antwoord is ingevuld of voorspeld. Je kunt nieuwe gebieden proeven of bewust alles afwerken."}
+                            : runtimeKind === "category"
+                              ? "Alle onderwerpen in deze categorie hebben nu een expliciet antwoord. Buiten deze categorie is niets ingevuld of afgeleid."
+                              : "Geen antwoord is ingevuld of voorspeld. Je kunt doorlopend nieuwe gebieden verkennen of bewust alles afwerken."}
                         </p>
-                        {questionnaireV2.mode === "dynamic" && (
+                        {runtimeKind === "dynamic" && (
                           <div className="grid grid-cols-2 gap-2 mt-4">
                             <button
                               type="button"
                               onClick={startDiscovery}
-                              disabled={nextDiscoveryWave.length === 0}
+                              disabled={catalogRated === KINKS.length}
                               className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
                               style={{ border: "1px solid var(--border)", color: "var(--text)" }}
                             >
-                              Meer ontdekken
+                              Discover
                             </button>
                             <button
                               type="button"
@@ -510,18 +569,25 @@ export default function ProfilePage({ params }: Props) {
                             </button>
                           </div>
                         )}
+                        {(runtimeKind === "category" || runtimeKind === "discover") && (
+                          <button
+                            type="button"
+                            onClick={leaveTemporaryIntent}
+                            className="focus-ring mt-4 min-h-11 w-full rounded-xl px-3 text-xs font-semibold"
+                            style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
+                          >
+                            {runtimeKind === "category" ? `Terug naar ${categoryReturnLabel}` : "Terug naar Dynamic"}
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <TriageDeck
+                        key={intentKey}
                         kinks={visibleKinks}
                         queueItems={runtime.queue}
                         entries={currentProfile.entries}
-                        focusCategory={deckFocus}
-                        progressLabel={questionnaireV2 && runtime.coverage
-                          ? questionnaireV2.mode === "deepDive"
-                            ? `Catalogus: ${catalogRated} / ${KINKS.length}`
-                            : `Profieldekking ${runtime.coverage.percent}%`
-                          : undefined}
+                        focusCategory={runtimeKind === "category" ? runtime.intent.category : null}
+                        progressLabel={deckProgressLabel}
                         onStatusChange={updateStatus}
                         onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
                         onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
@@ -532,7 +598,7 @@ export default function ProfilePage({ params }: Props) {
 
                   <div className="px-4">
                     {visibleCategories.map((category) => {
-                      const kinks = kinksByCategory.get(category) ?? [];
+                      const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
                       if (!kinks.length) return null;
                       return (
                         <CategorySection
@@ -541,18 +607,7 @@ export default function ProfilePage({ params }: Props) {
                           kinks={kinks}
                           entries={currentProfile.entries}
                           onEdit={setEditKink}
-                          onTriage={() => {
-                            setDeckFocus(category);
-                            deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }}
-                          onBulkSkip={() => {
-                            for (const kink of kinks) setEntry(currentProfile.id, kink.id, { status: "no" });
-                          }}
-                          onBulkRestore={(snapshot) => {
-                            for (const [kinkId, entry] of Object.entries(snapshot)) {
-                              setEntry(currentProfile.id, kinkId, entry);
-                            }
-                          }}
+                          onExplore={() => startCategory(category)}
                         />
                       );
                     })}

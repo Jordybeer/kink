@@ -168,7 +168,7 @@ export function buildStore(profiles: Profile[], extras: Partial<{
       theme: extras.theme ?? "midnight",
       pinnedProfileId: extras.pinnedProfileId ?? null,
     },
-    version: 17,
+    version: 18,
   };
 }
 

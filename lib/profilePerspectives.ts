@@ -3,7 +3,6 @@ import type {
   ExperienceLevel,
   Profile,
   ProfilePerspective,
-  QuestionnairePreset,
   QuestionnaireSetup,
 } from "@/types";
 
@@ -40,14 +39,7 @@ function perspectiveForProfile(profile: Profile): ProfilePerspective | undefined
   return undefined;
 }
 
-function experienceForPreset(preset: QuestionnairePreset): ExperienceLevel {
-  if (preset === "quick") return "beginner";
-  if (preset === "full") return "diepgaand";
-  return "gevorderd";
-}
-
 function experienceForQuestionnaire(setup: QuestionnaireSetup): ExperienceLevel {
-  if (setup.version === 1) return experienceForPreset(setup.preset);
   return setup.mode === "deepDive" ? "diepgaand" : "gevorderd";
 }
 

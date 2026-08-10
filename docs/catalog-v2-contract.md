@@ -23,8 +23,9 @@ De hoogste invariant blijft:
 
 ## 2. Feiten uit de audit
 
-De audit is uitgevoerd op de actuele `dev`-catalogus en alle directe
-consumenten daarvan.
+De audit-baseline is uitgevoerd op de toenmalige `dev`-catalogus en alle
+directe consumenten daarvan. De tabel hieronder verklaart de aanleiding; de
+gestapelde implementatiestatus staat in `engine.md`.
 
 | Onderdeel | Huidige toestand | Gevolg |
 | --- | --- | --- |
@@ -560,10 +561,10 @@ De stopregel blijft inspecteerbaar:
 expliciet gekozen interests. Een catalogusrelease wijzigt een lopende
 denominator niet door antwoorden. Iedere expliciete status telt; skip niet.
 
-De huidige 20 anchors worden na de categorieherindeling opnieuw geselecteerd.
-De nieuwe set raakt minimaal iedere user-facing categorie en de aparte
-safety/core-gebieden. Het doel is structurele dekking, niet een gekozen aantal
-vragen en niet enthousiasme meten.
+De uitgewerkte set bevat 44 anchors over alle 19 user-facing categorieën, met
+meerdere anchors alleen waar één kaart aantoonbaar een te brede kamer zou
+vertegenwoordigen. Het doel is structurele dekking, niet een marketingbudget en
+niet enthousiasme meten.
 
 ### Discover
 
@@ -653,9 +654,9 @@ publiek legacyprobleem op met permanente complexiteit.
   gekopieerd;
 - onbekende oude IDs mogen rauw in een profiel blijven zodat er geen
   destructieve dataverwijdering nodig is;
-- de storemigratie zet v1 Full om naar v2 Deep Dive en v1 Quick/Balanced of een
-  ontbrekende setup naar v2 Dynamic; gekozen interests en alle entries blijven
-  staan; daarna verdwijnen de v1-types en dubbele runtime;
+- storeversie 18 zet pre-launch Full om naar Deep Dive en Quick/Balanced of een
+  ontbrekende setup naar Dynamic; gekozen interests en alle entries blijven
+  staan; runtime, types en instellingen bevatten geen dubbele budgetengine;
 - de oude fixed-position v2 QR-decoder gebruikt één immutable
   `LEGACY_COMPACT_KINK_IDS_V2`-snapshot; de ongebruikte v2-encoder verdwijnt en
   nieuwe shares blijven de ID-gebaseerde v3-route gebruiken;
