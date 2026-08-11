@@ -29,7 +29,6 @@ export function detectIosInstallBrowser(
 }
 
 export const INSTALL_PROMPT_SNOOZE_MS = 5 * 24 * 60 * 60 * 1000;
-const INSTALL_PROMPT_POLICY_KEY = "kinksync-install-prompt-v2";
 
 export interface InstallPromptPolicy {
   dismissals: number;
@@ -37,7 +36,7 @@ export interface InstallPromptPolicy {
   neverAsk: boolean;
 }
 
-const DEFAULT_INSTALL_PROMPT_POLICY: InstallPromptPolicy = {
+export const DEFAULT_INSTALL_PROMPT_POLICY: InstallPromptPolicy = {
   dismissals: 0,
   snoozedUntil: 0,
   neverAsk: false,
@@ -84,16 +83,6 @@ export function snoozeInstallPrompt(
 
 export function disableAutomaticInstallPrompt(policy: InstallPromptPolicy): InstallPromptPolicy {
   return { ...policy, neverAsk: true, snoozedUntil: 0 };
-}
-
-export function readInstallPromptPolicy(): InstallPromptPolicy {
-  if (typeof window === "undefined") return { ...DEFAULT_INSTALL_PROMPT_POLICY };
-  return parseInstallPromptPolicy(window.localStorage.getItem(INSTALL_PROMPT_POLICY_KEY));
-}
-
-export function writeInstallPromptPolicy(policy: InstallPromptPolicy): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(INSTALL_PROMPT_POLICY_KEY, JSON.stringify(policy));
 }
 
 let _deferred: BeforeInstallPromptEvent | null = null;
