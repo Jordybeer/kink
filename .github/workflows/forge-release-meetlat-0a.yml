@@ -25,6 +25,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Sluit de quote op de tijdelijke smid
+        run: node .github/scripts/patch-release-meetlat-forge-syntax.mjs
+
       - name: Trek de meetlat recht
         run: node .github/scripts/forge-release-meetlat-0a.mjs
 
@@ -55,6 +58,7 @@ jobs:
           BRANCH: test/release-meetlat-fixtures
         run: |
           rm .github/scripts/forge-release-meetlat-0a.mjs
+          rm .github/scripts/patch-release-meetlat-forge-syntax.mjs
           rm .github/workflows/forge-release-meetlat-0a.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
