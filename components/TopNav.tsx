@@ -171,6 +171,9 @@ function focusedRoute(
   dyn: { profileName?: string; sceneTitle?: string },
 ): { title: string; back: string } {
   if (path === "/profile") return { title: "Profiel", back: "/" };
+  if (/^\/profile\/[^/]+\/questions$/.test(path)) {
+    return { title: "Voorkeuren", back: path.replace(/\/questions$/, "") };
+  }
   if (path.startsWith("/profile/")) return { title: dyn.profileName ?? "Profiel", back: "/" };
   if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
   if (path === "/scenes") return { title: "Scènes", back: "/" };

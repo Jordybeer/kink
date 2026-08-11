@@ -125,8 +125,9 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: "Profiel maken" }).click();
     await page.waitForLoadState("networkidle");
 
-    // Should have navigated to the profile page
-    await expect(page).toHaveURL(/\/profile\//);
-    await expect(page.getByRole("heading", { level: 2, name: "Testmeester" })).toBeVisible();
+    // New profiles continue directly into the dedicated questionnaire surface.
+    await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/);
+    await expect(page.getByTestId("questions-screen")).toBeVisible();
+    await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
   });
 });
