@@ -11,6 +11,7 @@ test("questionnaire focus hands off to the dedicated questions route", async ({ 
 });
 
 test("answered question persists across a reload without document-width overflow", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
 
   const cardTitle = page.locator('[data-tour="kink-card"] h3');
