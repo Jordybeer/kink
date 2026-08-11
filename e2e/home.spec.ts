@@ -42,15 +42,17 @@ test.describe("Home page — profielen aanwezig", () => {
 
 test.describe("Profiel aanmaken via UI", () => {
   test("opent het formulier en maakt een nieuw profiel aan", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
     await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
     await expect(page.getByRole("dialog", { name: "Nieuw profiel maken" })).toBeVisible();
+    await expect(page.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
     await page.getByLabel("Naam of alias").fill("TestPersoon");
     await page.getByRole("button", { name: /^Dominant/ }).click();
     await page.getByRole("button", { name: "Verder" }).click();
-    await page.getByRole("button", { name: "Verder" }).click();
-    await page.getByRole("button", { name: "Profiel maken" }).click();
+    await expect(page.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Start vragen" }).click();
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/, { timeout: 8000 });
     await expect(page.getByTestId("questions-screen")).toBeVisible();
