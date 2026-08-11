@@ -151,7 +151,7 @@ export const KINKS: CatalogKink[] = [
   },
   {
     id: "punching_give",
-    name: "Punching / thuding — giving",
+    name: "Punching / thudding — giving",
     aliases: ["Punching geven", "Thudding geven", "Een partner met vuisten impact geven"],
     category: "impact",
     level: 3,
@@ -159,7 +159,7 @@ export const KINKS: CatalogKink[] = [
   },
   {
     id: "punching_receive",
-    name: "Punching / thuding — receiving",
+    name: "Punching / thudding — receiving",
     aliases: ["Punching ontvangen", "Thudding ontvangen", "Vuistimpact ontvangen"],
     category: "impact",
     level: 3,

@@ -69,7 +69,7 @@ const DIRECTIONAL_CONCEPT_LABELS: Readonly<Record<string, string>> = {
   whipping: "Whipping",
   belt: "Belt",
   slapping_face: "Face slapping",
-  punching: "Punching / thuding",
+  punching: "Punching / thudding",
   trampling: "Trampling",
   rope_bondage: "Rope bondage",
   shibari: "Shibari",

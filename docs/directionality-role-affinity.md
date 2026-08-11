@@ -41,7 +41,7 @@ Dit zijn bewust alleen bestaande Dynamic-anchors en hun directe, al gemodelleerd
 
 ## Impact extension — uitgevoerd
 
-Caning, crop, paddling, whipping, belt, face slapping, punching/thuding en trampling zijn item voor item goedgekeurd en nu expliciet gepaird. Iedere kant blijft zelfstandig antwoordbaar en gebruikt dezelfde questionnaire-affinity als Release C. Geen van deze instrumenten krijgt een canonical follow-up of progression-edge: het zijn alternatieve technieken, geen betrouwbare intensiteitsladder.
+Caning, crop, paddling, whipping, belt, face slapping, punching/thudding en trampling zijn item voor item goedgekeurd en nu expliciet gepaird. Iedere kant blijft zelfstandig antwoordbaar en gebruikt dezelfde questionnaire-affinity als Release C. Geen van deze instrumenten krijgt een canonical follow-up of progression-edge: het zijn alternatieve technieken, geen betrouwbare intensiteitsladder.
 
 ## Niet meegenomen
 

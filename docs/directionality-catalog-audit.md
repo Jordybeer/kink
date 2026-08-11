@@ -43,4 +43,4 @@ Materiaal- en kledingfetishes, lichaamsaantrekking, algemene D/s- en roleplay-dy
 
 ## Impact extension — uitgevoerd 11 augustus 2026
 
-Na Release C zijn acht resterende high-confidence Impact-acties individueel gesplitst: caning, crop, paddling, whipping, belt, face slapping, punching/thuding en trampling. De oude enkelvoudige IDs worden pre-launch verwijderd zonder antwoordkopie; give/receive matcht alleen complementair. Instrumentkeuze is geen escalatieladder, dus deze release voegt bewust geen canonical follow-ups of progression-gates toe.
+Na Release C zijn acht resterende high-confidence Impact-acties individueel gesplitst: caning, crop, paddling, whipping, belt, face slapping, punching/thudding en trampling. De oude enkelvoudige IDs worden pre-launch verwijderd zonder antwoordkopie; give/receive matcht alleen complementair. Instrumentkeuze is geen escalatieladder, dus deze release voegt bewust geen canonical follow-ups of progression-gates toe.
