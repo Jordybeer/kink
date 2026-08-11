@@ -129,8 +129,16 @@ export default function SettingsSheet({
   const [isIos, setIsIos] = useState(false);
   const installTimerRef = useRef<number | null>(null);
 
-  const automaticInstallPromptsEnabled =
-    !installPromptDismissed && !promptNeverAsk && promptDismissals < 2;
+  const automaticInstallPromptsEnabled = !promptNeverAsk && promptDismissals < 2;
+
+  useEffect(() => {
+    if (installPromptDismissed && automaticInstallPromptsEnabled) {
+      // `installPromptDismissed` predates the dedicated prompt policy. Existing
+      // dev data may still carry that flag even though the new policy allows
+      // prompts, so keep the legacy parent gate in sync until it is retired.
+      useStore.setState({ installPromptDismissed: false });
+    }
+  }, [automaticInstallPromptsEnabled, installPromptDismissed]);
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable()

@@ -156,6 +156,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       }
 
       if (choice.outcome === "accepted") {
+        disableAutomaticPrompt();
         closeAfterExit(onDismiss);
       } else {
         snoozeAutomaticPrompt();
