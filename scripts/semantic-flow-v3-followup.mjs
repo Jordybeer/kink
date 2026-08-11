@@ -8,6 +8,14 @@ function replaceOnce(path, before, after) {
   if (count !== 1) throw new Error(`${path}: expected one match, got ${count}`);
   write(path, source.replace(before, after));
 }
+function replaceExpected(path, before, after, expectedCount) {
+  const source = read(path);
+  const count = source.split(before).length - 1;
+  if (count !== expectedCount) {
+    throw new Error(`${path}: expected ${expectedCount} matches, got ${count}`);
+  }
+  write(path, source.split(before).join(after));
+}
 
 replaceOnce(
   "lib/questionnaireEngine.ts",
@@ -99,15 +107,11 @@ import { isQuestionnaireKinkEligibleForPerspective } from "@/lib/questionnaireEl
   `import { isQuestionnaireKinkEligibleForPerspective } from "@/lib/questionnaireEligibility";
 import { questionnaireParticipationKinkIdForPerspective } from "@/lib/participation";`,
 );
-replaceOnce(
+replaceExpected(
   "lib/questionnaire.ts",
-  `    const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);`,
-  `    const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);`,
-);
-replaceOnce(
-  "lib/questionnaire.ts",
-  `      const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);`,
-  `      const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);`,
+  `questionnaireDirectionalKinkIdForPerspective(sourceId, perspective)`,
+  `questionnaireParticipationKinkIdForPerspective(sourceId, perspective)`,
+  2,
 );
 
 replaceOnce(
