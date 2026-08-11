@@ -1,0 +1,335 @@
+name: forge impact v2
+
+on:
+  push:
+    branches: [feature/directionality-impact-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  forge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Geef acht Impact-acties twee expliciete kanten
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if text.count(old) != 1:
+                  raise SystemExit(f"{path}: exact replacement count={text.count(old)} for {old[:70]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          def regex_once(path, pattern, replacement, flags=0):
+              p = Path(path)
+              text = p.read_text()
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=flags)
+              if count != 1:
+                  raise SystemExit(f"{path}: regex replacement count={count} for {pattern[:70]!r}")
+              p.write_text(updated)
+
+          def ts_block(item):
+              lines = ["  {", f'    id: "{item["id"]}",', f'    name: "{item["name"]}",']
+              if item.get("aliases"):
+                  aliases = ", ".join(f'"{alias}"' for alias in item["aliases"])
+                  lines.append(f"    aliases: [{aliases}],")
+              lines += [
+                  '    category: "impact",',
+                  f'    level: {item["level"]},',
+                  f'    description: "{item["description"]}",',
+                  "  },",
+              ]
+              return "\n".join(lines) + "\n"
+
+          pairs = {
+              "caning": [
+                  dict(id="caning_give", name="Caning — giving", aliases=["Caning geven", "Een partner canen"], level=3, description="Een partner met een dunne cane slaan als afgesproken impactspel. De scherpe impact vraagt techniek, veilige zones, geleidelijke opbouw en voortdurende afstemming."),
+                  dict(id="caning_receive", name="Caning — receiving", aliases=["Caning ontvangen", "Met een cane geslagen worden"], level=3, description="Caning met een dunne cane ontvangen als afgesproken impactspel. Bespreek intensiteit, veilige zones, opbouw en stopmomenten vooraf en tijdens het spel."),
+              ],
+              "cropping": [
+                  dict(id="cropping_give", name="Crop — giving", aliases=["Crop geven", "Rijzweep gebruiken op een partner"], level=2, description="Een partner met een crop gerichte impact geven. Stem zones en intensiteit af en bouw gecontroleerd op; de kleine contactzone kan impact sterk concentreren."),
+                  dict(id="cropping_receive", name="Crop — receiving", aliases=["Crop ontvangen", "Met een rijzweep geslagen worden"], level=2, description="Gerichte impact met een crop ontvangen. Bespreek zones, intensiteit en stopmomenten en houd rekening met de geconcentreerde impact van de kleine contactzone."),
+              ],
+              "paddling": [
+                  dict(id="paddling_give", name="Paddling — giving", aliases=["Paddling geven", "Een partner met een paddle slaan"], level=2, description="Een partner met een paddle slaan voor brede, doffe impact. Bouw intensiteit geleidelijk op en stem materiaal, zones en stopmomenten af."),
+                  dict(id="paddling_receive", name="Paddling — receiving", aliases=["Paddling ontvangen", "Met een paddle geslagen worden"], level=2, description="Brede, doffe impact met een paddle ontvangen. Spreek materiaal, zones, intensiteit en stopmomenten af en bouw de impact geleidelijk op."),
+              ],
+              "whipping": [
+                  dict(id="whipping_give", name="Whipping — giving", aliases=["Whipping geven", "Een partner zwepen"], level=3, description="Een partner met een lange zweep slaan. Dit vraagt aantoonbare techniek en afstandscontrole; spreek veilige zones, intensiteit en stopmomenten expliciet af."),
+                  dict(id="whipping_receive", name="Whipping — receiving", aliases=["Whipping ontvangen", "Gezweept worden"], level=3, description="Impact met een lange zweep ontvangen. Doe dit alleen met een geoefende partner en duidelijke afspraken over veilige zones, intensiteit en onmiddellijk stoppen."),
+              ],
+              "belt": [
+                  dict(id="belt_give", name="Belt — giving", aliases=["Riemslagen geven", "Een partner met een riem slaan"], level=2, description="Een partner met een riem impact geven. Stem materiaal, intensiteit en gewenste zones expliciet af en bouw gecontroleerd op."),
+                  dict(id="belt_receive", name="Belt — receiving", aliases=["Riemslagen ontvangen", "Met een riem geslagen worden"], level=2, description="Impact met een riem ontvangen. Bespreek materiaal, intensiteit, gewenste zones en stopmomenten en bouw de ervaring gecontroleerd op."),
+              ],
+              "slapping_face": [
+                  dict(id="slapping_face_give", name="Face slapping — giving", aliases=["Gezichtsklappen geven", "Een partner in het gezicht slaan"], level=3, description="Een partner consensueel in het gezicht slaan als impact- of vernederingsspel. Dit vraagt expliciete toestemming, veilige techniek en een vooraf afgesproken intensiteit; nooit onverwacht."),
+                  dict(id="slapping_face_receive", name="Face slapping — receiving", aliases=["Gezichtsklappen ontvangen", "In het gezicht geslagen worden"], level=3, description="Consensuele gezichtsklappen ontvangen als impact- of vernederingsspel. Spreek techniek, intensiteit en stopmomenten expliciet af; onverwachte klappen horen hier niet bij."),
+              ],
+              "punching": [
+                  dict(id="punching_give", name="Punching / thuding — giving", aliases=["Punching geven", "Thudding geven", "Een partner met vuisten impact geven"], level=3, description="Een partner gecontroleerde vuistimpact of thudding op geschikte vlezige zones geven. Dit vereist anatomische kennis, techniek en duidelijke afspraken over intensiteit en stoppen."),
+                  dict(id="punching_receive", name="Punching / thuding — receiving", aliases=["Punching ontvangen", "Thudding ontvangen", "Vuistimpact ontvangen"], level=3, description="Gecontroleerde vuistimpact of thudding op afgesproken vlezige zones ontvangen. Doe dit alleen met anatomische kennis, zorgvuldige opbouw en duidelijke stopafspraken."),
+              ],
+              "trampling": [
+                  dict(id="trampling_give", name="Trampling — giving", aliases=["Trampling geven", "Op een partner staan", "Op een partner lopen"], level=3, description="Consensueel op het lichaam van een partner staan of lopen. Verdeel gewicht zorgvuldig, vermijd kwetsbare zones en spreek ondersteuning en stopmomenten vooraf af."),
+                  dict(id="trampling_receive", name="Trampling — receiving", aliases=["Trampling ontvangen", "Betreden worden", "Iemand op je laten staan"], level=3, description="Consensueel laten staan of lopen op je lichaam. Spreek gewichtsverdeling, veilige zones, ondersteuning en een direct stopsignaal vooraf af."),
+              ],
+          }
+
+          for old_id, variants in pairs.items():
+              pattern = rf'  \{{\n    id: "{re.escape(old_id)}",\n.*?\n  \}},\n'
+              regex_once("lib/kinks.ts", pattern, "".join(ts_block(v) for v in variants), re.S)
+
+          # Registry: role-affinity controls only compact questionnaire selection.
+          registry_lines = "".join(
+              f'  {{ conceptId: "{concept}", giveId: "{concept}_give", receiveId: "{concept}_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY }},\n'
+              if concept not in {"slapping_face"}
+              else '  { conceptId: "slapping_face", giveId: "slapping_face_give", receiveId: "slapping_face_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },\n'
+              for concept in pairs
+          )
+          replace_once(
+              "lib/directionality.ts",
+              '  { conceptId: "flogging", giveId: "flogging_give", receiveId: "flogging_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },\n',
+              '  { conceptId: "flogging", giveId: "flogging_give", receiveId: "flogging_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },\n' + registry_lines,
+          )
+          label_map = {
+              "caning": "Caning", "cropping": "Crop", "paddling": "Paddling", "whipping": "Whipping",
+              "belt": "Belt", "slapping_face": "Face slapping", "punching": "Punching / thuding", "trampling": "Trampling",
+          }
+          replace_once(
+              "lib/directionality.ts",
+              '  flogging: "Flogging",\n',
+              '  flogging: "Flogging",\n' + "".join(f'  {key}: "{value}",\n' for key, value in label_map.items()),
+          )
+          replace_once(
+              "lib/directionality.ts",
+              '  "flogging",\n  "rope_bondage",\n',
+              '  "flogging",\n' + "".join(f'  "{key}",\n' for key in pairs) + '  "rope_bondage",\n',
+          )
+
+          replace_once(
+              "lib/questionnaireMetadata.ts",
+              '    "flogging_give", "flogging_receive", "caning", "cropping", "paddling",\n    "whipping", "belt", "slapping_face", "punching", "trampling", "over_de_knie",\n',
+              '    "flogging_give", "flogging_receive", "caning_give", "caning_receive",\n'
+              '    "cropping_give", "cropping_receive", "paddling_give", "paddling_receive",\n'
+              '    "whipping_give", "whipping_receive", "belt_give", "belt_receive",\n'
+              '    "slapping_face_give", "slapping_face_receive", "punching_give", "punching_receive",\n'
+              '    "trampling_give", "trampling_receive", "over_de_knie",\n',
+          )
+
+          replace_once("lib/storeCore.ts", "export const STORE_PERSIST_VERSION = 20;", "export const STORE_PERSIST_VERSION = 21;")
+          replace_once("lib/storeCore.ts", "export function migrateStoredDirectionalityV20<", "export function migrateStoredDirectionalityV21<")
+          replace_once("lib/storeCore.ts", "migrateStoredDirectionalityV20(state, version);", "migrateStoredDirectionalityV21(state, version);")
+
+          replace_once(
+              "e2e/ui-audit.spec.ts",
+              '    paddling: { status: "no" as const, score: null, comment: "" },\n    cropping: { status: "hard_no" as const, score: null, comment: "" },\n',
+              '    paddling_receive: { status: "no" as const, score: null, comment: "" },\n    cropping_receive: { status: "hard_no" as const, score: null, comment: "" },\n',
+          )
+
+          # Update the existing contract tests rather than inventing a parallel test vocabulary.
+          replace_once(
+              "__tests__/directionality.test.ts",
+              'import { migrateStoredDirectionalityV20, STORE_PERSIST_VERSION } from "@/lib/storeCore";\n',
+              'import { migrateStoredDirectionalityV21, STORE_PERSIST_VERSION } from "@/lib/storeCore";\n'
+              'import { QUESTIONNAIRE_CANONICAL_PROBE_TARGETS, QUESTIONNAIRE_FOLLOW_UPS } from "@/lib/questionnaireMetadata";\n'
+              'import { QUESTIONNAIRE_PROGRESSION_EDGES } from "@/lib/questionnaireProgression";\n',
+          )
+          replace_once("__tests__/directionality.test.ts", "expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(20);", "expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(28);")
+          replace_once(
+              "__tests__/directionality.test.ts",
+              '      "leather_cuffs", "gag_ball", "gag_bit", "blindfold", "sound_deprivation",\n',
+              '      "leather_cuffs", "gag_ball", "gag_bit", "blindfold", "sound_deprivation",\n'
+              '      "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",\n',
+          )
+          replace_once(
+              "__tests__/directionality.test.ts",
+              '    expect(partnerDirectionalKinkId("spanking_hand_receive")).toBe("spanking_hand_give");\n',
+              '    expect(partnerDirectionalKinkId("spanking_hand_receive")).toBe("spanking_hand_give");\n'
+              '    expect(partnerDirectionalKinkId("caning_give")).toBe("caning_receive");\n'
+              '    expect(partnerDirectionalKinkId("trampling_receive")).toBe("trampling_give");\n',
+          )
+          replace_once(
+              "__tests__/directionality.test.ts",
+              '  it("searches both variants through the shared concept vocabulary", () => {\n    const ids = searchAllKinks("pegging").map((kink) => kink.id);\n    expect(ids).toContain("pegging_give");\n    expect(ids).toContain("pegging_receive");\n  });\n',
+              '  it("searches both variants through the shared concept vocabulary", () => {\n'
+              '    const ids = searchAllKinks("pegging").map((kink) => kink.id);\n'
+              '    expect(ids).toContain("pegging_give");\n'
+              '    expect(ids).toContain("pegging_receive");\n'
+              '    const caningIds = searchAllKinks("caning").map((kink) => kink.id);\n'
+              '    expect(caningIds).toContain("caning_give");\n'
+              '    expect(caningIds).toContain("caning_receive");\n'
+              '  });\n\n'
+              '  it("houdt Impact-instrumenten directioneel zonder een escalatieladder te verzinnen", () => {\n'
+              '    const impactIds = [\n'
+              '      "caning_give", "caning_receive", "cropping_give", "cropping_receive",\n'
+              '      "paddling_give", "paddling_receive", "whipping_give", "whipping_receive",\n'
+              '      "belt_give", "belt_receive", "slapping_face_give", "slapping_face_receive",\n'
+              '      "punching_give", "punching_receive", "trampling_give", "trampling_receive",\n'
+              '    ];\n'
+              '    for (const id of impactIds) {\n'
+              '      expect(QUESTIONNAIRE_FOLLOW_UPS[id]).toBeUndefined();\n'
+              '      expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS[id]).toBeUndefined();\n'
+              '      expect(QUESTIONNAIRE_PROGRESSION_EDGES.some(([parent, child]) => parent === id || child === id)).toBe(false);\n'
+              '    }\n'
+              '    expect(questionnaireDirectionalKinkIdForPerspective("caning_give", "submissive")).toBe("caning_receive");\n'
+              '    expect(questionnaireDirectionalKinkIdForPerspective("caning_receive", "dominant")).toBe("caning_give");\n'
+              '  });\n',
+          )
+          replace_once(
+              "__tests__/directionality.test.ts",
+              '    expect(roleRetired.sound_deprivation).toBeUndefined();\n  });\n',
+              '    expect(roleRetired.sound_deprivation).toBeUndefined();\n'
+              '    const impactRetired = stripDeprecatedDirectionalEntries({\n'
+              '      caning: { status: "yes", comment: "ambigue impact" },\n'
+              '      trampling: { status: "hard_no", comment: "ambigue impact" },\n'
+              '    });\n'
+              '    expect(impactRetired.caning).toBeUndefined();\n'
+              '    expect(impactRetired.caning_give).toBeUndefined();\n'
+              '    expect(impactRetired.caning_receive).toBeUndefined();\n'
+              '    expect(impactRetired.trampling).toBeUndefined();\n'
+              '  });\n',
+          )
+          replace_once("__tests__/directionality.test.ts", '    expect(STORE_PERSIST_VERSION).toBe(20);', '    expect(STORE_PERSIST_VERSION).toBe(21);')
+          replace_once("__tests__/directionality.test.ts", "migrateStoredDirectionalityV20({", "migrateStoredDirectionalityV21({")
+          replace_once(
+              "__tests__/directionality.test.ts",
+              '  it("laat v20 state ongemoeid door dezelfde migratieboundary", () => {\n    const profile = ownProfile("dominant", {\n      spanking_hand_give: { status: "yes", comment: "expliciet" },\n    });\n    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);\n    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");\n  });\n',
+              '  it("migreert v20 Impact-antwoorden zonder een kant te verzinnen", () => {\n'
+              '    const profile = ownProfile("dominant", {\n'
+              '      caning: { status: "yes", comment: "oud gecombineerd" },\n'
+              '      praise_kink: { status: "maybe", comment: "blijft" },\n'
+              '    });\n'
+              '    const migrated = migrateStoredDirectionalityV21({ profiles: [profile] }, 20);\n'
+              '    expect(migrated.profiles?.[0].entries.caning).toBeUndefined();\n'
+              '    expect(migrated.profiles?.[0].entries.caning_give).toBeUndefined();\n'
+              '    expect(migrated.profiles?.[0].entries.caning_receive).toBeUndefined();\n'
+              '    expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");\n'
+              '  });\n\n'
+              '  it("laat v21 state ongemoeid door dezelfde migratieboundary", () => {\n'
+              '    const profile = ownProfile("dominant", { caning_give: { status: "yes", comment: "expliciet" } });\n'
+              '    const migrated = migrateStoredDirectionalityV21({ profiles: [profile] }, 21);\n'
+              '    expect(migrated.profiles?.[0].entries.caning_give?.status).toBe("yes");\n'
+              '  });\n',
+          )
+
+          replace_once(
+              "__tests__/directionalMatching.test.ts",
+              '  it("does not mistake two give answers for a complementary match", () => {\n    const a = profile("A", "dominant", { pegging_give: { status: "yes" } });\n    const b = profile("B", "submissive", { pegging_give: { status: "yes" } });\n\n    const result = profileMatchScore(a, b);\n    expect(result.comparedTotal).toBe(0);\n    expect(result.overall).toBe(0);\n    expect(result.counts.perfect).toBe(0);\n  });\n',
+              '  it("does not mistake same-side answers for complementary matches on any registered pair", () => {\n'
+              '    for (const { giveId, receiveId } of DIRECTIONAL_KINK_PAIRS) {\n'
+              '      for (const sameSideId of [giveId, receiveId]) {\n'
+              '        const a = profile("A-" + sameSideId, "dominant", { [sameSideId]: { status: "yes" } });\n'
+              '        const b = profile("B-" + sameSideId, "submissive", { [sameSideId]: { status: "yes" } });\n'
+              '        const result = profileMatchScore(a, b);\n'
+              '        expect(result.comparedTotal, sameSideId).toBe(0);\n'
+              '        expect(result.overall, sameSideId).toBe(0);\n'
+              '        expect(result.counts.perfect, sameSideId).toBe(0);\n'
+              '      }\n'
+              '    }\n'
+              '  });\n',
+          )
+
+          # Documentation and ledger: record what shipped and what explicitly did not.
+          replace_once(
+              "docs/directionality-role-affinity.md",
+              '# Directionality role-affinity — Release C\n\nStatus: high-confidence vertical slice na Release B.\n',
+              '# Directionality role-affinity — Release C + Impact extension\n\nStatus: role-affinity bewezen in Release C; geaudite Impact-instrumenten uitgebreid op 11 augustus 2026.\n',
+          )
+          replace_once(
+              "docs/directionality-role-affinity.md",
+              '## Niet meegenomen\n\nCaning, crop, paddling, whipping, belt, face slapping, punching, trampling, spreader bar, hogtie, mummification, straitjacket, chastity, tape/andere gags, hood, collar/leash, suspension en verdiepende bondage blijven kandidaat maar niet automatisch goedgekeurd. Hun directionality is vaak duidelijk; de vraag is vooral of de catalogusgranulariteit en questionnairewaarde een split rechtvaardigen.\n',
+              '## Impact extension — uitgevoerd\n\nCaning, crop, paddling, whipping, belt, face slapping, punching/thuding en trampling zijn item voor item goedgekeurd en nu expliciet gepaird. Iedere kant blijft zelfstandig antwoordbaar en gebruikt dezelfde questionnaire-affinity als Release C. Geen van deze instrumenten krijgt een canonical follow-up of progression-edge: het zijn alternatieve technieken, geen betrouwbare intensiteitsladder.\n\n## Niet meegenomen\n\nSpreader bar, hogtie, mummification, straitjacket, chastity, tape/andere gags, hood, collar/leash, suspension en verdiepende bondage blijven kandidaat maar niet automatisch goedgekeurd. Hun directionality is vaak duidelijk; de vraag blijft of catalogusgranulariteit, concrete woordkeuze en questionnairewaarde een split rechtvaardigen.\n',
+          )
+          with Path("docs/directionality-catalog-audit.md").open("a") as f:
+              f.write("\n## Impact extension — uitgevoerd 11 augustus 2026\n\nNa Release C zijn acht resterende high-confidence Impact-acties individueel gesplitst: caning, crop, paddling, whipping, belt, face slapping, punching/thuding en trampling. De oude enkelvoudige IDs worden pre-launch verwijderd zonder antwoordkopie; give/receive matcht alleen complementair. Instrumentkeuze is geen escalatieladder, dus deze release voegt bewust geen canonical follow-ups of progression-gates toe.\n")
+          replace_once(
+              "docs/questionnaire-progression-gates.md",
+              '- flogging, caning, crop, paddling en whipping onderling — instrument/techniek, niet lineaire intensiteit;\n',
+              '- flogging, caning, crop, paddling, whipping, belt, face slapping, punching/thuding en trampling onderling — ook na hun directionele split blijven dit instrument-/techniekalternatieven, geen lineaire intensiteit;\n',
+          )
+          replace_once(
+              "directie.md",
+              'Release C bewijst role-affinity op een beperkte keten van bestaande Dynamic-anchors en directe semantische vervolgen: hand-spanking, implement-spanking, flogging, rope bondage, shibari, handcuffs, leather cuffs, ball/bit gag, blindfold en sound deprivation. Alleen de compacte Dynamic-anchor kiest per perspective een geassocieerde kant; alle andere productpaden blijven beide richtingen expliciet behandelen. Overige impact/bondage-items wachten nog steeds op item-per-item audit. Worship, toys en anatomy/equipment-gevoelige gevallen blijven apart staan totdat de labels ondubbelzinnig zijn.\n',
+              'Release C bewijst role-affinity op een beperkte keten van bestaande Dynamic-anchors en directe semantische vervolgen: hand-spanking, implement-spanking, flogging, rope bondage, shibari, handcuffs, leather cuffs, ball/bit gag, blindfold en sound deprivation. De volgende Impact-audit splitst ook caning, crop, paddling, whipping, belt, face slapping, punching/thuding en trampling item voor item. Alleen compacte Dynamic-selectie mag role-affinity gebruiken; alle andere productpaden behandelen beide richtingen expliciet. De Impact-instrumenten krijgen bewust geen progression- of canonical-edges. Overige bondage-items wachten nog op item-per-item audit. Worship, toys en anatomy/equipment-gevoelige gevallen blijven apart staan totdat de labels ondubbelzinnig zijn.\n',
+          )
+          replace_once(
+              "planned-changes.md",
+              'The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C now proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. Remaining impact/bondage candidates stay item-by-item work, not a bulk split.\n',
+              'The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. The audited Impact extension now splits caning, crop, paddling, whipping, belt, face slapping, punching/thuding and trampling; none gains progression or canonical inference. Remaining bondage candidates stay item-by-item work, not a bulk split.\n',
+          )
+          replace_once(
+              "planned-changes.md",
+              'Release C role affinity may only choose the compact Dynamic coverage sibling;\nthe opposite side remains unknown and independently answerable. Remaining\ndirectional candidates stay item-by-item editorial work and must not be bulk\nsplit or inferred from `profile.role`.\n',
+              'Release C role affinity may only choose the compact Dynamic coverage sibling;\nthe opposite side remains unknown and independently answerable. The audited\nImpact instrument extension follows that same contract. Remaining directional\ncandidates stay item-by-item editorial work and must not be bulk split or\ninferred from `profile.role`.\n',
+          )
+
+          correction = '''\n## 2026-08-11 — Forge vertrouwde op de inspringing van een heel catalogusblok\n\n**What went wrong:** De eerste Impact-forge probeerde acht opeenvolgende catalogusitems als één exact multiline blok te vervangen. YAML-inspringing maakte die assertion fragiel; de workflow stopte veilig vóór enige wijziging, maar de transform was onnodig breed.\n\n**Rule:** Bij catalogusmigraties elk item afzonderlijk ankeren op zijn stabiele ID en exact één object vervangen. Gebruik een count-assertie per item; bundel nooit meerdere zelfstandige catalogusobjecten in één whitespace-gevoelige match.\n'''
+          with Path("corrections.md").open("a") as f:
+              f.write(correction)
+
+          # Structural guards.
+          ids = re.findall(r'\bid:\s*"([^"]+)"', Path("lib/kinks.ts").read_text())
+          if len(ids) != len(set(ids)):
+              raise SystemExit("duplicate catalog IDs after Impact split")
+          for old_id in pairs:
+              if old_id in ids:
+                  raise SystemExit(f"retired catalog ID survived: {old_id}")
+          d = Path("lib/directionality.ts").read_text()
+          for old_id in pairs:
+              if f'conceptId: "{old_id}"' not in d or f'  "{old_id}",' not in d:
+                  raise SystemExit(f"directionality registry/retirement incomplete for {old_id}")
+          meta = Path("lib/questionnaireMetadata.ts").read_text()
+          for old_id in pairs:
+              if re.search(rf'"{re.escape(old_id)}"', meta):
+                  raise SystemExit(f"retired exact Impact ID remains in questionnaire metadata: {old_id}")
+          PY
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Check de speelkamer en sluit de forge af
+        shell: bash
+        run: |
+          expected='__tests__/directionalMatching.test.ts
+          __tests__/directionality.test.ts
+          corrections.md
+          directie.md
+          docs/directionality-catalog-audit.md
+          docs/directionality-role-affinity.md
+          docs/questionnaire-progression-gates.md
+          e2e/ui-audit.spec.ts
+          lib/directionality.ts
+          lib/kinks.ts
+          lib/questionnaireMetadata.ts
+          lib/storeCore.ts
+          planned-changes.md'
+          actual="$(git diff --name-only | grep -v '^.github/workflows/forge-impact-v2.yml$' | sort)"
+          if [ "$actual" != "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)" ]; then
+            echo "Unexpected diff set"
+            printf 'ACTUAL:\n%s\nEXPECTED:\n%s\n' "$actual" "$expected"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/forge-impact-v2.yml
+          git add __tests__/directionalMatching.test.ts __tests__/directionality.test.ts corrections.md directie.md \
+            docs/directionality-catalog-audit.md docs/directionality-role-affinity.md docs/questionnaire-progression-gates.md \
+            e2e/ui-audit.spec.ts lib/directionality.ts lib/kinks.ts lib/questionnaireMetadata.ts lib/storeCore.ts planned-changes.md
+          git commit -m "feat: geef Impact beide kanten zonder voorkeur te raden"
+          git push origin HEAD:feature/directionality-impact-v2
