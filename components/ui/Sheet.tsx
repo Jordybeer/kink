@@ -41,13 +41,17 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
           <motion.div
             aria-hidden="true"
             className="fixed inset-0 z-[150]"
-            style={{ background: "var(--scrim-strong)", opacity: backdropOpacity }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={FAST}
             onClick={onClose}
-          />
+          >
+            <motion.div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: "var(--scrim-strong)", opacity: backdropOpacity }}
+            />
+          </motion.div>
 
           <motion.div
             ref={sheetRef}
