@@ -17,7 +17,7 @@ import Sheet from "@/components/ui/Sheet";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useStore } from "@/lib/store";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
-import { detectIosInstallBrowser, getInstallPrompt } from "@/lib/installPrompt";
+import { clearInstallPrompt, detectIosInstallBrowser, getInstallPrompt } from "@/lib/installPrompt";
 
 interface SettingsSheetProps {
   open: boolean;
@@ -70,13 +70,17 @@ export default function SettingsSheet({
     const refreshInstallAvailability = () => {
       setInstallAvailable(!standalone && (ios || getInstallPrompt() !== null));
     };
+    const handleAppInstalled = () => {
+      clearInstallPrompt();
+      setInstallAvailable(false);
+    };
 
     refreshInstallAvailability();
     window.addEventListener("beforeinstallprompt", refreshInstallAvailability);
-    window.addEventListener("appinstalled", refreshInstallAvailability);
+    window.addEventListener("appinstalled", handleAppInstalled);
     return () => {
       window.removeEventListener("beforeinstallprompt", refreshInstallAvailability);
-      window.removeEventListener("appinstalled", refreshInstallAvailability);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
