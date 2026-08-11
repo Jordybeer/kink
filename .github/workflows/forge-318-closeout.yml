@@ -1,0 +1,127 @@
+name: forge questions closeout
+
+on:
+  push:
+    branches:
+      - feature/questions-create-resume-polish
+
+permissions:
+  contents: write
+
+jobs:
+  closeout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26
+          cache: npm
+      - name: Restore guards and collar the dedicated questions door
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"missing expected text in {path}: {old[:80]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          # The previous edit accidentally rewrote the full onboarding guard.
+          # Restore dev verbatim, then change only the final profile-create flow.
+          baseline = subprocess.check_output(
+              ["git", "show", "origin/dev:e2e/new-user.spec.ts"], text=True
+          )
+          baseline = baseline.replace(
+              "then the three-step profile sheet",
+              "then the compact two-step profile sheet",
+          )
+          old_create = '''    await page.getByRole("button", { name: "Verder" }).click();\n    await page.getByRole("button", { name: "Verder" }).click();\n    await page.getByRole("button", { name: "Profiel maken" }).click();'''
+          new_create = '''    await page.getByRole("button", { name: "Verder" }).click();\n    await page.getByRole("button", { name: "Start vragen" }).click();'''
+          if old_create not in baseline:
+              raise SystemExit("dev onboarding create fixture no longer has expected three-step tail")
+          Path("e2e/new-user.spec.ts").write_text(baseline.replace(old_create, new_create, 1))
+
+          # Online and offline both end on the dedicated questions URL.
+          replace_once(
+              "components/ProfileCreateSheet.tsx",
+              'import { profileHref, waitForPersistedProfile } from "@/lib/localRoutes";',
+              'import { waitForPersistedProfile } from "@/lib/localRoutes";',
+          )
+          replace_once(
+              "components/ProfileCreateSheet.tsx",
+              'window.location.assign(`${profileHref(primaryId)}&focus=questionnaire`);',
+              'window.location.assign(`/profile/${encodeURIComponent(primaryId)}/questions`);',
+          )
+          replace_once(
+              "components/ProfileCreateSheet.tsx",
+              'router.push(`/profile/${primaryId}?focus=questionnaire`);',
+              'router.push(`/profile/${encodeURIComponent(primaryId)}/questions`);',
+          )
+
+          # The fixed profile shell must be able to serve the nested questions door
+          # after a cold offline create/reload.
+          replace_once(
+              "lib/localRoutes.ts",
+              'const legacyMatch = /^\\/profile\\/([^/]+)$/.exec(pathname);',
+              'const legacyMatch = /^\\/profile\\/([^/]+)(?:\\/questions)?$/.exec(pathname);',
+          )
+          replace_once(
+              "app/sw.ts",
+              '/^\\/profile\\/[^/]+$/.test(new URL(request.url).pathname)',
+              '/^\\/profile\\/[^/]+(?:\\/questions)?$/.test(new URL(request.url).pathname)',
+          )
+
+          p = Path("app/profile/page.tsx")
+          text = p.read_text()
+          text = text.replace(
+              'import ProfileScreen from "@/components/profile/ProfileScreen";\n',
+              'import ProfileScreen from "@/components/profile/ProfileScreen";\nimport QuestionsScreen from "@/components/profile/QuestionsScreen";\n',
+              1,
+          )
+          old = '  const params = useMemo(() => Promise.resolve({ id }), [id]);\n\n  return <ProfileScreen params={params} />;'
+          new = '  const params = useMemo(() => Promise.resolve({ id }), [id]);\n  const questionsRoute = /^\\/profile\\/[^/]+\\/questions$/.test(pathname);\n\n  return questionsRoute ? <QuestionsScreen params={params} /> : <ProfileScreen params={params} />;'
+          if old not in text:
+              raise SystemExit("fixed profile shell shape drifted")
+          p.write_text(text.replace(old, new, 1))
+
+          # Unit guard for the shell parser.
+          p = Path("__tests__/localRoutes.test.ts")
+          text = p.read_text()
+          anchor = '''    expect(\n      profileIdFromLocation(\n        "/profile/profile%20legacy",\n        new URLSearchParams(),\n      ),\n    ).toBe("profile legacy");\n'''
+          addition = anchor + '''    expect(\n      profileIdFromLocation(\n        "/profile/profile%20questions/questions",\n        new URLSearchParams(),\n      ),\n    ).toBe("profile questions");\n'''
+          if anchor not in text:
+              raise SystemExit("localRoutes unit anchor drifted")
+          p.write_text(text.replace(anchor, addition, 1))
+
+          # Update the cold-offline create proof to the two-step dedicated flow.
+          p = Path("e2e-offline/offline.spec.ts")
+          text = p.read_text()
+          old = '''  await page.getByRole("button", { name: "Verder" }).click();\n  await page.getByRole("button", { name: "Verder" }).click();\n  await page.getByRole("button", { name: "Profiel maken" }).click();\n\n  await expect(page).toHaveURL(/\\/profile\\?id=[^&]+$/);\n  await expect(page.getByText("Nova offline").first()).toBeVisible();\n  await expect(page.getByText("Je bent offline")).toHaveCount(0);\n\n  await page.reload({ waitUntil: "domcontentloaded" });\n  await expect(page.getByText("Nova offline").first()).toBeVisible();\n  await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);'''
+          new = '''  await page.getByRole("button", { name: "Verder" }).click();\n  await page.getByRole("button", { name: "Start vragen" }).click();\n\n  await expect(page).toHaveURL(/\\/profile\\/[^/]+\\/questions$/);\n  await expect(page.getByTestId("questions-screen")).toBeVisible();\n  await expect(page.getByText("Je bent offline")).toHaveCount(0);\n\n  await page.reload({ waitUntil: "domcontentloaded" });\n  await expect(page.getByTestId("questions-screen")).toBeVisible();\n  await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);'''
+          if old not in text:
+              raise SystemExit("offline create proof shape drifted")
+          p.write_text(text.replace(old, new, 1))
+
+          # Log the editing mistake so it cannot quietly recur.
+          corrections = Path("corrections.md")
+          marker = "## 2026-08-11 — Een gerichte E2E-wijziging herschreef de hele onboardingguard"
+          if marker not in corrections.read_text():
+              corrections.write_text(corrections.read_text() + f'''\n\n{marker}\n\n**What went wrong:** Tijdens PR #318 moest alleen de laatste profiel-create test van drie naar twee stappen. De contents-rewrite verving echter vrijwel `e2e/new-user.spec.ts`, waardoor bewezen onboarding- en PIN-regressieguards verdwenen en CI op oude selectors vastliep.\n\n**Rule:** Voor een gerichte testflowwijziging blijft de rest van het specbestand byte-identiek aan de branchbasis. Controleer altijd de per-file PR patch vóór de gate; als de diff groter is dan de bedoelde test, herstel eerst vanaf `origin/dev` en pas alleen het minimale blok aan.\n''')
+          PY
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Commit the proven closeout and burn the forge
+        run: |
+          rm .github/workflows/forge-318-closeout.yml
+          git config user.name "Jordybeer"
+          git config user.email "19562111+Jordybeer@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: collar the questions handoff without losing offline"
+          git push origin HEAD:feature/questions-create-resume-polish
