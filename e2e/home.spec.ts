@@ -52,23 +52,11 @@ test.describe("Profiel aanmaken via UI", () => {
     await page.getByRole("button", { name: "Verder" }).click();
     await page.getByRole("button", { name: "Profiel maken" }).click();
 
-    await expect(page).toHaveURL(/\/profile\//, { timeout: 8000 });
-    await expect(page.getByRole("heading", { level: 2, name: "TestPersoon" })).toBeVisible();
-    await expect(page).not.toHaveURL(/focus=questionnaire/);
-    await expect(page.locator('[data-tour="kink-card"]')).toBeInViewport();
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/, { timeout: 8000 });
+    await expect(page.getByTestId("questions-screen")).toBeVisible();
+    await expect(page.getByText("Voorkeuren", { exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 
-    const readMore = page.getByRole("button", { name: "Lees meer" });
-    await expect(readMore).toBeVisible();
-    await readMore.click();
-    await expect(page.getByRole("button", { name: "Minder tonen" })).toHaveAttribute("aria-expanded", "true");
-
-    await page.waitForTimeout(1700);
-    await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(page.locator('[data-tour="kink-card"]')).toBeInViewport();
-
-    await page.getByRole("button", { name: "Meer uit Impact Play beoordelen" }).click();
-    await expect(page.getByText("Alle nog onbeantwoorde onderwerpen uit Impact Play.")).toBeVisible();
     const entries = await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
       if (!raw) return null;
