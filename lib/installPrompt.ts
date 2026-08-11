@@ -42,24 +42,6 @@ export const DEFAULT_INSTALL_PROMPT_POLICY: InstallPromptPolicy = {
   neverAsk: false,
 };
 
-export function parseInstallPromptPolicy(raw: string | null): InstallPromptPolicy {
-  if (!raw) return { ...DEFAULT_INSTALL_PROMPT_POLICY };
-  try {
-    const value = JSON.parse(raw) as Partial<InstallPromptPolicy>;
-    return {
-      dismissals: Number.isFinite(value.dismissals)
-        ? Math.max(0, Math.min(2, Math.trunc(value.dismissals ?? 0)))
-        : 0,
-      snoozedUntil: Number.isFinite(value.snoozedUntil)
-        ? Math.max(0, value.snoozedUntil ?? 0)
-        : 0,
-      neverAsk: value.neverAsk === true,
-    };
-  } catch {
-    return { ...DEFAULT_INSTALL_PROMPT_POLICY };
-  }
-}
-
 export function shouldAutoShowInstallPrompt(
   policy: InstallPromptPolicy,
   meaningfulUse: boolean,
