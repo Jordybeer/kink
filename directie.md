@@ -178,7 +178,7 @@ Waarom:
 
 De eerste catalogusaudit daarna splitst uitsluitend high-confidence rol-neutrale handelingen: Golden shower (bestaande twee IDs worden nu echt complementair), anal sex, anal fingering, anal/vaginal fisting, deep throat, rimming en footjob. De oude enkelvoudige IDs starten pre-launch bewust onbeantwoord; er wordt niets naar siblings gekopieerd.
 
-Release C bewijst role-affinity op een beperkte keten van bestaande Dynamic-anchors en directe semantische vervolgen: hand-spanking, implement-spanking, flogging, rope bondage, shibari, handcuffs, leather cuffs, ball/bit gag, blindfold en sound deprivation. De volgende Impact-audit splitst ook caning, crop, paddling, whipping, belt, face slapping, punching/thudding en trampling item voor item. Alleen compacte Dynamic-selectie mag role-affinity gebruiken; alle andere productpaden behandelen beide richtingen expliciet. De Impact-instrumenten krijgen bewust geen progression- of canonical-edges. Overige bondage-items wachten nog op item-per-item audit. Worship, toys en anatomy/equipment-gevoelige gevallen blijven apart staan totdat de labels ondubbelzinnig zijn.
+Release C bewijst role-affinity op een beperkte keten van bestaande Dynamic-anchors en directe semantische vervolgen; latere Impact- en Bondage-audits hebben dat model item voor item uitgebreid zonder progression of answer inference. Release F maakt de tweede as expliciet: body/vulva/cock/ass/boot worship, erotic/prostate massage, pet training/grooming en diaper changing zijn directioneel maar **role-neutraal** en krijgen dus geen questionnaireAffinity. Remote toys en sex machine blijven apart totdat hun coverage- en catalogussemantiek ondubbelzinnig is.
 
 ## Pre-launch migratie
 

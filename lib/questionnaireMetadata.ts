@@ -102,18 +102,23 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   ],
   foot_focus: [
     "feet", "hoge_hakken_aanbidding", "footjob_give", "footjob_receive", "voetgeur",
-    "voeten_in_gezicht", "voeten_in_mond", "voet_vernedering", "voetslaaf", "laarzen_aanbidding",
+    "voeten_in_gezicht", "voeten_in_mond", "voet_vernedering", "voetslaaf",
+    "laarzen_aanbidding_give", "laarzen_aanbidding_receive",
   ],
   scent: ["geur_scent_fetish", "voetgeur", "panty_sniffing"],
   little_ageplay: [
     "little_speelgoed", "ddlg_mdlb_dynamiek", "little_space", "baby_infantiliteit",
     "fopspeen_fles",
   ],
-  diaper_play: ["luiers_dragen", "diaper_wetting", "diaper_messing", "diaper_changing"],
+  diaper_play: [
+    "luiers_dragen", "diaper_wetting", "diaper_messing",
+    "diaper_changing_give", "diaper_changing_receive",
+  ],
   pet_play: [
     "furry", "petplay_collar_id", "petplay_puppy", "petplay_kitten", "petplay_pony",
     "petplay_harnas", "petplay_oortjes", "petplay_leiband", "petplay_geluiden", "petplay_kom",
-    "fox_tail_plug", "petplay_kooi", "petplay_kattenbak", "pet_training", "pet_grooming",
+    "fox_tail_plug", "petplay_kooi", "petplay_kattenbak",
+    "pet_training_give", "pet_training_receive", "pet_grooming_give", "pet_grooming_receive",
   ],
   aftercare: [
     "aftercare_physical", "aftercare_verbal", "aftercare_alone", "aftercare_food",
@@ -213,7 +218,6 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["geur_scent_fetish", "panty_sniffing"],
   ["little_speelgoed", "little_space"],
   ["petplay_puppy", "petplay_harnas"],
-  ["petplay_puppy", "pet_training"],
   ["aftercare_physical", "aftercare_verbal"],
   ["aftercare_physical", "aftercare_cleanup"],
   ["aftercare_verbal", "next_day_check_in"],
@@ -226,8 +230,6 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["recording", "adult_content_creation"],
   ["mutual_masturbation", "partner_masturbation_watch"],
   ["luiers_dragen", "diaper_wetting"],
-  ["diaper_wetting", "diaper_changing"],
-  ["diaper_messing", "diaper_changing"],
   ["breeding_fantasy", "creampie"],
 ] as const satisfies readonly (readonly [string, string])[];
 
@@ -260,8 +262,6 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
   anal_fingering_give: ["anal_sex_give"],
   anal_fingering_receive: ["anal_sex_receive"],
   luiers_dragen: ["diaper_wetting"],
-  diaper_wetting: ["diaper_changing"],
-  diaper_messing: ["diaper_changing"],
   breeding_fantasy: ["creampie"],
 };
 
@@ -271,7 +271,7 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
  * uitsluitend samen met een version bump en bijbehorende pre-launch cleanup.
  * Er is bewust geen fallback of automatische sibling-propagatie.
  */
-export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 4;
+export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 5;
 
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
   spanking_hand_give: "spanking_implement_give",
@@ -298,8 +298,6 @@ export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, stri
   anal_fingering_give: "anal_sex_give",
   anal_fingering_receive: "anal_sex_receive",
   luiers_dragen: "diaper_wetting",
-  diaper_wetting: "diaper_changing",
-  diaper_messing: "diaper_changing",
   breeding_fantasy: "creampie",
 };
 

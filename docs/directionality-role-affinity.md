@@ -47,6 +47,8 @@ Caning, crop, paddling, whipping, belt, face slapping, punching/thudding en tram
 
 Na de Impact-uitbreiding volgden twee high-confidence bondage-slices. Spreader bar, hogtie, mummification, straitjacket, tape gag en hood zijn expliciete give/receive-paren; daarna zijn ook inflatable/penis-shaped/rubber gag, upright/inverted/horizontal suspension en cage/dark/small-space confinement gepaird. Voor al deze paren blijft role affinity uitsluitend questionnaire-prioriteit. Chastity, collar/leash, breast bondage en gas-mask play blijven kandidaat maar vragen eerst een scherpere catalogusbetekenis of praktische counterpart.
 
+Release F voegt daarnaast tien expliciet **role-neutrale** partnerhandelingen toe (worship, massage, pet training/grooming en diaper changing). Die pairs hebben bewust géén questionnaireAffinity: profile perspective kiest daar nooit een kant.
+
 Power-exchange-identiteiten zoals D/s, Master/slave, Owner/pet en brat/tamer zijn geen give/receive-instrumenten en worden niet door dit model gesplitst.
 
 ## Canonical expansion
