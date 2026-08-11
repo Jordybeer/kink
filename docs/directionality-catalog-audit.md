@@ -26,9 +26,20 @@ Impact (spanking, flogging, caning, whipping, face/body slapping, trampling), bo
 
 De volgende laag mag daarom metadata voor sterke role affinity gebruiken als **eligibility/prioriteit**, nooit als antwoord. Dom→give of Sub→receive mag hoogstens bepalen welke kant in de compacte basisflow verschijnt; de andere kant blijft onbekend en bereikbaar via Discover/Deep Dive/search.
 
-## Eerst wording/applicability auditen
+## Release F — role-neutrale partnerhandelingen
 
-Worship (body/cock/vulva/ass/boots), prostate massage, erotic massage, remote toys, sex machine, pet grooming/training, diaper changing en vergelijkbare cases hebben vaak twee kanten, maar "give/receive" is niet altijd de beste gebruikerswoordenschat of praktische toepasbaarheid kan afhangen van expliciete anatomy/equipment-context. Geen genderfilter gebruiken.
+De wording/applicability-audit is afgerond voor de concrete partnerhandelingen die zonder rol- of genderaanname twee onafhankelijke kanten hebben:
+
+- body, vulva, cock, ass en boot/shoe worship — aanbidden / aanbeden worden;
+- erotic massage en prostate massage — geven / ontvangen;
+- pet training en pet grooming — trainen/verzorgen / getraind of verzorgd worden;
+- diaper changing — verschonen / verschoond worden.
+
+Deze tien pairs hebben **geen questionnaire role affinity**. Dominant en Submissive krijgen dus nooit automatisch een andere kant. Anatomy-specifieke receive-copy (vulva, penis, prostaat) vraagt de anatomy rechtstreeks en gebruikt geen genderfilter.
+
+De oude `diaper_wetting`/`diaper_messing` → `diaper_changing` related/follow-up/canonical edges zijn verwijderd: na de split bestaat er geen eerlijke targetkant die uit wetting of messing volgt. Daarom gaat de canonical mappingversie naar v5.
+
+Nog bewust niet gepaird: remote toys en sex machine. `remote_toy` is een vaste Dynamic-anchor met bestaande private→public progression; een neutrale controller/wearer-split vraagt eerst een expliciete coverage-strategie. `sex_machine` combineert zelfgebruik en partnerbediening en heeft dus eerst scherpere catalogussemantiek nodig. Stocking/lingerie worship blijft voorlopig object-/kledingfetish; high-heel focus is expliciet geen worship-item.
 
 ## Geen pair op dit moment
 

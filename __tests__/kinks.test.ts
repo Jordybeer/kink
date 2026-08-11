@@ -23,10 +23,8 @@ const RELEASE_A_IDS = [
   "smeared_makeup",
   "crying_tears",
   "vampire_fangs",
-  "erotic_massage",
   "vibration_play",
   "wetlook",
-  "prostate_massage",
   "sex_machine",
   "drool_play",
   "being_heard",
@@ -34,11 +32,8 @@ const RELEASE_A_IDS = [
   "next_day_check_in",
   "aftercare_cleanup",
   "dollification",
-  "pet_training",
-  "pet_grooming",
   "diaper_wetting",
   "diaper_messing",
-  "diaper_changing",
   "breeding_fantasy",
   "creampie",
 ] as const;
@@ -86,6 +81,16 @@ const DIRECTIONAL_RELEASE_IDS = [
   "opsluiting_kooi_give", "opsluiting_kooi_receive",
   "opsluiting_donker_give", "opsluiting_donker_receive",
   "opsluiting_kleine_ruimte_give", "opsluiting_kleine_ruimte_receive",
+  "body_worship_give", "body_worship_receive",
+  "vagina_aanbidding_give", "vagina_aanbidding_receive",
+  "cock_worship_give", "cock_worship_receive",
+  "ass_worship_give", "ass_worship_receive",
+  "laarzen_aanbidding_give", "laarzen_aanbidding_receive",
+  "erotic_massage_give", "erotic_massage_receive",
+  "prostate_massage_give", "prostate_massage_receive",
+  "pet_training_give", "pet_training_receive",
+  "pet_grooming_give", "pet_grooming_receive",
+  "diaper_changing_give", "diaper_changing_receive",
 ] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
@@ -128,11 +133,21 @@ const RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS = [
   "opsluiting_kooi", "opsluiting_donker", "opsluiting_kleine_ruimte",
 ] as const;
 
+const RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS = [
+  "body_worship", "vagina_aanbidding", "cock_worship", "ass_worship", "laarzen_aanbidding",
+] as const;
+
+const RETIRED_RELEASE_A_DIRECTIONAL_IDS = [
+  "erotic_massage", "prostate_massage", "pet_training", "pet_grooming", "diaper_changing",
+] as const;
+
 const RETIRED_POST_V2_DIRECTIONAL_IDS = [
   "sound_deprivation",
   ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
   ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
   ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
+  ...RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS,
+  ...RETIRED_RELEASE_A_DIRECTIONAL_IDS,
 ] as const;
 
 describe("kink database integrity", () => {
@@ -193,7 +208,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(333);
+    expect(KINKS).toHaveLength(343);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -207,7 +222,9 @@ describe("kink database integrity", () => {
     expect(ids.has("creampie")).toBe(true);
     expect(ids.has("diaper_wetting")).toBe(true);
     expect(ids.has("diaper_messing")).toBe(true);
-    expect(ids.has("diaper_changing")).toBe(true);
+    expect(ids.has("diaper_changing")).toBe(false);
+    expect(ids.has("diaper_changing_give")).toBe(true);
+    expect(ids.has("diaper_changing_receive")).toBe(true);
   });
 
   it("changes the historical catalog only through the reviewed retire/add sets", () => {
@@ -221,6 +238,7 @@ describe("kink database integrity", () => {
       ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
       ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
       ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
+      ...RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS,
     ].sort());
     expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());
   });
@@ -244,7 +262,8 @@ describe("kink database integrity", () => {
       "petplay_kooi", "urine_intiem", "plas_desperation", "bloed_play",
       "katheters_urethral", "klysma_reiniging", "klysma_straf", "penisring_cockring",
       "rubber_latex_kleding", "korset_middelafname", "luiers_dragen", "adult_content_creation",
-      "crying_tears", "sound_deprivation_give", "sound_deprivation_receive", "prostate_massage", "sex_machine",
+      "crying_tears", "sound_deprivation_give", "sound_deprivation_receive",
+      "prostate_massage_give", "prostate_massage_receive", "sex_machine",
       "play_party", "diaper_messing", "breeding_fantasy", "creampie",
     ];
     const byId = new Map(KINKS.map((kink) => [kink.id, kink]));

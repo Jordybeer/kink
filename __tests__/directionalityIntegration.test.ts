@@ -75,6 +75,7 @@ describe("directionality consumer contract", () => {
     for (const [kinkId, partnerId] of [
       ["pegging_give", "pegging_receive"],
       ["fisting_anal_give", "fisting_anal_receive"],
+      ["body_worship_give", "body_worship_receive"],
     ] as const) {
       useStore.setState(useStore.getInitialState());
       const aId = useStore.getState().createProfile("A", "Dominant");

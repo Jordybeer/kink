@@ -42,10 +42,11 @@ import type {
 const CATALOG_V2_RELEASE_A_IDS = [
   "remote_toy", "nude_photography", "adult_content_creation", "mutual_masturbation",
   "partner_masturbation_watch", "thigh_focus", "muscle_focus", "pregnancy_attraction",
-  "smeared_makeup", "crying_tears", "vampire_fangs", "erotic_massage", "vibration_play",
-  "sound_deprivation_give", "wetlook", "prostate_massage", "sex_machine", "drool_play",
+  "smeared_makeup", "crying_tears", "vampire_fangs", "erotic_massage_give", "erotic_massage_receive", "vibration_play",
+  "sound_deprivation_give", "wetlook", "prostate_massage_give", "prostate_massage_receive", "sex_machine", "drool_play",
   "being_heard", "play_party", "next_day_check_in", "aftercare_cleanup", "dollification",
-  "pet_training", "pet_grooming", "diaper_wetting", "diaper_messing", "diaper_changing",
+  "pet_training_give", "pet_training_receive", "pet_grooming_give", "pet_grooming_receive",
+  "diaper_wetting", "diaper_messing", "diaper_changing_give", "diaper_changing_receive",
   "breeding_fantasy", "creampie",
 ] as const;
 
@@ -184,17 +185,16 @@ describe("adaptive questionnaire", () => {
       remote_toy: "remote_toy_publiek",
       nude_photography: "recording",
       partner_masturbation_watch: "mutual_masturbation",
-      diaper_wetting: "diaper_changing",
-      diaper_messing: "diaper_changing",
       breeding_fantasy: "creampie",
     });
 
     for (const id of [
       "thigh_focus", "muscle_focus", "pregnancy_attraction", "smeared_makeup",
-      "crying_tears", "vampire_fangs", "erotic_massage", "vibration_play",
-      "wetlook", "prostate_massage", "sex_machine", "drool_play", "being_heard",
+      "crying_tears", "vampire_fangs", "erotic_massage_give", "erotic_massage_receive", "vibration_play",
+      "wetlook", "prostate_massage_give", "prostate_massage_receive", "sex_machine", "drool_play", "being_heard",
       "play_party", "next_day_check_in", "aftercare_cleanup", "dollification",
-      "pet_training", "pet_grooming", "diaper_changing", "creampie",
+      "pet_training_give", "pet_training_receive", "pet_grooming_give", "pet_grooming_receive",
+      "diaper_changing_give", "diaper_changing_receive", "creampie",
     ]) {
       expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS[id], id).toBeUndefined();
     }
@@ -227,7 +227,7 @@ describe("adaptive questionnaire", () => {
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
-    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(4);
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(5);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).toEqual({
       spanking_hand_give: "spanking_implement_give",
       spanking_hand_receive: "spanking_implement_receive",
@@ -253,8 +253,6 @@ describe("adaptive questionnaire", () => {
       anal_fingering_give: "anal_sex_give",
       anal_fingering_receive: "anal_sex_receive",
       luiers_dragen: "diaper_wetting",
-      diaper_wetting: "diaper_changing",
-      diaper_messing: "diaper_changing",
       breeding_fantasy: "creampie",
     });
     for (const [source, target] of Object.entries(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS)) {
@@ -520,15 +518,13 @@ describe("adaptive questionnaire", () => {
     }
   });
 
-  it("deduplicates diaper changing when either explicit use answer nominates it", () => {
+  it("raadt geen diaper-changing richting uit wetting of messing", () => {
     const current = dynamicProfile();
     current.entries.diaper_wetting = { status: "yes", comment: "" };
     current.entries.diaper_messing = { status: "willing", comment: "" };
-    const probes = getQuestionnaireRuntime(current).pendingProbes;
-    expect(probes).toHaveLength(1);
-    expect(probes[0].targetKinkId).toBe("diaper_changing");
-    expect(probes[0].reasons.map((reason) => reason.sourceKinkId).sort())
-      .toEqual(["diaper_messing", "diaper_wetting"]);
+    const targets = getQuestionnaireRuntime(current).pendingProbes.map((probe) => probe.targetKinkId);
+    expect(targets).not.toContain("diaper_changing_give");
+    expect(targets).not.toContain("diaper_changing_receive");
   });
 
   it("does not synthesize humiliation from Golden Shower + Trampling enthusiasm", () => {
