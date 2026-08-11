@@ -1,0 +1,88 @@
+name: repair impact forge v2
+
+on:
+  push:
+    branches: [feature/directionality-impact-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Repareer alleen de twee bewezen harness-aannames
+        shell: bash
+        run: |
+          python - <<'PYTHON'
+          from pathlib import Path
+
+          workflow = Path(".github/workflows/forge-impact-v2.yml")
+          text = workflow.read_text()
+
+          single_call = '          replace_once("__tests__/directionality.test.ts", "migrateStoredDirectionalityV20({", "migrateStoredDirectionalityV21({")\n'
+          all_calls = '          p = Path("__tests__/directionality.test.ts"); t = p.read_text(); assert t.count("migrateStoredDirectionalityV20({") == 2; p.write_text(t.replace("migrateStoredDirectionalityV20({", "migrateStoredDirectionalityV21({"))\n'
+          if text.count(single_call) != 1:
+              raise SystemExit("migration call-count repair target drifted")
+          text = text.replace(single_call, all_calls, 1)
+
+          before = '    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);\\n    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");'
+          after = '    const migrated = migrateStoredDirectionalityV21({ profiles: [profile] }, 20);\\n    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");'
+          if text.count(before) != 1:
+              raise SystemExit(f"migration ordering repair target count={text.count(before)}")
+          text = text.replace(before, after, 1)
+
+          marker = "          python - <<'PY'\n"
+          start = text.index(marker) + len(marker)
+          end = text.index("\n          PY\n", start)
+          raw = text[start:end]
+          code = "\n".join(line[10:] if line.startswith("          ") else line for line in raw.splitlines())
+          exec(compile(code, "impact-transform.py", "exec"), {"__name__": "__main__"})
+          PYTHON
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Bewijs de diff en sluit alle tijdelijke smidses
+        shell: bash
+        run: |
+          python - <<'PYTHON'
+          import subprocess
+          expected = {
+            "__tests__/directionalMatching.test.ts",
+            "__tests__/directionality.test.ts",
+            "corrections.md",
+            "directie.md",
+            "docs/directionality-catalog-audit.md",
+            "docs/directionality-role-affinity.md",
+            "docs/questionnaire-progression-gates.md",
+            "e2e/ui-audit.spec.ts",
+            "lib/directionality.ts",
+            "lib/kinks.ts",
+            "lib/questionnaireMetadata.ts",
+            "lib/storeCore.ts",
+            "planned-changes.md",
+          }
+          changed = set(subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines())
+          product = {path for path in changed if not path.startswith(".github/workflows/")}
+          if product != expected:
+              raise SystemExit(f"unexpected product diff set: {sorted(product ^ expected)}")
+          PYTHON
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/forge-impact-v2.yml .github/workflows/forge-impact-repair.yml .github/workflows/forge-impact-repair2.yml
+          git add __tests__/directionalMatching.test.ts __tests__/directionality.test.ts corrections.md directie.md \
+            docs/directionality-catalog-audit.md docs/directionality-role-affinity.md docs/questionnaire-progression-gates.md \
+            e2e/ui-audit.spec.ts lib/directionality.ts lib/kinks.ts lib/questionnaireMetadata.ts lib/storeCore.ts planned-changes.md
+          git commit -m "feat: geef Impact beide kanten zonder voorkeur te raden"
+          git push origin HEAD:feature/directionality-impact-v2
