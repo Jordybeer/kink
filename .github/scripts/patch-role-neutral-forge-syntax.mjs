@@ -16,11 +16,19 @@ const replacements = [
     "`sex_machine` combineert zelfgebruik en partnerbediening",
     "\\`sex_machine\\` combineert zelfgebruik en partnerbediening",
   ],
+  [
+    "  text = replaceOnce(text,\n`      diaper_wetting: \"diaper_changing\",\n      diaper_messing: \"diaper_changing\",\n`,\n\"\",\n\"releaseSources diaper inference\");",
+    "  text = text.replace(\n`      diaper_wetting: \"diaper_changing\",\n      diaper_messing: \"diaper_changing\",\n`,\n\"\");",
+  ],
+  [
+    "  text = replaceOnce(text,\n`      diaper_wetting: \"diaper_changing\",\n      diaper_messing: \"diaper_changing\",\n`,\n\"\",\n\"canonical snapshot diaper inference\");",
+    "  text = text.replace(\n`      diaper_wetting: \"diaper_changing\",\n      diaper_messing: \"diaper_changing\",\n`,\n\"\");",
+  ],
 ];
 
 for (const [needle, replacement] of replacements) {
   const count = source.split(needle).length - 1;
-  if (count !== 1) throw new Error(`Forge syntax-anchor verwacht exact 1 keer: ${needle} (gevonden ${count})`);
+  if (count !== 1) throw new Error(`Forge patch-anchor verwacht exact 1 keer: ${needle.slice(0, 80)} (gevonden ${count})`);
   source = source.replace(needle, replacement);
 }
 
