@@ -35,7 +35,7 @@ Een **progression gate** is smaller: wanneer twee expliciet geaudite kaarten teg
 
 Deze relaties zijn verwant, maar niet betrouwbaar een oplopende intensiteitsladder:
 
-- flogging, caning, crop, paddling en whipping onderling — instrument/techniek, niet lineaire intensiteit;
+- flogging, caning, crop, paddling, whipping, belt, face slapping, punching/thudding en trampling onderling — ook na hun directionele split blijven dit instrument-/techniekalternatieven, geen lineaire intensiteit;
 - handcuffs ↔ leather cuffs — materiaalvoorkeur, geen verdieping;
 - ball gag ↔ bit gag — vormvoorkeur, geen verdieping;
 - orgasm control ↔ orgasm denial — specifieke voorkeuren kunnen onafhankelijk verschillen;

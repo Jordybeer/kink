@@ -53,8 +53,11 @@ export function questionnairePrimaryCluster(kink: Kink): QuestionnaireCluster {
 export const QUESTIONNAIRE_TOPIC_IDS = {
   impact: [
     "spanking_hand_give", "spanking_hand_receive", "spanking_implement_give", "spanking_implement_receive",
-    "flogging_give", "flogging_receive", "caning", "cropping", "paddling",
-    "whipping", "belt", "slapping_face", "punching", "trampling", "over_de_knie",
+    "flogging_give", "flogging_receive", "caning_give", "caning_receive",
+    "cropping_give", "cropping_receive", "paddling_give", "paddling_receive",
+    "whipping_give", "whipping_receive", "belt_give", "belt_receive",
+    "slapping_face_give", "slapping_face_receive", "punching_give", "punching_receive",
+    "trampling_give", "trampling_receive", "over_de_knie",
     "rubber_zweep_slapper", "fire_flogger", "bullwhip", "body_slapping", "strafspanking",
   ],
   rope: [

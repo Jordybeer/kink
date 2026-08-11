@@ -1,6 +1,6 @@
-# Directionality role-affinity — Release C
+# Directionality role-affinity — Release C + Impact extension
 
-Status: high-confidence vertical slice na Release B.
+Status: role-affinity bewezen in Release C; geaudite Impact-instrumenten uitgebreid op 11 augustus 2026.
 
 ## Doel
 
@@ -39,9 +39,13 @@ High-confidence role-affinity pairs:
 
 Dit zijn bewust alleen bestaande Dynamic-anchors en hun directe, al gemodelleerde semantische vervolgketens. Daardoor bewijst Release C de architectuur zonder tientallen instrumenten en nichevormen tegelijk te converteren.
 
+## Impact extension — uitgevoerd
+
+Caning, crop, paddling, whipping, belt, face slapping, punching/thudding en trampling zijn item voor item goedgekeurd en nu expliciet gepaird. Iedere kant blijft zelfstandig antwoordbaar en gebruikt dezelfde questionnaire-affinity als Release C. Geen van deze instrumenten krijgt een canonical follow-up of progression-edge: het zijn alternatieve technieken, geen betrouwbare intensiteitsladder.
+
 ## Niet meegenomen
 
-Caning, crop, paddling, whipping, belt, face slapping, punching, trampling, spreader bar, hogtie, mummification, straitjacket, chastity, tape/andere gags, hood, collar/leash, suspension en verdiepende bondage blijven kandidaat maar niet automatisch goedgekeurd. Hun directionality is vaak duidelijk; de vraag is vooral of de catalogusgranulariteit en questionnairewaarde een split rechtvaardigen.
+Spreader bar, hogtie, mummification, straitjacket, chastity, tape/andere gags, hood, collar/leash, suspension en verdiepende bondage blijven kandidaat maar niet automatisch goedgekeurd. Hun directionality is vaak duidelijk; de vraag blijft of catalogusgranulariteit, concrete woordkeuze en questionnairewaarde een split rechtvaardigen.
 
 Power-exchange-identiteiten zoals D/s, Master/slave, Owner/pet en brat/tamer zijn geen give/receive-instrumenten en worden niet door dit model gesplitst.
 

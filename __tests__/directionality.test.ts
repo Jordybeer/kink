@@ -20,7 +20,9 @@ import {
 import { encodeProfile, decodeAny } from "@/lib/shareProfile";
 import { generateProfileOwnerKey, signProfileConsent, verifyProfileConsent } from "@/lib/consentProof";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
-import { migrateStoredDirectionalityV20, STORE_PERSIST_VERSION } from "@/lib/storeCore";
+import { migrateStoredDirectionalityV21, STORE_PERSIST_VERSION } from "@/lib/storeCore";
+import { QUESTIONNAIRE_CANONICAL_PROBE_TARGETS, QUESTIONNAIRE_FOLLOW_UPS } from "@/lib/questionnaireMetadata";
+import { QUESTIONNAIRE_PROGRESSION_EDGES } from "@/lib/questionnaireProgression";
 import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
 
 function ownProfile(perspective: ProfilePerspective, entries: Record<string, KinkEntry> = {}): Profile {
@@ -59,7 +61,7 @@ describe("directionele kinkvragen", () => {
       { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
       { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
     ]);
-    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(20);
+    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(28);
     expect(DIRECTIONAL_KINK_PAIRS.slice(9).every((pair) =>
       "questionnaireAffinity" in pair
       && pair.questionnaireAffinity.dominant === "give"
@@ -75,6 +77,7 @@ describe("directionele kinkvragen", () => {
       "anal_sex", "anal_fingering", "fisting_anal", "fisting_vaginal", "deep_throat", "rimmen", "footjob",
       "spanking_hand", "spanking_implement", "flogging", "rope_bondage", "shibari", "handcuffs",
       "leather_cuffs", "gag_ball", "gag_bit", "blindfold", "sound_deprivation",
+      "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",
     ]) {
       expect(ids.has(retired), retired).toBe(false);
     }
@@ -140,12 +143,33 @@ describe("directionele kinkvragen", () => {
     expect(partnerDirectionalKinkId("deep_throat_receive")).toBe("deep_throat_give");
     expect(partnerDirectionalKinkId("spanking_hand_give")).toBe("spanking_hand_receive");
     expect(partnerDirectionalKinkId("spanking_hand_receive")).toBe("spanking_hand_give");
+    expect(partnerDirectionalKinkId("caning_give")).toBe("caning_receive");
+    expect(partnerDirectionalKinkId("trampling_receive")).toBe("trampling_give");
   });
 
   it("searches both variants through the shared concept vocabulary", () => {
     const ids = searchAllKinks("pegging").map((kink) => kink.id);
     expect(ids).toContain("pegging_give");
     expect(ids).toContain("pegging_receive");
+    const caningIds = searchAllKinks("caning").map((kink) => kink.id);
+    expect(caningIds).toContain("caning_give");
+    expect(caningIds).toContain("caning_receive");
+  });
+
+  it("houdt Impact-instrumenten directioneel zonder een escalatieladder te verzinnen", () => {
+    const impactIds = [
+      "caning_give", "caning_receive", "cropping_give", "cropping_receive",
+      "paddling_give", "paddling_receive", "whipping_give", "whipping_receive",
+      "belt_give", "belt_receive", "slapping_face_give", "slapping_face_receive",
+      "punching_give", "punching_receive", "trampling_give", "trampling_receive",
+    ];
+    for (const id of impactIds) {
+      expect(QUESTIONNAIRE_FOLLOW_UPS[id]).toBeUndefined();
+      expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS[id]).toBeUndefined();
+      expect(QUESTIONNAIRE_PROGRESSION_EDGES.some(([parent, child]) => parent === id || child === id)).toBe(false);
+    }
+    expect(questionnaireDirectionalKinkIdForPerspective("caning_give", "submissive")).toBe("caning_receive");
+    expect(questionnaireDirectionalKinkIdForPerspective("caning_receive", "dominant")).toBe("caning_give");
   });
 
   it("drops the old ambiguous answer instead of copying it to either direction", () => {
@@ -172,10 +196,18 @@ describe("directionele kinkvragen", () => {
     expect(roleRetired.spanking_hand_give).toBeUndefined();
     expect(roleRetired.spanking_hand_receive).toBeUndefined();
     expect(roleRetired.sound_deprivation).toBeUndefined();
+    const impactRetired = stripDeprecatedDirectionalEntries({
+      caning: { status: "yes", comment: "ambigue impact" },
+      trampling: { status: "hard_no", comment: "ambigue impact" },
+    });
+    expect(impactRetired.caning).toBeUndefined();
+    expect(impactRetired.caning_give).toBeUndefined();
+    expect(impactRetired.caning_receive).toBeUndefined();
+    expect(impactRetired.trampling).toBeUndefined();
   });
 
   it("migreert v19 profielen en snapshots en bewaart de consent chain-anchor", async () => {
-    expect(STORE_PERSIST_VERSION).toBe(20);
+    expect(STORE_PERSIST_VERSION).toBe(21);
     const profile = ownProfile("dominant", {
       spanking_hand: { status: "yes", comment: "oud C" },
       anal_sex: { status: "willing", comment: "oud B" },
@@ -184,7 +216,7 @@ describe("directionele kinkvragen", () => {
     const ownerKey = await generateProfileOwnerKey(profile.id);
     const signed = await signProfileConsent(profile, ownerKey);
     profile.consentProof = signed.proof;
-    const migrated = migrateStoredDirectionalityV20({
+    const migrated = migrateStoredDirectionalityV21({
       profiles: [profile],
       profileSnapshots: [{
         id: "snapshot-legacy",
@@ -219,12 +251,22 @@ describe("directionele kinkvragen", () => {
     });
   });
 
-  it("laat v20 state ongemoeid door dezelfde migratieboundary", () => {
+  it("migreert v20 Impact-antwoorden zonder een kant te verzinnen", () => {
     const profile = ownProfile("dominant", {
-      spanking_hand_give: { status: "yes", comment: "expliciet" },
+      caning: { status: "yes", comment: "oud gecombineerd" },
+      praise_kink: { status: "maybe", comment: "blijft" },
     });
-    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);
-    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");
+    const migrated = migrateStoredDirectionalityV21({ profiles: [profile] }, 20);
+    expect(migrated.profiles?.[0].entries.caning).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.caning_give).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.caning_receive).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");
+  });
+
+  it("laat v21 state ongemoeid door dezelfde migratieboundary", () => {
+    const profile = ownProfile("dominant", { caning_give: { status: "yes", comment: "expliciet" } });
+    const migrated = migrateStoredDirectionalityV21({ profiles: [profile] }, 21);
+    expect(migrated.profiles?.[0].entries.caning_give?.status).toBe("yes");
   });
 
   it("sanitizes and shares both explicit directions independently", () => {

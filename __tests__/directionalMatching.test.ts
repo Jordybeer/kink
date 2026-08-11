@@ -55,14 +55,17 @@ describe("complementaire directionele matching", () => {
     }
   });
 
-  it("does not mistake two give answers for a complementary match", () => {
-    const a = profile("A", "dominant", { pegging_give: { status: "yes" } });
-    const b = profile("B", "submissive", { pegging_give: { status: "yes" } });
-
-    const result = profileMatchScore(a, b);
-    expect(result.comparedTotal).toBe(0);
-    expect(result.overall).toBe(0);
-    expect(result.counts.perfect).toBe(0);
+  it("does not mistake same-side answers for complementary matches on any registered pair", () => {
+    for (const { giveId, receiveId } of DIRECTIONAL_KINK_PAIRS) {
+      for (const sameSideId of [giveId, receiveId]) {
+        const a = profile("A-" + sameSideId, "dominant", { [sameSideId]: { status: "yes" } });
+        const b = profile("B-" + sameSideId, "submissive", { [sameSideId]: { status: "yes" } });
+        const result = profileMatchScore(a, b);
+        expect(result.comparedTotal, sameSideId).toBe(0);
+        expect(result.overall, sameSideId).toBe(0);
+        expect(result.counts.perfect, sameSideId).toBe(0);
+      }
+    }
   });
 
   it("keeps the pairing independent from Dominant/Submissive perspective", () => {

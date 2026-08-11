@@ -63,6 +63,14 @@ const DIRECTIONAL_RELEASE_IDS = [
   "gag_bit_give", "gag_bit_receive",
   "blindfold_give", "blindfold_receive",
   "sound_deprivation_give", "sound_deprivation_receive",
+  "caning_give", "caning_receive",
+  "cropping_give", "cropping_receive",
+  "paddling_give", "paddling_receive",
+  "whipping_give", "whipping_receive",
+  "belt_give", "belt_receive",
+  "slapping_face_give", "slapping_face_receive",
+  "punching_give", "punching_receive",
+  "trampling_give", "trampling_receive",
 ] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
@@ -91,7 +99,14 @@ const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
   "blindfold",
 ] as const;
 
-const RETIRED_POST_V2_DIRECTIONAL_IDS = ["sound_deprivation"] as const;
+const RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS = [
+  "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",
+] as const;
+
+const RETIRED_POST_V2_DIRECTIONAL_IDS = [
+  "sound_deprivation",
+  ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
+] as const;
 
 describe("kink database integrity", () => {
   it("every kink has a unique id", () => {
@@ -151,7 +166,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(310);
+    expect(KINKS).toHaveLength(318);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -174,7 +189,10 @@ describe("kink database integrity", () => {
     const retired = [...historicalIds].filter((id) => !activeIds.has(id)).sort();
     const added = [...activeIds].filter((id) => !historicalIds.has(id)).sort();
 
-    expect(retired).toEqual([...RETIRED_COMPOSITE_OR_DUPLICATE_IDS].sort());
+    expect(retired).toEqual([
+      ...RETIRED_COMPOSITE_OR_DUPLICATE_IDS,
+      ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
+    ].sort());
     expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());
   });
 
