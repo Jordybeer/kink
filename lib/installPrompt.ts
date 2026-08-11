@@ -28,6 +28,74 @@ export function detectIosInstallBrowser(
   return "safari";
 }
 
+export const INSTALL_PROMPT_SNOOZE_MS = 5 * 24 * 60 * 60 * 1000;
+const INSTALL_PROMPT_POLICY_KEY = "kinksync-install-prompt-v2";
+
+export interface InstallPromptPolicy {
+  dismissals: number;
+  snoozedUntil: number;
+  neverAsk: boolean;
+}
+
+const DEFAULT_INSTALL_PROMPT_POLICY: InstallPromptPolicy = {
+  dismissals: 0,
+  snoozedUntil: 0,
+  neverAsk: false,
+};
+
+export function parseInstallPromptPolicy(raw: string | null): InstallPromptPolicy {
+  if (!raw) return { ...DEFAULT_INSTALL_PROMPT_POLICY };
+  try {
+    const value = JSON.parse(raw) as Partial<InstallPromptPolicy>;
+    return {
+      dismissals: Number.isFinite(value.dismissals)
+        ? Math.max(0, Math.min(2, Math.trunc(value.dismissals ?? 0)))
+        : 0,
+      snoozedUntil: Number.isFinite(value.snoozedUntil)
+        ? Math.max(0, value.snoozedUntil ?? 0)
+        : 0,
+      neverAsk: value.neverAsk === true,
+    };
+  } catch {
+    return { ...DEFAULT_INSTALL_PROMPT_POLICY };
+  }
+}
+
+export function shouldAutoShowInstallPrompt(
+  policy: InstallPromptPolicy,
+  meaningfulUse: boolean,
+  now = Date.now(),
+): boolean {
+  if (!meaningfulUse || policy.neverAsk || policy.dismissals >= 2) return false;
+  return now >= policy.snoozedUntil;
+}
+
+export function snoozeInstallPrompt(
+  policy: InstallPromptPolicy,
+  now = Date.now(),
+): InstallPromptPolicy {
+  const dismissals = Math.min(2, policy.dismissals + 1);
+  return {
+    ...policy,
+    dismissals,
+    snoozedUntil: dismissals >= 2 ? 0 : now + INSTALL_PROMPT_SNOOZE_MS,
+  };
+}
+
+export function disableAutomaticInstallPrompt(policy: InstallPromptPolicy): InstallPromptPolicy {
+  return { ...policy, neverAsk: true, snoozedUntil: 0 };
+}
+
+export function readInstallPromptPolicy(): InstallPromptPolicy {
+  if (typeof window === "undefined") return { ...DEFAULT_INSTALL_PROMPT_POLICY };
+  return parseInstallPromptPolicy(window.localStorage.getItem(INSTALL_PROMPT_POLICY_KEY));
+}
+
+export function writeInstallPromptPolicy(policy: InstallPromptPolicy): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(INSTALL_PROMPT_POLICY_KEY, JSON.stringify(policy));
+}
+
 let _deferred: BeforeInstallPromptEvent | null = null;
 
 export function getInstallPrompt(): BeforeInstallPromptEvent | null {
