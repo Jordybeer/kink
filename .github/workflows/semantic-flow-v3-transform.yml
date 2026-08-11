@@ -26,8 +26,10 @@ jobs:
           cache: npm
       - name: Validate and apply fail-closed transform
         run: |
+          python3 scripts/patch-questionnaire-semantic-flow-v3.py
           python3 -m py_compile scripts/apply-questionnaire-semantic-flow-v3.py
           python3 scripts/apply-questionnaire-semantic-flow-v3.py
+          rm -f scripts/patch-questionnaire-semantic-flow-v3.py
           git diff --check
       - run: npm ci
       - run: npm run lint
