@@ -6,7 +6,7 @@ test("questionnaire focus hands off to the dedicated questions route", async ({ 
 
   await expect(page).toHaveURL(new RegExp(`/profile/${PROFILE_ALEX.id}/questions$`));
   await expect(page.getByTestId("questions-screen")).toBeVisible();
-  await expect(page.getByRole("heading", { name: PROFILE_ALEX.name })).toBeVisible();
+  await expect(page.getByText("Voorkeuren", { exact: true })).toBeVisible();
   await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 });
 
