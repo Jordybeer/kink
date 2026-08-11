@@ -1,0 +1,67 @@
+name: forge release meetlat 0a
+
+on:
+  push:
+    branches:
+      - test/release-meetlat-fixtures
+
+permissions:
+  contents: write
+
+jobs:
+  forge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trek de juiste speelkamer open
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: test/release-meetlat-fixtures
+          fetch-depth: 0
+
+      - name: Zet Node aan de ketting
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Trek de meetlat recht
+        run: node .github/scripts/forge-release-meetlat-0a.mjs
+
+      - name: Installeer exact de lockfile
+        run: npm ci
+
+      - name: Laat de unit-suite bijten
+        run: npm test
+
+      - name: Bouw de hele dungeon
+        run: npm run build
+
+      - name: Installeer de browserrehearsal
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Bewijs alle bestaande browserflows tegen de strengere seed
+        env:
+          CI: "1"
+        run: npm run test:e2e
+
+      - name: Bewijs de echte device-readiness
+        env:
+          CI: "1"
+        run: npm run test:e2e:launch
+
+      - name: Ruim de meetlat-smid op en push alleen bewezen werk
+        env:
+          BRANCH: test/release-meetlat-fixtures
+        run: |
+          rm .github/scripts/forge-release-meetlat-0a.mjs
+          rm .github/workflows/forge-release-meetlat-0a.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Geen productdiff om te pushen"
+            exit 1
+          fi
+          git commit -m "test: laat de release-meetlat echt bijten"
+          git push origin HEAD:"$BRANCH"
