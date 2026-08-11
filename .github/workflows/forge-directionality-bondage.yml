@@ -25,6 +25,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Leer de smid de verse audittekst
+        run: node .github/scripts/patch-bondage-forge-anchor.mjs
+
       - name: Smeed de zes restraint-paren
         run: node .github/scripts/forge-directionality-bondage.mjs
 
@@ -42,6 +45,7 @@ jobs:
           BRANCH: feature/directionality-bondage-restraints
         run: |
           rm .github/scripts/forge-directionality-bondage.mjs
+          rm .github/scripts/patch-bondage-forge-anchor.mjs
           rm .github/workflows/forge-directionality-bondage.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
