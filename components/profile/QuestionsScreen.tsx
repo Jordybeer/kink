@@ -74,7 +74,8 @@ export default function QuestionsScreen({ params }: Props) {
     );
   }
 
-  const shared = profile.origin === "shared" || (!profile.origin && profile.isImported === true);
+  const currentProfile = profile;
+  const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   if (shared) {
     return (
       <PageShell width="lg">
@@ -82,7 +83,7 @@ export default function QuestionsScreen({ params }: Props) {
           icon={UserMinus}
           title="Alleen-lezen profiel"
           message="Vragen invullen kan alleen op je eigen profiel. Gedeelde profielen blijven ongewijzigd."
-          ctaHref={`/profile/${profile.id}`}
+          ctaHref={`/profile/${currentProfile.id}`}
           ctaLabel="Terug naar profiel"
         />
       </PageShell>
@@ -90,12 +91,12 @@ export default function QuestionsScreen({ params }: Props) {
   }
 
   const activeRuntime = runtime!;
-  const setup = profile.questionnaireSetup ?? defaultQuestionnaireSetup();
+  const setup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
   const runtimeKind = activeRuntime.intent.kind;
-  const catalogRated = KINKS.filter((kink) => profile.entries[kink.id]?.status != null).length;
+  const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
   const activeCategory = runtimeKind === "category" ? activeRuntime.intent.category : null;
   const activeCategoryIds = activeCategory ? CATALOG_IDS_BY_CATEGORY.get(activeCategory) ?? [] : [];
-  const activeCategoryRated = activeCategoryIds.filter((kinkId) => profile.entries[kinkId]?.status != null).length;
+  const activeCategoryRated = activeCategoryIds.filter((kinkId) => currentProfile.entries[kinkId]?.status != null).length;
   const catalogProgress = runtimeKind === "discover" || runtimeKind === "deepDive";
   const progressPercent = activeCategory
     ? Math.round((activeCategoryRated / Math.max(1, activeCategoryIds.length)) * 100)
@@ -114,7 +115,7 @@ export default function QuestionsScreen({ params }: Props) {
       : "Dynamic";
 
   function saveMode(mode: "dynamic" | "deepDive") {
-    updateProfileQuestionnaire(profile.id, {
+    updateProfileQuestionnaire(currentProfile.id, {
       mode,
       interests: [...setup.interests],
       version: 2,
@@ -158,7 +159,7 @@ export default function QuestionsScreen({ params }: Props) {
   }
 
   function updateStatus(kinkId: string, status: KinkStatus) {
-    setEntry(profile.id, kinkId, { status, desire: null });
+    setEntry(currentProfile.id, kinkId, { status, desire: null });
   }
 
   return (
@@ -174,7 +175,7 @@ export default function QuestionsScreen({ params }: Props) {
       <header className="flex-none pb-3">
         <div className="flex min-h-11 items-center gap-2">
           <Link
-            href={`/profile/${profile.id}`}
+            href={`/profile/${currentProfile.id}`}
             prefetch={false}
             aria-label="Terug naar profiel"
             className="focus-ring -ml-1 flex h-11 w-11 flex-none items-center justify-center rounded-xl"
@@ -190,7 +191,7 @@ export default function QuestionsScreen({ params }: Props) {
               className="truncate text-xl leading-tight"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}
             >
-              {profile.name}
+              {currentProfile.name}
             </h1>
           </div>
           <button
@@ -307,13 +308,13 @@ export default function QuestionsScreen({ params }: Props) {
             key={runtimeKind === "category" ? `category:${activeRuntime.intent.category}` : runtimeKind}
             kinks={activeRuntime.visibleKinks}
             queueItems={activeRuntime.queue}
-            entries={profile.entries}
+            entries={currentProfile.entries}
             focusCategory={runtimeKind === "category" ? activeRuntime.intent.category : null}
             progressLabel={progressLabel}
             onStatusChange={updateStatus}
-            onCuriousChange={(kinkId, value) => setEntry(profile.id, kinkId, { curious: value })}
-            onPrivateChange={(kinkId, value) => setEntry(profile.id, kinkId, { privateResponse: value })}
-            onTagsChange={(kinkId, tags) => setEntry(profile.id, kinkId, { tags })}
+            onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
+            onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
+            onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
           />
         ) : (
           <div
@@ -376,7 +377,7 @@ export default function QuestionsScreen({ params }: Props) {
             )}
             {runtimeKind === "deepDive" && (
               <Link
-                href={`/profile/${profile.id}`}
+                href={`/profile/${currentProfile.id}`}
                 prefetch={false}
                 className="focus-ring mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl px-3 text-xs font-semibold"
                 style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
