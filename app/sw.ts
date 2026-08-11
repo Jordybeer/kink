@@ -49,7 +49,7 @@ const dynamicShellFallbacks = [
     matcher({ request }: { request: Request }) {
       return (
         isDocumentRequest(request) &&
-        /^\/profile\/[^/]+$/.test(new URL(request.url).pathname)
+        /^\/profile\/[^/]+(?:\/questions)?$/.test(new URL(request.url).pathname)
       );
     },
   },

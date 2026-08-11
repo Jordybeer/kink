@@ -31,6 +31,12 @@ describe("local-first routes", () => {
         new URLSearchParams(),
       ),
     ).toBe("profile legacy");
+    expect(
+      profileIdFromLocation(
+        "/profile/profile%20questions/questions",
+        new URLSearchParams(),
+      ),
+    ).toBe("profile questions");
 
     expect(
       sceneIdFromLocation(

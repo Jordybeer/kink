@@ -18,7 +18,7 @@ import {
   createPerspectiveProfiles,
   type ProfileDirectionChoice,
 } from "@/lib/profilePerspectives";
-import { profileHref, waitForPersistedProfile } from "@/lib/localRoutes";
+import { waitForPersistedProfile } from "@/lib/localRoutes";
 import type { QuestionnaireInterest } from "@/types";
 
 interface Props {
@@ -133,13 +133,13 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         }
         setPendingProfileId(null);
         onClose();
-        window.location.assign(`${profileHref(primaryId)}&focus=questionnaire`);
+        window.location.assign(`/profile/${encodeURIComponent(primaryId)}/questions`);
         return;
       }
 
       setPendingProfileId(null);
       onClose();
-      router.push(`/profile/${primaryId}?focus=questionnaire`);
+      router.push(`/profile/${encodeURIComponent(primaryId)}/questions`);
     } catch (error) {
       setPendingProfileId(null);
       setNameError(error instanceof Error ? error.message : "Profiel kon niet worden gemaakt.");
