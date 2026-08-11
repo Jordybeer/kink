@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, GearSix } from "@phosphor-icons/react";
+import { CaretLeft, GearSix, Info } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 
@@ -20,6 +20,7 @@ export default function TopNav() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
   const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");
+  const questionsRoute = /^\/profile\/[^/]+\/questions$/.test(path);
 
   useEffect(() => {
     if (!hydrated) {
@@ -123,6 +124,17 @@ export default function TopNav() {
           >
             Opgeslagen ✓
           </span>
+        )}
+        {questionsRoute && (
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("ks:open-status-explainer"))}
+            aria-label="Uitleg over antwoordkeuzes"
+            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
+          >
+            <Info size={17} aria-hidden="true" />
+          </button>
         )}
         <StatusDot />
       </nav>
