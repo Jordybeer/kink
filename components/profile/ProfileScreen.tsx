@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
+  CaretDown,
   ChatCircle,
   FileArrowDown,
   FileText,
@@ -13,6 +14,7 @@ import {
   Lock,
   Star,
   UserMinus,
+  X,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
@@ -42,6 +44,7 @@ import TriageDeck from "@/components/TriageDeck";
 import CategorySection from "@/components/CategorySection";
 import KinkListRow from "@/components/KinkListRow";
 import KinkEditSheet from "@/components/KinkEditSheet";
+import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
 import StatusExplainerSheet from "@/components/sheets/StatusExplainerSheet";
 import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
 import QRModal from "@/components/QRModal";
@@ -93,7 +96,8 @@ export default function ProfilePage({ params }: Props) {
 
   const [activeTab, setActiveTab] = useState<ProfileTab | null>(null);
   const [tabDirection, setTabDirection] = useState<1 | -1>(1);
-  const [activeCategory, setActiveCategory] = useState<KinkCategoryId>(CATEGORIES[0]);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<KinkCategoryId | null>(null);
   const [search, setSearch] = useState("");
   const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>(DYNAMIC_INTENT);
   const [categoryReturnIntent, setCategoryReturnIntent] = useState<GlobalQuestionnaireIntent>(DYNAMIC_INTENT);
@@ -125,6 +129,8 @@ export default function ProfilePage({ params }: Props) {
     setRevealedPrivateResponses(new Set());
     setIncludePrivateExports(false);
     setEditing(false);
+    setCategoriesOpen(false);
+    setCatalogCategoryFilter(null);
     setQuestionnaireIntent(DYNAMIC_INTENT);
     setCategoryReturnIntent(DYNAMIC_INTENT);
     setQuestionnaireLanding(false);
@@ -219,10 +225,33 @@ export default function ProfilePage({ params }: Props) {
   const visibleCategories = CATEGORIES;
   const exportMaxLevel = LEVEL_MAX.diepgaand;
   const searchTerm = search.trim();
-  const searchResults = searchTerm ? searchAllKinks(searchTerm) : [];
   const customKinks = currentProfile.customKinks ?? [];
   const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
   const totalRated = catalogRated;
+  const catalogCategoryFilterLabel = catalogCategoryFilter
+    ? kinkCategoryLabel(catalogCategoryFilter)
+    : "Alle categorieën";
+  const catalogFilterKinks = catalogCategoryFilter
+    ? CATALOG_KINKS_BY_CATEGORY.get(catalogCategoryFilter) ?? EMPTY_KINKS
+    : KINKS;
+  const catalogFilterRated = catalogFilterKinks.filter(
+    (kink) => currentProfile.entries[kink.id]?.status != null,
+  ).length;
+  const catalogCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
+  const categoryFilterOptions = visibleCategories.map((category) => {
+    const categoryKinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? EMPTY_KINKS;
+    return {
+      id: category,
+      label: kinkCategoryLabel(category),
+      rated: categoryKinks.filter((kink) => currentProfile.entries[kink.id]?.status != null).length,
+      total: categoryKinks.length,
+    };
+  });
+  const searchResults = searchTerm
+    ? searchAllKinks(searchTerm).filter(
+        (kink) => catalogCategoryFilter === null || kink.category === catalogCategoryFilter,
+      )
+    : [];
   const runtimeKind = runtime.intent.kind;
   const activeCategoryKinks = runtimeKind === "category"
     ? CATALOG_KINKS_BY_CATEGORY.get(runtime.intent.category) ?? []
@@ -268,7 +297,7 @@ export default function ProfilePage({ params }: Props) {
 
   const statusSegments = STATUS_ORDER.map((status) => ({
     status,
-    count: visibleKinks.filter(
+    count: catalogFilterKinks.filter(
       (kink) => currentProfile.entries[kink.id]?.status === status
         && currentProfile.entries[kink.id]?.privateResponse !== true,
     ).length,
@@ -303,7 +332,6 @@ export default function ProfilePage({ params }: Props) {
     if (runtimeKind !== "category") {
       setCategoryReturnIntent(runtime.intent);
     }
-    setActiveCategory(category);
     setQuestionnaireIntent({ kind: "category", category });
     deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -464,7 +492,7 @@ export default function ProfilePage({ params }: Props) {
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Zoek in de volledige catalogus…"
+                  placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
                   className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
@@ -488,7 +516,7 @@ export default function ProfilePage({ params }: Props) {
                       />
                     </div>
                     <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                      {progressCopy} Zoeken toont altijd alles.
+                      {progressCopy}
                     </p>
                   </div>
                 )}
@@ -513,20 +541,36 @@ export default function ProfilePage({ params }: Props) {
                         />
                       ))}
                     </div>
-                    <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-                      {visibleCategories.map((category) => (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-1.5">
                         <button
-                          key={category}
                           type="button"
-                          onClick={() => startCategory(category)}
-                          className="focus-ring flex-none px-3 min-h-9 rounded-full text-xs font-semibold"
-                          style={runtimeKind === "category" && activeCategory === category
-                            ? { background: "var(--accent)", color: "var(--on-accent)" }
-                            : { border: "1px solid var(--border)", color: "var(--text2)" }}
+                          onClick={() => setCategoriesOpen(true)}
+                          aria-haspopup="dialog"
+                          aria-expanded={categoriesOpen}
+                          className="focus-ring inline-flex min-h-9 min-w-0 max-w-[70vw] items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                          style={catalogCategoryFilter
+                            ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
+                            : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
                         >
-                          {kinkCategoryLabel(category)}
+                          <span className="truncate">{catalogCategoryFilterLabel}</span>
+                          <CaretDown size={11} className="flex-none" aria-hidden="true" />
                         </button>
-                      ))}
+                        {catalogCategoryFilter && (
+                          <button
+                            type="button"
+                            onClick={() => setCatalogCategoryFilter(null)}
+                            aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
+                            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+                            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                          >
+                            <X size={13} weight="bold" aria-hidden="true" />
+                          </button>
+                        )}
+                      </div>
+                      <span className="flex-none text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                        {catalogFilterRated} beoordeeld
+                      </span>
                     </div>
                   </div>
 
@@ -627,7 +671,7 @@ export default function ProfilePage({ params }: Props) {
                   </div>
 
                   <div className="px-4">
-                    {visibleCategories.map((category) => {
+                    {catalogCategories.map((category) => {
                       const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
                       if (!kinks.length) return null;
                       return (
@@ -642,61 +686,63 @@ export default function ProfilePage({ params }: Props) {
                       );
                     })}
 
-                    <section className="rounded-xl mt-3 p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                      <h3 className="text-sm font-semibold mb-2">Eigen onderwerpen</h3>
-                      <div className="flex flex-col gap-1 mb-3">
-                        {customKinks.map((custom) => {
-                          const customAsKink: Kink = {
-                            id: custom.id,
-                            name: custom.name,
-                            category: "custom",
-                            level: 1,
-                          };
-                          return (
-                            <div key={custom.id} className="flex items-center gap-1">
-                              <div className="flex-1">
-                                <KinkListRow
-                                  kink={customAsKink}
-                                  entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
-                                  onOpen={() => setEditKink(customAsKink)}
-                                />
+                    {!catalogCategoryFilter && (
+                      <section className="rounded-xl mt-3 p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                        <h3 className="text-sm font-semibold mb-2">Eigen onderwerpen</h3>
+                        <div className="flex flex-col gap-1 mb-3">
+                          {customKinks.map((custom) => {
+                            const customAsKink: Kink = {
+                              id: custom.id,
+                              name: custom.name,
+                              category: "custom",
+                              level: 1,
+                            };
+                            return (
+                              <div key={custom.id} className="flex items-center gap-1">
+                                <div className="flex-1">
+                                  <KinkListRow
+                                    kink={customAsKink}
+                                    entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
+                                    onOpen={() => setEditKink(customAsKink)}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeCustomKink(currentProfile.id, custom.id)}
+                                  aria-label={`${custom.name} verwijderen`}
+                                  className="focus-ring w-10 h-10 rounded-full"
+                                  style={{ color: "var(--hard-no)" }}
+                                >
+                                  ×
+                                </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => removeCustomKink(currentProfile.id, custom.id)}
-                                aria-label={`${custom.name} verwijderen`}
-                                className="focus-ring w-10 h-10 rounded-full"
-                                style={{ color: "var(--hard-no)" }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <form onSubmit={addCustom} className="flex gap-2">
-                        <input
-                          value={customInput}
-                          onChange={(event) => setCustomInput(event.target.value)}
-                          placeholder="Voeg iets eigens toe…"
-                          className="focus-ring flex-1 min-h-11 rounded-xl px-3 text-sm focus:outline-none"
-                          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-                        />
-                        <button
-                          type="submit"
-                          className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
-                          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                        >
-                          Toevoegen
-                        </button>
-                      </form>
-                    </section>
+                            );
+                          })}
+                        </div>
+                        <form onSubmit={addCustom} className="flex gap-2">
+                          <input
+                            value={customInput}
+                            onChange={(event) => setCustomInput(event.target.value)}
+                            placeholder="Voeg iets eigens toe…"
+                            className="focus-ring flex-1 min-h-11 rounded-xl px-3 text-sm focus:outline-none"
+                            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                          />
+                          <button
+                            type="submit"
+                            className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
+                            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                          >
+                            Toevoegen
+                          </button>
+                        </form>
+                      </section>
+                    )}
                   </div>
                 </>
               ) : (
                 <div className="px-4">
                   <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
-                    {searchResults.length} resultaten in de volledige catalogus
+                    {searchResults.length} resultaten in {catalogCategoryFilter ? catalogCategoryFilterLabel : "de volledige catalogus"}
                   </p>
                   <div className="flex flex-col">
                     {searchResults.map((kink) => (
@@ -887,6 +933,15 @@ export default function ProfilePage({ params }: Props) {
         </AnimatePresence>
       </div>
 
+      <CategoryFilterSheet
+        open={categoriesOpen}
+        onClose={() => setCategoriesOpen(false)}
+        selected={catalogCategoryFilter}
+        categories={categoryFilterOptions}
+        totalRated={catalogRated}
+        totalCount={KINKS.length}
+        onSelect={setCatalogCategoryFilter}
+      />
       <StatusExplainerSheet open={statusExplainerOpen} onClose={() => setStatusExplainerOpen(false)} />
       <KinkEditSheet
         kink={editKink}

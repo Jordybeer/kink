@@ -2,9 +2,9 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CaretDown, Check, Info, Sparkle, UserMinus } from "@phosphor-icons/react";
+import { Check, Info, Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
-import { CATEGORIES, KINKS, kinkCategoryLabel } from "@/lib/kinks";
+import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
@@ -41,7 +41,6 @@ export default function QuestionsScreen({ params }: Props) {
     storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT,
   );
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   useEffect(() => {
     const openStatusExplainer = () => setStatusExplainerOpen(true);
@@ -138,14 +137,6 @@ export default function QuestionsScreen({ params }: Props) {
     setCategoryReturnIntent(next);
   }
 
-  function startCategory(category: KinkCategoryId) {
-    if (runtimeKind !== "category") {
-      setCategoryReturnIntent(activeRuntime.intent as GlobalQuestionnaireIntent);
-    }
-    setIntent({ kind: "category", category });
-    setCategoriesOpen(false);
-  }
-
   function leaveTemporaryIntent() {
     if (runtimeKind === "category") {
       setIntent(categoryReturnIntent);
@@ -185,7 +176,7 @@ export default function QuestionsScreen({ params }: Props) {
       </div>
 
       <header className="flex-none pb-2">
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">
+        <div className="grid grid-cols-3 gap-2 pb-0.5" aria-label="Vraagmodus">
           {([
             ["dynamic", "Dynamic", startDynamic],
             ["discover", "Discover", startDiscover],
@@ -198,7 +189,7 @@ export default function QuestionsScreen({ params }: Props) {
                 type="button"
                 onClick={action}
                 aria-pressed={active}
-                className="focus-ring min-h-9 flex-none rounded-full px-3 text-xs font-semibold"
+                className="focus-ring min-h-9 w-full rounded-full px-3 text-xs font-semibold"
                 style={active
                   ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
                   : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -207,40 +198,7 @@ export default function QuestionsScreen({ params }: Props) {
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setCategoriesOpen((open) => !open)}
-            aria-expanded={categoriesOpen}
-            className="focus-ring min-h-9 flex-none rounded-full px-3 text-xs font-semibold inline-flex items-center gap-1"
-            style={activeCategory
-              ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-              : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-          >
-            {activeCategory ? kinkCategoryLabel(activeCategory) : "Categorie"}
-            <CaretDown size={11} aria-hidden="true" />
-          </button>
         </div>
-
-        {categoriesOpen && (
-          <div
-            className="mt-2 grid max-h-[35dvh] grid-cols-2 gap-1.5 overflow-y-auto rounded-2xl p-2 ks-fade-in"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => startCategory(category)}
-                className="focus-ring min-h-10 rounded-xl px-2 text-left text-xs"
-                style={activeCategory === category
-                  ? { color: "var(--accent-text)", background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))" }
-                  : { color: "var(--text2)" }}
-              >
-                {kinkCategoryLabel(category)}
-              </button>
-            ))}
-          </div>
-        )}
 
         {runtimeKind === "category" && (
           <div
