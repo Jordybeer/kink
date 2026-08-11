@@ -99,7 +99,13 @@ export default function TriageDeck({
       return;
     }
     setLastAnsweredId(kink.id);
-    setConversationPhase(answeredWasContinuation ? "topicBreakRequired" : "preferContinuation");
+    setConversationPhase(
+      answeredWasContinuation
+        ? "topicBreakRequired"
+        : status === "yes" || status === "willing"
+          ? "preferContinuation"
+          : "preferComplement",
+    );
     setHolding(kink.id);
     holdTimer.current = setTimeout(() => setHolding(null), CARD_FEEDBACK_MS);
   }
