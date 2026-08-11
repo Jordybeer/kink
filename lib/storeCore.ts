@@ -86,9 +86,9 @@ const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 // and the 30-cap becomes a rolling month instead of a burst of noise.
 const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-export const STORE_PERSIST_VERSION = 21;
+export const STORE_PERSIST_VERSION = 22;
 
-export function migrateStoredDirectionalityV21<T extends {
+export function migrateStoredDirectionalityV22<T extends {
   profiles?: Profile[];
   profileSnapshots?: ProfileSnapshot[];
 }>(
@@ -715,7 +715,7 @@ export const useStore = create<State>()(
         if (version < 18 && state.profiles) {
           state.profiles = normalizeStoredQuestionnaireProfiles(state.profiles);
         }
-        migrateStoredDirectionalityV21(state, version);
+        migrateStoredDirectionalityV22(state, version);
         return state;
       },
     }

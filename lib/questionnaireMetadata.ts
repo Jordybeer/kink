@@ -67,10 +67,11 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   ],
   restraints: [
     "handcuffs_give", "handcuffs_receive", "leather_cuffs_give", "leather_cuffs_receive",
-    "spreader_bar", "hogtie", "mummification", "straitjacket",
+    "spreader_bar_give", "spreader_bar_receive", "hogtie_give", "hogtie_receive",
+    "mummification_give", "mummification_receive", "straitjacket_give", "straitjacket_receive",
     "borsten_afbinden", "sleepsack", "predicament_bondage", "vacuumbed",
   ],
-  gags: ["gag_ball_give", "gag_ball_receive", "gag_bit_give", "gag_bit_receive", "gag_tape", "gag_opblaasbaar", "gag_penisvorm", "gag_rubber"],
+  gags: ["gag_ball_give", "gag_ball_receive", "gag_bit_give", "gag_bit_receive", "gag_tape_give", "gag_tape_receive", "gag_opblaasbaar", "gag_penisvorm", "gag_rubber"],
   protocols: [
     "rules_protocols", "rituelen_protocols", "toestemmingsprotocol", "spraakprotocol",
     "hoog_protocol",
@@ -84,7 +85,7 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   media_capture: ["nude_photography", "recording", "webcam", "adult_content_creation"],
   masturbation: ["mutual_masturbation", "partner_masturbation_watch", "joi"],
   remote_toys: ["remote_toy", "remote_toy_publiek"],
-  sensory_deprivation: ["blindfold_give", "blindfold_receive", "hood", "sound_deprivation_give", "sound_deprivation_receive"],
+  sensory_deprivation: ["blindfold_give", "blindfold_receive", "hood_give", "hood_receive", "sound_deprivation_give", "sound_deprivation_receive"],
   watersports: [
     "watersports_geven", "watersports_ontvangen", "urine_intiem", "plas_merken",
     "plas_desperation", "buiten_plassen", "plas_in_kleding", "plas_slaaf",

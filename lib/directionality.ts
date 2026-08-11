@@ -44,9 +44,15 @@ export const DIRECTIONAL_KINK_PAIRS = [
   { conceptId: "shibari", giveId: "shibari_give", receiveId: "shibari_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
   { conceptId: "handcuffs", giveId: "handcuffs_give", receiveId: "handcuffs_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
   { conceptId: "leather_cuffs", giveId: "leather_cuffs_give", receiveId: "leather_cuffs_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "spreader_bar", giveId: "spreader_bar_give", receiveId: "spreader_bar_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "hogtie", giveId: "hogtie_give", receiveId: "hogtie_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "mummification", giveId: "mummification_give", receiveId: "mummification_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "straitjacket", giveId: "straitjacket_give", receiveId: "straitjacket_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
   { conceptId: "gag_ball", giveId: "gag_ball_give", receiveId: "gag_ball_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
   { conceptId: "gag_bit", giveId: "gag_bit_give", receiveId: "gag_bit_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "gag_tape", giveId: "gag_tape_give", receiveId: "gag_tape_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
   { conceptId: "blindfold", giveId: "blindfold_give", receiveId: "blindfold_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
+  { conceptId: "hood", giveId: "hood_give", receiveId: "hood_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
   { conceptId: "sound_deprivation", giveId: "sound_deprivation_give", receiveId: "sound_deprivation_receive", questionnaireAffinity: DOM_GIVE_SUB_RECEIVE_AFFINITY },
 ] as const satisfies readonly DirectionalKinkPair[];
 
@@ -75,9 +81,15 @@ const DIRECTIONAL_CONCEPT_LABELS: Readonly<Record<string, string>> = {
   shibari: "Shibari",
   handcuffs: "Handcuffs",
   leather_cuffs: "Leather cuffs",
+  spreader_bar: "Spreader bar",
+  hogtie: "Hogtie",
+  mummification: "Mummification",
+  straitjacket: "Straitjacket",
   gag_ball: "Ball gag",
   gag_bit: "Bit gag",
+  gag_tape: "Tape gag",
   blindfold: "Blindfold",
+  hood: "Hood / sensory deprivation hood",
   sound_deprivation: "Sound deprivation",
 };
 
@@ -188,9 +200,15 @@ const DEPRECATED_DIRECTIONAL_KINK_IDS = new Set<string>([
   "shibari",
   "handcuffs",
   "leather_cuffs",
+  "spreader_bar",
+  "hogtie",
+  "mummification",
+  "straitjacket",
   "gag_ball",
   "gag_bit",
+  "gag_tape",
   "blindfold",
+  "hood",
   "sound_deprivation",
 ]);
 

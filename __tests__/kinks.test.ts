@@ -71,6 +71,12 @@ const DIRECTIONAL_RELEASE_IDS = [
   "slapping_face_give", "slapping_face_receive",
   "punching_give", "punching_receive",
   "trampling_give", "trampling_receive",
+  "spreader_bar_give", "spreader_bar_receive",
+  "hogtie_give", "hogtie_receive",
+  "mummification_give", "mummification_receive",
+  "straitjacket_give", "straitjacket_receive",
+  "gag_tape_give", "gag_tape_receive",
+  "hood_give", "hood_receive",
 ] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
@@ -103,9 +109,14 @@ const RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS = [
   "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",
 ] as const;
 
+const RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS = [
+  "spreader_bar", "hogtie", "mummification", "straitjacket", "gag_tape", "hood",
+] as const;
+
 const RETIRED_POST_V2_DIRECTIONAL_IDS = [
   "sound_deprivation",
   ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
+  ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
 ] as const;
 
 describe("kink database integrity", () => {
@@ -166,7 +177,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(318);
+    expect(KINKS).toHaveLength(324);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -192,6 +203,7 @@ describe("kink database integrity", () => {
     expect(retired).toEqual([
       ...RETIRED_COMPOSITE_OR_DUPLICATE_IDS,
       ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
+      ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
     ].sort());
     expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());
   });
