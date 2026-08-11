@@ -44,6 +44,39 @@ replace_once(
     '    photography.entries.recording = { status: "yes", comment: "privé-opname is expliciet" };\n    expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))\n      .toEqual(["adult_content_creation"]);',
     '    photography.entries.recording = { status: "yes", comment: "privé-opname is expliciet" };\n    expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))\n      .toEqual([]);',
 )
+replace_once(
+    "__tests__/questionnaireProgression.test.ts",
+    '''  it("herstelt na ranking en diversiteit ook een volledige drie-staps waterval", () => {
+    const adultContent = kinkAtForcedLevel("adult_content_creation", 1);
+    const recording = kinkAtForcedLevel("recording", 1);
+    const photography = kinkAtForcedLevel("nude_photography", 4);
+
+    const ranked = rankQuestionnaireCandidates(
+      [adultContent, recording, photography],
+      {},
+    );
+
+    expect(ranked.map((kink) => kink.id)).toEqual([
+      "nude_photography",
+      "recording",
+      "adult_content_creation",
+    ]);
+  });''',
+    '''  it("ordent alleen de geaudite privé-mediastap en maakt publiceren geen verplichte trede", () => {
+    const adultContent = kinkAtForcedLevel("adult_content_creation", 1);
+    const recording = kinkAtForcedLevel("recording", 1);
+    const photography = kinkAtForcedLevel("nude_photography", 4);
+
+    const ranked = rankQuestionnaireCandidates(
+      [adultContent, recording, photography],
+      {},
+    );
+    const ids = ranked.map((kink) => kink.id);
+
+    expect(ids.indexOf("nude_photography")).toBeLessThan(ids.indexOf("recording"));
+    expect(questionnaireProgressionParentIds("adult_content_creation")).toEqual([]);
+  });''',
+)
 
 # Clean warnings introduced by replacing whole-catalog progress with guided scope.
 replace_once(
