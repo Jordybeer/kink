@@ -109,7 +109,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   });
 
   test("nieuw profiel aanmaken direct na onboarding", async ({ page }) => {
-    // Fast-path via skip → age gate → consent → home, then the three-step profile sheet
+    // Fast-path via skip → age gate → consent → home, then the compact two-step profile sheet
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
     await page.waitForTimeout(400);
     await page.getByRole("button", { name: /18\+/i }).click();
@@ -121,8 +121,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByLabel("Naam of alias").fill("Testmeester");
     await page.getByRole("button", { name: /^Dominant/ }).click();
     await page.getByRole("button", { name: "Verder" }).click();
-    await page.getByRole("button", { name: "Verder" }).click();
-    await page.getByRole("button", { name: "Profiel maken" }).click();
+    await page.getByRole("button", { name: "Start vragen" }).click();
     await page.waitForLoadState("networkidle");
 
     // New profiles continue directly into the dedicated questionnaire surface.

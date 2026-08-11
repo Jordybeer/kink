@@ -39,7 +39,7 @@ export function profileIdFromLocation(
   const queryId = searchParams.get("id");
   if (queryId) return queryId;
 
-  const legacyMatch = /^\/profile\/([^/]+)$/.exec(pathname);
+  const legacyMatch = /^\/profile\/([^/]+)(?:\/questions)?$/.exec(pathname);
   return legacyMatch ? safeDecode(legacyMatch[1]) : "";
 }
 

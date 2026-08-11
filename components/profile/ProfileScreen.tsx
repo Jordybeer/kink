@@ -1,9 +1,11 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowRight,
   ChatCircle,
   FileArrowDown,
   FileText,
@@ -394,6 +396,34 @@ export default function ProfilePage({ params }: Props) {
         />
       </div>
 
+      {!shared && (
+        <div className="mx-4 mb-3">
+          <Link
+            href={`/profile/${currentProfile.id}/questions`}
+            className="focus-ring flex min-h-12 items-center gap-3 rounded-2xl px-3.5 py-3"
+            style={{
+              background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
+              border: "1px solid var(--border-accent)",
+            }}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                {runtime.coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                {runtime.coverage.complete
+                  ? "Je brede dekking staat. Discover en Deep Dive blijven beschikbaar."
+                  : `${runtime.coverage.answered} van ${runtime.coverage.total} dekkingsvragen beantwoord.`}
+              </p>
+            </div>
+            <span className="text-xs tabular-nums" style={{ color: "var(--accent-text)" }}>
+              {runtime.coverage.percent}%
+            </span>
+            <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
+          </Link>
+        </div>
+      )}
+
       {!shared && activeTab && (
         <div className="mx-4 mb-3">
           <SegmentedPill
@@ -709,14 +739,13 @@ export default function ProfilePage({ params }: Props) {
                 <div className="text-center py-8">
                   <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
                   {!shared && (
-                    <button
-                      type="button"
-                      onClick={() => switchTab("bewerken")}
-                      className="focus-ring min-h-11 px-4 rounded-xl text-sm font-semibold"
+                    <Link
+                      href={`/profile/${currentProfile.id}/questions`}
+                      className="focus-ring inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
                       style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                     >
-                      Begin met beoordelen
-                    </button>
+                      Start met vragen
+                    </Link>
                   )}
                 </div>
               ) : (

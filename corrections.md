@@ -157,3 +157,10 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 **Rule:** Na een toolverwisseling geen volgende write op routine uitvoeren. Pauzeer, benoem het gewenste resource-type hardop, controleer de volledige toolnaam en argumenten, en voer pas dan exact één mutatie uit. Voor PR-titel of PR-body is de enige toegestane writer `update_pull_request`.
 
 ---
+
+
+## 2026-08-11 — Een gerichte E2E-wijziging herschreef de hele onboardingguard
+
+**What went wrong:** Tijdens PR #318 moest alleen de laatste profiel-create test van drie naar twee stappen. De contents-rewrite verving echter vrijwel `e2e/new-user.spec.ts`, waardoor bewezen onboarding- en PIN-regressieguards verdwenen en CI op oude selectors vastliep.
+
+**Rule:** Voor een gerichte testflowwijziging blijft de rest van het specbestand byte-identiek aan de branchbasis. Controleer altijd de per-file PR patch vóór de gate; als de diff groter is dan de bedoelde test, herstel eerst vanaf `origin/dev` en pas alleen het minimale blok aan.

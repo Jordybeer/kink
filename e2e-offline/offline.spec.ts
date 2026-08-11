@@ -181,15 +181,14 @@ test("a profile born after the network cut opens and reloads immediately", async
   await page.getByLabel("Naam of alias").fill("Nova offline");
   await page.getByRole("button", { name: /^Submissive/ }).click();
   await page.getByRole("button", { name: "Verder" }).click();
-  await page.getByRole("button", { name: "Verder" }).click();
-  await page.getByRole("button", { name: "Profiel maken" }).click();
+  await page.getByRole("button", { name: "Start vragen" }).click();
 
-  await expect(page).toHaveURL(/\/profile\?id=[^&]+$/);
-  await expect(page.getByText("Nova offline").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/);
+  await expect(page.getByTestId("questions-screen")).toBeVisible();
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
 
   await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.getByText("Nova offline").first()).toBeVisible();
+  await expect(page.getByTestId("questions-screen")).toBeVisible();
   await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
 });
 

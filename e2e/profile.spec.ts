@@ -11,6 +11,14 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByText("Dominant").first()).toBeVisible();
   });
 
+  test("vragenlijst kan vanuit het profiel hervat worden", async ({ page }) => {
+    const resume = page.getByRole("link", { name: /Verder invullen|Verder ontdekken|Start met vragen/i }).first();
+    await expect(resume).toBeVisible();
+    await resume.click();
+    await expect(page).toHaveURL(/\/profile\/pw-alex-001\/questions$/);
+    await expect(page.getByTestId("questions-screen")).toBeVisible();
+  });
+
   test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
     await page.getByRole("tab", { name: "Bewerken" }).click();
     await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();
