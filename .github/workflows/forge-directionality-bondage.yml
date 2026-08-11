@@ -31,6 +31,9 @@ jobs:
       - name: Smeed de zes restraint-paren
         run: node .github/scripts/forge-directionality-bondage.mjs
 
+      - name: Trek de questionnaire-metadata mee
+        run: node .github/scripts/forge-directionality-bondage-metadata.mjs
+
       - name: Installeer exact wat de lockfile toestaat
         run: npm ci
 
@@ -46,6 +49,7 @@ jobs:
         run: |
           rm .github/scripts/forge-directionality-bondage.mjs
           rm .github/scripts/patch-bondage-forge-anchor.mjs
+          rm .github/scripts/forge-directionality-bondage-metadata.mjs
           rm .github/workflows/forge-directionality-bondage.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
