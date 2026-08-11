@@ -586,7 +586,7 @@ describe("adaptive questionnaire", () => {
 
   it("stops Dynamic only after the fixed coverage plan and every open probe are answered", () => {
     const current = dynamicProfile();
-    const plan = buildQuestionnaireCoveragePlan([]);
+    const plan = buildQuestionnaireCoveragePlan([], current.perspective);
     answerIds(current, plan.anchorIds, "maybe");
     expect(getQuestionnaireRuntime(current).complete).toBe(true);
 
@@ -780,14 +780,18 @@ describe("adaptive questionnaire", () => {
     expect(submissive.entries).toEqual({});
   });
 
-  it("uses perspective only to choose the compact role-affinity side, never a different concept path", () => {
+  it("uses perspective only to choose compact role/participation sides, never a different concept path", () => {
     const dominant = dynamicProfile();
     dominant.perspective = "dominant";
     const submissive = dynamicProfile();
     submissive.perspective = "submissive";
     const dominantIds = getQuestionnaireRuntime(dominant).queue.map((item) => item.kink.id);
     const submissiveIds = getQuestionnaireRuntime(submissive).queue.map((item) => item.kink.id);
-    const concepts = (ids: string[]) => ids.map((id) => directionalPairForKinkId(id)?.conceptId ?? id);
+    const concepts = (ids: string[]) => ids.map((id) =>
+      id === "luiers_dragen" || id === "diaper_partner_wearing"
+        ? "diaper_wearing"
+        : directionalPairForKinkId(id)?.conceptId ?? id,
+    );
     expect(dominantIds).not.toEqual(submissiveIds);
     expect(concepts(dominantIds)).toEqual(concepts(submissiveIds));
     expect(dominant.entries).toEqual({});

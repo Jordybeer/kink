@@ -417,6 +417,15 @@ export function selectConversationQuestion(
       if (canonicalProbe) return canonicalProbe;
     }
 
+    // Geen echte continuation beschikbaar: behoud de bestaande conversation
+    // spacing in plaats van een gewone related/topic-buur direct te serveren.
+    if (context.lastKinkId) {
+      const last = catalog.find((kink) => kink.id === context.lastKinkId);
+      if (last) {
+        const differentTopic = candidates.find((item) => !sharesTopic(last, item.kink));
+        if (differentTopic) return differentTopic;
+      }
+    }
     return candidates[0] ?? null;
   }
 

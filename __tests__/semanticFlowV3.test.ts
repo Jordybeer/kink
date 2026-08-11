@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { KINKS } from "@/lib/kinks";
-import { getQuestionnaireRuntime, searchAllKinks } from "@/lib/questionnaire";
+import {
+  buildQuestionnaireCoveragePlan,
+  getQuestionnaireRuntime,
+  searchAllKinks,
+} from "@/lib/questionnaire";
 import {
   ROLE_BOUND_DIRECTIONAL_CONCEPT_IDS,
   isQuestionnaireKinkEligibleForPerspective,
@@ -167,6 +171,16 @@ describe("questionnaire semantic flow v3", () => {
       phase: "topicBreakRequired",
       lastKinkId: "handcuffs_give",
     })?.kink.id).toBe("doctor_patient");
+
+    // Een gewone related/topic-buur is géén continuation en mag het mentale
+    // momentum niet kapen wanneer er geen sibling/canonical probe bestaat.
+    expect(selectConversationQuestion([
+      queueItem("spanking_implement_give"),
+      queueItem("doctor_patient"),
+    ], KINKS, {
+      phase: "preferContinuation",
+      lastKinkId: "spanking_hand_give",
+    })?.kink.id).toBe("doctor_patient");
   });
 
   it("models diaper wearing as self/partner participation without calling it give/receive", () => {
@@ -177,6 +191,19 @@ describe("questionnaire semantic flow v3", () => {
     expect(complementaryCompareLabel("diaper_partner_wearing", "Partner wearing diapers")).toContain("Partner draagt");
     expect(KINKS.some((kink) => kink.id === "diaper_partner_wearing")).toBe(true);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS.diaper_partner_wearing).toBeUndefined();
+
+    const dominantCoverage = buildQuestionnaireCoveragePlan([], "dominant").anchorIds;
+    const submissiveCoverage = buildQuestionnaireCoveragePlan([], "submissive").anchorIds;
+    expect(dominantCoverage).toContain("diaper_partner_wearing");
+    expect(dominantCoverage).not.toContain("luiers_dragen");
+    expect(submissiveCoverage).toContain("luiers_dragen");
+    expect(submissiveCoverage).not.toContain("diaper_partner_wearing");
+
+    const dominantDiscover = getQuestionnaireRuntime(ownProfile("dominant"), {
+      intent: { kind: "discover" },
+    }).queue.map((item) => item.kink.id);
+    expect(dominantDiscover).toContain("luiers_dragen");
+    expect(dominantDiscover).toContain("diaper_partner_wearing");
   });
 
   it("matches diaper self-wearing only against a partner's explicit partner-facing preference", () => {

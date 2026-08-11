@@ -104,6 +104,8 @@ Role-bound is eigen metadata en mag nooit stilzwijgend uit questionnaireAffinity
 
 Voor **role-neutrale** directionele concepten (zoals Pegging, fisting, rimming, worship en massage) filtert perspective geen kant weg. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.
 
+Een participation-specific concept mag wel een zachte Dynamic-affinity hebben zonder hard role-bound te worden. Bij diaper wearing gebruikt de Dominant-coverage daarom `partner draagt` en de Submissive-coverage `zelf dragen`; Discover, categorie-exploratie en Deep Dive houden beide posities beschikbaar.
+
 ## Engine-regels
 
 ### Pairflow is Conversation, geen inference

@@ -1,7 +1,7 @@
 import { KINKS } from "@/lib/kinks";
 import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
-import { questionnaireDirectionalKinkIdForPerspective } from "@/lib/directionality";
 import { isQuestionnaireKinkEligibleForPerspective } from "@/lib/questionnaireEligibility";
+import { questionnaireParticipationKinkIdForPerspective } from "@/lib/participation";
 import {
   derivePendingExpansionProbes,
   rankQuestionnaireQueueItems,
@@ -140,14 +140,14 @@ export function buildQuestionnaireCoveragePlan(
   const seen = new Set<string>();
 
   for (const sourceId of QUESTIONNAIRE_COVERAGE_ANCHOR_IDS) {
-    const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);
+    const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);
     if (!catalogIds.has(kinkId) || seen.has(kinkId)) continue;
     seen.add(kinkId);
     anchorIds.push(kinkId);
   }
   for (const interest of interests) {
     for (const sourceId of QUESTIONNAIRE_INTEREST_ANCHOR_IDS[interest]) {
-      const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);
+      const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);
       if (!catalogIds.has(kinkId)) continue;
       if (!interestAnchorIds.includes(kinkId)) interestAnchorIds.push(kinkId);
       if (seen.has(kinkId)) continue;
