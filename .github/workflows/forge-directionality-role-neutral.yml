@@ -25,6 +25,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Escape de docs-copy in de tijdelijke forge
+        run: node .github/scripts/patch-role-neutral-forge-syntax.mjs
+
       - name: Smeed Release F
         run: node .github/scripts/forge-directionality-role-neutral.mjs
 
@@ -42,6 +45,7 @@ jobs:
           BRANCH: feature/directionality-role-neutral-actions
         run: |
           rm .github/scripts/forge-directionality-role-neutral.mjs
+          rm .github/scripts/patch-role-neutral-forge-syntax.mjs
           rm .github/workflows/forge-directionality-role-neutral.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
