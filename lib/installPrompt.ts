@@ -29,6 +29,7 @@ export function detectIosInstallBrowser(
 }
 
 export const INSTALL_PROMPT_SNOOZE_MS = 5 * 24 * 60 * 60 * 1000;
+export const INSTALL_PROMPT_CHANGE_EVENT = "kinksync:installpromptchange";
 
 export interface InstallPromptPolicy {
   dismissals: number;
@@ -69,6 +70,12 @@ export function disableAutomaticInstallPrompt(policy: InstallPromptPolicy): Inst
 
 let _deferred: BeforeInstallPromptEvent | null = null;
 
+function emitInstallPromptChange(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(INSTALL_PROMPT_CHANGE_EVENT));
+  }
+}
+
 export function getInstallPrompt(): BeforeInstallPromptEvent | null {
   // The inline script stores the raw Event on window; cast it here.
   if (!_deferred && typeof window !== "undefined") {
@@ -81,9 +88,13 @@ export function getInstallPrompt(): BeforeInstallPromptEvent | null {
 export function setInstallPrompt(e: BeforeInstallPromptEvent): void {
   _deferred = e;
   (window as Window & { __installPrompt?: BeforeInstallPromptEvent }).__installPrompt = e;
+  emitInstallPromptChange();
 }
 
 export function clearInstallPrompt(): void {
   _deferred = null;
-  delete (window as Window & { __installPrompt?: BeforeInstallPromptEvent }).__installPrompt;
+  if (typeof window !== "undefined") {
+    delete (window as Window & { __installPrompt?: BeforeInstallPromptEvent }).__installPrompt;
+  }
+  emitInstallPromptChange();
 }
