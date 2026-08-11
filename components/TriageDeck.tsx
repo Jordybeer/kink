@@ -5,7 +5,9 @@ import { ArrowRight, CaretDown, CaretUp, Check, Circle, Eye, EyeSlash, Star, War
 import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import {
+  isConversationContinuation,
   selectConversationQuestion,
+  type ConversationPhase,
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
@@ -45,8 +47,7 @@ export default function TriageDeck({
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [holding, setHolding] = useState<string | null>(null);
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
-  const [requireNonProbe, setRequireNonProbe] = useState(false);
-  const [preferDirectionalSibling, setPreferDirectionalSibling] = useState(false);
+  const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const fadeTransition = reducedMotion
@@ -82,25 +83,23 @@ export default function TriageDeck({
     queue = deferredFocus.length ? deferredFocus : unanswered;
   }
   const currentItem = selectConversationQuestion(queue, KINKS, {
-    requireNonProbe,
-    preferDirectionalSibling,
+    phase: conversationPhase,
     lastKinkId: lastAnsweredId,
   });
   const held = holding ? kinks.find((kink) => kink.id === holding) : null;
   const current = held ?? currentItem?.kink ?? null;
 
   function handleSelect(kink: Kink, status: KinkStatus) {
-    const answeredWasProbe = currentItem?.kink.id === kink.id && currentItem.isProbe;
+    const answeredWasContinuation = isConversationContinuation(currentItem, lastAnsweredId);
     onStatusChange(kink.id, status);
     if (holdTimer.current) clearTimeout(holdTimer.current);
     if (status == null) {
       setHolding(null);
-      setPreferDirectionalSibling(false);
+      setConversationPhase("normal");
       return;
     }
     setLastAnsweredId(kink.id);
-    setRequireNonProbe(answeredWasProbe);
-    setPreferDirectionalSibling(true);
+    setConversationPhase(answeredWasContinuation ? "topicBreakRequired" : "preferContinuation");
     setHolding(kink.id);
     holdTimer.current = setTimeout(() => setHolding(null), CARD_FEEDBACK_MS);
   }
@@ -119,8 +118,7 @@ export default function TriageDeck({
   function skip(kink: Kink) {
     setHolding(null);
     setLastAnsweredId(kink.id);
-    setPreferDirectionalSibling(false);
-    if (currentItem?.kink.id === kink.id && !currentItem.isProbe) setRequireNonProbe(false);
+    setConversationPhase("normal");
     setSkipped((previous) => new Set(previous).add(kink.id));
   }
 

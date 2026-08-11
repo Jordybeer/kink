@@ -1219,6 +1219,14 @@ export const KINKS: CatalogKink[] = [
     description: "Als volwassene een luier dragen om lichamelijke, praktische, esthetische of erotische redenen, zonder ageplay, controle of vernedering te veronderstellen.",
     safetyNote: "Kies de juiste maat, voorkom schuren en controleer de huid. Vervang een natte of vervuilde luier tijdig en stop bij huidbeschadiging of aanhoudende irritatie.",
   },
+  {
+    id: "diaper_partner_wearing",
+    name: "Partner wearing diapers",
+    aliases: ["Partner in luiers", "Je partner een luier zien dragen", "Partner diaper wearing"],
+    category: "adult_ageplay",
+    level: 3,
+    description: "Het aantrekkelijk, erotisch of betekenisvol vinden dat een volwassen partner een luier draagt, zonder te veronderstellen dat je zelf een luier wilt dragen of dat ageplay, controle of vernedering erbij hoort.",
+  },
 
 
   // ─── Pet Play (gedetailleerd) ──────────────────────────────────────────────

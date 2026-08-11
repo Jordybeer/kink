@@ -73,23 +73,18 @@ Ontbrekende pair-metadata betekent geen directionele behandeling.
 
 ## Questionnaire-UX
 
-### Directionele siblings horen direct bij elkaar
+### Eén lokale continuation, daarna ademruimte
 
-De normale Conversation-regel blijft:
+Conversation gebruikt voortaan het mentale momentum van de gebruiker zonder een topic-tunnel te bouwen:
 
-> raak een onderwerp aan, ga even ergens anders heen, kom later terug voor echte verdieping.
+1. als een independently eligible sibling/complement bestaat, komt die direct eerst;
+2. anders mag na `Heel graag` of `Ja` maximaal één canonical follow-up van exact die bron direct volgen;
+3. na zo'n sibling of directe follow-up is een topic break verplicht wanneer een ander geldig onderwerp beschikbaar is;
+4. verdere positieve verdieping blijft pending en kan later terugkomen.
 
-Directionele siblings zijn hier de uitzondering. `geven` en `ontvangen` zijn geen inhoudelijke verdieping maar twee noodzakelijke assen van dezelfde vraag. Als beide zelfstandig eligible zijn, worden ze direct als paar gesteld:
+Een directionele sibling is geen inhoudelijke voorspelling maar de tweede expliciete as van hetzelfde concept. Diaper wearing bewijst dat een complement ook een andere participatie-as kan hebben: `zelf dragen ↔ partner draagt`, zonder die posities artificieel `Geven/Ontvangen` te noemen.
 
-```text
-Pegging — geven
-→ antwoord
-Pegging — ontvangen
-→ antwoord
-→ daarna ander onderwerp
-```
-
-De tweede kaart kan subtiel worden ingeleid met bijvoorbeeld `En ontvangen?`, zonder het eerste antwoord te kopiëren of te suggereren.
+`related` beïnvloedt uitsluitend ranking en opent nooit eligibility. Alleen de versioned canonical source→target-edge mag een nieuwe probe openen.
 
 ### Geen automatische koppeling
 
@@ -103,9 +98,11 @@ Iedere directionele kant blijft een zelfstandig mogelijk antwoord. Dominant of S
 
 Voor **rol-neutrale** directionele concepten (zoals Pegging, fisting of rimming) mag perspective geen kant wegfilteren. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden.
 
-Voor een **sterk rol-geassocieerde** pair (zoals de Release C impact- en bondageverticals) mag Dynamic één rol-aligned kant als basisvraag kiezen om de standaardflow niet kunstmatig te verdubbelen. De andere kant blijft **onbekend**, niet negatief, en blijft bereikbaar via Discover, Deep Dive, categorie-exploratie of gericht zoeken. Een Switch behoudt twee perspectieven; ieder perspectief krijgt zijn eigen zuinige basisflow.
+Voor **expliciet role-bound** directionele concepten geldt een aparte questionnaire-policy. Buiten Deep Dive blijft de guided flow aan de perspective-aligned kant: Dominant krijgt de give-kant, Submissive de receive-kant. De tegenovergestelde kant wordt niet als negatief ingevuld en wordt niet verwijderd; ze is alleen Deep-Dive-eligible binnen de guided questionnaire. Een Switch krijgt de aligned kant vanzelf in elk van zijn twee onafhankelijke perspectives. Handmatige catalogussearch blijft wel volledig expliciet toegankelijk.
 
-Role affinity is dus uitsluitend een eligibility/prioriteitsregel en nooit een voorkeurssignaal. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.
+Role-bound is eigen metadata en mag nooit stilzwijgend uit questionnaireAffinity worden afgeleid. De eerste audited set omvat high-confidence impact, fysieke restraints, gags, suspension en confinement. Blindfold, hood en sound deprivation behouden voorlopig alleen hun compacte affinity en worden niet hard role-bound gemaakt.
+
+Voor **role-neutrale** directionele concepten (zoals Pegging, fisting, rimming, worship en massage) filtert perspective geen kant weg. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.
 
 ## Engine-regels
 

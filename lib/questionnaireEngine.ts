@@ -6,7 +6,7 @@ import {
   questionnaireTopicsFor,
 } from "@/lib/questionnaireMetadata";
 import { questionnaireProgressionParentIds } from "@/lib/questionnaireProgression";
-import { directionalSiblingId } from "@/lib/directionality";
+import { complementarySiblingId } from "@/lib/participation";
 import type { Kink, KinkEntry } from "@/types";
 
 interface RankOptions {
@@ -44,12 +44,16 @@ export interface QuestionnaireQueueItem {
   reasons: ExpansionReason[];
 }
 
+export type ConversationPhase = "normal" | "preferContinuation" | "topicBreakRequired";
+
 export interface ConversationContext {
+  /** Nieuwe expliciete live-state; afwezig houdt de oude adaptersemantiek. */
+  phase?: ConversationPhase;
   /** Een positieve probe krijgt ademruimte voor de volgende zich aandient. */
   requireNonProbe?: boolean;
-  /** Alleen een expliciet antwoord mag een zelfstandig eligible sibling direct uitnodigen. */
+  /** Legacy adapter: alleen een zelfstandig eligible sibling direct uitnodigen. */
   preferDirectionalSibling?: boolean;
-  /** Een spacing-lijntje, nooit een fluistering over het volgende antwoord. */
+  /** Bron voor sibling/follow-up en topic spacing. */
   lastKinkId?: string | null;
 }
 
@@ -351,9 +355,21 @@ function sharesTopic(left: Kink, right: Kink): boolean {
   return leftTopics.some((topic) => rightTopics.has(topic));
 }
 
+export function isConversationContinuation(
+  item: QuestionnaireQueueItem | null | undefined,
+  sourceKinkId: string | null | undefined,
+): boolean {
+  if (!item || !sourceKinkId) return false;
+  if (complementarySiblingId(sourceKinkId) === item.kink.id) return true;
+  return item.isProbe && item.reasons.some((reason) =>
+    reason.sourceKinkId === sourceKinkId && reason.targetKinkId === item.kink.id,
+  );
+}
+
 /**
- * De laatste kaartdanser bewaakt alleen het ritme: een probe of topical echo mag
- * even wachten, maar Conversation maakt nooit antwoorden of eligibility aan.
+ * De kaartdanser bewaakt alleen het gesprek. Hij maakt nooit eligibility of
+ * antwoorden aan: een complement/probe moet al in de queue staan om direct te
+ * mogen volgen.
  */
 export function selectConversationQuestion(
   queue: readonly QuestionnaireQueueItem[],
@@ -372,6 +388,38 @@ export function selectConversationQuestion(
   );
   if (progressionReady.length > 0) candidates = progressionReady;
 
+  if (context.phase) {
+    if (context.phase === "topicBreakRequired" && context.lastKinkId) {
+      const last = catalog.find((kink) => kink.id === context.lastKinkId);
+      if (last) {
+        const differentTopic = candidates.find((item) =>
+          !isConversationContinuation(item, context.lastKinkId)
+          && !sharesTopic(last, item.kink),
+        );
+        if (differentTopic) return differentTopic;
+      }
+      return candidates[0] ?? null;
+    }
+
+    if (context.phase === "preferContinuation" && context.lastKinkId) {
+      const siblingId = complementarySiblingId(context.lastKinkId);
+      const sibling = siblingId
+        ? candidates.find((item) => item.kink.id === siblingId)
+        : undefined;
+      if (sibling) return sibling;
+
+      const canonicalProbe = candidates.find((item) =>
+        item.isProbe && item.reasons.some((reason) =>
+          reason.sourceKinkId === context.lastKinkId
+          && reason.targetKinkId === item.kink.id,
+        ),
+      );
+      if (canonicalProbe) return canonicalProbe;
+    }
+
+    return candidates[0] ?? null;
+  }
+
   if (context.requireNonProbe) {
     const nonProbes = candidates.filter((item) => !item.isProbe);
     if (nonProbes.length > 0) candidates = nonProbes;
@@ -379,7 +427,7 @@ export function selectConversationQuestion(
 
   if (context.lastKinkId) {
     if (context.preferDirectionalSibling) {
-      const siblingId = directionalSiblingId(context.lastKinkId);
+      const siblingId = complementarySiblingId(context.lastKinkId);
       const sibling = siblingId
         ? candidates.find((item) => item.kink.id === siblingId)
         : undefined;

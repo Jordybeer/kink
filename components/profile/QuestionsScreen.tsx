@@ -2,9 +2,9 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CaretDown, Check, Info, Sparkle, UserMinus } from "@phosphor-icons/react";
+import { CaretDown, Check, Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
-import { CATEGORIES, KINKS, kinkCategoryLabel } from "@/lib/kinks";
+import { CATEGORIES, kinkCategoryLabel } from "@/lib/kinks";
 import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
@@ -20,13 +20,6 @@ interface Props {
 
 const DYNAMIC_INTENT = { kind: "dynamic" } as const satisfies QuestionnaireIntent;
 type GlobalQuestionnaireIntent = Exclude<QuestionnaireIntent, { kind: "category" }>;
-
-const CATALOG_IDS_BY_CATEGORY = new Map<KinkCategoryId, string[]>();
-for (const kink of KINKS) {
-  const ids = CATALOG_IDS_BY_CATEGORY.get(kink.category) ?? [];
-  ids.push(kink.id);
-  CATALOG_IDS_BY_CATEGORY.set(kink.category, ids);
-}
 
 export default function QuestionsScreen({ params }: Props) {
   const { id } = use(params);
@@ -89,21 +82,17 @@ export default function QuestionsScreen({ params }: Props) {
   const activeRuntime = runtime!;
   const setup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
   const runtimeKind = activeRuntime.intent.kind;
-  const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
   const activeCategory = runtimeKind === "category" ? activeRuntime.intent.category : null;
-  const activeCategoryIds = activeCategory ? CATALOG_IDS_BY_CATEGORY.get(activeCategory) ?? [] : [];
-  const activeCategoryRated = activeCategoryIds.filter((kinkId) => currentProfile.entries[kinkId]?.status != null).length;
-  const catalogProgress = runtimeKind === "discover" || runtimeKind === "deepDive";
-  const progressPercent = activeCategory
-    ? Math.round((activeCategoryRated / Math.max(1, activeCategoryIds.length)) * 100)
-    : catalogProgress
-      ? Math.round((catalogRated / KINKS.length) * 100)
-      : activeRuntime.coverage.percent;
+  const scopedProgress = activeRuntime.scope;
+  const progressPercent = runtimeKind === "dynamic"
+    ? activeRuntime.coverage.percent
+    : Math.round((scopedProgress.answered / Math.max(1, scopedProgress.total)) * 100);
   const progressLabel = activeCategory
-    ? `${kinkCategoryLabel(activeCategory)} · ${activeCategoryRated} / ${activeCategoryIds.length}`
-    : catalogProgress
-      ? `${runtimeKind === "discover" ? "Discover" : "Deep Dive"} · ${catalogRated} / ${KINKS.length}`
-      : `Dynamic · ${activeRuntime.coverage.answered} / ${activeRuntime.coverage.total}`;
+    ? kinkCategoryLabel(activeCategory) + " · " + scopedProgress.answered + " / " + scopedProgress.total
+    : runtimeKind === "discover" || runtimeKind === "deepDive"
+      ? (runtimeKind === "discover" ? "Discover" : "Deep Dive") + " · " + scopedProgress.answered + " / " + scopedProgress.total
+      : "Dynamic · " + activeRuntime.coverage.answered + " / " + activeRuntime.coverage.total;
+  const discoverComplete = getQuestionnaireRuntime(currentProfile, { intent: { kind: "discover" } }).complete;
   const returnLabel = categoryReturnIntent.kind === "discover"
     ? "Discover"
     : categoryReturnIntent.kind === "deepDive"
@@ -302,14 +291,14 @@ export default function QuestionsScreen({ params }: Props) {
                 ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken."
                 : runtimeKind === "category"
                   ? "Alle onderwerpen in deze categorie hebben een expliciet antwoord."
-                  : `${catalogRated} van ${KINKS.length} onderwerpen zijn expliciet beoordeeld.`}
+                  : `${activeRuntime.scope.answered} van ${activeRuntime.scope.total} onderwerpen in deze modus zijn expliciet beoordeeld.`}
             </p>
             {runtimeKind === "dynamic" && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={startDiscover}
-                  disabled={catalogRated === KINKS.length}
+                  disabled={discoverComplete}
                   className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
                   style={{ border: "1px solid var(--border)", color: "var(--text)" }}
                 >

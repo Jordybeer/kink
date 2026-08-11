@@ -227,7 +227,7 @@ describe("adaptive questionnaire", () => {
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
-    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(5);
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(6);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).toEqual({
       spanking_hand_give: "spanking_implement_give",
       spanking_hand_receive: "spanking_implement_receive",
@@ -248,7 +248,6 @@ describe("adaptive questionnaire", () => {
       being_watched: "public_play",
       remote_toy: "remote_toy_publiek",
       nude_photography: "recording",
-      recording: "adult_content_creation",
       partner_masturbation_watch: "mutual_masturbation",
       anal_fingering_give: "anal_sex_give",
       anal_fingering_receive: "anal_sex_receive",
@@ -488,7 +487,7 @@ describe("adaptive questionnaire", () => {
     }
   });
 
-  it("opens only the first explicit media boundary at a time", () => {
+  it("stops immediate media expansion at the private recording boundary", () => {
     const photography = dynamicProfile();
     photography.entries.nude_photography = { status: "yes", comment: "foto is expliciet" };
     expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))
@@ -496,7 +495,7 @@ describe("adaptive questionnaire", () => {
 
     photography.entries.recording = { status: "yes", comment: "privé-opname is expliciet" };
     expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))
-      .toEqual(["adult_content_creation"]);
+      .toEqual([]);
   });
 
   it("opens local toy, masturbation, anal and diaper follow-ups without cross-propagation", () => {
@@ -597,13 +596,14 @@ describe("adaptive questionnaire", () => {
     expect(getQuestionnaireRuntime(current).complete).toBe(true);
   });
 
-  it("keeps Discover continuous instead of ending after a micro-wave", () => {
+  it("keeps Discover continuous inside its perspective-eligible scope", () => {
     const current = dynamicProfile();
     answerIds(current, buildQuestionnaireCoveragePlan([]).anchorIds);
     const exploring = getQuestionnaireRuntime(current, { intent: { kind: "discover" } });
     expect(exploring.complete).toBe(false);
     expect(exploring.queue.some((item) => item.lane === "discovery")).toBe(true);
-    expect(exploring.queue.length).toBe(KINKS.length - Object.keys(current.entries).length);
+    expect(exploring.scope.total).toBeLessThan(KINKS.length);
+    expect(exploring.queue.length).toBe(exploring.scope.total - exploring.scope.answered);
 
     answerIds(current, exploring.queue.slice(0, 3).map((item) => item.kink.id));
     const continued = getQuestionnaireRuntime(current, { intent: { kind: "discover" } });
@@ -611,7 +611,10 @@ describe("adaptive questionnaire", () => {
     expect(continued.queue.length).toBe(exploring.queue.length - 3);
 
     answerIds(current, continued.queue.map((item) => item.kink.id));
-    expect(getQuestionnaireRuntime(current, { intent: { kind: "discover" } }).complete).toBe(true);
+    const completed = getQuestionnaireRuntime(current, { intent: { kind: "discover" } });
+    expect(completed.complete).toBe(true);
+    expect(completed.scope.answered).toBe(completed.scope.total);
+    expect(Object.keys(current.entries).length).toBeLessThan(KINKS.length);
   });
 
   it("keeps category exploration local without creating answers or consuming outside probes", () => {

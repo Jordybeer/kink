@@ -1,8 +1,8 @@
 import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
 import {
-  directionalCompareLabel,
-  partnerDirectionalKinkId,
-} from "@/lib/directionality";
+  complementaryCompareLabel,
+  complementaryPartnerKinkId,
+} from "@/lib/participation";
 import {
   hasRating,
   isConflict,
@@ -52,7 +52,7 @@ export function getCompareEntry(profile: Profile | undefined, kinkId: string): K
 
 /** De concrete partner-ID die bij de A-richting hoort. */
 export function getComparePartnerKinkId(kinkId: string): string {
-  return partnerDirectionalKinkId(kinkId);
+  return complementaryPartnerKinkId(kinkId);
 }
 
 export function getComparePartnerEntry(profile: Profile | undefined, kinkId: string): KinkEntry {
@@ -60,7 +60,7 @@ export function getComparePartnerEntry(profile: Profile | undefined, kinkId: str
 }
 
 export function getCompareKinkLabel(kinkId: string, fallbackName: string): string {
-  return directionalCompareLabel(kinkId, fallbackName);
+  return complementaryCompareLabel(kinkId, fallbackName);
 }
 
 export function passesCompareFilter(
