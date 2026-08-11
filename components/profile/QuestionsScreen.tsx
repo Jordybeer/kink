@@ -2,20 +2,10 @@
 
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  CaretDown,
-  Check,
-  Info,
-  Sparkle,
-  UserMinus,
-} from "@phosphor-icons/react";
+import { CaretDown, Check, Info, Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
 import { CATEGORIES, KINKS, kinkCategoryLabel } from "@/lib/kinks";
-import {
-  getQuestionnaireRuntime,
-  type QuestionnaireIntent,
-} from "@/lib/questionnaire";
+import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
 import type { KinkCategoryId, KinkStatus } from "@/types";
@@ -164,48 +154,31 @@ export default function QuestionsScreen({ params }: Props) {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-lg flex-col px-4"
+      className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4"
       style={{
-        minHeight: "calc(100dvh - var(--nav-h))",
-        paddingTop: "max(0.75rem, env(safe-area-inset-top))",
-        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+        height: "calc(100dvh - var(--nav-h))",
+        paddingTop: "0.75rem",
+        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
       }}
       data-testid="questions-screen"
     >
       <header className="flex-none pb-3">
-        <div className="flex min-h-11 items-center gap-2">
-          <Link
-            href={`/profile/${currentProfile.id}`}
-            prefetch={false}
-            aria-label="Terug naar profiel"
-            className="focus-ring -ml-1 flex h-11 w-11 flex-none items-center justify-center rounded-xl"
-            style={{ color: "var(--text2)" }}
-          >
-            <ArrowLeft size={19} aria-hidden="true" />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--text2)" }}>
-              Voorkeuren
-            </p>
-            <h1
-              className="truncate text-xl leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}
-            >
-              {currentProfile.name}
-            </h1>
-          </div>
+        <div className="flex min-h-9 items-center gap-2">
+          <p className="min-w-0 flex-1 truncate text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+            {progressLabel}
+          </p>
           <button
             type="button"
             onClick={() => setStatusExplainerOpen(true)}
             aria-label="Uitleg over antwoordkeuzes"
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl"
+            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-xl"
             style={{ color: "var(--text2)" }}
           >
-            <Info size={18} aria-hidden="true" />
+            <Info size={17} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-1.5 flex items-center gap-3">
           <div
             className="h-1.5 flex-1 overflow-hidden rounded-full"
             role="progressbar"
@@ -263,7 +236,7 @@ export default function QuestionsScreen({ params }: Props) {
 
         {categoriesOpen && (
           <div
-            className="mt-2 grid grid-cols-2 gap-1.5 rounded-2xl p-2 ks-fade-in"
+            className="mt-2 grid max-h-[35dvh] grid-cols-2 gap-1.5 overflow-y-auto rounded-2xl p-2 ks-fade-in"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
             {CATEGORIES.map((category) => (
