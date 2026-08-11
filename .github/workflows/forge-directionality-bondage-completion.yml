@@ -28,6 +28,9 @@ jobs:
       - name: Smeed Release E
         run: node .github/scripts/forge-directionality-bondage-completion.mjs
 
+      - name: Trek de safety-ledger mee
+        run: node .github/scripts/patch-release-e-safety-audit.mjs
+
       - name: Installeer exact de lockfile
         run: npm ci
 
@@ -42,6 +45,7 @@ jobs:
           BRANCH: feature/directionality-bondage-completion
         run: |
           rm .github/scripts/forge-directionality-bondage-completion.mjs
+          rm .github/scripts/patch-release-e-safety-audit.mjs
           rm .github/workflows/forge-directionality-bondage-completion.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
