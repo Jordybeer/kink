@@ -62,8 +62,9 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   ],
   rope: [
     "rope_bondage_give", "rope_bondage_receive", "shibari_give", "shibari_receive",
-    "suspension_rechtop", "suspension_ondersteboven",
-    "suspension_horizontaal",
+    "suspension_rechtop_give", "suspension_rechtop_receive",
+    "suspension_ondersteboven_give", "suspension_ondersteboven_receive",
+    "suspension_horizontaal_give", "suspension_horizontaal_receive",
   ],
   restraints: [
     "handcuffs_give", "handcuffs_receive", "leather_cuffs_give", "leather_cuffs_receive",
@@ -71,7 +72,11 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "mummification_give", "mummification_receive", "straitjacket_give", "straitjacket_receive",
     "borsten_afbinden", "sleepsack", "predicament_bondage", "vacuumbed",
   ],
-  gags: ["gag_ball_give", "gag_ball_receive", "gag_bit_give", "gag_bit_receive", "gag_tape_give", "gag_tape_receive", "gag_opblaasbaar", "gag_penisvorm", "gag_rubber"],
+  gags: [
+    "gag_ball_give", "gag_ball_receive", "gag_bit_give", "gag_bit_receive",
+    "gag_tape_give", "gag_tape_receive", "gag_opblaasbaar_give", "gag_opblaasbaar_receive",
+    "gag_penisvorm_give", "gag_penisvorm_receive", "gag_rubber_give", "gag_rubber_receive",
+  ],
   protocols: [
     "rules_protocols", "rituelen_protocols", "toestemmingsprotocol", "spraakprotocol",
     "hoog_protocol",

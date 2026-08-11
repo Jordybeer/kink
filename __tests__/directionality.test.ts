@@ -20,7 +20,7 @@ import {
 import { encodeProfile, decodeAny } from "@/lib/shareProfile";
 import { generateProfileOwnerKey, signProfileConsent, verifyProfileConsent } from "@/lib/consentProof";
 import { sanitizeProfileFull } from "@/lib/sanitizeProfile";
-import { migrateStoredDirectionalityV22, STORE_PERSIST_VERSION } from "@/lib/storeCore";
+import { migrateStoredDirectionalityV23, STORE_PERSIST_VERSION } from "@/lib/storeCore";
 import { QUESTIONNAIRE_CANONICAL_PROBE_TARGETS, QUESTIONNAIRE_FOLLOW_UPS } from "@/lib/questionnaireMetadata";
 import { QUESTIONNAIRE_PROGRESSION_EDGES } from "@/lib/questionnaireProgression";
 import type { KinkEntry, Profile, ProfilePerspective } from "@/types";
@@ -61,7 +61,7 @@ describe("directionele kinkvragen", () => {
       { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
       { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
     ]);
-    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(34);
+    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(43);
     expect(DIRECTIONAL_KINK_PAIRS.slice(9).every((pair) =>
       "questionnaireAffinity" in pair
       && pair.questionnaireAffinity.dominant === "give"
@@ -79,6 +79,9 @@ describe("directionele kinkvragen", () => {
       "leather_cuffs", "gag_ball", "gag_bit", "blindfold", "sound_deprivation",
       "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",
       "spreader_bar", "hogtie", "mummification", "straitjacket", "gag_tape", "hood",
+      "gag_opblaasbaar", "gag_penisvorm", "gag_rubber",
+      "suspension_rechtop", "suspension_ondersteboven", "suspension_horizontaal",
+      "opsluiting_kooi", "opsluiting_donker", "opsluiting_kleine_ruimte",
     ]) {
       expect(ids.has(retired), retired).toBe(false);
     }
@@ -148,6 +151,9 @@ describe("directionele kinkvragen", () => {
     expect(partnerDirectionalKinkId("trampling_receive")).toBe("trampling_give");
     expect(partnerDirectionalKinkId("spreader_bar_give")).toBe("spreader_bar_receive");
     expect(partnerDirectionalKinkId("hood_receive")).toBe("hood_give");
+    expect(partnerDirectionalKinkId("gag_rubber_give")).toBe("gag_rubber_receive");
+    expect(partnerDirectionalKinkId("suspension_rechtop_receive")).toBe("suspension_rechtop_give");
+    expect(partnerDirectionalKinkId("opsluiting_kooi_give")).toBe("opsluiting_kooi_receive");
   });
 
   it("searches both variants through the shared concept vocabulary", () => {
@@ -160,6 +166,9 @@ describe("directionele kinkvragen", () => {
     const restraintIds = searchAllKinks("spreader bar").map((kink) => kink.id);
     expect(restraintIds).toContain("spreader_bar_give");
     expect(restraintIds).toContain("spreader_bar_receive");
+    const suspensionIds = searchAllKinks("upright suspension").map((kink) => kink.id);
+    expect(suspensionIds).toContain("suspension_rechtop_give");
+    expect(suspensionIds).toContain("suspension_rechtop_receive");
   });
 
   it("houdt Impact-instrumenten directioneel zonder een escalatieladder te verzinnen", () => {
@@ -191,6 +200,24 @@ describe("directionele kinkvragen", () => {
     }
     expect(questionnaireDirectionalKinkIdForPerspective("spreader_bar_give", "submissive")).toBe("spreader_bar_receive");
     expect(questionnaireDirectionalKinkIdForPerspective("hood_receive", "dominant")).toBe("hood_give");
+  });
+
+  it("houdt de resterende gag-, suspension- en confinementacties expliciet zonder inferentie", () => {
+    const ids = [
+      "gag_opblaasbaar_give", "gag_opblaasbaar_receive", "gag_penisvorm_give", "gag_penisvorm_receive",
+      "gag_rubber_give", "gag_rubber_receive", "suspension_rechtop_give", "suspension_rechtop_receive",
+      "suspension_ondersteboven_give", "suspension_ondersteboven_receive", "suspension_horizontaal_give", "suspension_horizontaal_receive",
+      "opsluiting_kooi_give", "opsluiting_kooi_receive", "opsluiting_donker_give", "opsluiting_donker_receive",
+      "opsluiting_kleine_ruimte_give", "opsluiting_kleine_ruimte_receive",
+    ];
+    for (const id of ids) {
+      expect(QUESTIONNAIRE_FOLLOW_UPS[id]).toBeUndefined();
+      expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS[id]).toBeUndefined();
+      expect(QUESTIONNAIRE_PROGRESSION_EDGES.some(([parent, child]) => parent === id || child === id)).toBe(false);
+    }
+    expect(questionnaireDirectionalKinkIdForPerspective("gag_rubber_give", "submissive")).toBe("gag_rubber_receive");
+    expect(questionnaireDirectionalKinkIdForPerspective("suspension_rechtop_receive", "dominant")).toBe("suspension_rechtop_give");
+    expect(questionnaireDirectionalKinkIdForPerspective("opsluiting_kooi_give", "submissive")).toBe("opsluiting_kooi_receive");
   });
 
   it("drops the old ambiguous answer instead of copying it to either direction", () => {
@@ -233,10 +260,20 @@ describe("directionele kinkvragen", () => {
     expect(restraintRetired.spreader_bar_give).toBeUndefined();
     expect(restraintRetired.spreader_bar_receive).toBeUndefined();
     expect(restraintRetired.hood).toBeUndefined();
+    const completionRetired = stripDeprecatedDirectionalEntries({
+      gag_opblaasbaar: { status: "yes", comment: "oud gecombineerd" },
+      suspension_rechtop: { status: "maybe", comment: "oud gecombineerd" },
+      opsluiting_kooi: { status: "hard_no", comment: "oud gecombineerd" },
+    });
+    expect(completionRetired.gag_opblaasbaar).toBeUndefined();
+    expect(completionRetired.gag_opblaasbaar_give).toBeUndefined();
+    expect(completionRetired.gag_opblaasbaar_receive).toBeUndefined();
+    expect(completionRetired.suspension_rechtop).toBeUndefined();
+    expect(completionRetired.opsluiting_kooi).toBeUndefined();
   });
 
   it("migreert v19 profielen en snapshots en bewaart de consent chain-anchor", async () => {
-    expect(STORE_PERSIST_VERSION).toBe(22);
+    expect(STORE_PERSIST_VERSION).toBe(23);
     const profile = ownProfile("dominant", {
       spanking_hand: { status: "yes", comment: "oud C" },
       anal_sex: { status: "willing", comment: "oud B" },
@@ -245,7 +282,7 @@ describe("directionele kinkvragen", () => {
     const ownerKey = await generateProfileOwnerKey(profile.id);
     const signed = await signProfileConsent(profile, ownerKey);
     profile.consentProof = signed.proof;
-    const migrated = migrateStoredDirectionalityV22({
+    const migrated = migrateStoredDirectionalityV23({
       profiles: [profile],
       profileSnapshots: [{
         id: "snapshot-legacy",
@@ -285,7 +322,7 @@ describe("directionele kinkvragen", () => {
       caning: { status: "yes", comment: "oud gecombineerd" },
       praise_kink: { status: "maybe", comment: "blijft" },
     });
-    const migrated = migrateStoredDirectionalityV22({ profiles: [profile] }, 20);
+    const migrated = migrateStoredDirectionalityV23({ profiles: [profile] }, 20);
     expect(migrated.profiles?.[0].entries.caning).toBeUndefined();
     expect(migrated.profiles?.[0].entries.caning_give).toBeUndefined();
     expect(migrated.profiles?.[0].entries.caning_receive).toBeUndefined();
@@ -297,17 +334,29 @@ describe("directionele kinkvragen", () => {
       spreader_bar: { status: "yes", comment: "oud gecombineerd" },
       praise_kink: { status: "maybe", comment: "blijft" },
     });
-    const migrated = migrateStoredDirectionalityV22({ profiles: [profile] }, 21);
+    const migrated = migrateStoredDirectionalityV23({ profiles: [profile] }, 21);
     expect(migrated.profiles?.[0].entries.spreader_bar).toBeUndefined();
     expect(migrated.profiles?.[0].entries.spreader_bar_give).toBeUndefined();
     expect(migrated.profiles?.[0].entries.spreader_bar_receive).toBeUndefined();
     expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");
   });
 
-  it("laat v22 state ongemoeid door dezelfde migratieboundary", () => {
-    const profile = ownProfile("dominant", { spreader_bar_give: { status: "yes", comment: "expliciet" } });
-    const migrated = migrateStoredDirectionalityV22({ profiles: [profile] }, 22);
-    expect(migrated.profiles?.[0].entries.spreader_bar_give?.status).toBe("yes");
+  it("migreert v22 completion-antwoorden zonder een kant te verzinnen", () => {
+    const profile = ownProfile("dominant", {
+      suspension_rechtop: { status: "yes", comment: "oud gecombineerd" },
+      praise_kink: { status: "maybe", comment: "blijft" },
+    });
+    const migrated = migrateStoredDirectionalityV23({ profiles: [profile] }, 22);
+    expect(migrated.profiles?.[0].entries.suspension_rechtop).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.suspension_rechtop_give).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.suspension_rechtop_receive).toBeUndefined();
+    expect(migrated.profiles?.[0].entries.praise_kink?.status).toBe("maybe");
+  });
+
+  it("laat v23 state ongemoeid door dezelfde migratieboundary", () => {
+    const profile = ownProfile("dominant", { suspension_rechtop_give: { status: "yes", comment: "expliciet" } });
+    const migrated = migrateStoredDirectionalityV23({ profiles: [profile] }, 23);
+    expect(migrated.profiles?.[0].entries.suspension_rechtop_give?.status).toBe("yes");
   });
 
   it("sanitizes and shares both explicit directions independently", () => {
