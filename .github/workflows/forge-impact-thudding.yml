@@ -1,0 +1,76 @@
+name: forge impact thudding
+
+on:
+  push:
+    branches: [feature/directionality-impact-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Maak thudding overal dezelfde kink
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          expected = {
+            "lib/kinks.ts": 2,
+            "lib/directionality.ts": 1,
+            "directie.md": 1,
+            "docs/directionality-catalog-audit.md": 1,
+            "docs/directionality-role-affinity.md": 1,
+            "docs/questionnaire-progression-gates.md": 1,
+            "planned-changes.md": 1,
+          }
+          for path, count in expected.items():
+              p = Path(path)
+              text = p.read_text()
+              actual = text.count("thuding")
+              if actual != count:
+                  raise SystemExit(f"{path}: expected {count} thuding occurrence(s), found {actual}")
+              p.write_text(text.replace("thuding", "thudding"))
+          PY
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Trek de tijdelijke zweep weer uit de tree
+        shell: bash
+        run: |
+          python - <<'PY'
+          import subprocess
+          expected = {
+            "lib/kinks.ts",
+            "lib/directionality.ts",
+            "directie.md",
+            "docs/directionality-catalog-audit.md",
+            "docs/directionality-role-affinity.md",
+            "docs/questionnaire-progression-gates.md",
+            "planned-changes.md",
+          }
+          changed = set(subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines())
+          product = {path for path in changed if not path.startswith(".github/workflows/")}
+          if product != expected:
+              raise SystemExit(f"unexpected product diff: {sorted(product ^ expected)}")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/forge-impact-thudding.yml
+          git add lib/kinks.ts lib/directionality.ts directie.md docs/directionality-catalog-audit.md \
+            docs/directionality-role-affinity.md docs/questionnaire-progression-gates.md planned-changes.md
+          git commit -m "fix: spel thudding overal met twee d's"
+          git push origin HEAD:feature/directionality-impact-v2
