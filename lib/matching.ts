@@ -1,4 +1,4 @@
-import type { KinkEntry, KinkStatus, Profile } from "@/types";
+import type { KinkEntry, Profile } from "@/types";
 import { KINKS } from "@/lib/kinks";
 import { complementaryComparisonEntries } from "@/lib/participation";
 
