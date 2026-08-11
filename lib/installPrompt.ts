@@ -68,6 +68,10 @@ export function disableAutomaticInstallPrompt(policy: InstallPromptPolicy): Inst
   return { ...policy, neverAsk: true, snoozedUntil: 0 };
 }
 
+export function enableAutomaticInstallPrompt(): InstallPromptPolicy {
+  return { ...DEFAULT_INSTALL_PROMPT_POLICY };
+}
+
 let _deferred: BeforeInstallPromptEvent | null = null;
 
 function emitInstallPromptChange(): void {

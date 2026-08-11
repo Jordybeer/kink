@@ -3,6 +3,7 @@ import {
   DEFAULT_INSTALL_PROMPT_POLICY,
   disableAutomaticInstallPrompt,
   detectIosInstallBrowser,
+  enableAutomaticInstallPrompt,
   INSTALL_PROMPT_SNOOZE_MS,
   shouldAutoShowInstallPrompt,
   snoozeInstallPrompt,
@@ -64,5 +65,16 @@ describe("install prompt policy", () => {
     const disabled = disableAutomaticInstallPrompt(fresh);
     expect(disabled.neverAsk).toBe(true);
     expect(shouldAutoShowInstallPrompt(disabled, true, Number.MAX_SAFE_INTEGER)).toBe(false);
+  });
+
+  it("kan automatische installatievragen via Instellingen opnieuw toelaten", () => {
+    const disabled = disableAutomaticInstallPrompt({
+      dismissals: 2,
+      snoozedUntil: now + INSTALL_PROMPT_SNOOZE_MS,
+      neverAsk: false,
+    });
+    expect(enableAutomaticInstallPrompt()).toEqual(fresh);
+    expect(shouldAutoShowInstallPrompt(enableAutomaticInstallPrompt(), true, now)).toBe(true);
+    expect(disabled).not.toEqual(fresh);
   });
 });

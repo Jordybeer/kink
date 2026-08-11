@@ -1,9 +1,10 @@
 "use client";
+
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  BellSimple,
   CaretRight,
-  Database,
   DeviceMobile,
   DownloadSimple,
   Fingerprint,
@@ -14,8 +15,10 @@ import {
   UploadSimple,
 } from "@phosphor-icons/react";
 import Sheet from "@/components/ui/Sheet";
+import Switch from "@/components/ui/Switch";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useStore } from "@/lib/store";
+import { useInstallPromptPolicyStore } from "@/lib/installPromptPolicyStore";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
 import {
   clearInstallPrompt,
@@ -35,6 +38,67 @@ interface SettingsSheetProps {
   importSuccess: string | null;
 }
 
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h3
+      className="mb-2 px-1 font-serif text-sm italic"
+      style={{ color: "var(--text2)" }}
+    >
+      {children}
+    </h3>
+  );
+}
+
+function SettingsGroup({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="overflow-hidden rounded-2xl"
+      style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function RowContent({
+  icon,
+  title,
+  description,
+  trailing,
+  danger = false,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  trailing?: ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <>
+      <span
+        className="flex w-7 flex-none items-center justify-center"
+        style={{ color: danger ? "var(--hard-no)" : "var(--text2)" }}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className="block text-sm font-semibold"
+          style={{ color: danger ? "var(--hard-no)" : "var(--text)" }}
+        >
+          {title}
+        </span>
+        <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
+          {description}
+        </span>
+      </span>
+      {trailing && <span className="flex-none">{trailing}</span>}
+    </>
+  );
+}
+
+const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
+
 export default function SettingsSheet({
   open,
   onClose,
@@ -45,7 +109,18 @@ export default function SettingsSheet({
   importError,
   importSuccess,
 }: SettingsSheetProps) {
-  const { appLockEnabled, biometricEnabled, disableBiometric, enableBiometric } = useStore();
+  const appLockEnabled = useStore((state) => state.appLockEnabled);
+  const biometricEnabled = useStore((state) => state.biometricEnabled);
+  const disableBiometric = useStore((state) => state.disableBiometric);
+  const enableBiometric = useStore((state) => state.enableBiometric);
+  const installPromptDismissed = useStore((state) => state.installPromptDismissed);
+  const dismissInstallPrompt = useStore((state) => state.dismissInstallPrompt);
+
+  const promptDismissals = useInstallPromptPolicyStore((state) => state.dismissals);
+  const promptNeverAsk = useInstallPromptPolicyStore((state) => state.neverAsk);
+  const enableAutomaticPrompt = useInstallPromptPolicyStore((state) => state.enableAutomaticPrompt);
+  const disableAutomaticPrompt = useInstallPromptPolicyStore((state) => state.disableAutomaticPrompt);
+
   const [platformBioAvailable, setPlatformBioAvailable] = useState(false);
   const [bioRegistering, setBioRegistering] = useState(false);
   const [bioError, setBioError] = useState<string | null>(null);
@@ -53,6 +128,9 @@ export default function SettingsSheet({
   const [installGuideOpen, setInstallGuideOpen] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const installTimerRef = useRef<number | null>(null);
+
+  const automaticInstallPromptsEnabled =
+    !installPromptDismissed && !promptNeverAsk && promptDismissals < 2;
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable()
@@ -117,222 +195,209 @@ export default function SettingsSheet({
     }, 280);
   }
 
+  function handleAutomaticPromptChange(enabled: boolean) {
+    if (enabled) {
+      enableAutomaticPrompt();
+      useStore.setState({ installPromptDismissed: false });
+      return;
+    }
+    disableAutomaticPrompt();
+    dismissInstallPrompt();
+  }
+
   return (
     <>
       <Sheet open={open} onClose={onClose} title="Instellingen" aria-label="Instellingen">
-        <div className="grid gap-3">
-          <section
-            className="rounded-2xl p-3.5"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-none"
-                style={{ background: "var(--surface3)", color: "var(--accent)" }}
-              >
-                <Database size={20} weight="duotone" aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold">Back-up &amp; herstel</h3>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                  Bewaar of herstel je lokale gegevens.
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-6 pb-1">
+          <section>
+            <SectionTitle>Gegevens</SectionTitle>
+            <SettingsGroup>
               <button
                 type="button"
                 onClick={onExportBackup}
-                className="focus-ring min-h-11 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                className="focus-ring flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
               >
-                <DownloadSimple size={16} aria-hidden="true" />
-                Back-up
+                <RowContent
+                  icon={<DownloadSimple size={19} aria-hidden="true" />}
+                  title="Back-up maken"
+                  description="Bewaar een kopie van je lokale gegevens"
+                  trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
+                />
               </button>
+
               <label
-                className="relative min-h-11 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--accent)]"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-16 w-full cursor-pointer items-center gap-3 px-4 py-3 text-left"
+                style={DIVIDER_STYLE}
               >
-                <UploadSimple size={16} aria-hidden="true" />
-                Herstel
                 <input
                   type="file"
                   accept=".json"
                   onChange={onImportFile}
                   className="sr-only"
                 />
+                <RowContent
+                  icon={<UploadSimple size={19} aria-hidden="true" />}
+                  title="Back-up herstellen"
+                  description="Zet eerder bewaarde gegevens terug"
+                  trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
+                />
               </label>
-            </div>
+            </SettingsGroup>
             {importError && (
-              <p className="text-xs mt-2" role="alert" style={{ color: "var(--hard-no)" }}>{importError}</p>
+              <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
+                {importError}
+              </p>
             )}
             {importSuccess && (
-              <p className="text-xs mt-2" role="status" style={{ color: "var(--willing)" }}>{importSuccess}</p>
+              <p className="mt-2 px-1 text-xs" role="status" style={{ color: "var(--willing)" }}>
+                {importSuccess}
+              </p>
             )}
           </section>
 
-          <section
-            className="rounded-2xl p-3.5"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-none"
-                style={{ background: "var(--surface3)", color: "var(--accent)" }}
-              >
-                <LockKey size={20} weight="duotone" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-semibold">Appvergrendeling</h3>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                  {appLockEnabled ? "PIN-vergrendeling actief" : "Nog geen vergrendeling ingesteld"}
-                </p>
-              </div>
-            </div>
-
-            {!appLockEnabled ? (
+          <section>
+            <SectionTitle>Beveiliging</SectionTitle>
+            <SettingsGroup>
               <button
                 type="button"
                 onClick={() => onOpenPinFlow(0)}
-                className="focus-ring w-full min-h-11 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                className="focus-ring flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
               >
-                <Key size={16} aria-hidden="true" />
-                PIN instellen
+                <RowContent
+                  icon={<LockKey size={19} aria-hidden="true" />}
+                  title="Appvergrendeling"
+                  description={appLockEnabled ? "PIN-vergrendeling actief" : "Bescherm KinkSync met een PIN"}
+                  trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
+                />
               </button>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
+
+              {appLockEnabled && platformBioAvailable && (
+                <div
+                  className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5"
+                  style={DIVIDER_STYLE}
+                >
+                  <RowContent
+                    icon={<Fingerprint size={19} aria-hidden="true" />}
+                    title="Biometrie"
+                    description="Ontgrendel met de beveiliging van je toestel"
+                    trailing={
+                      <Switch
+                        checked={biometricEnabled}
+                        disabled={bioRegistering}
+                        onCheckedChange={(checked) => {
+                          if (checked) void handleEnableBiometric();
+                          else disableBiometric();
+                        }}
+                        label="Biometrische ontgrendeling"
+                      />
+                    }
+                  />
+                </div>
+              )}
+
+              {appLockEnabled && (
                 <button
                   type="button"
-                  onClick={() => onOpenPinFlow(0)}
-                  className="focus-ring min-h-11 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2"
-                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                  onClick={() => onOpenPinFlow(2)}
+                  className="focus-ring flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
+                  style={DIVIDER_STYLE}
                 >
-                  <Key size={15} aria-hidden="true" />
-                  PIN wijzigen
+                  <RowContent
+                    icon={<Key size={19} aria-hidden="true" />}
+                    title="PIN-vergrendeling verwijderen"
+                    description="Laat je lokale gegevens staan"
+                    danger
+                    trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--hard-no)" }} />}
+                  />
                 </button>
-
-                {platformBioAvailable ? (
-                  biometricEnabled ? (
-                    <button
-                      type="button"
-                      onClick={() => disableBiometric()}
-                      className="focus-ring min-h-11 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2"
-                      style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)" }}
-                    >
-                      <Fingerprint size={16} aria-hidden="true" />
-                      Biometrie uit
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleEnableBiometric}
-                      disabled={bioRegistering}
-                      className="focus-ring min-h-11 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-50"
-                      style={{ background: "var(--surface)", border: "1px solid var(--border-accent)", color: "var(--accent)" }}
-                    >
-                      <Fingerprint size={16} aria-hidden="true" />
-                      {bioRegistering ? "Bezig…" : "Biometrie aan"}
-                    </button>
-                  )
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => onOpenPinFlow(2)}
-                    className="focus-ring min-h-11 rounded-xl text-xs font-semibold"
-                    style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
-                  >
-                    PIN verwijderen
-                  </button>
-                )}
-
-                {platformBioAvailable && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenPinFlow(2)}
-                    className="focus-ring col-span-2 min-h-10 rounded-xl text-xs font-semibold"
-                    style={{ color: "var(--hard-no)", border: "1px solid color-mix(in srgb, var(--hard-no) 45%, var(--border))" }}
-                  >
-                    PIN-vergrendeling verwijderen
-                  </button>
-                )}
-              </div>
+              )}
+            </SettingsGroup>
+            {bioError && (
+              <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
+                {bioError}
+              </p>
             )}
-            {bioError && <p className="text-xs mt-2" role="alert" style={{ color: "var(--hard-no)" }}>{bioError}</p>}
           </section>
 
-          {installAvailable && (
-            <button
-              type="button"
-              onClick={handleOpenInstallGuide}
-              className="focus-ring min-h-12 rounded-2xl px-3.5 flex items-center gap-3 text-left"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-            >
-              <span
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-none"
-                style={{ background: "var(--surface3)", color: "var(--accent)" }}
+          <section>
+            <SectionTitle>App</SectionTitle>
+            <SettingsGroup>
+              {installAvailable && (
+                <button
+                  type="button"
+                  onClick={handleOpenInstallGuide}
+                  className="focus-ring flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
+                >
+                  <RowContent
+                    icon={<DeviceMobile size={19} aria-hidden="true" />}
+                    title="KinkSync installeren"
+                    description="Open de installatiestappen voor dit toestel"
+                    trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
+                  />
+                </button>
+              )}
+
+              {installAvailable && (
+                <div
+                  className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5"
+                  style={DIVIDER_STYLE}
+                >
+                  <RowContent
+                    icon={<BellSimple size={19} aria-hidden="true" />}
+                    title="Installatievragen"
+                    description={
+                      automaticInstallPromptsEnabled
+                        ? "Mag na gebruik een rustige installatiehint tonen"
+                        : "Alleen nog handmatig via Instellingen"
+                    }
+                    trailing={
+                      <Switch
+                        checked={automaticInstallPromptsEnabled}
+                        onCheckedChange={handleAutomaticPromptChange}
+                        label="Automatische installatievragen"
+                      />
+                    }
+                  />
+                </div>
+              )}
+
+              <Link
+                href="/about"
+                onClick={onClose}
+                className="focus-ring flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
+                style={installAvailable ? DIVIDER_STYLE : undefined}
               >
-                <DeviceMobile size={18} aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">App installeren</span>
-                <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                  Open de installatiestappen wanneer jij wilt
-                </span>
-              </span>
-              <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
-            </button>
-          )}
+                <RowContent
+                  icon={<ShieldCheck size={19} aria-hidden="true" />}
+                  title="Over KinkSync"
+                  description="Privacy, verificatie en lokale opslag"
+                  trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
+                />
+              </Link>
+            </SettingsGroup>
+          </section>
 
-          <Link
-            href="/about"
-            onClick={onClose}
-            className="focus-ring min-h-12 rounded-2xl px-3.5 flex items-center gap-3 text-left"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <span
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-none"
-              style={{ background: "var(--surface3)", color: "var(--accent)" }}
-            >
-              <ShieldCheck size={18} aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">Hoe KinkSync werkt</span>
-              <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                Privacy, verificatie en lokale opslag
-              </span>
-            </span>
-            <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => { onClose(); onOpenDestroy(); }}
-            className="focus-ring min-h-12 rounded-2xl px-3.5 flex items-center gap-3 text-left"
-            style={{ background: "color-mix(in srgb, var(--hard-no) 5%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--hard-no) 45%, var(--border))" }}
-          >
-            <span
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-none"
-              style={{ background: "color-mix(in srgb, var(--hard-no) 12%, transparent)", color: "var(--hard-no)" }}
-            >
-              <Trash size={18} aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold" style={{ color: "var(--hard-no)" }}>Alle data verwijderen</span>
-              <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>Permanent en onomkeerbaar</span>
-            </span>
-          </button>
-        </div>
-
-        <div className="pt-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="focus-ring w-full min-h-12 rounded-xl text-sm font-semibold"
-            style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
-          >
-            Sluit
-          </button>
+          <section>
+            <SectionTitle>Geavanceerd</SectionTitle>
+            <SettingsGroup>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenDestroy();
+                }}
+                className="focus-ring flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
+              >
+                <RowContent
+                  icon={<Trash size={19} aria-hidden="true" />}
+                  title="Alle data verwijderen"
+                  description="Wis alle lokale gegevens op dit toestel"
+                  danger
+                  trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--hard-no)" }} />}
+                />
+              </button>
+            </SettingsGroup>
+          </section>
         </div>
       </Sheet>
 

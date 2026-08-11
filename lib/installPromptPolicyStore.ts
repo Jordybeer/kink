@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import {
   DEFAULT_INSTALL_PROMPT_POLICY,
   disableAutomaticInstallPrompt,
+  enableAutomaticInstallPrompt,
   snoozeInstallPrompt,
   type InstallPromptPolicy,
 } from "@/lib/installPrompt";
@@ -10,6 +11,7 @@ import {
 interface InstallPromptPolicyState extends InstallPromptPolicy {
   snoozeAutomaticPrompt: (now?: number) => void;
   disableAutomaticPrompt: () => void;
+  enableAutomaticPrompt: () => void;
 }
 
 function policyFromState(state: InstallPromptPolicyState): InstallPromptPolicy {
@@ -29,6 +31,9 @@ export const useInstallPromptPolicyStore = create<InstallPromptPolicyState>()(
       },
       disableAutomaticPrompt() {
         set((state) => disableAutomaticInstallPrompt(policyFromState(state)));
+      },
+      enableAutomaticPrompt() {
+        set(enableAutomaticInstallPrompt());
       },
     }),
     {
