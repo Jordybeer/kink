@@ -31,6 +31,9 @@ jobs:
       - name: Smeed Release F
         run: node .github/scripts/forge-directionality-role-neutral.mjs
 
+      - name: Trek foot-focus mee naar beide worshipkanten
+        run: node .github/scripts/patch-release-f-foot-topic.mjs
+
       - name: Installeer exact de lockfile
         run: npm ci
 
@@ -46,6 +49,7 @@ jobs:
         run: |
           rm .github/scripts/forge-directionality-role-neutral.mjs
           rm .github/scripts/patch-role-neutral-forge-syntax.mjs
+          rm .github/scripts/patch-release-f-foot-topic.mjs
           rm .github/workflows/forge-directionality-role-neutral.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
