@@ -19,6 +19,33 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByTestId("questions-screen")).toBeVisible();
   });
 
+  test("eerste vraag houdt afspraken en Later boven de mobiele fold", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const emptyAlex = { ...PROFILE_ALEX, entries: {} };
+    await seedAndGo(page, "/profile/pw-alex-001/questions", [emptyAlex, PROFILE_SAM]);
+
+    await expect(page.getByTestId("questions-top-progress")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Uitleg over antwoordkeuzes" })).toBeVisible();
+
+    const controls = [
+      page.getByRole("button", { name: "Eerst vragen" }),
+      page.getByRole("button", { name: "Eerste keer" }),
+      page.getByRole("button", { name: /Later/ }),
+    ];
+
+    for (const width of [390, 375]) {
+      await page.setViewportSize({ width, height: 844 });
+      const viewportHeight = await page.evaluate(() => window.innerHeight);
+
+      for (const control of controls) {
+        await expect(control).toBeVisible();
+        const box = await control.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.y + box!.height).toBeLessThanOrEqual(viewportHeight);
+      }
+    }
+  });
+
   test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
     await page.getByRole("tab", { name: "Bewerken" }).click();
     await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();

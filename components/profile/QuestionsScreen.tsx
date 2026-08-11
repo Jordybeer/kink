@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CaretDown, Check, Info, Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
@@ -42,6 +42,12 @@ export default function QuestionsScreen({ params }: Props) {
   );
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+
+  useEffect(() => {
+    const openStatusExplainer = () => setStatusExplainerOpen(true);
+    window.addEventListener("ks:open-status-explainer", openStatusExplainer);
+    return () => window.removeEventListener("ks:open-status-explainer", openStatusExplainer);
+  }, []);
 
   const runtime = useMemo(
     () => profile ? getQuestionnaireRuntime(profile, { intent }) : null,
@@ -157,48 +163,29 @@ export default function QuestionsScreen({ params }: Props) {
       className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4"
       style={{
         height: "calc(100dvh - var(--nav-h))",
-        paddingTop: "0.75rem",
+        paddingTop: "0.5rem",
         paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
       }}
       data-testid="questions-screen"
     >
-      <header className="flex-none pb-3">
-        <div className="flex min-h-9 items-center gap-2">
-          <p className="min-w-0 flex-1 truncate text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-            {progressLabel}
-          </p>
-          <button
-            type="button"
-            onClick={() => setStatusExplainerOpen(true)}
-            aria-label="Uitleg over antwoordkeuzes"
-            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-xl"
-            style={{ color: "var(--text2)" }}
-          >
-            <Info size={17} aria-hidden="true" />
-          </button>
-        </div>
+      <div
+        className="pointer-events-none fixed inset-x-0 z-[41] h-0.5 overflow-hidden"
+        style={{ top: "calc(var(--nav-h) - 2px)", background: "var(--surface3)" }}
+        role="progressbar"
+        aria-label="Voortgang vragenlijst"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progressPercent}
+        data-testid="questions-top-progress"
+      >
+        <div
+          className="h-full transition-[width]"
+          style={{ width: `${progressPercent}%`, background: "var(--accent)" }}
+        />
+      </div>
 
-        <div className="mt-1.5 flex items-center gap-3">
-          <div
-            className="h-1.5 flex-1 overflow-hidden rounded-full"
-            role="progressbar"
-            aria-label="Voortgang vragenlijst"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progressPercent}
-            style={{ background: "var(--surface3)" }}
-          >
-            <div
-              className="h-full rounded-full transition-[width]"
-              style={{ width: `${progressPercent}%`, background: "var(--accent)" }}
-            />
-          </div>
-          <span className="flex-none text-[11px] tabular-nums" style={{ color: "var(--text2)" }}>
-            {progressPercent}%
-          </span>
-        </div>
-
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">
+      <header className="flex-none pb-2">
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">
           {([
             ["dynamic", "Dynamic", startDynamic],
             ["discover", "Discover", startDiscover],

@@ -6,6 +6,14 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-11 — De voortgang at de onderkant van de vraagkaart op
+
+**What went wrong:** De dedicated Questions-route kreeg boven de triagekaart een volledige voortgangsheader met label, infoknop, balk en percentage. Op iPhone Safari bleef daardoor te weinig verticale ruimte over: de statuskeuzes waren zichtbaar, maar `Eerst vragen`, `Eerste keer` en `Later` vielen onder de fold. De kaart zelf was niet te groot; dubbele chrome stal de viewport.
+
+**Rule:** Een gefocuste one-question-per-screen flow krijgt een expliciet viewportbudget. Globale/routechrome mag de primaire kaart niet onder de fold duwen. Stop compacte voortgang in bestaande navigatiechrome, laat detailtellers op de kaart zelf staan en bewijs op een 390×844 mobiele viewport dat de onderste primaire affordances zonder scroll zichtbaar zijn. Scroll blijft alleen fallback voor echt korte schermen en uitgeklapte details.
+
+---
+
 ## 2026-08-08 — Dependency-setup zat in de verkeerde speelkamer
 
 **What went wrong:** Na het aantrekken van `worktree-arousal` bleef de shell in de hoofdcheckout hangen en liet daar `npm ci` los — braaf commando, verkeerde speelkamer. Die run faalde ook omdat npm zijn standaardcache onder `/root/.npm` niet kon aanmaken. Er zijn geen tracked bestanden gewijzigd, maar de geïsoleerde-worktreegrens werd operationeel wel overschreden.
