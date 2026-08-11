@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { KINKS } from "@/lib/kinks";
 import {
+  questionnaireCanonicalProbeTarget,
+  questionnaireFollowUpIds,
+} from "@/lib/questionnaireMetadata";
+import {
   QUESTIONNAIRE_PROGRESSION_EDGES,
   questionnaireProgressionParentIds,
   unansweredQuestionnaireProgressionParents,
@@ -40,6 +44,17 @@ describe("questionnaire progression gates", () => {
       expect(parent, `missing progression parent ${parentId}`).toBeDefined();
       expect(child, `missing progression child ${childId}`).toBeDefined();
       expect(parent!.level).toBeLessThanOrEqual(child!.level);
+    }
+  });
+
+  it("laat progression metadata niet losdrijven van expliciete questionnaire-relaties", () => {
+    for (const [parentId, childId] of QUESTIONNAIRE_PROGRESSION_EDGES) {
+      const isExplicitFollowUp = questionnaireFollowUpIds(parentId).includes(childId);
+      const isCanonicalTarget = questionnaireCanonicalProbeTarget(parentId) === childId;
+      expect(
+        isExplicitFollowUp || isCanonicalTarget,
+        `progression ${parentId} -> ${childId} mist expliciete follow-up/canonical metadata`,
+      ).toBe(true);
     }
   });
 
