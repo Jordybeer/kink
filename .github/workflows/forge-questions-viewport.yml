@@ -1,0 +1,105 @@
+name: forge questions viewport
+
+on:
+  push:
+    branches:
+      - fix/questions-viewport-chrome
+
+permissions:
+  contents: write
+
+jobs:
+  forge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: fix/questions-viewport-chrome
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26
+          cache: npm
+      - name: Geef de kaart haar ademruimte terug
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import re
+
+          topnav = Path('components/TopNav.tsx')
+          text = topnav.read_text()
+          old = 'import { CaretLeft, GearSix } from "@phosphor-icons/react";'
+          new = 'import { CaretLeft, GearSix, Info } from "@phosphor-icons/react";'
+          assert text.count(old) == 1, 'TopNav icon import drifted'
+          text = text.replace(old, new)
+
+          old = '  const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");\n'
+          new = old + '  const questionsRoute = /^\\/profile\\/[^/]+\\/questions$/.test(path);\n'
+          assert text.count(old) == 1, 'TopNav route anchor drifted'
+          text = text.replace(old, new)
+
+          needle = '''        <StatusDot />\n      </nav>\n    </header>\n  );\n}\n\nfunction StatusDot'''
+          replacement = '''        {questionsRoute && (\n          <button\n            type="button"\n            onClick={() => window.dispatchEvent(new CustomEvent("ks:open-status-explainer"))}\n            aria-label="Uitleg over antwoordkeuzes"\n            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"\n            style={{ color: "var(--text2)" }}\n          >\n            <Info size={17} aria-hidden="true" />\n          </button>\n        )}\n        <StatusDot />\n      </nav>\n    </header>\n  );\n}\n\nfunction StatusDot'''
+          assert text.count(needle) == 1, 'TopNav focused tail drifted'
+          topnav.write_text(text.replace(needle, replacement))
+
+          screen = Path('components/profile/QuestionsScreen.tsx')
+          text = screen.read_text()
+          old = 'import { use, useMemo, useState } from "react";'
+          new = 'import { use, useEffect, useMemo, useState } from "react";'
+          assert text.count(old) == 1, 'QuestionsScreen React import drifted'
+          text = text.replace(old, new)
+
+          anchor = '''  const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);\n  const [categoriesOpen, setCategoriesOpen] = useState(false);\n\n'''
+          insert = anchor + '''  useEffect(() => {\n    const openStatusExplainer = () => setStatusExplainerOpen(true);\n    window.addEventListener("ks:open-status-explainer", openStatusExplainer);\n    return () => window.removeEventListener("ks:open-status-explainer", openStatusExplainer);\n  }, []);\n\n'''
+          assert text.count(anchor) == 1, 'QuestionsScreen state anchor drifted'
+          text = text.replace(anchor, insert)
+
+          old = '        paddingTop: "0.75rem",\n'
+          new = '        paddingTop: "0.5rem",\n'
+          assert text.count(old) == 1, 'QuestionsScreen top padding drifted'
+          text = text.replace(old, new)
+
+          start = text.index('      <header className="flex-none pb-3">')
+          modes = text.index('        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">', start)
+          before = text[:start]
+          after = text[modes + len('        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">'):]
+          rail = '''      <div\n        className="pointer-events-none fixed inset-x-0 z-[41] h-0.5 overflow-hidden"\n        style={{ top: "calc(var(--nav-h) - 2px)", background: "var(--surface3)" }}\n        role="progressbar"\n        aria-label="Voortgang vragenlijst"\n        aria-valuemin={0}\n        aria-valuemax={100}\n        aria-valuenow={progressPercent}\n        data-testid="questions-top-progress"\n      >\n        <div\n          className="h-full transition-[width]"\n          style={{ width: `${progressPercent}%`, background: "var(--accent)" }}\n        />\n      </div>\n\n      <header className="flex-none pb-2">\n        <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">'''
+          text = before + rail + after
+          screen.write_text(text)
+
+          spec = Path('e2e/profile.spec.ts')
+          text = spec.read_text()
+          anchor = '''  test("vragenlijst kan vanuit het profiel hervat worden", async ({ page }) => {\n    const resume = page.getByRole("link", { name: /Verder invullen|Verder ontdekken|Start met vragen/i }).first();\n    await expect(resume).toBeVisible();\n    await resume.click();\n    await expect(page).toHaveURL(/\\/profile\\/pw-alex-001\\/questions$/);\n    await expect(page.getByTestId("questions-screen")).toBeVisible();\n  });\n\n'''
+          test = anchor + '''  test("eerste vraag houdt afspraken en Later boven de mobiele fold", async ({ page }) => {\n    await page.setViewportSize({ width: 390, height: 844 });\n    const emptyAlex = { ...PROFILE_ALEX, entries: {} };\n    await seedAndGo(page, "/profile/pw-alex-001/questions", [emptyAlex, PROFILE_SAM]);\n\n    await expect(page.getByTestId("questions-top-progress")).toBeVisible();\n    await expect(page.getByRole("button", { name: "Uitleg over antwoordkeuzes" })).toBeVisible();\n\n    const controls = [\n      page.getByRole("button", { name: "Eerst vragen" }),\n      page.getByRole("button", { name: "Eerste keer" }),\n      page.getByRole("button", { name: /Later/ }),\n    ];\n    const viewportHeight = await page.evaluate(() => window.innerHeight);\n\n    for (const control of controls) {\n      await expect(control).toBeVisible();\n      const box = await control.boundingBox();\n      expect(box).not.toBeNull();\n      expect(box!.y + box!.height).toBeLessThanOrEqual(viewportHeight);\n    }\n  });\n\n'''
+          assert text.count(anchor) == 1, 'profile e2e anchor drifted'
+          spec.write_text(text.replace(anchor, test))
+
+          corrections = Path('corrections.md')
+          text = corrections.read_text()
+          marker = '## 2026-08-11 — De voortgang at de onderkant van de vraagkaart op\n'
+          if marker not in text:
+            entry = '''\n## 2026-08-11 — De voortgang at de onderkant van de vraagkaart op\n\n**What went wrong:** De dedicated Questions-route kreeg boven de triagekaart een volledige voortgangsheader met label, infoknop, balk en percentage. Op iPhone Safari bleef daardoor te weinig verticale ruimte over: de statuskeuzes waren zichtbaar, maar `Eerst vragen`, `Eerste keer` en `Later` vielen onder de fold. De kaart zelf was niet te groot; dubbele chrome stal de viewport.\n\n**Rule:** Een gefocuste one-question-per-screen flow krijgt een expliciet viewportbudget. Globale/routechrome mag de primaire kaart niet onder de fold duwen. Stop compacte voortgang in bestaande navigatiechrome, laat detailtellers op de kaart zelf staan en bewijs op een 390×844 mobiele viewport dat de onderste primaire affordances zonder scroll zichtbaar zijn. Scroll blijft alleen fallback voor echt korte schermen en uitgeklapte details.\n\n---\n'''
+            split = text.index('\n---\n') + len('\n---\n')
+            text = text[:split] + entry + text[split:]
+            corrections.write_text(text)
+
+          Path('.github/workflows/forge-questions-viewport.yml').unlink()
+          PY
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Bewijs de mobiele fold
+        run: CI=1 npx playwright test e2e/profile.spec.ts --project=mobile
+      - name: Kraag dicht en smid weer buiten
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/TopNav.tsx components/profile/QuestionsScreen.tsx e2e/profile.spec.ts corrections.md .github/workflows/forge-questions-viewport.yml
+          git diff --cached --check
+          git commit -m "fix: geef de vraagkaart haar viewport terug"
+          git push origin HEAD:fix/questions-viewport-chrome
