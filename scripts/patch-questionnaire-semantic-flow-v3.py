@@ -46,7 +46,7 @@ replace_once(
 )
 replace_once(
     "__tests__/questionnaireProgression.test.ts",
-    '''  it("herstelt na ranking en diversiteit ook een volledige drie-staps waterval", () => {
+    r"""  it("herstelt na ranking en diversiteit ook een volledige drie-staps waterval", () => {
     const adultContent = kinkAtForcedLevel("adult_content_creation", 1);
     const recording = kinkAtForcedLevel("recording", 1);
     const photography = kinkAtForcedLevel("nude_photography", 4);
@@ -61,8 +61,8 @@ replace_once(
       "recording",
       "adult_content_creation",
     ]);
-  });''',
-    '''  it("ordent alleen de geaudite privé-mediastap en maakt publiceren geen verplichte trede", () => {
+  });""",
+    r"""  it("ordent alleen de geaudite privé-mediastap en maakt publiceren geen verplichte trede", () => {
     const adultContent = kinkAtForcedLevel("adult_content_creation", 1);
     const recording = kinkAtForcedLevel("recording", 1);
     const photography = kinkAtForcedLevel("nude_photography", 4);
@@ -75,7 +75,7 @@ replace_once(
 
     expect(ids.indexOf("nude_photography")).toBeLessThan(ids.indexOf("recording"));
     expect(questionnaireProgressionParentIds("adult_content_creation")).toEqual([]);
-  });''',
+  });""",
 )
 
 # Clean warnings introduced by replacing whole-catalog progress with guided scope.
