@@ -19,5 +19,51 @@ if source.count(role_needle) != 1:
     raise RuntimeError("expected one role-policy documentation regex")
 source = source.replace(role_needle, role_replacement, 1)
 
+cleanup_marker = '''# Temporary transform plumbing must not survive in the PR diff.
+'''
+if source.count(cleanup_marker) != 1:
+    raise RuntimeError("expected one transform cleanup marker")
+contract_updates = r'''# Align old reviewed contracts with the new semantic model.
+replace_once(
+    "lib/questionnaireProgression.ts",
+    '  ["recording", "adult_content_creation"],\n',
+    '',
+)
+replace_once(
+    "__tests__/kinks.test.ts",
+    '    expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());',
+    '    expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS, "diaper_partner_wearing"].sort());',
+)
+replace_once(
+    "__tests__/questionnaire.test.ts",
+    '  it("opens only the first explicit media boundary at a time", () => {',
+    '  it("stops immediate media expansion at the private recording boundary", () => {',
+)
+replace_once(
+    "__tests__/questionnaire.test.ts",
+    '    photography.entries.recording = { status: "yes", comment: "privé-opname is expliciet" };\n    expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))\n      .toEqual(["adult_content_creation"]);',
+    '    photography.entries.recording = { status: "yes", comment: "privé-opname is expliciet" };\n    expect(getQuestionnaireRuntime(photography).pendingProbes.map((probe) => probe.targetKinkId))\n      .toEqual([]);',
+)
+
+# Clean warnings introduced by replacing whole-catalog progress with guided scope.
+replace_once(
+    "components/profile/QuestionsScreen.tsx",
+    'import { CaretDown, Check, Info, Sparkle, UserMinus } from "@phosphor-icons/react";',
+    'import { CaretDown, Check, Sparkle, UserMinus } from "@phosphor-icons/react";',
+)
+replace_once(
+    "components/profile/QuestionsScreen.tsx",
+    'import { CATEGORIES, KINKS, kinkCategoryLabel } from "@/lib/kinks";',
+    'import { CATEGORIES, kinkCategoryLabel } from "@/lib/kinks";',
+)
+replace_once(
+    "components/profile/QuestionsScreen.tsx",
+    '  const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;\n',
+    '',
+)
+
+'''
+source = source.replace(cleanup_marker, contract_updates + cleanup_marker, 1)
+
 path.write_text(source)
-print("transform preconditions patched")
+print("transform preconditions and reviewed contracts patched")
