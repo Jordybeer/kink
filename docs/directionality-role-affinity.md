@@ -45,7 +45,7 @@ Caning, crop, paddling, whipping, belt, face slapping, punching/thudding en tram
 
 ## Niet meegenomen
 
-Na de Impact-uitbreiding is ook een high-confidence restraint-slice uitgevoerd: spreader bar, hogtie, mummification, straitjacket, tape gag en hood zijn expliciete give/receive-paren met dezelfde role-affinitygrens. Chastity, collar/leash, suspension en overige gag-/confinementvarianten blijven kandidaat maar niet automatisch goedgekeurd; daar moet eerst de catalogusbetekenis of praktische counterpart scherper worden.
+Na de Impact-uitbreiding volgden twee high-confidence bondage-slices. Spreader bar, hogtie, mummification, straitjacket, tape gag en hood zijn expliciete give/receive-paren; daarna zijn ook inflatable/penis-shaped/rubber gag, upright/inverted/horizontal suspension en cage/dark/small-space confinement gepaird. Voor al deze paren blijft role affinity uitsluitend questionnaire-prioriteit. Chastity, collar/leash, breast bondage en gas-mask play blijven kandidaat maar vragen eerst een scherpere catalogusbetekenis of praktische counterpart.
 
 Power-exchange-identiteiten zoals D/s, Master/slave, Owner/pet en brat/tamer zijn geen give/receive-instrumenten en worden niet door dit model gesplitst.
 

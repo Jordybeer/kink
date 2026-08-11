@@ -77,6 +77,15 @@ const DIRECTIONAL_RELEASE_IDS = [
   "straitjacket_give", "straitjacket_receive",
   "gag_tape_give", "gag_tape_receive",
   "hood_give", "hood_receive",
+  "gag_opblaasbaar_give", "gag_opblaasbaar_receive",
+  "gag_penisvorm_give", "gag_penisvorm_receive",
+  "gag_rubber_give", "gag_rubber_receive",
+  "suspension_rechtop_give", "suspension_rechtop_receive",
+  "suspension_ondersteboven_give", "suspension_ondersteboven_receive",
+  "suspension_horizontaal_give", "suspension_horizontaal_receive",
+  "opsluiting_kooi_give", "opsluiting_kooi_receive",
+  "opsluiting_donker_give", "opsluiting_donker_receive",
+  "opsluiting_kleine_ruimte_give", "opsluiting_kleine_ruimte_receive",
 ] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
@@ -113,10 +122,17 @@ const RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS = [
   "spreader_bar", "hogtie", "mummification", "straitjacket", "gag_tape", "hood",
 ] as const;
 
+const RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS = [
+  "gag_opblaasbaar", "gag_penisvorm", "gag_rubber",
+  "suspension_rechtop", "suspension_ondersteboven", "suspension_horizontaal",
+  "opsluiting_kooi", "opsluiting_donker", "opsluiting_kleine_ruimte",
+] as const;
+
 const RETIRED_POST_V2_DIRECTIONAL_IDS = [
   "sound_deprivation",
   ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
   ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
+  ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
 ] as const;
 
 describe("kink database integrity", () => {
@@ -177,7 +193,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(324);
+    expect(KINKS).toHaveLength(333);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -204,15 +220,22 @@ describe("kink database integrity", () => {
       ...RETIRED_COMPOSITE_OR_DUPLICATE_IDS,
       ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
       ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
+      ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
     ].sort());
     expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());
   });
 
   it("separates definitions from a conservative safety note where reviewed", () => {
     const safetyReviewedIds = [
-      "bullwhip", "gag_opblaasbaar", "gag_rubber", "borsten_afbinden", "gasmasker",
-      "suspension_rechtop", "suspension_ondersteboven", "suspension_horizontaal",
-      "opsluiting_kooi", "opsluiting_donker", "opsluiting_kleine_ruimte", "vacuumbed",
+      "bullwhip",
+      "gag_opblaasbaar_give", "gag_opblaasbaar_receive", "gag_rubber_give", "gag_rubber_receive",
+      "borsten_afbinden", "gasmasker",
+      "suspension_rechtop_give", "suspension_rechtop_receive",
+      "suspension_ondersteboven_give", "suspension_ondersteboven_receive",
+      "suspension_horizontaal_give", "suspension_horizontaal_receive",
+      "opsluiting_kooi_give", "opsluiting_kooi_receive",
+      "opsluiting_donker_give", "opsluiting_donker_receive",
+      "opsluiting_kleine_ruimte_give", "opsluiting_kleine_ruimte_receive", "vacuumbed",
       "forced_orgasm", "facesitting", "badkamer_controle", "dienen_asbak", "lifestyle_247",
       "free_use", "erotische_hypnose", "toestemmingsprotocol", "punishment",
       "strafoefeningen", "mondzeep", "somnofilie", "choking", "scarification",

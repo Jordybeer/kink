@@ -49,6 +49,18 @@ Alle zes gebruiken role affinity uitsluitend voor compacte questionnaire-priorit
 
 Chastity, collar/leash en suspension blijven buiten deze slice. Hun huidige catalogusitems combineren nog betekenissen (dragen, keyholding/controle, symboliek, leiden of technische suspensionvarianten) die eerst scherper moeten worden voordat één give/receive-pair eerlijk is.
 
+## Release E — gag, suspension en confinement completion
+
+De resterende high-confidence bondage-handelingen met een letterlijke complementaire partnerkant zijn nu eveneens directioneel:
+
+- Inflatable gag, penis-shaped gag en rubber gag — aanbrengen / dragen.
+- Upright, inverted en horizontal suspension — riggen / gesuspendeerd worden.
+- Cage, dark en small-space confinement — iemand beperken / zelf beperkt worden.
+
+Deze negen concepten krijgen role affinity uitsluitend als compacte questionnaire-prioriteit. Ze krijgen geen sibling-inference, canonical probe of progression. De drie suspensionvormen zijn technische alternatieven, geen automatische ladder; confinementvormen en gagtypes zijn eveneens alternatieven.
+
+Bewust nog niet gesplitst: chastity, collar/leash, breast bondage en gas-mask play. Daar combineert de huidige single nog controle/symboliek, anatomy-context of een objectfetish met de concrete partnerhandeling. Eerst het concept zelf aanscherpen, pas daarna eventueel directionality.
+
 ## Questionnaire-keuzes
 
 - Golden shower verdwijnt uit de vaste fluids-anchor om één willekeurige richting niet als neutrale basis te behandelen; `drool_play` neemt die breadth-slot over.

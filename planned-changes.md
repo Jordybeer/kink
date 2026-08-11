@@ -76,7 +76,7 @@ mapping version 3 for the explicit Release B semantic migration. The Golden Show
 inference is removed and retired anal source IDs are replaced by explicit same-side directional
 mappings. “Auto masturbation” remains explicitly out of scope.
 
-The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. The audited Impact extension splits caning, crop, paddling, whipping, belt, face slapping, punching/thudding and trampling. The subsequent high-confidence restraint slice splits spreader bar, hogtie, mummification, straitjacket, tape gag and hood. None gains progression or canonical inference. Chastity, collar/leash, suspension and remaining confinement/gag candidates stay item-by-item work, not a bulk split.
+The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. The audited Impact extension splits caning, crop, paddling, whipping, belt, face slapping, punching/thudding and trampling. Two high-confidence bondage slices then split spreader bar, hogtie, mummification, straitjacket, tape gag, hood, the remaining three gag types, all three suspension positions and all three confinement forms. None gains progression or canonical inference. Chastity, collar/leash, breast bondage and gas-mask play stay item-by-item editorial work, not a bulk split.
 
 Question progression is now a separate explicit ordering contract. High-confidence parent → child doors make broad/light cards precede true deepenings when both are queued (for example Golden Shower ontvangen → urine in mond/slikken), without turning catalog `level` into a universal ladder. Progression never copies an answer, never suppresses a child after a neutral/negative answer in exhaustive flows, and never converts related siblings such as impact instruments, gag types or anal acts into inferred escalation. Source of truth: `docs/questionnaire-progression-gates.md`.
 
@@ -109,8 +109,8 @@ concepts now use explicit give/receive IDs plus a central complement relation at
 matching time. Dominant/Submissive perspective still never supplies an answer:
 Release C role affinity may only choose the compact Dynamic coverage sibling;
 the opposite side remains unknown and independently answerable. The audited
-Impact instrument extension and the high-confidence restraint slice (spreader
-bar, hogtie, mummification, straitjacket, tape gag and hood) follow that same
+Impact instrument extension and both high-confidence bondage slices (restraints,
+gag variants, suspension positions and confinement forms) follow that same
 contract. Remaining directional candidates stay item-by-item editorial work and
 must not be bulk split or inferred from `profile.role`.
 
