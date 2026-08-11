@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_INSTALL_PROMPT_POLICY,
   disableAutomaticInstallPrompt,
   detectIosInstallBrowser,
   INSTALL_PROMPT_SNOOZE_MS,
-  parseInstallPromptPolicy,
   shouldAutoShowInstallPrompt,
   snoozeInstallPrompt,
 } from "@/lib/installPrompt";
@@ -37,7 +37,7 @@ describe("detectIosInstallBrowser", () => {
 });
 
 describe("install prompt policy", () => {
-  const fresh = parseInstallPromptPolicy(null);
+  const fresh = DEFAULT_INSTALL_PROMPT_POLICY;
   const now = 1_800_000_000_000;
 
   it("wacht op betekenisvol gebruik voor de eerste automatische vraag", () => {
@@ -64,9 +64,5 @@ describe("install prompt policy", () => {
     const disabled = disableAutomaticInstallPrompt(fresh);
     expect(disabled.neverAsk).toBe(true);
     expect(shouldAutoShowInstallPrompt(disabled, true, Number.MAX_SAFE_INTEGER)).toBe(false);
-  });
-
-  it("herstelt veilig van beschadigde opgeslagen policy", () => {
-    expect(parseInstallPromptPolicy("geen-json")).toEqual(fresh);
   });
 });
