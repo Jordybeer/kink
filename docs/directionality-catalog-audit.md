@@ -34,6 +34,21 @@ Worship (body/cock/vulva/ass/boots), prostate massage, erotic massage, remote to
 
 Materiaal- en kledingfetishes, lichaamsaantrekking, algemene D/s- en roleplay-dynamieken, groeps/sociale contexten, media-consentcontexten en persoonlijke aftercarebehoeften blijven één concept zolang complementaire matching geen twee concrete handelingkanten nodig heeft.
 
+## Release D — high-confidence bondage/restraints
+
+Na de Impact-uitbreiding zijn zes handelingen item voor item goedgekeurd omdat geven en ontvangen praktisch onafhankelijk zijn en complementaire matching de betekenis verandert:
+
+- Spreader bar — aanbrengen / dragen.
+- Hogtie — binden / gebonden worden.
+- Mummification — inbakeren / ingebakerd worden.
+- Straitjacket — aanbrengen / dragen.
+- Tape gag — aanbrengen / dragen.
+- Hood — aanbrengen / dragen.
+
+Alle zes gebruiken role affinity uitsluitend voor compacte questionnaire-prioriteit. De opposite sibling blijft onbekend en bereikbaar. Er komen bewust geen follow-up-, canonical-probe- of progression-edges bij: deze restraints zijn geen betrouwbare escalatieladder en een voorkeur voor één kant zegt niets over de andere.
+
+Chastity, collar/leash en suspension blijven buiten deze slice. Hun huidige catalogusitems combineren nog betekenissen (dragen, keyholding/controle, symboliek, leiden of technische suspensionvarianten) die eerst scherper moeten worden voordat één give/receive-pair eerlijk is.
+
 ## Questionnaire-keuzes
 
 - Golden shower verdwijnt uit de vaste fluids-anchor om één willekeurige richting niet als neutrale basis te behandelen; `drool_play` neemt die breadth-slot over.

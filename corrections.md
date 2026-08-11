@@ -184,3 +184,10 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 **What went wrong:** De Impact-transform werkte, maar de eerste echte unitrun vond stale verwachtingen buiten de directionality-tests: cataloguscount/retire-add ledger en twee questionnaire-fixtures gebruikten nog de oude singles. De suite stopte terecht vóór build en commit. Een vervolgrun maakte vervolgens `sound_deprivation` ten onrechte onderdeel van de historische v2-retirementset, terwijl die ID pas post-v2 werd retired.
 
 **Rule:** Bij iedere pre-launch ID-retirement vóór de eerste volledige unitrun expliciet alle testreferenties naar de oude IDs inventariseren. Houd historische compact-catalogusretirements en latere post-v2 retirements als aparte testsets; actieve fixtures moeten naar één concrete nieuwe betekenis worden gezet en hun oorspronkelijke testsemantiek behouden.
+
+
+## 2026-08-11 — Een oude dev-head verborg parallel gemergd werk
+
+**What went wrong:** Na het afronden van de Questions-viewportfix werd een eerder opgehaalde `dev`-head gebruikt om het volgende directionalitywerk te kiezen. Intussen waren parallel PR #321, #322 en #323 geland. Daardoor leek de al uitgevoerde Impact-split opnieuw open werk en stopte de uitvoering onnodig midden in de audit.
+
+**Rule:** In deze parallelle repository is een branchstatus alleen geldig op het moment van lezen. Vlak vóór elke nieuwe fase altijd in één verse check actuele `dev`, recente PR's en de bedoelde featurebranch ophalen; een eerder in dezelfde sessie gelezen SHA is geen startbewijs.
