@@ -12,14 +12,23 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { detectIosInstallBrowser, type IosInstallBrowser } from "@/lib/installPrompt";
+import {
+  clearInstallPrompt,
+  detectIosInstallBrowser,
+  getInstallPrompt,
+  shouldAutoShowInstallPrompt,
+  type IosInstallBrowser,
+} from "@/lib/installPrompt";
+import { useInstallPromptPolicyStore } from "@/lib/installPromptPolicyStore";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
+import { useStore } from "@/lib/store";
 
 interface Props {
   isIos: boolean;
   onInstall?: () => void | Promise<void>;
   onDismiss: () => void;
+  manual?: boolean;
 }
 
 function ActionChip({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
@@ -66,12 +75,30 @@ const FEATURES = [
   { icon: Lightning, label: "Direct geopend" },
 ];
 
-export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) {
+export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = false }: Props) {
   const t = useMotionSafe();
-  const [visible, setVisible] = useState(true);
+  const meaningfulUse = useStore((state) => state.profiles.length > 0);
+  const dismissals = useInstallPromptPolicyStore((state) => state.dismissals);
+  const snoozedUntil = useInstallPromptPolicyStore((state) => state.snoozedUntil);
+  const neverAsk = useInstallPromptPolicyStore((state) => state.neverAsk);
+  const snoozeAutomaticPrompt = useInstallPromptPolicyStore((state) => state.snoozeAutomaticPrompt);
+  const disableAutomaticPrompt = useInstallPromptPolicyStore((state) => state.disableAutomaticPrompt);
+  const [visible, setVisible] = useState(manual);
   const [iosBrowser, setIosBrowser] = useState<IosInstallBrowser>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  const exitCallbackRef = useRef<(() => void) | null>(null);
   useFocusTrap(sheetRef, visible);
+
+  useEffect(() => {
+    if (manual) {
+      setVisible(true);
+      return;
+    }
+    setVisible(shouldAutoShowInstallPrompt(
+      { dismissals, snoozedUntil, neverAsk },
+      meaningfulUse,
+    ));
+  }, [dismissals, manual, meaningfulUse, neverAsk, snoozedUntil]);
 
   useEffect(() => {
     if (!isIos) {
@@ -88,17 +115,57 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
     );
   }, [isIos]);
 
+  function closeAfterExit(callback?: () => void) {
+    exitCallbackRef.current = callback ?? null;
+    setVisible(false);
+  }
+
+  function dismiss() {
+    if (manual) {
+      closeAfterExit(onDismiss);
+      return;
+    }
+    snoozeAutomaticPrompt();
+    closeAfterExit();
+  }
+
   useEffect(() => {
     if (!visible) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setVisible(false);
+      if (event.key === "Escape") dismiss();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [visible]);
+  });
 
-  function dismiss() {
-    setVisible(false);
+  function neverAskAgain() {
+    disableAutomaticPrompt();
+    closeAfterExit(onDismiss);
+  }
+
+  async function install() {
+    const prompt = getInstallPrompt();
+    if (prompt) {
+      await prompt.prompt();
+      const choice = await prompt.userChoice;
+      clearInstallPrompt();
+
+      if (manual) {
+        closeAfterExit(onDismiss);
+        return;
+      }
+
+      if (choice.outcome === "accepted") {
+        closeAfterExit(onDismiss);
+      } else {
+        snoozeAutomaticPrompt();
+        closeAfterExit();
+      }
+      return;
+    }
+
+    await onInstall?.();
+    closeAfterExit(manual ? onDismiss : undefined);
   }
 
   const chromeSteps = [
@@ -142,7 +209,13 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
       : otherIosSteps;
 
   return (
-    <AnimatePresence onExitComplete={onDismiss}>
+    <AnimatePresence
+      onExitComplete={() => {
+        const callback = exitCallbackRef.current;
+        exitCallbackRef.current = null;
+        callback?.();
+      }}
+    >
       {visible && (
         <>
           <motion.div
@@ -247,13 +320,24 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss }: Props) 
                   <motion.button
                     type="button"
                     whileTap={TAP_SPRING}
-                    onClick={() => { void onInstall?.(); }}
+                    onClick={() => { void install(); }}
                     className="focus-ring min-h-12 w-full rounded-xl px-5 text-sm font-bold"
                     style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                   >
                     Installeer KinkSync
                   </motion.button>
                 </div>
+              )}
+
+              {!manual && (
+                <button
+                  type="button"
+                  onClick={neverAskAgain}
+                  className="focus-ring mt-4 min-h-11 w-full rounded-xl px-4 text-xs font-semibold"
+                  style={{ color: "var(--text2)" }}
+                >
+                  Niet meer vragen
+                </button>
               )}
             </div>
           </motion.div>
