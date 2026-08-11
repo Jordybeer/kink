@@ -81,7 +81,7 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
           <motion.div
             aria-hidden="true"
             className="fixed inset-0 z-[150]"
-            style={{ background: "var(--scrim)", opacity: backdropOpacity }}
+            style={{ background: "var(--scrim-strong)", opacity: backdropOpacity }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
