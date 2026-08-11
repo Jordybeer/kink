@@ -15,14 +15,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   clearInstallPrompt,
   detectIosInstallBrowser,
-  disableAutomaticInstallPrompt,
   getInstallPrompt,
-  readInstallPromptPolicy,
   shouldAutoShowInstallPrompt,
-  snoozeInstallPrompt,
   type IosInstallBrowser,
-  writeInstallPromptPolicy,
 } from "@/lib/installPrompt";
+import { useInstallPromptPolicyStore } from "@/lib/installPromptPolicyStore";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useStore } from "@/lib/store";
@@ -81,6 +78,11 @@ const FEATURES = [
 export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = false }: Props) {
   const t = useMotionSafe();
   const meaningfulUse = useStore((state) => state.profiles.length > 0);
+  const dismissals = useInstallPromptPolicyStore((state) => state.dismissals);
+  const snoozedUntil = useInstallPromptPolicyStore((state) => state.snoozedUntil);
+  const neverAsk = useInstallPromptPolicyStore((state) => state.neverAsk);
+  const snoozeAutomaticPrompt = useInstallPromptPolicyStore((state) => state.snoozeAutomaticPrompt);
+  const disableAutomaticPrompt = useInstallPromptPolicyStore((state) => state.disableAutomaticPrompt);
   const [visible, setVisible] = useState(manual);
   const [iosBrowser, setIosBrowser] = useState<IosInstallBrowser>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -92,8 +94,11 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       setVisible(true);
       return;
     }
-    setVisible(shouldAutoShowInstallPrompt(readInstallPromptPolicy(), meaningfulUse));
-  }, [manual, meaningfulUse]);
+    setVisible(shouldAutoShowInstallPrompt(
+      { dismissals, snoozedUntil, neverAsk },
+      meaningfulUse,
+    ));
+  }, [dismissals, manual, meaningfulUse, neverAsk, snoozedUntil]);
 
   useEffect(() => {
     if (!isIos) {
@@ -110,15 +115,6 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
     );
   }, [isIos]);
 
-  useEffect(() => {
-    if (!visible) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") dismiss();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  });
-
   function closeAfterExit(callback?: () => void) {
     exitCallbackRef.current = callback ?? null;
     setVisible(false);
@@ -129,12 +125,21 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       closeAfterExit(onDismiss);
       return;
     }
-    writeInstallPromptPolicy(snoozeInstallPrompt(readInstallPromptPolicy()));
+    snoozeAutomaticPrompt();
     closeAfterExit();
   }
 
+  useEffect(() => {
+    if (!visible) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   function neverAskAgain() {
-    writeInstallPromptPolicy(disableAutomaticInstallPrompt(readInstallPromptPolicy()));
+    disableAutomaticPrompt();
     closeAfterExit(onDismiss);
   }
 
@@ -153,7 +158,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       if (choice.outcome === "accepted") {
         closeAfterExit(onDismiss);
       } else {
-        writeInstallPromptPolicy(snoozeInstallPrompt(readInstallPromptPolicy()));
+        snoozeAutomaticPrompt();
         closeAfterExit();
       }
       return;
