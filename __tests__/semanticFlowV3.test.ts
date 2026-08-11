@@ -152,6 +152,13 @@ describe("questionnaire semantic flow v3", () => {
     expect(sibling?.kink.id).toBe("pegging_receive");
     expect(isConversationContinuation(sibling, "pegging_give")).toBe(true);
 
+    // Een sibling blijft concept-completion na een niet-positief antwoord, maar
+    // een canonical probe krijgt in die fase bewust geen voorrang.
+    expect(selectConversationQuestion(siblingQueue, KINKS, {
+      phase: "preferComplement",
+      lastKinkId: "pegging_give",
+    })?.kink.id).toBe("pegging_receive");
+
     const probe = queueItem("leather_cuffs_give", {
       lane: "expansion",
       isProbe: true,
@@ -166,6 +173,11 @@ describe("questionnaire semantic flow v3", () => {
       phase: "preferContinuation",
       lastKinkId: "handcuffs_give",
     })?.kink.id).toBe("leather_cuffs_give");
+
+    expect(selectConversationQuestion([probe, queueItem("doctor_patient")], KINKS, {
+      phase: "preferComplement",
+      lastKinkId: "handcuffs_give",
+    })?.kink.id).toBe("doctor_patient");
 
     expect(selectConversationQuestion([probe, queueItem("doctor_patient")], KINKS, {
       phase: "topicBreakRequired",
