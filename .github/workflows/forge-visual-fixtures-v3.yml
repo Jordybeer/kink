@@ -1,0 +1,69 @@
+name: forge visual fixtures v3
+
+on:
+  push:
+    branches:
+      - fix/visual-audit-fixture-rot
+
+permissions:
+  contents: write
+
+jobs:
+  forge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+      - name: Moderniseer fixtures en herstel de retirement-guard
+        run: |
+          python .github/forge_visual_fixtures.py
+          python .github/repair_visual_fixture_test.py
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Draai beide handmatige visuele audits echt
+        shell: bash
+        run: |
+          npm run start >/tmp/kinksync-visual-fixtures.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3000/ >/dev/null
+          node scripts/screenshots.mjs
+          node scripts/audit-screenshots.mjs
+      - name: Sluit de fixture-smid zonder rommel
+        shell: bash
+        run: |
+          python - <<'PY'
+          import subprocess
+          expected = {
+              "__tests__/visualAuditFixtures.test.ts",
+              "corrections.md",
+              "e2e/fixtures.ts",
+              "planned-changes.md",
+              "scripts/audit-screenshots.mjs",
+              "scripts/screenshots.mjs",
+          }
+          changed = set(subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines())
+          product = {path for path in changed if not path.startswith(".github/")}
+          if product != expected:
+              raise SystemExit(f"unexpected product diff set: {sorted(product ^ expected)}")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/forge_visual_fixtures.py .github/repair_visual_fixture_test.py .github/workflows/forge-visual-fixtures.yml .github/workflows/forge-visual-fixtures-v2.yml .github/workflows/forge-visual-fixtures-v3.yml
+          git add __tests__/visualAuditFixtures.test.ts corrections.md e2e/fixtures.ts planned-changes.md scripts/audit-screenshots.mjs scripts/screenshots.mjs
+          git commit -m "test: laat visuele audits geen lege kamers fotograferen"
+          git push origin HEAD:fix/visual-audit-fixture-rot
