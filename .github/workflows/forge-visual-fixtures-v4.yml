@@ -1,4 +1,4 @@
-name: forge visual fixtures v2
+name: forge visual fixtures v4
 
 on:
   push:
@@ -20,8 +20,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Moderniseer en borg de fixtures
-        run: python .github/forge_visual_fixtures.py
+      - name: Moderniseer fixtures en herstel de twee gevonden auditrotjes
+        run: |
+          python .github/forge_visual_fixtures.py
+          python .github/repair_visual_fixture_test.py
+          python .github/repair_visual_runner.py
       - run: npm ci
       - run: npm test
       - run: npm run build
@@ -61,7 +64,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/forge_visual_fixtures.py .github/workflows/forge-visual-fixtures.yml .github/workflows/forge-visual-fixtures-v2.yml
+          git rm .github/forge_visual_fixtures.py .github/repair_visual_fixture_test.py .github/repair_visual_runner.py .github/workflows/forge-visual-fixtures-v4.yml
           git add __tests__/visualAuditFixtures.test.ts corrections.md e2e/fixtures.ts planned-changes.md scripts/audit-screenshots.mjs scripts/screenshots.mjs
           git commit -m "test: laat visuele audits geen lege kamers fotograferen"
           git push origin HEAD:fix/visual-audit-fixture-rot
