@@ -32,13 +32,17 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
       page.getByRole("button", { name: "Eerste keer" }),
       page.getByRole("button", { name: /Later/ }),
     ];
-    const viewportHeight = await page.evaluate(() => window.innerHeight);
 
-    for (const control of controls) {
-      await expect(control).toBeVisible();
-      const box = await control.boundingBox();
-      expect(box).not.toBeNull();
-      expect(box!.y + box!.height).toBeLessThanOrEqual(viewportHeight);
+    for (const width of [390, 375]) {
+      await page.setViewportSize({ width, height: 844 });
+      const viewportHeight = await page.evaluate(() => window.innerHeight);
+
+      for (const control of controls) {
+        await expect(control).toBeVisible();
+        const box = await control.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.y + box!.height).toBeLessThanOrEqual(viewportHeight);
+      }
     }
   });
 
