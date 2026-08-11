@@ -13,26 +13,20 @@ import {
   UserCirclePlus,
 } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
-import {
-  QUESTIONNAIRE_INTERESTS,
-  QUESTIONNAIRE_MODES,
-} from "@/lib/questionnaire";
+import { QUESTIONNAIRE_INTERESTS } from "@/lib/questionnaire";
 import {
   createPerspectiveProfiles,
   type ProfileDirectionChoice,
 } from "@/lib/profilePerspectives";
 import { profileHref, waitForPersistedProfile } from "@/lib/localRoutes";
-import type {
-  QuestionnaireInterest,
-  QuestionnaireMode,
-} from "@/types";
+import type { QuestionnaireInterest } from "@/types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-type Step = 0 | 1 | 2;
+type Step = 0 | 1;
 
 const DIRECTIONS: Array<{
   value: ProfileDirectionChoice;
@@ -70,7 +64,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [direction, setDirection] = useState<ProfileDirectionChoice | null>(null);
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
-  const [mode, setMode] = useState<QuestionnaireMode>("dynamic");
   const [isCreating, setIsCreating] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
@@ -81,7 +74,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     setNameError(null);
     setDirection(null);
     setInterests([]);
-    setMode("dynamic");
     setIsCreating(false);
     setPendingProfileId(null);
     createInFlightRef.current = false;
@@ -124,7 +116,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           name: name.trim(),
           direction,
           questionnaireSetup: {
-            mode,
+            mode: "dynamic",
             interests,
             version: 2,
           },
@@ -158,11 +150,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     }
   }
 
-  const title = step === 0
-    ? "Wie ben je hier?"
-    : step === 1
-      ? "Wat wil je verkennen?"
-      : "Kies je route";
+  const title = step === 0 ? "Wie ben je hier?" : "Wat wil je verkennen?";
 
   return (
     <Sheet open={open} onClose={onClose} scrollable aria-label="Nieuw profiel maken">
@@ -186,7 +174,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             </div>
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text2)" }}>
-                Stap {step + 1} van 3
+                Stap {step + 1} van 2
               </p>
               <h2
                 className="text-2xl leading-tight"
@@ -197,8 +185,8 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 mb-5" aria-hidden="true">
-            {[0, 1, 2].map((index) => (
+          <div className="grid grid-cols-2 gap-2 mb-5" aria-hidden="true">
+            {[0, 1].map((index) => (
               <div
                 key={index}
                 className="h-1 rounded-full transition-colors"
@@ -351,67 +339,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
               </p>
             </div>
           )}
-
-          {step === 2 && (
-            <div className="ks-fade-in">
-              <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--text2)" }}>
-                Je kunt dit later aanpassen zonder bestaande antwoorden te verliezen.
-              </p>
-              <div className="grid gap-2">
-                {QUESTIONNAIRE_MODES.map((option) => {
-                  const active = mode === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setMode(option.value)}
-                      aria-pressed={active}
-                      className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
-                      style={active
-                        ? {
-                            background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
-                            border: "1px solid var(--accent)",
-                          }
-                        : { background: "var(--surface2)", border: "1px solid var(--border)" }}
-                    >
-                      <span className="flex-1 min-w-0">
-                        <span className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-semibold">{option.label}</span>
-                          {active && <Check size={16} weight="bold" style={{ color: "var(--accent)" }} aria-hidden="true" />}
-                        </span>
-                        <span className="block text-xs mt-1 leading-relaxed" style={{ color: "var(--text2)" }}>
-                          {option.description}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div
-                className="rounded-2xl p-4 mt-4"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}
-              >
-                <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "var(--text2)" }}>
-                  Jouw start
-                </p>
-                <p className="text-lg font-semibold">{name.trim()}</p>
-                <p className="text-sm mt-0.5" style={{ color: "var(--accent)" }}>
-                  {direction === "both" ? "Dominant + Submissive" : direction === "dominant" ? "Dominant" : "Submissive"}
-                </p>
-                <p className="text-xs mt-2" style={{ color: "var(--text2)" }}>
-                  {mode === "dynamic"
-                    ? "Dynamic stopt bij brede, expliciete dekking en vlecht echte vervolgvragen later terug in de flow."
-                    : "Deep Dive blijft doorvragen tot de volledige catalogus expliciet is beoordeeld."}
-                </p>
-                {direction === "both" && (
-                  <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
-                    Beide profielen starten met dezelfde selectie, maar worden los van elkaar ingevuld.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         <div
@@ -420,7 +347,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         >
           <button
             type="button"
-            onClick={step === 0 ? onClose : () => setStep((current) => (current - 1) as Step)}
+            onClick={step === 0 ? onClose : () => setStep(0)}
             disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
             style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -429,15 +356,15 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           </button>
           <button
             type="button"
-            onClick={step === 0 ? continueFromIdentity : step === 1 ? () => setStep(2) : create}
+            onClick={step === 0 ? continueFromIdentity : create}
             disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-bold"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
-            {step === 2
-              ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Profiel maken")
+            {step === 1
+              ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Start vragen")
               : "Verder"}
-            {step < 2 && <ArrowRight size={16} weight="bold" aria-hidden="true" />}
+            {step === 0 && <ArrowRight size={16} weight="bold" aria-hidden="true" />}
           </button>
         </div>
       </SheetContent>
