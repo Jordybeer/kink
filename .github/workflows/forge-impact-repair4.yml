@@ -1,0 +1,175 @@
+name: repair impact forge v4
+
+on:
+  push:
+    branches: [feature/directionality-impact-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Voer de bewezen transform uit met correcte retirement-ledger
+        shell: bash
+        run: |
+          python - <<'PYTHON'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one target, found {count}: {old[:80]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          # Reuse the audited product transform, patching only the two known
+          # harness-order assumptions before executing it in this clean runner.
+          workflow = Path(".github/workflows/forge-impact-v2.yml")
+          text = workflow.read_text()
+
+          single_call = '          replace_once("__tests__/directionality.test.ts", "migrateStoredDirectionalityV20({", "migrateStoredDirectionalityV21({")\n'
+          all_calls = '          p = Path("__tests__/directionality.test.ts"); t = p.read_text(); assert t.count("migrateStoredDirectionalityV20({") == 2; p.write_text(t.replace("migrateStoredDirectionalityV20({", "migrateStoredDirectionalityV21({"))\n'
+          if text.count(single_call) != 1:
+              raise SystemExit("migration call-count repair target drifted")
+          text = text.replace(single_call, all_calls, 1)
+
+          before = '    const migrated = migrateStoredDirectionalityV20({ profiles: [profile] }, 20);\\n    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");'
+          after = '    const migrated = migrateStoredDirectionalityV21({ profiles: [profile] }, 20);\\n    expect(migrated.profiles?.[0].entries.spanking_hand_give?.status).toBe("yes");'
+          if text.count(before) != 1:
+              raise SystemExit(f"migration ordering repair target count={text.count(before)}")
+          text = text.replace(before, after, 1)
+
+          marker = "          python - <<'PY'\n"
+          start = text.index(marker) + len(marker)
+          end = text.index("\n          PY\n", start)
+          raw = text[start:end]
+          code = "\n".join(line[10:] if line.startswith("          ") else line for line in raw.splitlines())
+          exec(compile(code, "impact-transform.py", "exec"), {"__name__": "__main__"})
+
+          # Catalog ledger: 8 historical singles retire, 16 concrete sides land.
+          replace_once(
+              "__tests__/kinks.test.ts",
+              '  "sound_deprivation_give", "sound_deprivation_receive",\n] as const;\n',
+              '  "sound_deprivation_give", "sound_deprivation_receive",\n'
+              '  "caning_give", "caning_receive",\n'
+              '  "cropping_give", "cropping_receive",\n'
+              '  "paddling_give", "paddling_receive",\n'
+              '  "whipping_give", "whipping_receive",\n'
+              '  "belt_give", "belt_receive",\n'
+              '  "slapping_face_give", "slapping_face_receive",\n'
+              '  "punching_give", "punching_receive",\n'
+              '  "trampling_give", "trampling_receive",\n'
+              '] as const;\n',
+          )
+          replace_once(
+              "__tests__/kinks.test.ts",
+              'const RETIRED_POST_V2_DIRECTIONAL_IDS = ["sound_deprivation"] as const;\n',
+              'const RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS = [\n'
+              '  "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",\n'
+              '] as const;\n\n'
+              'const RETIRED_POST_V2_DIRECTIONAL_IDS = [\n'
+              '  "sound_deprivation",\n'
+              '  ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,\n'
+              '] as const;\n',
+          )
+          replace_once("__tests__/kinks.test.ts", "expect(KINKS).toHaveLength(310);", "expect(KINKS).toHaveLength(318);")
+          replace_once(
+              "__tests__/kinks.test.ts",
+              '    expect(retired).toEqual([...RETIRED_COMPOSITE_OR_DUPLICATE_IDS].sort());\n',
+              '    expect(retired).toEqual([\n'
+              '      ...RETIRED_COMPOSITE_OR_DUPLICATE_IDS,\n'
+              '      ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,\n'
+              '    ].sort());\n',
+          )
+
+          # Two questionnaire proofs used generic trampling merely as a neutral
+          # Impact foil. Pin them to one explicit side without adding relations.
+          replace_once(
+              "__tests__/questionnaire.test.ts",
+              '    const catalog = catalogSlice("watersports_geven", "trampling", "humiliation_verbal", "doctor_patient");\n'
+              '    const neutral = rankQuestionnaireCandidates(\n'
+              '      catalog,\n'
+              '      entriesWith({ watersports_geven: "maybe", trampling: "maybe" }),\n'
+              '    ).map((kink) => kink.id);\n'
+              '    const enthusiastic = rankQuestionnaireCandidates(\n'
+              '      catalog,\n'
+              '      entriesWith({ watersports_geven: "yes", trampling: "yes" }),\n',
+              '    const catalog = catalogSlice("watersports_geven", "trampling_receive", "humiliation_verbal", "doctor_patient");\n'
+              '    const neutral = rankQuestionnaireCandidates(\n'
+              '      catalog,\n'
+              '      entriesWith({ watersports_geven: "maybe", trampling_receive: "maybe" }),\n'
+              '    ).map((kink) => kink.id);\n'
+              '    const enthusiastic = rankQuestionnaireCandidates(\n'
+              '      catalog,\n'
+              '      entriesWith({ watersports_geven: "yes", trampling_receive: "yes" }),\n',
+          )
+          replace_once(
+              "__tests__/questionnaire.test.ts",
+              '      [queueItem("watersports_ontvangen", true), queueItem("trampling")],\n'
+              '      KINKS,\n'
+              '      { lastKinkId: "watersports_geven" },\n'
+              '    );\n'
+              '    expect(next?.kink.id).toBe("trampling");\n',
+              '      [queueItem("watersports_ontvangen", true), queueItem("trampling_receive")],\n'
+              '      KINKS,\n'
+              '      { lastKinkId: "watersports_geven" },\n'
+              '    );\n'
+              '    expect(next?.kink.id).toBe("trampling_receive");\n',
+          )
+
+          with Path("corrections.md").open("a") as f:
+              f.write('''\n## 2026-08-11 — Een semantische ID-split liet contracttests met oude namen staan\n\n**What went wrong:** De Impact-transform werkte, maar de eerste echte unitrun vond stale verwachtingen buiten de directionality-tests: cataloguscount/retire-add ledger en twee questionnaire-fixtures gebruikten nog de oude singles. De suite stopte terecht vóór build en commit. Een vervolgrun maakte vervolgens `sound_deprivation` ten onrechte onderdeel van de historische v2-retirementset, terwijl die ID pas post-v2 werd retired.\n\n**Rule:** Bij iedere pre-launch ID-retirement vóór de eerste volledige unitrun expliciet alle testreferenties naar de oude IDs inventariseren. Houd historische compact-catalogusretirements en latere post-v2 retirements als aparte testsets; actieve fixtures moeten naar één concrete nieuwe betekenis worden gezet en hun oorspronkelijke testsemantiek behouden.\n''')
+          PYTHON
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Bewijs de diff en sluit alle tijdelijke smidses
+        shell: bash
+        run: |
+          python - <<'PYTHON'
+          import subprocess
+          expected = {
+            "__tests__/directionalMatching.test.ts",
+            "__tests__/directionality.test.ts",
+            "__tests__/kinks.test.ts",
+            "__tests__/questionnaire.test.ts",
+            "corrections.md",
+            "directie.md",
+            "docs/directionality-catalog-audit.md",
+            "docs/directionality-role-affinity.md",
+            "docs/questionnaire-progression-gates.md",
+            "e2e/ui-audit.spec.ts",
+            "lib/directionality.ts",
+            "lib/kinks.ts",
+            "lib/questionnaireMetadata.ts",
+            "lib/storeCore.ts",
+            "planned-changes.md",
+          }
+          changed = set(subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines())
+          product = {path for path in changed if not path.startswith(".github/workflows/")}
+          if product != expected:
+              raise SystemExit(f"unexpected product diff set: {sorted(product ^ expected)}")
+          PYTHON
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/forge-impact-v2.yml .github/workflows/forge-impact-repair.yml .github/workflows/forge-impact-repair2.yml .github/workflows/forge-impact-repair3.yml .github/workflows/forge-impact-repair4.yml
+          git add __tests__/directionalMatching.test.ts __tests__/directionality.test.ts __tests__/kinks.test.ts __tests__/questionnaire.test.ts \
+            corrections.md directie.md docs/directionality-catalog-audit.md docs/directionality-role-affinity.md \
+            docs/questionnaire-progression-gates.md e2e/ui-audit.spec.ts lib/directionality.ts lib/kinks.ts \
+            lib/questionnaireMetadata.ts lib/storeCore.ts planned-changes.md
+          git commit -m "feat: geef Impact beide kanten zonder voorkeur te raden"
+          git push origin HEAD:feature/directionality-impact-v2
