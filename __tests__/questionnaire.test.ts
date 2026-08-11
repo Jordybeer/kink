@@ -532,14 +532,14 @@ describe("adaptive questionnaire", () => {
   });
 
   it("does not synthesize humiliation from Golden Shower + Trampling enthusiasm", () => {
-    const catalog = catalogSlice("watersports_geven", "trampling", "humiliation_verbal", "doctor_patient");
+    const catalog = catalogSlice("watersports_geven", "trampling_receive", "humiliation_verbal", "doctor_patient");
     const neutral = rankQuestionnaireCandidates(
       catalog,
-      entriesWith({ watersports_geven: "maybe", trampling: "maybe" }),
+      entriesWith({ watersports_geven: "maybe", trampling_receive: "maybe" }),
     ).map((kink) => kink.id);
     const enthusiastic = rankQuestionnaireCandidates(
       catalog,
-      entriesWith({ watersports_geven: "yes", trampling: "yes" }),
+      entriesWith({ watersports_geven: "yes", trampling_receive: "yes" }),
     ).map((kink) => kink.id);
     expect(enthusiastic).toEqual(neutral);
   });
@@ -667,11 +667,11 @@ describe("adaptive questionnaire", () => {
 
   it("lets Golden Shower breathe before its explicit watersports follow-up", () => {
     const next = selectConversationQuestion(
-      [queueItem("watersports_ontvangen", true), queueItem("trampling")],
+      [queueItem("watersports_ontvangen", true), queueItem("trampling_receive")],
       KINKS,
       { lastKinkId: "watersports_geven" },
     );
-    expect(next?.kink.id).toBe("trampling");
+    expect(next?.kink.id).toBe("trampling_receive");
   });
 
   it("keeps interests/safety ahead of concentrated answer relevance without numeric weights", () => {

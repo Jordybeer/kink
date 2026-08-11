@@ -76,7 +76,7 @@ mapping version 3 for the explicit Release B semantic migration. The Golden Show
 inference is removed and retired anal source IDs are replaced by explicit same-side directional
 mappings. “Auto masturbation” remains explicitly out of scope.
 
-The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C now proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. Remaining impact/bondage candidates stay item-by-item work, not a bulk split.
+The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. The audited Impact extension now splits caning, crop, paddling, whipping, belt, face slapping, punching/thuding and trampling; none gains progression or canonical inference. Remaining bondage candidates stay item-by-item work, not a bulk split.
 
 Question progression is now a separate explicit ordering contract. High-confidence parent → child doors make broad/light cards precede true deepenings when both are queued (for example Golden Shower ontvangen → urine in mond/slikken), without turning catalog `level` into a universal ladder. Progression never copies an answer, never suppresses a child after a neutral/negative answer in exhaustive flows, and never converts related siblings such as impact instruments, gag types or anal acts into inferred escalation. Source of truth: `docs/questionnaire-progression-gates.md`.
 
@@ -108,9 +108,10 @@ The original deferred gate is superseded. Pegging and the reviewed Release B/C
 concepts now use explicit give/receive IDs plus a central complement relation at
 matching time. Dominant/Submissive perspective still never supplies an answer:
 Release C role affinity may only choose the compact Dynamic coverage sibling;
-the opposite side remains unknown and independently answerable. Remaining
-directional candidates stay item-by-item editorial work and must not be bulk
-split or inferred from `profile.role`.
+the opposite side remains unknown and independently answerable. The audited
+Impact instrument extension follows that same contract. Remaining directional
+candidates stay item-by-item editorial work and must not be bulk split or
+inferred from `profile.role`.
 
 ### Phase — Pair-scoped kink overlay (deferred, design doc first)
 

@@ -172,3 +172,15 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 **What went wrong:** Tijdens PR #318 moest alleen de laatste profiel-create test van drie naar twee stappen. De contents-rewrite verving echter vrijwel `e2e/new-user.spec.ts`, waardoor bewezen onboarding- en PIN-regressieguards verdwenen en CI op oude selectors vastliep.
 
 **Rule:** Voor een gerichte testflowwijziging blijft de rest van het specbestand byte-identiek aan de branchbasis. Controleer altijd de per-file PR patch vóór de gate; als de diff groter is dan de bedoelde test, herstel eerst vanaf `origin/dev` en pas alleen het minimale blok aan.
+
+## 2026-08-11 — Forge vertrouwde op de inspringing van een heel catalogusblok
+
+**What went wrong:** De eerste Impact-forge probeerde acht opeenvolgende catalogusitems als één exact multiline blok te vervangen. YAML-inspringing maakte die assertion fragiel; de workflow stopte veilig vóór enige wijziging, maar de transform was onnodig breed.
+
+**Rule:** Bij catalogusmigraties elk item afzonderlijk ankeren op zijn stabiele ID en exact één object vervangen. Gebruik een count-assertie per item; bundel nooit meerdere zelfstandige catalogusobjecten in één whitespace-gevoelige match.
+
+## 2026-08-11 — Een semantische ID-split liet contracttests met oude namen staan
+
+**What went wrong:** De Impact-transform werkte, maar de eerste echte unitrun vond stale verwachtingen buiten de directionality-tests: cataloguscount/retire-add ledger en twee questionnaire-fixtures gebruikten nog de oude singles. De suite stopte terecht vóór build en commit. Een vervolgrun maakte vervolgens `sound_deprivation` ten onrechte onderdeel van de historische v2-retirementset, terwijl die ID pas post-v2 werd retired.
+
+**Rule:** Bij iedere pre-launch ID-retirement vóór de eerste volledige unitrun expliciet alle testreferenties naar de oude IDs inventariseren. Houd historische compact-catalogusretirements en latere post-v2 retirements als aparte testsets; actieve fixtures moeten naar één concrete nieuwe betekenis worden gezet en hun oorspronkelijke testsemantiek behouden.
