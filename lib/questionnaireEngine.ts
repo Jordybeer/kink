@@ -44,7 +44,11 @@ export interface QuestionnaireQueueItem {
   reasons: ExpansionReason[];
 }
 
-export type ConversationPhase = "normal" | "preferContinuation" | "topicBreakRequired";
+export type ConversationPhase =
+  | "normal"
+  | "preferComplement"
+  | "preferContinuation"
+  | "topicBreakRequired";
 
 export interface ConversationContext {
   /** Nieuwe expliciete live-state; afwezig houdt de oude adaptersemantiek. */
@@ -401,20 +405,25 @@ export function selectConversationQuestion(
       return candidates[0] ?? null;
     }
 
-    if (context.phase === "preferContinuation" && context.lastKinkId) {
+    if (
+      (context.phase === "preferComplement" || context.phase === "preferContinuation")
+      && context.lastKinkId
+    ) {
       const siblingId = complementarySiblingId(context.lastKinkId);
       const sibling = siblingId
         ? candidates.find((item) => item.kink.id === siblingId)
         : undefined;
       if (sibling) return sibling;
 
-      const canonicalProbe = candidates.find((item) =>
-        item.isProbe && item.reasons.some((reason) =>
-          reason.sourceKinkId === context.lastKinkId
-          && reason.targetKinkId === item.kink.id,
-        ),
-      );
-      if (canonicalProbe) return canonicalProbe;
+      if (context.phase === "preferContinuation") {
+        const canonicalProbe = candidates.find((item) =>
+          item.isProbe && item.reasons.some((reason) =>
+            reason.sourceKinkId === context.lastKinkId
+            && reason.targetKinkId === item.kink.id,
+          ),
+        );
+        if (canonicalProbe) return canonicalProbe;
+      }
     }
 
     // Geen echte continuation beschikbaar: behoud de bestaande conversation
