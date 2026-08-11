@@ -170,6 +170,47 @@ replaceOnce(
 );
 
 replaceOnce(
+  "__tests__/questionnaire.test.ts",
+  `    const plan = buildQuestionnaireCoveragePlan([]);
+    answerIds(current, plan.anchorIds, "maybe");`,
+  `    const plan = buildQuestionnaireCoveragePlan([], current.perspective);
+    answerIds(current, plan.anchorIds, "maybe");`,
+);
+replaceOnce(
+  "__tests__/questionnaire.test.ts",
+  `  it("uses perspective only to choose the compact role-affinity side, never a different concept path", () => {
+    const dominant = dynamicProfile();
+    dominant.perspective = "dominant";
+    const submissive = dynamicProfile();
+    submissive.perspective = "submissive";
+    const dominantIds = getQuestionnaireRuntime(dominant).queue.map((item) => item.kink.id);
+    const submissiveIds = getQuestionnaireRuntime(submissive).queue.map((item) => item.kink.id);
+    const concepts = (ids: string[]) => ids.map((id) => directionalPairForKinkId(id)?.conceptId ?? id);
+    expect(dominantIds).not.toEqual(submissiveIds);
+    expect(concepts(dominantIds)).toEqual(concepts(submissiveIds));
+    expect(dominant.entries).toEqual({});
+    expect(submissive.entries).toEqual({});
+  });`,
+  `  it("uses perspective only to choose compact role/participation sides, never a different concept path", () => {
+    const dominant = dynamicProfile();
+    dominant.perspective = "dominant";
+    const submissive = dynamicProfile();
+    submissive.perspective = "submissive";
+    const dominantIds = getQuestionnaireRuntime(dominant).queue.map((item) => item.kink.id);
+    const submissiveIds = getQuestionnaireRuntime(submissive).queue.map((item) => item.kink.id);
+    const concepts = (ids: string[]) => ids.map((id) =>
+      id === "luiers_dragen" || id === "diaper_partner_wearing"
+        ? "diaper_wearing"
+        : directionalPairForKinkId(id)?.conceptId ?? id,
+    );
+    expect(dominantIds).not.toEqual(submissiveIds);
+    expect(concepts(dominantIds)).toEqual(concepts(submissiveIds));
+    expect(dominant.entries).toEqual({});
+    expect(submissive.entries).toEqual({});
+  });`,
+);
+
+replaceOnce(
   "directie.md",
   `Voor **role-neutrale** directionele concepten (zoals Pegging, fisting, rimming, worship en massage) filtert perspective geen kant weg. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.`,
   `Voor **role-neutrale** directionele concepten (zoals Pegging, fisting, rimming, worship en massage) filtert perspective geen kant weg. Als beide kanten onafhankelijk eligible zijn, kunnen beide expliciet gevraagd worden. Pairflow blijft bovendien alleen gelden wanneer beide siblings al zelfstandig eligible zijn.
