@@ -1,8 +1,8 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -18,13 +18,7 @@ import {
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
-import {
-  getQuestionnaireRuntime,
-  searchAllKinks,
-  type QuestionnaireIntent,
-} from "@/lib/questionnaire";
-import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
-import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
+import { questionnaireCoverage, searchAllKinks } from "@/lib/questionnaire";
 import { useMotionSafe } from "@/lib/motion";
 import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
@@ -35,12 +29,10 @@ import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
-import ProfileTour from "@/components/ProfileTour";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import BdsmtestScores from "@/components/BdsmtestScores";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import SegmentedPill from "@/components/ui/SegmentedPill";
-import TriageDeck from "@/components/TriageDeck";
 import CategorySection from "@/components/CategorySection";
 import KinkListRow from "@/components/KinkListRow";
 import KinkEditSheet from "@/components/KinkEditSheet";
@@ -61,8 +53,6 @@ const TAB_VARIANTS = {
   exit: (direction: number) => ({ opacity: 0, x: direction > 0 ? -28 : 28 }),
 };
 const EMPTY_KINKS: Kink[] = [];
-const DYNAMIC_INTENT = { kind: "dynamic" } as const satisfies QuestionnaireIntent;
-type GlobalQuestionnaireIntent = Exclude<QuestionnaireIntent, { kind: "category" }>;
 
 const CATALOG_KINKS_BY_CATEGORY = new Map<KinkCategoryId, Kink[]>();
 for (const kink of KINKS) {
@@ -73,7 +63,6 @@ for (const kink of KINKS) {
 
 export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
-  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const transition = useMotionSafe();
@@ -85,45 +74,28 @@ export default function ProfilePage({ params }: Props) {
     removeCustomKink,
     setProfileAvatar,
     updatePrivateNote,
-    profileTourComplete,
-    completeProfileTour,
     pinnedProfileId,
     profileSnapshots,
     saveProfileSnapshot,
   } = useStore();
   const profile = profiles.find((candidate) => candidate.id === id);
-  const profileQuestionnaireMode = profile?.questionnaireSetup?.mode;
 
   const [activeTab, setActiveTab] = useState<ProfileTab | null>(null);
   const [tabDirection, setTabDirection] = useState<1 | -1>(1);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<KinkCategoryId | null>(null);
   const [search, setSearch] = useState("");
-  const [questionnaireIntent, setQuestionnaireIntent] = useState<QuestionnaireIntent>(DYNAMIC_INTENT);
-  const [categoryReturnIntent, setCategoryReturnIntent] = useState<GlobalQuestionnaireIntent>(DYNAMIC_INTENT);
   const [customInput, setCustomInput] = useState("");
   const [editKink, setEditKink] = useState<Kink | null>(null);
   const [editing, setEditing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
-  const [tourVisible, setTourVisible] = useState(false);
-  const [questionnaireLanding, setQuestionnaireLanding] = useState(false);
   const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const initializedProfileId = useRef<string | null>(null);
   const editQueryConsumed = useRef(false);
-  const questionnaireFocusConsumed = useRef(false);
-  const deckRef = useRef<HTMLDivElement>(null);
-
-  const questionnaireRuntime = useMemo(
-    () => profile
-      ? getQuestionnaireRuntime(profile, { intent: questionnaireIntent })
-      : null,
-    [profile, questionnaireIntent],
-  );
-  const visibleKinks = questionnaireRuntime?.visibleKinks ?? EMPTY_KINKS;
 
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
@@ -131,22 +103,9 @@ export default function ProfilePage({ params }: Props) {
     setEditing(false);
     setCategoriesOpen(false);
     setCatalogCategoryFilter(null);
-    setQuestionnaireIntent(DYNAMIC_INTENT);
-    setCategoryReturnIntent(DYNAMIC_INTENT);
-    setQuestionnaireLanding(false);
     initializedProfileId.current = null;
     editQueryConsumed.current = false;
-    questionnaireFocusConsumed.current = false;
   }, [id]);
-
-  useEffect(() => {
-    if (!profileQuestionnaireMode) return;
-    const storedIntent: GlobalQuestionnaireIntent = profileQuestionnaireMode === "deepDive"
-      ? { kind: "deepDive" }
-      : DYNAMIC_INTENT;
-    setQuestionnaireIntent((current) => current.kind === "category" ? current : storedIntent);
-    setCategoryReturnIntent(storedIntent);
-  }, [id, profileQuestionnaireMode]);
 
   useEffect(() => {
     if (!hydrated || !profile || initializedProfileId.current === profile.id) return;
@@ -167,40 +126,6 @@ export default function ProfilePage({ params }: Props) {
     router.replace(`/profile/${profile.id}${query ? `?${query}` : ""}`, { scroll: false });
   }, [hydrated, profile, router, searchParams]);
 
-  useEffect(() => {
-    if (!hydrated || !profile || activeTab !== "bewerken") return;
-    if (questionnaireFocusConsumed.current || searchParams.get("focus") !== "questionnaire") return;
-    const target = deckRef.current;
-    if (!target) return;
-    setQuestionnaireLanding(true);
-
-    const frame = window.requestAnimationFrame(() => {
-      if (!target.isConnected) return;
-      questionnaireFocusConsumed.current = true;
-      target.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-        block: "start",
-      });
-
-      const nextParams = new URLSearchParams(searchParams.toString());
-      nextParams.delete("focus");
-      const query = nextParams.toString();
-      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [activeTab, hydrated, pathname, profile, router, searchParams]);
-
-  useEffect(() => {
-    const sharedProfile = profile?.origin === "shared" || profile?.isImported === true;
-    if (profileTourComplete || questionnaireLanding || activeTab !== "bewerken" || sharedProfile) {
-      setTourVisible(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setTourVisible(true), 1500);
-    return () => window.clearTimeout(timer);
-  }, [profileTourComplete, questionnaireLanding, activeTab, profile]);
-
   if (!hydrated) return <PageShell loading width="2xl" />;
 
   if (!profile) {
@@ -218,8 +143,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   const currentProfile = profile;
-  const runtime = questionnaireRuntime!;
-  const questionnaireSetup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
+  const coverage = questionnaireCoverage(currentProfile);
   const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   const effectiveTab = shared ? "overzicht" : activeTab;
   const visibleCategories = CATEGORIES;
@@ -252,48 +176,6 @@ export default function ProfilePage({ params }: Props) {
         (kink) => catalogCategoryFilter === null || kink.category === catalogCategoryFilter,
       )
     : [];
-  const runtimeKind = runtime.intent.kind;
-  const activeCategoryKinks = runtimeKind === "category"
-    ? CATALOG_KINKS_BY_CATEGORY.get(runtime.intent.category) ?? []
-    : [];
-  const activeCategoryRated = activeCategoryKinks.filter(
-    (kink) => currentProfile.entries[kink.id]?.status != null,
-  ).length;
-  const catalogProgress = runtimeKind === "deepDive" || runtimeKind === "discover";
-  const progressPercent = runtimeKind === "category"
-    ? Math.round((activeCategoryRated / Math.max(1, activeCategoryKinks.length)) * 100)
-    : catalogProgress
-      ? Math.round((catalogRated / KINKS.length) * 100)
-      : runtime.coverage.percent;
-  const hasPrivateResponses = Object.values(currentProfile.entries).some(
-    (entry) => entry.status && entry.privateResponse,
-  );
-  const activeCategoryLabel = runtimeKind === "category"
-    ? kinkCategoryLabel(runtime.intent.category)
-    : null;
-  const progressAriaLabel = runtimeKind === "category"
-    ? `${activeCategoryLabel} voortgang`
-    : catalogProgress
-      ? "Catalogusvoortgang"
-      : "Profieldekking";
-  const progressCopy = runtimeKind === "category"
-    ? `${activeCategoryLabel}: ${activeCategoryRated} / ${activeCategoryKinks.length} beoordeeld.`
-    : catalogProgress
-      ? `${runtimeKind === "discover" ? "Discover" : "Catalogus"}: ${catalogRated} / ${KINKS.length} beoordeeld.`
-      : `Profieldekking ${runtime.coverage.percent}% · ${runtime.coverage.answered} / ${runtime.coverage.total} dekkingsvragen expliciet beantwoord.`;
-  const deckProgressLabel = runtimeKind === "category"
-    ? `${activeCategoryLabel}: ${activeCategoryRated} / ${activeCategoryKinks.length}`
-    : catalogProgress
-      ? `${runtimeKind === "discover" ? "Discover" : "Catalogus"}: ${catalogRated} / ${KINKS.length}`
-      : `Profieldekking ${runtime.coverage.percent}%`;
-  const intentKey = runtimeKind === "category"
-    ? `category:${runtime.intent.category}`
-    : runtimeKind;
-  const categoryReturnLabel = categoryReturnIntent.kind === "discover"
-    ? "Discover"
-    : categoryReturnIntent.kind === "deepDive"
-      ? "Deep Dive"
-      : "Dynamic";
 
   const statusSegments = STATUS_ORDER.map((status) => ({
     status,
@@ -320,34 +202,6 @@ export default function ProfilePage({ params }: Props) {
 
   function updateStatus(kinkId: string, status: KinkStatus) {
     setEntry(currentProfile.id, kinkId, { status, desire: null });
-  }
-
-  function startDiscovery() {
-    if (catalogRated === KINKS.length) return;
-    setQuestionnaireIntent({ kind: "discover" });
-    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function startCategory(category: KinkCategoryId) {
-    if (runtimeKind !== "category") {
-      setCategoryReturnIntent(runtime.intent);
-    }
-    setQuestionnaireIntent({ kind: "category", category });
-    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function leaveTemporaryIntent() {
-    setQuestionnaireIntent(runtimeKind === "category" ? categoryReturnIntent : DYNAMIC_INTENT);
-    deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function startDeepDive() {
-    updateProfileQuestionnaire(currentProfile.id, {
-      mode: "deepDive",
-      interests: [...questionnaireSetup.interests],
-      version: 2,
-    });
-    setQuestionnaireIntent({ kind: "deepDive" });
   }
 
   function privateResponseRevealed(kinkId: string): boolean {
@@ -397,8 +251,6 @@ export default function ProfilePage({ params }: Props) {
 
   return (
     <main className="max-w-3xl mx-auto w-full pt-6">
-      {tourVisible && <ProfileTour onComplete={completeProfileTour} />}
-
       {errorMessage && (
         <div
           role="alert"
@@ -436,16 +288,16 @@ export default function ProfilePage({ params }: Props) {
           >
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                {runtime.coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
+                {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
               </p>
               <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                {runtime.coverage.complete
+                {coverage.complete
                   ? "Je brede dekking staat. Discover en Deep Dive blijven beschikbaar."
-                  : `${runtime.coverage.answered} van ${runtime.coverage.total} dekkingsvragen beantwoord.`}
+                  : `${coverage.answered} van ${coverage.total} dekkingsvragen beantwoord.`}
               </p>
             </div>
             <span className="text-xs tabular-nums" style={{ color: "var(--accent-text)" }}>
-              {runtime.coverage.percent}%
+              {coverage.percent}%
             </span>
             <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
           </Link>
@@ -496,249 +348,130 @@ export default function ProfilePage({ params }: Props) {
                   className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
+
                 {!searchTerm && (
-                  <div className="mt-2">
-                    <div
-                      role="progressbar"
-                      aria-label={progressAriaLabel}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={progressPercent}
-                      className="h-1.5 rounded-full overflow-hidden"
-                      style={{ background: "var(--surface2)" }}
-                    >
-                      <div
-                        className="h-full rounded-full transition-[width]"
-                        style={{
-                          width: `${progressPercent}%`,
-                          background: "var(--accent)",
-                        }}
-                      />
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setCategoriesOpen(true)}
+                        aria-haspopup="dialog"
+                        aria-expanded={categoriesOpen}
+                        className="focus-ring inline-flex min-h-9 min-w-0 max-w-[70vw] items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                        style={catalogCategoryFilter
+                          ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
+                          : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                      >
+                        <span className="truncate">{catalogCategoryFilterLabel}</span>
+                        <CaretDown size={11} className="flex-none" aria-hidden="true" />
+                      </button>
+                      {catalogCategoryFilter && (
+                        <button
+                          type="button"
+                          onClick={() => setCatalogCategoryFilter(null)}
+                          aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
+                          className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+                          style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                        >
+                          <X size={13} weight="bold" aria-hidden="true" />
+                        </button>
+                      )}
                     </div>
-                    <p className="text-xs mt-1.5" style={{ color: "var(--text2)" }}>
-                      {progressCopy}
-                    </p>
+                    <span className="flex-none text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                      {catalogFilterRated} beoordeeld
+                    </span>
                   </div>
                 )}
               </div>
 
-              {!searchTerm ? (
-                <>
-                  <div className="px-4 mb-3">
+              {!searchTerm && (
+                <div
+                  role="img"
+                  aria-label={statusSegments.length
+                    ? statusSegments.map((segment) => `${segment.count} ${STATUS_LABEL[segment.status]}`).join(", ")
+                    : "Nog niets beoordeeld"}
+                  className="mx-4 mb-3 h-1.5 rounded-full overflow-hidden flex"
+                  style={{ background: "var(--surface2)" }}
+                >
+                  {statusSegments.map((segment) => (
                     <div
-                      role="img"
-                      aria-label={statusSegments.length
-                        ? statusSegments.map((segment) => `${segment.count} ${STATUS_LABEL[segment.status]}`).join(", ")
-                        : "Nog niets beoordeeld"}
-                      className="h-1.5 rounded-full overflow-hidden flex mb-2"
-                      style={{ background: "var(--surface2)" }}
-                    >
-                      {statusSegments.map((segment) => (
-                        <div
-                          key={segment.status}
-                          className="h-full"
-                          style={{ flex: segment.count, background: STATUS_VAR[segment.status] }}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setCategoriesOpen(true)}
-                          aria-haspopup="dialog"
-                          aria-expanded={categoriesOpen}
-                          className="focus-ring inline-flex min-h-9 min-w-0 max-w-[70vw] items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-                          style={catalogCategoryFilter
-                            ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-                            : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                        >
-                          <span className="truncate">{catalogCategoryFilterLabel}</span>
-                          <CaretDown size={11} className="flex-none" aria-hidden="true" />
-                        </button>
-                        {catalogCategoryFilter && (
-                          <button
-                            type="button"
-                            onClick={() => setCatalogCategoryFilter(null)}
-                            aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
-                            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
-                            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                          >
-                            <X size={13} weight="bold" aria-hidden="true" />
-                          </button>
-                        )}
-                      </div>
-                      <span className="flex-none text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-                        {catalogFilterRated} beoordeeld
-                      </span>
-                    </div>
-                  </div>
+                      key={segment.status}
+                      className="h-full"
+                      style={{ flex: segment.count, background: STATUS_VAR[segment.status] }}
+                    />
+                  ))}
+                </div>
+              )}
 
-                  <div ref={deckRef} className="px-4 mb-4" style={{ scrollMarginTop: "calc(var(--nav-h) + 12px)" }}>
-                    {!runtime.complete && (runtimeKind === "discover" || runtimeKind === "category") && (
-                      <div
-                        className="mb-2 rounded-xl px-3 py-2.5 flex items-center gap-3"
-                        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
-                            {runtimeKind === "discover" ? "Discover" : activeCategoryLabel}
-                          </p>
-                          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
-                            {runtimeKind === "discover"
-                              ? "Doorlopend nieuwe gebieden verkennen; je bepaalt zelf wanneer het genoeg is."
-                              : `Alle nog onbeantwoorde onderwerpen uit ${activeCategoryLabel}.`}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={leaveTemporaryIntent}
-                          className="focus-ring min-h-10 flex-none rounded-lg px-3 text-xs font-semibold"
-                          style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
-                        >
-                          {runtimeKind === "discover" ? "Genoeg voor nu" : `Terug naar ${categoryReturnLabel}`}
-                        </button>
-                      </div>
-                    )}
-                    {runtime.complete ? (
-                      <div
-                        className="rounded-2xl p-5 text-center"
-                        style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-                      >
-                        <p
-                          className="text-xl"
-                          style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}
-                        >
-                          {runtimeKind === "deepDive" || runtimeKind === "discover"
-                            ? "De hele catalogus ligt open op tafel."
-                            : runtimeKind === "category"
-                              ? `${activeCategoryLabel} is rond.`
-                              : "Brede profieldekking bereikt."}
-                        </p>
-                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text2)" }}>
-                          {runtimeKind === "deepDive" || runtimeKind === "discover"
-                            ? `${catalogRated} van ${KINKS.length} onderwerpen expliciet beoordeeld.`
-                            : runtimeKind === "category"
-                              ? "Alle onderwerpen in deze categorie hebben nu een expliciet antwoord. Buiten deze categorie is niets ingevuld of afgeleid."
-                              : "Geen antwoord is ingevuld of voorspeld. Je kunt doorlopend nieuwe gebieden verkennen of bewust alles afwerken."}
-                        </p>
-                        {runtimeKind === "dynamic" && (
-                          <div className="grid grid-cols-2 gap-2 mt-4">
-                            <button
-                              type="button"
-                              onClick={startDiscovery}
-                              disabled={catalogRated === KINKS.length}
-                              className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
-                              style={{ border: "1px solid var(--border)", color: "var(--text)" }}
-                            >
-                              Discover
-                            </button>
-                            <button
-                              type="button"
-                              onClick={startDeepDive}
-                              className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold"
-                              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                            >
-                              Deep Dive
-                            </button>
-                          </div>
-                        )}
-                        {(runtimeKind === "category" || runtimeKind === "discover") && (
-                          <button
-                            type="button"
-                            onClick={leaveTemporaryIntent}
-                            className="focus-ring mt-4 min-h-11 w-full rounded-xl px-3 text-xs font-semibold"
-                            style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
-                          >
-                            {runtimeKind === "category" ? `Terug naar ${categoryReturnLabel}` : "Terug naar Dynamic"}
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <TriageDeck
-                        key={intentKey}
-                        kinks={visibleKinks}
-                        queueItems={runtime.queue}
+              {!searchTerm ? (
+                <div className="px-4">
+                  {catalogCategories.map((category) => {
+                    const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
+                    if (!kinks.length) return null;
+                    return (
+                      <CategorySection
+                        key={category}
+                        category={category}
+                        kinks={kinks}
                         entries={currentProfile.entries}
-                        focusCategory={runtimeKind === "category" ? runtime.intent.category : null}
-                        progressLabel={deckProgressLabel}
-                        onStatusChange={updateStatus}
-                        onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
-                        onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
-                        onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
+                        onEdit={setEditKink}
+                        openByDefault={catalogCategoryFilter === category}
                       />
-                    )}
-                  </div>
+                    );
+                  })}
 
-                  <div className="px-4">
-                    {catalogCategories.map((category) => {
-                      const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
-                      if (!kinks.length) return null;
-                      return (
-                        <CategorySection
-                          key={category}
-                          category={category}
-                          kinks={kinks}
-                          entries={currentProfile.entries}
-                          onEdit={setEditKink}
-                          onExplore={() => startCategory(category)}
-                        />
-                      );
-                    })}
-
-                    {!catalogCategoryFilter && (
-                      <section className="rounded-xl mt-3 p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                        <h3 className="text-sm font-semibold mb-2">Eigen onderwerpen</h3>
-                        <div className="flex flex-col gap-1 mb-3">
-                          {customKinks.map((custom) => {
-                            const customAsKink: Kink = {
-                              id: custom.id,
-                              name: custom.name,
-                              category: "custom",
-                              level: 1,
-                            };
-                            return (
-                              <div key={custom.id} className="flex items-center gap-1">
-                                <div className="flex-1">
-                                  <KinkListRow
-                                    kink={customAsKink}
-                                    entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
-                                    onOpen={() => setEditKink(customAsKink)}
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => removeCustomKink(currentProfile.id, custom.id)}
-                                  aria-label={`${custom.name} verwijderen`}
-                                  className="focus-ring w-10 h-10 rounded-full"
-                                  style={{ color: "var(--hard-no)" }}
-                                >
-                                  ×
-                                </button>
+                  {!catalogCategoryFilter && (
+                    <section className="rounded-xl mt-3 p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                      <h3 className="text-sm font-semibold mb-2">Eigen onderwerpen</h3>
+                      <div className="flex flex-col gap-1 mb-3">
+                        {customKinks.map((custom) => {
+                          const customAsKink: Kink = {
+                            id: custom.id,
+                            name: custom.name,
+                            category: "custom",
+                            level: 1,
+                          };
+                          return (
+                            <div key={custom.id} className="flex items-center gap-1">
+                              <div className="flex-1">
+                                <KinkListRow
+                                  kink={customAsKink}
+                                  entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
+                                  onOpen={() => setEditKink(customAsKink)}
+                                />
                               </div>
-                            );
-                          })}
-                        </div>
-                        <form onSubmit={addCustom} className="flex gap-2">
-                          <input
-                            value={customInput}
-                            onChange={(event) => setCustomInput(event.target.value)}
-                            placeholder="Voeg iets eigens toe…"
-                            className="focus-ring flex-1 min-h-11 rounded-xl px-3 text-sm focus:outline-none"
-                            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-                          />
-                          <button
-                            type="submit"
-                            className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
-                            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                          >
-                            Toevoegen
-                          </button>
-                        </form>
-                      </section>
-                    )}
-                  </div>
-                </>
+                              <button
+                                type="button"
+                                onClick={() => removeCustomKink(currentProfile.id, custom.id)}
+                                aria-label={`${custom.name} verwijderen`}
+                                className="focus-ring w-10 h-10 rounded-full"
+                                style={{ color: "var(--hard-no)" }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <form onSubmit={addCustom} className="flex gap-2">
+                        <input
+                          value={customInput}
+                          onChange={(event) => setCustomInput(event.target.value)}
+                          placeholder="Voeg iets eigens toe…"
+                          className="focus-ring flex-1 min-h-11 rounded-xl px-3 text-sm focus:outline-none"
+                          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                        />
+                        <button
+                          type="submit"
+                          className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
+                          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                        >
+                          Toevoegen
+                        </button>
+                      </form>
+                    </section>
+                  )}
+                </div>
               ) : (
                 <div className="px-4">
                   <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
@@ -898,7 +631,7 @@ export default function ProfilePage({ params }: Props) {
               {!shared && totalRated > 0 && (
                 <section className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
                   <h3 className="text-sm italic mb-2" style={{ color: "var(--text2)" }}>Download dit profiel</h3>
-                  {hasPrivateResponses && (
+                  {hasPrivateResponses(currentProfile.entries) && (
                     <label className="flex items-center gap-2 text-xs mb-2" style={{ color: "var(--text2)" }}>
                       <input
                         type="checkbox"
@@ -956,4 +689,8 @@ export default function ProfilePage({ params }: Props) {
       <QRModal profile={shareOpen && !shared ? currentProfile : null} onClose={() => setShareOpen(false)} />
     </main>
   );
+}
+
+function hasPrivateResponses(entries: Record<string, { status?: KinkStatus | null; privateResponse?: boolean }>) {
+  return Object.values(entries).some((entry) => entry.status && entry.privateResponse);
 }
