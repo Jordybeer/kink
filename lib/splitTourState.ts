@@ -1,28 +1,82 @@
+import { useEffect, useState } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
 export const SPLIT_TOUR_KEYS = {
-  profile: "ks-tour-profile-intro-v2",
-  questions: "ks-tour-questionnaire-v2",
+  profile: "profile",
+  questions: "questions",
 } as const;
 
 type SplitTourKey = (typeof SPLIT_TOUR_KEYS)[keyof typeof SPLIT_TOUR_KEYS];
 
-function readSeen(key: SplitTourKey): boolean {
-  try {
-    return window.localStorage.getItem(key) === "1";
-  } catch {
-    return false;
-  }
+interface SplitTourState {
+  profileIntroTourSeen: boolean;
+  questionnaireTourSeen: boolean;
+  markSeen: (key: SplitTourKey) => boolean;
+  reset: () => void;
+}
+
+function bothSeen(state: Pick<SplitTourState, "profileIntroTourSeen" | "questionnaireTourSeen">) {
+  return state.profileIntroTourSeen && state.questionnaireTourSeen;
+}
+
+export const useSplitTourStore = create<SplitTourState>()(
+  persist(
+    (set) => ({
+      profileIntroTourSeen: false,
+      questionnaireTourSeen: false,
+      markSeen(key) {
+        let completed = false;
+        set((state) => {
+          const next = key === SPLIT_TOUR_KEYS.profile
+            ? { ...state, profileIntroTourSeen: true }
+            : { ...state, questionnaireTourSeen: true };
+          completed = bothSeen(next);
+          return next;
+        });
+        return completed;
+      },
+      reset() {
+        set({ profileIntroTourSeen: false, questionnaireTourSeen: false });
+      },
+    }),
+    {
+      name: "kinksync-split-tours-v2",
+      partialize: (state) => ({
+        profileIntroTourSeen: state.profileIntroTourSeen,
+        questionnaireTourSeen: state.questionnaireTourSeen,
+      }),
+    },
+  ),
+);
+
+function seenFor(key: SplitTourKey) {
+  const state = useSplitTourStore.getState();
+  return key === SPLIT_TOUR_KEYS.profile
+    ? state.profileIntroTourSeen
+    : state.questionnaireTourSeen;
 }
 
 export function shouldShowSplitTour(legacyComplete: boolean, key: SplitTourKey): boolean {
-  if (legacyComplete || typeof window === "undefined") return false;
-  return !readSeen(key);
+  if (legacyComplete) return false;
+  return !seenFor(key);
 }
 
 export function markSplitTourSeen(key: SplitTourKey): boolean {
-  try {
-    window.localStorage.setItem(key, "1");
-    return readSeen(SPLIT_TOUR_KEYS.profile) && readSeen(SPLIT_TOUR_KEYS.questions);
-  } catch {
-    return false;
-  }
+  return useSplitTourStore.getState().markSeen(key);
+}
+
+export function resetSplitTours() {
+  useSplitTourStore.getState().reset();
+}
+
+export function useSplitTourHasHydrated() {
+  const [hydrated, setHydrated] = useState(useSplitTourStore.persist.hasHydrated());
+
+  useEffect(() => {
+    setHydrated(useSplitTourStore.persist.hasHydrated());
+    return useSplitTourStore.persist.onFinishHydration(() => setHydrated(true));
+  }, []);
+
+  return hydrated;
 }
