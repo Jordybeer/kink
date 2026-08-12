@@ -56,6 +56,18 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByRole("button", { name: /Categorie/i })).toHaveCount(0);
   });
 
+  test("opgeslagen Deep Dive blijft actief na hydration", async ({ page }) => {
+    const deepAlex = {
+      ...PROFILE_ALEX,
+      entries: {},
+      questionnaireSetup: { mode: "deepDive" as const, interests: [], version: 2 as const },
+    };
+    await seedAndGo(page, "/profile/pw-alex-001/questions", [deepAlex, PROFILE_SAM]);
+
+    await expect(page.getByRole("button", { name: "Deep Dive" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "Dynamic" })).toHaveAttribute("aria-pressed", "false");
+  });
+
   test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
     await page.getByRole("tab", { name: "Bewerken" }).click();
     await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();
@@ -168,8 +180,14 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
     await expect(profileTour).toBeVisible({ timeout: 3000 });
     await profileTour.getByRole("button", { name: "Begrepen" }).click();
 
-    await expect.poll(() => page.evaluate(() => localStorage.getItem("ks-tour-profile-intro-v2"))).toBe("1");
-    await expect.poll(() => page.evaluate(() => localStorage.getItem("ks-tour-questionnaire-v2"))).toBeNull();
+    await expect.poll(() => page.evaluate(() => {
+      const raw = localStorage.getItem("kinksync-split-tours-v2");
+      return raw ? JSON.parse(raw).state?.profileIntroTourSeen === true : false;
+    })).toBe(true);
+    expect(await page.evaluate(() => {
+      const raw = localStorage.getItem("kinksync-split-tours-v2");
+      return raw ? JSON.parse(raw).state?.questionnaireTourSeen === true : false;
+    })).toBe(false);
 
     await page.getByRole("link", { name: /Start met vragen|Verder invullen|Verder ontdekken/i }).click();
     await expect(page).toHaveURL(/\/profile\/pw-alex-001\/questions$/);
@@ -178,7 +196,10 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
     await expect(questionTour).toBeVisible({ timeout: 3000 });
     await questionTour.getByRole("button", { name: "Sla over" }).click();
 
-    await expect.poll(() => page.evaluate(() => localStorage.getItem("ks-tour-questionnaire-v2"))).toBe("1");
+    await expect.poll(() => page.evaluate(() => {
+      const raw = localStorage.getItem("kinksync-split-tours-v2");
+      return raw ? JSON.parse(raw).state?.questionnaireTourSeen === true : false;
+    })).toBe(true);
     await expect.poll(() => page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
       if (!raw) return false;
