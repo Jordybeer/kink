@@ -349,39 +349,41 @@ export default function ProfilePage({ params }: Props) {
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
 
-                {!searchTerm && (
-                  <div className="mt-2 flex items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-1.5">
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCategoriesOpen(true)}
+                      aria-haspopup="dialog"
+                      aria-expanded={categoriesOpen}
+                      className="focus-ring inline-flex min-h-9 min-w-0 max-w-[70vw] items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                      style={catalogCategoryFilter
+                        ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
+                        : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                    >
+                      <span className="truncate">{catalogCategoryFilterLabel}</span>
+                      <CaretDown size={11} className="flex-none" aria-hidden="true" />
+                    </button>
+                    {catalogCategoryFilter && (
                       <button
                         type="button"
-                        onClick={() => setCategoriesOpen(true)}
-                        aria-haspopup="dialog"
-                        aria-expanded={categoriesOpen}
-                        className="focus-ring inline-flex min-h-9 min-w-0 max-w-[70vw] items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-                        style={catalogCategoryFilter
-                          ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-                          : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                        onClick={() => setCatalogCategoryFilter(null)}
+                        aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
+                        className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+                        style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
                       >
-                        <span className="truncate">{catalogCategoryFilterLabel}</span>
-                        <CaretDown size={11} className="flex-none" aria-hidden="true" />
+                        <X size={13} weight="bold" aria-hidden="true" />
                       </button>
-                      {catalogCategoryFilter && (
-                        <button
-                          type="button"
-                          onClick={() => setCatalogCategoryFilter(null)}
-                          aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
-                          className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
-                          style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                        >
-                          <X size={13} weight="bold" aria-hidden="true" />
-                        </button>
-                      )}
-                    </div>
-                    <span className="flex-none text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-                      {catalogFilterRated} beoordeeld
-                    </span>
+                    )}
                   </div>
-                )}
+                  <span
+                    aria-live="polite"
+                    className="flex-none text-xs tabular-nums"
+                    style={{ color: "var(--text2)" }}
+                  >
+                    {searchTerm ? `${searchResults.length} resultaten` : `${catalogFilterRated} beoordeeld`}
+                  </span>
+                </div>
               </div>
 
               {!searchTerm && (
@@ -474,9 +476,6 @@ export default function ProfilePage({ params }: Props) {
                 </div>
               ) : (
                 <div className="px-4">
-                  <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
-                    {searchResults.length} resultaten in {catalogCategoryFilter ? catalogCategoryFilterLabel : "de volledige catalogus"}
-                  </p>
                   <div className="flex flex-col">
                     {searchResults.map((kink) => (
                       <KinkListRow
