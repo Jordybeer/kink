@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowSquareOut,
@@ -22,9 +22,9 @@ import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
 import ProfileTrust from "@/components/ProfileTrust";
-import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import { mostRecentReadableContractForProfile } from "@/lib/contractLifecycle";
+import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -47,15 +47,9 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
-  const allProfiles = useStore((state) => state.profiles);
-  const legacyContracts = useStore((state) => state.contracts);
+  useLegacyContractMigration();
   const contractSeries = useContractStore((state) => state.series);
-  const importLegacyContracts = useContractStore((state) => state.importLegacyContracts);
   const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
-
-  useEffect(() => {
-    importLegacyContracts(legacyContracts, allProfiles);
-  }, [allProfiles, importLegacyContracts, legacyContracts]);
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
 
