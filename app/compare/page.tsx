@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense, useCallback, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { ArrowsLeftRight } from "@phosphor-icons/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowsLeftRight, FileText } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import CompareProfileHeader from "@/components/compare/CompareProfileHeader";
 import CompareResults from "@/components/compare/CompareResults";
@@ -20,6 +20,7 @@ import {
 import { useHasHydrated, useStore } from "@/lib/store";
 
 function ComparePage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { profiles, setEntry, pinnedProfileId } = useStore();
   const hasHydrated = useHasHydrated();
@@ -54,7 +55,15 @@ function ComparePage() {
       placement: "primary",
       disabled: !hasPair,
     },
-  ], [hasPair, swapProfiles]);
+    {
+      id: "create-contract",
+      label: "Contract opstellen",
+      icon: <FileText size={18} aria-hidden="true" />,
+      onClick: () => router.push(`/contract?a=${encodeURIComponent(aId)}&b=${encodeURIComponent(bId)}`),
+      placement: "secondary",
+      disabled: !hasPair,
+    },
+  ], [aId, bId, hasPair, router, swapProfiles]);
   useTopNavActions(navActions);
 
   const toggleDiscussed = useCallback((id: string) => {
