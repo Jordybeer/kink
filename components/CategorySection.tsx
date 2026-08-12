@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { ArrowUp, CaretDown, CaretRight } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import KinkListRow from "./KinkListRow";
@@ -10,7 +10,7 @@ interface Props {
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onEdit: (kink: Kink) => void;
-  onExplore: () => void;
+  openByDefault?: boolean;
 }
 
 const MAX_PIPS = 12;
@@ -20,17 +20,23 @@ function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
 }
 
 export default function CategorySection({
-  category, kinks, entries,
-  onEdit, onExplore,
+  category,
+  kinks,
+  entries,
+  onEdit,
+  openByDefault = false,
 }: Props) {
   const filled = countFilled(kinks, entries);
-  const [open, setOpen] = useState(() => filled > 0);
-  const unratedCount = kinks.length - filled;
+  const [open, setOpen] = useState(() => openByDefault || filled > 0);
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
   const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
   const label = kinkCategoryLabel(category);
   const headingId = `category-${category}`;
+
+  useEffect(() => {
+    if (openByDefault) setOpen(true);
+  }, [openByDefault]);
 
   return (
     <section className="mb-3" aria-labelledby={headingId}>
@@ -76,57 +82,19 @@ export default function CategorySection({
             </span>
           </div>
         </button>
-        {unratedCount > 0 && (
-          <button
-            type="button"
-            onClick={onExplore}
-            aria-label={`Meer uit ${label} beoordelen`}
-            className="focus-ring mr-2 min-h-11 flex-none rounded-full px-3 text-xs transition-colors"
-            style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.borderColor = "var(--accent)";
-              event.currentTarget.style.color = "var(--accent-text)";
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.borderColor = "var(--border)";
-              event.currentTarget.style.color = "var(--text2)";
-            }}
-          >
-            Meer
-          </button>
-        )}
       </div>
 
       <div id={`${headingId}-content`} className={`accordion-content ${open ? "open" : ""}`}>
         <div className="accordion-inner">
           <div className="mt-1 flex flex-col pl-1">
-            {kinks
-              .filter((kink) => entries[kink.id]?.status != null)
-              .map((kink) => (
-                <KinkListRow
-                  key={kink.id}
-                  kink={kink}
-                  entry={entries[kink.id]}
-                  onOpen={() => onEdit(kink)}
-                />
-              ))}
-            {unratedCount > 0 && (
-              <button
-                type="button"
-                onClick={onExplore}
-                className="focus-ring w-full min-h-12 rounded-xl mb-1 px-3 flex items-center gap-2 text-left transition-colors"
-                style={{
-                  border: "1px dashed color-mix(in srgb, var(--accent) 45%, transparent)",
-                  color: "var(--accent-text)",
-                  background: "transparent",
-                }}
-              >
-                <span className="flex-1 text-xs font-medium">
-                  Nog <span className="tabular-nums">{unratedCount}</span> onbeantwoord
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs"><ArrowUp size={12} aria-hidden="true" />meer uit deze categorie</span>
-              </button>
-            )}
+            {kinks.map((kink) => (
+              <KinkListRow
+                key={kink.id}
+                kink={kink}
+                entry={entries[kink.id] ?? { status: null, comment: "" }}
+                onOpen={() => onEdit(kink)}
+              />
+            ))}
           </div>
         </div>
       </div>
