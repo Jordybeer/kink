@@ -64,7 +64,7 @@ const journey = [
     icon: QrCode,
     eyebrow: "Deel",
     title: "Jij opent de deur",
-    text: "Alleen de gekozen publieke profielinhoud reist mee. Private responses blijven buiten partnergerichte output.",
+    text: "Alleen de gekozen publieke profielinhoud reist mee. Afgeschermde antwoorden blijven buiten informatie voor partners.",
   },
 ] as const;
 
@@ -109,7 +109,7 @@ export default function AboutPage() {
           >
             {[
               ["Lokaal", "Standaard op dit toestel"],
-              ["Expliciet", "Geen antwoord-inference"],
+              ["Expliciet", "Geen voorspelde antwoorden"],
               ["Controleerbaar", "Ondertekende versies"],
             ].map(([title, text]) => (
               <div key={title} className="px-4 py-3.5" style={{ background: "color-mix(in srgb, var(--surface) 92%, transparent)" }}>
@@ -227,7 +227,7 @@ export default function AboutPage() {
 
         <div className="mt-7 grid gap-3 md:grid-cols-2">
           <TrustCard icon={ShieldCheck} title="Privé blijft privé" className="md:col-span-2">
-            Een afgeschermd antwoord is alleen voor jou. Het wordt uitgesloten van profieloverdracht en partnergerichte afgeleide output, waaronder vergelijkingen, contracten, scènes en pdf’s.
+            Een afgeschermd antwoord is alleen voor jou. Het wordt uitgesloten van profieloverdracht, vergelijkingen, contracten, scènes en pdf’s voor partners.
           </TrustCard>
           <TrustCard icon={Fingerprint} title="Een herkenbare bron">
             Eigen profielen kunnen versies lokaal ondertekenen. Een geïmporteerd profiel blijft vergrendeld; een ontvanger krijgt niet stilletjes eigendom of bewerkrechten.
@@ -288,7 +288,7 @@ export default function AboutPage() {
             De versleutelde back-up gebruikt AES-GCM-256 met een via PBKDF2-SHA-256 afgeleide sleutel.
           </p>
           <p className="mt-3">
-            Gedeelde payloads worden vóór import gevalideerd. Private eigendomssleutels reizen niet mee in profiel-QR’s of gedeelde links;
+            Gedeelde payloads worden vóór import gevalideerd. Private eigendomssleutels reizen niet mee in profiel-QR-codes of gedeelde links;
             ze horen alleen in de versleutelde back-up. De hosting serveert wel de appcode en updates, maar bewaart geen KinkSync-profielaccount.
           </p>
         </div>
