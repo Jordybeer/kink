@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import { X } from "@phosphor-icons/react";
 import SheetBackdrop from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
@@ -26,6 +26,7 @@ interface Props {
 
 export default function Sheet({ open, onClose, title, children, scrollable = false, "aria-label": ariaLabel }: Props) {
   const t = useMotionSafe();
+  const reduceMotion = useReducedMotion();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -55,10 +56,10 @@ export default function Sheet({ open, onClose, title, children, scrollable = fal
             aria-label={ariaLabel}
             className="fixed bottom-0 left-0 right-0 z-[151]"
             style={{ y, touchAction: scrollable ? "auto" : "none" }}
-            initial={{ y: "100%" }}
+            initial={reduceMotion ? false : { y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={SPRING}
+            transition={reduceMotion ? { duration: 0 } : SPRING}
             drag={scrollable ? false : "y"}
             dragConstraints={scrollable ? undefined : { top: 0 }}
             dragElastic={scrollable ? false : { top: 0.05, bottom: 0.3 }}
