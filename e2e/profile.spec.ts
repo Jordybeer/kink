@@ -46,6 +46,16 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     }
   });
 
+  test("vragenpagina toont alleen de drie vraagmodi", async ({ page }) => {
+    await page.goto("/profile/pw-alex-001/questions");
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByRole("button", { name: "Dynamic" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Discover" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Deep Dive" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Categorie/i })).toHaveCount(0);
+  });
+
   test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
     await page.getByRole("tab", { name: "Bewerken" }).click();
     await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();
@@ -81,6 +91,19 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByText("Impact Play", { exact: true }).first()).toBeVisible();
   });
 
+  test("gesloten categorieën zijn inert tot ze geopend worden", async ({ page }) => {
+    await page.getByRole("tab", { name: "Bewerken" }).click();
+    const content = page.locator("#category-impact-content");
+
+    await expect(content).toHaveAttribute("aria-hidden", "true");
+    await expect.poll(() => content.evaluate((element) => (element as HTMLElement).inert)).toBe(true);
+
+    await page.locator('button[aria-controls="category-impact-content"]').click();
+    await expect(content).toHaveAttribute("aria-hidden", "false");
+    await expect.poll(() => content.evaluate((element) => (element as HTMLElement).inert)).toBe(false);
+    await expect(content.locator('button[aria-label*="— bewerken"]').first()).toBeVisible();
+  });
+
   test("tabblad 'Bewerken' is een cataloguseditor zonder ingebouwde vragenkaart", async ({ page }) => {
     const editTab = page.getByRole("tab", { name: "Bewerken" });
     await editTab.click();
@@ -88,6 +111,29 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
     await expect(page.getByRole("button", { name: /Alle categorieën/ })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
+  });
+
+  test("categoriefilter blijft zichtbaar en wijzigbaar tijdens zoeken", async ({ page }) => {
+    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Alle categorieën/ }).click();
+
+    const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
+    await expect(categoryDialog).toBeVisible();
+    await categoryDialog.getByRole("button", { name: /^Bondage\b/ }).click();
+
+    const activeFilter = page.getByRole("button", { name: /^Bondage\b/ }).first();
+    await expect(activeFilter).toBeVisible();
+    const search = page.getByPlaceholder("Zoek in Bondage…");
+    await search.fill("spanking");
+
+    await expect(activeFilter).toBeVisible();
+    await expect(page.getByText("0 resultaten", { exact: true })).toBeVisible();
+    await expect(page.getByText("Geen onderwerpen gevonden.")).toBeVisible();
+
+    await page.getByRole("button", { name: "Filter Bondage wissen" }).click();
+    await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveValue("spanking");
+    await expect(page.getByText(/^[1-9]\d* resultaten$/)).toBeVisible();
+    await expect(page.locator('button[aria-label*="— bewerken"]').first()).toBeVisible();
   });
 
   test("kink-status instellen via de cataloguseditor", async ({ page }) => {
@@ -110,6 +156,34 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await page.getByRole("button", { name: "Klaar" }).click();
 
     await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible({ timeout: 3000 });
+  });
+});
+
+test.describe("Gesplitste spotlight-rondleiding", () => {
+  test("profielintro en vragenrondleiding onthouden hun eigen voltooiing", async ({ page }) => {
+    const emptyAlex = { ...PROFILE_ALEX, entries: {} };
+    await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex], { profileTourComplete: false });
+
+    const profileTour = page.getByRole("dialog", { name: "Maak het profiel herkenbaar" });
+    await expect(profileTour).toBeVisible({ timeout: 3000 });
+    await profileTour.getByRole("button", { name: "Begrepen" }).click();
+
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ks-tour-profile-intro-v2"))).toBe("1");
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ks-tour-questionnaire-v2"))).toBeNull();
+
+    await page.getByRole("link", { name: /Start met vragen|Verder invullen|Verder ontdekken/i }).click();
+    await expect(page).toHaveURL(/\/profile\/pw-alex-001\/questions$/);
+
+    const questionTour = page.getByRole("dialog", { name: "Beoordeel de volledige kink" });
+    await expect(questionTour).toBeVisible({ timeout: 3000 });
+    await questionTour.getByRole("button", { name: "Sla over" }).click();
+
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ks-tour-questionnaire-v2"))).toBe("1");
+    await expect.poll(() => page.evaluate(() => {
+      const raw = localStorage.getItem("kink-profiles");
+      if (!raw) return false;
+      return JSON.parse(raw).state?.profileTourComplete === true;
+    })).toBe(true);
   });
 });
 
