@@ -170,7 +170,11 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
 
   await page.goto("/profile/" + PROFILE_ALEX.id + "/questions");
   await page.waitForLoadState("networkidle");
-  await page.evaluate(() => window.dispatchEvent(new Event("ks:open-status-explainer")));
+  const helpTrigger = page
+    .getByLabel("Hoofdnavigatie")
+    .getByRole("button", { name: "Uitleg antwoordkeuzes" });
+  await expect(helpTrigger).toBeVisible();
+  await helpTrigger.click();
   const explainer = page.getByRole("dialog", { name: "Uitleg keuzes" });
   await expect(explainer).toBeVisible();
   await expectWithinVisualViewport(explainer);
