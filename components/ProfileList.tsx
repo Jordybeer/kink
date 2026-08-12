@@ -246,21 +246,8 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
         )}
 
         <div className="flex flex-col gap-1.5 lg:col-span-2">
-          {comparePair ? (
-            <Link
-              href={`/contract?a=${comparePair[0].id}&b=${comparePair[1].id}`}
-              prefetch={false}
-              className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-            >
-              <FileText size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
-              <span className="flex-1 text-sm font-medium">Maak een contract</span>
-              <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
-            </Link>
-          ) : null}
           {[
             { href: "/contracts", label: "Contracten", icon: FileText },
-            { href: "/scene", label: "Nieuwe scène", icon: FilmSlate },
             { href: "/scenes", label: "Scènes", icon: FilmSlate },
           ].map(({ href, label, icon: Icon }) => (
             <Link
