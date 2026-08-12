@@ -8,6 +8,7 @@ import PageShell from "@/components/PageShell";
 import ContractManageSheet from "@/components/contract/ContractManageSheet";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { decodeLocalRouteId } from "@/lib/localRoutes";
 import {
   contractBucket,
   contractStatusLabel,
@@ -17,8 +18,9 @@ import {
 
 export default function ContractDetailPage() {
   const params = useParams<{ seriesId: string }>();
+  const seriesId = decodeLocalRouteId(params.seriesId);
   const profiles = useStore((state) => state.profiles);
-  const series = useContractStore((state) => state.series.find((item) => item.id === params.seriesId));
+  const series = useContractStore((state) => state.series.find((item) => item.id === seriesId));
   const [hydrated, setHydrated] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
 
