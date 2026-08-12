@@ -46,6 +46,7 @@ export default function QuestionsScreen({ params }: Props) {
     [profile?.questionnaireSetup],
   );
   const runtimeKind = runtime?.intent.kind ?? "dynamic";
+  const shared = Boolean(profile && (profile.origin === "shared" || (!profile.origin && profile.isImported === true)));
 
   const saveMode = useCallback((mode: "dynamic" | "deepDive") => {
     if (!profile) return;
@@ -126,7 +127,6 @@ export default function QuestionsScreen({ params }: Props) {
   }
 
   const currentProfile = profile;
-  const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   if (shared) {
     return (
       <PageShell width="lg">
