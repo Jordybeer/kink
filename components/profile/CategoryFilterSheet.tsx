@@ -48,6 +48,7 @@ export default function CategoryFilterSheet({
         <button
           type="button"
           onClick={() => choose(null)}
+          aria-pressed={selected === null}
           className="focus-ring mb-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
           style={selected === null
             ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
