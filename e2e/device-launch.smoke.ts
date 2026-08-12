@@ -8,6 +8,7 @@ import {
 
 const ROUTES = [
   { slug: "home", url: "/" },
+  { slug: "about", url: "/about" },
   { slug: "profile", url: `/profile/${PROFILE_ALEX.id}` },
   { slug: "questions", url: `/profile/${PROFILE_ALEX.id}/questions` },
   { slug: "compare", url: `/compare?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}` },
@@ -42,6 +43,12 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expectEffectivelyOpaque(samProfile);
       break;
     }
+    case "about":
+      await expect(page.getByRole("heading", { name: "Jouw voorkeuren. Jouw toestel. Jouw woorden." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Drie regels sturen het hele product" })).toBeVisible();
+      await expect(page.getByText("Geen KinkSync-account", { exact: true })).toBeVisible();
+      await expect(page.getByText(/op iOS kunnen Safari en de geïnstalleerde Home Screen-app aparte opslagcontexten zijn/i)).toBeVisible();
+      break;
     case "profile":
       await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();
       await expect(page.getByRole("tab", { name: "Overzicht" })).toBeVisible();
