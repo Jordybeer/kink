@@ -29,7 +29,7 @@ const rules = [
   {
     number: "03",
     title: "Delen vraagt een handeling",
-    text: "Een profiel verlaat je toestel alleen wanneer jij bewust een QR-code, link of back-up gebruikt. Geen stille synchronisatie op de achtergrond.",
+    text: "Profielgegevens worden pas gedeeld of geëxporteerd wanneer jij daar zelf voor kiest, bijvoorbeeld via QR, link, tekst, pdf of back-up. Geen stille synchronisatie op de achtergrond.",
   },
 ] as const;
 
@@ -64,7 +64,7 @@ const journey = [
     icon: QrCode,
     eyebrow: "Deel",
     title: "Jij opent de deur",
-    text: "Alleen de gekozen publieke profielinhoud reist mee. Afgeschermde antwoorden blijven buiten informatie voor partners.",
+    text: "Bij profieloverdracht reizen alleen publieke antwoorden mee. Afgeschermde antwoorden blijven buiten QR-codes en gedeelde links.",
   },
 ] as const;
 
@@ -226,8 +226,8 @@ export default function AboutPage() {
         </h2>
 
         <div className="mt-7 grid gap-3 md:grid-cols-2">
-          <TrustCard icon={ShieldCheck} title="Privé blijft privé" className="md:col-span-2">
-            Een afgeschermd antwoord is alleen voor jou. Het wordt uitgesloten van profieloverdracht, vergelijkingen, contracten, scènes en pdf’s voor partners.
+          <TrustCard icon={ShieldCheck} title="Privé blijft afgeschermd" className="md:col-span-2">
+            Een afgeschermd antwoord telt niet mee in vergelijkingen en blijft uit profieloverdracht. Tekst- en pdf-export nemen het alleen mee nadat jij daar expliciet voor kiest.
           </TrustCard>
           <TrustCard icon={Fingerprint} title="Een herkenbare bron">
             Eigen profielen kunnen versies lokaal ondertekenen. Een geïmporteerd profiel blijft vergrendeld; een ontvanger krijgt niet stilletjes eigendom of bewerkrechten.
