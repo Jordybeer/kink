@@ -1,14 +1,14 @@
 "use client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
 import { sceneDetailHref } from "@/lib/localRoutes";
 import AftercareSheet from "@/components/AftercareSheet";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
-import { Play, Trash, FilmSlate } from "@phosphor-icons/react";
+import { FilmSlate, Play, Plus, Trash } from "@phosphor-icons/react";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { SceneRecord } from "@/types";
 
 const TRAFFIC = {
@@ -45,8 +45,6 @@ function SceneCard({
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-
-      {/* Completed: traffic-light header strip */}
       {traffic && (
         <div
           className="flex items-center gap-2.5 px-4 py-2.5"
@@ -59,7 +57,6 @@ function SceneCard({
       )}
 
       <div className="p-4 flex flex-col gap-2">
-        {/* Title + meta */}
         <div>
           <p className="text-sm font-semibold">{scene.title}</p>
           <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
@@ -68,7 +65,6 @@ function SceneCard({
           </p>
         </div>
 
-        {/* Intensity pills */}
         {scene.items.length > 0 && (
           <div className="flex gap-1.5 flex-wrap">
             {counts.zacht  > 0 && <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--willing) 15%, transparent)", color: "var(--willing)" }}>{counts.zacht}× zacht</span>}
@@ -78,7 +74,6 @@ function SceneCard({
           </div>
         )}
 
-        {/* Aftercare journal snippet (completed) */}
         {aftercare?.wentWell && (
           <p className="text-xs line-clamp-2" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
             <span className="font-medium" style={{ color: "var(--text)" }}>Wat werkte goed: </span>
@@ -92,7 +87,6 @@ function SceneCard({
           </p>
         )}
 
-        {/* Actions */}
         <div className="flex gap-2 mt-1">
           {scene.status === "completed" ? (
             <button
@@ -147,9 +141,20 @@ function EmptySection({ invite }: { invite: string }) {
 }
 
 export default function ScenesPage() {
+  const router = useRouter();
   const { scenes, deleteScene, completeScene } = useStore();
   const _hasHydrated = useHasHydrated();
   const [aftercareTarget, setAftercareTarget] = useState<string | null>(null);
+  const navActions = useMemo<TopNavAction[]>(() => [
+    {
+      id: "new-scene",
+      label: "Nieuwe scène",
+      icon: <Plus size={19} aria-hidden="true" />,
+      onClick: () => router.push("/scene"),
+      placement: "primary",
+    },
+  ], [router]);
+  useTopNavActions(navActions);
 
   if (!_hasHydrated) return <PageShell loading />;
 
@@ -165,13 +170,7 @@ export default function ScenesPage() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-4xl">
-      <div className="flex items-end justify-between mb-5">
-        <div>
-          <h1 className="text-2xl" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>Scènes</h1>
-          <p className="text-xs uppercase tracking-[0.22em] mt-1" style={{ color: "var(--text2)" }}>gepland · gespeeld · onthouden</p>
-        </div>
-        <Link href="/scene" className="text-xs px-3 py-2 rounded-lg focus-ring" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>+ Nieuwe scène</Link>
-      </div>
+      <h1 className="sr-only">Scènes</h1>
 
       {scenes.length === 0 ? (
         <EmptyState
