@@ -13,7 +13,7 @@ import {
   PushPinSlash,
   Trash,
 } from "@phosphor-icons/react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { getQuestionnaireRuntime } from "@/lib/questionnaire";
@@ -84,6 +84,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   const unpinProfile = useStore((state) => state.unpinProfile);
   const deleteProfile = useStore((state) => state.deleteProfile);
   const [groupDeleteTarget, setGroupDeleteTarget] = useState<Profile | null>(null);
+  const reduceMotion = useReducedMotion();
 
   const ownership = splitProfilesByOwnership(profiles, pinnedProfileId);
   const mineGroups = buildGroups(ownership.mine, pinnedProfileId);
@@ -111,7 +112,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   const renderGroups = (visibleGroups: ProfileGroup[]) => (
     <motion.div
       className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start"
-      initial="hidden"
+      initial={reduceMotion ? false : "hidden"}
       animate="show"
       variants={STAGGER_CHILDREN}
     >
