@@ -3,9 +3,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, GearSix, Info } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
+import ContextMenu from "@/components/ui/ContextMenu";
+import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
 
 const MotionLink = motion.create(Link);
 
@@ -15,12 +17,18 @@ export default function TopNav() {
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
   const onboardingComplete = useStore((state) => state.onboardingComplete);
+  const { actions } = useTopNav();
   const [savedVisible, setSavedVisible] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
   const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");
   const questionsRoute = /^\/profile\/[^/]+\/questions$/.test(path);
+
+  useEffect(() => {
+    setOverflowOpen(false);
+  }, [path]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -52,7 +60,7 @@ export default function TopNav() {
 
   const shell = {
     paddingTop: "env(safe-area-inset-top)",
-    background: "color-mix(in srgb, var(--surface) 78%, transparent)",
+    background: "color-mix(in srgb, var(--surface) 82%, transparent)",
     borderBottom: "1px solid var(--border)",
     backdropFilter: "blur(12px) saturate(140%)",
     WebkitBackdropFilter: "blur(12px) saturate(140%)",
@@ -68,13 +76,13 @@ export default function TopNav() {
           >
             KinkSync
           </span>
-          <div className="ml-auto flex items-center justify-end gap-2">
-            <StatusDot />
+          <div className="ml-auto flex items-center justify-end gap-1">
+            <OfflineStatus />
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              className="focus-ring flex items-center justify-center h-10 w-10 rounded-full"
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
               style={{ color: "var(--text2)" }}
             >
               <GearSix size={18} aria-hidden="true" />
@@ -85,12 +93,17 @@ export default function TopNav() {
     );
   }
 
-  const profileMatch = path.match(/^\/profile\/([^/]+)/);
   const sceneMatch = path.match(/^\/scenes\/([^/]+)/);
   const { title, back } = focusedRoute(path, {
-    profileName: profileMatch ? profiles.find((profile) => profile.id === profileMatch[1])?.name : undefined,
     sceneTitle: sceneMatch ? scenes.find((scene) => scene.id === sceneMatch[1])?.title : undefined,
   });
+
+  const directActions = actions.filter((action) => action.placement !== "overflow");
+  const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
+  const secondary = actions.find((action) => action.placement === "secondary" && action.id !== primary?.id)
+    ?? directActions.find((action) => action.id !== primary?.id);
+  const visibleIds = new Set([primary?.id, secondary?.id].filter(Boolean));
+  const overflowActions = actions.filter((action) => !visibleIds.has(action.id));
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
@@ -125,24 +138,80 @@ export default function TopNav() {
             Opgeslagen ✓
           </span>
         )}
-        {questionsRoute && (
+        {questionsRoute && actions.length === 0 && (
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("ks:open-status-explainer"))}
             aria-label="Uitleg over antwoordkeuzes"
-            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+            className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
           >
             <Info size={17} aria-hidden="true" />
           </button>
         )}
-        <StatusDot />
+        {primary && <TopNavActionButton action={primary} emphasis="primary" />}
+        {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
+        {overflowActions.length > 0 && (
+          <ContextMenu
+            open={overflowOpen}
+            onClose={() => setOverflowOpen(false)}
+            items={overflowActions
+              .filter((action) => !action.disabled)
+              .map((action) => ({
+                label: action.label,
+                icon: action.icon,
+                danger: action.danger,
+                onClick: action.onClick,
+              }))}
+          >
+            <button
+              type="button"
+              onClick={() => setOverflowOpen((open) => !open)}
+              aria-label="Meer acties"
+              aria-expanded={overflowOpen}
+              className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
+            >
+              <DotsThree size={20} weight="bold" aria-hidden="true" />
+            </button>
+          </ContextMenu>
+        )}
+        <OfflineStatus />
       </nav>
     </header>
   );
 }
 
-function StatusDot() {
+function TopNavActionButton({
+  action,
+  emphasis,
+}: {
+  action: TopNavAction;
+  emphasis: "primary" | "secondary";
+}) {
+  return (
+    <motion.button
+      type="button"
+      whileTap={action.disabled ? undefined : TAP_SPRING}
+      onClick={action.onClick}
+      disabled={action.disabled}
+      aria-label={action.label}
+      title={action.label}
+      className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full disabled:opacity-35"
+      style={{
+        color: action.danger
+          ? "var(--hard-no)"
+          : emphasis === "primary"
+            ? "var(--text)"
+            : "var(--text2)",
+      }}
+    >
+      {action.icon}
+    </motion.button>
+  );
+}
+
+function OfflineStatus() {
   const [online, setOnline] = useState(true);
 
   useEffect(() => {
@@ -156,41 +225,35 @@ function StatusDot() {
     };
   }, []);
 
-  const color = online ? "var(--willing)" : "var(--hard-no)";
+  if (online) return null;
 
   return (
     <span
       role="status"
       aria-live="polite"
-      aria-label={online ? "Online" : "Offline"}
-      className="inline-flex items-center gap-1.5"
+      aria-label="Offline"
+      className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
+      style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
-      <span className="relative flex h-2 w-2">
-        {!online && (
-          <span
-            className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
-            style={{ background: color }}
-          />
-        )}
-        <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
-      </span>
+      <WifiSlash size={14} aria-hidden="true" />
+      <span className="hidden min-[360px]:inline">Offline</span>
     </span>
   );
 }
 
 function focusedRoute(
   path: string,
-  dyn: { profileName?: string; sceneTitle?: string },
+  dyn: { sceneTitle?: string },
 ): { title: string; back: string } {
   if (path === "/profile") return { title: "Profiel", back: "/" };
   if (/^\/profile\/[^/]+\/questions$/.test(path)) {
     return { title: "Voorkeuren", back: path.replace(/\/questions$/, "") };
   }
-  if (path.startsWith("/profile/")) return { title: dyn.profileName ?? "Profiel", back: "/" };
+  if (path.startsWith("/profile/")) return { title: "Profiel", back: "/" };
   if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
   if (path === "/scenes") return { title: "Scènes", back: "/" };
   if (path === "/compare") return { title: "Vergelijk", back: "/" };
-  if (path === "/timeline") return { title: "Geschiedenis", back: "/" };
+  if (path === "/timeline") return { title: "Verloop", back: "/" };
   if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
   if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
   if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
