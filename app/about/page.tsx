@@ -259,7 +259,7 @@ export default function AboutPage() {
               Cryptografie kan manipulatie zichtbaar maken. Ze kan menselijke consent niet vervangen.
             </p>
           </div>
-          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          <div>
             <Limit title="Een handtekening is geen identiteitsbewijs">
               Ze bewijst controle over een lokale sleutel en een exacte inhoud — niet iemands wettelijke identiteit, begrip of afwezigheid van druk.
             </Limit>
@@ -352,7 +352,7 @@ function TrustCard({
 
 function Limit({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <article className="py-4 first:pt-0 last:pb-0">
+    <article className="border-t py-4 first:border-t-0 first:pt-0 last:pb-0" style={{ borderColor: "var(--border)" }}>
       <h3 className="text-sm font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm leading-6" style={{ color: "var(--text2)" }}>{children}</p>
     </article>
