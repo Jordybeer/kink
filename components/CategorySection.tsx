@@ -28,6 +28,7 @@ export default function CategorySection({
 }: Props) {
   const filled = countFilled(kinks, entries);
   const [open, setOpen] = useState(() => openByDefault);
+  const [hasOpened, setHasOpened] = useState(() => openByDefault);
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
   const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
@@ -35,8 +36,17 @@ export default function CategorySection({
   const headingId = `category-${category}`;
 
   useEffect(() => {
-    if (openByDefault) setOpen(true);
+    setOpen(openByDefault);
+    if (openByDefault) setHasOpened(true);
   }, [openByDefault]);
+
+  function toggleOpen() {
+    setOpen((value) => {
+      const next = !value;
+      if (next) setHasOpened(true);
+      return next;
+    });
+  }
 
   return (
     <section className="mb-3" aria-labelledby={headingId}>
@@ -51,7 +61,7 @@ export default function CategorySection({
       >
         <button
           type="button"
-          onClick={() => setOpen((value) => !value)}
+          onClick={toggleOpen}
           aria-expanded={open}
           aria-controls={`${headingId}-content`}
           className="focus-ring flex min-h-12 flex-1 items-center gap-2 px-3 py-2.5 text-left min-w-0"
@@ -84,18 +94,25 @@ export default function CategorySection({
         </button>
       </div>
 
-      <div id={`${headingId}-content`} className={`accordion-content ${open ? "open" : ""}`}>
+      <div
+        id={`${headingId}-content`}
+        className={`accordion-content ${open ? "open" : ""}`}
+        aria-hidden={!open}
+        inert={!open}
+      >
         <div className="accordion-inner">
-          <div className="mt-1 flex flex-col pl-1">
-            {kinks.map((kink) => (
-              <KinkListRow
-                key={kink.id}
-                kink={kink}
-                entry={entries[kink.id] ?? { status: null, comment: "" }}
-                onOpen={() => onEdit(kink)}
-              />
-            ))}
-          </div>
+          {hasOpened && (
+            <div className="mt-1 flex flex-col pl-1">
+              {kinks.map((kink) => (
+                <KinkListRow
+                  key={kink.id}
+                  kink={kink}
+                  entry={entries[kink.id] ?? { status: null, comment: "" }}
+                  onOpen={() => onEdit(kink)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
