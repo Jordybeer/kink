@@ -16,7 +16,6 @@ export type TopNavActionPlacement = "primary" | "secondary" | "overflow";
 export interface TopNavAction {
   id: string;
   label: string;
-  shortLabel?: string;
   icon: ReactNode;
   onClick: () => void;
   placement?: TopNavActionPlacement;
