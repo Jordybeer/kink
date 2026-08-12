@@ -54,7 +54,7 @@ test.describe("Home page — profielen aanwezig", () => {
   });
 
   test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
+    await page.setViewportSize({ width: 375, height: 480 });
     const trigger = page.getByRole("button", { name: "Instellingen openen" });
     await trigger.click();
 
@@ -72,7 +72,7 @@ test.describe("Home page — profielen aanwezig", () => {
     const titleBox = await title.boundingBox();
     expect(titleBox).not.toBeNull();
     const titleTop = titleBox!.y;
-    await lastAction.scrollIntoViewIfNeeded();
+    await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
     await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
 
     const actionBox = await lastAction.boundingBox();

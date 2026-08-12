@@ -191,16 +191,19 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <h3 className="text-sm font-semibold">Persoon & perspectief</h3>
             </div>
 
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
+            <label htmlFor="profile-edit-name" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
               Naam of alias
             </label>
             <input
+              id="profile-edit-name"
               value={name}
               onChange={(event) => {
                 setName(event.target.value);
                 setError(null);
               }}
               placeholder="Naam of alias"
+              autoComplete="off"
+              spellCheck={false}
               className="focus-ring w-full min-h-12 rounded-xl px-3.5 text-base mb-3 focus:outline-none"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
@@ -372,13 +375,16 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               })}
             </div>
 
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
+            <label htmlFor="profile-edit-fetlife" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
               FetLife-gebruikersnaam <span className="font-normal opacity-60">(optioneel)</span>
             </label>
             <input
+              id="profile-edit-fetlife"
               value={fetLife}
               onChange={(event) => setFetLife(event.target.value)}
               placeholder="Alleen je gebruikersnaam"
+              autoComplete="off"
+              spellCheck={false}
               className="focus-ring w-full min-h-11 rounded-xl px-3 text-sm focus:outline-none"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
@@ -407,21 +413,25 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
 
             {advancedOpen && (
               <div className="px-4 pb-4 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
-                <label className="block text-xs font-semibold mt-3 mb-1.5" style={{ color: "var(--text2)" }}>
+                <label htmlFor="profile-edit-bdsm-url" className="block text-xs font-semibold mt-3 mb-1.5" style={{ color: "var(--text2)" }}>
                   Resultaatlink
                 </label>
                 <input
+                  id="profile-edit-bdsm-url"
                   value={bdsmtestUrl}
                   onChange={(event) => setBdsmtestUrl(event.target.value)}
                   placeholder="https://bdsmtest.org/r/…"
+                  autoComplete="off"
+                  spellCheck={false}
                   className="focus-ring w-full min-h-11 rounded-xl px-3 text-sm mb-3 focus:outline-none"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
 
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
+                <label htmlFor="profile-edit-bdsm-results" className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
                   Plak resultaten
                 </label>
                 <textarea
+                  id="profile-edit-bdsm-results"
                   value={bdsmPaste}
                   onChange={(event) => {
                     setBdsmPaste(event.target.value);
@@ -429,6 +439,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   }}
                   placeholder={"== Results from bdsmtest.org ==\n100% Dominant\n97% Sadist\n…"}
                   rows={4}
+                  autoComplete="off"
+                  spellCheck={false}
                   className="focus-ring w-full rounded-xl px-3 py-2.5 text-xs resize-none font-mono focus:outline-none"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />

@@ -102,9 +102,10 @@ test.describe("Vergelijkingspagina", () => {
     expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
 
     await lastProfile.click();
-    await expect(page).toHaveURL(/b=bulk-24/);
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toHaveAccessibleName("Kies profiel B: Gedeeld 24");
 
-    await page.getByRole("button", { name: /Kies profiel B:/ }).click();
+    await trigger.click();
     const search = page.getByPlaceholder("Zoek op naam of rol…");
     await expect(search).toHaveValue("");
     await search.fill("Eigen 01");
