@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import SheetBackdrop from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
@@ -78,20 +79,11 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            aria-hidden="true"
-            className="fixed inset-0 z-[150]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={t.fast}
+          <SheetBackdrop
             onClick={onClose}
-          >
-            <motion.div
-              className="pointer-events-none absolute inset-0"
-              style={{ background: "var(--scrim-strong)", opacity: backdropOpacity }}
-            />
-          </motion.div>
+            transition={t.fast}
+            dragOpacity={backdropOpacity}
+          />
 
           <motion.div
             ref={sheetRef}
