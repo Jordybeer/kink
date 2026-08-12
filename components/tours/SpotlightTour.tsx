@@ -22,9 +22,11 @@ export interface SpotlightStep {
   offsetBelowNav?: boolean;
 }
 
+export type SpotlightTourExitReason = "completed" | "skipped" | "abandoned";
+
 interface SpotlightTourProps {
   steps: readonly SpotlightStep[];
-  onComplete: () => void;
+  onComplete: (reason: SpotlightTourExitReason) => void;
   finalLabel?: string;
   ariaIdPrefix: string;
 }
@@ -62,11 +64,16 @@ export default function SpotlightTour({
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const focusRestoredRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
   const t = useMotionSafe();
   const current = steps[step];
   const isLast = step === steps.length - 1;
   const titleId = `${ariaIdPrefix}-title`;
   const bodyId = `${ariaIdPrefix}-body`;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   const restorePreviousFocus = useCallback(() => {
     if (focusRestoredRef.current) return;
@@ -75,10 +82,10 @@ export default function SpotlightTour({
     if (previous?.isConnected) previous.focus();
   }, []);
 
-  const finishTour = useCallback(() => {
-    onComplete();
+  const finishTour = useCallback((reason: SpotlightTourExitReason) => {
+    onCompleteRef.current(reason);
     requestAnimationFrame(restorePreviousFocus);
-  }, [onComplete, restorePreviousFocus]);
+  }, [restorePreviousFocus]);
 
   const focusPrimaryAction = useCallback((node: HTMLButtonElement | null) => {
     if (!node) return;
@@ -100,7 +107,7 @@ export default function SpotlightTour({
 
   useEffect(() => {
     if (!current) {
-      finishTour();
+      finishTour("abandoned");
       return;
     }
 
@@ -112,7 +119,7 @@ export default function SpotlightTour({
 
     function abandonMissingStep() {
       if (cancelled) return;
-      if (step >= steps.length - 1) finishTour();
+      if (step >= steps.length - 1) finishTour("abandoned");
       else setStep((currentStep) => Math.min(currentStep + 1, steps.length - 1));
     }
 
@@ -199,13 +206,13 @@ export default function SpotlightTour({
       document.removeEventListener("scroll", remeasure, true);
       window.removeEventListener("resize", remeasure);
     };
-  }, [current, finishTour, step, steps]);
+  }, [current, step, steps]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        finishTour();
+        finishTour("skipped");
         return;
       }
       if (event.key !== "Tab") return;
@@ -302,7 +309,7 @@ export default function SpotlightTour({
   const spotHeight = rect.height + pad * 2;
 
   function advance() {
-    if (isLast) finishTour();
+    if (isLast) finishTour("completed");
     else setStep((currentStep) => currentStep + 1);
   }
 
@@ -316,7 +323,7 @@ export default function SpotlightTour({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={t.fast}
-        onClick={finishTour}
+        onClick={() => finishTour("skipped")}
       />
 
       <motion.div
@@ -397,7 +404,7 @@ export default function SpotlightTour({
             </motion.button>
             <motion.button
               type="button"
-              onClick={finishTour}
+              onClick={() => finishTour("skipped")}
               whileTap={TAP_SPRING}
               className="focus-ring rounded-full px-3.5 py-2 text-xs"
               style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
