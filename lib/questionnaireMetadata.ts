@@ -111,7 +111,7 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "fopspeen_fles",
   ],
   diaper_play: [
-    "luiers_dragen", "diaper_wetting", "diaper_messing",
+    "luiers_dragen", "diaper_partner_wearing", "diaper_wetting", "diaper_messing",
     "diaper_changing_give", "diaper_changing_receive",
   ],
   pet_play: [
@@ -229,6 +229,7 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["nude_photography", "recording"],
   ["recording", "adult_content_creation"],
   ["mutual_masturbation", "partner_masturbation_watch"],
+  ["luiers_dragen", "diaper_partner_wearing"],
   ["luiers_dragen", "diaper_wetting"],
   ["breeding_fantasy", "creampie"],
 ] as const satisfies readonly (readonly [string, string])[];
@@ -257,7 +258,6 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
   being_watched: ["public_play"],
   remote_toy: ["remote_toy_publiek"],
   nude_photography: ["recording"],
-  recording: ["adult_content_creation"],
   partner_masturbation_watch: ["mutual_masturbation"],
   anal_fingering_give: ["anal_sex_give"],
   anal_fingering_receive: ["anal_sex_receive"],
@@ -271,7 +271,7 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
  * uitsluitend samen met een version bump en bijbehorende pre-launch cleanup.
  * Er is bewust geen fallback of automatische sibling-propagatie.
  */
-export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 5;
+export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 6;
 
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
   spanking_hand_give: "spanking_implement_give",
@@ -293,7 +293,6 @@ export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, stri
   being_watched: "public_play",
   remote_toy: "remote_toy_publiek",
   nude_photography: "recording",
-  recording: "adult_content_creation",
   partner_masturbation_watch: "mutual_masturbation",
   anal_fingering_give: "anal_sex_give",
   anal_fingering_receive: "anal_sex_receive",

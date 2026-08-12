@@ -208,7 +208,7 @@ describe("kink database integrity", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(343);
+    expect(KINKS).toHaveLength(344);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -240,7 +240,7 @@ describe("kink database integrity", () => {
       ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
       ...RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS,
     ].sort());
-    expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS].sort());
+    expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS, "diaper_partner_wearing"].sort());
   });
 
   it("separates definitions from a conservative safety note where reviewed", () => {

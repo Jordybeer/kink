@@ -18,7 +18,6 @@ export const QUESTIONNAIRE_PROGRESSION_EDGES = [
   ["blindfold_receive", "sound_deprivation_receive"],
   ["watersports_ontvangen", "urine_intiem"],
   ["nude_photography", "recording"],
-  ["recording", "adult_content_creation"],
   ["being_watched", "public_play"],
   ["remote_toy", "remote_toy_publiek"],
 ] as const satisfies readonly (readonly [string, string])[];

@@ -1,6 +1,6 @@
-import type { KinkEntry, KinkStatus, Profile } from "@/types";
+import type { KinkEntry, Profile } from "@/types";
 import { KINKS } from "@/lib/kinks";
-import { directionalComparisonEntries } from "@/lib/directionality";
+import { complementaryComparisonEntries } from "@/lib/participation";
 
 export type MatchKind = "perfect" | "strong" | "soft" | "discuss" | "conflict" | "limit" | "none";
 export interface KinkMatch { score: number; kind: MatchKind; }
@@ -52,7 +52,7 @@ export function profileMatchScore(a: Profile, b: Profile): ProfileMatchResult {
   let unscoredLimits = 0;
 
   for (const kink of KINKS) {
-    const { sourceEntry: eA, partnerEntry: eB } = directionalComparisonEntries(
+    const { sourceEntry: eA, partnerEntry: eB } = complementaryComparisonEntries(
       a.entries,
       b.entries,
       kink.id,

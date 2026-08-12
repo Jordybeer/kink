@@ -94,7 +94,7 @@ describe("questionnaire progression gates", () => {
     expect(selected?.kink.id).toBe("watersports_ontvangen");
   });
 
-  it("herstelt na ranking en diversiteit ook een volledige drie-staps waterval", () => {
+  it("ordent alleen de geaudite privé-mediastap en maakt publiceren geen verplichte trede", () => {
     const adultContent = kinkAtForcedLevel("adult_content_creation", 1);
     const recording = kinkAtForcedLevel("recording", 1);
     const photography = kinkAtForcedLevel("nude_photography", 4);
@@ -103,12 +103,10 @@ describe("questionnaire progression gates", () => {
       [adultContent, recording, photography],
       {},
     );
+    const ids = ranked.map((kink) => kink.id);
 
-    expect(ranked.map((kink) => kink.id)).toEqual([
-      "nude_photography",
-      "recording",
-      "adult_content_creation",
-    ]);
+    expect(ids.indexOf("nude_photography")).toBeLessThan(ids.indexOf("recording"));
+    expect(questionnaireProgressionParentIds("adult_content_creation")).toEqual([]);
   });
 
   it("maakt de verdieping weer vrij zodra de ingang expliciet beantwoord is, ongeacht het antwoord", () => {

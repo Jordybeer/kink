@@ -1,6 +1,7 @@
 import { KINKS } from "@/lib/kinks";
 import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
-import { questionnaireDirectionalKinkIdForPerspective } from "@/lib/directionality";
+import { isQuestionnaireKinkEligibleForPerspective } from "@/lib/questionnaireEligibility";
+import { questionnaireParticipationKinkIdForPerspective } from "@/lib/participation";
 import {
   derivePendingExpansionProbes,
   rankQuestionnaireQueueItems,
@@ -42,12 +43,18 @@ export interface QuestionnaireCoveragePlan {
   interestAnchorIds: string[];
 }
 
+export interface QuestionnaireScopeProgress {
+  answered: number;
+  total: number;
+}
+
 export interface QuestionnaireRuntime {
   intent: QuestionnaireIntent;
   queue: QuestionnaireQueueItem[];
   visibleKinks: Kink[];
   pendingProbes: PendingExpansionProbe[];
   coverage: QuestionnaireCoverage;
+  scope: QuestionnaireScopeProgress;
   complete: boolean;
 }
 
@@ -133,14 +140,14 @@ export function buildQuestionnaireCoveragePlan(
   const seen = new Set<string>();
 
   for (const sourceId of QUESTIONNAIRE_COVERAGE_ANCHOR_IDS) {
-    const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);
+    const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);
     if (!catalogIds.has(kinkId) || seen.has(kinkId)) continue;
     seen.add(kinkId);
     anchorIds.push(kinkId);
   }
   for (const interest of interests) {
     for (const sourceId of QUESTIONNAIRE_INTEREST_ANCHOR_IDS[interest]) {
-      const kinkId = questionnaireDirectionalKinkIdForPerspective(sourceId, perspective);
+      const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);
       if (!catalogIds.has(kinkId)) continue;
       if (!interestAnchorIds.includes(kinkId)) interestAnchorIds.push(kinkId);
       if (seen.has(kinkId)) continue;
@@ -191,24 +198,40 @@ export function getQuestionnaireRuntime(
     : setup.mode === "deepDive"
       ? { kind: "deepDive" }
       : requestedIntent;
-  const coveragePlan = buildQuestionnaireCoveragePlan(setup.interests, questionnairePerspective(profile));
+  const perspective = questionnairePerspective(profile);
+  const exhaustive = intent.kind === "deepDive";
+  const isGuidedEligible = (kinkId: string) =>
+    isQuestionnaireKinkEligibleForPerspective(kinkId, perspective, exhaustive);
+
+  const coveragePlan = buildQuestionnaireCoveragePlan(setup.interests, perspective);
   const coverage = questionnaireCoverage(profile, coveragePlan);
   const coverageIds = new Set(coveragePlan.anchorIds);
   const coreIds = new Set<string>(QUESTIONNAIRE_CORE_ANCHOR_IDS);
   const interestIds = new Set(coveragePlan.interestAnchorIds);
-  const pendingProbes = derivePendingExpansionProbes(KINKS, profile.entries);
-  const probeByTarget = new Map(pendingProbes.map((probe) => [probe.targetKinkId, probe]));
-  const eligibleIds = new Set<string>();
 
-  if (intent.kind === "deepDive" || intent.kind === "discover") {
-    for (const kink of KINKS) {
-      if (!explicitlyAnswered(profile, kink.id)) eligibleIds.add(kink.id);
-    }
-  } else if (intent.kind === "category") {
-    for (const kink of KINKS) {
-      if (kink.category === intent.category && !explicitlyAnswered(profile, kink.id)) {
-        eligibleIds.add(kink.id);
-      }
+  const pendingProbes = derivePendingExpansionProbes(KINKS, profile.entries)
+    .filter((probe) => isGuidedEligible(probe.targetKinkId));
+  const probeByTarget = new Map(pendingProbes.map((probe) => [probe.targetKinkId, probe]));
+
+  const scopeIds = intent.kind === "deepDive"
+    ? KINKS.map((kink) => kink.id)
+    : intent.kind === "discover"
+      ? KINKS.filter((kink) => isGuidedEligible(kink.id)).map((kink) => kink.id)
+      : intent.kind === "category"
+        ? KINKS
+            .filter((kink) => kink.category === intent.category && isGuidedEligible(kink.id))
+            .map((kink) => kink.id)
+        : coveragePlan.anchorIds;
+  const scopeAnswered = scopeIds.filter((kinkId) => explicitlyAnswered(profile, kinkId)).length;
+  const scope: QuestionnaireScopeProgress = {
+    answered: intent.kind === "dynamic" ? coverage.answered : scopeAnswered,
+    total: intent.kind === "dynamic" ? coverage.total : scopeIds.length,
+  };
+
+  const eligibleIds = new Set<string>();
+  if (intent.kind === "deepDive" || intent.kind === "discover" || intent.kind === "category") {
+    for (const kinkId of scopeIds) {
+      if (!explicitlyAnswered(profile, kinkId)) eligibleIds.add(kinkId);
     }
   } else {
     for (const kinkId of coveragePlan.anchorIds) {
@@ -243,20 +266,22 @@ export function getQuestionnaireRuntime(
       };
     });
   const queue = rankQuestionnaireQueueItems(items, KINKS, profile.entries);
-  const complete = intent.kind === "deepDive" || intent.kind === "discover"
-    ? KINKS.every((kink) => explicitlyAnswered(profile, kink.id))
-    : intent.kind === "category"
-      ? queue.length === 0
-      : coverage.complete && pendingProbes.length === 0;
+  const complete = intent.kind === "deepDive" || intent.kind === "discover" || intent.kind === "category"
+    ? scope.answered === scope.total
+    : coverage.complete && pendingProbes.length === 0;
 
+  const visibleScopeIds = new Set(scopeIds);
   return {
     intent,
     queue,
-    visibleKinks: intent.kind === "deepDive" || intent.kind === "discover"
+    visibleKinks: intent.kind === "deepDive"
       ? [...KINKS]
-      : runtimeVisibleKinks(profile, eligibleIds),
+      : intent.kind === "dynamic"
+        ? runtimeVisibleKinks(profile, eligibleIds)
+        : runtimeVisibleKinks(profile, visibleScopeIds),
     pendingProbes,
     coverage,
+    scope,
     complete,
   };
 }

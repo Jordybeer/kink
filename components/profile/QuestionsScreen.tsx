@@ -4,7 +4,6 @@ import { use, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
-import { KINKS } from "@/lib/kinks";
 import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
@@ -83,14 +82,16 @@ export default function QuestionsScreen({ params }: Props) {
   const activeRuntime = runtime!;
   const setup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
   const runtimeKind = activeRuntime.intent.kind;
-  const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
-  const catalogProgress = runtimeKind === "discover" || runtimeKind === "deepDive";
-  const progressPercent = catalogProgress
-    ? Math.round((catalogRated / KINKS.length) * 100)
-    : activeRuntime.coverage.percent;
-  const progressLabel = catalogProgress
-    ? `${runtimeKind === "discover" ? "Discover" : "Deep Dive"} · ${catalogRated} / ${KINKS.length}`
+  const scopedProgress = activeRuntime.scope;
+  const progressPercent = runtimeKind === "dynamic"
+    ? activeRuntime.coverage.percent
+    : Math.round((scopedProgress.answered / Math.max(1, scopedProgress.total)) * 100);
+  const progressLabel = runtimeKind === "discover" || runtimeKind === "deepDive"
+    ? `${runtimeKind === "discover" ? "Discover" : "Deep Dive"} · ${scopedProgress.answered} / ${scopedProgress.total}`
     : `Dynamic · ${activeRuntime.coverage.answered} / ${activeRuntime.coverage.total}`;
+  const discoverComplete = getQuestionnaireRuntime(currentProfile, {
+    intent: { kind: "discover" },
+  }).complete;
 
   function saveMode(mode: "dynamic" | "deepDive") {
     updateProfileQuestionnaire(currentProfile.id, {
@@ -205,14 +206,14 @@ export default function QuestionsScreen({ params }: Props) {
             <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
               {runtimeKind === "dynamic"
                 ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken."
-                : `${catalogRated} van ${KINKS.length} onderwerpen zijn expliciet beoordeeld.`}
+                : `${activeRuntime.scope.answered} van ${activeRuntime.scope.total} onderwerpen in deze modus zijn expliciet beoordeeld.`}
             </p>
             {runtimeKind === "dynamic" && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={startDiscover}
-                  disabled={catalogRated === KINKS.length}
+                  disabled={discoverComplete}
                   className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
                   style={{ border: "1px solid var(--border)", color: "var(--text)" }}
                 >
