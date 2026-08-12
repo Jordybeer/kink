@@ -84,6 +84,11 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const nameInput = dialog.getByLabel("Naam of alias");
 
     await expect(dialog).toBeVisible();
+    await expect.poll(async () => dialog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+      return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+    })).toBeLessThanOrEqual(1);
     await expect(header).toBeVisible();
     await expect(footer).toBeVisible();
     await expect.poll(() => nameInput.evaluate((element) =>

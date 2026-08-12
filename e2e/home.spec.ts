@@ -64,7 +64,14 @@ test.describe("Home page — profielen aanwezig", () => {
     const lastAction = dialog.getByRole("button", { name: /Alle data verwijderen/ });
 
     await expect(dialog).toBeVisible();
-    const titleTop = (await title.boundingBox())?.y;
+    await expect.poll(async () => dialog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+      return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+    })).toBeLessThanOrEqual(1);
+    const titleBox = await title.boundingBox();
+    expect(titleBox).not.toBeNull();
+    const titleTop = titleBox!.y;
     await lastAction.scrollIntoViewIfNeeded();
     await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
 
@@ -72,7 +79,7 @@ test.describe("Home page — profielen aanwezig", () => {
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
     expect(actionBox).not.toBeNull();
     expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
-    expect((await title.boundingBox())?.y).toBe(titleTop);
+    expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
 
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();

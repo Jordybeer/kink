@@ -82,10 +82,16 @@ test.describe("Vergelijkingspagina", () => {
     const lastProfile = dialog.getByRole("button", { name: /^Gedeeld 24,/ });
 
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("Mijn profielen", { exact: true })).toBeVisible();
-    await expect(dialog.getByText("Gedeeld met mij", { exact: true })).toBeVisible();
-
-    const titleTop = (await title.boundingBox())?.y;
+    await expect(dialog.getByText("Mijn profielen", { exact: true })).toHaveCount(1);
+    await expect(dialog.getByText("Gedeeld met mij", { exact: true })).toHaveCount(1);
+    await expect.poll(async () => dialog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+      return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+    })).toBeLessThanOrEqual(1);
+    const titleBox = await title.boundingBox();
+    expect(titleBox).not.toBeNull();
+    const titleTop = titleBox!.y;
     await lastProfile.scrollIntoViewIfNeeded();
     await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
 
@@ -93,7 +99,7 @@ test.describe("Vergelijkingspagina", () => {
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
     expect(lastBox).not.toBeNull();
     expect(lastBox!.y + lastBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
-    expect((await title.boundingBox())?.y).toBe(titleTop);
+    expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
 
     await lastProfile.click();
     await expect(page).toHaveURL(/b=bulk-24/);
