@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, CaretRight, FileText, GearSix, TrendUp } from "@phosphor-icons/react";
@@ -9,6 +9,7 @@ import ContractManageSheet from "@/components/contract/ContractManageSheet";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import { decodeLocalRouteId } from "@/lib/localRoutes";
+import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 import {
   contractBucket,
   contractStatusLabel,
@@ -21,12 +22,11 @@ export default function ContractDetailPage() {
   const seriesId = decodeLocalRouteId(params.seriesId);
   const profiles = useStore((state) => state.profiles);
   const series = useContractStore((state) => state.series.find((item) => item.id === seriesId));
-  const [hydrated, setHydrated] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
 
-  useEffect(() => setHydrated(true), []);
+  const contractsReady = useLegacyContractMigration();
 
-  if (!hydrated) return <PageShell loading width="2xl" />;
+  if (!contractsReady) return <PageShell loading width="2xl" />;
   if (!series) {
     return (
       <PageShell width="2xl">
