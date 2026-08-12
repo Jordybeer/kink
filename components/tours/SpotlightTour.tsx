@@ -1,8 +1,35 @@
 "use client";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "@phosphor-icons/react";
 import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
+
+export interface SpotlightStep {
+  selector: string;
+  scrollSelector?: string;
+  title: string;
+  body: string;
+  pad?: number;
+  scrollBlock?: ScrollLogicalPosition;
+  offsetBelowNav?: boolean;
+}
+
+export type SpotlightTourExitReason = "completed" | "skipped" | "abandoned";
+
+interface SpotlightTourProps {
+  steps: readonly SpotlightStep[];
+  onComplete: (reason: SpotlightTourExitReason) => void;
+  finalLabel?: string;
+  ariaIdPrefix: string;
+}
 
 interface TourRect {
   top: number;
@@ -24,42 +51,12 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-const STEPS = [
-  {
-    selector: '[data-tour="avatar"]',
-    scrollSelector: '[data-tour="avatar"]',
-    title: "Voeg een foto toe",
-    body: "Tik de avatar om een profielfoto toe te voegen — bijgesneden en lokaal opgeslagen.",
-    pad: 8,
-  },
-  {
-    selector: '[data-tour="kink-card"]',
-    scrollSelector: '[data-tour="kink-card"]',
-    title: "Beoordeel de volledige kink",
-    body: "De hele kaart hoort bij één onderwerp. Kies daar hoe het voor jou voelt — van Heel graag tot Harde grens.",
-    pad: 6,
-  },
-  {
-    selector: '[data-tour="curious"]',
-    scrollSelector: '[data-tour="kink-card"]',
-    title: "Nieuwsgierig?",
-    body: "Los van je oordeel: markeer met de ster wat je wil verkennen. Een ster is geen ja.",
-    pad: 6,
-  },
-  {
-    selector: '[data-tour="private"]',
-    scrollSelector: '[data-tour="kink-card"]',
-    title: "Verberg je antwoord",
-    body: "Tik ‘Verberg’ voor of na je keuze. Alleen de kinknaam blijft zichtbaar tot je het antwoord bewust onthult.",
-    pad: 6,
-  },
-] as const;
-
-interface Props {
-  onComplete: () => void;
-}
-
-export default function ProfileTour({ onComplete }: Props) {
+export default function SpotlightTour({
+  steps,
+  onComplete,
+  finalLabel = "Aan de slag",
+  ariaIdPrefix,
+}: SpotlightTourProps) {
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<TourRect | null>(null);
   const [viewport, setViewport] = useState({ width: 390, height: 844 });
@@ -67,9 +64,16 @@ export default function ProfileTour({ onComplete }: Props) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const focusRestoredRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
   const t = useMotionSafe();
-  const current = STEPS[step];
-  const isLast = step === STEPS.length - 1;
+  const current = steps[step];
+  const isLast = step === steps.length - 1;
+  const titleId = `${ariaIdPrefix}-title`;
+  const bodyId = `${ariaIdPrefix}-body`;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   const restorePreviousFocus = useCallback(() => {
     if (focusRestoredRef.current) return;
@@ -78,10 +82,10 @@ export default function ProfileTour({ onComplete }: Props) {
     if (previous?.isConnected) previous.focus();
   }, []);
 
-  const finishTour = useCallback(() => {
-    onComplete();
+  const finishTour = useCallback((reason: SpotlightTourExitReason) => {
+    onCompleteRef.current(reason);
     requestAnimationFrame(restorePreviousFocus);
-  }, [onComplete, restorePreviousFocus]);
+  }, [restorePreviousFocus]);
 
   const focusPrimaryAction = useCallback((node: HTMLButtonElement | null) => {
     if (!node) return;
@@ -102,6 +106,11 @@ export default function ProfileTour({ onComplete }: Props) {
   }, []);
 
   useEffect(() => {
+    if (!current) {
+      finishTour("abandoned");
+      return;
+    }
+
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -110,8 +119,8 @@ export default function ProfileTour({ onComplete }: Props) {
 
     function abandonMissingStep() {
       if (cancelled) return;
-      if (step >= STEPS.length - 1) finishTour();
-      else setStep((currentStep) => Math.min(currentStep + 1, STEPS.length - 1));
+      if (step >= steps.length - 1) finishTour("abandoned");
+      else setStep((currentStep) => Math.min(currentStep + 1, steps.length - 1));
     }
 
     function retry(callback: () => void) {
@@ -146,20 +155,23 @@ export default function ProfileTour({ onComplete }: Props) {
 
     function positionTarget() {
       if (cancelled) return;
-      const scrollTarget = document.querySelector(current.scrollSelector) as HTMLElement | null;
+      const scrollTarget = document.querySelector(current.scrollSelector ?? current.selector) as HTMLElement | null;
       if (!scrollTarget) {
         retry(positionTarget);
         return;
       }
 
       attempts = 0;
-      if (step === 1) {
-        scrollTarget.scrollIntoView({
-          behavior: reducedMotion ? "auto" : "smooth",
-          block: "start",
-        });
-        timer = setTimeout(() => {
-          if (cancelled) return;
+      scrollTarget.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        block: current.scrollBlock ?? "center",
+      });
+
+      const settleDelay = reducedMotion ? 0 : 260;
+      timer = setTimeout(() => {
+        if (cancelled) return;
+
+        if (current.offsetBelowNav) {
           const navHeight = Number.parseFloat(
             getComputedStyle(document.documentElement).getPropertyValue("--nav-h"),
           ) || 56;
@@ -171,15 +183,10 @@ export default function ProfileTour({ onComplete }: Props) {
               behavior: reducedMotion ? "auto" : "smooth",
             });
           }
-          timer = setTimeout(measure, reducedMotion ? 0 : 260);
-        }, reducedMotion ? 0 : 260);
-      } else {
-        scrollTarget.scrollIntoView({
-          behavior: reducedMotion ? "auto" : "smooth",
-          block: "center",
-        });
-        timer = setTimeout(measure, reducedMotion ? 0 : 260);
-      }
+        }
+
+        timer = setTimeout(measure, settleDelay);
+      }, settleDelay);
     }
 
     setRect(null);
@@ -190,29 +197,28 @@ export default function ProfileTour({ onComplete }: Props) {
       requestAnimationFrame(measure);
     }
 
-    window.addEventListener("scroll", remeasure, { passive: true });
+    document.addEventListener("scroll", remeasure, true);
     window.addEventListener("resize", remeasure, { passive: true });
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
       if (retryTimer) clearTimeout(retryTimer);
-      window.removeEventListener("scroll", remeasure);
+      document.removeEventListener("scroll", remeasure, true);
       window.removeEventListener("resize", remeasure);
     };
-  }, [current, finishTour, step]);
+  }, [current, step, steps]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        finishTour();
+        finishTour("skipped");
         return;
       }
       if (event.key !== "Tab") return;
 
       const dialog = dialogRef.current;
       if (!dialog) return;
-
       const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
         .filter((element) => element.getAttribute("aria-hidden") !== "true");
 
@@ -241,11 +247,12 @@ export default function ProfileTour({ onComplete }: Props) {
   }, [finishTour]);
 
   const placement = useMemo(() => {
-    if (!rect) return null;
+    if (!rect || !current) return null;
 
+    const pad = current.pad ?? 6;
     const width = Math.min(288, viewport.width - 16);
-    const belowTop = rect.top + rect.height + current.pad + DIALOG_GAP;
-    const aboveBottom = rect.top - current.pad - DIALOG_GAP;
+    const belowTop = rect.top + rect.height + pad + DIALOG_GAP;
+    const aboveBottom = rect.top - pad - DIALOG_GAP;
     const spaceBelow = Math.max(0, viewport.height - DIALOG_MARGIN - belowTop);
     const spaceAbove = Math.max(0, aboveBottom - DIALOG_MARGIN);
 
@@ -284,24 +291,25 @@ export default function ProfileTour({ onComplete }: Props) {
       maxHeight,
       constrained: dialogHeight > maxHeight,
     };
-  }, [current.pad, dialogHeight, rect, viewport]);
+  }, [current, dialogHeight, rect, viewport]);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog || !rect) return;
+    if (!dialog || !rect || !current) return;
     const measuredHeight = Math.ceil(dialog.scrollHeight);
     setDialogHeight((previous) => Math.abs(previous - measuredHeight) > 1 ? measuredHeight : previous);
-  }, [current.body, current.title, rect, step, viewport.width]);
+  }, [current, rect, step, viewport.width]);
 
-  if (!rect || !placement) return null;
+  if (!current || !rect || !placement) return null;
 
-  const spotTop = rect.top - current.pad;
-  const spotLeft = rect.left - current.pad;
-  const spotWidth = rect.width + current.pad * 2;
-  const spotHeight = rect.height + current.pad * 2;
+  const pad = current.pad ?? 6;
+  const spotTop = rect.top - pad;
+  const spotLeft = rect.left - pad;
+  const spotWidth = rect.width + pad * 2;
+  const spotHeight = rect.height + pad * 2;
 
   function advance() {
-    if (isLast) finishTour();
+    if (isLast) finishTour("completed");
     else setStep((currentStep) => currentStep + 1);
   }
 
@@ -315,7 +323,7 @@ export default function ProfileTour({ onComplete }: Props) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={t.fast}
-        onClick={finishTour}
+        onClick={() => finishTour("skipped")}
       />
 
       <motion.div
@@ -345,8 +353,8 @@ export default function ProfileTour({ onComplete }: Props) {
           key={step}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="tour-title"
-          aria-describedby="tour-body"
+          aria-labelledby={titleId}
+          aria-describedby={bodyId}
           tabIndex={-1}
           style={{
             position: "fixed",
@@ -368,69 +376,59 @@ export default function ProfileTour({ onComplete }: Props) {
           exit={{ opacity: 0, y: placement.below ? -4 : 4 }}
           transition={t.tooltip}
         >
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-            <h3 id="tour-title" style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)" }}>
+          <div className="flex items-start justify-between mb-1.5">
+            <h3 id={titleId} className="m-0 text-[0.9375rem] font-semibold" style={{ color: "var(--text)" }}>
               {current.title}
             </h3>
-            <span style={{ fontSize: "0.75rem", color: "var(--text2)", flexShrink: 0, marginLeft: "0.5rem", marginTop: "0.125rem" }}>
-              {step + 1}/{STEPS.length}
+            <span className="ml-2 mt-0.5 flex-none text-xs" style={{ color: "var(--text2)" }}>
+              {step + 1}/{steps.length}
             </span>
           </div>
 
-          <p id="tour-body" style={{ margin: "0 0 1rem", fontSize: "0.8125rem", color: "var(--text2)", lineHeight: 1.6 }}>
+          <p id={bodyId} className="mb-4 text-[0.8125rem] leading-relaxed" style={{ color: "var(--text2)" }}>
             {current.body}
           </p>
 
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <div className="flex items-center gap-2">
             <motion.button
               ref={focusPrimaryAction}
+              type="button"
               onClick={advance}
               whileTap={TAP_SPRING}
-              style={{
-                flex: 1,
-                background: "var(--accent)",
-                color: "var(--on-accent)",
-                fontWeight: 600,
-                padding: "0.5rem 1rem",
-                borderRadius: "9999px",
-                border: "none",
-                fontSize: "0.8125rem",
-                cursor: "pointer",
-              }}
+              className="focus-ring flex-1 rounded-full px-4 py-2 text-[0.8125rem] font-semibold"
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              {isLast ? "Aan de slag" : <span className="inline-flex items-center gap-1">Volgende <ArrowRight size={14} aria-hidden="true" /></span>}
+              {isLast
+                ? finalLabel
+                : <span className="inline-flex items-center gap-1">Volgende <ArrowRight size={14} aria-hidden="true" /></span>}
             </motion.button>
             <motion.button
-              onClick={finishTour}
+              type="button"
+              onClick={() => finishTour("skipped")}
               whileTap={TAP_SPRING}
-              style={{
-                background: "transparent",
-                border: "1px solid var(--border)",
-                color: "var(--text2)",
-                padding: "0.5rem 0.875rem",
-                borderRadius: "9999px",
-                fontSize: "0.75rem",
-                cursor: "pointer",
-              }}
+              className="focus-ring rounded-full px-3.5 py-2 text-xs"
+              style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
             >
               Sla over
             </motion.button>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "0.375rem", marginTop: "0.75rem" }}>
-            {STEPS.map((_, index) => (
-              <div
-                key={index}
-                style={{
-                  height: 3,
-                  width: index === step ? 18 : 5,
-                  borderRadius: 999,
-                  background: index === step ? "var(--accent)" : "var(--border)",
-                  transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
-                }}
-              />
-            ))}
-          </div>
+          {steps.length > 1 && (
+            <div className="mt-3 flex justify-center gap-1.5" aria-hidden="true">
+              {steps.map((_, index) => (
+                <div
+                  key={index}
+                  style={{
+                    height: 3,
+                    width: index === step ? 18 : 5,
+                    borderRadius: 999,
+                    background: index === step ? "var(--accent)" : "var(--border)",
+                    transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     </AnimatePresence>
