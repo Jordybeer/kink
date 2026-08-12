@@ -52,8 +52,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
     case "scene":
       await expect(page.getByRole("button", { name: "Kinks toevoegen" })).toBeVisible();
       await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
-      await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
-      await expect(page.getByText("Sam", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("Alex & Sam", { exact: true })).toBeVisible();
       break;
   }
 }
