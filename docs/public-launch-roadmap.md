@@ -1,10 +1,25 @@
 # KinkSync — Public Launch Roadmap
 
-> **Status:** release-reference, 10 augustus 2026  
-> **Baseline:** `dev` @ `db6f4e5` (PR #311)  
+> **Status:** release-reference, herijkt op 12 augustus 2026  
+> **Baseline:** `dev` @ `8e26b3f` na integratie van PR’s #330, #331, #334 en #337  
+> **Scope:** catalogus, questionnaire en directionality zijn bevroren voor de publieke launch  
 > **Doel:** één logische route van de huidige prelaunch-state naar een publieke release, zonder de bestaande privacy-, consent- of mobile-first garanties opnieuw open te breken.
 
 Dit document is **geen tweede backlog**. `planned-changes.md` blijft het werklog met ideeën en fases. Deze roadmap bepaalt alleen de volgorde, afhankelijkheden en harde exit-gates voor de publieke launch.
+
+## Actuele integratiestatus
+
+Op deze baseline zijn alle bewegende product-PR’s naar `dev` geïntegreerd en
+stond geen nieuwe PR naar `dev` open. De releasebasis telt 344 actieve
+catalogusitems, 53 expliciete directionele pairs, 45 vaste Dynamic-anchors en
+canonical mapping v6 met 24 geaudite edges.
+
+De launch-scope freeze is nu actief:
+
+- geen nieuwe brede directionality-, catalogus- of questionnaire-slices;
+- alleen een bewezen P0/P1, consent/privacyregressie of expliciet goedgekeurde
+  semantische correctie mag deze surfaces vóór launch nog openen;
+- de eerstvolgende actieve fase is Fase 0: de release-meetlat betrouwbaar maken.
 
 ---
 
@@ -13,21 +28,15 @@ Dit document is **geen tweede backlog**. `planned-changes.md` blijft het werklog
 De fundamentele productarchitectuur is release-candidate. De resterende weg is geen feature-marathon maar een gecontroleerde close-out:
 
 ```text
-parallel kink-directionality werk ───────┐
-                                         ├─> integratie + scope freeze
-meetlat/testharnas ─> Soft Gate ─> XSS/CSP ─> finale UI/UX-pass
-                                         │
-                                         └─> final security/durability delta-audit
-                                                  ↓
-                                           fysieke device gate
-                                                  ↓
-                                           release governance
-                                                  ↓
-                                           dev → main promotion
-                                                  ↓
-                                           production smoke
-                                                  ↓
-                                             PUBLIC LAUNCH
+scope freeze (actief)
+        ↓
+meetlat/testharnas → Soft Gate → XSS/CSP → finale UI/UX-pass
+        ↓
+final security/durability delta-audit
+        ↓
+fysieke device gate → release governance → dev/main promotion
+        ↓
+production smoke → PUBLIC LAUNCH
 ```
 
 ### Launchfilosofie
@@ -55,59 +64,42 @@ Deze onderdelen worden niet opnieuw ontworpen tenzij een latere gate een concret
 - productie-PWA/offline routearchitectuur;
 - enforcing core/browser/device/PWA CI-gates;
 - `SECURITY.md` en expliciete trust boundaries;
-- Dynamic questionnaire v2, Discover, Deep Dive en vaste monotone coverage;
-- Pegging als eerste directionality reference implementation, inclusief give↔receive matching, compare, contract, scene, QR, snapshots, consent en privacyregressies.
+- Dynamic, Discover en Deep Dive op de dedicated Questions-route met 45 vaste monotone coverage-anchors;
+- rustige handmatige catalogusfilters op de profielpagina, zonder questionnaire-state te muteren;
+- 53 expliciete directionele pairs en een aparte complementaire participatielaag, centraal doorgevoerd in matching, compare, contract, scene, QR, snapshots, consent en privacyregressies.
 
 Referentie: `docs/prelaunch-audit-2026-08-07.md`, `engine.md`, `directie.md`, `SECURITY.md`.
 
 ---
 
-## 3. Parallel werk: kink directions
+## 3. Integratie afgerond: launch-scope freeze actief
 
-Er loopt bewust parallel werk aan verdere kink-directionality. Dat mag doorgaan, maar het mag de release-close-out niet oncontroleerbaar laten bewegen.
+PR’s #330, #331, #334 en de gerichte #337-follow-up zijn op de baseline
+geïntegreerd. Questionnaire en cataloguseditor hebben ieder één duidelijke
+surface; de guided role-policy schrijft geen antwoorden; canonical follow-ups
+blijven affirmative-only; diaper-participatie is expliciet complementair zonder
+fake give/receive.
 
-### Parallelismecontract
+Tot de publieke launch geldt:
 
-**Directionality lane** mag de catalogus/questionnaire/directionality-surfaces bezitten:
-
-- `lib/kinks.ts` en catalogusmetadata;
-- `lib/directionality.ts`;
-- directionality-specifieke questionnairelogica en tests;
-- expliciete matching/compare/contract/scene-integratie voor nieuwe directionele siblings wanneer nodig.
-
-**Launch lane** vermijdt deze files tot de directionality-branch geland is, behalve bij een bewezen releaseblocker.
-
-Soft Gate-werk kan grotendeels orthogonaal gebeuren in:
-
-- `app/layout.tsx`;
-- `app/page.tsx`;
-- `components/PwaInstallGuide.tsx`;
-- `components/InstallPromptBridge.tsx`;
-- nieuwe runtime/PWA-policy helpers en tests.
-
-### Integratiepoort voor directionality
-
-Wanneer het parallelle directionality-werk klaar is:
-
-1. rebase op de nieuwste `dev`;
-2. volledige unit/build/browser/PWA-gates groen;
-3. per nieuw directioneel concept bewijzen:
-   - geen rol-inference;
-   - give ↔ receive complementair;
-   - give + give wordt niet vals wederzijds;
-   - private counterpartdata lekt niet;
-   - QR/share/sanitize/snapshot/consent blijven lossless;
-   - Contract en Scene gebruiken dezelfde centrale counterpartwaarheid;
-4. `directie.md` en `planned-changes.md` actualiseren;
-5. daarna **catalogus/questionnaire/directionality scope freeze** tot launch.
-
-Nieuwe directionele ideeën die op dat moment nog niet inhoudelijk geaudit zijn, gaan postlaunch. De prelaunchscope mag geen bewegend doel blijven.
+1. geen bulktransformaties of nieuwe directionele splits op taalpatronen;
+2. geen nieuwe questionnaire-inference, role-proxy of expansion zonder
+   versioned, edge-voor-edge audit;
+3. geen cataloguswijziging zonder downstream controle van matching, compare,
+   contract, scene, share, snapshots en consent;
+4. gevonden ideeën die geen P0/P1 of expliciet goedgekeurde semantische
+   correctie zijn gaan naar postlaunch.
 
 ---
 
 # FASE 0 — Release-meetlat betrouwbaar maken
 
 **Doel:** vóór we meer screenshots, Soft Gate-QA of polish vertrouwen, moet de testomgeving de huidige app werkelijk representeren.
+
+**Status op de baseline:** actief. De domeinstore staat op persistversie 24,
+terwijl `e2e/fixtures.ts` nog versie 20 en het verwijderde ID
+`breath_play` seedt. De device-smoke gebruikt nog hoofdzakelijk overflow en
+`body.innerText.length > 30`; dit is dus nog geen betrouwbare exit-gate.
 
 ### Werk
 
@@ -142,6 +134,13 @@ Nieuwe directionele ideeën die op dat moment nog niet inhoudelijk geaudit zijn,
 # FASE 1 — Soft Gate PWA v1 afronden
 
 **Doel:** browsergebruik blijft mogelijk, maar niemand kan ongemerkt waardevolle lokale consent/profiledata opbouwen in een fragiele browsercontainer zonder duidelijke durability-keuze.
+
+**Status op de baseline:** gedeeltelijk uitgevoerd. De vroege install-event
+capture, centrale broker, iOS/iPadOS-classifier, native installatiesheet en
+aparte `kinksync-install-prompt-policy` bestaan. Home onderhoudt daarnaast
+nog een eigen deferred prompt, UA-check, listener en
+`installPromptDismissed`-rendergate. Browser → standalone checkpoint/restore
+vóór onboarding is nog niet bewezen.
 
 ## 1A. Runtime classifier en install-event broker
 
@@ -248,7 +247,7 @@ Minimaal:
 - single-use prompt clearing;
 - BFCache `pageshow`;
 - `appinstalled` verandert browsertab niet naar standalone;
-- permanent dismissal bestaat niet meer;
+- een gewone dismissal wordt nooit stilzwijgend permanent; alleen expliciet `Niet meer vragen` zet `neverAsk`;
 - browserdata → export → fresh standalone → restore vóór onboarding;
 - SSR/client eerste snapshot geeft geen hydration mismatch.
 
