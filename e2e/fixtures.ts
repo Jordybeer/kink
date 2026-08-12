@@ -1,9 +1,11 @@
 import type { Page } from "@playwright/test";
 import type { ContractSnapshot, Profile } from "@/types";
 import type { ContractSeries } from "@/lib/contractLifecycle";
+import { STORE_PERSIST_VERSION } from "@/lib/storePersistVersion";
 
 const STORE_KEY = "kink-profiles";
 const CONTRACT_STORE_KEY = "kink-contract-series";
+const INSTALL_PROMPT_POLICY_STORE_KEY = "kinksync-install-prompt-policy";
 const SEED_GUARD = "kinksync-e2e-store-seeded";
 const SEEDED_PAGES = new WeakSet<Page>();
 
@@ -28,7 +30,7 @@ export const PROFILE_ALEX: Profile = {
     flogging_give:            { status: "willing", score: null, comment: "Lichte sessies" },
     humiliation_verbal:  { status: "no",      score: null, comment: "Niet mijn stijl" },
     // Hard limit
-    breath_play:         { status: "hard_no", score: null, comment: "" },
+    choking:         { status: "hard_no", score: null, comment: "" },
     // Discussion (one has yes, other has maybe)
     wax_play:            { status: "yes",     score: null, comment: "" },
     dominance_submission:{ status: "yes",     score: null, comment: "" },
@@ -163,13 +165,21 @@ export function buildStore(profiles: Profile[], extras: Partial<{
     state: {
       profiles,
       contracts: extras.contracts ?? [],
+      profileSnapshots: [],
+      scenes: [],
+      profileOwnerKeys: [],
       onboardingComplete: extras.onboardingComplete ?? true,
       profileTourComplete: extras.profileTourComplete ?? true,
       installPromptDismissed: true,
+      notificationPermissionAsked: false,
       theme: extras.theme ?? "midnight",
       pinnedProfileId: extras.pinnedProfileId ?? null,
+      appLockEnabled: false,
+      appLockPin: null,
+      biometricEnabled: false,
+      biometricCredentialId: null,
     },
-    version: 20,
+    version: STORE_PERSIST_VERSION,
   };
 }
 
@@ -186,28 +196,56 @@ async function installStoreSeed(
     },
     version: 1,
   });
+  const serializedInstallPromptPolicy = JSON.stringify({
+    state: {
+      dismissals: 2,
+      snoozedUntil: null,
+      neverAsk: true,
+    },
+    version: 0,
+  });
   const seed = {
     storeKey: STORE_KEY,
     contractStoreKey: CONTRACT_STORE_KEY,
+    installPromptPolicyStoreKey: INSTALL_PROMPT_POLICY_STORE_KEY,
     seedGuard: SEED_GUARD,
     value: serialized,
     contractStoreValue: serializedContractStore,
+    installPromptPolicyValue: serializedInstallPromptPolicy,
   };
 
   if (SEEDED_PAGES.has(page)) {
-    await page.evaluate(({ storeKey, contractStoreKey, seedGuard, value, contractStoreValue }) => {
+    await page.evaluate(({
+      storeKey,
+      contractStoreKey,
+      installPromptPolicyStoreKey,
+      seedGuard,
+      value,
+      contractStoreValue,
+      installPromptPolicyValue,
+    }) => {
       localStorage.setItem(storeKey, value);
       localStorage.setItem(contractStoreKey, contractStoreValue);
+      localStorage.setItem(installPromptPolicyStoreKey, installPromptPolicyValue);
       sessionStorage.setItem(seedGuard, "1");
     }, seed);
     return;
   }
 
   await page.addInitScript(
-    ({ storeKey, contractStoreKey, seedGuard, value, contractStoreValue }) => {
+    ({
+      storeKey,
+      contractStoreKey,
+      installPromptPolicyStoreKey,
+      seedGuard,
+      value,
+      contractStoreValue,
+      installPromptPolicyValue,
+    }) => {
       if (sessionStorage.getItem(seedGuard) === "1") return;
       localStorage.setItem(storeKey, value);
       localStorage.setItem(contractStoreKey, contractStoreValue);
+      localStorage.setItem(installPromptPolicyStoreKey, installPromptPolicyValue);
       sessionStorage.setItem(seedGuard, "1");
     },
     seed,

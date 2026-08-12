@@ -5,6 +5,7 @@ import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot,
 import { deriveCounts } from "@/lib/profileSnapshot";
 import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from "@/lib/questionnaireSetup";
 import { partnerDirectionalKinkId, stripDeprecatedDirectionalEntries, stripDeprecatedDirectionalProfile } from "@/lib/directionality";
+import { STORE_PERSIST_VERSION } from "@/lib/storePersistVersion";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   createConsentLedgerEvent,
@@ -86,7 +87,7 @@ const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 // and the 30-cap becomes a rolling month instead of a burst of noise.
 const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-export const STORE_PERSIST_VERSION = 24;
+export { STORE_PERSIST_VERSION };
 
 export function migrateStoredDirectionalityV24<T extends {
   profiles?: Profile[];
