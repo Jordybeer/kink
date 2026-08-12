@@ -37,7 +37,10 @@ export default function CategoryFilterSheet({
 
   return (
     <Sheet open={open} onClose={onClose} scrollable aria-label="Categorie kiezen">
-      <SheetContent className="max-h-[82dvh] overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+      <SheetContent
+        showHandle={false}
+        className="max-h-[82dvh] overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4"
+      >
         <div className="px-1 pb-3">
           <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>Categorieën</h3>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
