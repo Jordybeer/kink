@@ -47,9 +47,11 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   const contractSeries = useContractStore((state) => state.series);
   const contractCount = countCurrentContractsForProfile(contractSeries, profile, allProfiles);
   const contractPersonId = profile.personGroupId ?? profile.id;
+  const canShare = Boolean(onShare);
+  const canEdit = Boolean(onEdit);
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
-    if (onShare) {
+    if (canShare) {
       next.push({
         id: "share-profile",
         label: "Profiel delen",
@@ -58,7 +60,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
         placement: "primary",
       });
     }
-    if (onEdit) {
+    if (canEdit) {
       next.push({
         id: "edit-profile",
         label: "Profiel bewerken",
@@ -68,7 +70,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
       });
     }
     return next;
-  }, [Boolean(onEdit), Boolean(onShare)]);
+  }, [canEdit, canShare]);
   useTopNavActions(navActions);
 
   const expLevel = profile.experienceLevel ?? "beginner";
