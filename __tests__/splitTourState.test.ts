@@ -8,7 +8,6 @@ import {
 } from "@/lib/splitTourState";
 
 beforeEach(() => {
-  localStorage.removeItem("kinksync-split-tours-v2");
   useSplitTourStore.setState({
     profileIntroTourSeen: false,
     questionnaireTourSeen: false,
