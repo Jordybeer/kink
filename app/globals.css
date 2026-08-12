@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  /* JS keeps this in lockstep with iOS visualViewport; 100dvh is the no-JS fallback. */
+  --visual-viewport-height: 100dvh;
   --bg: #09080E;
   --surface: #110F19;
   --surface2: #16141F;
@@ -272,6 +274,23 @@ html, body {
   width: 120px;
   background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
   opacity: 0.6;
+}
+
+/* Dense multi-frame QR codes keep their 280px source resolution, but yield vertical
+   room to Safari chrome. Installed PWAs at normal phone heights stay at 280px. */
+.profile-share-qr {
+  --profile-share-qr-image-size: min(
+    280px,
+    max(224px, calc(var(--visual-viewport-height, 100dvh) * 0.36)),
+    calc(100vw - 3rem - 2px)
+  );
+  width: calc(var(--profile-share-qr-image-size) + 2px);
+  height: calc(var(--profile-share-qr-image-size) + 2px);
+}
+
+.profile-share-qr-image {
+  width: var(--profile-share-qr-image-size);
+  height: var(--profile-share-qr-image-size);
 }
 
 /* Prevent iOS Safari auto-zoom on focus (font-size < 16px triggers it and page stays zoomed) */

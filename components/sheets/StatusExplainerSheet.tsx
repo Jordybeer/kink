@@ -20,7 +20,10 @@ interface StatusExplainerSheetProps {
 export default function StatusExplainerSheet({ open, onClose }: StatusExplainerSheetProps) {
   return (
     <Sheet open={open} onClose={onClose} scrollable aria-label="Uitleg keuzes">
-      <SheetContent className="max-h-[80dvh] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3">
+      <SheetContent
+        className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
+        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) * 0.8)" }}
+      >
         <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
         <ul className="flex flex-col gap-3">
           {STATUS_ORDER.map((status) => ({

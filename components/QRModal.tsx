@@ -257,7 +257,8 @@ export default function QRModal({ profile, onClose }: Props) {
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
       <SheetContent
         showHandle={false}
-        className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4"
+        className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4"
+        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >
         <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
         {profile && (
@@ -278,7 +279,7 @@ export default function QRModal({ profile, onClose }: Props) {
             Dit profiel bevat te veel gegevens voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
           </div>
         ) : qrDataUrl ? (
-          <div className="mx-auto my-3 flex h-[282px] w-[282px] items-center justify-center overflow-hidden rounded-xl" style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}>
+          <div className="profile-share-qr mx-auto my-3 flex items-center justify-center overflow-hidden rounded-xl" style={{ background: "#FFFFFF", border: "1px solid var(--border)" }} data-testid="profile-share-qr">
             <img
               src={qrDataUrl}
               width={280}
@@ -286,11 +287,11 @@ export default function QRModal({ profile, onClose }: Props) {
               alt={currentFrame
                 ? `${currentFrame.phase === "avatar" ? "Profielfoto" : "Profiel"} QR-code ${currentFrame.index} van ${currentFrame.total}`
                 : "QR-code voor profielimport"}
-              className="h-[280px] w-[280px] shrink-0"
+              className="profile-share-qr-image shrink-0"
             />
           </div>
         ) : (
-          <div className="mx-auto my-3 rounded-xl animate-pulse flex items-center justify-center text-xs text-center px-6" style={{ width: 280, height: 280, background: "#FFFFFF", color: "#4b5563", border: "1px solid var(--border)" }} aria-label="QR-code laden…">
+          <div className="profile-share-qr mx-auto my-3 rounded-xl animate-pulse flex items-center justify-center text-xs text-center px-6" style={{ background: "#FFFFFF", color: "#4b5563", border: "1px solid var(--border)" }} aria-label="QR-code laden…">
             {generationError ?? (multi ? "QR-reeks voorbereiden…" : "Volledig profiel inpakken…")}
           </div>
         )}
