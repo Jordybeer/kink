@@ -19,7 +19,7 @@ const rules = [
   {
     number: "01",
     title: "Expliciet, nooit voorspeld",
-    text: "KinkSync kiest welke vraag nuttig volgt. Het raadt geen antwoord, gebruikt je rol niet als voorkeur en behandelt niets ingevuld als onbekend.",
+    text: "KinkSync kiest welke vraag nuttig volgt. Het raadt geen antwoord, gebruikt je rol niet als voorkeur en laat ieder ontbrekend antwoord onbekend.",
   },
   {
     number: "02",
@@ -35,7 +35,7 @@ const rules = [
 
 const localData = [
   "Profielen en expliciete antwoorden",
-  "Privénotities en private responses",
+  "Privénotities en afgeschermde antwoorden",
   "Vergelijkingen, scènes en contracthistoriek",
   "Lokale eigendomssleutels",
 ] as const;
@@ -90,6 +90,7 @@ export default function AboutPage() {
             Privacy door ontwerp
           </p>
           <h1
+            aria-label="Jouw voorkeuren. Jouw toestel. Jouw woorden."
             className="serif-safe mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-5xl"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
@@ -181,8 +182,8 @@ export default function AboutPage() {
           <WarningCircle size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--maybe)" }} />
           <p className="text-sm leading-6" style={{ color: "var(--text2)" }}>
             <strong style={{ color: "var(--text)" }}>Belangrijk bij installeren:</strong>{" "}
-            browserdata en een geïnstalleerde Home Screen-app synchroniseren niet vanzelf.
-            Maak een versleutelde back-up vóór je van browser, appcontext of toestel wisselt.
+            op iOS kunnen Safari en de geïnstalleerde Home Screen-app aparte opslagcontexten zijn.
+            Reken niet op automatische synchronisatie en maak vóór een wissel een versleutelde back-up.
           </p>
         </div>
       </section>
@@ -219,14 +220,14 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-12" aria-labelledby="trust-title">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>Trust boundaries</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>Vertrouwensgrenzen</p>
         <h2 id="trust-title" className="serif-safe mt-2 text-3xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
           Controle zonder schijnzekerheid
         </h2>
 
         <div className="mt-7 grid gap-3 md:grid-cols-2">
           <TrustCard icon={ShieldCheck} title="Privé blijft privé" className="md:col-span-2">
-            Een private response is alleen voor jou. Ze wordt uitgesloten van profieloverdracht en partnergerichte afgeleide output, waaronder vergelijkingen, contracten, scènes en pdf’s.
+            Een afgeschermd antwoord is alleen voor jou. Het wordt uitgesloten van profieloverdracht en partnergerichte afgeleide output, waaronder vergelijkingen, contracten, scènes en pdf’s.
           </TrustCard>
           <TrustCard icon={Fingerprint} title="Een herkenbare bron">
             Eigen profielen kunnen versies lokaal ondertekenen. Een geïmporteerd profiel blijft vergrendeld; een ontvanger krijgt niet stilletjes eigendom of bewerkrechten.
@@ -263,7 +264,7 @@ export default function AboutPage() {
             <Limit title="Een handtekening is geen identiteitsbewijs">
               Ze bewijst controle over een lokale sleutel en een exacte inhoud — niet iemands wettelijke identiteit, begrip of afwezigheid van druk.
             </Limit>
-            <Limit title="App-lock is geen encryptie van browseropslag">
+            <Limit title="De appvergrendeling is geen encryptie van browseropslag">
               De pincode helpt tegen meekijken in de app. Ze beschermt niet tegen iemand die het ontgrendelde toestel, de browseropslag of het besturingssysteem controleert.
             </Limit>
             <Limit title="Historiek is geen blijvende toestemming">
