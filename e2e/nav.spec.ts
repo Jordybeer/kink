@@ -24,26 +24,38 @@ test("subpages show back chevron pointing at the right parent", async ({ page })
   }
 });
 
-test("contextual actions live in the TopNav", async ({ page }) => {
+test("contextual actions live in the TopNav as icon-only commands", async ({ page }) => {
   await seedAndGo(page, "/scenes", PROFILES);
-  await expect(page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Nieuwe scène" })).toBeVisible();
+  const newScene = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Nieuwe scène" });
+  await expect(newScene).toBeVisible();
+  await expect(newScene).toHaveText("");
 
   await seedAndGo(page, "/contracts", PROFILES);
   const contractsNav = page.getByLabel("Hoofdnavigatie");
-  await expect(contractsNav.getByRole("button", { name: "Nieuw contract" })).toBeVisible();
-  await expect(contractsNav.getByRole("button", { name: "Contractverzoek scannen" })).toBeVisible();
+  const newContract = contractsNav.getByRole("button", { name: "Nieuw contract" });
+  const scanContract = contractsNav.getByRole("button", { name: "Contractverzoek scannen" });
+  await expect(newContract).toBeVisible();
+  await expect(scanContract).toBeVisible();
+  await expect(newContract).toHaveText("");
+  await expect(scanContract).toHaveText("");
   await expect(page.getByRole("button", { name: "Nieuw contract" })).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Contractverzoek scannen" })).toHaveCount(1);
 
   await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", PROFILES);
   const compareNav = page.getByLabel("Hoofdnavigatie");
-  await expect(compareNav.getByRole("button", { name: "Wissel profielen" })).toBeVisible();
+  const swap = compareNav.getByRole("button", { name: "Wissel profielen" });
+  await expect(swap).toBeVisible();
+  await expect(swap).toHaveText("");
   await expect(page.getByRole("button", { name: "Wissel profielen" })).toHaveCount(1);
 
   await seedAndGo(page, "/profile/pw-alex-001", PROFILES);
   const profileNav = page.getByLabel("Hoofdnavigatie");
-  await expect(profileNav.getByRole("button", { name: "Profiel delen" })).toBeVisible();
-  await expect(profileNav.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
+  const share = profileNav.getByRole("button", { name: "Profiel delen" });
+  const edit = profileNav.getByRole("button", { name: "Profiel bewerken" });
+  await expect(share).toBeVisible();
+  await expect(edit).toBeVisible();
+  await expect(share).toHaveText("");
+  await expect(edit).toHaveText("");
   await expect(page.getByRole("button", { name: "Profiel delen" })).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Profiel bewerken" })).toHaveCount(1);
 });
