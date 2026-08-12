@@ -6,6 +6,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -22,19 +23,28 @@ export interface TopNavAction {
   disabled?: boolean;
 }
 
+type ActionOwner = symbol;
+
 interface TopNavContextValue {
   actions: TopNavAction[];
-  setActions: (actions: TopNavAction[]) => void;
-  clearActions: () => void;
+  setActions: (owner: ActionOwner, actions: TopNavAction[]) => void;
+  clearActions: (owner: ActionOwner) => void;
 }
 
 const TopNavContext = createContext<TopNavContextValue | null>(null);
 
 export function TopNavProvider({ children }: { children: ReactNode }) {
-  const [actions, setActionsState] = useState<TopNavAction[]>([]);
-  const setActions = useCallback((next: TopNavAction[]) => setActionsState(next), []);
-  const clearActions = useCallback(() => setActionsState([]), []);
-  const value = useMemo(() => ({ actions, setActions, clearActions }), [actions, setActions, clearActions]);
+  const [registration, setRegistration] = useState<{ owner: ActionOwner; actions: TopNavAction[] } | null>(null);
+  const setActions = useCallback((owner: ActionOwner, actions: TopNavAction[]) => {
+    setRegistration({ owner, actions });
+  }, []);
+  const clearActions = useCallback((owner: ActionOwner) => {
+    setRegistration((current) => current?.owner === owner ? null : current);
+  }, []);
+  const value = useMemo(
+    () => ({ actions: registration?.actions ?? [], setActions, clearActions }),
+    [registration, setActions, clearActions],
+  );
 
   return <TopNavContext.Provider value={value}>{children}</TopNavContext.Provider>;
 }
@@ -51,9 +61,11 @@ export function useTopNav() {
  */
 export function useTopNavActions(actions: TopNavAction[]) {
   const { setActions, clearActions } = useTopNav();
+  const ownerRef = useRef<ActionOwner>(Symbol("top-nav-actions"));
 
   useLayoutEffect(() => {
-    setActions(actions);
-    return clearActions;
+    const owner = ownerRef.current;
+    setActions(owner, actions);
+    return () => clearActions(owner);
   }, [actions, clearActions, setActions]);
 }
