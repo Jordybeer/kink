@@ -152,6 +152,7 @@ describe("contract lifecycle", () => {
     older.updatedAt = 200;
     older.currentVersionId = older.draftVersionId;
     older.draftVersionId = undefined;
+    older.versions[0].state = "signed";
 
     const newest = await draftSeries(me, partnerSub);
     newest.id = "legacy-series:snapshot-2";
@@ -159,6 +160,7 @@ describe("contract lifecycle", () => {
     newest.updatedAt = 300;
     newest.currentVersionId = newest.draftVersionId;
     newest.draftVersionId = undefined;
+    newest.versions[0].state = "signed";
 
     const concept = await draftSeries(me, partnerDom);
     concept.id = "series-draft";
