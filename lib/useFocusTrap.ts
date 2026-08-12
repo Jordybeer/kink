@@ -21,7 +21,11 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== "Tab") return;
       const els = focusable();
-      if (!els.length) return;
+      if (!els.length) {
+        e.preventDefault();
+        el.focus({ preventScroll: true });
+        return;
+      }
       const last = els[els.length - 1];
       if (e.shiftKey) {
         if (document.activeElement === els[0] || document.activeElement === el) {

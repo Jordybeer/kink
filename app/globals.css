@@ -284,6 +284,7 @@ html, body {
     max(224px, calc(var(--visual-viewport-height, 100dvh) * 0.36)),
     calc(100vw - 3rem - 2px)
   );
+
   width: calc(var(--profile-share-qr-image-size) + 2px);
   height: calc(var(--profile-share-qr-image-size) + 2px);
 }
