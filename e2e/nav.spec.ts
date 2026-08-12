@@ -28,6 +28,13 @@ test("contextual actions live in the TopNav", async ({ page }) => {
   await seedAndGo(page, "/scenes", PROFILES);
   await expect(page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Nieuwe scène" })).toBeVisible();
 
+  await seedAndGo(page, "/contracts", PROFILES);
+  const contractsNav = page.getByLabel("Hoofdnavigatie");
+  await expect(contractsNav.getByRole("button", { name: "Nieuw contract" })).toBeVisible();
+  await expect(contractsNav.getByRole("button", { name: "Contractverzoek scannen" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Nieuw contract" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Contractverzoek scannen" })).toHaveCount(1);
+
   await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", PROFILES);
   const compareNav = page.getByLabel("Hoofdnavigatie");
   await expect(compareNav.getByRole("button", { name: "Wissel profielen" })).toBeVisible();
