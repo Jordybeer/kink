@@ -60,10 +60,10 @@ export default function TopNav() {
 
   const shell = {
     paddingTop: "env(safe-area-inset-top)",
-    background: "color-mix(in srgb, var(--surface) 88%, transparent)",
+    background: "color-mix(in srgb, var(--surface) 82%, transparent)",
     borderBottom: "1px solid var(--border)",
-    backdropFilter: "blur(14px) saturate(145%)",
-    WebkitBackdropFilter: "blur(14px) saturate(145%)",
+    backdropFilter: "blur(12px) saturate(140%)",
+    WebkitBackdropFilter: "blur(12px) saturate(140%)",
   } as const;
 
   if (path === "/") {
@@ -71,19 +71,19 @@ export default function TopNav() {
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
         <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
           <span
-            className="text-[17px] italic serif-safe"
-            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}
+            className="text-base italic serif-safe"
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
           >
             KinkSync
           </span>
-          <div className="ml-auto flex items-center justify-end gap-1.5">
+          <div className="ml-auto flex items-center justify-end gap-1">
             <OfflineStatus />
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              className="focus-ring flex h-9 w-9 items-center justify-center rounded-xl"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
             >
               <GearSix size={18} aria-hidden="true" />
             </button>
@@ -107,7 +107,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center gap-1.5" aria-label="Hoofdnavigatie">
+      <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
         <MotionLink
           href={back}
           whileTap={TAP_SPRING}
@@ -115,13 +115,13 @@ export default function TopNav() {
           style={{ color: "var(--text2)" }}
           aria-label="Terug"
         >
-          <CaretLeft aria-hidden="true" size={19} />
+          <CaretLeft aria-hidden="true" size={18} />
         </MotionLink>
         <span
-          className="flex-1 min-w-0 text-[17px] italic truncate serif-safe transition-opacity"
+          className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
           style={{
             fontFamily: "var(--font-display, Georgia, serif)",
-            fontWeight: 600,
+            fontWeight: 500,
             color: "var(--text)",
             opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
           }}
@@ -143,8 +143,8 @@ export default function TopNav() {
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("ks:open-status-explainer"))}
             aria-label="Uitleg over antwoordkeuzes"
-            className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-xl"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+            className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
           >
             <Info size={17} aria-hidden="true" />
           </button>
@@ -169,8 +169,8 @@ export default function TopNav() {
               onClick={() => setOverflowOpen((open) => !open)}
               aria-label="Meer acties"
               aria-expanded={overflowOpen}
-              className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-xl"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+              className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
             >
               <DotsThree size={20} weight="bold" aria-hidden="true" />
             </button>
@@ -189,7 +189,6 @@ function TopNavActionButton({
   action: TopNavAction;
   emphasis: "primary" | "secondary";
 }) {
-  const primary = emphasis === "primary";
   return (
     <motion.button
       type="button"
@@ -198,29 +197,16 @@ function TopNavActionButton({
       disabled={action.disabled}
       aria-label={action.label}
       title={action.label}
-      className={primary
-        ? "focus-ring flex h-9 min-w-9 max-w-[148px] flex-none items-center justify-center gap-1.5 rounded-xl px-2.5 text-[11px] font-semibold disabled:opacity-35"
-        : "focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-xl disabled:opacity-35"}
-      style={primary
-        ? {
-            color: action.danger ? "var(--hard-no)" : "var(--accent)",
-            background: action.danger
-              ? "color-mix(in srgb, var(--hard-no) 9%, var(--surface2))"
-              : "color-mix(in srgb, var(--accent) 9%, var(--surface2))",
-            border: action.danger ? "1px solid var(--hard-no)" : "1px solid var(--border-accent)",
-          }
-        : {
-            color: action.danger ? "var(--hard-no)" : "var(--text2)",
-            background: "var(--surface2)",
-            border: "1px solid var(--border)",
-          }}
+      className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full disabled:opacity-35"
+      style={{
+        color: action.danger
+          ? "var(--hard-no)"
+          : emphasis === "primary"
+            ? "var(--text)"
+            : "var(--text2)",
+      }}
     >
-      <span className="flex-none" aria-hidden="true">{action.icon}</span>
-      {primary && (
-        <span className="hidden min-[360px]:block min-w-0 truncate">
-          {action.shortLabel ?? action.label}
-        </span>
-      )}
+      {action.icon}
     </motion.button>
   );
 }
