@@ -210,6 +210,12 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### Trustpagina en privacygrenzen (dev, 2026-08-13)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | `/about` rebuilt as an editorial trust page with explicit local-first, no-answer-inference and consent boundaries; private profile transfer stays public-only while text/PDF private-answer export remains an explicit opt-in; app-lock is not presented as storage encryption; iOS browser versus Home Screen storage durability is called out; `/about` joins the five-device launch screenshot matrix and shipped only after lint/unit/build, full browser/device rehearsal and production PWA/offline were green on the same head | `5da8980` / PR #345 |
+
 ### Vragenlijstviewport en contractrecovery (dev, 2026-08-12)
 
 | — | What landed | Commit |
@@ -338,6 +344,7 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 - 2026-07-09: dead Unix socket named `cloud` in the repo root crashes Turbopack's CSS scan ("No such device or address", os error 6) — check `ss -xl` for listeners, then `rm` it. A stale 7-day dev server holding :3000 with HTTP 500 blocks Playwright's `reuseExistingServer` — kill and let it respawn.
 - 2026-07-11: session handoff, clean state — dev tree clean at `6e0b903`, 227 tests + build green. The contract-PDF arc (signature spacing, unified four-section table, choice-ladder ordering, comment bullets, column discipline + comment breathing room) is **complete**; a fresh session should not re-touch `app/contract/page.tsx` PDF code and should start at Phase 31. Visual PDF checks use the standalone jsPDF-repro + `pdftoppm` pattern (import `jspdf/dist/jspdf.node.min.js` by absolute path in a scratchpad `.mjs`).
 - 2026-07-09: ephemeral screenshot pattern — drop a throwaway spec in `e2e/` using `seedAndGo` + `pinnedProfileId`, run `--project=desktop`, delete the spec; keeps visual proof without polluting the suite.
+- 2026-08-13: `safe-word check` uses one concurrency group per workflow/ref with `cancel-in-progress: true`; rerunning an older attempt on the same PR ref can cancel a newer attempt. Inspect active runs before rerunning, let one attempt own the ref, and treat setup/lint cancellation as orchestration unless its logs show a real code failure.
 
 ### Signed consent ledger (dev, 2026-07-30)
 
