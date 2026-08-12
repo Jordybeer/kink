@@ -53,6 +53,32 @@ test.describe("Home page — profielen aanwezig", () => {
     await expect(compareLink).toHaveAttribute("href", /\/compare\?a=pw-alex-001&b=pw-sam-002/);
   });
 
+  test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    const trigger = page.getByRole("button", { name: "Instellingen openen" });
+    await trigger.click();
+
+    const dialog = page.getByRole("dialog", { name: "Instellingen" });
+    const title = dialog.getByRole("heading", { name: "Instellingen" });
+    const scrollBody = dialog.getByTestId("sheet-scroll-body");
+    const lastAction = dialog.getByRole("button", { name: /Alle data verwijderen/ });
+
+    await expect(dialog).toBeVisible();
+    const titleTop = (await title.boundingBox())?.y;
+    await lastAction.scrollIntoViewIfNeeded();
+    await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+    const actionBox = await lastAction.boundingBox();
+    const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
+    expect(actionBox).not.toBeNull();
+    expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+    expect((await title.boundingBox())?.y).toBe(titleTop);
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
   test("geen horizontale overflow op mobiel (390px)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");

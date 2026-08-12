@@ -19,10 +19,11 @@ interface Props {
   onClose: () => void;
   title?: string;
   children?: ReactNode;
+  scrollable?: boolean;
   "aria-label"?: string;
 }
 
-export default function Sheet({ open, onClose, title, children, "aria-label": ariaLabel }: Props) {
+export default function Sheet({ open, onClose, title, children, scrollable = false, "aria-label": ariaLabel }: Props) {
   const t = useMotionSafe();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
@@ -51,22 +52,30 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            className="fixed bottom-0 left-0 right-0 z-[151] touch-none"
-            style={{ y }}
+            className="fixed bottom-0 left-0 right-0 z-[151]"
+            style={{ y, touchAction: scrollable ? "auto" : "none" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={SPRING}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0.05, bottom: 0.3 }}
-            onDragEnd={(_, info) => {
+            drag={scrollable ? false : "y"}
+            dragConstraints={scrollable ? undefined : { top: 0 }}
+            dragElastic={scrollable ? false : { top: 0.05, bottom: 0.3 }}
+            onDragEnd={scrollable ? undefined : (_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 500) onClose();
             }}
           >
             <div
-              className="rounded-t-[28px] px-4 pb-10 pt-3"
-              style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
+              className={scrollable
+                ? "flex flex-col overflow-hidden rounded-t-[28px] px-4 pt-3"
+                : "rounded-t-[28px] px-4 pb-10 pt-3"}
+              style={{
+                background: "var(--surface)",
+                borderTop: "1px solid var(--border)",
+                ...(scrollable
+                  ? { maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }
+                  : {}),
+              }}
             >
               <div className="h-7 mb-1" aria-hidden="true">
                 <div
@@ -79,7 +88,14 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
                 <h2 className="text-lg font-bold mb-4 px-1">{title}</h2>
               )}
 
-              {children}
+              {scrollable ? (
+                <div
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
+                  data-testid="sheet-scroll-body"
+                >
+                  {children}
+                </div>
+              ) : children}
             </div>
           </motion.div>
         </>

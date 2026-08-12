@@ -154,10 +154,10 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     <Sheet open={open} onClose={onClose} scrollable aria-label="Profiel bewerken">
       <SheetContent
         showClose={false}
-        className="overflow-hidden px-0 pb-0 pt-3"
+        className="flex flex-col overflow-hidden px-0 pb-0 pt-3"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >
-        <div className="px-5 pb-4 flex items-center gap-3">
+        <div className="flex flex-none items-center gap-3 px-5 pb-4" data-testid="profile-edit-header">
           <div
             className="w-11 h-11 rounded-2xl flex items-center justify-center flex-none"
             style={{
@@ -181,7 +181,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           </div>
         </div>
 
-        <div className="overflow-y-auto overscroll-contain px-5 pb-5 space-y-4" style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - 170px)" }}>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 space-y-4" data-testid="profile-edit-scroll-body">
           <section
             className="rounded-2xl p-4"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
@@ -452,7 +452,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         </div>
 
         <div
-          className="px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+          className="flex-none px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+          data-testid="profile-edit-footer"
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
         >
           {error && (
