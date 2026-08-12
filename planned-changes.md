@@ -210,6 +210,12 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### Vragenlijstviewport en contractrecovery (dev, 2026-08-12)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Questions uses the contextual TopNav for its flow modes and the shared full-detail edit sheet; visual-viewport sizing keeps long sheets internally scrollable; contract creation is pair-first from Compare; imported profiles link only to their latest signed local contract; hydration-aware legacy migration and decoded local IDs restore cold historical routes without mutating consent history or exposing profile data | `b7a2ca6` / PR #343 |
+
 ### iOS-browserhoogte en lange profielselecties (dev, 2026-08-12)
 
 | — | What landed | Commit |
