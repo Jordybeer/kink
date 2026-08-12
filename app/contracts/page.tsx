@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Archive,
   CaretDown,
@@ -16,6 +16,7 @@ import {
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ContractInboxSheet from "@/components/contract/ContractInboxSheet";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import { useHasHydrated, useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import {
@@ -135,6 +136,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
 }
 
 function ContractsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
   const legacyContracts = useStore((state) => state.contracts);
@@ -145,6 +147,24 @@ function ContractsContent() {
   const [tab, setTab] = useState<Exclude<ContractDisplayBucket, "draft">>("active");
   const [conceptsOpen, setConceptsOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
+  const createHref = newContractHref(profiles, pinnedProfileId);
+  const navActions = useMemo<TopNavAction[]>(() => [
+    {
+      id: "new-contract",
+      label: "Nieuw contract",
+      icon: <Plus size={18} aria-hidden="true" />,
+      onClick: () => router.push(createHref),
+      placement: "primary",
+    },
+    {
+      id: "scan-contract-request",
+      label: "Contractverzoek scannen",
+      icon: <QrCode size={18} aria-hidden="true" />,
+      onClick: () => setInboxOpen(true),
+      placement: "secondary",
+    },
+  ], [createHref, router]);
+  useTopNavActions(navActions);
 
   useEffect(() => {
     if (hydrated) importLegacyContracts(legacyContracts, profiles);
@@ -159,48 +179,20 @@ function ContractsContent() {
     .filter((item) => contractBucket(item, profiles) === tab)
     .sort((left, right) => right.updatedAt - left.updatedAt);
   const counts = Object.fromEntries(TABS.map(({ id }) => [id, filteredSeries.filter((item) => contractBucket(item, profiles) === id).length])) as Record<Exclude<ContractDisplayBucket, "draft">, number>;
-  const createHref = newContractHref(profiles, pinnedProfileId);
   const personProfile = personId
     ? profiles.find((profile) => (profile.personGroupId ?? profile.id) === personId)
     : undefined;
 
   return (
     <PageShell width="2xl" className="lg:max-w-4xl">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400 }}>
-            {personProfile ? `Contracten met ${personProfile.name}` : "Contracten"}
-          </h1>
-          <p className="mt-1 text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text2)" }}>
-            afspraken · consent · historiek
-          </p>
-        </div>
-        <div className="flex flex-none items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setInboxOpen(true)}
-            aria-label="Contractverzoek scannen"
-            className="focus-ring flex h-10 w-10 items-center justify-center rounded-lg"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)" }}
-          >
-            <QrCode size={17} aria-hidden="true" />
-          </button>
-          <Link
-            href={createHref}
-            prefetch={false}
-            className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-          >
-            <Plus size={14} aria-hidden="true" />
-            Nieuw
-          </Link>
-        </div>
-      </div>
+      <h1 className="sr-only">
+        {personProfile ? `Contracten met ${personProfile.name}` : "Contracten"}
+      </h1>
 
       {personId && (
         <Link
           href="/contracts"
-          className="focus-ring mt-3 inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs"
+          className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs"
           style={{ color: "var(--text2)", background: "var(--surface2)" }}
         >
           <X size={12} aria-hidden="true" />
