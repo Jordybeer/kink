@@ -65,7 +65,16 @@ export default function KinkEditSheet({
         {kink?.description && (
           <ClampText text={kink.description} className="text-sm mb-4" style={{ color: "var(--text2)" }} />
         )}
-        {!kink?.description && <div className="mb-3" />}
+        {kink?.safetyNote && (
+          <aside
+            className="mb-4 rounded-xl px-3 py-3 text-sm leading-relaxed"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+          >
+            <p className="font-semibold" style={{ color: "var(--text)" }}>Veiligheid</p>
+            <p className="mt-1">{kink.safetyNote}</p>
+          </aside>
+        )}
+        {!kink?.description && !kink?.safetyNote && <div className="mb-3" />}
 
         <div aria-live="polite" className="sr-only">
           {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
