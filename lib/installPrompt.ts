@@ -12,8 +12,8 @@ export interface BeforeInstallPromptEvent extends Event {
 export type IosInstallBrowser = "safari" | "chrome" | "other" | null;
 
 /**
- * Classify the iOS browser without touching browser globals so the decision can
- * be tested independently from hydration.
+ * Classify the iOS browser with browser globals kept outside the ropes, so tests
+ * can probe the decision without getting hydration tangled in the leash.
  */
 export function detectIosInstallBrowser(
   userAgent: string,

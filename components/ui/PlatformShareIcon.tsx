@@ -9,8 +9,8 @@ type PlatformShareIconProps = ComponentProps<typeof ShareNetwork> & {
 };
 
 /**
- * Render the familiar platform share glyph while keeping hydration deterministic.
- * Auto detection happens in a layout effect so the platform glyph is corrected
+ * Render the familiar share glyph without putting hydration in a chokehold.
+ * Auto detection waits for a layout effect, then corrects the platform glyph
  * before the browser paints the hydrated UI.
  */
 export default function PlatformShareIcon({
