@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { X } from "@phosphor-icons/react";
 import SheetBackdrop from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -85,7 +86,20 @@ export default function Sheet({ open, onClose, title, children, scrollable = fal
               </div>
 
               {title && (
-                <h2 className="text-lg font-bold mb-4 px-1">{title}</h2>
+                <div className="mb-4 flex min-h-11 items-center gap-2 px-1">
+                  <h2 className="min-w-0 flex-1 text-lg font-bold">{title}</h2>
+                  {scrollable && (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      aria-label={`${title} sluiten`}
+                      className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                      style={{ color: "var(--text2)" }}
+                    >
+                      <X size={20} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
               )}
 
               {scrollable ? (

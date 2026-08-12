@@ -103,7 +103,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   expect(await page.evaluate(() => window.scrollY)).toBe(backgroundScrollY);
   await saveScreenshot(page, testInfo, "settings-scrolled");
 
-  await page.keyboard.press("Escape");
+  await settings.getByRole("button", { name: "Instellingen sluiten" }).click();
   await expect(settings).toBeHidden();
   await expect(settingsTrigger).toBeFocused();
 
@@ -155,7 +155,8 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await expectWithinVisualViewport(lastShared);
   await expect(selector.getByPlaceholder("Zoek op naam of rol…")).toBeVisible();
   await saveScreenshot(page, testInfo, "compare-profile-selector");
-  await page.keyboard.press("Escape");
+  await selector.getByRole("button", { name: "Kies profiel B sluiten" }).click();
+  await expect(selector).toBeHidden();
   await expect(compareTrigger).toBeFocused();
 
   await page.goto("/profile/" + PROFILE_ALEX.id + "/questions");

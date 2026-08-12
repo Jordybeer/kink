@@ -111,7 +111,7 @@ test.describe("Vergelijkingspagina", () => {
     await expect(dialog.getByRole("button", { name: /^Eigen 01,/ })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /^Gedeeld 24,/ })).toHaveCount(0);
 
-    await page.keyboard.press("Escape");
+    await dialog.getByRole("button", { name: "Kies profiel B sluiten" }).click();
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
   });

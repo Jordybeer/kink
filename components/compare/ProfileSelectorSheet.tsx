@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Lock, MagnifyingGlass } from "@phosphor-icons/react";
+import { Lock, MagnifyingGlass, X } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import { PROFILE_COLOUR_A, PROFILE_COLOUR_B } from "@/lib/compare";
 import { splitProfilesByOwnership } from "@/lib/profileType";
@@ -137,17 +137,28 @@ export default function ProfileSelectorSheet({
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >
         <div className="flex-none px-5 pb-3">
-          <h2
-            className="text-sm mb-3"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-              color: "var(--text2)",
-            }}
-          >
-            Kies profiel {slot}
-          </h2>
+          <div className="mb-3 flex min-h-11 items-center gap-2">
+            <h2
+              className="min-w-0 flex-1 text-sm"
+              style={{
+                fontFamily: "var(--font-display, Georgia, serif)",
+                fontStyle: "italic",
+                fontWeight: 400,
+                color: "var(--text2)",
+              }}
+            >
+              Kies profiel {slot}
+            </h2>
+            <button
+              type="button"
+              onClick={closeAndReset}
+              aria-label={`Kies profiel ${slot} sluiten`}
+              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
+            >
+              <X size={20} aria-hidden="true" />
+            </button>
+          </div>
           {profiles.length >= SEARCH_THRESHOLD && (
             <label className="relative block">
               <span className="sr-only">Zoek profiel</span>

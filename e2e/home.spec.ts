@@ -81,7 +81,7 @@ test.describe("Home page — profielen aanwezig", () => {
     expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
     expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
 
-    await page.keyboard.press("Escape");
+    await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
   });
