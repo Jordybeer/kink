@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -16,8 +16,9 @@ import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ContractInboxSheet from "@/components/contract/ContractInboxSheet";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
-import { useHasHydrated, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 import {
   contractBucket,
   contractPersonIdentity,
@@ -136,13 +137,11 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
 function ContractsContent() {
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
-  const legacyContracts = useStore((state) => state.contracts);
-  const hydrated = useHasHydrated();
   const series = useContractStore((state) => state.series);
-  const importLegacyContracts = useContractStore((state) => state.importLegacyContracts);
   const [tab, setTab] = useState<Exclude<ContractDisplayBucket, "draft">>("active");
   const [conceptsOpen, setConceptsOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
+  const contractsReady = useLegacyContractMigration();
   const navActions = useMemo<TopNavAction[]>(() => [
     {
       id: "scan-contract-request",
@@ -154,11 +153,7 @@ function ContractsContent() {
   ], []);
   useTopNavActions(navActions);
 
-  useEffect(() => {
-    if (hydrated) importLegacyContracts(legacyContracts, profiles);
-  }, [hydrated, importLegacyContracts, legacyContracts, profiles]);
-
-  if (!hydrated) return <PageShell loading width="2xl" />;
+  if (!contractsReady) return <PageShell loading width="2xl" />;
 
   const personId = searchParams.get("person");
   const filteredSeries = series.filter((item) => seriesMatchesPerson(item, personId));
