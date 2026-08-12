@@ -81,27 +81,35 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByText("Impact Play", { exact: true }).first()).toBeVisible();
   });
 
-  test("tabblad 'Bewerken' opent bewerkingsmodus", async ({ page }) => {
+  test("tabblad 'Bewerken' is een cataloguseditor zonder ingebouwde vragenkaart", async ({ page }) => {
     const editTab = page.getByRole("tab", { name: "Bewerken" });
     await editTab.click();
-    await expect(page.locator("button[aria-pressed]").first()).toBeVisible();
+
+    await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Alle categorieën/ })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
   });
 
-  test("kink-status instellen via de triage-stapel", async ({ page }) => {
+  test("kink-status instellen via de cataloguseditor", async ({ page }) => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
-    // Navigate to edit tab if needed
     const editTab = page.getByRole("tab", { name: "Bewerken" });
     if (await editTab.count() > 0) await editTab.first().click();
 
-    // The deck offers the five verdicts as stacked rows — take "Ja"
-    const jaBtn = page.locator('button[aria-pressed]').filter({ hasText: "geen probleem mee" }).first();
-    await jaBtn.scrollIntoViewIfNeeded();
-    await jaBtn.dispatchEvent("click");
+    const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
+    await search.fill("spanking");
 
-    // The verdict lands in the ledger as a compact row
-    await expect(page.locator('button[aria-label*=", Ja — bewerken"]').first()).toBeVisible({ timeout: 3000 });
+    const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*="— bewerken"]').first();
+    await expect(result).toBeVisible();
+    await result.click();
+
+    const statusGroup = page.getByRole("group", { name: "Status kiezen" });
+    await expect(statusGroup).toBeVisible();
+    await statusGroup.getByRole("button", { name: /Heel graag/ }).click();
+    await page.getByRole("button", { name: "Klaar" }).click();
+
+    await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible({ timeout: 3000 });
   });
 });
 
