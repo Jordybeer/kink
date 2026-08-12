@@ -14,12 +14,21 @@ stond geen nieuwe PR naar `dev` open. De releasebasis telt 344 actieve
 catalogusitems, 53 expliciete directionele pairs, 45 vaste Dynamic-anchors en
 canonical mapping v6 met 24 geaudite edges.
 
+Immutable bewijs op exact `8e26b3f`:
+
+- [344 catalogusitems](https://github.com/Jordybeer/kink/blob/8e26b3fe2c4b29ef53aa339007483a844dfa8eb6/__tests__/kinks.test.ts#L207-L214);
+- [53 pairs en 45 anchors](https://github.com/Jordybeer/kink/blob/8e26b3fe2c4b29ef53aa339007483a844dfa8eb6/__tests__/directionality.test.ts#L64-L104);
+- [mapping v6 met alle 24 edges](https://github.com/Jordybeer/kink/blob/8e26b3fe2c4b29ef53aa339007483a844dfa8eb6/__tests__/questionnaire.test.ts#L229-L260);
+- [complementaire matching en compare](https://github.com/Jordybeer/kink/blob/8e26b3fe2c4b29ef53aa339007483a844dfa8eb6/__tests__/directionalMatching.test.ts#L39-L140);
+- [snapshots, Scene, QR, consent en private-response-boundary](https://github.com/Jordybeer/kink/blob/8e26b3fe2c4b29ef53aa339007483a844dfa8eb6/__tests__/directionalityIntegration.test.ts#L36-L154);
+- [directionele Contract-output](https://github.com/Jordybeer/kink/blob/8e26b3fe2c4b29ef53aa339007483a844dfa8eb6/e2e/contract.spec.ts#L112-L128).
+
 De launch-scope freeze is nu actief:
 
 - geen nieuwe brede directionality-, catalogus- of questionnaire-slices;
 - alleen een bewezen P0/P1, consent/privacyregressie of expliciet goedgekeurde
   semantische correctie mag deze surfaces vóór launch nog openen;
-- de eerstvolgende actieve fase is Fase 0: de release-meetlat betrouwbaar maken.
+- Fase 0 is de enige actieve close-outlane; Fase 1 blijft geblokkeerd tot de Fase 0-exit gate groen is.
 
 ---
 
@@ -135,7 +144,7 @@ terwijl `e2e/fixtures.ts` nog versie 20 en het verwijderde ID
 
 **Doel:** browsergebruik blijft mogelijk, maar niemand kan ongemerkt waardevolle lokale consent/profiledata opbouwen in een fragiele browsercontainer zonder duidelijke durability-keuze.
 
-**Status op de baseline:** gedeeltelijk uitgevoerd. De vroege install-event
+**Status op de baseline:** gedeeltelijk uitgevoerd en geblokkeerd tot de Fase 0-exit gate. De vroege install-event
 capture, centrale broker, iOS/iPadOS-classifier, native installatiesheet en
 aparte `kinksync-install-prompt-policy` bestaan. Home onderhoudt daarnaast
 nog een eigen deferred prompt, UA-check, listener en

@@ -27,8 +27,8 @@ PR #299 leverde de pure selectieonderdelen, statussemantiek, pinned canonical
 probes, provenance en anti-monopoly. De funnel-slice bouwt daarop zonder de
 causale veiligheidsgrens te veranderen:
 
-1. Dynamic heeft een inspecteerbaar basisplan van 45 anchors over alle 19
-   user-facing categorieën;
+1. Dynamic houdt een inspecteerbare meetlat van 45 anchors over alle 19
+   user-facing categorieën strak aan de lijn;
 2. Discover gebruikt de volledige actieve onbeantwoorde catalogus als
    doorlopende, user-exitable pool;
 3. `Meer uit deze categorie` is een ephemeral lokale intent;
@@ -82,8 +82,8 @@ Dynamic is klaar wanneer:
 
 Geen confidence-score, “engine weet genoeg”-model of bewegende denominator.
 
-De basisset bevat 45 expliciete anchors over alle 19 user-facing categorieën.
-Meerdere anchors bestaan alleen waar één kaart aantoonbaar een te brede kamer
+De basisset houdt 45 expliciete anchors over alle 19 user-facing categorieën
+strak aan de lijn. Meerdere anchors bestaan alleen waar één kaart aantoonbaar een te brede kamer
 zou vertegenwoordigen. Het aantal volgt uit die controlelijst, niet uit een
 marketingbudget. Zelfgekozen interests kunnen vooraf vastgelegde extra anchors
 toevoegen; antwoorden nooit.
@@ -185,11 +185,11 @@ opruiming. Nieuwe catalogusitems landen standaard zonder propagation.
 
 ## Canonical allowlist @6
 
-De actieve formeel geaudite mapping is vastgelegd als
-`QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 6`. Deze versie bevat 24
-expliciete source → target-edges. Directionele kanten staan als afzonderlijke
-stabiele IDs in de allowlist; oude generieke edges en
-`recording -> adult_content_creation` zijn geen runtime-propagation meer.
+De formeel geaudite allowlist draagt versie 6 strak op de halsband:
+`QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 6`. Daarin zitten 24 expliciete
+source → target-edges. Directionele kanten blijven als afzonderlijke stabiele
+IDs vastgegespt; oude generieke edges en
+`recording -> adult_content_creation` krijgen geen runtime-propagation meer.
 De edge-voor-edge onderbouwing en expliciet verworpen associaties staan in
 [`docs/questionnaire-metadata-audit.md`](docs/questionnaire-metadata-audit.md).
 
