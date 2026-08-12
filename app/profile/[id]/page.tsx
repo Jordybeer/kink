@@ -1,15 +1,17 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ProfileScreen from "@/components/profile/ProfileScreen";
 import ProfileIntroTour from "@/components/tours/ProfileIntroTour";
+import type { SpotlightTourExitReason } from "@/components/tours/SpotlightTour";
 import PageShell from "@/components/PageShell";
 import { useHasHydrated, useStore } from "@/lib/store";
 import {
   SPLIT_TOUR_KEYS,
   markSplitTourSeen,
   shouldShowSplitTour,
+  useSplitTourHasHydrated,
 } from "@/lib/splitTourState";
 
 interface Props {
@@ -22,7 +24,10 @@ export default function ProfilePage({ params }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hydrated = useHasHydrated();
-  const { profiles, profileTourComplete, completeProfileTour } = useStore();
+  const splitTourHydrated = useSplitTourHasHydrated();
+  const profiles = useStore((state) => state.profiles);
+  const profileTourComplete = useStore((state) => state.profileTourComplete);
+  const completeProfileTour = useStore((state) => state.completeProfileTour);
   const profile = profiles.find((candidate) => candidate.id === id);
   const shared = profile?.origin === "shared" || (!profile?.origin && profile?.isImported === true);
   const focusQuestions = searchParams.get("focus") === "questionnaire";
@@ -34,7 +39,7 @@ export default function ProfilePage({ params }: Props) {
   }, [focusQuestions, pathname, router]);
 
   useEffect(() => {
-    if (focusQuestions || !hydrated || !profile || shared || profileTourComplete) {
+    if (focusQuestions || !hydrated || !splitTourHydrated || !profile || shared || profileTourComplete) {
       setTourVisible(false);
       return;
     }
@@ -43,12 +48,13 @@ export default function ProfilePage({ params }: Props) {
       setTourVisible(shouldShowSplitTour(profileTourComplete, SPLIT_TOUR_KEYS.profile));
     }, 700);
     return () => window.clearTimeout(timer);
-  }, [focusQuestions, hydrated, profile, profileTourComplete, shared]);
+  }, [focusQuestions, hydrated, profile, profileTourComplete, shared, splitTourHydrated]);
 
-  function finishProfileTour() {
+  const finishProfileTour = useCallback((reason: SpotlightTourExitReason) => {
     setTourVisible(false);
+    if (reason === "abandoned") return;
     if (markSplitTourSeen(SPLIT_TOUR_KEYS.profile)) completeProfileTour();
-  }
+  }, [completeProfileTour]);
 
   if (focusQuestions) return <PageShell loading width="2xl" />;
 
