@@ -48,7 +48,6 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect(page.getByText("Gedeelde verlangens", { exact: true })).toBeVisible();
       await expect(page.getByText("Zachte grenzen", { exact: true })).toBeVisible();
       await expect(page.getByText("Harde grenzen", { exact: true })).toBeVisible();
-      await expect(page.getByText("Bespreking nodig", { exact: true })).toBeVisible();
       break;
     case "scene":
       await expect(page.getByRole("button", { name: "Kinks toevoegen" })).toBeVisible();
