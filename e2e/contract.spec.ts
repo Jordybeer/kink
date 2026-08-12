@@ -1,7 +1,41 @@
 import { test, expect } from "@playwright/test";
-import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
+import { CONTRACT_ALEX_SAM, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const URL = "/contract?a=pw-alex-001&b=pw-sam-002";
+
+
+test.describe("Historische contractrecovery", () => {
+  test("opent een encoded legacy contract rechtstreeks na een cold local-store start", async ({ page }) => {
+    const seriesId = `legacy-series:${CONTRACT_ALEX_SAM.id}`;
+    await seedAndGo(
+      page,
+      `/contracts/${encodeURIComponent(seriesId)}`,
+      [PROFILE_ALEX, PROFILE_SAM],
+      { contracts: [CONTRACT_ALEX_SAM] },
+    );
+
+    await expect(page.getByText("Contract niet gevonden.", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Alex × Sam" })).toBeVisible();
+    await expect(page.getByText(/Versie 1/)).toBeVisible();
+  });
+
+  test("toont op een geïmporteerd profiel alleen het nieuwste getekende contract als lokale shortcut", async ({ page }) => {
+    const importedSam = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
+    await seedAndGo(
+      page,
+      `/profile/${importedSam.id}`,
+      [PROFILE_ALEX, importedSam],
+      { contracts: [CONTRACT_ALEX_SAM] },
+    );
+
+    const contract = page.getByRole("link", { name: "Open het meest recente contract met Sam" });
+    await expect(contract).toBeVisible();
+    await expect(contract).toHaveAttribute(
+      "href",
+      `/contracts/${encodeURIComponent(`legacy-series:${CONTRACT_ALEX_SAM.id}`)}`,
+    );
+  });
+});
 
 test.describe("Contractpagina", () => {
   test.beforeEach(async ({ page }) => {
