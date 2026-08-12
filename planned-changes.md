@@ -210,6 +210,13 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### iOS-browserhoogte en lange profielselecties (dev, 2026-08-12)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Home separates own and explicitly shared profiles into independent disclosures with boolean-only session state; Settings, profile editing and Compare use bounded visual-viewport scroll regions with fixed context and visible close actions; the long Compare picker adds transient in-memory search; five launch-device profiles now exercise dynamic toolbar height, long selectors, QR, focus restoration and synthetic-only screenshot evidence | PR #341 |
+
+
 ### Local-first offline rooms (dev, 2026-07-28)
 
 | — | What landed | Commit |
