@@ -2,16 +2,18 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  CaretDown,
+  CheckCircle,
   DeviceMobile,
+  DotsThree,
+  DownloadSimple,
   Lightning,
-  List,
   PlusSquare,
-  ShareNetwork,
   WifiSlash,
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import SheetBackdrop from "@/components/SheetBackdrop";
+import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import {
   clearInstallPrompt,
   detectIosInstallBrowser,
@@ -31,38 +33,48 @@ interface Props {
   manual?: boolean;
 }
 
-function ActionChip({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 align-middle font-semibold"
-      style={{
-        background: "var(--surface3)",
-        border: "1px solid var(--border)",
-        color: "var(--text)",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {icon}
-      {children}
-    </span>
-  );
+interface InstallStep {
+  icon: ReactNode;
+  title: string;
+  detail: string;
 }
 
-function InstructionList({ steps }: { steps: ReactNode[] }) {
+function InstructionList({ steps }: { steps: readonly InstallStep[] }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-1">
       {steps.map((step, index) => (
         <motion.div
-          key={index}
+          key={step.title}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 + index * 0.05, duration: 0.24, ease: "easeOut" }}
-          className="grid grid-cols-[2rem_1fr] gap-2 text-sm leading-7"
+          transition={{ delay: 0.1 + index * 0.06, duration: 0.24, ease: "easeOut" }}
+          className="grid grid-cols-[1.75rem_2.5rem_1fr] items-start gap-2.5 rounded-2xl px-2 py-3"
         >
-          <span className="font-bold tabular-nums" style={{ color: "var(--text2)" }}>
-            {index + 1}.
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold tabular-nums"
+            style={{ background: "var(--surface3)", color: "var(--text2)" }}
+            aria-hidden="true"
+          >
+            {index + 1}
           </span>
-          <div style={{ color: "var(--text2)" }}>{step}</div>
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{
+              background: "color-mix(in srgb, var(--accent) 10%, var(--surface3))",
+              color: "var(--accent)",
+            }}
+            aria-hidden="true"
+          >
+            {step.icon}
+          </span>
+          <span className="min-w-0 pt-0.5">
+            <span className="block text-sm font-semibold leading-5" style={{ color: "var(--text)" }}>
+              {step.title}
+            </span>
+            <span className="mt-1 block text-xs leading-5" style={{ color: "var(--text2)" }}>
+              {step.detail}
+            </span>
+          </span>
         </motion.div>
       ))}
     </div>
@@ -169,38 +181,58 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
     closeAfterExit(manual ? onDismiss : undefined);
   }
 
-  const chromeSteps = [
-    <span key="chrome-menu">
-      Tik op <ActionChip icon={<List size={15} aria-hidden="true" />}>menu</ActionChip> om het browsermenu te openen.
-    </span>,
-    <span key="chrome-share">
-      Tik op <ActionChip icon={<ShareNetwork size={15} aria-hidden="true" />}>Delen</ActionChip> en daarna op <ActionChip icon={<CaretDown size={14} aria-hidden="true" />}>Meer</ActionChip>.
-    </span>,
-    <span key="chrome-home">
-      Kies <ActionChip icon={<PlusSquare size={15} aria-hidden="true" />}>Zet op beginscherm</ActionChip>.
-    </span>,
+  const chromeSteps: InstallStep[] = [
+    {
+      icon: <DotsThree size={21} weight="bold" />,
+      title: "Open het Chrome-menu",
+      detail: "Tik op de drie puntjes in Chrome.",
+    },
+    {
+      icon: <PlatformShareIcon platform="ios" size={20} weight="regular" />,
+      title: "Open Delen",
+      detail: "Kies Delen in het browsermenu.",
+    },
+    {
+      icon: <PlusSquare size={20} weight="regular" />,
+      title: "Zet op je beginscherm",
+      detail: "Kies Zet op beginscherm en bevestig daarna met Voeg toe.",
+    },
   ];
 
-  const safariSteps = [
-    <span key="safari-share">
-      Tik op <ActionChip icon={<ShareNetwork size={15} aria-hidden="true" />}>Delen</ActionChip> in de onderste Safari-balk.
-    </span>,
-    <span key="safari-home">
-      Scroll omlaag en kies <ActionChip icon={<PlusSquare size={15} aria-hidden="true" />}>Zet op beginscherm</ActionChip>.
-    </span>,
-    <span key="safari-add">
-      Tik rechtsboven op <ActionChip>Voeg toe</ActionChip>.
-    </span>,
+  const safariSteps: InstallStep[] = [
+    {
+      icon: <PlatformShareIcon platform="ios" size={20} weight="regular" />,
+      title: "Open Delen",
+      detail: "Tik op het deel-icoon in de onderste Safari-balk.",
+    },
+    {
+      icon: <PlusSquare size={20} weight="regular" />,
+      title: "Zet op je beginscherm",
+      detail: "Scroll omlaag en kies Zet op beginscherm.",
+    },
+    {
+      icon: <CheckCircle size={20} weight="regular" />,
+      title: "Bevestig",
+      detail: "Tik rechtsboven op Voeg toe.",
+    },
   ];
 
-  const otherIosSteps = [
-    <span key="other-share">Open het deelmenu van je browser.</span>,
-    <span key="other-home">
-      Kies <ActionChip icon={<PlusSquare size={15} aria-hidden="true" />}>Zet op beginscherm</ActionChip>.
-    </span>,
-    <span key="other-add">
-      Bevestig met <ActionChip>Voeg toe</ActionChip>.
-    </span>,
+  const otherIosSteps: InstallStep[] = [
+    {
+      icon: <PlatformShareIcon platform="ios" size={20} weight="regular" />,
+      title: "Open Delen",
+      detail: "Open het deelmenu van je browser.",
+    },
+    {
+      icon: <PlusSquare size={20} weight="regular" />,
+      title: "Zet op je beginscherm",
+      detail: "Kies Zet op beginscherm in de lijst met acties.",
+    },
+    {
+      icon: <CheckCircle size={20} weight="regular" />,
+      title: "Bevestig",
+      detail: "Rond af met Voeg toe.",
+    },
   ];
 
   const iosSteps = iosBrowser === "chrome"
@@ -208,6 +240,15 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
     : iosBrowser === "safari"
       ? safariSteps
       : otherIosSteps;
+
+  const title = manual ? "KinkSync installeren" : "KinkSync installeren?";
+  const intro = manual
+    ? "Volg de stappen voor dit toestel."
+    : "Zet KinkSync op je beginscherm voor snellere toegang en een rustige app-weergave.";
+  const enterTransition = {
+    ...t.sheet,
+    duration: t.sheet.duration === 0 ? 0 : 0.42,
+  };
 
   return (
     <AnimatePresence
@@ -219,16 +260,11 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
     >
       {visible && (
         <>
-          <motion.div
+          <SheetBackdrop
             key="pwa-backdrop"
-            aria-hidden="true"
-            className="fixed inset-0 z-[140]"
-            style={{ background: "var(--scrim-strong)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={t.fast}
             onClick={dismiss}
+            transition={t.fast}
+            zIndex={140}
           />
 
           <motion.div
@@ -237,25 +273,47 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
             role="dialog"
             aria-modal="true"
             aria-labelledby="pwa-install-title"
+            aria-describedby="pwa-install-intro"
             className="fixed bottom-0 left-0 right-0 z-[141] overflow-y-auto overscroll-contain"
             style={{
-              maxHeight: "86dvh",
-              background: "var(--surface2)",
+              maxHeight: "88dvh",
+              background: "var(--surface)",
               borderRadius: "2rem 2rem 0 0",
               borderTop: "1px solid var(--border)",
               boxShadow: "0 -18px 64px rgba(0,0,0,0.52)",
-              paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+              paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
+              willChange: "transform",
             }}
-            initial={{ y: "100%" }}
+            initial={{ y: "105%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%", transition: t.sheetExit }}
-            transition={t.sheet}
+            exit={{ y: "105%", transition: t.sheetExit }}
+            transition={enterTransition}
           >
-            <div className="mx-auto w-full max-w-2xl px-5 pt-5 sm:px-7">
-              <div className="mb-5 flex items-center justify-between gap-4">
-                <h2 id="pwa-install-title" className="text-xl font-bold tracking-[-0.02em]">
-                  Installeer KinkSync
-                </h2>
+            <div className="mx-auto h-7 w-full pt-2" aria-hidden="true">
+              <div className="mx-auto h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
+            </div>
+
+            <div className="mx-auto w-full max-w-2xl px-5 pb-1 pt-2 sm:px-7">
+              <div className="flex items-start gap-3">
+                <img
+                  src={isIos ? "/apple-touch-icon.png" : "/icon-192.png"}
+                  alt=""
+                  aria-hidden="true"
+                  width={50}
+                  height={50}
+                  className="h-[50px] w-[50px] flex-none rounded-[14px]"
+                  style={{ boxShadow: "0 5px 18px rgba(0,0,0,0.28)" }}
+                />
+
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h2 id="pwa-install-title" className="text-lg font-bold leading-6 tracking-[-0.015em]">
+                    {title}
+                  </h2>
+                  <p className="mt-0.5 truncate text-xs" style={{ color: "var(--text2)" }}>
+                    kinksync.be
+                  </p>
+                </div>
+
                 <motion.button
                   type="button"
                   whileTap={TAP_SPRING}
@@ -264,81 +322,61 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
                   className="focus-ring -mr-2 flex h-11 w-11 flex-none items-center justify-center rounded-full"
                   style={{ color: "var(--text2)" }}
                 >
-                  <X size={25} aria-hidden="true" />
+                  <X size={22} aria-hidden="true" />
                 </motion.button>
               </div>
 
-              <div
-                className="mb-6 flex items-center gap-4 rounded-[24px] p-4"
-                style={{
-                  background: "var(--surface3)",
-                  border: "1px solid var(--border)",
-                  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
-                }}
-              >
-                <motion.img
-                  src={isIos ? "/apple-touch-icon.png" : "/icon-192.png"}
-                  alt=""
-                  aria-hidden="true"
-                  width={60}
-                  height={60}
-                  className="h-[60px] w-[60px] flex-none rounded-[17px]"
-                  style={{ boxShadow: "0 5px 18px rgba(0,0,0,0.3)" }}
-                />
-                <div className="min-w-0">
-                  <div className="truncate text-base font-bold">KinkSync</div>
-                  <div className="mt-0.5 truncate text-sm" style={{ color: "var(--text2)" }}>
-                    kinksync.be
+              <p id="pwa-install-intro" className="mt-4 text-sm leading-6" style={{ color: "var(--text2)" }}>
+                {intro}
+              </p>
+
+              <div className="mt-4" style={{ borderTop: "1px solid var(--border)" }}>
+                {isIos ? (
+                  <div className="pt-2">
+                    <InstructionList steps={iosSteps} />
                   </div>
-                </div>
+                ) : (
+                  <div className="pt-5">
+                    <div className="mb-5 grid grid-cols-3 gap-2">
+                      {FEATURES.map(({ icon: Icon, label }) => (
+                        <div
+                          key={label}
+                          className="flex min-h-[80px] flex-col items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center"
+                          style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                        >
+                          <Icon size={19} aria-hidden="true" style={{ color: "var(--accent)" }} />
+                          <span className="text-xs font-semibold leading-4" style={{ color: "var(--text2)" }}>
+                            {label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <motion.button
+                      type="button"
+                      whileTap={TAP_SPRING}
+                      onClick={() => { void install(); }}
+                      className="focus-ring inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
+                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                    >
+                      <DownloadSimple size={18} weight="bold" aria-hidden="true" />
+                      <span>Installeer KinkSync</span>
+                    </motion.button>
+                  </div>
+                )}
               </div>
 
-              {isIos ? (
-                <div className="pb-2">
-                  <InstructionList steps={iosSteps} />
-                </div>
-              ) : (
-                <div className="pb-1">
-                  <p className="mb-5 text-sm leading-6" style={{ color: "var(--text2)" }}>
-                    Zet KinkSync op je startscherm voor de volledige app-ervaring.
-                  </p>
-
-                  <div className="mb-5 grid grid-cols-3 gap-2">
-                    {FEATURES.map(({ icon: Icon, label }) => (
-                      <div
-                        key={label}
-                        className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center"
-                        style={{ background: "var(--surface3)", border: "1px solid var(--border)" }}
-                      >
-                        <Icon size={19} aria-hidden="true" style={{ color: "var(--accent)" }} />
-                        <span className="text-xs font-semibold leading-4" style={{ color: "var(--text2)" }}>
-                          {label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <motion.button
-                    type="button"
-                    whileTap={TAP_SPRING}
-                    onClick={() => { void install(); }}
-                    className="focus-ring min-h-12 w-full rounded-xl px-5 text-sm font-bold"
-                    style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                  >
-                    Installeer KinkSync
-                  </motion.button>
-                </div>
-              )}
-
               {!manual && (
-                <button
-                  type="button"
-                  onClick={neverAskAgain}
-                  className="focus-ring mt-4 min-h-11 w-full rounded-xl px-4 text-xs font-semibold"
-                  style={{ color: "var(--text2)" }}
-                >
-                  Niet meer vragen
-                </button>
+                <div className="mt-5 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                  <button
+                    type="button"
+                    onClick={neverAskAgain}
+                    className="focus-ring min-h-11 w-full rounded-xl px-4 text-xs font-semibold"
+                    style={{ color: "var(--text2)" }}
+                  >
+                    Niet meer vragen
+                  </button>
+                </div>
               )}
             </div>
           </motion.div>

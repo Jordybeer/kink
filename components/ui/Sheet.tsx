@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import SheetBackdrop from "@/components/SheetBackdrop";
+import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.38 } as const;
-const FAST = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.22 } as const;
 
 export interface SheetOption {
   value: string;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function Sheet({ open, onClose, title, children, "aria-label": ariaLabel }: Props) {
+  const t = useMotionSafe();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -38,20 +40,11 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            aria-hidden="true"
-            className="fixed inset-0 z-[150]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={FAST}
+          <SheetBackdrop
             onClick={onClose}
-          >
-            <motion.div
-              className="pointer-events-none absolute inset-0"
-              style={{ background: "var(--scrim-strong)", opacity: backdropOpacity }}
-            />
-          </motion.div>
+            transition={t.fast}
+            dragOpacity={backdropOpacity}
+          />
 
           <motion.div
             ref={sheetRef}

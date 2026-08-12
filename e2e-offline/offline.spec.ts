@@ -142,10 +142,11 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   expect(errors, `page errors offline: ${errors.join(" | ")}`).toHaveLength(0);
 
   await page.goto("/scenes", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("status", { name: "Offline" }).first()).toBeVisible();
+  const offlineStatus = page.getByRole("status", { name: "Offline" }).first();
+  await expect(offlineStatus).toBeVisible();
 
   await goOnline(context);
-  await expect(page.getByRole("status", { name: "Online" }).first()).toBeVisible();
+  await expect(offlineStatus).toHaveCount(0);
 });
 
 test("legacy cards fold into the fixed profile and scene shells offline", async ({ page, context }) => {

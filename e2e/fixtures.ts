@@ -5,6 +5,7 @@ import type { ContractSeries } from "@/lib/contractLifecycle";
 const STORE_KEY = "kink-profiles";
 const CONTRACT_STORE_KEY = "kink-contract-series";
 const SEED_GUARD = "kinksync-e2e-store-seeded";
+const SEEDED_PAGES = new WeakSet<Page>();
 
 // Realistic test profiles with entries covering all match types
 export const PROFILE_ALEX: Profile = {
@@ -185,6 +186,23 @@ async function installStoreSeed(
     },
     version: 1,
   });
+  const seed = {
+    storeKey: STORE_KEY,
+    contractStoreKey: CONTRACT_STORE_KEY,
+    seedGuard: SEED_GUARD,
+    value: serialized,
+    contractStoreValue: serializedContractStore,
+  };
+
+  if (SEEDED_PAGES.has(page)) {
+    await page.evaluate(({ storeKey, contractStoreKey, seedGuard, value, contractStoreValue }) => {
+      localStorage.setItem(storeKey, value);
+      localStorage.setItem(contractStoreKey, contractStoreValue);
+      sessionStorage.setItem(seedGuard, "1");
+    }, seed);
+    return;
+  }
+
   await page.addInitScript(
     ({ storeKey, contractStoreKey, seedGuard, value, contractStoreValue }) => {
       if (sessionStorage.getItem(seedGuard) === "1") return;
@@ -192,14 +210,9 @@ async function installStoreSeed(
       localStorage.setItem(contractStoreKey, contractStoreValue);
       sessionStorage.setItem(seedGuard, "1");
     },
-    {
-      storeKey: STORE_KEY,
-      contractStoreKey: CONTRACT_STORE_KEY,
-      seedGuard: SEED_GUARD,
-      value: serialized,
-      contractStoreValue: serializedContractStore,
-    },
+    seed,
   );
+  SEEDED_PAGES.add(page);
 }
 
 export async function seedProfiles(page: Page, profiles: Profile[], extras?: Parameters<typeof buildStore>[1]) {

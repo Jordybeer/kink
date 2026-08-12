@@ -1,14 +1,13 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { CaretDown, Check, Sparkle, UserMinus } from "@phosphor-icons/react";
+import { Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
-import { CATEGORIES, kinkCategoryLabel } from "@/lib/kinks";
 import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
-import type { KinkCategoryId, KinkStatus } from "@/types";
+import type { KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import TriageDeck from "@/components/TriageDeck";
@@ -18,8 +17,8 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-const DYNAMIC_INTENT = { kind: "dynamic" } as const satisfies QuestionnaireIntent;
-type GlobalQuestionnaireIntent = Exclude<QuestionnaireIntent, { kind: "category" }>;
+type GuidedQuestionnaireIntent = Exclude<QuestionnaireIntent, { kind: "category" }>;
+const DYNAMIC_INTENT = { kind: "dynamic" } as const satisfies GuidedQuestionnaireIntent;
 
 export default function QuestionsScreen({ params }: Props) {
   const { id } = use(params);
@@ -27,14 +26,15 @@ export default function QuestionsScreen({ params }: Props) {
   const { profiles, setEntry } = useStore();
   const profile = profiles.find((candidate) => candidate.id === id);
   const storedMode = profile?.questionnaireSetup?.mode;
-  const [intent, setIntent] = useState<QuestionnaireIntent>(
-    storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT,
-  );
-  const [categoryReturnIntent, setCategoryReturnIntent] = useState<GlobalQuestionnaireIntent>(
-    storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT,
-  );
+  const [intent, setIntent] = useState<GuidedQuestionnaireIntent>(DYNAMIC_INTENT);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const seededMode = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated || seededMode.current || !profile) return;
+    seededMode.current = true;
+    setIntent(storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT);
+  }, [hydrated, profile, storedMode]);
 
   useEffect(() => {
     const openStatusExplainer = () => setStatusExplainerOpen(true);
@@ -82,22 +82,16 @@ export default function QuestionsScreen({ params }: Props) {
   const activeRuntime = runtime!;
   const setup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
   const runtimeKind = activeRuntime.intent.kind;
-  const activeCategory = runtimeKind === "category" ? activeRuntime.intent.category : null;
   const scopedProgress = activeRuntime.scope;
   const progressPercent = runtimeKind === "dynamic"
     ? activeRuntime.coverage.percent
     : Math.round((scopedProgress.answered / Math.max(1, scopedProgress.total)) * 100);
-  const progressLabel = activeCategory
-    ? kinkCategoryLabel(activeCategory) + " · " + scopedProgress.answered + " / " + scopedProgress.total
-    : runtimeKind === "discover" || runtimeKind === "deepDive"
-      ? (runtimeKind === "discover" ? "Discover" : "Deep Dive") + " · " + scopedProgress.answered + " / " + scopedProgress.total
-      : "Dynamic · " + activeRuntime.coverage.answered + " / " + activeRuntime.coverage.total;
-  const discoverComplete = getQuestionnaireRuntime(currentProfile, { intent: { kind: "discover" } }).complete;
-  const returnLabel = categoryReturnIntent.kind === "discover"
-    ? "Discover"
-    : categoryReturnIntent.kind === "deepDive"
-      ? "Deep Dive"
-      : "Dynamic";
+  const progressLabel = runtimeKind === "discover" || runtimeKind === "deepDive"
+    ? `${runtimeKind === "discover" ? "Discover" : "Deep Dive"} · ${scopedProgress.answered} / ${scopedProgress.total}`
+    : `Dynamic · ${activeRuntime.coverage.answered} / ${activeRuntime.coverage.total}`;
+  const discoverComplete = getQuestionnaireRuntime(currentProfile, {
+    intent: { kind: "discover" },
+  }).complete;
 
   function saveMode(mode: "dynamic" | "deepDive") {
     updateProfileQuestionnaire(currentProfile.id, {
@@ -110,37 +104,16 @@ export default function QuestionsScreen({ params }: Props) {
   function startDynamic() {
     saveMode("dynamic");
     setIntent(DYNAMIC_INTENT);
-    setCategoryReturnIntent(DYNAMIC_INTENT);
   }
 
   function startDiscover() {
     if (setup.mode === "deepDive") saveMode("dynamic");
-    const next = { kind: "discover" } as const;
-    setIntent(next);
-    setCategoryReturnIntent(next);
+    setIntent({ kind: "discover" });
   }
 
   function startDeepDive() {
     saveMode("deepDive");
-    const next = { kind: "deepDive" } as const;
-    setIntent(next);
-    setCategoryReturnIntent(next);
-  }
-
-  function startCategory(category: KinkCategoryId) {
-    if (runtimeKind !== "category") {
-      setCategoryReturnIntent(activeRuntime.intent as GlobalQuestionnaireIntent);
-    }
-    setIntent({ kind: "category", category });
-    setCategoriesOpen(false);
-  }
-
-  function leaveTemporaryIntent() {
-    if (runtimeKind === "category") {
-      setIntent(categoryReturnIntent);
-      return;
-    }
-    startDynamic();
+    setIntent({ kind: "deepDive" });
   }
 
   function updateStatus(kinkId: string, status: KinkStatus) {
@@ -174,7 +147,7 @@ export default function QuestionsScreen({ params }: Props) {
       </div>
 
       <header className="flex-none pb-2">
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" aria-label="Vraagmodus">
+        <div className="grid grid-cols-3 gap-2 pb-0.5" aria-label="Vraagmodus">
           {([
             ["dynamic", "Dynamic", startDynamic],
             ["discover", "Discover", startDiscover],
@@ -187,7 +160,7 @@ export default function QuestionsScreen({ params }: Props) {
                 type="button"
                 onClick={action}
                 aria-pressed={active}
-                className="focus-ring min-h-9 flex-none rounded-full px-3 text-xs font-semibold"
+                className="focus-ring min-h-9 w-full rounded-full px-3 text-xs font-semibold"
                 style={active
                   ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
                   : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -196,69 +169,17 @@ export default function QuestionsScreen({ params }: Props) {
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setCategoriesOpen((open) => !open)}
-            aria-expanded={categoriesOpen}
-            className="focus-ring min-h-9 flex-none rounded-full px-3 text-xs font-semibold inline-flex items-center gap-1"
-            style={activeCategory
-              ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-              : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-          >
-            {activeCategory ? kinkCategoryLabel(activeCategory) : "Categorie"}
-            <CaretDown size={11} aria-hidden="true" />
-          </button>
         </div>
-
-        {categoriesOpen && (
-          <div
-            className="mt-2 grid max-h-[35dvh] grid-cols-2 gap-1.5 overflow-y-auto rounded-2xl p-2 ks-fade-in"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => startCategory(category)}
-                className="focus-ring min-h-10 rounded-xl px-2 text-left text-xs"
-                style={activeCategory === category
-                  ? { color: "var(--accent-text)", background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))" }
-                  : { color: "var(--text2)" }}
-              >
-                {kinkCategoryLabel(category)}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {runtimeKind === "category" && (
-          <div
-            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <span className="min-w-0 flex-1 truncate text-xs" style={{ color: "var(--text2)" }}>
-              Alleen {kinkCategoryLabel(activeRuntime.intent.category)}
-            </span>
-            <button
-              type="button"
-              onClick={leaveTemporaryIntent}
-              className="focus-ring min-h-9 flex-none rounded-lg px-2 text-xs font-semibold"
-              style={{ color: "var(--accent-text)" }}
-            >
-              Terug naar {returnLabel}
-            </button>
-          </div>
-        )}
       </header>
 
       <section className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2" data-testid="questions-scroll-region">
         {!activeRuntime.complete ? (
           <TriageDeck
-            key={runtimeKind === "category" ? `category:${activeRuntime.intent.category}` : runtimeKind}
+            key={runtimeKind}
             kinks={activeRuntime.visibleKinks}
             queueItems={activeRuntime.queue}
             entries={currentProfile.entries}
-            focusCategory={runtimeKind === "category" ? activeRuntime.intent.category : null}
+            focusCategory={null}
             progressLabel={progressLabel}
             onStatusChange={updateStatus}
             onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
@@ -274,24 +195,18 @@ export default function QuestionsScreen({ params }: Props) {
               className="mx-auto flex h-11 w-11 items-center justify-center rounded-full"
               style={{ background: "color-mix(in srgb, var(--accent) 12%, var(--surface2))", color: "var(--accent)" }}
             >
-              {runtimeKind === "category" ? <Check size={20} weight="bold" aria-hidden="true" /> : <Sparkle size={20} weight="duotone" aria-hidden="true" />}
+              <Sparkle size={20} weight="duotone" aria-hidden="true" />
             </span>
             <h2
               className="mt-3 text-xl"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}
             >
-              {runtimeKind === "category"
-                ? `${kinkCategoryLabel(activeRuntime.intent.category)} is rond.`
-                : runtimeKind === "dynamic"
-                  ? "Brede profieldekking bereikt."
-                  : "Voor nu alles op tafel."}
+              {runtimeKind === "dynamic" ? "Brede profieldekking bereikt." : "Voor nu alles op tafel."}
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
               {runtimeKind === "dynamic"
                 ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken."
-                : runtimeKind === "category"
-                  ? "Alle onderwerpen in deze categorie hebben een expliciet antwoord."
-                  : `${activeRuntime.scope.answered} van ${activeRuntime.scope.total} onderwerpen in deze modus zijn expliciet beoordeeld.`}
+                : `${activeRuntime.scope.answered} van ${activeRuntime.scope.total} onderwerpen in deze modus zijn expliciet beoordeeld.`}
             </p>
             {runtimeKind === "dynamic" && (
               <div className="mt-4 grid grid-cols-2 gap-2">
@@ -314,14 +229,14 @@ export default function QuestionsScreen({ params }: Props) {
                 </button>
               </div>
             )}
-            {(runtimeKind === "discover" || runtimeKind === "category") && (
+            {runtimeKind === "discover" && (
               <button
                 type="button"
-                onClick={leaveTemporaryIntent}
+                onClick={startDynamic}
                 className="focus-ring mt-4 min-h-11 w-full rounded-xl px-3 text-xs font-semibold"
                 style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
               >
-                {runtimeKind === "category" ? `Terug naar ${returnLabel}` : "Genoeg voor nu"}
+                Genoeg voor nu
               </button>
             )}
             {runtimeKind === "deepDive" && (

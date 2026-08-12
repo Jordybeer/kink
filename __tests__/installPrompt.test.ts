@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { detectClientPlatform } from "@/lib/clientPlatform";
 import {
   DEFAULT_INSTALL_PROMPT_POLICY,
   disableAutomaticInstallPrompt,
@@ -13,6 +14,26 @@ const SAFARI_IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Ap
 const CHROME_IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/128.0.6613.98 Mobile/15E148 Safari/604.1";
 const FIREFOX_IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/130.0 Mobile/15E148 Safari/605.1.15";
 const CHROME_ANDROID = "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36";
+const IPAD_DESKTOP_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
+
+describe("detectClientPlatform", () => {
+  it("classificeert iPhone als iOS onafhankelijk van browser", () => {
+    expect(detectClientPlatform(SAFARI_IPHONE)).toBe("ios");
+    expect(detectClientPlatform(CHROME_IPHONE)).toBe("ios");
+  });
+
+  it("classificeert Android apart voor platform-specifieke UI", () => {
+    expect(detectClientPlatform(CHROME_ANDROID, "Linux armv8l", 5)).toBe("android");
+  });
+
+  it("herkent iPadOS met desktopachtige Mac-identiteit", () => {
+    expect(detectClientPlatform(IPAD_DESKTOP_UA, "MacIntel", 5)).toBe("ios");
+  });
+
+  it("laat een echte desktop-Mac als overige platform", () => {
+    expect(detectClientPlatform(IPAD_DESKTOP_UA, "MacIntel", 0)).toBe("other");
+  });
+});
 
 describe("detectIosInstallBrowser", () => {
   it("herkent Safari op iPhone", () => {
@@ -32,8 +53,7 @@ describe("detectIosInstallBrowser", () => {
   });
 
   it("herkent iPadOS wanneer het zich als Mac identificeert", () => {
-    const ipadDesktopUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
-    expect(detectIosInstallBrowser(ipadDesktopUa, "MacIntel", 5)).toBe("safari");
+    expect(detectIosInstallBrowser(IPAD_DESKTOP_UA, "MacIntel", 5)).toBe("safari");
   });
 });
 

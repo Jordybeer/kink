@@ -2,6 +2,7 @@
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { SHEET_BACKDROP_STYLE } from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 
@@ -58,7 +59,7 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center p-4" style={{ background: "var(--scrim)" }}>
+    <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center p-4" style={SHEET_BACKDROP_STYLE}>
       <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
         <AnimatePresence mode="wait" initial={false}>
           {step === 0 && (
