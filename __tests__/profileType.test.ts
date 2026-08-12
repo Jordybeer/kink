@@ -26,14 +26,13 @@ describe("getProfileType", () => {
   });
 });
 
-
 describe("splitProfilesByOwnership", () => {
   it("uses only explicit ownership metadata and keeps order stable", () => {
     const profiles = [
       { ...own, id: "mine-dominant", role: "Dominant", name: "Zelf" },
       { ...own, id: "shared-dominant", isImported: true, role: "Dominant", name: "Ook dominant" },
       { ...own, id: "mine-submissive", role: "Submissive", name: "Zelf twee" },
-      { ...own, id: "shared-origin", origin: "shared", role: "Submissive", name: "Gedeeld" },
+      { ...own, id: "shared-origin", origin: "shared" as const, role: "Submissive", name: "Gedeeld" },
     ];
 
     const result = splitProfilesByOwnership(profiles, "mine-dominant");

@@ -11,7 +11,6 @@ export function getProfileType(
   return "alternatief";
 }
 
-
 export interface ProfileOwnershipGroups<T> {
   mine: T[];
   shared: T[];
