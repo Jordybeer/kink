@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   CONTRACT_SERIES_ALEX_SAM,
   PROFILE_ALEX,
@@ -17,13 +17,31 @@ const ROUTES = [
 
 type CriticalRoute = (typeof ROUTES)[number];
 
+async function expectEffectivelyOpaque(locator: Locator) {
+  await expect.poll(async () => locator.evaluate((element) => {
+    let opacity = 1;
+    let current: Element | null = element;
+    while (current) {
+      const value = Number.parseFloat(getComputedStyle(current).opacity);
+      if (Number.isFinite(value)) opacity *= value;
+      current = current.parentElement;
+    }
+    return opacity;
+  })).toBeGreaterThan(0.99);
+}
+
 async function expectRouteReady(page: Page, route: CriticalRoute) {
   switch (route.slug) {
-    case "home":
-      await expect(page.getByRole("link", { name: "Alex Dominant openen" })).toBeVisible();
-      await expect(page.getByRole("link", { name: "Sam Submissive openen" })).toBeVisible();
+    case "home": {
+      const alexProfile = page.getByRole("link", { name: "Alex Dominant openen" });
+      const samProfile = page.getByRole("link", { name: "Sam Submissive openen" });
+      await expect(alexProfile).toBeVisible();
+      await expect(samProfile).toBeVisible();
       await expect(page.getByRole("link", { name: / openen$/ })).toHaveCount(2);
+      await expectEffectivelyOpaque(alexProfile);
+      await expectEffectivelyOpaque(samProfile);
       break;
+    }
     case "profile":
       await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();
       await expect(page.getByRole("tab", { name: "Overzicht" })).toBeVisible();
