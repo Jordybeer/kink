@@ -1,6 +1,9 @@
 "use client";
 
-import SpotlightTour, { type SpotlightStep } from "@/components/tours/SpotlightTour";
+import SpotlightTour, {
+  type SpotlightStep,
+  type SpotlightTourExitReason,
+} from "@/components/tours/SpotlightTour";
 
 const PROFILE_STEPS: readonly SpotlightStep[] = [
   {
@@ -12,7 +15,7 @@ const PROFILE_STEPS: readonly SpotlightStep[] = [
 ];
 
 interface ProfileIntroTourProps {
-  onComplete: () => void;
+  onComplete: (reason: SpotlightTourExitReason) => void;
 }
 
 export default function ProfileIntroTour({ onComplete }: ProfileIntroTourProps) {
