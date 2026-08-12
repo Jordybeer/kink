@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowSquareOut,
@@ -16,6 +16,7 @@ import {
 import ContextMenu from "@/components/ui/ContextMenu";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
@@ -36,12 +37,39 @@ interface ProfileHeroProps {
 
 export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, onError, profileType }: ProfileHeroProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const shareRef = useRef(onShare);
+  const editRef = useRef(onEdit);
+  shareRef.current = onShare;
+  editRef.current = onEdit;
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const allProfiles = useStore((state) => state.profiles);
   const contractSeries = useContractStore((state) => state.series);
   const contractCount = countCurrentContractsForProfile(contractSeries, profile, allProfiles);
   const contractPersonId = profile.personGroupId ?? profile.id;
+  const navActions = useMemo<TopNavAction[]>(() => {
+    const next: TopNavAction[] = [];
+    if (onShare) {
+      next.push({
+        id: "share-profile",
+        label: "Profiel delen",
+        icon: <ShareNetwork size={18} weight="regular" aria-hidden="true" />,
+        onClick: () => shareRef.current?.(),
+        placement: "primary",
+      });
+    }
+    if (onEdit) {
+      next.push({
+        id: "edit-profile",
+        label: "Profiel bewerken",
+        icon: <PencilSimple size={17} weight="regular" aria-hidden="true" />,
+        onClick: () => editRef.current?.(),
+        placement: "secondary",
+      });
+    }
+    return next;
+  }, [Boolean(onEdit), Boolean(onShare)]);
+  useTopNavActions(navActions);
 
   const expLevel = profile.experienceLevel ?? "beginner";
   const initial = profile.name.charAt(0).toUpperCase();
@@ -165,22 +193,9 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               {profileType === "partner" && <Lock size={10} weight="regular" aria-hidden="true" className="shrink-0" />}
             </p>
           </div>
-
-          {onEdit && (
-            <button
-              type="button"
-              onClick={onEdit}
-              aria-label="Profiel bewerken"
-              title="Bewerken"
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl transition-colors active:opacity-70"
-              style={{ color: "var(--text2)", background: "transparent", border: "none" }}
-            >
-              <PencilSimple size={16} weight="regular" aria-hidden="true" />
-            </button>
-          )}
         </div>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie en acties">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie">
           <ProfileTrust profile={profile} />
 
           {profileType === "partner" && profile.lockedAt && (
@@ -236,19 +251,6 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               <span>FetLife</span>
               <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
             </a>
-          )}
-
-          {onShare && (
-            <button
-              type="button"
-              onClick={onShare}
-              aria-label="Profiel delen"
-              className="focus-ring ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-normal transition-opacity active:opacity-65"
-              style={{ color: "var(--text2)", background: "transparent", border: "none" }}
-            >
-              <ShareNetwork size={17} weight="regular" aria-hidden="true" />
-              <span>Delen</span>
-            </button>
           )}
         </div>
 
