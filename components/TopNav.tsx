@@ -102,7 +102,7 @@ export default function TopNav() {
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
-  const secondary = actions.find((action) => action.placement === "secondary")
+  const secondary = actions.find((action) => action.placement === "secondary" && action.id !== primary?.id)
     ?? directActions.find((action) => action.id !== primary?.id);
   const visibleIds = new Set([primary?.id, secondary?.id].filter(Boolean));
   const overflowActions = actions.filter((action) => !visibleIds.has(action.id));
