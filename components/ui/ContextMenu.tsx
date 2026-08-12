@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Check } from "@phosphor-icons/react";
 
 const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.22 } as const;
 
@@ -8,6 +9,7 @@ export interface ContextMenuItem {
   label: string;
   icon?: ReactNode;
   danger?: boolean;
+  selected?: boolean;
   onClick?: () => void;
 }
 
@@ -72,20 +74,23 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
             {items.map((item, i) => (
               <button
                 key={i}
-                role="menuitem"
+                role={item.selected === undefined ? "menuitem" : "menuitemradio"}
+                aria-checked={item.selected}
                 onClick={() => { item.onClick?.(); onClose(); }}
                 className="w-full flex items-center justify-between px-4 py-[13px] text-sm font-medium text-left transition-colors duration-100 active:scale-[0.97]"
                 style={{
                   color: item.danger ? "var(--hard-no)" : "var(--text)",
-                  background: "transparent",
+                  background: item.selected ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                   border: "none",
                   borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
                 }}
               >
                 <span>{item.label}</span>
-                {item.icon && (
+                {item.selected ? (
+                  <Check size={15} weight="bold" aria-hidden="true" className="shrink-0" style={{ color: "var(--accent)" }} />
+                ) : item.icon ? (
                   <span className="shrink-0 opacity-60">{item.icon}</span>
-                )}
+                ) : null}
               </button>
             ))}
           </motion.div>
