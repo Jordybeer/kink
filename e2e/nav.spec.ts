@@ -32,21 +32,23 @@ test("contextual actions live in the TopNav as icon-only commands", async ({ pag
 
   await seedAndGo(page, "/contracts", PROFILES);
   const contractsNav = page.getByLabel("Hoofdnavigatie");
-  const newContract = contractsNav.getByRole("button", { name: "Nieuw contract" });
   const scanContract = contractsNav.getByRole("button", { name: "Contractverzoek scannen" });
-  await expect(newContract).toBeVisible();
   await expect(scanContract).toBeVisible();
-  await expect(newContract).toHaveText("");
   await expect(scanContract).toHaveText("");
-  await expect(page.getByRole("button", { name: "Nieuw contract" })).toHaveCount(1);
+  await expect(contractsNav.getByRole("button", { name: /Nieuw contract/i })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Contractverzoek scannen" })).toHaveCount(1);
 
   await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", PROFILES);
   const compareNav = page.getByLabel("Hoofdnavigatie");
   const swap = compareNav.getByRole("button", { name: "Wissel profielen" });
+  const contract = compareNav.getByRole("button", { name: "Contract opstellen" });
   await expect(swap).toBeVisible();
+  await expect(contract).toBeVisible();
+  await expect(contract).toBeEnabled();
   await expect(swap).toHaveText("");
+  await expect(contract).toHaveText("");
   await expect(page.getByRole("button", { name: "Wissel profielen" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Contract opstellen" })).toHaveCount(1);
 
   await seedAndGo(page, "/profile/pw-alex-001", PROFILES);
   const profileNav = page.getByLabel("Hoofdnavigatie");

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, GearSix, WifiSlash } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import ContextMenu from "@/components/ui/ContextMenu";
@@ -24,7 +24,6 @@ export default function TopNav() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
   const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");
-  const questionsRoute = /^\/profile\/[^/]+\/questions$/.test(path);
 
   useEffect(() => {
     setOverflowOpen(false);
@@ -138,17 +137,6 @@ export default function TopNav() {
             Opgeslagen ✓
           </span>
         )}
-        {questionsRoute && actions.length === 0 && (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("ks:open-status-explainer"))}
-            aria-label="Uitleg over antwoordkeuzes"
-            className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
-            style={{ color: "var(--text2)" }}
-          >
-            <Info size={17} aria-hidden="true" />
-          </button>
-        )}
         {primary && <TopNavActionButton action={primary} emphasis="primary" />}
         {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
         {overflowActions.length > 0 && (
@@ -161,6 +149,7 @@ export default function TopNav() {
                 label: action.label,
                 icon: action.icon,
                 danger: action.danger,
+                selected: action.selected,
                 onClick: action.onClick,
               }))}
           >
@@ -247,7 +236,7 @@ function focusedRoute(
 ): { title: string; back: string } {
   if (path === "/profile") return { title: "Profiel", back: "/" };
   if (/^\/profile\/[^/]+\/questions$/.test(path)) {
-    return { title: "Voorkeuren", back: path.replace(/\/questions$/, "") };
+    return { title: "Vragenlijst", back: path.replace(/\/questions$/, "") };
   }
   if (path.startsWith("/profile/")) return { title: "Profiel", back: "/" };
   if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };

@@ -85,7 +85,11 @@ async function expectVisualViewportContract(page: Page) {
 }
 
 async function expectStatusExplainerStartsAtTop(page: Page) {
-  await page.evaluate(() => window.dispatchEvent(new Event("ks:open-status-explainer")));
+  const helpTrigger = page
+    .getByLabel("Hoofdnavigatie")
+    .getByRole("button", { name: "Uitleg antwoordkeuzes" });
+  await expect(helpTrigger).toBeVisible();
+  await helpTrigger.click();
 
   const dialog = page.getByRole("dialog", { name: "Uitleg keuzes" });
   await expect(dialog).toBeVisible();

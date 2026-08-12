@@ -1,15 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Archive,
   CaretDown,
   CaretRight,
   FileText,
   Pause,
-  Plus,
   QrCode,
   X,
 } from "@phosphor-icons/react";
@@ -17,8 +16,9 @@ import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ContractInboxSheet from "@/components/contract/ContractInboxSheet";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
-import { useHasHydrated, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 import {
   contractBucket,
   contractPersonIdentity,
@@ -29,7 +29,6 @@ import {
   type ContractDisplayBucket,
   type ContractSeries,
 } from "@/lib/contractLifecycle";
-import { newContractHref } from "@/lib/contractOverview";
 
 const TABS: { id: Exclude<ContractDisplayBucket, "draft">; label: string }[] = [
   { id: "active", label: "Actief" },
@@ -136,41 +135,25 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
 }
 
 function ContractsContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
-  const legacyContracts = useStore((state) => state.contracts);
-  const pinnedProfileId = useStore((state) => state.pinnedProfileId);
-  const hydrated = useHasHydrated();
   const series = useContractStore((state) => state.series);
-  const importLegacyContracts = useContractStore((state) => state.importLegacyContracts);
   const [tab, setTab] = useState<Exclude<ContractDisplayBucket, "draft">>("active");
   const [conceptsOpen, setConceptsOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
-  const createHref = newContractHref(profiles, pinnedProfileId);
+  const contractsReady = useLegacyContractMigration();
   const navActions = useMemo<TopNavAction[]>(() => [
-    {
-      id: "new-contract",
-      label: "Nieuw contract",
-      icon: <Plus size={18} aria-hidden="true" />,
-      onClick: () => router.push(createHref),
-      placement: "primary",
-    },
     {
       id: "scan-contract-request",
       label: "Contractverzoek scannen",
       icon: <QrCode size={18} aria-hidden="true" />,
       onClick: () => setInboxOpen(true),
-      placement: "secondary",
+      placement: "primary",
     },
-  ], [createHref, router]);
+  ], []);
   useTopNavActions(navActions);
 
-  useEffect(() => {
-    if (hydrated) importLegacyContracts(legacyContracts, profiles);
-  }, [hydrated, importLegacyContracts, legacyContracts, profiles]);
-
-  if (!hydrated) return <PageShell loading width="2xl" />;
+  if (!contractsReady) return <PageShell loading width="2xl" />;
 
   const personId = searchParams.get("person");
   const filteredSeries = series.filter((item) => seriesMatchesPerson(item, personId));
@@ -268,7 +251,7 @@ function ContractsContent() {
               : tab === "paused"
                 ? "Tijdelijk gepauzeerde contracten blijven hier totdat beide partijen ze hervatten of iemand ze stopzet."
                 : "Stopgezette contracten en contracten met verwijderde profielen verschijnen hier."}
-            {...(tab === "active" ? { ctaHref: createHref, ctaLabel: "Maak een nieuw contract" } : {})}
+            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Vergelijk profielen" } : {})}
           />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">

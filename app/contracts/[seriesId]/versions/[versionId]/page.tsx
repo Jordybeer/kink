@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, CheckCircle, Info, ShieldCheck } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import { useContractStore } from "@/lib/contractStore";
+import { decodeLocalRouteId } from "@/lib/localRoutes";
+import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 import { formatContractTimestamp } from "@/lib/contractLifecycle";
 
 function DetailSection({ title, items }: { title: string; items: { name: string; commentA?: string; commentB?: string }[] }) {
@@ -32,13 +34,14 @@ function DetailSection({ title, items }: { title: string; items: { name: string;
 
 export default function ContractVersionPage() {
   const params = useParams<{ seriesId: string; versionId: string }>();
-  const series = useContractStore((state) => state.series.find((item) => item.id === params.seriesId));
-  const [hydrated, setHydrated] = useState(false);
+  const seriesId = decodeLocalRouteId(params.seriesId);
+  const versionId = decodeLocalRouteId(params.versionId);
+  const series = useContractStore((state) => state.series.find((item) => item.id === seriesId));
   const [technicalOpen, setTechnicalOpen] = useState(false);
 
-  useEffect(() => setHydrated(true), []);
-  if (!hydrated) return <PageShell loading width="2xl" />;
-  const version = series?.versions.find((item) => item.id === params.versionId);
+  const contractsReady = useLegacyContractMigration();
+  if (!contractsReady) return <PageShell loading width="2xl" />;
+  const version = series?.versions.find((item) => item.id === versionId);
   if (!series || !version) {
     return <PageShell width="2xl"><p className="py-16 text-center text-sm" style={{ color: "var(--text2)" }}>Contractversie niet gevonden.</p></PageShell>;
   }

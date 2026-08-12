@@ -1,8 +1,8 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Sparkle, UserMinus } from "@phosphor-icons/react";
+import { Compass, Info, ListChecks, Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
 import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
@@ -12,6 +12,7 @@ import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import TriageDeck from "@/components/TriageDeck";
 import StatusExplainerSheet from "@/components/sheets/StatusExplainerSheet";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -36,16 +37,78 @@ export default function QuestionsScreen({ params }: Props) {
     setIntent(storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT);
   }, [hydrated, profile, storedMode]);
 
-  useEffect(() => {
-    const openStatusExplainer = () => setStatusExplainerOpen(true);
-    window.addEventListener("ks:open-status-explainer", openStatusExplainer);
-    return () => window.removeEventListener("ks:open-status-explainer", openStatusExplainer);
-  }, []);
-
   const runtime = useMemo(
     () => profile ? getQuestionnaireRuntime(profile, { intent }) : null,
     [profile, intent],
   );
+  const setup = useMemo(
+    () => profile?.questionnaireSetup ?? defaultQuestionnaireSetup(),
+    [profile?.questionnaireSetup],
+  );
+  const runtimeKind = runtime?.intent.kind ?? "dynamic";
+  const shared = Boolean(profile && (profile.origin === "shared" || (!profile.origin && profile.isImported === true)));
+
+  const saveMode = useCallback((mode: "dynamic" | "deepDive") => {
+    if (!profile) return;
+    updateProfileQuestionnaire(profile.id, {
+      mode,
+      interests: [...setup.interests],
+      version: 2,
+    });
+  }, [profile, setup.interests]);
+
+  const startDynamic = useCallback(() => {
+    saveMode("dynamic");
+    setIntent(DYNAMIC_INTENT);
+  }, [saveMode]);
+
+  const startDiscover = useCallback(() => {
+    if (setup.mode === "deepDive") saveMode("dynamic");
+    setIntent({ kind: "discover" });
+  }, [saveMode, setup.mode]);
+
+  const startDeepDive = useCallback(() => {
+    saveMode("deepDive");
+    setIntent({ kind: "deepDive" });
+  }, [saveMode]);
+
+  const navActions = useMemo<TopNavAction[]>(() => {
+    if (!profile || shared) return [];
+    return [
+      {
+        id: "questionnaire-help",
+        label: "Uitleg antwoordkeuzes",
+        icon: <Info size={18} aria-hidden="true" />,
+        onClick: () => setStatusExplainerOpen(true),
+        placement: "primary",
+      },
+      {
+        id: "questionnaire-dynamic",
+        label: "Dynamic",
+        icon: <Sparkle size={16} aria-hidden="true" />,
+        onClick: startDynamic,
+        placement: "overflow",
+        selected: runtimeKind === "dynamic",
+      },
+      {
+        id: "questionnaire-discover",
+        label: "Discover",
+        icon: <Compass size={16} aria-hidden="true" />,
+        onClick: startDiscover,
+        placement: "overflow",
+        selected: runtimeKind === "discover",
+      },
+      {
+        id: "questionnaire-deep-dive",
+        label: "Deep Dive",
+        icon: <ListChecks size={16} aria-hidden="true" />,
+        onClick: startDeepDive,
+        placement: "overflow",
+        selected: runtimeKind === "deepDive",
+      },
+    ];
+  }, [profile, runtimeKind, shared, startDeepDive, startDiscover, startDynamic]);
+  useTopNavActions(navActions);
 
   if (!hydrated) return <PageShell loading width="lg" />;
 
@@ -64,7 +127,6 @@ export default function QuestionsScreen({ params }: Props) {
   }
 
   const currentProfile = profile;
-  const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
   if (shared) {
     return (
       <PageShell width="lg">
@@ -80,8 +142,6 @@ export default function QuestionsScreen({ params }: Props) {
   }
 
   const activeRuntime = runtime!;
-  const setup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
-  const runtimeKind = activeRuntime.intent.kind;
   const scopedProgress = activeRuntime.scope;
   const progressPercent = runtimeKind === "dynamic"
     ? activeRuntime.coverage.percent
@@ -92,29 +152,6 @@ export default function QuestionsScreen({ params }: Props) {
   const discoverComplete = getQuestionnaireRuntime(currentProfile, {
     intent: { kind: "discover" },
   }).complete;
-
-  function saveMode(mode: "dynamic" | "deepDive") {
-    updateProfileQuestionnaire(currentProfile.id, {
-      mode,
-      interests: [...setup.interests],
-      version: 2,
-    });
-  }
-
-  function startDynamic() {
-    saveMode("dynamic");
-    setIntent(DYNAMIC_INTENT);
-  }
-
-  function startDiscover() {
-    if (setup.mode === "deepDive") saveMode("dynamic");
-    setIntent({ kind: "discover" });
-  }
-
-  function startDeepDive() {
-    saveMode("deepDive");
-    setIntent({ kind: "deepDive" });
-  }
 
   function updateStatus(kinkId: string, status: KinkStatus) {
     setEntry(currentProfile.id, kinkId, { status, desire: null });
@@ -145,32 +182,6 @@ export default function QuestionsScreen({ params }: Props) {
           style={{ width: `${progressPercent}%`, background: "var(--accent)" }}
         />
       </div>
-
-      <header className="flex-none pb-2">
-        <div className="grid grid-cols-3 gap-2 pb-0.5" aria-label="Vraagmodus">
-          {([
-            ["dynamic", "Dynamic", startDynamic],
-            ["discover", "Discover", startDiscover],
-            ["deepDive", "Deep Dive", startDeepDive],
-          ] as const).map(([kind, label, action]) => {
-            const active = runtimeKind === kind;
-            return (
-              <button
-                key={kind}
-                type="button"
-                onClick={action}
-                aria-pressed={active}
-                className="focus-ring min-h-9 w-full rounded-full px-3 text-xs font-semibold"
-                style={active
-                  ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
-                  : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </header>
 
       <section className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2" data-testid="questions-scroll-region">
         {!activeRuntime.complete ? (

@@ -52,7 +52,10 @@ export default function KinkEditSheet({
 
   return (
     <Sheet open={kink !== null} onClose={onClose} scrollable aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}>
-      <SheetContent className="max-h-[88dvh] overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+      <SheetContent
+        className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
+        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - max(0.75rem, env(safe-area-inset-top)))" }}
+      >
         <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>
           {kink ? kinkCategoryLabel(kink.category) : ""}
         </p>
@@ -65,7 +68,16 @@ export default function KinkEditSheet({
         {kink?.description && (
           <ClampText text={kink.description} className="text-sm mb-4" style={{ color: "var(--text2)" }} />
         )}
-        {!kink?.description && <div className="mb-3" />}
+        {kink?.safetyNote && (
+          <aside
+            className="mb-4 rounded-xl px-3 py-3 text-sm leading-relaxed"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+          >
+            <p className="font-semibold" style={{ color: "var(--text)" }}>Veiligheid</p>
+            <p className="mt-1">{kink.safetyNote}</p>
+          </aside>
+        )}
+        {!kink?.description && !kink?.safetyNote && <div className="mb-3" />}
 
         <div aria-live="polite" className="sr-only">
           {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}

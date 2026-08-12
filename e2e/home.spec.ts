@@ -47,6 +47,13 @@ test.describe("Home page — profielen aanwezig", () => {
     await expect(page).toHaveURL(/\/profile\/pw-alex-001/);
   });
 
+  test("houdt home vrij van directe contract- en scènecreatie", async ({ page }) => {
+    await expect(page.getByRole("link", { name: "Maak een contract", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Nieuwe scène", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Contracten", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Scènes", exact: true })).toBeVisible();
+  });
+
   test("toont link naar vergelijken pagina", async ({ page }) => {
     const compareLink = page.getByRole("link", { name: /Vergelijk.*Alex.*Sam/i });
     await expect(compareLink).toBeVisible();
@@ -111,7 +118,7 @@ test.describe("Profiel aanmaken via UI", () => {
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/, { timeout: 8000 });
     await expect(page.getByTestId("questions-screen")).toBeVisible();
-    await expect(page.getByText("Voorkeuren", { exact: true })).toBeVisible();
+    await expect(page.getByText("Vragenlijst", { exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 
     const entries = await page.evaluate(() => {

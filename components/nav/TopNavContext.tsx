@@ -21,6 +21,7 @@ export interface TopNavAction {
   placement?: TopNavActionPlacement;
   danger?: boolean;
   disabled?: boolean;
+  selected?: boolean;
 }
 
 type ActionOwner = symbol;

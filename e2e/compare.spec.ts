@@ -117,6 +117,13 @@ test.describe("Vergelijkingspagina", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("start contractopstelling pas met het expliciet gekozen paar", async ({ page }) => {
+    const createContract = page.getByRole("button", { name: "Contract opstellen" });
+    await expect(createContract).toBeEnabled();
+    await createContract.click();
+    await expect(page).toHaveURL(/\/contract\?a=pw-alex-001&b=pw-sam-002$/);
+  });
+
   test("lege staat: toont melding of selector bij geen URL-params", async ({ page }) => {
     await seedAndGo(page, "/compare", [PROFILE_ALEX, PROFILE_SAM]);
     const text = await page.evaluate(() => document.body.innerText);

@@ -25,7 +25,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await seedAndGo(page, "/profile/pw-alex-001/questions", [emptyAlex, PROFILE_SAM]);
 
     await expect(page.getByTestId("questions-top-progress")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Uitleg over antwoordkeuzes" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Uitleg antwoordkeuzes" })).toBeVisible();
 
     const controls = [
       page.getByRole("button", { name: "Eerst vragen" }),
@@ -46,14 +46,22 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     }
   });
 
-  test("vragenpagina toont alleen de drie vraagmodi", async ({ page }) => {
+  test("vragenpagina houdt modi in het contextmenu en de kaart vrij van filters", async ({ page }) => {
     await page.goto("/profile/pw-alex-001/questions");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("button", { name: "Dynamic" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Discover" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Deep Dive" })).toBeVisible();
+    const nav = page.getByLabel("Hoofdnavigatie");
+    await expect(nav.getByText("Vragenlijst", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Dynamic" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Discover" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Deep Dive" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Categorie/i })).toHaveCount(0);
+
+    await nav.getByRole("button", { name: "Meer acties" }).click();
+    const modeMenu = page.getByRole("menu");
+    await expect(modeMenu.getByRole("menuitemradio", { name: "Dynamic" })).toBeVisible();
+    await expect(modeMenu.getByRole("menuitemradio", { name: "Discover" })).toBeVisible();
+    await expect(modeMenu.getByRole("menuitemradio", { name: "Deep Dive" })).toBeVisible();
   });
 
   test("opgeslagen Deep Dive blijft actief na hydration", async ({ page }) => {
@@ -68,8 +76,11 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await page.goto("/profile/pw-alex-001/questions");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("button", { name: "Deep Dive" })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("button", { name: "Dynamic" })).toHaveAttribute("aria-pressed", "false");
+    const nav = page.getByLabel("Hoofdnavigatie");
+    await nav.getByRole("button", { name: "Meer acties" }).click();
+    const modeMenu = page.getByRole("menu");
+    await expect(modeMenu.getByRole("menuitemradio", { name: "Deep Dive" })).toHaveAttribute("aria-checked", "true");
+    await expect(modeMenu.getByRole("menuitemradio", { name: "Dynamic" })).toHaveAttribute("aria-checked", "false");
   });
 
   test("profielbewerking geeft header, formulier en footer elk hun eigen ruimte", async ({ page }) => {

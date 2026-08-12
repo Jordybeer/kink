@@ -8,6 +8,7 @@ import {
   contractSummaryFromContent,
   contractPairKey,
   countCurrentContractsForProfile,
+  mostRecentReadableContractForProfile,
   hashContractContent,
   signContractPayload,
   verifyContractProof,
@@ -139,6 +140,35 @@ describe("contract lifecycle", () => {
 
     expect(countCurrentContractsForProfile([first, second], partnerDom, [me, partnerDom, partnerSub])).toBe(2);
     expect(first.pairKey).not.toBe(second.pairKey);
+  });
+
+  it("finds the newest readable historical contract for an imported person without mutating series", async () => {
+    const me = profile("me-dom", "Jordy");
+    const partnerDom = profile("noiva-dom", "Noiva", "shared", "noiva");
+    const partnerSub = profile("noiva-sub", "Noiva", "shared", "noiva");
+    const older = await draftSeries(me, partnerDom);
+    older.id = "series-older";
+    older.status = "active";
+    older.updatedAt = 200;
+    older.currentVersionId = older.draftVersionId;
+    older.draftVersionId = undefined;
+    older.versions[0].state = "signed";
+
+    const newest = await draftSeries(me, partnerSub);
+    newest.id = "legacy-series:snapshot-2";
+    newest.status = "stopped";
+    newest.updatedAt = 300;
+    newest.currentVersionId = newest.draftVersionId;
+    newest.draftVersionId = undefined;
+    newest.versions[0].state = "signed";
+
+    const concept = await draftSeries(me, partnerDom);
+    concept.id = "series-draft";
+    concept.updatedAt = 400;
+    const before = structuredClone([older, newest, concept]);
+
+    expect(mostRecentReadableContractForProfile([older, newest, concept], partnerDom)?.id).toBe(newest.id);
+    expect([older, newest, concept]).toEqual(before);
   });
 
   it("archives a series when a participant profile disappears", async () => {

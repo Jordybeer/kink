@@ -402,6 +402,19 @@ export function countCurrentContractsForProfile(
   }).length;
 }
 
+export function mostRecentReadableContractForProfile(
+  series: readonly ContractSeries[],
+  profile: Profile,
+): ContractSeries | undefined {
+  const personId = profile.personGroupId ?? profile.id;
+  return series
+    .filter((item) => {
+      if (!seriesMatchesPerson(item, personId) || !item.currentVersionId) return false;
+      return contractVersionById(item, item.currentVersionId)?.state === "signed";
+    })
+    .sort((left, right) => right.updatedAt - left.updatedAt)[0];
+}
+
 export function formatContractTimestamp(timestamp: number): string {
   const parts = new Intl.DateTimeFormat("nl-BE", {
     day: "numeric",

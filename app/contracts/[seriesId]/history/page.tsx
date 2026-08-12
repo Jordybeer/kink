@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, CaretRight, CheckCircle, FileText } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { decodeLocalRouteId } from "@/lib/localRoutes";
+import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 import {
   contractBucket,
   contractStatusLabel,
@@ -50,13 +52,13 @@ function eventStatus(event: ContractLifecycleEvent, events: ContractLifecycleEve
 
 export default function ContractHistoryPage() {
   const params = useParams<{ seriesId: string }>();
+  const seriesId = decodeLocalRouteId(params.seriesId);
   const profiles = useStore((state) => state.profiles);
-  const series = useContractStore((state) => state.series.find((item) => item.id === params.seriesId));
-  const [hydrated, setHydrated] = useState(false);
+  const series = useContractStore((state) => state.series.find((item) => item.id === seriesId));
   const [tab, setTab] = useState<"events" | "versions">("events");
 
-  useEffect(() => setHydrated(true), []);
-  if (!hydrated) return <PageShell loading width="2xl" />;
+  const contractsReady = useLegacyContractMigration();
+  if (!contractsReady) return <PageShell loading width="2xl" />;
   if (!series) {
     return <PageShell width="2xl"><p className="py-16 text-center text-sm" style={{ color: "var(--text2)" }}>Contract niet gevonden.</p></PageShell>;
   }
