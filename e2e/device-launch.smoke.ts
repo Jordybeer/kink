@@ -73,20 +73,18 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Heel graag", { exact: true })).toBeVisible();
 
-  const metrics = await dialog.evaluate((element) => {
-    const scroller = element.querySelector<HTMLElement>(".overflow-y-auto");
+  // Visibility only proves that the dialog has layout. Wait until the sheet's
+  // entrance transform has reached the visual viewport before measuring it.
+  await expect.poll(async () => dialog.evaluate((element) => {
     const rect = element.getBoundingClientRect();
-    return {
-      top: rect.top,
-      bottom: rect.bottom,
-      visibleHeight: window.visualViewport?.height ?? window.innerHeight,
-      scrollTop: scroller?.scrollTop ?? -1,
-    };
-  });
+    const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+    return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+  })).toBeLessThanOrEqual(1);
 
-  expect(metrics.top).toBeGreaterThanOrEqual(-1);
-  expect(metrics.bottom).toBeLessThanOrEqual(metrics.visibleHeight + 1);
-  expect(metrics.scrollTop).toBeLessThanOrEqual(1);
+  const scrollTop = await dialog.evaluate((element) =>
+    element.querySelector<HTMLElement>(".overflow-y-auto")?.scrollTop ?? -1,
+  );
+  expect(scrollTop).toBeLessThanOrEqual(1);
 
   await dialog.getByRole("button", { name: "Sluit" }).click();
   await expect(dialog).toBeHidden();
