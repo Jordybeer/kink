@@ -161,6 +161,7 @@ export default function TopNav() {
                 label: action.label,
                 icon: action.icon,
                 danger: action.danger,
+                selected: action.selected,
                 onClick: action.onClick,
               }))}
           >
@@ -247,7 +248,7 @@ function focusedRoute(
 ): { title: string; back: string } {
   if (path === "/profile") return { title: "Profiel", back: "/" };
   if (/^\/profile\/[^/]+\/questions$/.test(path)) {
-    return { title: "Voorkeuren", back: path.replace(/\/questions$/, "") };
+    return { title: "Vragenlijst", back: path.replace(/\/questions$/, "") };
   }
   if (path.startsWith("/profile/")) return { title: "Profiel", back: "/" };
   if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
