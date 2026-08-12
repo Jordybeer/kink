@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowSquareOut,
   ArrowsClockwise,
   ArrowsOutSimple,
   CameraPlus,
+  Export,
   FileText,
   Lock,
   PencilSimple,
@@ -43,19 +44,30 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   editRef.current = onEdit;
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [useIosShareGlyph, setUseIosShareGlyph] = useState(false);
   const allProfiles = useStore((state) => state.profiles);
   const contractSeries = useContractStore((state) => state.series);
   const contractCount = countCurrentContractsForProfile(contractSeries, profile, allProfiles);
   const contractPersonId = profile.personGroupId ?? profile.id;
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent;
+    const iosDevice = /iPhone|iPad|iPod/i.test(userAgent)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    setUseIosShareGlyph(iosDevice);
+  }, []);
+
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
     if (canShare) {
       next.push({
         id: "share-profile",
         label: "Profiel delen",
-        icon: <ShareNetwork size={18} weight="regular" aria-hidden="true" />,
+        icon: useIosShareGlyph
+          ? <Export size={18} weight="regular" aria-hidden="true" />
+          : <ShareNetwork size={18} weight="regular" aria-hidden="true" />,
         onClick: () => shareRef.current?.(),
         placement: "primary",
       });
@@ -70,7 +82,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
       });
     }
     return next;
-  }, [canEdit, canShare]);
+  }, [canEdit, canShare, useIosShareGlyph]);
   useTopNavActions(navActions);
 
   const expLevel = profile.experienceLevel ?? "beginner";
