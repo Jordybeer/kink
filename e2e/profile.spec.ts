@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
+import { buildStore, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   test.beforeEach(async ({ page }) => {
@@ -62,7 +62,11 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
       entries: {},
       questionnaireSetup: { mode: "deepDive" as const, interests: [], version: 2 as const },
     };
-    await seedAndGo(page, "/profile/pw-alex-001/questions", [deepAlex, PROFILE_SAM]);
+    await page.evaluate((stored) => {
+      localStorage.setItem("kink-profiles", JSON.stringify(stored));
+    }, buildStore([deepAlex, PROFILE_SAM]));
+    await page.goto("/profile/pw-alex-001/questions");
+    await page.waitForLoadState("networkidle");
 
     await expect(page.getByRole("button", { name: "Deep Dive" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("button", { name: "Dynamic" })).toHaveAttribute("aria-pressed", "false");
