@@ -1,9 +1,9 @@
 export type ClientPlatform = "ios" | "android" | "other";
 
 /**
- * Classify the client platform without touching browser globals. Keeping this
- * pure lets browser-aware UI share one hydration-safe source of truth.
- * iPadOS may identify itself as a Mac, so touch points distinguish that case.
+ * Classify the client platform with browser globals kept outside the ropes.
+ * The pure helper keeps hydration predictable, while touch points unmask an
+ * iPadOS client that has dressed itself up as a Mac.
  */
 export function detectClientPlatform(
   userAgent: string,

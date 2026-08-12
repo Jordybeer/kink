@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowSquareOut,
@@ -39,8 +39,12 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shareRef = useRef(onShare);
   const editRef = useRef(onEdit);
-  shareRef.current = onShare;
-  editRef.current = onEdit;
+
+  useLayoutEffect(() => {
+    shareRef.current = onShare;
+    editRef.current = onEdit;
+  }, [onEdit, onShare]);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const allProfiles = useStore((state) => state.profiles);
