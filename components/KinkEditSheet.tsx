@@ -52,7 +52,10 @@ export default function KinkEditSheet({
 
   return (
     <Sheet open={kink !== null} onClose={onClose} scrollable aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}>
-      <SheetContent className="max-h-[88dvh] overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+      <SheetContent
+        className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
+        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - max(0.75rem, env(safe-area-inset-top)))" }}
+      >
         <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>
           {kink ? kinkCategoryLabel(kink.category) : ""}
         </p>
