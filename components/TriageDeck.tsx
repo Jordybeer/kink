@@ -317,7 +317,7 @@ export default function TriageDeck({
         entry={editKink ? (entries[editKink.id] ?? { status: null, comment: "" }) : { status: null, comment: "" }}
         onClose={() => setEditKink(null)}
         onStatusChange={(status) => {
-          if (editKink) onStatusChange(editKink.id, status);
+          if (editKink) handleSelect(editKink, status);
         }}
         onTagsChange={(tags) => {
           if (editKink) onTagsChange(editKink.id, tags);
