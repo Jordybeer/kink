@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowSquareOut,
@@ -24,7 +24,7 @@ import type { ProfileType } from "@/lib/profileType";
 import ProfileTrust from "@/components/ProfileTrust";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
-import { countCurrentContractsForProfile } from "@/lib/contractLifecycle";
+import { mostRecentReadableContractForProfile } from "@/lib/contractLifecycle";
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -48,9 +48,14 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const allProfiles = useStore((state) => state.profiles);
+  const legacyContracts = useStore((state) => state.contracts);
   const contractSeries = useContractStore((state) => state.series);
-  const contractCount = countCurrentContractsForProfile(contractSeries, profile, allProfiles);
-  const contractPersonId = profile.personGroupId ?? profile.id;
+  const importLegacyContracts = useContractStore((state) => state.importLegacyContracts);
+  const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
+
+  useEffect(() => {
+    importLegacyContracts(legacyContracts, allProfiles);
+  }, [allProfiles, importLegacyContracts, legacyContracts]);
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
 
@@ -218,11 +223,11 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             </span>
           )}
 
-          {profileType === "partner" && contractCount > 0 && (
+          {profileType === "partner" && latestContract && (
             <Link
-              href={`/contracts?person=${encodeURIComponent(contractPersonId)}`}
+              href={`/contracts/${encodeURIComponent(latestContract.id)}`}
               prefetch={false}
-              aria-label={`${contractCount} ${contractCount === 1 ? "contract" : "contracten"} met ${profile.name}`}
+              aria-label={`Open het meest recente contract met ${profile.name}`}
               className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-normal"
               style={{
                 color: "var(--text2)",
@@ -231,7 +236,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               }}
             >
               <FileText size={13} weight="regular" aria-hidden="true" />
-              Contracten · {contractCount}
+              Contract
             </Link>
           )}
 
