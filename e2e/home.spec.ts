@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
+const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
+
 test.describe("Home page — leeg", () => {
   test("laadt zonder overflow en toont onboarding of lege staat", async ({ page }) => {
     await page.goto("/");
@@ -12,12 +14,32 @@ test.describe("Home page — leeg", () => {
 
 test.describe("Home page — profielen aanwezig", () => {
   test.beforeEach(async ({ page }) => {
-    await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM]);
+    await seedProfiles(page, [PROFILE_ALEX, SHARED_SAM]);
   });
 
-  test("toont beide profielen in de lijst", async ({ page }) => {
+  test("scheidt eigen en gedeelde profielen zonder verborgen profielmetadata te bewaren", async ({ page }) => {
+    const mine = page.getByRole("button", { name: "Mijn profielen 1" });
+    const shared = page.getByRole("button", { name: "Gedeeld met mij 1" });
+
+    await expect(mine).toHaveAttribute("aria-expanded", "true");
+    await expect(shared).toHaveAttribute("aria-expanded", "false");
     await expect(page.getByText("Alex", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sam", { exact: true })).toBeHidden();
+
+    await shared.click();
     await expect(page.getByText("Sam", { exact: true })).toBeVisible();
+    await mine.click();
+    await expect(page.getByText("Alex", { exact: true })).toBeHidden();
+
+    const stored = await page.evaluate(() => sessionStorage.getItem("kinksync-home-profile-disclosures"));
+    expect(stored).toBe('{"mine":false,"shared":true}');
+    expect(stored).not.toContain(PROFILE_ALEX.id);
+    expect(stored).not.toContain(PROFILE_SAM.id);
+
+    await page.goto("/about");
+    await page.goBack();
+    await expect(mine).toHaveAttribute("aria-expanded", "false");
+    await expect(shared).toHaveAttribute("aria-expanded", "true");
   });
 
   test("navigeert naar profielpagina via link op profiel", async ({ page }) => {

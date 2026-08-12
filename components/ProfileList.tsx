@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
+  CaretDown,
   CaretRight,
   FileText,
   FilmSlate,
@@ -16,7 +17,7 @@ import { motion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { getQuestionnaireRuntime } from "@/lib/questionnaire";
-import { getProfileType } from "@/lib/profileType";
+import { getProfileType, splitProfilesByOwnership } from "@/lib/profileType";
 import { avatarStyle } from "@/lib/avatar";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import type { Profile } from "@/types";
@@ -24,6 +25,8 @@ import type { Profile } from "@/types";
 interface ProfileListProps {
   onPromptDelete: (id: string) => void;
 }
+
+const HOME_PROFILE_DISCLOSURES = "kinksync-home-profile-disclosures";
 
 interface ProfileGroup {
   key: string;
@@ -82,7 +85,9 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   const deleteProfile = useStore((state) => state.deleteProfile);
   const [groupDeleteTarget, setGroupDeleteTarget] = useState<Profile | null>(null);
 
-  const groups = buildGroups(profiles, pinnedProfileId);
+  const ownership = splitProfilesByOwnership(profiles, pinnedProfileId);
+  const mineGroups = buildGroups(ownership.mine, pinnedProfileId);
+  const sharedGroups = buildGroups(ownership.shared, pinnedProfileId);
   const comparePair = defaultComparePair(profiles, pinnedProfileId);
   const deletionGroup = groupDeleteTarget?.personGroupId
     ? profiles.filter((profile) => profile.personGroupId === groupDeleteTarget.personGroupId)
@@ -103,72 +108,95 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
     closeGroupDelete();
   }
 
+  const renderGroups = (visibleGroups: ProfileGroup[]) => (
+    <motion.div
+      className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start"
+      initial="hidden"
+      animate="show"
+      variants={STAGGER_CHILDREN}
+    >
+      {visibleGroups.map((group) => {
+        const isPerspectiveGroup = group.profiles.length > 1;
+        return (
+          <motion.section
+            key={group.key}
+            variants={fadeUp(10)}
+            className="rounded-2xl overflow-hidden"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+          >
+            {isPerspectiveGroup && (
+              <div
+                className="px-3.5 py-3 flex items-center gap-3"
+                style={{ borderBottom: "1px solid var(--border)" }}
+              >
+                <ProfileAvatar profile={group.profiles[0]} size="small" />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-lg italic truncate"
+                    style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+                  >
+                    {group.name}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                    Twee afzonderlijke perspectieven
+                  </p>
+                </div>
+                {group.profiles.length === 2 && (
+                  <Link
+                    href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
+                    prefetch={false}
+                    className="focus-ring min-h-9 px-3 rounded-full inline-flex items-center text-xs font-semibold"
+                    style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
+                  >
+                    Vergelijk kanten
+                  </Link>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-col">
+              {group.profiles.map((profile, index) => (
+                <ProfileRow
+                  key={profile.id}
+                  profile={profile}
+                  pinnedProfileId={pinnedProfileId}
+                  showName={!isPerspectiveGroup}
+                  divider={index > 0}
+                  onPin={() => profile.id === pinnedProfileId ? unpinProfile() : pinProfile(profile.id)}
+                  onDelete={() => isPerspectiveGroup
+                    ? setGroupDeleteTarget(profile)
+                    : onPromptDelete(profile.id)}
+                />
+              ))}
+            </div>
+          </motion.section>
+        );
+      })}
+    </motion.div>
+  );
+
   return (
     <>
-      <motion.div
-        className="flex flex-col gap-3 mb-6 lg:grid lg:grid-cols-2 lg:items-start"
-        initial="hidden"
-        animate="show"
-        variants={STAGGER_CHILDREN}
-      >
-        {groups.map((group) => {
-          const isPerspectiveGroup = group.profiles.length > 1;
-          return (
-            <motion.section
-              key={group.key}
-              variants={fadeUp(10)}
-              className="rounded-2xl overflow-hidden"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-            >
-              {isPerspectiveGroup && (
-                <div
-                  className="px-3.5 py-3 flex items-center gap-3"
-                  style={{ borderBottom: "1px solid var(--border)" }}
-                >
-                  <ProfileAvatar profile={group.profiles[0]} size="small" />
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className="text-lg italic truncate"
-                      style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-                    >
-                      {group.name}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                      Twee afzonderlijke perspectieven
-                    </p>
-                  </div>
-                  {group.profiles.length === 2 && (
-                    <Link
-                      href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
-                      prefetch={false}
-                      className="focus-ring min-h-9 px-3 rounded-full inline-flex items-center text-xs font-semibold"
-                      style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
-                    >
-                      Vergelijk kanten
-                    </Link>
-                  )}
-                </div>
-              )}
-
-              <div className="flex flex-col">
-                {group.profiles.map((profile, index) => (
-                  <ProfileRow
-                    key={profile.id}
-                    profile={profile}
-                    pinnedProfileId={pinnedProfileId}
-                    showName={!isPerspectiveGroup}
-                    divider={index > 0}
-                    onPin={() => profile.id === pinnedProfileId ? unpinProfile() : pinProfile(profile.id)}
-                    onDelete={() => isPerspectiveGroup
-                      ? setGroupDeleteTarget(profile)
-                      : onPromptDelete(profile.id)}
-                  />
-                ))}
-              </div>
-            </motion.section>
-          );
-        })}
-      </motion.div>
+      {ownership.mine.length > 0 && (
+        <ProfileDisclosure
+          id="mine"
+          label="Mijn profielen"
+          count={ownership.mine.length}
+          defaultOpen
+        >
+          {renderGroups(mineGroups)}
+        </ProfileDisclosure>
+      )}
+      {ownership.shared.length > 0 && (
+        <ProfileDisclosure
+          id="shared"
+          label="Gedeeld met mij"
+          count={ownership.shared.length}
+          defaultOpen={ownership.mine.length === 0}
+        >
+          {renderGroups(sharedGroups)}
+        </ProfileDisclosure>
+      )}
 
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
         {comparePair ? (
@@ -292,6 +320,79 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
         </SheetContent>
       </Sheet>
     </>
+  );
+}
+
+function ProfileDisclosure({
+  id,
+  label,
+  count,
+  defaultOpen,
+  children,
+}: {
+  id: "mine" | "shared";
+  label: string;
+  count: number;
+  defaultOpen: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = `home-${id}-profiles`;
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(HOME_PROFILE_DISCLOSURES);
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as Partial<Record<"mine" | "shared", unknown>>;
+      if (typeof parsed[id] === "boolean") setOpen(parsed[id]);
+    } catch {
+      // UI-only preference: malformed state is ignored and never touches profile data.
+    }
+  }, [id]);
+
+  function toggle() {
+    setOpen((current) => {
+      const next = !current;
+      try {
+        const stored = sessionStorage.getItem(HOME_PROFILE_DISCLOSURES);
+        const parsed = stored ? JSON.parse(stored) as Record<string, unknown> : {};
+        sessionStorage.setItem(HOME_PROFILE_DISCLOSURES, JSON.stringify({
+          mine: typeof parsed.mine === "boolean" ? parsed.mine : undefined,
+          shared: typeof parsed.shared === "boolean" ? parsed.shared : undefined,
+          [id]: next,
+        }));
+      } catch {
+        // The disclosure still works when storage is unavailable.
+      }
+      return next;
+    });
+  }
+
+  return (
+    <section className="mb-4" aria-labelledby={`${panelId}-label`}>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="focus-ring mb-2 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <span id={`${panelId}-label`} className="flex-1 text-sm font-semibold">
+          {label}
+        </span>
+        <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+          {count}
+        </span>
+        <CaretDown
+          size={15}
+          aria-hidden="true"
+          className="transition-transform"
+          style={{ color: "var(--text2)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+      {open && <div id={panelId}>{children}</div>}
+    </section>
   );
 }
 
