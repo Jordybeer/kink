@@ -27,8 +27,8 @@ PR #299 leverde de pure selectieonderdelen, statussemantiek, pinned canonical
 probes, provenance en anti-monopoly. De funnel-slice bouwt daarop zonder de
 causale veiligheidsgrens te veranderen:
 
-1. Dynamic heeft een inspecteerbaar basisplan van 44 anchors over alle 19
-   user-facing categorieën;
+1. Dynamic houdt een inspecteerbare meetlat van 45 anchors over alle 19
+   user-facing categorieën strak aan de lijn;
 2. Discover gebruikt de volledige actieve onbeantwoorde catalogus als
    doorlopende, user-exitable pool;
 3. `Meer uit deze categorie` is een ephemeral lokale intent;
@@ -82,8 +82,8 @@ Dynamic is klaar wanneer:
 
 Geen confidence-score, “engine weet genoeg”-model of bewegende denominator.
 
-De basisset bevat 44 expliciete anchors over alle 19 user-facing categorieën.
-Meerdere anchors bestaan alleen waar één kaart aantoonbaar een te brede kamer
+De basisset houdt 45 expliciete anchors over alle 19 user-facing categorieën
+strak aan de lijn. Meerdere anchors bestaan alleen waar één kaart aantoonbaar een te brede kamer
 zou vertegenwoordigen. Het aantal volgt uit die controlelijst, niet uit een
 marketingbudget. Zelfgekozen interests kunnen vooraf vastgelegde extra anchors
 toevoegen; antwoorden nooit.
@@ -183,43 +183,44 @@ Iedere positieve source heeft hoogstens één pinned target, ooit.
 Een bestaande mapping wijzigen is een semantische datamigratie, geen metadata-
 opruiming. Nieuwe catalogusitems landen standaard zonder propagation.
 
-## Canonical allowlist @2
+## Canonical allowlist @6
 
-De actieve formeel geaudite mapping is vastgelegd als
-`QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 2`. De elf mappings uit @1 blijven
-exact staan; @2 voegt alleen nieuwe sources toe. De volledige edge-voor-edge
-onderbouwing en expliciet verworpen associaties staan in
+De formeel geaudite allowlist draagt versie 6 strak op de halsband:
+`QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 6`. Daarin zitten 24 expliciete
+source → target-edges. Directionele kanten blijven als afzonderlijke stabiele
+IDs vastgegespt; oude generieke edges en
+`recording -> adult_content_creation` krijgen geen runtime-propagation meer.
+De edge-voor-edge onderbouwing en expliciet verworpen associaties staan in
 [`docs/questionnaire-metadata-audit.md`](docs/questionnaire-metadata-audit.md).
 
 De pinned set is:
 
 ```text
-spanking_hand             -> spanking_implement
-rope_bondage              -> shibari
-handcuffs                 -> leather_cuffs
-rules_protocols           -> rituelen_protocols
-ochtend_avondritueel      -> rituelen_protocols
-orgasm_control            -> orgasm_denial
-exhibitionism             -> being_watched
-voyeurism                 -> watching_others
-watersports_geven         -> watersports_ontvangen
-watersports_ontvangen     -> urine_intiem
-geur_scent_fetish         -> panty_sniffing
-petplay_puppy             -> petplay_harnas
-shibari                    -> suspension_rechtop
-blindfold                  -> sound_deprivation
-being_watched              -> public_play
-remote_toy                 -> remote_toy_publiek
-nude_photography           -> recording
-recording                  -> adult_content_creation
-partner_masturbation_watch -> mutual_masturbation
-anal_fingering             -> anal_sex
-luiers_dragen              -> diaper_wetting
-diaper_wetting             -> diaper_changing
-diaper_messing             -> diaper_changing
-breeding_fantasy           -> creampie
+spanking_hand_give              -> spanking_implement_give
+spanking_hand_receive           -> spanking_implement_receive
+rope_bondage_give               -> shibari_give
+rope_bondage_receive            -> shibari_receive
+handcuffs_give                  -> leather_cuffs_give
+handcuffs_receive               -> leather_cuffs_receive
+rules_protocols                 -> rituelen_protocols
+ochtend_avondritueel            -> rituelen_protocols
+orgasm_control                  -> orgasm_denial
+exhibitionism                   -> being_watched
+voyeurism                       -> watching_others
+watersports_ontvangen           -> urine_intiem
+geur_scent_fetish               -> panty_sniffing
+petplay_puppy                   -> petplay_harnas
+blindfold_give                  -> sound_deprivation_give
+blindfold_receive               -> sound_deprivation_receive
+being_watched                   -> public_play
+remote_toy                      -> remote_toy_publiek
+nude_photography                -> recording
+partner_masturbation_watch      -> mutual_masturbation
+anal_fingering_give             -> anal_sex_give
+anal_fingering_receive          -> anal_sex_receive
+luiers_dragen                   -> diaper_wetting
+breeding_fantasy                -> creampie
 ```
-
 Nieuwe relaties worden edge voor edge gereviewd en daarna versioned
 vastgepind. Een mogelijke chain is pas geldig wanneer iedere stap zelfstandig
 expliciet positief is. Dat maakt bijvoorbeeld mogelijk:
