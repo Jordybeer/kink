@@ -408,11 +408,10 @@ export function mostRecentReadableContractForProfile(
 ): ContractSeries | undefined {
   const personId = profile.personGroupId ?? profile.id;
   return series
-    .filter((item) => (
-      seriesMatchesPerson(item, personId)
-      && Boolean(item.currentVersionId)
-      && Boolean(contractVersionById(item, item.currentVersionId))
-    ))
+    .filter((item) => {
+      if (!seriesMatchesPerson(item, personId) || !item.currentVersionId) return false;
+      return contractVersionById(item, item.currentVersionId)?.state === "signed";
+    })
     .sort((left, right) => right.updatedAt - left.updatedAt)[0];
 }
 
