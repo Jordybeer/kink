@@ -13,6 +13,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import SheetBackdrop from "@/components/SheetBackdrop";
 import {
   clearInstallPrompt,
   detectIosInstallBrowser,
@@ -259,16 +260,11 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
     >
       {visible && (
         <>
-          <motion.div
+          <SheetBackdrop
             key="pwa-backdrop"
-            aria-hidden="true"
-            className="fixed inset-0 z-[140]"
-            style={{ background: "var(--scrim-strong)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={t.fast}
             onClick={dismiss}
+            transition={t.fast}
+            zIndex={140}
           />
 
           <motion.div
