@@ -18,8 +18,8 @@ import PageShell from "@/components/PageShell";
 const rules = [
   {
     number: "01",
-    title: "Expliciet, nooit voorspeld",
-    text: "KinkSync kiest welke vraag nuttig volgt. Het raadt geen antwoord, gebruikt je rol niet als voorkeur en laat ieder ontbrekend antwoord onbekend.",
+    title: "Antwoorden blijven van jou",
+    text: "KinkSync kan bepalen welke vraag nuttig volgt, maar een voorkeur bestaat pas wanneer jij ze invult. Rol en eerdere antwoorden vullen niets voor je in.",
   },
   {
     number: "02",
@@ -50,20 +50,20 @@ const absentData = [
 const journey = [
   {
     icon: DeviceMobile,
-    eyebrow: "Antwoord",
-    title: "Jij zegt wat geldt",
-    text: "Geven en ontvangen blijven waar nodig aparte vragen. Een ontbrekend antwoord blijft onbekend.",
+    eyebrow: "Verken",
+    title: "Bouw je profiel op",
+    text: "Leg voorkeuren, grenzen, context en privénotities vast op je eigen tempo. Geven en ontvangen blijven waar nodig aparte keuzes.",
   },
   {
     icon: ShieldCheck,
     eyebrow: "Vergelijk",
-    title: "De app rekent lokaal",
-    text: "Geselecteerde profielen worden op dit toestel vergeleken. Rol is nooit een verborgen shortcut voor consent.",
+    title: "Zie waar het klikt en schuurt",
+    text: "KinkSync legt twee gekozen profielen lokaal naast elkaar en ordent overeenkomsten, bespreekpunten en grenzen zodat je weet waarover je moet praten.",
   },
   {
     icon: QrCode,
     eyebrow: "Deel",
-    title: "Jij opent de deur",
+    title: "Neem alleen mee wat bedoeld is",
     text: "Bij profieloverdracht reizen alleen publieke antwoorden mee. Afgeschermde antwoorden blijven buiten QR-codes en gedeelde links.",
   },
 ] as const;
@@ -98,8 +98,8 @@ export default function AboutPage() {
             Jouw toestel. Jouw woorden.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7" style={{ color: "var(--text2)" }}>
-            KinkSync helpt mensen expliciet praten over voorkeuren, grenzen en afspraken.
-            Zonder account, zonder centrale profielopslag en zonder te doen alsof een algoritme jou beter kent dan jijzelf.
+            KinkSync helpt mensen praten over voorkeuren, grenzen en afspraken, van eerste verkenning tot vergelijking en contract.
+            Gevoelige data blijft daarbij standaard op je eigen toestel.
           </p>
 
           <div
@@ -109,7 +109,7 @@ export default function AboutPage() {
           >
             {[
               ["Lokaal", "Standaard op dit toestel"],
-              ["Expliciet", "Geen voorspelde antwoorden"],
+              ["Bewust delen", "Jij kiest wat vertrekt"],
               ["Controleerbaar", "Ondertekende versies"],
             ].map(([title, text]) => (
               <div key={title} className="px-4 py-3.5" style={{ background: "color-mix(in srgb, var(--surface) 92%, transparent)" }}>
@@ -189,9 +189,9 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-12" aria-labelledby="journey-title">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>Van vraag tot afspraak</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>Van profiel tot afspraak</p>
         <h2 id="journey-title" className="serif-safe mt-2 max-w-xl text-3xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
-          Slim over de volgende vraag.<br />Nooit over jouw antwoord.
+          Verkennen, vergelijken en delen.<br />Zonder de menselijke context kwijt te raken.
         </h2>
         <div className="mt-7 grid gap-3 md:grid-cols-3">
           {journey.map(({ icon: Icon, eyebrow, title, text }, index) => (
