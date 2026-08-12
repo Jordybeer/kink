@@ -7,6 +7,7 @@ import { ArrowLeft, CaretRight, CheckCircle, FileText } from "@phosphor-icons/re
 import PageShell from "@/components/PageShell";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { decodeLocalRouteId } from "@/lib/localRoutes";
 import {
   contractBucket,
   contractStatusLabel,
@@ -50,8 +51,9 @@ function eventStatus(event: ContractLifecycleEvent, events: ContractLifecycleEve
 
 export default function ContractHistoryPage() {
   const params = useParams<{ seriesId: string }>();
+  const seriesId = decodeLocalRouteId(params.seriesId);
   const profiles = useStore((state) => state.profiles);
-  const series = useContractStore((state) => state.series.find((item) => item.id === params.seriesId));
+  const series = useContractStore((state) => state.series.find((item) => item.id === seriesId));
   const [hydrated, setHydrated] = useState(false);
   const [tab, setTab] = useState<"events" | "versions">("events");
 
