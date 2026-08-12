@@ -27,7 +27,7 @@ export default function CategorySection({
   openByDefault = false,
 }: Props) {
   const filled = countFilled(kinks, entries);
-  const [open, setOpen] = useState(() => openByDefault || filled > 0);
+  const [open, setOpen] = useState(() => openByDefault);
   const pipCount = Math.min(kinks.length, MAX_PIPS);
   const filledPips = Math.round((filled / kinks.length) * pipCount);
   const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
