@@ -87,7 +87,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   if (originalViewport && testInfo.project.name.startsWith("iphone")) {
     await page.setViewportSize({
       width: originalViewport.width,
-      height: Math.max(520, originalViewport.height - 96),
+      height: Math.max(520, Math.min(600, originalViewport.height - 96)),
     });
     await expectVisualViewportContract(page);
   }
@@ -96,7 +96,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const settingsTitleBox = await settingsTitle.boundingBox();
   expect(settingsTitleBox).not.toBeNull();
   const settingsTitleTop = settingsTitleBox!.y;
-  await deleteAll.scrollIntoViewIfNeeded();
+  await settingsScroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await expect.poll(() => settingsScroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expectWithinVisualViewport(deleteAll);
   expect((await settingsTitle.boundingBox())!.y).toBeCloseTo(settingsTitleTop, 0);
