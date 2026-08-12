@@ -1,6 +1,9 @@
 "use client";
 
-import SpotlightTour, { type SpotlightStep } from "@/components/tours/SpotlightTour";
+import SpotlightTour, {
+  type SpotlightStep,
+  type SpotlightTourExitReason,
+} from "@/components/tours/SpotlightTour";
 
 const QUESTIONNAIRE_STEPS: readonly SpotlightStep[] = [
   {
@@ -29,7 +32,7 @@ const QUESTIONNAIRE_STEPS: readonly SpotlightStep[] = [
 ];
 
 interface QuestionnaireTourProps {
-  onComplete: () => void;
+  onComplete: (reason: SpotlightTourExitReason) => void;
 }
 
 export default function QuestionnaireTour({ onComplete }: QuestionnaireTourProps) {
