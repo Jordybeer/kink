@@ -1,3 +1,5 @@
+import { detectClientPlatform } from "@/lib/clientPlatform";
+
 // Module-level singleton for the beforeinstallprompt event.
 // Populated by the inline <script> in app/layout.tsx before any JS module runs,
 // which is the only way to reliably capture the event on fast devices.
@@ -11,18 +13,14 @@ export type IosInstallBrowser = "safari" | "chrome" | "other" | null;
 
 /**
  * Classify the iOS browser without touching browser globals so the decision can
- * be tested independently from hydration. iPadOS can identify itself as a Mac;
- * touch points distinguish that case from desktop Safari.
+ * be tested independently from hydration.
  */
 export function detectIosInstallBrowser(
   userAgent: string,
   platform = "",
   maxTouchPoints = 0,
 ): IosInstallBrowser {
-  const isIos = /iP(hone|ad|od)/i.test(userAgent)
-    || (platform === "MacIntel" && maxTouchPoints > 1);
-
-  if (!isIos) return null;
+  if (detectClientPlatform(userAgent, platform, maxTouchPoints) !== "ios") return null;
   if (/CriOS/i.test(userAgent)) return "chrome";
   if (/(FxiOS|EdgiOS|OPiOS)/i.test(userAgent)) return "other";
   return "safari";

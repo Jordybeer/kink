@@ -6,7 +6,6 @@ import {
   DeviceMobile,
   DotsThree,
   DownloadSimple,
-  Export,
   Lightning,
   PlusSquare,
   WifiSlash,
@@ -14,6 +13,7 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import SheetBackdrop from "@/components/SheetBackdrop";
+import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import {
   clearInstallPrompt,
   detectIosInstallBrowser,
@@ -188,7 +188,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       detail: "Tik op de drie puntjes in Chrome.",
     },
     {
-      icon: <Export size={20} weight="regular" />,
+      icon: <PlatformShareIcon platform="ios" size={20} weight="regular" />,
       title: "Open Delen",
       detail: "Kies Delen in het browsermenu.",
     },
@@ -201,7 +201,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
 
   const safariSteps: InstallStep[] = [
     {
-      icon: <Export size={20} weight="regular" />,
+      icon: <PlatformShareIcon platform="ios" size={20} weight="regular" />,
       title: "Open Delen",
       detail: "Tik op het deel-icoon in de onderste Safari-balk.",
     },
@@ -219,7 +219,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
 
   const otherIosSteps: InstallStep[] = [
     {
-      icon: <Export size={20} weight="regular" />,
+      icon: <PlatformShareIcon platform="ios" size={20} weight="regular" />,
       title: "Open Delen",
       detail: "Open het deelmenu van je browser.",
     },

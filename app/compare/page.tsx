@@ -1,13 +1,15 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ArrowsLeftRight } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import CompareProfileHeader from "@/components/compare/CompareProfileHeader";
 import CompareResults from "@/components/compare/CompareResults";
 import CompareScoreSummary from "@/components/compare/CompareScoreSummary";
 import CompareToolbar from "@/components/compare/CompareToolbar";
 import ProfileSelectorSheet from "@/components/compare/ProfileSelectorSheet";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import useCompareProfiles from "@/hooks/useCompareProfiles";
 import {
   cleanCompareParam,
@@ -43,6 +45,17 @@ function ComparePage() {
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
+  const navActions = useMemo<TopNavAction[]>(() => [
+    {
+      id: "swap-profiles",
+      label: "Wissel profielen",
+      icon: <ArrowsLeftRight size={18} aria-hidden="true" />,
+      onClick: swapProfiles,
+      placement: "primary",
+      disabled: !hasPair,
+    },
+  ], [hasPair, swapProfiles]);
+  useTopNavActions(navActions);
 
   const toggleDiscussed = useCallback((id: string) => {
     setDiscussed((previous) => {
@@ -72,7 +85,6 @@ function ComparePage() {
         samePairError={samePairError}
         onOpenA={() => setSelectorOpen("a")}
         onOpenB={() => setSelectorOpen("b")}
-        onSwap={swapProfiles}
       />
 
       {hasPair && (
