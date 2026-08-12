@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -20,6 +21,7 @@ interface SheetContentProps {
   showHandle?: boolean;
   /** Kept for source compatibility; visible close actions belong in the footer. */
   showClose?: boolean;
+  style?: CSSProperties;
 }
 
 /** Standardized sheet content wrapper: surface bg, border and optional drag handle. */
@@ -27,11 +29,12 @@ export function SheetContent({
   children,
   className = "px-6 pb-6 pt-4",
   showHandle = true,
+  style,
 }: SheetContentProps) {
   return (
     <div
       className={`rounded-t-2xl ${className}`}
-      style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none" }}
+      style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none", ...style }}
     >
       {showHandle && (
         <div className="h-7 mb-1" aria-hidden="true">

@@ -124,7 +124,7 @@ export default function QuestionsScreen({ params }: Props) {
     <main
       className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4"
       style={{
-        height: "calc(100dvh - var(--nav-h))",
+        height: "calc(var(--visual-viewport-height, 100dvh) - var(--nav-h))",
         paddingTop: "0.5rem",
         paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
       }}

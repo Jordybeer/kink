@@ -154,7 +154,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     <Sheet open={open} onClose={onClose} scrollable aria-label="Profiel bewerken">
       <SheetContent
         showClose={false}
-        className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-hidden px-0 pb-0 pt-3"
+        className="overflow-hidden px-0 pb-0 pt-3"
+        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >
         <div className="px-5 pb-4 flex items-center gap-3">
           <div
@@ -180,7 +181,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           </div>
         </div>
 
-        <div className="overflow-y-auto overscroll-contain px-5 pb-5 space-y-4" style={{ maxHeight: "calc(100dvh - 170px)" }}>
+        <div className="overflow-y-auto overscroll-contain px-5 pb-5 space-y-4" style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - 170px)" }}>
           <section
             className="rounded-2xl p-4"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}

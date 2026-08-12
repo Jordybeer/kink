@@ -56,6 +56,39 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       break;
   }
 }
+async function expectVisualViewportContract(page: Page) {
+  await expect.poll(async () => page.evaluate(() => {
+    const rendered = Number.parseFloat(
+      document.documentElement.style.getPropertyValue("--visual-viewport-height"),
+    );
+    const visible = Math.round(window.visualViewport?.height ?? window.innerHeight);
+    return Number.isFinite(rendered) ? Math.abs(rendered - visible) : Number.POSITIVE_INFINITY;
+  })).toBeLessThanOrEqual(1);
+}
+
+async function expectStatusExplainerStartsAtTop(page: Page) {
+  await page.evaluate(() => window.dispatchEvent(new Event("ks:open-status-explainer")));
+
+  const dialog = page.getByRole("dialog", { name: "Uitleg keuzes" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Heel graag", { exact: true })).toBeVisible();
+
+  // Visibility only proves that the dialog has layout. Wait until the sheet's
+  // entrance transform has reached the visual viewport before measuring it.
+  await expect.poll(async () => dialog.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+    return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+  })).toBeLessThanOrEqual(1);
+
+  const scrollTop = await dialog.evaluate((element) =>
+    element.querySelector<HTMLElement>(".overflow-y-auto")?.scrollTop ?? -1,
+  );
+  expect(scrollTop).toBeLessThanOrEqual(1);
+
+  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await expect(dialog).toBeHidden();
+}
 
 test("critical launch routes hydrate with their real content inside the viewport", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -68,6 +101,8 @@ test("critical launch routes hydrate with their real content inside the viewport
     await page.goto(route.url);
     await page.waitForLoadState("networkidle");
     await expectRouteReady(page, route);
+    await expectVisualViewportContract(page);
+    if (route.slug === "questions") await expectStatusExplainerStartsAtTop(page);
     await page.evaluate(async () => { await document.fonts.ready; });
 
     const layout = await page.evaluate(() => ({
