@@ -72,6 +72,48 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByRole("button", { name: "Dynamic" })).toHaveAttribute("aria-pressed", "false");
   });
 
+  test("profielbewerking geeft header, formulier en footer elk hun eigen ruimte", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    const trigger = page.getByRole("button", { name: "Profiel bewerken" });
+    await trigger.click();
+
+    const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
+    const header = dialog.getByTestId("profile-edit-header");
+    const scrollBody = dialog.getByTestId("profile-edit-scroll-body");
+    const footer = dialog.getByTestId("profile-edit-footer");
+    const nameInput = dialog.getByLabel("Naam of alias");
+
+    await expect(dialog).toBeVisible();
+    await expect.poll(async () => dialog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+      return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+    })).toBeLessThanOrEqual(1);
+    await expect(header).toBeVisible();
+    await expect(footer).toBeVisible();
+    await expect.poll(() => nameInput.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).fontSize),
+    )).toBeGreaterThanOrEqual(16);
+
+    await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+    const headerBox = await header.boundingBox();
+    const bodyBox = await scrollBody.boundingBox();
+    const footerBox = await footer.boundingBox();
+    const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
+    expect(headerBox).not.toBeNull();
+    expect(bodyBox).not.toBeNull();
+    expect(footerBox).not.toBeNull();
+    expect(headerBox!.y + headerBox!.height).toBeLessThanOrEqual(bodyBox!.y + 1);
+    expect(bodyBox!.y + bodyBox!.height).toBeLessThanOrEqual(footerBox!.y + 1);
+    expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+
+    await dialog.getByRole("button", { name: "Annuleer" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
   test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
     await page.getByRole("tab", { name: "Bewerken" }).click();
     await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();

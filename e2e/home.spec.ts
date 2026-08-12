@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
+const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
+
 test.describe("Home page — leeg", () => {
   test("laadt zonder overflow en toont onboarding of lege staat", async ({ page }) => {
     await page.goto("/");
@@ -12,12 +14,32 @@ test.describe("Home page — leeg", () => {
 
 test.describe("Home page — profielen aanwezig", () => {
   test.beforeEach(async ({ page }) => {
-    await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM]);
+    await seedProfiles(page, [PROFILE_ALEX, SHARED_SAM]);
   });
 
-  test("toont beide profielen in de lijst", async ({ page }) => {
+  test("scheidt eigen en gedeelde profielen zonder verborgen profielmetadata te bewaren", async ({ page }) => {
+    const mine = page.getByRole("button", { name: "Mijn profielen 1" });
+    const shared = page.getByRole("button", { name: "Gedeeld met mij 1" });
+
+    await expect(mine).toHaveAttribute("aria-expanded", "true");
+    await expect(shared).toHaveAttribute("aria-expanded", "false");
     await expect(page.getByText("Alex", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sam", { exact: true })).toBeHidden();
+
+    await shared.click();
     await expect(page.getByText("Sam", { exact: true })).toBeVisible();
+    await mine.click();
+    await expect(page.getByText("Alex", { exact: true })).toBeHidden();
+
+    const stored = await page.evaluate(() => sessionStorage.getItem("kinksync-home-profile-disclosures"));
+    expect(stored).toBe('{"mine":false,"shared":true}');
+    expect(stored).not.toContain(PROFILE_ALEX.id);
+    expect(stored).not.toContain(PROFILE_SAM.id);
+
+    await page.goto("/about");
+    await page.goBack();
+    await expect(mine).toHaveAttribute("aria-expanded", "false");
+    await expect(shared).toHaveAttribute("aria-expanded", "true");
   });
 
   test("navigeert naar profielpagina via link op profiel", async ({ page }) => {
@@ -29,6 +51,39 @@ test.describe("Home page — profielen aanwezig", () => {
     const compareLink = page.getByRole("link", { name: /Vergelijk.*Alex.*Sam/i });
     await expect(compareLink).toBeVisible();
     await expect(compareLink).toHaveAttribute("href", /\/compare\?a=pw-alex-001&b=pw-sam-002/);
+  });
+
+  test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 480 });
+    const trigger = page.getByRole("button", { name: "Instellingen openen" });
+    await trigger.click();
+
+    const dialog = page.getByRole("dialog", { name: "Instellingen" });
+    const title = dialog.getByRole("heading", { name: "Instellingen" });
+    const scrollBody = dialog.getByTestId("sheet-scroll-body");
+    const lastAction = dialog.getByRole("button", { name: /Alle data verwijderen/ });
+
+    await expect(dialog).toBeVisible();
+    await expect.poll(async () => dialog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+      return Math.max(0, -rect.top, rect.bottom - visibleHeight);
+    })).toBeLessThanOrEqual(1);
+    const titleBox = await title.boundingBox();
+    expect(titleBox).not.toBeNull();
+    const titleTop = titleBox!.y;
+    await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+    const actionBox = await lastAction.boundingBox();
+    const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
+    expect(actionBox).not.toBeNull();
+    expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+    expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
+
+    await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
   });
 
   test("geen horizontale overflow op mobiel (390px)", async ({ page }) => {

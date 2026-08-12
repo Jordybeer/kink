@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
+import { X } from "@phosphor-icons/react";
 import SheetBackdrop from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -19,11 +20,13 @@ interface Props {
   onClose: () => void;
   title?: string;
   children?: ReactNode;
+  scrollable?: boolean;
   "aria-label"?: string;
 }
 
-export default function Sheet({ open, onClose, title, children, "aria-label": ariaLabel }: Props) {
+export default function Sheet({ open, onClose, title, children, scrollable = false, "aria-label": ariaLabel }: Props) {
   const t = useMotionSafe();
+  const reduceMotion = useReducedMotion();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -51,22 +54,30 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
             role="dialog"
             aria-modal="true"
             aria-label={ariaLabel}
-            className="fixed bottom-0 left-0 right-0 z-[151] touch-none"
-            style={{ y }}
-            initial={{ y: "100%" }}
+            className="fixed bottom-0 left-0 right-0 z-[151]"
+            style={{ y, touchAction: scrollable ? "auto" : "none" }}
+            initial={reduceMotion ? false : { y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={SPRING}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0.05, bottom: 0.3 }}
-            onDragEnd={(_, info) => {
+            transition={reduceMotion ? { duration: 0 } : SPRING}
+            drag={scrollable ? false : "y"}
+            dragConstraints={scrollable ? undefined : { top: 0 }}
+            dragElastic={scrollable ? false : { top: 0.05, bottom: 0.3 }}
+            onDragEnd={scrollable ? undefined : (_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 500) onClose();
             }}
           >
             <div
-              className="rounded-t-[28px] px-4 pb-10 pt-3"
-              style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
+              className={scrollable
+                ? "flex flex-col overflow-hidden rounded-t-[28px] px-4 pt-3"
+                : "rounded-t-[28px] px-4 pb-10 pt-3"}
+              style={{
+                background: "var(--surface)",
+                borderTop: "1px solid var(--border)",
+                ...(scrollable
+                  ? { maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }
+                  : {}),
+              }}
             >
               <div className="h-7 mb-1" aria-hidden="true">
                 <div
@@ -76,10 +87,30 @@ export default function Sheet({ open, onClose, title, children, "aria-label": ar
               </div>
 
               {title && (
-                <h2 className="text-lg font-bold mb-4 px-1">{title}</h2>
+                <div className="mb-4 flex min-h-11 items-center gap-2 px-1">
+                  <h2 className="min-w-0 flex-1 text-lg font-bold">{title}</h2>
+                  {scrollable && (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      aria-label={`${title} sluiten`}
+                      className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                      style={{ color: "var(--text2)" }}
+                    >
+                      <X size={20} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
               )}
 
-              {children}
+              {scrollable ? (
+                <div
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
+                  data-testid="sheet-scroll-body"
+                >
+                  {children}
+                </div>
+              ) : children}
             </div>
           </motion.div>
         </>
