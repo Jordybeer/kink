@@ -7,11 +7,11 @@ import {
   Lightning,
   List,
   PlusSquare,
-  ShareNetwork,
   WifiSlash,
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import {
   clearInstallPrompt,
   detectIosInstallBrowser,
@@ -174,7 +174,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       Tik op <ActionChip icon={<List size={15} aria-hidden="true" />}>menu</ActionChip> om het browsermenu te openen.
     </span>,
     <span key="chrome-share">
-      Tik op <ActionChip icon={<ShareNetwork size={15} aria-hidden="true" />}>Delen</ActionChip> en daarna op <ActionChip icon={<CaretDown size={14} aria-hidden="true" />}>Meer</ActionChip>.
+      Tik op <ActionChip icon={<PlatformShareIcon size={15} aria-hidden="true" />}>Delen</ActionChip> en daarna op <ActionChip icon={<CaretDown size={14} aria-hidden="true" />}>Meer</ActionChip>.
     </span>,
     <span key="chrome-home">
       Kies <ActionChip icon={<PlusSquare size={15} aria-hidden="true" />}>Zet op beginscherm</ActionChip>.
@@ -183,7 +183,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
 
   const safariSteps = [
     <span key="safari-share">
-      Tik op <ActionChip icon={<ShareNetwork size={15} aria-hidden="true" />}>Delen</ActionChip> in de onderste Safari-balk.
+      Tik op <ActionChip icon={<PlatformShareIcon size={15} aria-hidden="true" />}>Delen</ActionChip> in de onderste Safari-balk.
     </span>,
     <span key="safari-home">
       Scroll omlaag en kies <ActionChip icon={<PlusSquare size={15} aria-hidden="true" />}>Zet op beginscherm</ActionChip>.
