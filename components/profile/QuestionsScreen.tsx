@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
@@ -27,10 +27,15 @@ export default function QuestionsScreen({ params }: Props) {
   const { profiles, setEntry } = useStore();
   const profile = profiles.find((candidate) => candidate.id === id);
   const storedMode = profile?.questionnaireSetup?.mode;
-  const [intent, setIntent] = useState<GuidedQuestionnaireIntent>(
-    storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT,
-  );
+  const [intent, setIntent] = useState<GuidedQuestionnaireIntent>(DYNAMIC_INTENT);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
+  const seededMode = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated || seededMode.current || !profile) return;
+    seededMode.current = true;
+    setIntent(storedMode === "deepDive" ? { kind: "deepDive" } : DYNAMIC_INTENT);
+  }, [hydrated, profile, storedMode]);
 
   useEffect(() => {
     const openStatusExplainer = () => setStatusExplainerOpen(true);
@@ -77,7 +82,7 @@ export default function QuestionsScreen({ params }: Props) {
 
   const activeRuntime = runtime!;
   const setup = currentProfile.questionnaireSetup ?? defaultQuestionnaireSetup();
-  const runtimeKind = intent.kind;
+  const runtimeKind = activeRuntime.intent.kind;
   const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
   const catalogProgress = runtimeKind === "discover" || runtimeKind === "deepDive";
   const progressPercent = catalogProgress
