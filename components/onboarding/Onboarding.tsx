@@ -195,65 +195,72 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </AnimatePresence>
           </div>
 
-          {step !== 5 && (
-            <div
-              className="relative z-10 shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
-              style={{ background: 'var(--bg)' }}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={barKey}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={t.fast}
-                  className="mx-auto flex w-full max-w-sm flex-col gap-2.5"
-                >
-                  {step === 0 && (
-                    <>
-                      <Action primary onClick={advance}>Begin</Action>
-                      <Action onClick={() => { setSkipRequested(true); setStep(1); }} ariaLabel="Sla de introductie over">
-                        Sla intro over
+          <AnimatePresence initial={false}>
+            {step !== 5 && (
+              <motion.div
+                key="onboarding-action-row"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={t.fast}
+                className="relative z-10 shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+                style={{ background: 'var(--bg)' }}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={barKey}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={t.fast}
+                    className="mx-auto flex w-full max-w-sm flex-col gap-2.5"
+                  >
+                    {step === 0 && (
+                      <>
+                        <Action primary onClick={advance}>Begin</Action>
+                        <Action onClick={() => { setSkipRequested(true); setStep(1); }} ariaLabel="Sla de introductie over">
+                          Sla intro over
+                        </Action>
+                      </>
+                    )}
+                    {step === 1 && (
+                      <>
+                        <Action primary onClick={passGate}>Ik ben 18+</Action>
+                        <Action onClick={() => setLockout(true)}>Ik ben jonger</Action>
+                      </>
+                    )}
+                    {step === 2 && (
+                      <Action primary onClick={advance}>Kom maar door <ArrowRight size={17} aria-hidden="true" /></Action>
+                    )}
+                    {step === 3 && (
+                      <Action primary onClick={skipRequested ? onComplete : advance}>
+                        {skipRequested ? 'Naar KinkSync' : 'Verder'} <ArrowRight size={17} aria-hidden="true" />
                       </Action>
-                    </>
-                  )}
-                  {step === 1 && (
-                    <>
-                      <Action primary onClick={passGate}>Ik ben 18+</Action>
-                      <Action onClick={() => setLockout(true)}>Ik ben jonger</Action>
-                    </>
-                  )}
-                  {step === 2 && (
-                    <Action primary onClick={advance}>Kom maar door <ArrowRight size={17} aria-hidden="true" /></Action>
-                  )}
-                  {step === 3 && (
-                    <Action primary onClick={skipRequested ? onComplete : advance}>
-                      {skipRequested ? 'Naar KinkSync' : 'Verder'} <ArrowRight size={17} aria-hidden="true" />
-                    </Action>
-                  )}
-                  {step === 4 && lockSub === 'intro' && (
-                    <>
-                      <Action primary onClick={() => setLockSub('pin1')}>PIN instellen</Action>
-                      <Action onClick={advance}>Niet nu</Action>
-                    </>
-                  )}
-                  {step === 4 && (lockSub === 'pin1' || lockSub === 'pin2') && (
-                    <Action onClick={() => { setPin1([]); setPin2([]); setLockSub('intro'); }}>
-                      <ArrowLeft size={17} aria-hidden="true" /> Terug
-                    </Action>
-                  )}
-                  {step === 4 && lockSub === 'biometric' && (
-                    <>
-                      <Action primary onClick={handleEnableBio} disabled={bioLoading}>
-                        {bioLoading ? 'Even wachten…' : 'Biometrie inschakelen'}
+                    )}
+                    {step === 4 && lockSub === 'intro' && (
+                      <>
+                        <Action primary onClick={() => setLockSub('pin1')}>PIN instellen</Action>
+                        <Action onClick={advance}>Niet nu</Action>
+                      </>
+                    )}
+                    {step === 4 && (lockSub === 'pin1' || lockSub === 'pin2') && (
+                      <Action onClick={() => { setPin1([]); setPin2([]); setLockSub('intro'); }}>
+                        <ArrowLeft size={17} aria-hidden="true" /> Terug
                       </Action>
-                      <Action onClick={advance}>Alleen PIN</Action>
-                    </>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          )}
+                    )}
+                    {step === 4 && lockSub === 'biometric' && (
+                      <>
+                        <Action primary onClick={handleEnableBio} disabled={bioLoading}>
+                          {bioLoading ? 'Even wachten…' : 'Biometrie inschakelen'}
+                        </Action>
+                        <Action onClick={advance}>Alleen PIN</Action>
+                      </>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </div>
