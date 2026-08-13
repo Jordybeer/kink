@@ -97,20 +97,40 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
   const disableAutomaticPrompt = useInstallPromptPolicyStore((state) => state.disableAutomaticPrompt);
   const [visible, setVisible] = useState(manual);
   const [iosBrowser, setIosBrowser] = useState<IosInstallBrowser>(null);
+  const [profileCreateOpen, setProfileCreateOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const exitCallbackRef = useRef<(() => void) | null>(null);
   useFocusTrap(sheetRef, visible);
+
+  useEffect(() => {
+    if (manual) return;
+
+    const syncProfileCreateState = () => {
+      setProfileCreateOpen(Boolean(
+        document.querySelector('[role="dialog"][aria-label="Nieuw profiel maken"]'),
+      ));
+    };
+
+    syncProfileCreateState();
+    const observer = new MutationObserver(syncProfileCreateState);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [manual]);
 
   useEffect(() => {
     if (manual) {
       setVisible(true);
       return;
     }
+    if (profileCreateOpen) {
+      setVisible(false);
+      return;
+    }
     setVisible(shouldAutoShowInstallPrompt(
       { dismissals, snoozedUntil, neverAsk },
       meaningfulUse,
     ));
-  }, [dismissals, manual, meaningfulUse, neverAsk, snoozedUntil]);
+  }, [dismissals, manual, meaningfulUse, neverAsk, profileCreateOpen, snoozedUntil]);
 
   useEffect(() => {
     if (!isIos) {

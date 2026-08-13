@@ -1,8 +1,19 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, PenNib, ShieldCheck, Heart, Lock, Fingerprint, ShieldWarning, HeartBreak } from '@phosphor-icons/react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Fingerprint,
+  HeartBreak,
+  Lock,
+  QrCode,
+  ShieldWarning,
+  Sparkle,
+  UsersThree,
+} from '@phosphor-icons/react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
 import { hashPin } from '@/lib/crypto';
@@ -13,73 +24,24 @@ interface OnboardingProps {
   onComplete: () => void;
 }
 
-const ICON_CIRCLE: React.CSSProperties = {
-  width: '6rem', height: '6rem', borderRadius: '9999px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
-  marginBottom: '2rem',
-};
-const TITLE: React.CSSProperties = {
-  fontFamily: "var(--font-display, Georgia, serif)", fontStyle: 'italic', fontWeight: 500,
-  fontSize: '1.875rem', color: 'var(--text)', marginBottom: '0.875rem', lineHeight: 1.2,
-  textWrap: 'balance',
-};
-const BODY: React.CSSProperties = {
-  fontSize: '0.875rem', color: 'var(--text2)', lineHeight: 1.7, marginBottom: '2rem',
-  // No orphaned words shivering alone on the last line.
-  textWrap: 'pretty',
-};
-const CARD: React.CSSProperties = {
-  background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
-  border: '1px solid color-mix(in srgb, var(--accent) 12%, transparent)',
-  borderRadius: '0.75rem', padding: '0.75rem 1rem', textAlign: 'left',
-};
-
-// Shared action-button styles
-const BTN_GHOST: React.CSSProperties = {
-  color: 'var(--text)', border: '1px solid var(--border)', background: 'transparent',
-  padding: '0.875rem 2rem', borderRadius: '9999px', fontSize: '1rem', cursor: 'pointer',
-  width: '100%', maxWidth: '22rem', transition: 'border-color 150ms ease',
-};
-const BTN_PRIMARY: React.CSSProperties = {
-  background: 'linear-gradient(135deg, var(--accent), var(--accent2))', color: 'var(--on-accent)', fontWeight: 600,
-  padding: '0.875rem 2rem', borderRadius: '9999px', border: 'none', fontSize: '1rem',
-  cursor: 'pointer', width: '100%', maxWidth: '22rem',
-};
-const BTN_SECONDARY: React.CSSProperties = {
-  background: 'transparent', border: '1px solid var(--border)',
-  color: 'var(--text2)', padding: '0.75rem 2rem', borderRadius: '9999px',
-  fontSize: '0.875rem', cursor: 'pointer', width: '100%', maxWidth: '22rem',
-};
-
-// The fixed slot where all continue/action buttons live — outside the animated
-// step container (transforms break fixed positioning, learned the hard way).
-const ACTION_BAR: React.CSSProperties = {
-  position: 'fixed', bottom: '5rem', left: 0, right: 0,
-  display: 'flex', flexDirection: 'column', alignItems: 'center',
-  gap: '0.75rem', padding: '0 2rem',
-};
-
-const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
+const PIN_KEYS = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
 const PIN_LENGTH = 4;
-
-// The dramaturgy: welcome → the door (18+) → trust → consent → slot → eerste profiel.
-// The age gate stands at the entrance, not the exit; the finale hands off into the app.
 const STEP_COUNT = 6;
-
-type LockSub = "intro" | "pin1" | "pin2" | "biometric";
-
+type LockSub = 'intro' | 'pin1' | 'pin2' | 'biometric';
 const childV = fadeUp(10);
+
+const primaryButton: React.CSSProperties = {
+  background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+  color: 'var(--on-accent)',
+  fontWeight: 650,
+};
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const t = useMotionSafe();
   const [step, setStep] = useState(0);
   const [lockout, setLockout] = useState(false);
-  // "Sla over" jumps to the age gate — never around it. Passing it then completes.
   const [skipRequested, setSkipRequested] = useState(false);
-
-  // Lock-step state lives here so action buttons can render outside the animated div
-  const [lockSub, setLockSub] = useState<LockSub>("intro");
+  const [lockSub, setLockSub] = useState<LockSub>('intro');
   const [pin1, setPin1] = useState<string[]>([]);
   const [pin2, setPin2] = useState<string[]>([]);
   const [shake, setShake] = useState(false);
@@ -91,36 +53,35 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const enableBiometric = useStore((s) => s.enableBiometric);
 
   useEffect(() => { isPlatformAuthenticatorAvailable().then(setBioAvailable); }, []);
-
-  const advance = useCallback(() => setStep(s => s + 1), []);
+  const advance = useCallback(() => setStep((current) => current + 1), []);
 
   function passGate() {
-    // Skipping trims the tour, never the vows — the consent slide always gets its word.
+    // Een skip mag de rondleiding inkorten, nooit de consent-boodschap omzeilen.
     if (skipRequested) setStep(3);
     else advance();
   }
 
-  async function handlePinKey(k: string) {
-    const active = lockSub === "pin1" ? pin1 : pin2;
-    const setActive = lockSub === "pin1" ? setPin1 : setPin2;
-    if (k === "⌫") { setActive(d => d.slice(0, -1)); return; }
+  async function handlePinKey(key: string) {
+    const active = lockSub === 'pin1' ? pin1 : pin2;
+    const setActive = lockSub === 'pin1' ? setPin1 : setPin2;
+    if (key === '⌫') { setActive((digits) => digits.slice(0, -1)); return; }
     if (active.length >= PIN_LENGTH) return;
-    const next = [...active, k];
+    const next = [...active, key];
     setActive(next);
     if (next.length < PIN_LENGTH) return;
-    if (lockSub === "pin1") { setLockSub("pin2"); return; }
-    if (next.join("") !== pin1.join("")) {
+    if (lockSub === 'pin1') { setLockSub('pin2'); return; }
+    if (next.join('') !== pin1.join('')) {
       setShake(true);
-      setTimeout(() => { setShake(false); setPin1([]); setPin2([]); setLockSub("pin1"); }, 500);
+      window.setTimeout(() => {
+        setShake(false); setPin1([]); setPin2([]); setLockSub('pin1');
+      }, 500);
       return;
     }
-    const hash = await hashPin(next.join(""));
-    // Whoever just chose this PIN is standing right here — mark the session
-    // unlocked BEFORE the store flips appLockEnabled, or HomeContent trades
-    // the wizard for the lock screen and the wizard forgets its page.
-    sessionStorage.setItem("app_unlocked", "1");
+    const hash = await hashPin(next.join(''));
+    sessionStorage.setItem('app_unlocked', '1');
     setAppLockPin(hash);
-    if (bioAvailable) setLockSub("biometric"); else advance();
+    if (bioAvailable) setLockSub('biometric');
+    else advance();
   }
 
   async function handleEnableBio() {
@@ -130,164 +91,66 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       enableBiometric(credId);
       advance();
     } catch {
-      setBioError("Registratie mislukt — je kunt Face ID later inschakelen via instellingen.");
+      setBioError('Registratie mislukt. Je kunt biometrie later inschakelen via Instellingen.');
       setBioLoading(false);
     }
   }
 
-  const currentDigits = lockSub === "pin1" ? pin1 : pin2;
+  const currentDigits = lockSub === 'pin1' ? pin1 : pin2;
   const barKey = step === 4 ? `4-${lockSub}` : String(step);
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', transition: 'background 200ms ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-      role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync"
-    >
+    <div className="fixed inset-0 z-[500] grid min-h-[100dvh] grid-rows-[auto_1fr_auto] overflow-hidden" style={{ background: 'var(--bg)' }} role="dialog" aria-modal="true" aria-label="Welkom bij KinkSync">
       {lockout ? (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t.fast}
-          style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', textAlign: 'center', padding: '0 2rem' }}
-        >
-          <div style={{ marginBottom: '1.5rem', color: 'var(--text2)' }} aria-hidden="true"><HeartBreak aria-hidden="true" size={36} /></div>
-          <p style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>Kom terug als je 18 bent.</p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t.fast} className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8 text-center" style={{ background: 'var(--bg)' }}>
+          <HeartBreak size={34} aria-hidden="true" style={{ color: 'var(--text2)' }} />
+          <h2 className="serif-safe mt-5 text-3xl" style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}>Kom terug als je 18 bent.</h2>
+          <p className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
         </motion.div>
       ) : (
         <>
-          {/* ── Animated step stage — NO buttons here (transform breaks fixed positioning) ── */}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, y: 16, scale: 0.99 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.98, transition: t.exit }}
-              transition={t.enter}
-              style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 1.5rem 14rem', overflowY: 'auto', maxHeight: '100dvh' }}
-            >
-              <motion.div
-                variants={STAGGER_CHILDREN} initial="hidden" animate="show"
-                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-              >
-                {step === 0 && <Step0Welcome />}
-                {step === 1 && <Step1Gate />}
-                {step === 2 && <Step2Data />}
-                {step === 3 && <Step3Consent />}
-                                {step === 4 && lockSub === "intro" && <StepLockIntro bioAvailable={bioAvailable} />}
-                {step === 4 && lockSub === "biometric" && <StepBio bioError={bioError} />}
-                {step === 4 && (lockSub === "pin1" || lockSub === "pin2") && (
-                  <StepPin sub={lockSub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
-                )}
-                {step === 5 && <StepFinale />}
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
+          <div className="px-5 pt-[max(1rem,env(safe-area-inset-top))]">
+            <div className="mx-auto flex max-w-sm items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text2)' }}>KinkSync</span>
+              <span className="text-xs tabular-nums" style={{ color: 'var(--text2)' }}>{step + 1} / {STEP_COUNT}</span>
+            </div>
+            <div className="mx-auto mt-3 grid max-w-sm grid-cols-6 gap-1.5" aria-hidden="true">
+              {Array.from({ length: STEP_COUNT }, (_, index) => (
+                <div key={index} className="h-1 rounded-full transition-colors" style={{ background: index <= step ? 'var(--accent)' : 'var(--surface3)' }} />
+              ))}
+            </div>
+          </div>
 
-          {/* Scrim — scrolling step content fades out before it can grope the buttons */}
-          <div aria-hidden="true" style={{
-            position: 'fixed', bottom: 0, left: 0, right: 0, height: '11rem',
-            background: 'linear-gradient(to top, var(--bg) 55%, transparent)',
-            pointerEvents: 'none',
-          }} />
-
-          {/* ── Fixed action bar — always at the same spot, never inside a transform ── */}
-          <div style={ACTION_BAR}>
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:py-8">
             <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={barKey}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={t.fast}
-                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}
-              >
-                {step === 0 && (
-                  <>
-                    <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_GHOST}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
-                    >
-                      Begin
-                    </motion.button>
-                    <motion.button whileTap={TAP_SPRING}
-                      onClick={() => { setSkipRequested(true); setStep(1); }}
-                      style={BTN_SECONDARY}
-                      aria-label="Sla de introductie over"
-                    >
-                      Sla over
-                    </motion.button>
-                  </>
-                )}
-
-                {step === 1 && (
-                  <>
-                    <motion.button whileTap={TAP_SPRING} onClick={passGate} style={BTN_PRIMARY}>
-                      Ja, ik ben 18+
-                    </motion.button>
-                    <motion.button whileTap={TAP_SPRING} onClick={() => setLockout(true)} style={BTN_SECONDARY}>
-                      Ik ben jonger
-                    </motion.button>
-                  </>
-                )}
-
-                {step >= 2 && step <= 3 && (
-                  <motion.button whileTap={TAP_SPRING} onClick={step === 3 && skipRequested ? onComplete : advance} style={BTN_GHOST}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--text)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)'; }}
-                  >
-                    <span className="inline-flex items-center justify-center gap-1.5">
-                      {step === 3 ? 'Ga door' : 'Volgende'}
-                      <ArrowRight size={14} aria-hidden="true" />
-                    </span>
-                  </motion.button>
-                )}
-
-                {step === 4 && lockSub === "intro" && (
-                  <>
-                    <motion.button whileTap={TAP_SPRING} onClick={() => setLockSub("pin1")} style={BTN_PRIMARY}>PIN instellen</motion.button>
-                    <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_SECONDARY}>Sla over</motion.button>
-                  </>
-                )}
-
-                {step === 4 && (lockSub === "pin1" || lockSub === "pin2") && (
-                  <motion.button whileTap={TAP_SPRING}
-                    onClick={() => { setPin1([]); setPin2([]); setLockSub("intro"); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.8125rem', cursor: 'pointer', padding: '0.75rem 1rem', minHeight: '44px' }}
-                  >
-                    <ArrowLeft size={14} aria-hidden="true" /> Terug
-                  </motion.button>
-                )}
-
-                {step === 4 && lockSub === "biometric" && (
-                  <>
-                    <motion.button whileTap={TAP_SPRING}
-                      onClick={handleEnableBio}
-                      disabled={bioLoading}
-                      style={{ ...BTN_PRIMARY, background: bioLoading ? 'var(--surface2)' : 'linear-gradient(135deg, var(--accent), var(--accent2))', color: bioLoading ? 'var(--text2)' : 'var(--on-accent)', cursor: bioLoading ? 'default' : 'pointer' }}
-                    >
-                      {bioLoading ? 'Even wachten…' : 'Face ID / vingerafdruk inschakelen'}
-                    </motion.button>
-                    <motion.button whileTap={TAP_SPRING} onClick={advance} style={BTN_SECONDARY}>Nee, alleen PIN</motion.button>
-                  </>
-                )}
-
-                {step === 5 && (
-                  <motion.button whileTap={TAP_SPRING} onClick={onComplete} style={BTN_PRIMARY}>
-                    Maak je eerste profiel
-                  </motion.button>
-                )}
+              <motion.div key={step} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={t.enter} className="mx-auto flex min-h-full w-full max-w-sm items-center">
+                <motion.div variants={STAGGER_CHILDREN} initial="hidden" animate="show" className="w-full">
+                  {step === 0 && <Welcome />}
+                  {step === 1 && <AgeGate />}
+                  {step === 2 && <Discover />}
+                  {step === 3 && <Together />}
+                  {step === 4 && lockSub === 'intro' && <Privacy bioAvailable={bioAvailable} />}
+                  {step === 4 && lockSub === 'biometric' && <Biometric bioError={bioError} />}
+                  {step === 4 && (lockSub === 'pin1' || lockSub === 'pin2') && <Pin sub={lockSub} digits={currentDigits} shake={shake} onKey={handlePinKey} />}
+                  {step === 5 && <Finale />}
+                </motion.div>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* Progress dots */}
-          <div style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '0.5rem' }} aria-hidden="true">
-            {Array.from({ length: STEP_COUNT }, (_, i) => i).map(i => (
-              <div key={i} style={{
-                height: 4,
-                width: i === step ? 24 : 8,
-                borderRadius: 999,
-                background: i === step ? 'var(--accent)' : 'var(--border)',
-                transition: 'width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease',
-              }} />
-            ))}
+          <div className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3" style={{ background: 'linear-gradient(to top, var(--bg) 78%, transparent)' }}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={barKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={t.fast} className="mx-auto flex w-full max-w-sm flex-col gap-2.5">
+                {step === 0 && <><Action primary onClick={advance}>Begin</Action><Action onClick={() => { setSkipRequested(true); setStep(1); }} ariaLabel="Sla de introductie over">Sla intro over</Action></>}
+                {step === 1 && <><Action primary onClick={passGate}>Ja, ik ben 18+</Action><Action onClick={() => setLockout(true)}>Ik ben jonger</Action></>}
+                {step === 2 && <Action primary onClick={advance}>Kom maar door <ArrowRight size={15} aria-hidden="true" /></Action>}
+                {step === 3 && <Action primary onClick={skipRequested ? onComplete : advance}>{skipRequested ? 'Naar KinkSync' : 'Verder'} <ArrowRight size={15} aria-hidden="true" /></Action>}
+                {step === 4 && lockSub === 'intro' && <><Action primary onClick={() => setLockSub('pin1')}>PIN instellen</Action><Action onClick={advance}>Niet nu</Action></>}
+                {step === 4 && (lockSub === 'pin1' || lockSub === 'pin2') && <Action onClick={() => { setPin1([]); setPin2([]); setLockSub('intro'); }}><ArrowLeft size={15} aria-hidden="true" /> Terug</Action>}
+                {step === 4 && lockSub === 'biometric' && <><Action primary onClick={handleEnableBio} disabled={bioLoading}>{bioLoading ? 'Even wachten…' : 'Biometrie inschakelen'}</Action><Action onClick={advance}>Alleen PIN</Action></>}
+                {step === 5 && <Action primary onClick={onComplete}>Naar KinkSync <ArrowRight size={15} aria-hidden="true" /></Action>}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </>
       )}
@@ -295,170 +158,158 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   );
 }
 
-/* ── Step content components (pure content, no buttons) ─────────────────── */
-
-function Step0Welcome() {
+function Action({ children, onClick, primary = false, disabled = false, ariaLabel }: { children: React.ReactNode; onClick: () => void; primary?: boolean; disabled?: boolean; ariaLabel?: string }) {
   return (
-    <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-      {/* Ambient glow behind the wordmark */}
-      <motion.div aria-hidden="true"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.3 }}
-        style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -60%)',
-          width: '18rem', height: '10rem',
-          background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-      <motion.h1 variants={childV} style={{ fontSize: '2.25rem', fontWeight: 700, margin: 0, position: 'relative' }}>
-        <Wordmark style={{ letterSpacing: '0.08em' }} />
-      </motion.h1>
-      <motion.p variants={childV} style={{ fontSize: '0.875rem', color: 'var(--text2)', marginTop: '0.5rem', position: 'relative' }}>
-        Verken grenzen. Samen.
-      </motion.p>
+    <motion.button
+      whileTap={disabled ? undefined : TAP_SPRING}
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      className="focus-ring flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full border px-5 text-sm transition-opacity disabled:cursor-default disabled:opacity-50"
+      style={primary ? { ...primaryButton, borderColor: 'transparent' } : { background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text2)' }}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <motion.p variants={childV} className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>{children}</motion.p>;
+}
+
+function Title({ children }: { children: React.ReactNode }) {
+  return <motion.h2 variants={childV} className="serif-safe mt-2 text-[2rem] leading-[1.05]" style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}>{children}</motion.h2>;
+}
+
+function Welcome() {
+  return (
+    <div className="relative py-4 text-center">
+      <motion.div aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.2 }} className="pointer-events-none absolute left-1/2 top-1/2 h-48 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: 'var(--accent-glow)' }} />
+      <motion.h1 variants={childV} className="relative text-5xl"><Wordmark /></motion.h1>
+      <motion.p variants={childV} className="relative mx-auto mt-8 max-w-xs text-lg font-medium leading-7">Ontdek samen wat jullie leuk vinden.</motion.p>
+      <motion.p variants={childV} className="relative mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Wat je wilt proberen. Wat je liever laat.</motion.p>
+      <motion.p variants={childV} className="relative mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>En misschien iets waar jullie nog niet aan gedacht hadden.</motion.p>
     </div>
   );
 }
 
-function Step1Gate() {
+function AgeGate() {
   return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldWarning aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Voor volwassenen</motion.h2>
-      <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <p style={{ margin: 0 }}>Hier praten we open over kinks, grenzen en alles daartussen.</p>
-        <p style={{ margin: 0 }}>Ga alleen verder als je 18 jaar of ouder bent.</p>
+    <div>
+      <motion.div variants={childV} className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}><ShieldWarning size={22} aria-hidden="true" /></motion.div>
+      <Eyebrow>Voor we beginnen</Eyebrow>
+      <Title>18+?</Title>
+      <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>KinkSync gaat over seks, kink, fantasieën en grenzen.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Daar hoeven we niet moeilijk over te doen.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm font-medium leading-6">Je leeftijd wel.</motion.p>
+    </div>
+  );
+}
+
+const statuses = [
+  ['Heel graag', 'var(--yes)'],
+  ['Ja', 'var(--willing)'],
+  ['Misschien', 'var(--maybe)'],
+  ['Voor hen', 'var(--no)'],
+  ['Harde grens', 'var(--hard-no)'],
+] as const;
+
+function Discover() {
+  return (
+    <div>
+      <Eyebrow>Jouw profiel</Eyebrow>
+      <Title>Waar sta jij voor open?</Title>
+      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>We stellen vragen.</motion.p>
+      <motion.p variants={childV} className="mt-3 text-sm font-medium leading-6">Jij kiest wat erbij past.</motion.p>
+      <motion.div variants={childV} className="mt-6 overflow-hidden rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div className="flex items-center gap-2">
+          <Sparkle size={17} aria-hidden="true" style={{ color: 'var(--accent)' }} />
+          <span className="text-sm font-semibold">Een kink die je aandacht trekt</span>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {statuses.map(([label, color]) => <span key={label} className="rounded-full border px-2.5 py-1 text-[11px] font-medium" style={{ borderColor: `color-mix(in srgb, ${color} 45%, var(--border))`, color }}>{label}</span>)}
+        </div>
+      </motion.div>
+      <motion.p variants={childV} className="mt-6 text-sm leading-6" style={{ color: 'var(--text2)' }}>Raakt iets je interesse? Dan kunnen we wat verder graven.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Niet jouw ding? Dan laten we het met rust.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm font-medium leading-6">Wij kiezen de volgende vraag. Nooit jouw antwoord.</motion.p>
+    </div>
+  );
+}
+
+function Together() {
+  return (
+    <div>
+      <Eyebrow>Samen</Eyebrow>
+      <Title>Nodig iemand uit.</Title>
+      <motion.p variants={childV} className="mt-5 text-base leading-7">Want hier wordt KinkSync leuk.</motion.p>
+      <motion.div variants={childV} className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div className="rounded-xl p-3 text-center" style={{ background: 'var(--surface2)' }}><span className="text-xs font-semibold">Jij</span></div>
+        <UsersThree size={19} aria-hidden="true" style={{ color: 'var(--accent)' }} />
+        <div className="rounded-xl p-3 text-center" style={{ background: 'var(--surface2)' }}><span className="text-xs font-semibold">De ander</span></div>
+      </motion.div>
+      <motion.p variants={childV} className="mt-6 text-sm leading-6" style={{ color: 'var(--text2)' }}>Leg jullie profielen naast elkaar.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Dan zie je wat jullie allebei willen, waar nog een gesprek tussen zit en waar de grens gewoon staat.</motion.p>
+      <motion.div variants={childV} className="mt-6 rounded-xl border-l-2 py-1 pl-3 text-sm leading-6" style={{ borderColor: 'var(--accent)', color: 'var(--text)' }}><strong>Een match is geen toestemming.</strong> Blijf praten.</motion.div>
+    </div>
+  );
+}
+
+function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
+  return (
+    <div>
+      <Eyebrow>Privé</Eyebrow>
+      <Title>Wat hier gebeurt, blijft hier.</Title>
+      <motion.p variants={childV} className="mt-5 text-base leading-7">Nou ja.</motion.p>
+      <motion.p variants={childV} className="mt-2 text-base leading-7">Tot jij op delen drukt.</motion.p>
+      <motion.div variants={childV} className="mt-6 rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div className="flex items-start gap-3"><Lock size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} /><div><p className="text-sm font-semibold">Op jouw toestel</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>Profielen, antwoorden en contracten.</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>Geen account. Geen centrale database.</p></div></div>
+        <div className="my-5 h-px" style={{ background: 'var(--border)' }} />
+        <div className="flex items-start gap-3"><QrCode size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} /><div><p className="text-sm font-semibold">Jij kiest wat vertrekt</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>QR, link, export of back-up.</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>Niets synchroniseert stilletjes.</p></div></div>
+      </motion.div>
+      <motion.p variants={childV} className="mt-6 text-sm leading-6" style={{ color: 'var(--text2)' }}>Wil je nieuwsgierige vingers buiten houden?</motion.p>
+      <motion.p variants={childV} className="mt-3 text-sm font-medium leading-6">Zet er een PIN{bioAvailable ? ' en eventueel biometrie' : ''} op.</motion.p>
+    </div>
+  );
+}
+
+function Pin({ sub, digits, shake, onKey }: { sub: 'pin1' | 'pin2'; digits: string[]; shake: boolean; onKey: (key: string) => void }) {
+  return (
+    <div className="mx-auto max-w-[18rem] text-center">
+      <Title>{sub === 'pin1' ? 'Kies een PIN' : 'Nog één keer.'}</Title>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>{sub === 'pin1' ? 'Vier cijfers. Hou ze voor jezelf.' : 'Voer dezelfde PIN opnieuw in.'}</motion.p>
+      <motion.div variants={childV} animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake ? SHAKE_ANIM : undefined} className="my-6 flex justify-center gap-3.5">
+        {Array.from({ length: PIN_LENGTH }, (_, index) => <div key={index} className="h-3 w-3 rounded-full" style={{ background: index < digits.length ? 'var(--accent)' : 'var(--border)' }} />)}
+      </motion.div>
+      <motion.div variants={childV} className="grid grid-cols-3 gap-2">
+        {PIN_KEYS.map((key, index) => <button key={index} type="button" onClick={() => key && onKey(key)} disabled={!key} className="focus-ring h-12 rounded-xl border text-lg font-semibold disabled:opacity-0" style={{ background: key ? 'var(--surface2)' : 'transparent', borderColor: key ? 'var(--border)' : 'transparent', color: key === '⌫' ? 'var(--text2)' : 'var(--text)' }}>{key}</button>)}
       </motion.div>
     </div>
   );
 }
 
-function Step2Data() {
+function Biometric({ bioError }: { bioError: string | null }) {
   return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><ShieldCheck aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Jouw gegevens blijven onder jouw controle</motion.h2>
-      <div style={{ ...BODY, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
-        <motion.div variants={childV} style={CARD}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Lokaal bewaard</div>
-          Profielen, antwoorden en contracten worden op jouw toestel opgeslagen. Na installatie en cachevoorbereiding werkt de kern offline.
-        </motion.div>
-        <motion.div variants={childV} style={CARD}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Bewust gedeeld</div>
-          Een ander toestel ontvangt alleen wat jij doelbewust via een QR-code of bestand overdraagt.
-        </motion.div>
-        <motion.div variants={childV} style={CARD}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>Back-up</div>
-          Jij bent je eigen cloud: exporteer een back-up via <strong style={{ color: 'var(--text)' }}>Instellingen</strong> en bewaar het bestand veilig.
-        </motion.div>
-      </div>
+    <div>
+      <motion.div variants={childV} className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}><Fingerprint size={22} aria-hidden="true" /></motion.div>
+      <Eyebrow>Extra slot</Eyebrow>
+      <Title>PIN staat erop.</Title>
+      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>Wil je ook Face ID of je vingerafdruk gebruiken?</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Je PIN blijft altijd beschikbaar als terugval.</motion.p>
+      {bioError && <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--hard-no)' }}>{bioError}</motion.p>}
     </div>
   );
 }
 
-function Step3Consent() {
+function Finale() {
   return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--text)' }} aria-hidden="true"><Heart aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Consent, altijd</motion.h2>
-      <motion.p variants={childV} style={{
-        fontFamily: "var(--font-display, Georgia, serif)", fontStyle: 'italic', fontWeight: 500,
-        fontSize: '1.25rem', lineHeight: 1.4, color: 'var(--text)', margin: '0 0 1rem',
-      }}>
-        Safewords zijn heilig.<br />Grenzen zijn wet.
-      </motion.p>
-      <motion.p variants={childV} style={{ ...BODY, textAlign: 'center', margin: 0 }}>
-        KinkSync is een startpunt voor het gesprek — nooit een vervanging ervan. Niets hier is een afspraak totdat jullie het samen zeggen.
-      </motion.p>
-    </div>
-  );
-}
-
-function StepLockIntro({ bioAvailable }: { bioAvailable: boolean }) {
-  return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Lock aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Vergrendel de app</motion.h2>
-      <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <p style={{ margin: 0 }}>Bescherm je kinks met een PIN{bioAvailable ? ' of Face ID / vingerafdruk' : ''}.</p>
-        <p style={{ margin: 0 }}>Optioneel — je kunt dit ook later instellen.</p>
-      </motion.div>
-    </div>
-  );
-}
-
-function StepPin({ sub, digits, shake, onKey }: { sub: "pin1" | "pin2"; digits: string[]; shake: boolean; onKey: (k: string) => void }) {
-  return (
-    <div style={{ maxWidth: '18rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.h2 variants={childV} style={TITLE}>{sub === "pin1" ? "Kies een PIN" : "Bevestig je PIN"}</motion.h2>
-      <motion.p variants={childV} style={{ fontSize: '0.8125rem', color: 'var(--text2)', marginBottom: '1.5rem' }}>
-        {sub === "pin1" ? "Kies een code van 4 cijfers" : "Voer je PIN nog een keer in"}
-      </motion.p>
-      <motion.div
-        variants={childV}
-        animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : undefined}
-        transition={shake ? SHAKE_ANIM : undefined}
-        style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', marginBottom: '1.5rem' }}
-      >
-        {Array.from({ length: PIN_LENGTH }, (_, i) => (
-          <div key={i} style={{
-            width: 12, height: 12, borderRadius: '9999px',
-            background: i < digits.length ? 'var(--accent)' : 'var(--border)',
-            transition: 'background 150ms ease',
-          }} />
-        ))}
-      </motion.div>
-      <motion.div variants={childV} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', width: '100%' }}>
-        {PIN_KEYS.map((k, i) => (
-          <button
-            key={i}
-            onClick={() => k && onKey(k)}
-            disabled={!k}
-            style={{
-              height: '3.25rem', borderRadius: '0.75rem', fontWeight: 600,
-              cursor: k ? 'pointer' : 'default',
-              background: k ? 'var(--surface2)' : 'transparent',
-              border: k ? '1px solid var(--border)' : 'none',
-              color: k === '⌫' ? 'var(--text2)' : 'var(--text)',
-              fontSize: k === '⌫' ? '1.125rem' : '1.375rem',
-              opacity: !k ? 0 : 1,
-              transition: 'opacity 150ms ease, background 150ms ease',
-            }}
-            onPointerDown={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface3)'; }}
-            onPointerUp={e => { if (k) (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface2)'; }}
-          >
-            {k}
-          </button>
-        ))}
-      </motion.div>
-    </div>
-  );
-}
-
-function StepBio({ bioError }: { bioError: string | null }) {
-  return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><Fingerprint aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>PIN ingesteld!</motion.h2>
-      <motion.p variants={childV} style={{ ...BODY, textAlign: 'center' }}>
-        Wil je ook Face ID of vingerafdruk inschakelen? Je PIN blijft altijd beschikbaar als terugval.
-      </motion.p>
-      {bioError && (
-        <motion.p variants={childV} style={{ fontSize: '0.8125rem', color: 'var(--hard-no)', marginBottom: '1rem' }}>{bioError}</motion.p>
-      )}
-    </div>
-  );
-}
-
-function StepFinale() {
-  return (
-    <div style={{ maxWidth: '22rem', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div variants={childV} style={{ ...ICON_CIRCLE, color: 'var(--accent)' }} aria-hidden="true"><PenNib aria-hidden="true" size={48} /></motion.div>
-      <motion.h2 variants={childV} style={TITLE}>Het speelveld is van jou</motion.h2>
-      <motion.div variants={childV} style={{ ...BODY, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <p style={{ margin: 0 }}>Begin met je eigen profiel — kinks, grenzen, verlangens.</p>
-        <p style={{ margin: 0 }}>Alles op jouw tempo. Alles blijft van jou.</p>
-      </motion.div>
+    <div className="text-center">
+      <motion.div variants={childV} className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'color-mix(in srgb, var(--accent) 12%, var(--surface2))', color: 'var(--accent)', border: '1px solid var(--border-accent)' }}><Check size={23} weight="bold" aria-hidden="true" /></motion.div>
+      <motion.h2 variants={childV} className="serif-safe mt-7 text-4xl leading-tight" style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}>Zin om te beginnen?</motion.h2>
+      <motion.p variants={childV} className="mx-auto mt-6 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Mooi.</motion.p>
+      <motion.p variants={childV} className="mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Vanaf hier is het aan jou.</motion.p>
+      <motion.p variants={childV} className="mx-auto mt-4 max-w-xs text-sm font-medium leading-6">Maak een profiel wanneer je wilt. De vragen staan al klaar.</motion.p>
     </div>
   );
 }
