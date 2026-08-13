@@ -47,9 +47,10 @@ test.describe("Vergelijkingspagina", () => {
   test("houdt eenzijdige antwoorden apart van pair-resultaten", async ({ page }) => {
     const details = page.locator("details").filter({ hasText: "Nog niet door beiden beoordeeld" });
     await expect(details).toBeVisible();
+    await expect(details.locator("summary")).toContainText(/Nog niet door beiden beoordeeld · [1-9]/);
     await details.locator("summary").click();
-    await expect(details).toContainText("Kaarsvet druppels");
     await expect(details).toContainText("Deze punten tellen nergens mee als pair-resultaat");
+    await expect(details).toContainText(/Alex: (Heel graag|Ja|Misschien|Voor hen|Harde grens)|Sam: (Heel graag|Ja|Misschien|Voor hen|Harde grens)/);
   });
 
   test("benadrukt dat profieloverlap geen toestemming is", async ({ page }) => {
@@ -74,7 +75,7 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).toMatch(/Heel graag|Ja|Misschien|Voor hen|Harde grens/);
   });
 
-  test("lange profielselector houdt titel vast en maakt de laatste rij selecteerbaar", async ({ page }) => {
+  test("lange profielselector houdt header vast en maakt de laatste rij selecteerbaar", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await seedAndGo(page, URL, [PROFILE_ALEX, PROFILE_SAM, ...MANY_PROFILES]);
 
@@ -87,12 +88,12 @@ test.describe("Vergelijkingspagina", () => {
     const lastProfile = dialog.getByRole("button", { name: /^Gedeeld 24,/ });
 
     await expect(dialog).toBeVisible();
-    const titleBox = await title.boundingBox();
-    expect(titleBox).not.toBeNull();
-    const titleTop = titleBox!.y;
+    await expect.poll(async () => (await title.boundingBox())?.y ?? 999).toBeLessThan(100);
+    const titleTop = (await title.boundingBox())!.y;
+
     await lastProfile.scrollIntoViewIfNeeded();
     await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
-    await expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
+    await expect.poll(async () => (await title.boundingBox())?.y ?? -999).toBeCloseTo(titleTop, 0);
 
     await lastProfile.click();
     await expect(dialog).toBeHidden();
