@@ -136,7 +136,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <HeartBreak size={38} aria-hidden="true" style={{ color: 'var(--text2)' }} />
           <h2
             className="serif-safe mt-6 text-[2.25rem] leading-tight"
-            style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
             Kom terug als je 18 bent.
           </h2>
@@ -301,7 +301,7 @@ function Title({ children }: { children: React.ReactNode }) {
     <motion.h2
       variants={childV}
       className="serif-safe mt-4 text-[2.25rem] leading-[1.05]"
-      style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}
+      style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
     >
       {children}
     </motion.h2>
@@ -437,7 +437,6 @@ function Together() {
           De ander
         </div>
       </motion.div>
-
       <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>
         Leg jullie profielen naast elkaar en ontdek wat jullie delen.<br />
         Waar jullie nieuwsgierigheid elkaar raakt.<br />
@@ -616,7 +615,7 @@ function Finale() {
       <motion.h2
         variants={childV}
         className="serif-safe mt-7 text-[2.5rem] leading-[1.05]"
-        style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}
+        style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
       >
         Genoeg voorspel.
       </motion.h2>
