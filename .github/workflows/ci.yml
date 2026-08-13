@@ -27,7 +27,30 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - name: Audit dependencies
+        shell: bash
+        run: |
+          set +e
+          npm audit --audit-level=high --json > npm-audit.json
+          audit_status=$?
+          set -e
+          if [ "$audit_status" -ne 0 ]; then
+            node <<'NODE'
+          const fs = require("node:fs");
+          const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
+          for (const [name, vulnerability] of Object.entries(report.vulnerabilities ?? {})) {
+            if (!(["high", "critical"].includes(vulnerability.severity))) continue;
+            const advisory = (vulnerability.via ?? []).find((item) => item && typeof item === "object");
+            const title = advisory?.title ?? "Security advisory";
+            const range = vulnerability.range ?? "unknown range";
+            const fix = vulnerability.fixAvailable === false
+              ? "no automatic fix"
+              : JSON.stringify(vulnerability.fixAvailable);
+            console.log(`::error title=npm audit: ${name} (${vulnerability.severity})::${title}; affected ${range}; fix ${fix}`);
+          }
+          NODE
+            exit "$audit_status"
+          fi
       - run: npm run lint
       - run: npm test
       - run: npm run build
