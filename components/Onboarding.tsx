@@ -16,7 +16,6 @@ import {
 } from '@phosphor-icons/react';
 import { useStore } from '@/lib/store';
 import Wordmark from '@/components/Wordmark';
-import ProfileCreateSheet from '@/components/ProfileCreateSheet';
 import { hashPin } from '@/lib/crypto';
 import { isPlatformAuthenticatorAvailable, registerBiometric } from '@/lib/webauthn';
 import { useMotionSafe, TAP_SPRING, STAGGER_CHILDREN, fadeUp, SHAKE_ANIM } from '@/lib/motion';
@@ -42,7 +41,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const [lockout, setLockout] = useState(false);
   const [skipRequested, setSkipRequested] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [lockSub, setLockSub] = useState<LockSub>('intro');
   const [pin1, setPin1] = useState<string[]>([]);
   const [pin2, setPin2] = useState<string[]>([]);
@@ -107,7 +105,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t.fast} className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8 text-center" style={{ background: 'var(--bg)' }}>
           <HeartBreak size={34} aria-hidden="true" style={{ color: 'var(--text2)' }} />
           <h2 className="serif-safe mt-5 text-3xl" style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}>Kom terug als je 18 bent.</h2>
-          <p className="mt-3 text-sm" style={{ color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
+          <p className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>KinkSync is alleen voor volwassenen.</p>
         </motion.div>
       ) : (
         <>
@@ -150,14 +148,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 {step === 4 && lockSub === 'intro' && <><Action primary onClick={() => setLockSub('pin1')}>PIN instellen</Action><Action onClick={advance}>Niet nu</Action></>}
                 {step === 4 && (lockSub === 'pin1' || lockSub === 'pin2') && <Action onClick={() => { setPin1([]); setPin2([]); setLockSub('intro'); }}><ArrowLeft size={15} aria-hidden="true" /> Terug</Action>}
                 {step === 4 && lockSub === 'biometric' && <><Action primary onClick={handleEnableBio} disabled={bioLoading}>{bioLoading ? 'Even wachten…' : 'Biometrie inschakelen'}</Action><Action onClick={advance}>Alleen PIN</Action></>}
-                {step === 5 && <Action primary onClick={() => setProfileOpen(true)}>Maak mijn profiel <ArrowRight size={15} aria-hidden="true" /></Action>}
+                {step === 5 && <Action primary onClick={onComplete}>Naar KinkSync <ArrowRight size={15} aria-hidden="true" /></Action>}
               </motion.div>
             </AnimatePresence>
           </div>
         </>
       )}
-
-      <ProfileCreateSheet open={profileOpen} onClose={() => { setProfileOpen(false); onComplete(); }} />
     </div>
   );
 }
@@ -191,8 +187,9 @@ function Welcome() {
     <div className="relative py-4 text-center">
       <motion.div aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.2 }} className="pointer-events-none absolute left-1/2 top-1/2 h-48 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: 'var(--accent-glow)' }} />
       <motion.h1 variants={childV} className="relative text-5xl"><Wordmark /></motion.h1>
-      <motion.p variants={childV} className="relative mx-auto mt-7 max-w-xs text-lg font-medium leading-7">Ontdek samen wat jullie leuk vinden, willen proberen of liever laten.</motion.p>
-      <motion.p variants={childV} className="relative mx-auto mt-3 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>En misschien een paar dingen waar jullie nog niet aan gedacht hadden.</motion.p>
+      <motion.p variants={childV} className="relative mx-auto mt-8 max-w-xs text-lg font-medium leading-7">Ontdek samen wat jullie leuk vinden.</motion.p>
+      <motion.p variants={childV} className="relative mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Wat je wilt proberen. Wat je liever laat.</motion.p>
+      <motion.p variants={childV} className="relative mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>En misschien iets waar jullie nog niet aan gedacht hadden.</motion.p>
     </div>
   );
 }
@@ -203,8 +200,9 @@ function AgeGate() {
       <motion.div variants={childV} className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}><ShieldWarning size={22} aria-hidden="true" /></motion.div>
       <Eyebrow>Voor we beginnen</Eyebrow>
       <Title>18+?</Title>
-      <motion.p variants={childV} className="mt-5 text-base leading-7" style={{ color: 'var(--text2)' }}>KinkSync bevat volwassen onderwerpen. Seks, kink en alles wat daarbij komt kijken.</motion.p>
-      <motion.p variants={childV} className="mt-3 text-sm leading-6" style={{ color: 'var(--text2)' }}>Dus deze moeten we even vragen.</motion.p>
+      <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>KinkSync gaat over seks, kink, fantasieën en grenzen.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Daar hoeven we niet moeilijk over te doen.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm font-medium leading-6">Je leeftijd wel.</motion.p>
     </div>
   );
 }
@@ -222,8 +220,9 @@ function Discover() {
     <div>
       <Eyebrow>Jouw profiel</Eyebrow>
       <Title>Waar sta jij voor open?</Title>
-      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>We stellen je vragen. Jij kiest wat erbij past.</motion.p>
-      <motion.div variants={childV} className="mt-5 overflow-hidden rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>We stellen vragen.</motion.p>
+      <motion.p variants={childV} className="mt-3 text-sm font-medium leading-6">Jij kiest wat erbij past.</motion.p>
+      <motion.div variants={childV} className="mt-6 overflow-hidden rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-2">
           <Sparkle size={17} aria-hidden="true" style={{ color: 'var(--accent)' }} />
           <span className="text-sm font-semibold">Een kink die je aandacht trekt</span>
@@ -232,8 +231,9 @@ function Discover() {
           {statuses.map(([label, color]) => <span key={label} className="rounded-full border px-2.5 py-1 text-[11px] font-medium" style={{ borderColor: `color-mix(in srgb, ${color} 45%, var(--border))`, color }}>{label}</span>)}
         </div>
       </motion.div>
-      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>Op sommige antwoorden gaan we wat dieper in. Andere laten we lekker met rust.</motion.p>
-      <motion.p variants={childV} className="mt-2 text-sm font-medium">We nemen trouwens niets voor je aan.</motion.p>
+      <motion.p variants={childV} className="mt-6 text-sm leading-6" style={{ color: 'var(--text2)' }}>Raakt iets je interesse? Dan kunnen we wat verder graven.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Niet jouw ding? Dan laten we het met rust.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm font-medium leading-6">Wij kiezen de volgende vraag. Nooit jouw antwoord.</motion.p>
     </div>
   );
 }
@@ -243,14 +243,15 @@ function Together() {
     <div>
       <Eyebrow>Samen</Eyebrow>
       <Title>Nodig iemand uit.</Title>
-      <motion.p variants={childV} className="mt-4 text-base leading-7">Want hier wordt KinkSync leuk.</motion.p>
-      <motion.div variants={childV} className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <motion.p variants={childV} className="mt-5 text-base leading-7">Want hier wordt KinkSync leuk.</motion.p>
+      <motion.div variants={childV} className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <div className="rounded-xl p-3 text-center" style={{ background: 'var(--surface2)' }}><span className="text-xs font-semibold">Jij</span></div>
         <UsersThree size={19} aria-hidden="true" style={{ color: 'var(--accent)' }} />
         <div className="rounded-xl p-3 text-center" style={{ background: 'var(--surface2)' }}><span className="text-xs font-semibold">De ander</span></div>
       </motion.div>
-      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>Leg jullie profielen naast elkaar en ontdek wat jullie allebei willen, waar jullie anders over denken en waar de grens ligt.</motion.p>
-      <motion.div variants={childV} className="mt-4 rounded-xl border-l-2 py-1 pl-3 text-sm leading-6" style={{ borderColor: 'var(--accent)', color: 'var(--text)' }}><strong>Een match is geen toestemming.</strong> Blijf praten.</motion.div>
+      <motion.p variants={childV} className="mt-6 text-sm leading-6" style={{ color: 'var(--text2)' }}>Leg jullie profielen naast elkaar.</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Dan zie je wat jullie allebei willen, waar nog een gesprek tussen zit en waar de grens gewoon staat.</motion.p>
+      <motion.div variants={childV} className="mt-6 rounded-xl border-l-2 py-1 pl-3 text-sm leading-6" style={{ borderColor: 'var(--accent)', color: 'var(--text)' }}><strong>Een match is geen toestemming.</strong> Blijf praten.</motion.div>
     </div>
   );
 }
@@ -260,13 +261,15 @@ function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
     <div>
       <Eyebrow>Privé</Eyebrow>
       <Title>Wat hier gebeurt, blijft hier.</Title>
-      <motion.p variants={childV} className="mt-3 text-base">Nou ja. Tot jij op delen drukt.</motion.p>
-      <motion.div variants={childV} className="mt-5 rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <div className="flex items-start gap-3"><Lock size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} /><div><p className="text-sm font-semibold">Op jouw toestel</p><p className="mt-1 text-xs leading-5" style={{ color: 'var(--text2)' }}>Profielen, antwoorden en contracten. Geen account of centrale database.</p></div></div>
-        <div className="my-4 h-px" style={{ background: 'var(--border)' }} />
-        <div className="flex items-start gap-3"><QrCode size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} /><div><p className="text-sm font-semibold">Jij kiest wat vertrekt</p><p className="mt-1 text-xs leading-5" style={{ color: 'var(--text2)' }}>Via QR, link, export of back-up. Niets synchroniseert stilletjes.</p></div></div>
+      <motion.p variants={childV} className="mt-5 text-base leading-7">Nou ja.</motion.p>
+      <motion.p variants={childV} className="mt-2 text-base leading-7">Tot jij op delen drukt.</motion.p>
+      <motion.div variants={childV} className="mt-6 rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div className="flex items-start gap-3"><Lock size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} /><div><p className="text-sm font-semibold">Op jouw toestel</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>Profielen, antwoorden en contracten.</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>Geen account. Geen centrale database.</p></div></div>
+        <div className="my-5 h-px" style={{ background: 'var(--border)' }} />
+        <div className="flex items-start gap-3"><QrCode size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} /><div><p className="text-sm font-semibold">Jij kiest wat vertrekt</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>QR, link, export of back-up.</p><p className="mt-2 text-xs leading-5" style={{ color: 'var(--text2)' }}>Niets synchroniseert stilletjes.</p></div></div>
       </motion.div>
-      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>Wil je nieuwsgierige vingers buiten houden? Zet er een PIN{bioAvailable ? ' en eventueel biometrie' : ''} op.</motion.p>
+      <motion.p variants={childV} className="mt-6 text-sm leading-6" style={{ color: 'var(--text2)' }}>Wil je nieuwsgierige vingers buiten houden?</motion.p>
+      <motion.p variants={childV} className="mt-3 text-sm font-medium leading-6">Zet er een PIN{bioAvailable ? ' en eventueel biometrie' : ''} op.</motion.p>
     </div>
   );
 }
@@ -275,8 +278,8 @@ function Pin({ sub, digits, shake, onKey }: { sub: 'pin1' | 'pin2'; digits: stri
   return (
     <div className="mx-auto max-w-[18rem] text-center">
       <Title>{sub === 'pin1' ? 'Kies een PIN' : 'Nog één keer.'}</Title>
-      <motion.p variants={childV} className="mt-3 text-sm" style={{ color: 'var(--text2)' }}>{sub === 'pin1' ? 'Vier cijfers. Hou ze voor jezelf.' : 'Voer dezelfde PIN opnieuw in.'}</motion.p>
-      <motion.div variants={childV} animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake ? SHAKE_ANIM : undefined} className="my-5 flex justify-center gap-3.5">
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>{sub === 'pin1' ? 'Vier cijfers. Hou ze voor jezelf.' : 'Voer dezelfde PIN opnieuw in.'}</motion.p>
+      <motion.div variants={childV} animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake ? SHAKE_ANIM : undefined} className="my-6 flex justify-center gap-3.5">
         {Array.from({ length: PIN_LENGTH }, (_, index) => <div key={index} className="h-3 w-3 rounded-full" style={{ background: index < digits.length ? 'var(--accent)' : 'var(--border)' }} />)}
       </motion.div>
       <motion.div variants={childV} className="grid grid-cols-3 gap-2">
@@ -292,8 +295,9 @@ function Biometric({ bioError }: { bioError: string | null }) {
       <motion.div variants={childV} className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}><Fingerprint size={22} aria-hidden="true" /></motion.div>
       <Eyebrow>Extra slot</Eyebrow>
       <Title>PIN staat erop.</Title>
-      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Wil je ook Face ID of je vingerafdruk gebruiken? Je PIN blijft altijd beschikbaar als terugval.</motion.p>
-      {bioError && <motion.p variants={childV} className="mt-4 text-sm" style={{ color: 'var(--hard-no)' }}>{bioError}</motion.p>}
+      <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--text2)' }}>Wil je ook Face ID of je vingerafdruk gebruiken?</motion.p>
+      <motion.p variants={childV} className="mt-4 text-sm leading-6" style={{ color: 'var(--text2)' }}>Je PIN blijft altijd beschikbaar als terugval.</motion.p>
+      {bioError && <motion.p variants={childV} className="mt-5 text-sm leading-6" style={{ color: 'var(--hard-no)' }}>{bioError}</motion.p>}
     </div>
   );
 }
@@ -302,9 +306,10 @@ function Finale() {
   return (
     <div className="text-center">
       <motion.div variants={childV} className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'color-mix(in srgb, var(--accent) 12%, var(--surface2))', color: 'var(--accent)', border: '1px solid var(--border-accent)' }}><Check size={23} weight="bold" aria-hidden="true" /></motion.div>
-      <motion.h2 variants={childV} className="serif-safe mt-6 text-4xl leading-tight" style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}>Zin om te beginnen?</motion.h2>
-      <motion.p variants={childV} className="mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Maak je profiel en kies waar je nieuwsgierig naar bent.</motion.p>
-      <motion.p variants={childV} className="mt-2 text-sm font-medium">De rest komt vanzelf voorbij.</motion.p>
+      <motion.h2 variants={childV} className="serif-safe mt-7 text-4xl leading-tight" style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}>Zin om te beginnen?</motion.h2>
+      <motion.p variants={childV} className="mx-auto mt-6 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Mooi.</motion.p>
+      <motion.p variants={childV} className="mx-auto mt-4 max-w-xs text-sm leading-6" style={{ color: 'var(--text2)' }}>Vanaf hier is het aan jou.</motion.p>
+      <motion.p variants={childV} className="mx-auto mt-4 max-w-xs text-sm font-medium leading-6">Maak een profiel wanneer je wilt. De vragen staan al klaar.</motion.p>
     </div>
   );
 }
