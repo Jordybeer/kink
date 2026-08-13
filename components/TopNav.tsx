@@ -23,7 +23,9 @@ export default function TopNav() {
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
-  const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");
+  const saveFeedbackRoute = path === "/compare"
+    || path === "/profile"
+    || (path.startsWith("/profile/") && !path.endsWith("/questions"));
 
   useEffect(() => {
     setOverflowOpen(false);
