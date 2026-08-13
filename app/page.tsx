@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
@@ -207,13 +206,6 @@ function HomeContent() {
   if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
 
   const deleteTargetProfile = profiles.find((profile) => profile.id === deleteTarget);
-  const tagline = profiles.length === 1
-    ? "Eén profiel staat klaar. Nodig je partner uit."
-    : profiles.length === 2
-      ? "Twee profielen. Eén gesprek."
-      : profiles.length > 2
-        ? "Alle stemmen aan tafel. Eén gesprek."
-        : "Verken grenzen. Samen.";
 
   return (
     <>
@@ -224,19 +216,6 @@ function HomeContent() {
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
             Verken grenzen. Samen.
           </p>
-          {profiles.length > 0 && (
-            <p className="text-xs mt-1" style={{ color: "var(--text2)", opacity: 0.7 }}>
-              {tagline}
-            </p>
-          )}
-          <Link
-            href="/about"
-            className="focus-ring mt-2 inline-flex min-h-10 items-center gap-1 px-2 text-xs font-semibold"
-            style={{ color: "var(--accent)" }}
-          >
-            Ontdek hoe KinkSync werkt
-            <ArrowRight size={13} aria-hidden="true" />
-          </Link>
         </div>
 
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
