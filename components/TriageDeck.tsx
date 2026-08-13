@@ -14,8 +14,8 @@ import StatusOptionRows from "./StatusOptionRows";
 import ClampText from "./ui/ClampText";
 
 const AGREEMENTS = [
-  { value: "vraag eerst", label: "Eerst vragen", emphasized: true },
-  { value: "eerste keer", label: "Eerste keer", emphasized: false },
+  { value: "vraag eerst", label: "Eerst vragen", emphasized: true, tour: "agreement-ask-first" },
+  { value: "eerste keer", label: "Eerste keer", emphasized: false, tour: "agreement-first-time" },
 ] as const;
 
 const CARD_FEEDBACK_MS = 200;
@@ -74,8 +74,6 @@ export default function TriageDeck({
     ? unskipped.filter((item) => item.kink.category === focusCategory)
     : [];
   let queue = focused.length ? focused : unskipped;
-  // "Later" means later, not never. Once everything else has had a turn,
-  // skipped cards become eligible again instead of deadlocking Dynamic coverage.
   if (queue.length === 0 && unanswered.length > 0) {
     const deferredFocus = focusCategory
       ? unanswered.filter((item) => item.kink.category === focusCategory)
@@ -236,6 +234,7 @@ export default function TriageDeck({
                     <button
                       key={agreement.value}
                       type="button"
+                      data-tour={agreement.tour}
                       onClick={() => toggleAgreement(agreement.value)}
                       aria-pressed={active}
                       className="focus-ring min-h-10 rounded-xl px-2.5 inline-flex items-center justify-center gap-1.5 text-xs font-semibold"
