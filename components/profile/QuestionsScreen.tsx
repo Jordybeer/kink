@@ -46,6 +46,11 @@ export default function QuestionsScreen({ params }: Props) {
     [profile?.questionnaireSetup],
   );
   const runtimeKind = runtime?.intent.kind ?? "dynamic";
+  const modeLabel = runtimeKind === "deepDive"
+    ? "Deep Dive"
+    : runtimeKind === "discover"
+      ? "Discover"
+      : "Dynamic";
   const shared = Boolean(profile && (profile.origin === "shared" || (!profile.origin && profile.isImported === true)));
 
   const saveMode = useCallback((mode: "dynamic" | "deepDive") => {
@@ -85,7 +90,7 @@ export default function QuestionsScreen({ params }: Props) {
       {
         id: "questionnaire-dynamic",
         label: "Dynamic",
-        icon: <Sparkle size={16} aria-hidden="true" />,
+        icon: <Sparkle size={17} aria-hidden="true" />,
         onClick: startDynamic,
         placement: "overflow",
         selected: runtimeKind === "dynamic",
@@ -93,7 +98,7 @@ export default function QuestionsScreen({ params }: Props) {
       {
         id: "questionnaire-discover",
         label: "Discover",
-        icon: <Compass size={16} aria-hidden="true" />,
+        icon: <Compass size={17} aria-hidden="true" />,
         onClick: startDiscover,
         placement: "overflow",
         selected: runtimeKind === "discover",
@@ -101,14 +106,14 @@ export default function QuestionsScreen({ params }: Props) {
       {
         id: "questionnaire-deep-dive",
         label: "Deep Dive",
-        icon: <ListChecks size={16} aria-hidden="true" />,
+        icon: <ListChecks size={17} aria-hidden="true" />,
         onClick: startDeepDive,
         placement: "overflow",
         selected: runtimeKind === "deepDive",
       },
     ];
   }, [profile, runtimeKind, shared, startDeepDive, startDiscover, startDynamic]);
-  useTopNavActions(navActions);
+  useTopNavActions(navActions, `Vragenlijst · ${modeLabel}`);
 
   if (!hydrated) return <PageShell loading width="lg" />;
 
