@@ -50,7 +50,7 @@ export function TopNavProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       actions: registration?.actions ?? [],
-      title: registration?.title,
+      title: registration?.actions.length ? registration.title : undefined,
       setActions,
       clearActions,
     }),
