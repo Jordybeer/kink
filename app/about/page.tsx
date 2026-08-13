@@ -136,6 +136,69 @@ export default function AboutPage() {
         </div>
       </header>
 
+      <section
+        className="relative mt-6 overflow-hidden rounded-[28px] p-5 sm:mt-8 sm:p-7"
+        style={{
+          background:
+            "linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%, var(--surface) 62%, color-mix(in srgb, var(--maybe) 8%, var(--surface)) 100%)",
+          border: "1px solid color-mix(in srgb, var(--accent) 28%, var(--border))",
+        }}
+        aria-labelledby="community-title"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full blur-3xl"
+          style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)" }}
+        />
+        <div className="relative z-10">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
+            <MapPin size={16} weight="fill" aria-hidden="true" />
+            Community in België
+          </p>
+          <h2 id="community-title" className="serif-safe mt-3 max-w-xl text-3xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
+            Kink gebeurt ook buiten je scherm.
+          </h2>
+          <p className="mt-4 max-w-2xl text-base leading-7" style={{ color: "var(--text2)" }}>
+            KinkSync kan het gesprek openen. Wil je daarna eens tussen echte mensen staan? Dit zijn twee Belgische plekken om zelf verder te ontdekken.
+          </p>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {communityPlaces.map((place) => (
+              <a
+                key={place.name}
+                href={place.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="focus-ring group flex min-h-32 flex-col justify-between rounded-2xl p-5 transition-transform active:scale-[0.99]"
+                style={{
+                  background: "color-mix(in srgb, var(--surface) 94%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--accent) 18%, var(--border))",
+                }}
+                aria-label={`${place.name} in ${place.city} openen in Google Maps`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
+                    <MapPin size={20} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold leading-6">{place.name}</h3>
+                    <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{place.city}</p>
+                  </div>
+                </div>
+                <span className="mt-5 flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent)" }}>
+                  Open in Google Maps
+                  <ArrowSquareOut size={16} weight="bold" aria-hidden="true" />
+                </span>
+              </a>
+            ))}
+          </div>
+
+          <p className="mt-5 text-xs leading-5" style={{ color: "var(--text2)" }}>
+            Geen betaalde plaatsingen of officiële partners. Google Maps opent pas wanneer jij zelf op een locatie tikt; KinkSync stuurt geen profieldata mee.
+          </p>
+        </div>
+      </section>
+
       <section className="mt-12" aria-labelledby="rules-title">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>De basis</p>
@@ -231,69 +294,6 @@ export default function AboutPage() {
               <p className="mt-2 text-sm leading-6" style={{ color: "var(--text2)" }}>{text}</p>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section
-        className="relative mt-12 overflow-hidden rounded-[28px] p-5 sm:p-7"
-        style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%, var(--surface) 62%, color-mix(in srgb, var(--maybe) 8%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--accent) 28%, var(--border))",
-        }}
-        aria-labelledby="community-title"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)" }}
-        />
-        <div className="relative z-10">
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
-            <MapPin size={16} weight="fill" aria-hidden="true" />
-            Community in België
-          </p>
-          <h2 id="community-title" className="serif-safe mt-3 max-w-xl text-3xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
-            Kink gebeurt ook buiten je scherm.
-          </h2>
-          <p className="mt-4 max-w-2xl text-base leading-7" style={{ color: "var(--text2)" }}>
-            KinkSync kan het gesprek openen. Wil je daarna eens tussen echte mensen staan? Dit zijn twee Belgische plekken om zelf verder te ontdekken.
-          </p>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {communityPlaces.map((place) => (
-              <a
-                key={place.name}
-                href={place.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="focus-ring group flex min-h-32 flex-col justify-between rounded-2xl p-5 transition-transform active:scale-[0.99]"
-                style={{
-                  background: "color-mix(in srgb, var(--surface) 94%, transparent)",
-                  border: "1px solid color-mix(in srgb, var(--accent) 18%, var(--border))",
-                }}
-                aria-label={`${place.name} in ${place.city} openen in Google Maps`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-                    <MapPin size={20} aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold leading-6">{place.name}</h3>
-                    <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{place.city}</p>
-                  </div>
-                </div>
-                <span className="mt-5 flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent)" }}>
-                  Open in Google Maps
-                  <ArrowSquareOut size={16} weight="bold" aria-hidden="true" />
-                </span>
-              </a>
-            ))}
-          </div>
-
-          <p className="mt-5 text-xs leading-5" style={{ color: "var(--text2)" }}>
-            Geen betaalde plaatsingen of officiële partners. Google Maps opent pas wanneer jij zelf op een locatie tikt; KinkSync stuurt geen profieldata mee.
-          </p>
         </div>
       </section>
 
