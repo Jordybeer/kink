@@ -210,6 +210,12 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### Vragenlijst- en navigatiepolish (dev, 2026-08-13)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Questions keeps the active mode in the contextual TopNav, removes the permanent mode row, reuses the viewport-bounded `ClampText` overlay for descriptions, keeps answer actions visible after rating, and makes the notes toggle explicit; Home drops duplicate chrome, TopNav icons are clearer, and profile-share copy stays local-only while linking to the trust explanation; validated after integrating the latest `dev` with full browser/device, production PWA/offline and iPhone screenshot review | `8ae3380` / PR #350 |
+
 ### Trustpagina en privacygrenzen (dev, 2026-08-13)
 
 | — | What landed | Commit |

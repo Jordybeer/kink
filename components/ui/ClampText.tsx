@@ -73,6 +73,7 @@ export default function ClampText({ text, className = "", style }: Props) {
         aria-expanded={expanded}
         aria-hidden={expanded}
         tabIndex={expanded ? -1 : 0}
+        data-clamp-trigger
         style={{ visibility: expanded ? "hidden" : "visible" }}
         className={`focus-ring block w-full text-left ${className}`}
       >
@@ -89,6 +90,7 @@ export default function ClampText({ text, className = "", style }: Props) {
             role="button"
             tabIndex={0}
             aria-label="Toon minder"
+            data-clamp-overlay
             onClick={() => setExpanded(false)}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(false); } }}
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
@@ -96,7 +98,13 @@ export default function ClampText({ text, className = "", style }: Props) {
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={t.fast}
             className={`focus-ring absolute left-0 right-0 top-0 z-20 rounded-xl p-3 text-left overflow-y-auto cursor-pointer leading-relaxed ${overlayClassName}`}
-            style={{ maxHeight: "45vh", background: "var(--surface2)", border: "1px solid var(--border-accent)", boxShadow: "0 10px 28px rgba(0,0,0,0.45)", color: "var(--text)" }}
+            style={{
+              maxHeight: "min(45vh, calc(var(--visual-viewport-height, 100dvh) - var(--nav-h) - 1.5rem))",
+              background: "var(--surface2)",
+              border: "1px solid var(--border-accent)",
+              boxShadow: "0 10px 28px rgba(0,0,0,0.45)",
+              color: "var(--text)",
+            }}
           >
             <span className="block">{text}</span>
             <span aria-hidden="true" className="block text-xs mt-1.5 text-right" style={{ color: "var(--accent)" }}>
