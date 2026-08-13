@@ -18,19 +18,19 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
 
-    await expect(page.getByRole("heading", { name: /waar sta jij voor open/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /hoe klinkt dit voor jou/i })).toBeVisible();
     await expect(page.getByText("Heel graag")).toBeVisible();
     await page.getByRole("button", { name: /kom maar door/i }).click();
 
-    await expect(page.getByRole("heading", { name: /nodig iemand uit/i })).toBeVisible();
-    await expect(page.getByText(/een match is geen toestemming/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
+    await expect(page.getByText(/een match is nooit automatisch consent/i)).toBeVisible();
     await page.getByRole("button", { name: /^verder/i }).click();
 
-    await expect(page.getByRole("heading", { name: /wat hier gebeurt, blijft hier/i })).toBeVisible();
-    await expect(page.getByText(/geen centrale database/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /niet voor iedere pottenkijker/i })).toBeVisible();
+    await expect(page.getByText(/privacy-first/i)).toBeVisible();
     await page.getByRole("button", { name: "Niet nu" }).click();
 
-    await expect(page.getByRole("heading", { name: /zin om te beginnen/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
     await page.getByRole("button", { name: /naar kinksync/i }).click();
 
     // Onboarding rondt af op home. Profielaanmaak blijft een bewuste volgende tik.
@@ -51,12 +51,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
         await page.getByRole("button", { name: digit, exact: true }).click();
       }
     };
-    await expect(page.getByRole("heading", { name: /kies een pin/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /hou nieuwsgierige vingers buiten/i })).toBeVisible();
     await tapPin();
     await expect(page.getByRole("heading", { name: /nog één keer/i })).toBeVisible();
     await tapPin();
 
-    await expect(page.getByRole("heading", { name: /pin staat erop|zin om te beginnen/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /liever met één blik|genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /^begin$/i })).not.toBeVisible();
   });
 
@@ -66,8 +66,8 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /18\+/i }).click();
 
     // Skip trims the tour, nooit de consent-boodschap.
-    await expect(page.getByRole("heading", { name: /nodig iemand uit/i })).toBeVisible();
-    await expect(page.getByText(/een match is geen toestemming/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
+    await expect(page.getByText(/een match is nooit automatisch consent/i)).toBeVisible();
     await page.getByRole("button", { name: /naar kinksync/i }).click();
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
   });
