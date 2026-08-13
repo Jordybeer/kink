@@ -169,6 +169,7 @@ export default function TopNav() {
           >
             <button
               type="button"
+              data-tour={questionTitle ? "questionnaire-menu" : undefined}
               onClick={() => setOverflowOpen((open) => !open)}
               aria-label="Meer acties"
               aria-expanded={overflowOpen}
@@ -195,6 +196,7 @@ function TopNavActionButton({
   return (
     <motion.button
       type="button"
+      data-tour={action.id === "questionnaire-help" ? "questionnaire-info" : undefined}
       whileTap={action.disabled ? undefined : TAP_SPRING}
       onClick={action.onClick}
       disabled={action.disabled}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildCompareModel } from "@/lib/compareV2";
 import {
   comparableEntry,
   isResponseVisible,
@@ -7,7 +8,7 @@ import {
   visibleUsedInScene,
   visibleStatus,
 } from "@/lib/privateResponses";
-import type { KinkEntry } from "@/types";
+import type { KinkEntry, Profile } from "@/types";
 
 const PRIVATE_ENTRY: KinkEntry = {
   status: "yes",
@@ -18,6 +19,20 @@ const PRIVATE_ENTRY: KinkEntry = {
   curious: true,
   privateResponse: true,
 };
+
+function profile(id: string, overrides: Partial<Profile> = {}): Profile {
+  return {
+    id,
+    name: id,
+    role: "Dominant",
+    experienceLevel: "beginner",
+    customKinks: [],
+    createdAt: 1,
+    updatedAt: 1,
+    entries: {},
+    ...overrides,
+  };
+}
 
 describe("private responses", () => {
   it("uses a profile-scoped reveal key", () => {
@@ -56,5 +71,23 @@ describe("private responses", () => {
       comment: "alleen voor ons",
       tags: ["vraag eerst"],
     });
+  });
+
+  it("does not let private custom metadata change Compare v2 output", () => {
+    const visible = profile("visible", {
+      customKinks: [{ id: "custom-topic", name: "Custom topic" }],
+      entries: {
+        "custom-topic": { status: "yes", comment: "" },
+      },
+    });
+    const absent = profile("other");
+    const concealed = profile("other", {
+      customKinks: [{ id: "custom-topic", name: "Custom topic" }],
+      entries: {
+        "custom-topic": { ...PRIVATE_ENTRY, status: "hard_no" },
+      },
+    });
+
+    expect(buildCompareModel(visible, concealed)).toEqual(buildCompareModel(visible, absent));
   });
 });
