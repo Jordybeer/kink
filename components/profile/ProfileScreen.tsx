@@ -291,9 +291,14 @@ export default function ProfilePage({ params }: Props) {
                 {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
               </p>
               <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                {coverage.complete
-                  ? "Je brede dekking staat. Discover en Deep Dive blijven beschikbaar."
-                  : `${coverage.answered} van ${coverage.total} dekkingsvragen beantwoord.`}
+                {coverage.complete ? (
+                  <>
+                    <span className="block">Je brede dekking staat.</span>
+                    <span className="block">Discover en Deep Dive blijven beschikbaar.</span>
+                  </>
+                ) : (
+                  `${coverage.answered} van ${coverage.total} dekkingsvragen beantwoord.`
+                )}
               </p>
             </div>
             <span className="text-xs tabular-nums" style={{ color: "var(--accent-text)" }}>
@@ -536,10 +541,11 @@ export default function ProfilePage({ params }: Props) {
                       type="button"
                       onClick={() => setShowOverviewComments((value) => !value)}
                       aria-label={showOverviewComments ? "Verberg notities" : "Toon notities"}
-                      className="focus-ring w-10 h-10 rounded-full flex items-center justify-center"
+                      className="focus-ring min-h-10 rounded-full px-3 flex items-center justify-center gap-1.5 text-xs font-semibold"
                       style={{ color: showOverviewComments ? "var(--accent)" : "var(--text2)", border: "1px solid var(--border)" }}
                     >
-                      <ChatCircle aria-hidden="true" size={15} />
+                      <ChatCircle aria-hidden="true" size={16} />
+                      <span>{showOverviewComments ? "Verberg notities" : "Toon notities"}</span>
                     </button>
                   </div>
 

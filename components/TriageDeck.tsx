@@ -10,8 +10,8 @@ import {
   type ConversationPhase,
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
-import KinkEditSheet from "./KinkEditSheet";
 import StatusOptionRows from "./StatusOptionRows";
+import ClampText from "./ui/ClampText";
 
 const AGREEMENTS = [
   { value: "vraag eerst", label: "Eerst vragen", emphasized: true },
@@ -50,7 +50,6 @@ export default function TriageDeck({
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [editKink, setEditKink] = useState<Kink | null>(null);
   const fadeTransition = reducedMotion
     ? { duration: 0 }
     : { duration: CARD_FADE_SECONDS, ease: "easeOut" as const };
@@ -197,36 +196,26 @@ export default function TriageDeck({
                 {current.name}
               </h3>
               {current.description ? (
-                <p
-                  className="text-sm mt-1 leading-relaxed line-clamp-2"
+                <ClampText
+                  text={current.description}
+                  className="text-sm mt-1 leading-relaxed"
                   style={{ color: "var(--text2)" }}
-                >
-                  {current.description}
-                </p>
+                />
               ) : (
                 <div />
               )}
               {current.safetyNote && (
                 <aside
-                  className="mt-2 rounded-xl px-3 py-2 text-xs leading-relaxed"
+                  className="mt-2 rounded-xl px-3 py-2"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
                 >
-                  <span className="font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
-                  <span className="block mt-0.5 line-clamp-2">
-                    {current.safetyNote}
-                  </span>
+                  <span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
+                  <ClampText
+                    text={current.safetyNote}
+                    className="text-xs mt-0.5 leading-relaxed"
+                    style={{ color: "var(--text2)" }}
+                  />
                 </aside>
-              )}
-              {(current.description || current.safetyNote) && (
-                <button
-                  type="button"
-                  onClick={() => setEditKink(current)}
-                  aria-haspopup="dialog"
-                  className="focus-ring min-h-9 mt-1.5 rounded-lg px-1 text-xs font-semibold inline-flex items-center gap-1"
-                  style={{ color: "var(--accent-text)" }}
-                >
-                  Lees meer <ArrowRight size={13} aria-hidden="true" />
-                </button>
               )}
             </div>
 
@@ -312,23 +301,6 @@ export default function TriageDeck({
         </motion.div>
       )}
       </div>
-      <KinkEditSheet
-        kink={editKink}
-        entry={editKink ? (entries[editKink.id] ?? { status: null, comment: "" }) : { status: null, comment: "" }}
-        onClose={() => setEditKink(null)}
-        onStatusChange={(status) => {
-          if (editKink) handleSelect(editKink, status);
-        }}
-        onTagsChange={(tags) => {
-          if (editKink) onTagsChange(editKink.id, tags);
-        }}
-        onCuriousChange={(value) => {
-          if (editKink) onCuriousChange(editKink.id, value);
-        }}
-        onPrivateChange={(value) => {
-          if (editKink) onPrivateChange(editKink.id, value);
-        }}
-      />
     </>
   );
 }

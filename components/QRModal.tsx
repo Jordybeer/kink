@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, CopySimple } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
@@ -315,13 +316,17 @@ export default function QRModal({ profile, onClose }: Props) {
         )}
 
         <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
-          {switchPair ? "Deelt beide Switch-perspectieven samen, met aparte antwoorden en zonder verborgen reacties." : "Deelt alle niet-verborgen profielgegevens zonder dataverlies. Deze profielversie wordt door jouw eigendomssleutel bevestigd."}
+          {switchPair
+            ? "Beide Switch-perspectieven reizen samen; antwoorden blijven apart en verborgen reacties blijven thuis."
+            : "Niet-verborgen profielgegevens worden volledig gedeeld. Deze versie blijft met jouw eigendomssleutel bevestigd."}
         </p>
-        {avatarInQrSequence && <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>{switchPair ? "De profielfoto reist mee in dezelfde bevestigde Switch-overdracht." : "De profielfoto volgt na het profiel en is met dezelfde eigendomssleutel bevestigd."}</p>}
+        {avatarInQrSequence && <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>{switchPair ? "De bevestigde profielfoto reist mee met de Switch-overdracht." : "De bevestigde profielfoto volgt na het profiel."}</p>}
         {avatarLinkOnly && <p className="text-xs text-center mb-2" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
         {multi && (
           <p className="text-xs text-center mb-3" style={{ color: "var(--accent-text)" }}>
-            {autoAdvance ? "Houd beide toestellen stil. De codes wisselen automatisch; dubbele scans zijn geen probleem." : `Hervat automatisch wisselen of toon de ${qrValues.length} delen handmatig. Volgorde maakt niet uit.`}
+            {autoAdvance
+              ? "Laat de codes wisselen; volgorde en dubbele scans zijn geen probleem."
+              : `Toon de ${qrValues.length} delen één voor één; volgorde maakt niet uit.`}
           </p>
         )}
 
@@ -351,9 +356,17 @@ export default function QRModal({ profile, onClose }: Props) {
           {copied ? <span className="inline-flex items-center justify-center gap-1.5"><Check size={14} weight="bold" aria-hidden="true" />Gekopieerd!</span> : <span className="inline-flex items-center justify-center gap-1.5"><CopySimple size={14} aria-hidden="true" />Kopieer volledige link</span>}
         </button>
 
-        <p className="text-xs text-center mt-1 mb-4" style={{ color: "var(--text2)" }}>
+        <p className="text-xs text-center mt-1 mb-2" style={{ color: "var(--text2)" }}>
           {avatarIncluded ? "Verborgen antwoorden en persoonlijke notitie blijven uitsluitend op dit toestel. De profielfoto wordt meegestuurd." : "Verborgen antwoorden, profielfoto en persoonlijke notitie blijven uitsluitend op dit toestel."}
         </p>
+        <Link
+          href="/about#limits-title"
+          className="focus-ring mx-auto mb-4 flex min-h-10 w-fit items-center gap-1 px-2 text-xs font-semibold"
+          style={{ color: "var(--accent-text)" }}
+        >
+          Hoe delen en cryptografie werken
+          <ArrowRight size={13} aria-hidden="true" />
+        </Link>
 
         <button onClick={onClose} className="focus-ring w-full min-h-11 rounded-xl text-sm font-medium border transition-colors" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Sluit</button>
       </SheetContent>

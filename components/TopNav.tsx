@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, GearSix, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
 import { TAP_SPRING } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import ContextMenu from "@/components/ui/ContextMenu";
@@ -17,13 +17,15 @@ export default function TopNav() {
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
   const onboardingComplete = useStore((state) => state.onboardingComplete);
-  const { actions } = useTopNav();
+  const { actions, title: contextualTitle } = useTopNav();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
-  const saveFeedbackRoute = path === "/compare" || path === "/profile" || path.startsWith("/profile/");
+  const saveFeedbackRoute = path === "/compare"
+    || path === "/profile"
+    || (path.startsWith("/profile/") && !path.endsWith("/questions"));
 
   useEffect(() => {
     setOverflowOpen(false);
@@ -69,12 +71,15 @@ export default function TopNav() {
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
         <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
-          <span
-            className="text-base italic serif-safe"
-            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+          <Link
+            href="/about"
+            aria-label="Ontdek hoe KinkSync werkt"
+            className="focus-ring -ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold"
+            style={{ color: "var(--text2)" }}
           >
-            KinkSync
-          </span>
+            <Info size={20} aria-hidden="true" />
+            <span>Hoe het werkt</span>
+          </Link>
           <div className="ml-auto flex items-center justify-end gap-1">
             <OfflineStatus />
             <button
@@ -84,7 +89,7 @@ export default function TopNav() {
               className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
               style={{ color: "var(--text2)" }}
             >
-              <GearSix size={18} aria-hidden="true" />
+              <GearSix size={20} aria-hidden="true" />
             </button>
           </div>
         </nav>
@@ -93,9 +98,13 @@ export default function TopNav() {
   }
 
   const sceneMatch = path.match(/^\/scenes\/([^/]+)/);
-  const { title, back } = focusedRoute(path, {
+  const { title: routeTitle, back } = focusedRoute(path, {
     sceneTitle: sceneMatch ? scenes.find((scene) => scene.id === sceneMatch[1])?.title : undefined,
   });
+  const title = contextualTitle ?? routeTitle;
+  const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
+    ? contextualTitle.split(" · ", 2)
+    : null;
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -114,7 +123,7 @@ export default function TopNav() {
           style={{ color: "var(--text2)" }}
           aria-label="Terug"
         >
-          <CaretLeft aria-hidden="true" size={18} />
+          <CaretLeft aria-hidden="true" size={20} />
         </MotionLink>
         <span
           className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
@@ -125,7 +134,12 @@ export default function TopNav() {
             opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
           }}
         >
-          {title}
+          {questionTitle ? (
+            <>
+              <span>{questionTitle[0]}</span>
+              <span> · {questionTitle[1]}</span>
+            </>
+          ) : title}
         </span>
         {saveFeedbackRoute && (
           <span
@@ -161,7 +175,7 @@ export default function TopNav() {
               className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
               style={{ color: "var(--text2)" }}
             >
-              <DotsThree size={20} weight="bold" aria-hidden="true" />
+              <DotsThree size={22} weight="bold" aria-hidden="true" />
             </button>
           </ContextMenu>
         )}
@@ -186,7 +200,7 @@ function TopNavActionButton({
       disabled={action.disabled}
       aria-label={action.label}
       title={action.label}
-      className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full disabled:opacity-35"
+      className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
       style={{
         color: action.danger
           ? "var(--hard-no)"
@@ -224,7 +238,7 @@ function OfflineStatus() {
       className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
-      <WifiSlash size={14} aria-hidden="true" />
+      <WifiSlash size={15} aria-hidden="true" />
       <span className="hidden min-[360px]:inline">Offline</span>
     </span>
   );
