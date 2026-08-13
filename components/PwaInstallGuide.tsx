@@ -100,6 +100,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
   const [profileCreateOpen, setProfileCreateOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const exitCallbackRef = useRef<(() => void) | null>(null);
+  const meaningfulUseAtMountRef = useRef(meaningfulUse);
   useFocusTrap(sheetRef, visible);
 
   useEffect(() => {
@@ -122,10 +123,16 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
       setVisible(true);
       return;
     }
-    if (profileCreateOpen) {
+
+    // Do not let the automatic install sheet jump in between creating the
+    // first profile and navigating to its questionnaire. If meaningful use
+    // starts during this Home mount, wait until Home is visited again.
+    const meaningfulUseStartedThisVisit = !meaningfulUseAtMountRef.current && meaningfulUse;
+    if (profileCreateOpen || meaningfulUseStartedThisVisit) {
       setVisible(false);
       return;
     }
+
     setVisible(shouldAutoShowInstallPrompt(
       { dismissals, snoozedUntil, neverAsk },
       meaningfulUse,
