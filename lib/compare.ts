@@ -1,38 +1,47 @@
-import { CATEGORIES, getKinksByCategory } from "@/lib/kinks";
+import {
+  buildCompareModel,
+  type CompareCategoryEvidence,
+  type CompareSummary,
+  type ComparisonFact,
+} from "@/lib/compareV2";
 import {
   complementaryCompareLabel,
   complementaryPartnerKinkId,
 } from "@/lib/participation";
-import {
-  hasRating,
-  isConflict,
-  isHardLimit,
-  isKinkMatch,
-  kinkMatchScore,
-  MAX_KINK_MATCH_SCORE,
-  profileMatchScore,
-} from "@/lib/matching";
-import type { KinkCategoryId, KinkEntry, Profile } from "@/types";
+import type { KinkEntry, Profile } from "@/types";
+
+export {
+  buildCompareModel,
+  buildCompareReasons,
+  classifyStatusPair,
+} from "@/lib/compareV2";
+export type {
+  CompareCategoryEvidence,
+  CompareFactKind,
+  CompareModel,
+  CompareReason,
+  CompareReasonCode,
+  CompareReasonType,
+  CompareRelation,
+  CompareSummary,
+  ComparisonFact,
+  StatusPairClassification,
+  UnpairedComparisonItem,
+  VisibleCompareStatus,
+} from "@/lib/compareV2";
 
 export const PROFILE_COLOUR_A = "var(--identity-a)";
 export const PROFILE_COLOUR_B = "var(--identity-b)";
 
-export type CompareFilterMode = "all" | "match" | "conflict" | "hardno";
+export type CompareFilterMode =
+  | "all"
+  | "shared"
+  | "complementary"
+  | "discuss"
+  | "soft"
+  | "hard";
 
-export interface CompareCategoryScore {
-  category: KinkCategoryId;
-  rated: number;
-  compared: number;
-  rate: number | null;
-}
-
-export interface CompareSummary {
-  score: number | null;
-  match: number;
-  discuss: number;
-  soft: number;
-  limit: number;
-}
+export type CompareCategoryScore = CompareCategoryEvidence;
 
 export interface MergedCustomKink {
   name: string;
@@ -50,7 +59,6 @@ export function getCompareEntry(profile: Profile | undefined, kinkId: string): K
   return profile?.entries[kinkId] ?? EMPTY_ENTRY;
 }
 
-/** De concrete partner-ID die bij de A-richting hoort. */
 export function getComparePartnerKinkId(kinkId: string): string {
   return complementaryPartnerKinkId(kinkId);
 }
@@ -64,64 +72,26 @@ export function getCompareKinkLabel(kinkId: string, fallbackName: string): strin
 }
 
 export function passesCompareFilter(
-  entryA: KinkEntry,
-  entryB: KinkEntry,
+  fact: ComparisonFact,
   filterMode: CompareFilterMode,
 ): boolean {
-  if (!entryA.status && !entryB.status) return false;
   if (filterMode === "all") return true;
-  if (filterMode === "hardno") return isHardLimit(entryA, entryB);
-  if (filterMode === "conflict") return isConflict(entryA, entryB);
-  if (filterMode === "match") return isKinkMatch(entryA, entryB);
-  return true;
+  if (filterMode === "hard") return fact.kind === "limit" || fact.kind === "conflict";
+  return fact.kind === filterMode;
 }
 
 export function getCompareSummary(
   profileA: Profile | undefined,
   profileB: Profile | undefined,
 ): CompareSummary {
-  if (!profileA || !profileB) {
-    return { score: null, match: 0, discuss: 0, soft: 0, limit: 0 };
-  }
-
-  const result = profileMatchScore(profileA, profileB);
-  return {
-    score: result.comparedTotal > 0 ? result.overall : null,
-    match: (result.counts.perfect ?? 0) + (result.counts.strong ?? 0),
-    discuss: (result.counts.discuss ?? 0) + (result.counts.conflict ?? 0),
-    soft: result.counts.soft ?? 0,
-    limit: result.counts.limit ?? 0,
-  };
+  return buildCompareModel(profileA, profileB).summary;
 }
 
 export function getCompareCategoryScores(
   profileA: Profile | undefined,
   profileB: Profile | undefined,
 ): CompareCategoryScore[] {
-  if (!profileA || !profileB) return [];
-
-  return CATEGORIES.map((category) => {
-    const kinks = getKinksByCategory(category);
-    let scoreSum = 0;
-    let compared = 0;
-    let rated = 0;
-
-    for (const kink of kinks) {
-      const entryA = getCompareEntry(profileA, kink.id);
-      const entryB = getComparePartnerEntry(profileB, kink.id);
-      if (hasRating(entryA) || hasRating(entryB)) rated += 1;
-      if (!hasRating(entryA) || !hasRating(entryB)) continue;
-      scoreSum += kinkMatchScore(entryA, entryB).score;
-      compared += 1;
-    }
-
-    return {
-      category,
-      rated,
-      compared,
-      rate: compared > 0 ? scoreSum / (compared * MAX_KINK_MATCH_SCORE) : null,
-    };
-  });
+  return buildCompareModel(profileA, profileB).categories;
 }
 
 export function resolveCompareProfileIds({
@@ -148,10 +118,19 @@ export function resolveCompareProfileIds({
 
   const nextA = selectedA
     ?? (preferredOwn && preferredOwn.id !== selectedB?.id ? preferredOwn : undefined)
-    ?? profiles.find((profile) => profile.id !== selectedB?.id && !profile.isImported && profile.origin !== "shared")
+    ?? profiles.find(
+      (profile) =>
+        profile.id !== selectedB?.id
+        && !profile.isImported
+        && profile.origin !== "shared",
+    )
     ?? profiles.find((profile) => profile.id !== selectedB?.id);
   const nextB = selectedB
-    ?? profiles.find((profile) => profile.id !== nextA?.id && (profile.isImported || profile.origin === "shared"))
+    ?? profiles.find(
+      (profile) =>
+        profile.id !== nextA?.id
+        && (profile.isImported || profile.origin === "shared"),
+    )
     ?? profiles.find((profile) => profile.id !== nextA?.id);
 
   return {
@@ -160,23 +139,32 @@ export function resolveCompareProfileIds({
   };
 }
 
-export function mergeCustomKinks(profileA: Profile, profileB: Profile): MergedCustomKink[] {
-  const merged = new Map<string, MergedCustomKink>();
-  const allCustom = [
-    ...(profileA.customKinks ?? []).map((kink) => ({ ...kink, side: "a" as const })),
-    ...(profileB.customKinks ?? []).map((kink) => ({ ...kink, side: "b" as const })),
-  ];
+/**
+ * UI helper only. Custom topics are paired by stable identity, never by a
+ * fuzzy or name-only match.
+ */
+export function mergeCustomKinks(
+  profileA: Profile,
+  profileB: Profile,
+): MergedCustomKink[] {
+  const byB = new Map((profileB.customKinks ?? []).map((item) => [item.id, item]));
+  const usedB = new Set<string>();
+  const merged: MergedCustomKink[] = [];
 
-  for (const custom of allCustom) {
-    const key = custom.name.trim().toLowerCase();
-    const existing = merged.get(key) ?? { name: custom.name };
-    merged.set(
-      key,
-      custom.side === "a"
-        ? { ...existing, aId: custom.id }
-        : { ...existing, bId: custom.id },
-    );
+  for (const itemA of profileA.customKinks ?? []) {
+    const itemB = byB.get(itemA.id);
+    if (itemB && itemA.name.trim() === itemB.name.trim()) {
+      merged.push({ name: itemA.name, aId: itemA.id, bId: itemB.id });
+      usedB.add(itemB.id);
+    } else {
+      merged.push({ name: itemA.name, aId: itemA.id });
+    }
   }
 
-  return Array.from(merged.values());
+  for (const itemB of profileB.customKinks ?? []) {
+    if (usedB.has(itemB.id)) continue;
+    merged.push({ name: itemB.name, bId: itemB.id });
+  }
+
+  return merged;
 }
