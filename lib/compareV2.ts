@@ -108,6 +108,7 @@ export interface CompareModel {
 }
 
 const POSITIVE = new Set<VisibleCompareStatus>(["yes", "willing"]);
+const KINK_BY_ID = new Map(KINKS.map((kink) => [kink.id, kink]));
 
 export function classifyStatusPair(
   statusA: VisibleCompareStatus,
@@ -163,6 +164,10 @@ function canonicalPairId(
     `${profileAId}:${kinkAId}`,
     `${profileBId}:${kinkBId}`,
   ].sort().join("|")}`;
+}
+
+function customUnpairedId(profileId: string, kinkId: string): string {
+  return `custom-unpaired:${profileId}:${kinkId}`;
 }
 
 function visibleRatedStatus(entry: KinkEntry | undefined): VisibleCompareStatus | null {
@@ -230,6 +235,37 @@ function buildSummary(
   };
 }
 
+function catalogPresentation(
+  kink: (typeof KINKS)[number],
+): { label: string; category: KinkCategoryId | null } {
+  const partnerId = complementaryPartnerKinkId(kink.id);
+  if (partnerId === kink.id) {
+    return {
+      label: complementaryCompareLabel(kink.id, kink.name),
+      category: kink.category,
+    };
+  }
+
+  const partner = KINK_BY_ID.get(partnerId);
+  if (!partner) {
+    return {
+      label: complementaryCompareLabel(kink.id, kink.name),
+      category: kink.category,
+    };
+  }
+
+  const labels = [
+    complementaryCompareLabel(kink.id, kink.name),
+    complementaryCompareLabel(partner.id, partner.name),
+  ].filter((label, index, all) => all.indexOf(label) === index)
+    .sort((left, right) => left.localeCompare(right));
+
+  return {
+    label: labels.join(" ↔ "),
+    category: partner.category === kink.category ? kink.category : null,
+  };
+}
+
 function addCatalogLane(
   facts: ComparisonFact[],
   unpaired: UnpairedComparisonItem[],
@@ -243,15 +279,15 @@ function addCatalogLane(
   const statusB = visibleRatedStatus(profileB.entries[kinkBId]);
   const relation: CompareRelation = kinkAId === kinkBId ? "same" : "complementary";
   const id = canonicalPairId("catalog", profileA.id, kinkAId, profileB.id, kinkBId);
-  const label = complementaryCompareLabel(kink.id, kink.name);
+  const presentation = catalogPresentation(kink);
 
   if (statusA && statusB) {
     facts.push({
       id,
       ...classifyStatusPair(statusA, statusB, relation),
       relation,
-      label,
-      category: kink.category,
+      label: presentation.label,
+      category: presentation.category,
       custom: false,
       kinkAId,
       kinkBId,
@@ -261,8 +297,8 @@ function addCatalogLane(
   } else if (statusA || statusB) {
     unpaired.push({
       id,
-      label,
-      category: kink.category,
+      label: presentation.label,
+      category: presentation.category,
       custom: false,
       kinkAId,
       kinkBId,
@@ -272,18 +308,25 @@ function addCatalogLane(
   }
 }
 
-function sharedCustomIdentities(
-  profileA: Profile,
-  profileB: Profile,
-): Array<{ id: string; name: string }> {
-  const bById = new Map((profileB.customKinks ?? []).map((item) => [item.id, item]));
-  return (profileA.customKinks ?? [])
-    .flatMap((itemA) => {
-      const itemB = bById.get(itemA.id);
-      if (!itemB || itemA.name.trim() !== itemB.name.trim()) return [];
-      return [{ id: itemA.id, name: itemA.name.trim() }];
+interface VisibleCustomItem {
+  id: string;
+  name: string;
+  status: VisibleCompareStatus;
+}
+
+function visibleCustomItems(profile: Profile): VisibleCustomItem[] {
+  return (profile.customKinks ?? [])
+    .flatMap((item) => {
+      const status = visibleRatedStatus(profile.entries[item.id]);
+      const name = item.name.trim();
+      if (!status || !name) return [];
+      return [{ id: item.id, name, status }];
     })
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((left, right) => left.id.localeCompare(right.id) || left.name.localeCompare(right.name));
+}
+
+function customIdentityKey(item: Pick<VisibleCustomItem, "id" | "name">): string {
+  return `${item.id}\u0000${item.name}`;
 }
 
 function addCustomLanes(
@@ -292,36 +335,56 @@ function addCustomLanes(
   profileA: Profile,
   profileB: Profile,
 ): void {
-  for (const item of sharedCustomIdentities(profileA, profileB)) {
-    const statusA = visibleRatedStatus(profileA.entries[item.id]);
-    const statusB = visibleRatedStatus(profileB.entries[item.id]);
-    const id = canonicalPairId("custom", profileA.id, item.id, profileB.id, item.id);
+  const visibleA = visibleCustomItems(profileA);
+  const visibleB = visibleCustomItems(profileB);
+  const bByIdentity = new Map(visibleB.map((item) => [customIdentityKey(item), item]));
+  const pairedB = new Set<string>();
 
-    if (statusA && statusB) {
+  for (const itemA of visibleA) {
+    const identity = customIdentityKey(itemA);
+    const itemB = bByIdentity.get(identity);
+    if (itemB) {
+      pairedB.add(identity);
       facts.push({
-        id,
-        ...classifyStatusPair(statusA, statusB),
+        id: canonicalPairId("custom", profileA.id, itemA.id, profileB.id, itemB.id),
+        ...classifyStatusPair(itemA.status, itemB.status),
         relation: "same",
-        label: item.name,
+        label: itemA.name,
         category: null,
         custom: true,
-        kinkAId: item.id,
-        kinkBId: item.id,
-        statusA,
-        statusB,
+        kinkAId: itemA.id,
+        kinkBId: itemB.id,
+        statusA: itemA.status,
+        statusB: itemB.status,
       });
-    } else if (statusA || statusB) {
-      unpaired.push({
-        id,
-        label: item.name,
-        category: null,
-        custom: true,
-        kinkAId: item.id,
-        kinkBId: item.id,
-        visibleSide: statusA ? "a" : "b",
-        status: (statusA ?? statusB)!,
-      });
+      continue;
     }
+
+    unpaired.push({
+      id: customUnpairedId(profileA.id, itemA.id),
+      label: itemA.name,
+      category: null,
+      custom: true,
+      kinkAId: itemA.id,
+      kinkBId: itemA.id,
+      visibleSide: "a",
+      status: itemA.status,
+    });
+  }
+
+  for (const itemB of visibleB) {
+    const identity = customIdentityKey(itemB);
+    if (pairedB.has(identity)) continue;
+    unpaired.push({
+      id: customUnpairedId(profileB.id, itemB.id),
+      label: itemB.name,
+      category: null,
+      custom: true,
+      kinkAId: itemB.id,
+      kinkBId: itemB.id,
+      visibleSide: "b",
+      status: itemB.status,
+    });
   }
 }
 
@@ -342,6 +405,8 @@ export function buildCompareModel(
   const unpaired: UnpairedComparisonItem[] = [];
   for (const kink of KINKS) addCatalogLane(facts, unpaired, profileA, profileB, kink);
   addCustomLanes(facts, unpaired, profileA, profileB);
+  facts.sort((left, right) => left.id.localeCompare(right.id));
+  unpaired.sort((left, right) => left.id.localeCompare(right.id));
 
   const categories = emptyCategoryEvidence();
   const byId = new Map(categories.map((item) => [item.category, item]));
