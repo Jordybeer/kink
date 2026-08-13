@@ -31,7 +31,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: "Niet nu" }).click();
 
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
-    await page.getByRole("button", { name: /naar kinksync/i }).click();
+    await page.getByRole("button", { name: /naar kinksync/i }).press("Enter");
 
     // Onboarding rondt af op home. Profielaanmaak blijft een bewuste volgende tik.
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
@@ -85,7 +85,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /kom maar door/i }).click();
     await page.getByRole("button", { name: /^verder/i }).click();
     await page.getByRole("button", { name: "Niet nu" }).click();
-    await page.getByRole("button", { name: /naar kinksync/i }).click();
+    await page.getByRole("button", { name: /naar kinksync/i }).press("Enter");
 
     await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
     await page.getByLabel("Naam of alias").fill("Testmeester");
