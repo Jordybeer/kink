@@ -420,8 +420,8 @@ function Together() {
       <Title>Leg jullie kaarten op tafel.</Title>
 
       <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>
-        Misschien weten jullie al precies waar jullie samen van genieten.<br />
-        Maar er is altijd ruimte voor iets dat nog niet ter sprake kwam. 😏
+        Misschien weten jullie al behoorlijk goed wat de ander lekker vindt.<br />
+        Misschien denken jullie dat vooral.
       </motion.p>
 
       <motion.div
