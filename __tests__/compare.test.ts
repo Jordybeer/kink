@@ -48,24 +48,22 @@ describe("compare helpers", () => {
     })).toEqual({ aId: partner.id, bId: own.id });
   });
 
-  it("paart custom entries alleen op dezelfde stabiele ID en naam", () => {
+  it("voegt gelijknamige eigen kinks hoofdletterongevoelig samen", () => {
     const own = profile("own", "Eigen profiel", {
       customKinks: [
-        { id: "shared-id", name: "Shared item" },
-        { id: "a-only", name: "Same label" },
+        { id: "a-1", name: "Wax play" },
+        { id: "a-2", name: "Rope" },
       ],
     });
     const partner = profile("partner", "Partner", {
       customKinks: [
-        { id: "shared-id", name: "Shared item" },
-        { id: "b-only", name: "Same label" },
+        { id: "b-1", name: " wax PLAY " },
       ],
     });
 
     expect(mergeCustomKinks(own, partner)).toEqual([
-      { name: "Shared item", aId: "shared-id", bId: "shared-id" },
-      { name: "Same label", aId: "a-only" },
-      { name: "Same label", bId: "b-only" },
+      { name: "Wax play", aId: "a-1", bId: "b-1" },
+      { name: "Rope", aId: "a-2" },
     ]);
   });
 });

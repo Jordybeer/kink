@@ -1,103 +1,151 @@
-import Link from "next/link";
-import { planCompareSentences } from "@/lib/compareCopy";
 import type { CompareSummary } from "@/lib/compare";
 
-const DIMENSIONS = [
-  { key: "shared", label: "Gedeeld", colour: "var(--yes)" },
-  { key: "complementary", label: "Aanvullend", colour: "var(--yes)" },
-  { key: "discuss", label: "Bespreken", colour: "var(--willing)" },
-  { key: "soft", label: "Zachte grens", colour: "var(--maybe)" },
-  { key: "hard", label: "Hard", colour: "var(--hard-no-text)" },
-] as const;
+function compatibilityVerdict(score: number | null): string | null {
+  if (score === null) return null;
+  if (score >= 85) return "Sterke compatibiliteit";
+  if (score >= 70) return "Goede basis";
+  if (score >= 55) return "Gemengde compatibiliteit";
+  if (score >= 40) return "Veel te bespreken";
+  return "Grote verschillen";
+}
 
-export default function CompareScoreSummary({ summary }: { summary: CompareSummary }) {
-  const values = {
-    shared: summary.shared,
-    complementary: summary.complementary,
-    discuss: summary.discuss,
-    soft: summary.soft,
-    hard: summary.conflict + summary.limit,
-  };
-  const sentences = planCompareSentences(summary.reasons, summary.jointlyAssessed);
+function AlignmentBar({ match, discuss, soft, limit }: Omit<CompareSummary, "score">) {
+  const total = match + discuss + soft + limit;
+  if (total === 0) return null;
+
+  const segments = [
+    { key: "match", count: match, color: "var(--yes)" },
+    { key: "discuss", count: discuss, color: "var(--conflict)" },
+    { key: "soft", count: soft, color: "var(--maybe)" },
+    { key: "limit", count: limit, color: "var(--hard-no)" },
+  ];
 
   return (
-    <section
-      className="rounded-2xl p-4 sm:p-5 mb-4 mt-1"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      aria-labelledby="compare-overview-heading"
+    <div
+      className="flex rounded-full overflow-hidden mb-4"
+      style={{ height: 6, background: "var(--surface3)" }}
+      role="img"
+      aria-label={`Verdeling: ${match} match, ${discuss} te bespreken, ${soft} zacht, ${limit} grenzen`}
     >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <h2
-            id="compare-overview-heading"
-            className="text-base"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-              color: "var(--text)",
-            }}
-          >
-            Jullie vergelijking
-          </h2>
-          <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
-            Alleen expliciet gedeelde, zichtbare antwoorden tellen mee.
-          </p>
-        </div>
-        <div className="text-right flex-none">
-          <div
-            className="text-2xl font-semibold tabular-nums"
-            style={{ color: "var(--text)" }}
-            aria-label={`${summary.jointlyAssessed} gezamenlijk vergelijkbare antwoordparen`}
-          >
-            {summary.jointlyAssessed}
-          </div>
-          <div className="text-[11px]" style={{ color: "var(--text2)" }}>
-            samen beoordeeld
-          </div>
-        </div>
-      </div>
+      {segments.map((segment) => segment.count > 0 ? (
+        <span
+          key={segment.key}
+          aria-hidden="true"
+          style={{
+            width: `${(segment.count / total) * 100}%`,
+            background: segment.color,
+            transition: "width 500ms ease-out",
+          }}
+        />
+      ) : null)}
+    </div>
+  );
+}
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
-        {DIMENSIONS.map((dimension) => (
-          <div
-            key={dimension.key}
-            className="rounded-xl px-3 py-2.5"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <div className="text-lg font-semibold tabular-nums" style={{ color: dimension.colour }}>
-              {values[dimension.key]}
-            </div>
-            <div className="text-[11px] leading-tight" style={{ color: "var(--text2)" }}>
-              {dimension.label}
-            </div>
-          </div>
-        ))}
-      </div>
+export default function CompareScoreSummary({
+  score,
+  match,
+  discuss,
+  soft,
+  limit,
+}: CompareSummary) {
+  const total = match + discuss + soft + limit;
+  const verdict = compatibilityVerdict(score);
+  const verdictColor = score === null
+    ? "var(--text2)"
+    : score >= 75
+      ? "var(--yes)"
+      : score >= 55
+        ? "var(--maybe)"
+        : score < 40
+          ? "var(--conflict)"
+          : "var(--text)";
 
-      <div className="space-y-1.5" aria-label="Waarom deze vergelijking">
-        {sentences.map((sentence) => (
-          <p key={sentence} className="text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-            {sentence}
-          </p>
-        ))}
-      </div>
-
-      <div
-        className="mt-4 pt-3 flex flex-wrap items-center justify-between gap-2"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <p className="text-[11px] leading-relaxed" style={{ color: "var(--text2)" }}>
-          Deze vergelijking beschrijft profieldata en is geen toestemming.
-        </p>
-        <Link
-          href="#compare-details"
-          className="focus-ring min-h-11 inline-flex items-center px-3 rounded-full text-xs font-medium"
-          style={{ color: "var(--accent)", background: "var(--surface2)" }}
+  return (
+    <>
+      <div className="text-center mb-4 mt-1">
+        <div
+          aria-label={score === null
+            ? "Nog geen gezamenlijk beoordeelde kinks"
+            : `${score} procent kinkcompatibiliteit`}
+          style={{
+            fontFamily: "var(--font-display, Georgia, serif)",
+            fontStyle: "italic",
+            fontWeight: 400,
+            fontSize: "clamp(56px, 16vw, 80px)",
+            lineHeight: 1,
+            letterSpacing: "-0.025em",
+            color: verdictColor,
+            transition: "color 600ms ease-out",
+          }}
         >
-          Bekijk alle details
-        </Link>
+          {score === null ? (
+            <span style={{ opacity: 0.55 }}>—</span>
+          ) : (
+            <>
+              {score}
+              <span
+                style={{
+                  fontSize: "0.42em",
+                  verticalAlign: "0.62em",
+                  marginLeft: "0.06em",
+                  fontStyle: "normal",
+                  fontWeight: 300,
+                  color: "var(--text2)",
+                }}
+              >
+                %
+              </span>
+            </>
+          )}
+        </div>
+        <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
+          {score === null ? "Beoordeel allebei minstens één kink" : "Compatibiliteit"}
+        </p>
+        {verdict && (
+          <p className="text-sm font-semibold mt-2" style={{ color: verdictColor }}>
+            {verdict}
+          </p>
+        )}
+        {total > 0 && (
+          <div
+            className="flex justify-center flex-wrap gap-x-3 gap-y-1 text-xs mt-2"
+            style={{ color: "var(--text2)" }}
+          >
+            <span>
+              <span className="font-semibold tabular-nums" style={{ color: "var(--yes)" }}>
+                {match}
+              </span>{" "}
+              match
+            </span>
+            {discuss > 0 && (
+              <span>
+                <span className="font-semibold tabular-nums" style={{ color: "var(--conflict)" }}>
+                  {discuss}
+                </span>{" "}
+                te bespreken
+              </span>
+            )}
+            {soft > 0 && (
+              <span>
+                <span className="font-semibold tabular-nums" style={{ color: "var(--maybe)" }}>
+                  {soft}
+                </span>{" "}
+                zacht
+              </span>
+            )}
+            {limit > 0 && (
+              <span>
+                <span className="font-semibold tabular-nums" style={{ color: "var(--hard-no-text)" }}>
+                  {limit}
+                </span>{" "}
+                {limit === 1 ? "grens" : "grenzen"}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-    </section>
+      <AlignmentBar match={match} discuss={discuss} soft={soft} limit={limit} />
+    </>
   );
 }

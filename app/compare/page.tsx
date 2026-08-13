@@ -12,8 +12,9 @@ import ProfileSelectorSheet from "@/components/compare/ProfileSelectorSheet";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import useCompareProfiles from "@/hooks/useCompareProfiles";
 import {
-  buildCompareModel,
   cleanCompareParam,
+  getCompareCategoryScores,
+  getCompareSummary,
   type CompareFilterMode,
 } from "@/lib/compare";
 import { useHasHydrated, useStore } from "@/lib/store";
@@ -45,11 +46,6 @@ function ComparePage() {
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
-  const model = useMemo(
-    () => buildCompareModel(profileA, profileB),
-    [profileA, profileB],
-  );
-
   const navActions = useMemo<TopNavAction[]>(() => [
     {
       id: "swap-profiles",
@@ -79,9 +75,12 @@ function ComparePage() {
     });
   }, []);
 
-  const updateComment = useCallback((profileId: string, itemId: string, comment: string) => {
-    setEntry(profileId, itemId, { comment });
+  const updateComment = useCallback((profileId: string, kinkId: string, comment: string) => {
+    setEntry(profileId, kinkId, { comment });
   }, [setEntry]);
+
+  const summary = getCompareSummary(profileA, profileB);
+  const categoryScores = getCompareCategoryScores(profileA, profileB);
 
   if (!hasHydrated) return <PageShell loading width="5xl" />;
 
@@ -99,11 +98,13 @@ function ComparePage() {
 
       {hasPair && (
         <>
-          <CompareScoreSummary summary={model.summary} />
+          <CompareScoreSummary {...summary} />
           <CompareToolbar
-            categoryScores={model.categories}
+            categoryScores={categoryScores}
             filterMode={filterMode}
-            summary={model.summary}
+            matchCount={summary.match}
+            discussCount={summary.discuss}
+            hardLimitCount={summary.limit}
             discussedCount={discussed.size}
             hideDiscussed={hideDiscussed}
             onFilterChange={setFilterMode}
@@ -116,7 +117,6 @@ function ComparePage() {
         profileA={profileA}
         profileB={profileB}
         samePairError={samePairError}
-        model={model}
         filterMode={filterMode}
         discussed={discussed}
         hideDiscussed={hideDiscussed}
