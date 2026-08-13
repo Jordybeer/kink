@@ -100,7 +100,9 @@ export default function TopNav() {
     sceneTitle: sceneMatch ? scenes.find((scene) => scene.id === sceneMatch[1])?.title : undefined,
   });
   const title = contextualTitle ?? routeTitle;
-  const [titleBase, titleContext] = title.split(" · ", 2);
+  const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
+    ? contextualTitle.split(" · ", 2)
+    : null;
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -130,8 +132,12 @@ export default function TopNav() {
             opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
           }}
         >
-          <span>{titleBase}</span>
-          {titleContext && <span> · {titleContext}</span>}
+          {questionTitle ? (
+            <>
+              <span>{questionTitle[0]}</span>
+              <span> · {questionTitle[1]}</span>
+            </>
+          ) : title}
         </span>
         {saveFeedbackRoute && (
           <span
