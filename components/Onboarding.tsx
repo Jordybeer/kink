@@ -428,7 +428,7 @@ function Together() {
 
       <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>
         Misschien weten jullie al precies waar jullie samen van genieten.<br />
-        Maar er is altijd iets dat nog niet ter sprake kwam. 😏
+        Maar er is altijd iets dat nog niet ter sprake kwam.
       </motion.p>
 
       <motion.div
