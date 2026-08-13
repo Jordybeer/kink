@@ -4,7 +4,12 @@ import {
   mergeCustomKinks,
   resolveCompareProfileIds,
 } from "@/lib/compare";
-import { classifyStatusPair, type VisibleCompareStatus } from "@/lib/compareV2";
+import {
+  buildCompareModel,
+  classifyStatusPair,
+  type VisibleCompareStatus,
+} from "@/lib/compareV2";
+import { DIRECTIONAL_KINK_PAIRS } from "@/lib/directionality";
 import type { Profile } from "@/types";
 
 function profile(id: string, name: string, overrides: Partial<Profile> = {}): Profile {
@@ -98,5 +103,26 @@ describe("compare v2 status contract", () => {
   it("maakt positieve antwoorden alleen complementair met expliciete directionality", () => {
     expect(classifyStatusPair("yes", "willing", "same").kind).toBe("shared");
     expect(classifyStatusPair("yes", "willing", "complementary").kind).toBe("complementary");
+  });
+
+  it("houdt directionele id, label en samenvatting stabiel bij A/B-wissel", () => {
+    const pair = DIRECTIONAL_KINK_PAIRS[0];
+    const left = profile("left", "Left", {
+      entries: {
+        [pair.giveId]: { status: "yes", comment: "" },
+      },
+    });
+    const right = profile("right", "Right", {
+      entries: {
+        [pair.receiveId]: { status: "willing", comment: "" },
+      },
+    });
+
+    const ab = buildCompareModel(left, right);
+    const ba = buildCompareModel(right, left);
+
+    expect(ab.summary).toEqual(ba.summary);
+    expect(ab.facts.map(({ id, label, kind }) => ({ id, label, kind })))
+      .toEqual(ba.facts.map(({ id, label, kind }) => ({ id, label, kind })));
   });
 });
