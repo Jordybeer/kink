@@ -13,7 +13,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
   });
 
-  test("doorloopt de rondleiding en geeft het profiel direct door", async ({ page }) => {
+  test("doorloopt de rondleiding en landt rustig op home", async ({ page }) => {
     await page.getByRole("button", { name: /^begin$/i }).click();
     await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
@@ -27,15 +27,16 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /^verder/i }).click();
 
     await expect(page.getByRole("heading", { name: /wat hier gebeurt, blijft hier/i })).toBeVisible();
-    await expect(page.getByText(/geen account of centrale database/i)).toBeVisible();
+    await expect(page.getByText(/geen centrale database/i)).toBeVisible();
     await page.getByRole("button", { name: "Niet nu" }).click();
 
     await expect(page.getByRole("heading", { name: /zin om te beginnen/i })).toBeVisible();
-    await page.getByRole("button", { name: /maak mijn profiel/i }).click();
+    await page.getByRole("button", { name: /naar kinksync/i }).click();
 
-    // Geen dubbele home-CTA: de bestaande profiel-flow neemt het meteen over.
-    await expect(page.getByRole("dialog", { name: /nieuw profiel maken/i })).toBeVisible();
-    await expect(page.getByLabel("Naam of alias")).toBeVisible();
+    // Onboarding rondt af op home. Profielaanmaak blijft een bewuste volgende tik.
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /nieuw profiel maken/i })).not.toBeVisible();
+    await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
   test("pin instellen gooit de wizard niet terug naar slide één", async ({ page }) => {
@@ -78,14 +79,15 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByText(/kom terug als je 18 bent/i)).toBeVisible();
   });
 
-  test("nieuw profiel aanmaken direct na volledige onboarding", async ({ page }) => {
+  test("nieuw profiel aanmaken na onboarding blijft een expliciete keuze", async ({ page }) => {
     await page.getByRole("button", { name: /^begin$/i }).click();
     await page.getByRole("button", { name: /18\+/i }).click();
     await page.getByRole("button", { name: /kom maar door/i }).click();
     await page.getByRole("button", { name: /^verder/i }).click();
     await page.getByRole("button", { name: "Niet nu" }).click();
-    await page.getByRole("button", { name: /maak mijn profiel/i }).click();
+    await page.getByRole("button", { name: /naar kinksync/i }).click();
 
+    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
     await page.getByLabel("Naam of alias").fill("Testmeester");
     await page.getByRole("button", { name: /^Dominant/ }).click();
     await page.getByRole("button", { name: "Verder" }).click();
