@@ -3,12 +3,14 @@ import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("hub shows utility actions, no back chevron", async ({ page }) => {
+test("hub shows useful utility actions without redundant product chrome", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Ontdek hoe KinkSync werkt" })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Instellingen openen" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
+  await expect(nav.getByText("KinkSync", { exact: true })).toHaveCount(0);
 });
 
 test("subpages show back chevron pointing at the right parent", async ({ page }) => {
