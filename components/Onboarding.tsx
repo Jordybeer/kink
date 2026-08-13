@@ -116,10 +116,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const currentDigits = lockSub === 'pin1' ? pin1 : pin2;
   const barKey = step === 4 ? `4-${lockSub}` : String(step);
+  const denseSlide = step === 3 || (step === 4 && lockSub === 'intro');
 
   return (
     <div
-      className="fixed inset-0 z-[500] grid min-h-[100dvh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
+      className="fixed inset-x-0 top-0 z-[500] grid h-[100dvh] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
       style={{ background: 'var(--bg)' }}
       role="dialog"
       aria-modal="true"
@@ -136,7 +137,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <HeartBreak size={38} aria-hidden="true" style={{ color: 'var(--text2)' }} />
           <h2
             className="serif-safe mt-6 text-[2.25rem] leading-tight"
-            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+            style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}
           >
             Kom terug als je 18 bent.
           </h2>
@@ -146,7 +147,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         </motion.div>
       ) : (
         <>
-          <div className="px-5 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div className="shrink-0 px-5 pt-[max(1rem,env(safe-area-inset-top))]">
             <div className="mx-auto flex max-w-sm items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text2)' }}>
                 KinkSync
@@ -166,7 +167,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </div>
           </div>
 
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-7 pt-8 sm:pt-10">
+          <div
+            className={`min-h-0 overflow-y-auto overscroll-contain px-5 pb-10 [-webkit-overflow-scrolling:touch] ${denseSlide ? 'pt-5' : 'pt-8 sm:pt-10'}`}
+          >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={step}
@@ -193,8 +196,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           </div>
 
           <div
-            className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
-            style={{ background: 'linear-gradient(to top, var(--bg) 78%, transparent)' }}
+            className="relative z-10 shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+            style={{ background: 'var(--bg)' }}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -219,7 +222,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     <Action onClick={() => setLockout(true)}>Ik ben jonger</Action>
                   </>
                 )}
-                {step === 2 && <Action primary onClick={advance}>Kom maar door <ArrowRight size={17} aria-hidden="true" /></Action>}
+                {step === 2 && (
+                  <Action primary onClick={advance}>Kom maar door <ArrowRight size={17} aria-hidden="true" /></Action>
+                )}
                 {step === 3 && (
                   <Action primary onClick={skipRequested ? onComplete : advance}>
                     {skipRequested ? 'Naar KinkSync' : 'Verder'} <ArrowRight size={17} aria-hidden="true" />
@@ -244,7 +249,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     <Action onClick={advance}>Alleen PIN</Action>
                   </>
                 )}
-                {step === 5 && <Action primary onClick={onComplete}>Naar KinkSync <ArrowRight size={17} aria-hidden="true" /></Action>}
+                {step === 5 && (
+                  <Action primary onClick={onComplete}>Naar KinkSync <ArrowRight size={17} aria-hidden="true" /></Action>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -296,12 +303,12 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Title({ children }: { children: React.ReactNode }) {
+function Title({ children, compact = false }: { children: React.ReactNode; compact?: boolean }) {
   return (
     <motion.h2
       variants={childV}
-      className="serif-safe mt-4 text-[2.25rem] leading-[1.05]"
-      style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+      className={`serif-safe mt-4 leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[2.25rem]'}`}
+      style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}
     >
       {children}
     </motion.h2>
@@ -415,44 +422,44 @@ function Discover() {
 
 function Together() {
   return (
-    <div className="pt-2">
+    <div>
       <Eyebrow>Samen</Eyebrow>
-      <Title>Leg jullie kaarten op tafel.</Title>
+      <Title compact>Leg jullie kaarten op tafel.</Title>
 
-      <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>
-        Misschien weten jullie al behoorlijk goed wat de ander lekker vindt.<br />
-        Misschien denken jullie dat vooral.
+      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>
+        Misschien weten jullie al precies waar jullie samen van genieten.<br />
+        Maar er is altijd iets dat nog niet ter sprake kwam. 😏
       </motion.p>
 
       <motion.div
         variants={childV}
-        className="mt-7 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl border px-5 py-6"
+        className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl border px-4 py-4"
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
-        <div className="rounded-xl px-3 py-4 text-center text-sm font-semibold" style={{ background: 'var(--surface2)' }}>
+        <div className="rounded-xl px-3 py-3.5 text-center text-sm font-semibold" style={{ background: 'var(--surface2)' }}>
           Jij
         </div>
         <UsersThree size={21} aria-hidden="true" style={{ color: 'var(--accent)' }} />
-        <div className="rounded-xl px-3 py-4 text-center text-sm font-semibold" style={{ background: 'var(--surface2)' }}>
+        <div className="rounded-xl px-3 py-3.5 text-center text-sm font-semibold" style={{ background: 'var(--surface2)' }}>
           De ander
         </div>
       </motion.div>
-      <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>
+
+      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>
         Leg jullie profielen naast elkaar en ontdek wat jullie delen.<br />
-        Waar jullie nieuwsgierigheid elkaar raakt.<br />
         En waar jullie nét anders in staan.
       </motion.p>
 
       <motion.div
         variants={childV}
-        className="mt-7 rounded-xl border-l-2 py-4 pl-4 pr-3 text-base leading-7"
+        className="mt-5 rounded-xl border-l-2 py-3 pl-4 pr-3 text-base leading-[1.6]"
         style={{ borderColor: 'var(--accent)', color: 'var(--text)' }}
       >
         <strong className="block">Een match opent mogelijkheden.</strong>
-        <span className="mt-2 block" style={{ color: 'var(--text2)' }}>
+        <span className="mt-1.5 block" style={{ color: 'var(--text2)' }}>
           Wat jullie ermee doen, bepalen jullie samen.
         </span>
-        <span className="mt-2 block font-medium">Een match is nooit automatisch consent.</span>
+        <span className="mt-1.5 block font-medium">Een match is nooit automatisch consent.</span>
       </motion.div>
     </div>
   );
@@ -460,52 +467,52 @@ function Together() {
 
 function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
   return (
-    <div className="pt-2">
+    <div>
       <Eyebrow>Privé</Eyebrow>
-      <Title>Sommige dingen zijn niet voor iedere pottenkijker.</Title>
+      <Title compact>Niet voor iedere pottenkijker.</Title>
 
-      <motion.p variants={childV} className="mt-6 text-lg leading-8">
+      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]">
         Al jouw data blijft standaard op jouw toestel.
-      </motion.p>
-      <motion.p variants={childV} className="mt-3 text-base font-semibold leading-7" style={{ color: 'var(--accent)' }}>
-        Volledig offline. Privacy-first.
+        <span className="mt-2 block font-semibold" style={{ color: 'var(--accent)' }}>
+          Volledig offline. Privacy-first.
+        </span>
       </motion.p>
 
       <motion.div
         variants={childV}
-        className="mt-7 rounded-2xl border px-5 py-6"
+        className="mt-5 rounded-2xl border px-4 py-5"
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
-        <div className="flex items-start gap-4">
-          <Lock size={22} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
+        <div className="flex items-start gap-3.5">
+          <Lock size={21} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
           <div>
-            <p className="text-base font-semibold">Op jouw toestel</p>
-            <p className="mt-3 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>
-              Geen account.<br />
-              Geen centrale database.
+            <p className="text-base font-semibold">Lokaal, zonder account</p>
+            <p className="mt-2 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>
+              Geen centrale database.<br />
+              Geen stille synchronisatie.
             </p>
           </div>
         </div>
 
-        <div className="my-6 h-px" style={{ background: 'var(--border)' }} />
+        <div className="my-4 h-px" style={{ background: 'var(--border)' }} />
 
-        <div className="flex items-start gap-4">
-          <QrCode size={22} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
+        <div className="flex items-start gap-3.5">
+          <QrCode size={21} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
           <div>
             <p className="text-base font-semibold">Delen wanneer jij dat wilt</p>
-            <p className="mt-3 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>
+            <p className="mt-2 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>
               Via QR, link, export of back-up.<br />
-              Niets gaat vanzelf ergens heen.
+              Jij kiest wat vertrekt.
             </p>
           </div>
         </div>
       </motion.div>
 
-      <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>
-        Wil je nieuwsgierige vingers buiten houden?
-      </motion.p>
-      <motion.p variants={childV} className="mt-3 text-base font-semibold leading-7">
-        Zet er een PIN{bioAvailable ? ' en eventueel biometrie' : ''} op.
+      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>
+        Nieuwsgierige vingers?{' '}
+        <span className="font-semibold" style={{ color: 'var(--text)' }}>
+          Zet er een PIN{bioAvailable ? ' en eventueel biometrie' : ''} op.
+        </span>
       </motion.p>
     </div>
   );
@@ -524,7 +531,7 @@ function Pin({
 }) {
   return (
     <div className="mx-auto max-w-[19rem] pt-4 text-center">
-      <Title>{sub === 'pin1' ? 'Hou nieuwsgierige vingers buiten.' : 'Nog één keer.'}</Title>
+      <Title compact>{sub === 'pin1' ? 'Hou nieuwsgierige vingers buiten.' : 'Nog één keer.'}</Title>
       <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>
         {sub === 'pin1'
           ? <>Vier cijfers.<br />Hou ze voor jezelf.</>
@@ -579,7 +586,7 @@ function Biometric({ bioError }: { bioError: string | null }) {
         <Fingerprint size={24} aria-hidden="true" />
       </motion.div>
       <Eyebrow>Extra slot</Eyebrow>
-      <Title>Liever met één blik naar binnen?</Title>
+      <Title compact>Liever met één blik naar binnen?</Title>
       <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>
         Gebruik Face ID of je vingerafdruk.<br />
         Je PIN blijft altijd achter de hand.
@@ -615,7 +622,7 @@ function Finale() {
       <motion.h2
         variants={childV}
         className="serif-safe mt-7 text-[2.5rem] leading-[1.05]"
-        style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+        style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 500 }}
       >
         Genoeg voorspel.
       </motion.h2>
