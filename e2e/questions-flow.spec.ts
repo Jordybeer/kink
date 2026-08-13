@@ -16,15 +16,19 @@ test("answered question persists across a reload without document-width overflow
   await page.setViewportSize({ width: 375, height: 812 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
 
+  const nav = page.getByLabel("Hoofdnavigatie");
   const cardTitle = page.locator('[data-tour="kink-card"] h3');
   const firstQuestion = await cardTitle.innerText();
   await page.getByRole("button", { name: /Heel graag/i }).click();
   await expect(cardTitle).not.toHaveText(firstQuestion);
+  await expect(nav).toContainText("Vragenlijst · Dynamic");
+  await expect(nav.getByText("Opgeslagen ✓", { exact: true })).toHaveCount(0);
 
   await page.reload();
   await page.waitForLoadState("networkidle");
   await expect(page.getByTestId("questions-screen")).toBeVisible();
   await expect(cardTitle).not.toHaveText(firstQuestion);
+  await expect(nav).toContainText("Vragenlijst · Dynamic");
 
   const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(hasHorizontalOverflow).toBe(false);
