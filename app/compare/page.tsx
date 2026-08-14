@@ -98,7 +98,7 @@ function ComparePage() {
 
       {hasPair && (
         <>
-          <CompareScoreSummary {...summary} />
+          <CompareScoreSummary {...summary} categoryScores={categoryScores} />
           <CompareToolbar
             categoryScores={categoryScores}
             filterMode={filterMode}
