@@ -44,23 +44,23 @@ describe("compare narrative copy", () => {
     expect(story.overlapPercent).toBe(69);
     expect(story.lead).toContain("39 voorkeuren");
     expect(story.lead).toContain("27");
-    expect(story.lead).toMatch(/overlap|gemeenschappelijke grond|interesse/i);
+    expect(story.lead).toMatch(/overlap|overeenkomsten|interesse|één lijn/i);
     expect(story.lead).not.toMatch(/[—–]/);
-    expect(story.lead).not.toMatch(/punten|complementair|asymmetrie|sluiten er .* duidelijk aan/i);
-    expect((story.lead.match(/jullie/gi) ?? []).length).toBeLessThanOrEqual(1);
+    expect(story.lead).not.toMatch(/punten|complementair|asymmetrie|gemeenschappelijke grond|sluiten er .* duidelijk aan/i);
+    expect((story.lead.match(/jullie/gi) ?? []).length).toBe(0);
     expect(story.coverage).toContain("233 andere");
   });
 
   it("splitst gedeelde interesse en geven plus ontvangen begrijpelijk uit", () => {
     const story = planCompareStory(summary({ shared: 24, complementary: 3, match: 27 }));
-    expect(story.lead).toMatch(/24.*positieve interesse/i);
+    expect(story.lead).toMatch(/interesse bij 24.*beide kanten positief/i);
     expect(story.lead).toMatch(/3 andere.*geven en ontvangen/i);
   });
 
   it("houdt harde grenzen belangrijker dan gewone nuance", () => {
     const story = planCompareStory(summary({ conflict: 1, discuss: 5, jointlyAssessed: 36 }));
     expect(story.insights[0]).toMatch(/harde grens/i);
-    expect(story.insights[0]).toMatch(/even samen over te praten/i);
+    expect(story.insights[0]).toMatch(/best eerst even samen over praten/i);
   });
 
   it("laat andere harde grenzen niet verdwijnen wanneer er ook een conflict is", () => {
