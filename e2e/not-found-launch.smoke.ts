@@ -7,7 +7,7 @@ test("404 stays usable on the launch device matrix", async ({ page }) => {
   const homeLink = page.getByRole("link", { name: /terug naar home/i });
 
   await expect(hero).toBeVisible();
-  await expect(page.getByRole("heading", { name: /heeft zich laten meeslepen/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /deze pagina is nergens te vinden/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Hoofdnavigatie" })).toBeVisible();
   await expect(page.locator(".bottom-nav")).toBeHidden();
   await expect(homeLink).toBeVisible();
