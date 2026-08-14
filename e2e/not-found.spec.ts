@@ -44,6 +44,7 @@ test("unknown route lands on the KinkSync 404", async ({ page }) => {
 });
 
 for (const viewport of [
+  { name: "375px mobile baseline", width: 375, height: 812 },
   { name: "iPhone portrait", width: 393, height: 852 },
   { name: "short Safari viewport", width: 390, height: 600 },
   { name: "tablet portrait", width: 820, height: 1180 },
