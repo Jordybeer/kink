@@ -1,3 +1,5 @@
+/* Deliberately richer than ordinary app surfaces: this module owns only the
+   404 studio artwork and may spend extra CSS on fidelity to the visual concept. */
 .hero {
   background:
     linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 32%),
@@ -15,6 +17,7 @@
 }
 
 .whipScene {
+  /* Theme-aware near-black leather; no separate hardcoded product palette. */
   --leather: color-mix(in srgb, var(--bg) 90%, var(--surface2));
   --leather-mid: color-mix(in srgb, var(--surface3) 42%, var(--bg));
   --leather-edge: color-mix(in srgb, var(--text) 14%, var(--bg));
