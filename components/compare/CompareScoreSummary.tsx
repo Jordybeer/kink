@@ -1,4 +1,4 @@
-import { ChatCircle, Heart, Info, WaveSine } from "@phosphor-icons/react";
+import { ArrowsLeftRight, ChatCircle, Heart, Info, WaveSine } from "@phosphor-icons/react";
 import { planCompareStory } from "@/lib/compareCopy";
 import type { CompareCategoryScore, CompareSummary } from "@/lib/compare";
 
@@ -36,11 +36,19 @@ export default function CompareScoreSummary({
   const stats = [
     {
       key: "together",
-      count: story.overlapCount,
+      count: shared,
       label: "samen",
-      helper: "Duidelijke overlap",
+      helper: "Allebei positief",
       color: "var(--yes)",
       icon: Heart,
+    },
+    {
+      key: "roles",
+      count: complementary,
+      label: "rollen",
+      helper: "Geven en ontvangen sluiten aan",
+      color: "var(--yes)",
+      icon: ArrowsLeftRight,
     },
     {
       key: "discuss",
@@ -59,6 +67,7 @@ export default function CompareScoreSummary({
       icon: WaveSine,
     },
   ].filter((item) => item.count > 0);
+  const statColumns = stats.length > 3 ? 2 : Math.max(stats.length, 1);
 
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
@@ -99,11 +108,15 @@ export default function CompareScoreSummary({
 
         {stats.length > 0 && (
           <div
-            className="mt-5 grid grid-cols-3 divide-x rounded-2xl border px-1 py-4"
-            style={{ borderColor: "var(--border)", background: "var(--surface2)" }}
+            className="mt-5 grid gap-px overflow-hidden rounded-2xl border"
+            style={{
+              gridTemplateColumns: `repeat(${statColumns}, minmax(0, 1fr))`,
+              borderColor: "var(--border)",
+              background: "var(--border)",
+            }}
           >
             {stats.map(({ key, count, label, helper, color, icon: Icon }) => (
-              <div key={key} className="min-w-0 px-2 text-center">
+              <div key={key} className="min-w-0 px-2 py-4 text-center" style={{ background: "var(--surface2)" }}>
                 <div className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
                   {count}
                 </div>
