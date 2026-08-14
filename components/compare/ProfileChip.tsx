@@ -11,6 +11,12 @@ interface ProfileChipProps {
   onClick: () => void;
 }
 
+function compareRoleLabel(profile: Profile): string {
+  if (profile.perspective === "dominant") return "Dominant";
+  if (profile.perspective === "submissive") return "Submissive";
+  return profile.role.trim();
+}
+
 export default function ProfileChip({
   profile,
   colour,
@@ -19,19 +25,20 @@ export default function ProfileChip({
   onClick,
 }: ProfileChipProps) {
   const labelColour = slot === "B" ? "var(--accent2-text)" : "var(--accent-text)";
+  const roleLabel = profile ? compareRoleLabel(profile) : "";
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={profile ? `Kies profiel ${slot}: ${profile.name}` : `Kies profiel ${slot}`}
-      className="focus-ring min-h-11 flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-colors text-left min-w-0"
+      className="focus-ring min-h-14 flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-colors text-left min-w-0"
       style={profile
         ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 10%, transparent)` }
         : { borderColor: "var(--border)", background: "var(--surface)" }}
     >
       <div
-        className="w-7 h-7 rounded-full flex-none overflow-hidden flex items-center justify-center text-xs font-bold shrink-0"
+        className="w-9 h-9 rounded-full flex-none overflow-hidden flex items-center justify-center text-sm font-bold shrink-0"
         style={{ background: profile ? colour : "var(--surface3)" }}
       >
         {profile?.avatarDataUrl ? (
@@ -43,17 +50,17 @@ export default function ProfileChip({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold truncate leading-tight">
+        <p className="text-[15px] font-semibold truncate leading-tight" style={{ color: "var(--text)" }}>
           {profile ? profile.name : "Kies profiel…"}
         </p>
-        {profile && (
-          <p className="text-xs truncate leading-tight" style={{ color: labelColour }}>
-            {isPartner && <Lock size={9} className="inline mr-0.5" aria-hidden="true" />}
-            Profiel {slot}
+        {profile && roleLabel && (
+          <p className="mt-1 text-[14px] truncate leading-tight" style={{ color: labelColour }}>
+            {isPartner && <Lock size={12} className="inline mr-1" aria-hidden="true" />}
+            {roleLabel}
           </p>
         )}
       </div>
-      <CaretDown aria-hidden="true" size={12} className="shrink-0" style={{ color: "var(--text2)" }} />
+      <CaretDown aria-hidden="true" size={15} className="shrink-0" style={{ color: "var(--text2)" }} />
     </button>
   );
 }
