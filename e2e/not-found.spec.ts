@@ -32,22 +32,36 @@ for (const viewport of MOBILE_VIEWPORTS) {
     await page.goto("/this-route-is-not-collared");
 
     const hero = page.getByTestId("not-found-hero");
+    const whip = page.getByTestId("not-found-whip");
     const homeLink = page.getByRole("link", { name: /terug naar home/i });
 
     await expect(hero).toBeVisible();
+    await expect(whip).toBeVisible();
     await expect(homeLink).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     const heroBox = await hero.boundingBox();
+    const whipBox = await whip.boundingBox();
     expect(heroBox).not.toBeNull();
+    expect(whipBox).not.toBeNull();
     expect(heroBox!.x).toBeGreaterThanOrEqual(0);
     expect(heroBox!.x + heroBox!.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(whipBox!.x).toBeGreaterThanOrEqual(heroBox!.x - 1);
+    expect(whipBox!.x + whipBox!.width).toBeLessThanOrEqual(heroBox!.x + heroBox!.width + 1);
+    expect(whipBox!.y).toBeGreaterThanOrEqual(heroBox!.y);
+    expect(whipBox!.y + whipBox!.height).toBeLessThanOrEqual(heroBox!.y + heroBox!.height + 1);
 
     await homeLink.scrollIntoViewIfNeeded();
     const linkBox = await homeLink.boundingBox();
+    const bottomNavBox = await page.locator(".bottom-nav").boundingBox();
     expect(linkBox).not.toBeNull();
     expect(linkBox!.x).toBeGreaterThanOrEqual(0);
     expect(linkBox!.x + linkBox!.width).toBeLessThanOrEqual(viewport.width + 1);
-    expect(linkBox!.y + linkBox!.height).toBeLessThanOrEqual(viewport.height + 1);
+
+    if (bottomNavBox) {
+      expect(linkBox!.y + linkBox!.height).toBeLessThanOrEqual(bottomNavBox.y + 1);
+    } else {
+      expect(linkBox!.y + linkBox!.height).toBeLessThanOrEqual(viewport.height + 1);
+    }
   });
 }
