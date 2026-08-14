@@ -189,7 +189,7 @@ export default function QuestionsScreen({ params }: Props) {
       </div>
 
       <section
-        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 ${activeRuntime.complete ? "flex items-center" : ""}`}
+        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 ${activeRuntime.complete ? "flex flex-col" : ""}`}
         data-testid="questions-scroll-region"
       >
         {!activeRuntime.complete ? (
@@ -206,7 +206,7 @@ export default function QuestionsScreen({ params }: Props) {
             onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
           />
         ) : (
-          <div className="mx-auto w-full max-w-sm px-4 py-8 text-center ks-fade-in" data-testid="questions-complete">
+          <div className="my-auto mx-auto w-full max-w-sm px-4 py-8 text-center ks-fade-in" data-testid="questions-complete">
             <span
               className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
               style={{
