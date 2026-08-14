@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Circle, Eye, EyeSlash, Star } from "@phosphor-icons/react";
+import { ArrowRight, CaretRight, Check, Circle, Eye, EyeSlash, ShieldCheck, Star } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import {
@@ -11,6 +11,7 @@ import {
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
+import Sheet, { SheetContent } from "./Sheet";
 import ClampText from "./ui/ClampText";
 
 const AGREEMENTS = [
@@ -49,6 +50,7 @@ export default function TriageDeck({
   const [holding, setHolding] = useState<string | null>(null);
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
+  const [safetyKinkId, setSafetyKinkId] = useState<string | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeTransition = reducedMotion
     ? { duration: 0 }
@@ -131,6 +133,7 @@ export default function TriageDeck({
     : 0;
   const totalDone = kinks.filter((kink) => entries[kink.id]?.status != null).length;
   const currentEntry = current ? entries[current.id] : undefined;
+  const safetyOpen = Boolean(current?.safetyNote && safetyKinkId === current.id);
 
   return (
     <>
@@ -204,17 +207,20 @@ export default function TriageDeck({
                 <div />
               )}
               {current.safetyNote && (
-                <aside
-                  className="mt-2 rounded-xl px-3 py-2"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+                <button
+                  type="button"
+                  data-testid="safety-disclosure"
+                  aria-haspopup="dialog"
+                  aria-expanded={safetyOpen}
+                  onClick={() => setSafetyKinkId(current.id)}
+                  className="focus-ring mt-2 flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left transition-colors"
+                  style={{ background: "var(--surface2)", color: "var(--text2)" }}
                 >
-                  <span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
-                  <ClampText
-                    text={current.safetyNote}
-                    className="mt-0.5 text-xs leading-relaxed"
-                    style={{ color: "var(--text2)" }}
-                  />
-                </aside>
+                  <ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent-text)" }} aria-hidden="true" />
+                  <span className="flex-1 text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
+                  <span className="text-xs">Bekijk</span>
+                  <CaretRight size={14} aria-hidden="true" />
+                </button>
               )}
             </div>
 
@@ -302,6 +308,35 @@ export default function TriageDeck({
         </motion.div>
       )}
       </div>
+
+      {current?.safetyNote && (
+        <Sheet
+          open={safetyOpen}
+          onClose={() => setSafetyKinkId(null)}
+          scrollable
+          aria-label={`Veiligheid bij ${current.name}`}
+        >
+          <SheetContent
+            className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
+            style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) * 0.7), 32rem)" }}
+          >
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={20} weight="duotone" style={{ color: "var(--accent-text)" }} aria-hidden="true" />
+              <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>Veiligheid</h3>
+            </div>
+            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{current.name}</p>
+            <p className="mt-4 text-sm leading-6" style={{ color: "var(--text)" }}>{current.safetyNote}</p>
+            <button
+              type="button"
+              onClick={() => setSafetyKinkId(null)}
+              className="focus-ring mt-5 min-h-12 w-full rounded-xl text-sm font-semibold"
+              style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
+            >
+              Sluit
+            </button>
+          </SheetContent>
+        </Sheet>
+      )}
     </>
   );
 }
