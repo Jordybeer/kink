@@ -129,9 +129,9 @@ export default function CompareKinkRow({
       </div>
 
       <div className="mb-1 flex items-center gap-2">
-        <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${displayName}`} compact />
+        <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${displayName}`} compact readable />
         <div className="h-px flex-1" style={{ background: "var(--border)", opacity: 0.35 }} />
-        <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${displayName}`} compact />
+        <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${displayName}`} compact readable />
       </div>
 
       {(showReadOnlyA || showReadOnlyB) && (
