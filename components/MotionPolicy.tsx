@@ -4,12 +4,12 @@ import { MotionConfig } from "framer-motion";
 import type { ReactNode } from "react";
 
 /**
- * Site-wide motion accessibility safety net.
+ * Site-wide reduced-motion safety net for Framer Motion.
  *
- * `reducedMotion="user"` makes Framer Motion respect the operating-system
- * preference everywhere, including older/direct motion consumers that do not
- * call `useMotionSafe()` themselves. Component-level motion helpers still own
- * timing and presentation details; this provider is the final guardrail.
+ * The root policy makes Motion respect the operating-system preference for
+ * transform/layout animation. Interaction semantics stay explicit: components
+ * that should remove tactile press scaling use `useMotionSafe().tap`, so a
+ * reduced-motion user never depends on MotionConfig target behavior alone.
  */
 export default function MotionPolicy({ children }: { children: ReactNode }) {
   return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
