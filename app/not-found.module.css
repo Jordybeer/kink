@@ -11,7 +11,7 @@
     calc(env(safe-area-inset-bottom) + clamp(1rem, 2.5vh, 1.5rem));
 }
 
-:global(body:has(#not-found-page) .bottom-nav) {
+:global(body):has(.pageShell) :global(.bottom-nav) {
   display: none;
 }
 

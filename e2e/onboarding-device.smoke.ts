@@ -18,6 +18,10 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(Math.max(layout.bodyWidth, layout.documentWidth)).toBeLessThanOrEqual(layout.viewportWidth + 1);
 }
 
+async function expectCleanCopy(locator: Locator) {
+  await expect(locator).not.toContainText(/konijnenhol|rabbit hole|—|–/i);
+}
+
 async function capture(page: Page, project: string, slug: string) {
   await page.evaluate(async () => { await document.fonts.ready; });
   await page.screenshot({
@@ -38,18 +42,27 @@ test("onboarding stays usable inside the browser viewport", async ({ page }, tes
 
   const dialog = page.getByRole("dialog", { name: /welkom bij kinksync/i });
   await expectInsideVisualViewport(dialog);
+  await expectCleanCopy(dialog);
 
   await page.getByRole("button", { name: /^begin$/i }).click();
-  await page.getByRole("button", { name: /18\+/i }).click();
-  await page.getByRole("button", { name: /kom maar door/i }).click();
+  await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
+  await expectCleanCopy(dialog);
 
+  await page.getByRole("button", { name: /18\+/i }).click();
+  await expect(page.getByRole("heading", { name: /hoe klinkt dit voor jou/i })).toBeVisible();
+  await expectCleanCopy(dialog);
+
+  await page.getByRole("button", { name: /kom maar door/i }).click();
   await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
+  await expectCleanCopy(dialog);
+
   await expectInsideVisualViewport(page.getByRole("button", { name: /^verder/i }));
   await expectNoHorizontalOverflow(page);
   await capture(page, testInfo.project.name, "together");
   await page.getByRole("button", { name: /^verder/i }).click();
 
   await expect(page.getByRole("heading", { name: /niet voor iedere pottenkijker/i })).toBeVisible();
+  await expectCleanCopy(dialog);
   await expectInsideVisualViewport(page.getByRole("button", { name: "PIN instellen" }));
   await expectInsideVisualViewport(page.getByRole("button", { name: "Niet nu" }));
   await expectNoHorizontalOverflow(page);
@@ -57,6 +70,7 @@ test("onboarding stays usable inside the browser viewport", async ({ page }, tes
   await page.getByRole("button", { name: "Niet nu" }).click();
 
   await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
+  await expectCleanCopy(dialog);
   const finish = page.getByRole("button", { name: /naar kinksync/i });
   await expectInsideVisualViewport(finish);
   await expectNoHorizontalOverflow(page);

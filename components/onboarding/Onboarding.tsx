@@ -360,7 +360,7 @@ function Discover() {
           {statuses.map(([label, color]) => <span key={label} className="rounded-full border px-3 py-1.5 text-[13px] font-medium" style={{ borderColor: `color-mix(in srgb, ${color} 45%, var(--border))`, color }}>{label}</span>)}
         </div>
       </motion.div>
-      <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>Geen goed of fout.<br />Geen kinkier-dan-de-rest-score.</motion.p>
+      <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>Geen goed of fout.<br />Geen score voor hoe kinky je bent.</motion.p>
       <motion.p variants={childV} className="mt-5 text-base font-semibold leading-7">Gewoon waar jij staat.</motion.p>
     </div>
   );
@@ -392,7 +392,7 @@ function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
     <div>
       <Eyebrow>Privé</Eyebrow>
       <Title compact>Niet voor iedere pottenkijker.</Title>
-      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]">Al jouw data blijft standaard op jouw toestel.<span className="mt-2 block font-semibold" style={{ color: 'var(--accent)' }}>Volledig offline. Privacy-first.</span></motion.p>
+      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]">Al jouw data blijft standaard op jouw toestel.<span className="mt-2 block font-semibold" style={{ color: 'var(--accent)' }}>Volledig offline. Privacy voorop.</span></motion.p>
       <motion.div variants={childV} className="mt-5 rounded-2xl border px-4 py-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <div className="flex items-start gap-3.5">
           <Lock size={21} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
@@ -401,7 +401,7 @@ function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
         <div className="my-4 h-px" style={{ background: 'var(--border)' }} />
         <div className="flex items-start gap-3.5">
           <QrCode size={21} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
-          <div><p className="text-base font-semibold">Delen wanneer jij dat wilt</p><p className="mt-2 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>Via QR, link, export of back-up.<br />Jij kiest wat vertrekt.</p></div>
+          <div><p className="text-base font-semibold">Delen wanneer jij dat wilt</p><p className="mt-2 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>Via QR, link, export of reservekopie.<br />Jij kiest wat vertrekt.</p></div>
         </div>
       </motion.div>
       <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>Nieuwsgierige vingers? <span className="font-semibold" style={{ color: 'var(--text)' }}>Zet er een PIN{bioAvailable ? ' en eventueel biometrie' : ''} op.</span></motion.p>

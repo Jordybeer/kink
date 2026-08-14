@@ -5,11 +5,13 @@ test("404 stays usable on the launch device matrix", async ({ page }) => {
 
   const hero = page.getByTestId("not-found-hero");
   const homeLink = page.getByRole("link", { name: /terug naar home/i });
+  const pageCopy = page.locator("#not-found-page");
 
   await expect(hero).toBeVisible();
-  await expect(page.getByRole("heading", { name: /heeft zich laten meeslepen/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /hier is niets te vinden/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Hoofdnavigatie" })).toBeVisible();
   await expect(page.locator(".bottom-nav")).toBeHidden();
+  await expect(pageCopy).not.toContainText(/konijnenhol|rabbit hole|—|–/i);
   await expect(homeLink).toBeVisible();
 
   const artwork = hero.locator('img[src*="404-pagina-niet-hier.PNG"]');
