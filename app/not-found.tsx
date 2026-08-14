@@ -7,7 +7,7 @@ import styles from "./not-found.module.css";
 export default function NotFound() {
   return (
     <PageShell width="5xl" flush className={styles.pageShell}>
-      <section className={styles.content} aria-labelledby="not-found-title">
+      <section id="not-found-page" className={styles.content} aria-labelledby="not-found-title">
         <div className={styles.hero} data-testid="not-found-hero" aria-hidden="true">
           <Image
             src="/404-pagina-niet-hier.PNG"
