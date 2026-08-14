@@ -29,7 +29,7 @@ function overlapOpening(percent: number, seed: number): string {
     return choose([
       "Er is behoorlijk wat overlap.",
       "Best veel antwoorden komen overeen.",
-      "Op veel voorkeuren ligt de interesse dicht bij elkaar.",
+      "Bij veel voorkeuren ligt de interesse dicht bij elkaar.",
     ], seed);
   }
   if (percent >= 25) {
@@ -49,10 +49,10 @@ function overlapOpening(percent: number, seed: number): string {
 function overlapDetail(summary: CompareSummary): string {
   const total = preferenceCount(summary.jointlyAssessed);
   if (summary.complementary > 0 && summary.shared > 0) {
-    return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief. Bij ${summary.complementary} andere sluiten geven en ontvangen op elkaar aan.`;
+    return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief. Bij ${summary.complementary} andere past wat de één wil geven bij wat de ander wil ontvangen.`;
   }
   if (summary.complementary > 0) {
-    return `Van de ${total} die aan beide kanten zijn ingevuld, sluiten geven en ontvangen bij ${summary.complementary} op elkaar aan.`;
+    return `Van de ${total} die aan beide kanten zijn ingevuld, past bij ${summary.complementary} wat de één wil geven bij wat de ander wil ontvangen.`;
   }
   return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief.`;
 }
@@ -102,7 +102,7 @@ export function planCompareStory(
     return {
       overlapPercent: null,
       overlapCount: 0,
-      lead: "Er is nog te weinig gedeelde informatie om iets zinnigs te vergelijken. Zodra dezelfde voorkeuren aan beide kanten zijn ingevuld, verschijnt hier het patroon.",
+      lead: "Er zijn nog geen voorkeuren die aan beide kanten zijn ingevuld. Zodra dat gebeurt, kan de vergelijking iets zinnigs laten zien.",
       insights: [],
       coverage: summary.unpairedVisible > 0
         ? `Voor ${preferenceCount(summary.unpairedVisible)} ontbreekt nog één zichtbaar antwoord.`
@@ -137,18 +137,12 @@ export function planCompareStory(
       : `Er staan ${summary.limit} harde grenzen tussen de gezamenlijk ingevulde voorkeuren. Die staan bewust los van het overlappercentage.`);
   }
 
-  if (summary.complementary > 0 && insights.length < 2) {
-    insights.push(summary.complementary === 1
-      ? "Bij één voorkeur vullen geven en ontvangen elkaar mooi aan."
-      : `Bij ${summary.complementary} voorkeuren vullen geven en ontvangen elkaar mooi aan.`);
-  }
-
   const clustered = categoryInsight(categoryScores);
   if (clustered && insights.length < 2) insights.push(clustered);
 
   if (summary.discuss > 0 && insights.length < 2) {
     insights.push(choose([
-      `Bij ${preferenceCount(summary.discuss)} ligt het minder duidelijk. De antwoorden verschillen, of één van beiden twijfelt nog.`,
+      `Bij ${preferenceCount(summary.discuss)} zit nog verschil of twijfel. Daar valt dus nog wat uit te praten of te ontdekken.`,
       `Bij ${preferenceCount(summary.discuss)} zit nog wat verschil of twijfel. Dat zijn logische onderwerpen om samen verder te verkennen.`,
       `${preferenceCount(summary.discuss)} zijn nog niet zo duidelijk. Soms verschillen de antwoorden, soms twijfelt één van beiden nog.`,
     ], seed + 19));
@@ -157,7 +151,7 @@ export function planCompareStory(
   if (summary.soft > 0 && insights.length < 2) {
     insights.push(choose([
       `Bij ${preferenceCount(summary.soft)} is de ene duidelijk enthousiaster dan de andere.`,
-      `Op ${preferenceCount(summary.soft)} verschilt vooral de mate van enthousiasme.`,
+      `Bij ${preferenceCount(summary.soft)} verschilt vooral hoeveel zin de één en de ander erin hebben.`,
       `Bij ${preferenceCount(summary.soft)} ligt de interesse niet even sterk aan beide kanten.`,
     ], seed + 23));
   }
