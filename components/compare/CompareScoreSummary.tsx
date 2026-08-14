@@ -64,7 +64,7 @@ export default function CompareScoreSummary({
       count: hardBoundaryCount,
       label: "grenzen",
       helper: hardBoundaryCount === 0
-        ? "Geen harde grens gevonden"
+        ? "Geen harde grens in deze antwoorden"
         : conflict > 0
           ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met een positief antwoord`
           : hardBoundaryCount === 1
