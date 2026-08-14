@@ -16,6 +16,7 @@ const ROUTES = [
   { slug: "scene", url: `/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}` },
 ] as const;
 
+const MOTION_SIZE_TOLERANCE_PX = 0.5;
 type CriticalRoute = (typeof ROUTES)[number];
 
 async function expectEffectivelyOpaque(locator: Locator) {
@@ -120,19 +121,19 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   await expect(dialog).toBeHidden();
 }
 
+async function boxSize(target: Locator) {
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) throw new Error("Expected interactive target to have a bounding box");
+  return { width: box.width, height: box.height };
+}
+
 async function holdPress(page: Page, target: Locator) {
   const box = await target.boundingBox();
   expect(box).not.toBeNull();
   if (!box) return;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-}
-
-async function hasScaleTransform(target: Locator) {
-  return target.evaluate((element) => {
-    const transform = getComputedStyle(element).transform;
-    return transform !== "none" && transform !== "matrix(1, 0, 0, 1, 0, 0)";
-  });
 }
 
 test("critical launch routes hydrate with their real content inside the viewport", async ({ page }, testInfo) => {
@@ -176,8 +177,12 @@ test("iPhone tactile motion remains present normally and collapses with reduced 
   const begin = page.getByRole("button", { name: "Begin", exact: true });
   await expect(begin).toBeVisible();
 
+  const normalSize = await boxSize(begin);
   await holdPress(page, begin);
-  await expect.poll(() => hasScaleTransform(begin)).toBe(true);
+  await expect.poll(async () => {
+    const held = await boxSize(begin);
+    return Math.max(normalSize.width - held.width, normalSize.height - held.height);
+  }).toBeGreaterThan(MOTION_SIZE_TOLERANCE_PX);
   await page.screenshot({
     path: `test-results/device-screenshots/${testInfo.project.name}/motion-normal-pressed.png`,
   });
@@ -188,8 +193,15 @@ test("iPhone tactile motion remains present normally and collapses with reduced 
   const reducedBegin = page.getByRole("button", { name: "Begin", exact: true });
   await expect(reducedBegin).toBeVisible();
 
+  const reducedSize = await boxSize(reducedBegin);
   await holdPress(page, reducedBegin);
-  await expect.poll(() => hasScaleTransform(reducedBegin)).toBe(false);
+  await expect.poll(async () => {
+    const held = await boxSize(reducedBegin);
+    return Math.max(
+      Math.abs(held.width - reducedSize.width),
+      Math.abs(held.height - reducedSize.height),
+    );
+  }).toBeLessThanOrEqual(MOTION_SIZE_TOLERANCE_PX);
   await page.screenshot({
     path: `test-results/device-screenshots/${testInfo.project.name}/motion-reduced-pressed.png`,
   });
