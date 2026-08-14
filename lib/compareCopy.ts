@@ -123,8 +123,8 @@ export function planCompareStory(
 
   if (summary.conflict > 0) {
     const conflictCopy = summary.conflict === 1
-      ? "Bij één voorkeur staat enthousiasme tegenover een harde grens. Daar zou ik eerst even samen over praten."
-      : `Bij ${summary.conflict} voorkeuren staat enthousiasme tegenover een harde grens. Daar zou ik eerst even samen over praten.`;
+      ? "Bij één voorkeur staat enthousiasme tegenover een harde grens. Daar kun je best eerst even samen over praten."
+      : `Bij ${summary.conflict} voorkeuren staat enthousiasme tegenover een harde grens. Daar kun je best eerst even samen over praten.`;
     const otherLimits = summary.limit === 0
       ? ""
       : summary.limit === 1
