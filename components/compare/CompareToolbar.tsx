@@ -22,24 +22,46 @@ interface Props {
 }
 
 const RESULT_OPTIONS: ReadonlyArray<{ id: CompareResultFilter; label: string; helper: string }> = [
-  { id: "shared", label: "Samen", helper: "Allebei positief" },
-  { id: "complementary", label: "Geven & ontvangen", helper: "De ene geeft wat de andere wil ontvangen" },
+  { id: "shared", label: "Samen", helper: "Aan beide kanten positief" },
+  { id: "complementary", label: "Geven & ontvangen", helper: "Wat de één wil geven past bij wat de ander wil ontvangen" },
   { id: "discuss", label: "Bespreken", helper: "Verschil of twijfel" },
   { id: "soft", label: "Zachte verschillen", helper: "De ene is duidelijk enthousiaster" },
-  { id: "boundaries", label: "Grenzen", helper: "Harde grenzen en expliciete botsingen" },
+  { id: "boundaries", label: "Grenzen", helper: "Harde grenzen en duidelijke botsingen" },
 ];
 
-function FilterTrigger({ label, count, onClick }: { label: string; count: number; onClick: () => void }) {
+function FilterTrigger({
+  label,
+  count,
+  open,
+  testId,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  open: boolean;
+  testId: string;
+  onClick: () => void;
+}) {
+  const accessibleState = count === 0 ? "alles" : `${count} geselecteerd`;
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-haspopup="dialog"
+      aria-expanded={open}
+      aria-label={`${label}: ${accessibleState}`}
+      data-testid={testId}
       className="focus-ring flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border px-3.5 text-left text-[15px] font-semibold"
       style={{ borderColor: "var(--border)", background: "var(--surface2)", color: "var(--text)" }}
     >
       <span className="min-w-0 truncate">{label}{count > 0 ? ` · ${count}` : ""}</span>
-      <CaretDown size={17} className="shrink-0" aria-hidden="true" />
+      <CaretDown
+        size={17}
+        className="shrink-0 transition-transform"
+        aria-hidden="true"
+        style={{ transform: open ? "rotate(180deg)" : undefined }}
+      />
     </button>
   );
 }
@@ -66,8 +88,20 @@ export default function CompareToolbar({
   return (
     <>
       <div className="mb-3 grid grid-cols-2 gap-2" aria-label="Vergelijking filteren">
-        <FilterTrigger label="Resultaten" count={selectedResults.size} onClick={() => setResultsOpen(true)} />
-        <FilterTrigger label="Categorieën" count={selectedCategories.size} onClick={() => setCategoriesOpen(true)} />
+        <FilterTrigger
+          label="Resultaten"
+          count={selectedResults.size}
+          open={resultsOpen}
+          testId="compare-results-filter"
+          onClick={() => setResultsOpen(true)}
+        />
+        <FilterTrigger
+          label="Categorieën"
+          count={selectedCategories.size}
+          open={categoriesOpen}
+          testId="compare-categories-filter"
+          onClick={() => setCategoriesOpen(true)}
+        />
       </div>
 
       <DiscussedToggle count={discussedCount} hidden={hideDiscussed} onToggle={onToggleHideDiscussed} />
