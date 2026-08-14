@@ -19,7 +19,7 @@ interface Props {
 const FILTERS: ReadonlyArray<{ mode: CompareFilterMode; label: string }> = [
   { mode: "all", label: "Alles" },
   { mode: "shared", label: "Samen" },
-  { mode: "complementary", label: "Rollen" },
+  { mode: "complementary", label: "Geven & ontvangen" },
   { mode: "discuss", label: "Bespreken" },
   { mode: "soft", label: "Zachte verschillen" },
   { mode: "conflict", label: "Conflicten" },
