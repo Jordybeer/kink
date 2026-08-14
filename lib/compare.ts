@@ -25,6 +25,13 @@ export type CompareFilterMode =
   | "conflict"
   | "limit";
 
+export type CompareResultFilter =
+  | "shared"
+  | "complementary"
+  | "discuss"
+  | "soft"
+  | "boundaries";
+
 export type CompareCategoryScore = CompareCategoryEvidence;
 export interface CompareSummary extends CompareSummaryV2 {
   /** Compatibility alias for the existing page contract. */
