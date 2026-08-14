@@ -18,10 +18,10 @@ interface Props {
 
 const FILTERS: ReadonlyArray<{ mode: CompareFilterMode; label: string }> = [
   { mode: "all", label: "Alles" },
-  { mode: "shared", label: "Gedeeld" },
-  { mode: "complementary", label: "Complementair" },
+  { mode: "shared", label: "Samen" },
+  { mode: "complementary", label: "Rollen" },
   { mode: "discuss", label: "Bespreken" },
-  { mode: "soft", label: "Zacht" },
+  { mode: "soft", label: "Zachte verschillen" },
   { mode: "conflict", label: "Conflicten" },
   { mode: "limit", label: "Grenzen" },
 ];
@@ -45,7 +45,7 @@ export default function CompareToolbar({
               type="button"
               aria-pressed={active}
               onClick={() => onFilterChange(mode)}
-              className="focus-ring min-h-11 flex-none whitespace-nowrap rounded-full px-3 text-xs font-medium"
+              className="focus-ring min-h-11 flex-none whitespace-nowrap rounded-full px-3.5 text-[14px] font-medium"
               style={{
                 color: active ? "var(--on-accent)" : "var(--text)",
                 background: active ? "var(--action-primary)" : "var(--surface2)",
@@ -64,7 +64,7 @@ export default function CompareToolbar({
             key={item.category}
             type="button"
             onClick={() => document.getElementById(`cat-${item.category}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            className="focus-ring min-h-11 flex-none whitespace-nowrap rounded-full px-3 text-xs"
+            className="focus-ring min-h-11 flex-none whitespace-nowrap rounded-full px-3.5 text-[14px]"
             style={{ color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
             {kinkCategoryLabel(item.category)} · {item.jointlyAssessed}
