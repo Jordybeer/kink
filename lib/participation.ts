@@ -60,6 +60,16 @@ export function complementaryPartnerKinkId(kinkId: string): string {
   return complementarySiblingId(kinkId) ?? kinkId;
 }
 
+/**
+ * Geeft alleen voor bijzondere complementaire participatie-assen de expliciete
+ * kant terug. Directionele give/receive-paren blijven via directionality lopen.
+ */
+export function complementaryParticipationSideLabel(kinkId: string): string | null {
+  const special = SPECIAL_PAIR_BY_KINK_ID.get(kinkId);
+  if (!special) return null;
+  return special.leftId === kinkId ? special.leftLabel : special.rightLabel;
+}
+
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 
 export interface ComplementaryComparisonEntries {
