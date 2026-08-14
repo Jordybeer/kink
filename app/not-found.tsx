@@ -22,10 +22,10 @@ export default function NotFound() {
         <div className={styles.copy}>
           <p className={styles.eyebrow}>VERKEERDE DEUR</p>
           <h1 id="not-found-title" className={styles.title}>
-            Hmm… deze pagina heeft zich laten meeslepen.
+            Hmm… deze pagina is nergens te vinden.
           </h1>
           <p className={styles.description}>
-            De link klopt niet meer, de pagina is verhuisd — of je bent gewoon iets te enthousiast door het konijnenhol gekropen.
+            De link klopt niet meer of de pagina is verhuisd. Hoe dan ook, hier zit je niet goed.
           </p>
 
           <Link href="/" className={`focus-ring ${styles.homeLink}`}>
@@ -33,8 +33,10 @@ export default function NotFound() {
             <ArrowRight size={17} weight="bold" aria-hidden="true" />
           </Link>
 
-          <p className={styles.reassurance}>
-            Je lokale profielen en antwoorden zijn niet weg. Alleen deze route mist z’n bestemming.
+          <p className={styles.reassurance} data-testid="not-found-reassurance">
+            Je lokale profielen en antwoorden zijn niet weg.
+            <br />
+            Alleen deze route mist z’n bestemming.
           </p>
         </div>
       </section>
