@@ -50,22 +50,30 @@ test.describe("Vergelijkingspagina", () => {
     await expect(page.getByRole("button", { name: "Kies profiel B: Sam" })).toContainText("Submissive");
   });
 
-  test("houdt profielrol en expliciete directionality van elkaar gescheiden", async ({ page }) => {
+  test("houdt profielrol en expliciete richting van elkaar gescheiden", async ({ page }) => {
+    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+    await expect(summary).toContainText(/samen/i);
+    await expect(summary).toContainText(/bespreken/i);
+    await expect(summary).toContainText(/grenzen/i);
+
     const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toContain("Samen");
-    expect(text).toContain("Bespreken");
-    expect(text).toContain("Grenzen");
-    expect(text).toContain("Spanking (hand) — geven ↔ ontvangen");
+    expect(text).toContain("Spanking (hand)");
+    expect(text).toMatch(/Alex (geeft|ontvangt) · Sam (ontvangt|geeft)/);
     expect(text).toMatch(/[Ff]logging/);
+    expect(text).not.toContain("complementaire richting");
+    expect(text).not.toMatch(/Spanking \(hand\).*↔.*Spanking \(hand\)/);
   });
 
   test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
-    const resultsTrigger = page.getByRole("button", { name: "Resultaten" });
-    const categoriesTrigger = page.getByRole("button", { name: "Categorieën" });
+    const resultsTrigger = page.getByTestId("compare-results-filter");
+    const categoriesTrigger = page.getByTestId("compare-categories-filter");
     await expect(resultsTrigger).toBeVisible();
     await expect(categoriesTrigger).toBeVisible();
+    await expect(resultsTrigger).toHaveAccessibleName("Resultaten: alles");
+    await expect(categoriesTrigger).toHaveAccessibleName("Categorieën: alles");
 
     await resultsTrigger.click();
+    await expect(resultsTrigger).toHaveAttribute("aria-expanded", "true");
     const resultsDialog = page.getByRole("dialog", { name: "Resultaten filteren" });
     await expect(resultsDialog).toBeVisible();
     await expect(resultsDialog.getByRole("button", { name: "Alles" })).toHaveAttribute("aria-pressed", "true");
@@ -78,6 +86,8 @@ test.describe("Vergelijkingspagina", () => {
     await expect(boundaries).toHaveAttribute("aria-pressed", "true");
     await resultsDialog.getByRole("button", { name: "Klaar" }).click();
     await expect(resultsTrigger).toContainText("· 2");
+    await expect(resultsTrigger).toHaveAccessibleName("Resultaten: 2 geselecteerd");
+    await expect(resultsTrigger).toHaveAttribute("aria-expanded", "false");
 
     await categoriesTrigger.click();
     const categoriesDialog = page.getByRole("dialog", { name: "Categorieën filteren" });
@@ -88,6 +98,7 @@ test.describe("Vergelijkingspagina", () => {
     await expect(categoryButtons.first()).toHaveAttribute("aria-pressed", "true");
     await categoriesDialog.getByRole("button", { name: "Klaar" }).click();
     await expect(categoriesTrigger).toContainText("· 1");
+    await expect(categoriesTrigger).toHaveAccessibleName("Categorieën: 1 geselecteerd");
   });
 
   test("houdt eenzijdige antwoorden apart van pair-resultaten", async ({ page }) => {
@@ -114,8 +125,22 @@ test.describe("Vergelijkingspagina", () => {
     await page.waitForLoadState("networkidle");
     const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
     expect(overflow).toBe(false);
-    await expect(page.getByRole("button", { name: "Resultaten" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Categorieën" })).toBeVisible();
+    await expect(page.getByTestId("compare-results-filter")).toBeVisible();
+    await expect(page.getByTestId("compare-categories-filter")).toBeVisible();
+  });
+
+  test("belangrijke vergelijktekst blijft minstens 14px", async ({ page }) => {
+    const selectors = [
+      "[data-testid='compare-results-filter']",
+      "[data-testid='compare-categories-filter']",
+      "details summary",
+    ];
+    for (const selector of selectors) {
+      const element = page.locator(selector).first();
+      await expect(element).toBeVisible();
+      const size = await element.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+      expect(size).toBeGreaterThanOrEqual(14);
+    }
   });
 
   test("statusbadges voor beide profielen zijn zichtbaar", async ({ page }) => {
