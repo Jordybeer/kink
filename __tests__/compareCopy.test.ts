@@ -76,7 +76,9 @@ describe("compare narrative copy", () => {
       category({ category: "impact", jointlyAssessed: 7, discuss: 1, shared: 6 }),
     ];
     const story = planCompareStory(summary({ discuss: 6, soft: 2 }), categories);
-    expect(story.insights.join(" ")).toMatch(/Bondage/);
+    const copy = story.insights.join(" ");
+    expect(copy).toMatch(/Bondage/);
+    expect(copy).not.toMatch(/daarbuiten|vaker op dezelfde lijn/i);
   });
 
   it("blijft voorzichtig wanneer er nog niets gezamenlijk beoordeeld is", () => {
