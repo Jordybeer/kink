@@ -28,7 +28,7 @@ interface Props {
 
 const FACT_LABEL: Record<CompareFactKind, string> = {
   shared: "zelfde interesse",
-  complementary: "geven en ontvangen passen",
+  complementary: "past bij elkaar",
   discuss: "even bespreken",
   soft: "verschil in enthousiasme",
   conflict: "botst met harde grens",
