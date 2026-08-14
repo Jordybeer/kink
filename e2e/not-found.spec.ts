@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function assertNotFoundFits(page: Page) {
   await expect(page.getByRole("heading", { name: /heeft zich laten meeslepen/i })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Hoofdnavigatie" })).toBeVisible();
+  await expect(page.locator(".bottom-nav")).toBeHidden();
 
   const homeLink = page.getByRole("link", { name: /terug naar home/i });
   await expect(homeLink).toHaveAttribute("href", "/");
@@ -27,18 +29,12 @@ async function assertNotFoundFits(page: Page) {
   await homeLink.scrollIntoViewIfNeeded();
   const linkBox = await homeLink.boundingBox();
   expect(linkBox).not.toBeNull();
-
-  const bottomNav = page.locator(".bottom-nav");
-  if (await bottomNav.isVisible()) {
-    const navBox = await bottomNav.boundingBox();
-    expect(navBox).not.toBeNull();
-    if (linkBox && navBox) {
-      expect(linkBox.y + linkBox.height).toBeLessThanOrEqual(navBox.y + 1);
-    }
+  if (linkBox) {
+    expect(linkBox.y + linkBox.height).toBeLessThanOrEqual((await page.viewportSize())!.height + page.evaluate(() => window.scrollY) + 1);
   }
 }
 
-test("unknown route lands on the KinkSync 404", async ({ page }) => {
+test("unknown route lands on the focused KinkSync 404", async ({ page }) => {
   await page.goto("/this-route-is-not-collared");
   await assertNotFoundFits(page);
 });
