@@ -13,6 +13,7 @@ import AmbientGlow from "@/components/ui/AmbientGlow";
 import OfflineCacheWarmup from "@/components/OfflineCacheWarmup";
 import ImportedProfileIntegrityGate from "@/components/ImportedProfileIntegrityGate";
 import AppLockGate from "@/components/AppLockGate";
+import MotionPolicy from "@/components/MotionPolicy";
 import { TopNavProvider } from "@/components/nav/TopNavContext";
 
 const instrumentSans = Instrument_Sans({
@@ -58,23 +59,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col antialiased">
-        <VisualViewportBridge />
-        <AmbientGlow />
-        <AppLockGate>
-          <InstallPromptBridge />
-          <OfflineCacheWarmup />
-          <TopNavProvider>
-            <TopNav />
-            <BottomNav />
-            <ToastProvider>
-              <ImportedProfileIntegrityGate>
-                {children}
-                <UpdateBanner />
-                <NotificationPrompt />
-              </ImportedProfileIntegrityGate>
-            </ToastProvider>
-          </TopNavProvider>
-        </AppLockGate>
+        <MotionPolicy>
+          <VisualViewportBridge />
+          <AmbientGlow />
+          <AppLockGate>
+            <InstallPromptBridge />
+            <OfflineCacheWarmup />
+            <TopNavProvider>
+              <TopNav />
+              <BottomNav />
+              <ToastProvider>
+                <ImportedProfileIntegrityGate>
+                  {children}
+                  <UpdateBanner />
+                  <NotificationPrompt />
+                </ImportedProfileIntegrityGate>
+              </ToastProvider>
+            </TopNavProvider>
+          </AppLockGate>
+        </MotionPolicy>
       </body>
     </html>
   );
