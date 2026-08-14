@@ -2,7 +2,7 @@
 import { Backspace, Fingerprint, SpinnerGap } from "@phosphor-icons/react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TAP_SPRING, SHAKE_ANIM, useMotionSafe } from "@/lib/motion";
+import { SHAKE_ANIM, useMotionSafe } from "@/lib/motion";
 import { verifyPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
 
@@ -109,7 +109,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
             <motion.button
               onClick={tryBiometric}
               disabled={bioLoading}
-              whileTap={bioLoading ? {} : TAP_SPRING}
+              whileTap={bioLoading ? undefined : t.tap}
               style={{
                 background: bioLoading ? "var(--surface3)" : "color-mix(in srgb, var(--accent) 12%, transparent)",
                 border: `1px solid color-mix(in srgb, var(--accent) 30%, transparent)`,
@@ -149,8 +149,8 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
             <AnimatePresence mode="wait">
               <motion.div
                 key={shake ? "shake" : "normal"}
-                animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
-                transition={SHAKE_ANIM}
+                animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
+                transition={t.reduced ? t.fast : SHAKE_ANIM}
                 style={{ display: "flex", justifyContent: "center", gap: "0.875rem", marginBottom: "1.25rem" }}
               >
                 {Array.from({ length: PIN_LENGTH }, (_, i) => (
@@ -176,7 +176,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                   aria-label={k === "backspace" ? "Laatste cijfer wissen" : k || undefined}
                   onClick={() => k && handleKey(k)}
                   disabled={!k || cooldownLeft > 0}
-                  whileTap={k && cooldownLeft === 0 ? TAP_SPRING : {}}
+                  whileTap={k && cooldownLeft === 0 ? t.tap : undefined}
                   style={{
                     height: "3.25rem", borderRadius: "0.75rem",
                     fontWeight: 600, cursor: k && cooldownLeft === 0 ? "pointer" : "default",
