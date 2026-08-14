@@ -15,9 +15,17 @@ import {
   cleanCompareParam,
   getCompareCategoryScores,
   getCompareSummary,
-  type CompareFilterMode,
+  type CompareResultFilter,
 } from "@/lib/compare";
 import { useHasHydrated, useStore } from "@/lib/store";
+import type { KinkCategoryId } from "@/types";
+
+function toggleSetValue<T>(current: ReadonlySet<T>, value: T): Set<T> {
+  const next = new Set(current);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
+}
 
 function ComparePage() {
   const router = useRouter();
@@ -42,7 +50,8 @@ function ComparePage() {
     initialBId: cleanCompareParam(searchParams.get("b")),
   });
 
-  const [filterMode, setFilterMode] = useState<CompareFilterMode>("all");
+  const [selectedResults, setSelectedResults] = useState<Set<CompareResultFilter>>(new Set());
+  const [selectedCategories, setSelectedCategories] = useState<Set<KinkCategoryId>>(new Set());
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
@@ -67,12 +76,7 @@ function ComparePage() {
   useTopNavActions(navActions);
 
   const toggleDiscussed = useCallback((id: string) => {
-    setDiscussed((previous) => {
-      const next = new Set(previous);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setDiscussed((previous) => toggleSetValue(previous, id));
   }, []);
 
   const updateComment = useCallback((profileId: string, kinkId: string, comment: string) => {
@@ -101,13 +105,14 @@ function ComparePage() {
           <CompareScoreSummary {...summary} categoryScores={categoryScores} />
           <CompareToolbar
             categoryScores={categoryScores}
-            filterMode={filterMode}
-            matchCount={summary.match}
-            discussCount={summary.discuss}
-            hardLimitCount={summary.limit}
+            selectedResults={selectedResults}
+            selectedCategories={selectedCategories}
             discussedCount={discussed.size}
             hideDiscussed={hideDiscussed}
-            onFilterChange={setFilterMode}
+            onToggleResult={(filter) => setSelectedResults((current) => toggleSetValue(current, filter))}
+            onClearResults={() => setSelectedResults(new Set())}
+            onToggleCategory={(category) => setSelectedCategories((current) => toggleSetValue(current, category))}
+            onClearCategories={() => setSelectedCategories(new Set())}
             onToggleHideDiscussed={() => setHideDiscussed((value) => !value)}
           />
         </>
@@ -117,7 +122,8 @@ function ComparePage() {
         profileA={profileA}
         profileB={profileB}
         samePairError={samePairError}
-        filterMode={filterMode}
+        selectedResults={selectedResults}
+        selectedCategories={selectedCategories}
         discussed={discussed}
         hideDiscussed={hideDiscussed}
         onToggleDiscussed={toggleDiscussed}
