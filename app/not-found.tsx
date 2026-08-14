@@ -25,7 +25,7 @@ export default function NotFound() {
             Hmm… hier is niets te vinden.
           </h1>
           <p className={styles.description}>
-            De link klopt niet meer of de pagina is verhuisd. Ga terug naar home om verder te gaan.
+            De link klopt niet meer of de pagina is verhuisd.
           </p>
 
           <Link href="/" className={`focus-ring ${styles.homeLink}`}>
