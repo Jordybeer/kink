@@ -1,14 +1,10 @@
-import { planCompareSentences } from "@/lib/compareCopy";
-import type { CompareSummary } from "@/lib/compareV2";
+import { ArrowsLeftRight, ChatCircle, Heart, Info, ShieldWarning, WaveSine } from "@phosphor-icons/react";
+import { planCompareStory } from "@/lib/compareCopy";
+import type { CompareCategoryScore, CompareSummary } from "@/lib/compare";
 
-const STAT_ITEMS = [
-  { key: "shared", label: "Gedeeld", color: "var(--yes)" },
-  { key: "complementary", label: "Complementair", color: "var(--yes)" },
-  { key: "discuss", label: "Bespreken", color: "var(--conflict)" },
-  { key: "soft", label: "Zacht", color: "var(--maybe)" },
-  { key: "conflict", label: "Conflict", color: "var(--hard-no-text)" },
-  { key: "limit", label: "Harde grens", color: "var(--hard-no-text)" },
-] as const;
+interface Props extends CompareSummary {
+  categoryScores: CompareCategoryScore[];
+}
 
 export default function CompareScoreSummary({
   shared,
@@ -20,51 +16,157 @@ export default function CompareScoreSummary({
   jointlyAssessed,
   unpairedVisible,
   reasons,
-}: CompareSummary) {
-  const copy = planCompareSentences(reasons, jointlyAssessed);
+  match,
+  categoryScores,
+}: Props) {
+  const summary: CompareSummary = {
+    shared,
+    complementary,
+    discuss,
+    soft,
+    conflict,
+    limit,
+    jointlyAssessed,
+    unpairedVisible,
+    reasons,
+    match,
+  };
+  const story = planCompareStory(summary, categoryScores);
+  const hardBoundaryCount = conflict + limit;
+
+  const stats = [
+    {
+      key: "together",
+      count: shared,
+      label: "samen",
+      helper: "Allebei positief",
+      color: "var(--yes)",
+      icon: Heart,
+    },
+    {
+      key: "direction",
+      count: complementary,
+      label: "geven & ontvangen",
+      helper: "De één geeft, de ander ontvangt",
+      color: "var(--yes)",
+      icon: ArrowsLeftRight,
+    },
+    {
+      key: "discuss",
+      count: discuss,
+      label: "bespreken",
+      helper: "Verschil of twijfel",
+      color: "var(--conflict)",
+      icon: ChatCircle,
+    },
+    {
+      key: "soft",
+      count: soft,
+      label: "zachte verschillen",
+      helper: "De één is positiever",
+      color: "var(--maybe)",
+      icon: WaveSine,
+    },
+    {
+      key: "boundaries",
+      count: hardBoundaryCount,
+      label: hardBoundaryCount === 1 ? "harde grens" : "harde grenzen",
+      helper: conflict > 0
+        ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met een positief antwoord`
+        : "Minstens één harde grens",
+      color: "var(--hard-no-text)",
+      icon: ShieldWarning,
+    },
+  ].filter((item) => item.count > 0);
+  const statColumns = stats.length > 1 ? 2 : 1;
 
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
-      <div className="rounded-2xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-        <div className="flex items-end justify-between gap-3 mb-3">
-          <div>
-            <h2 id="compare-summary-heading" className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-              Wat jullie expliciet deelden
-            </h2>
-            <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
-              {jointlyAssessed === 0
-                ? "Nog geen gezamenlijk vergelijkbare antwoorden."
-                : `${jointlyAssessed} gezamenlijk ${jointlyAssessed === 1 ? "beoordeeld punt" : "beoordeelde punten"}`}
+      <div
+        className="rounded-2xl border p-5"
+        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+      >
+        <h2
+          id="compare-summary-heading"
+          className="text-[22px] font-semibold leading-tight"
+          style={{ color: "var(--text)" }}
+        >
+          Wat valt op tussen jullie
+        </h2>
+
+        {story.overlapPercent !== null ? (
+          <div className="mt-4">
+            <div className="flex items-end gap-2.5">
+              <div
+                className="text-[52px] font-semibold leading-none tabular-nums"
+                style={{ color: "var(--accent-text)" }}
+              >
+                {story.overlapPercent}%
+              </div>
+              <div className="pb-1 text-[15px] font-medium" style={{ color: "var(--accent-text)" }}>
+                duidelijke overlap
+              </div>
+            </div>
+            <p className="mt-3 max-w-2xl text-[17px] leading-[1.55]" style={{ color: "var(--text)" }}>
+              {story.lead}
             </p>
           </div>
-          {unpairedVisible > 0 && (
-            <span className="text-[11px] text-right" style={{ color: "var(--text2)" }}>
-              +{unpairedVisible} nog niet door beiden beoordeeld
-            </span>
-          )}
-        </div>
+        ) : (
+          <p className="mt-4 text-[17px] leading-[1.55]" style={{ color: "var(--text)" }}>
+            {story.lead}
+          </p>
+        )}
 
-        {jointlyAssessed > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-            {STAT_ITEMS.map(({ key, label, color }) => {
-              const count = { shared, complementary, discuss, soft, conflict, limit }[key];
-              return (
-                <div key={key} className="rounded-xl border px-3 py-2" style={{ borderColor: "var(--border)", background: "var(--surface2)" }}>
-                  <div className="text-lg font-semibold tabular-nums" style={{ color }}>{count}</div>
-                  <div className="text-[11px]" style={{ color: "var(--text2)" }}>{label}</div>
+        {stats.length > 0 && (
+          <div
+            className="mt-5 grid gap-px overflow-hidden rounded-2xl border"
+            style={{
+              gridTemplateColumns: `repeat(${statColumns}, minmax(0, 1fr))`,
+              borderColor: "var(--border)",
+              background: "var(--border)",
+            }}
+          >
+            {stats.map(({ key, count, label, helper, color, icon: Icon }) => (
+              <div key={key} className="min-w-0 px-3 py-4 text-center" style={{ background: "var(--surface2)" }}>
+                <div className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
+                  {count}
                 </div>
-              );
-            })}
+                <div className="mt-2 text-[15px] font-semibold leading-tight" style={{ color: "var(--text)" }}>
+                  {label}
+                </div>
+                <div className="mt-2 flex items-start justify-center gap-1.5 text-[14px] leading-[1.35]" style={{ color: "var(--text2)" }}>
+                  <Icon size={16} weight="regular" className="mt-0.5 shrink-0" aria-hidden="true" style={{ color }} />
+                  <span>{helper}</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        <div className="space-y-1.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-          {copy.map((sentence) => <p key={sentence}>{sentence}</p>)}
-        </div>
+        {story.insights.length > 0 && (
+          <div
+            className="mt-4 space-y-3 rounded-2xl border p-4 text-[16px] leading-[1.5]"
+            style={{ borderColor: "var(--border)", background: "var(--surface2)", color: "var(--text)" }}
+          >
+            {story.insights.map((insight) => (
+              <p key={insight}>{insight}</p>
+            ))}
+          </div>
+        )}
 
-        <p className="text-[11px] mt-3 pt-3 border-t" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
-          Dit beschrijft alleen zichtbare profieldata. Het is geen toestemming, veiligheidsclaim of oordeel over jullie relatie.
-        </p>
+        <div
+          className="mt-4 space-y-2 border-t pt-4 text-[14px] leading-[1.45]"
+          style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+        >
+          <div className="flex items-start gap-2.5">
+            <Info size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p>{story.coverage}</p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <ShieldWarning size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p>Alleen zichtbare antwoorden tellen mee. Overlap is geen toestemming.</p>
+          </div>
+        </div>
       </div>
     </section>
   );

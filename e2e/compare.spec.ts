@@ -23,35 +23,42 @@ test.describe("Vergelijkingspagina", () => {
     await seedAndGo(page, URL, [PROFILE_ALEX, PROFILE_SAM]);
   });
 
-  test("toont beide profielen zonder compatibiliteitspercentage", async ({ page }) => {
+  test("toont transparante overlap met natuurlijke uitleg", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).toMatch(/Alex/);
     expect(text).toMatch(/Sam/);
-    expect(text).toContain("Wat jullie expliciet deelden");
-    expect(text).toContain("gezamenlijk beoordeelde punten");
-    expect(text).not.toMatch(/\d+\s*%/);
+    expect(text).toContain("Wat valt op tussen jullie");
+    expect(text).toMatch(/\d+%/);
+    expect(text).toContain("duidelijke overlap");
+    expect(text).toMatch(/voorkeuren die jullie allebei hebben beoordeeld/i);
     expect(text).not.toContain("Sterke compatibiliteit");
     expect(text).not.toContain("Goede basis");
+    expect(text).not.toContain("compatibiliteitsscore");
   });
 
-  test("toont v2-dimensies en expliciete directionality", async ({ page }) => {
+  test("toont de rol van beide gekozen profielen", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Kies profiel A: Alex" })).toContainText("Dominant");
+    await expect(page.getByRole("button", { name: "Kies profiel B: Sam" })).toContainText("Submissive");
+  });
+
+  test("houdt profielrol en expliciete directionality van elkaar gescheiden", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toContain("Gedeeld");
-    expect(text).toContain("Complementair");
+    expect(text).toContain("Samen");
+    expect(text).toContain("Geven & ontvangen");
     expect(text).toContain("Bespreken");
-    expect(text).toContain("Harde grens");
+    expect(text).toContain("Grenzen");
     expect(text).toContain("Spanking (hand) — geven ↔ ontvangen");
     expect(text).toMatch(/[Ff]logging/);
   });
 
   test("maakt alle v2-resultaatfilters bereikbaar", async ({ page }) => {
-    const labels = ["Alles", "Gedeeld", "Complementair", "Bespreken", "Zacht", "Conflicten", "Grenzen"];
+    const labels = ["Alles", "Samen", "Geven & ontvangen", "Bespreken", "Zachte verschillen", "Conflicten", "Grenzen"];
     for (const label of labels) {
       await expect(page.getByRole("button", { name: label, exact: true })).toBeVisible();
     }
 
     const all = page.getByRole("button", { name: "Alles", exact: true });
-    const complementary = page.getByRole("button", { name: "Complementair", exact: true });
+    const complementary = page.getByRole("button", { name: "Geven & ontvangen", exact: true });
     await expect(all).toHaveAttribute("aria-pressed", "true");
     await complementary.click();
     await expect(complementary).toHaveAttribute("aria-pressed", "true");
@@ -68,7 +75,7 @@ test.describe("Vergelijkingspagina", () => {
   });
 
   test("benadrukt dat profieloverlap geen toestemming is", async ({ page }) => {
-    await expect(page.getByText(/geen toestemming, veiligheidsclaim of oordeel/i)).toBeVisible();
+    await expect(page.getByText(/overlap is geen toestemming/i)).toBeVisible();
   });
 
   test("geen horizontale overflow", async ({ page }) => {
