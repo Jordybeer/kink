@@ -1,4 +1,4 @@
-import { ArrowsLeftRight, ChatCircle, Heart, Info, WaveSine } from "@phosphor-icons/react";
+import { ArrowsLeftRight, ChatCircle, Heart, Info, ShieldWarning, WaveSine } from "@phosphor-icons/react";
 import { planCompareStory } from "@/lib/compareCopy";
 import type { CompareCategoryScore, CompareSummary } from "@/lib/compare";
 
@@ -32,6 +32,7 @@ export default function CompareScoreSummary({
     match,
   };
   const story = planCompareStory(summary, categoryScores);
+  const hardBoundaryCount = conflict + limit;
 
   const stats = [
     {
@@ -66,8 +67,18 @@ export default function CompareScoreSummary({
       color: "var(--maybe)",
       icon: WaveSine,
     },
+    {
+      key: "boundaries",
+      count: hardBoundaryCount,
+      label: hardBoundaryCount === 1 ? "harde grens" : "harde grenzen",
+      helper: conflict > 0
+        ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met een positief antwoord`
+        : "Minstens één van jullie trekt hier een harde grens",
+      color: "var(--hard-no-text)",
+      icon: ShieldWarning,
+    },
   ].filter((item) => item.count > 0);
-  const statColumns = stats.length > 3 ? 2 : Math.max(stats.length, 1);
+  const statColumns = stats.length === 3 ? 3 : stats.length > 1 ? 2 : 1;
 
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
