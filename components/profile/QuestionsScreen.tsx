@@ -167,7 +167,7 @@ export default function QuestionsScreen({ params }: Props) {
       className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4"
       style={{
         height: "calc(var(--visual-viewport-height, 100dvh) - var(--nav-h))",
-        paddingTop: "0.5rem",
+        paddingTop: "1rem",
         paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
       }}
       data-testid="questions-screen"
