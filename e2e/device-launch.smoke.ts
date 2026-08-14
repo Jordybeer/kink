@@ -66,7 +66,8 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
     case "compare":
       await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Alles", exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Complementair", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Rollen", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Wat valt op tussen jullie" })).toBeVisible();
       await expect.poll(() => page.locator('section[id^="cat-"]').count()).toBeGreaterThan(0);
       break;
     case "contract":
@@ -103,8 +104,6 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Heel graag", { exact: true })).toBeVisible();
 
-  // Visibility only proves that the dialog has layout. Wait until the sheet's
-  // entrance transform has reached the visual viewport before measuring it.
   await expect.poll(async () => dialog.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
