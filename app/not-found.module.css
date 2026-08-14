@@ -1,0 +1,211 @@
+.pageShell {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: calc(
+    var(--visual-viewport-height, 100dvh)
+    - var(--nav-h, 3.5rem)
+  );
+  padding-block:
+    clamp(0.75rem, 2.5vh, 2rem)
+    calc(var(--bottom-nav-h, 4.5rem) + env(safe-area-inset-bottom) + clamp(1rem, 2.5vh, 1.5rem));
+}
+
+.content {
+  width: 100%;
+  text-align: center;
+}
+
+.hero {
+  position: relative;
+  width: min(100%, 31rem);
+  aspect-ratio: 4 / 3;
+  margin: 0 auto clamp(1.25rem, 3vh, 1.9rem);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-radius: clamp(1.5rem, 7vw, 2rem);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 52%),
+    var(--surface2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
+    0 1.5rem 5rem color-mix(in srgb, var(--accent) 13%, transparent),
+    0 1.5rem 3.5rem rgb(0 0 0 / 0.34);
+}
+
+.heroImage {
+  object-fit: cover;
+  object-position: 50% 49%;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.025), transparent 28%, rgb(0 0 0 / 0.08)),
+    radial-gradient(circle at 50% 46%, transparent 58%, rgb(0 0 0 / 0.08) 100%);
+}
+
+.copy {
+  width: 100%;
+}
+
+.eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.title {
+  max-width: 36rem;
+  margin-inline: auto;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(1.75rem, 7vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.description,
+.reassurance {
+  margin-inline: auto;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.description {
+  max-width: 28rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  text-wrap: pretty;
+}
+
+.homeLink {
+  display: inline-flex;
+  width: min(100%, 24rem);
+  min-height: 3rem;
+  margin-top: clamp(1.25rem, 3vh, 1.75rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-inline: 1.25rem;
+  border-radius: 1rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.homeLink:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
+}
+
+.homeLink:active {
+  transform: translateY(0);
+}
+
+.reassurance {
+  max-width: 24rem;
+  margin-top: 1.25rem;
+  font-size: 0.75rem;
+}
+
+@media (max-height: 700px) and (orientation: portrait) {
+  .pageShell {
+    align-items: flex-start;
+    padding-top: 0.6rem;
+  }
+
+  .hero {
+    width: min(100%, 27rem);
+    aspect-ratio: 16 / 10;
+    margin-bottom: 1rem;
+  }
+
+  .heroImage {
+    object-position: 50% 48%;
+  }
+
+  .title {
+    font-size: clamp(1.55rem, 6vw, 1.9rem);
+  }
+
+  .description {
+    margin-top: 0.55rem;
+  }
+
+  .homeLink {
+    margin-top: 1rem;
+  }
+
+  .reassurance {
+    margin-top: 0.85rem;
+  }
+}
+
+@media (min-width: 760px) and (orientation: landscape) {
+  .pageShell {
+    padding-top: clamp(1rem, 2.5vh, 2rem);
+  }
+
+  .content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.88fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    text-align: left;
+  }
+
+  .hero {
+    width: 100%;
+    max-width: 38rem;
+    aspect-ratio: 4 / 3;
+    margin: 0;
+    justify-self: end;
+  }
+
+  .heroImage {
+    object-position: 50% 48%;
+  }
+
+  .copy {
+    max-width: 31rem;
+  }
+
+  .title,
+  .description,
+  .reassurance {
+    margin-inline: 0;
+  }
+
+  .title {
+    font-size: clamp(2rem, 3.4vw, 3.25rem);
+  }
+
+  .homeLink {
+    width: min(100%, 22rem);
+  }
+}
+
+@media (min-width: 1200px) and (orientation: landscape) {
+  .content {
+    grid-template-columns: minmax(0, 1.18fr) minmax(20rem, 0.82fr);
+  }
+
+  .hero {
+    max-width: 42rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homeLink {
+    transition: none;
+  }
+}

@@ -38,7 +38,7 @@ const galaxyS26Ultra = {
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["device-launch.smoke.ts", "device-overlays.smoke.ts"],
+  testMatch: ["device-launch.smoke.ts", "device-overlays.smoke.ts", "not-found-launch.smoke.ts"],
   fullyParallel: false,
   workers: 1,
   retries: 1,
