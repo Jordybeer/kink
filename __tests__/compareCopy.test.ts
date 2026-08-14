@@ -39,26 +39,33 @@ describe("compare narrative copy", () => {
     expect(getClearOverlapPercent(summary({ jointlyAssessed: 0 }))).toBeNull();
   });
 
-  it("legt het percentage uit met voorkeuren in gewone taal", () => {
+  it("legt het percentage uit in natuurlijk Nederlands zonder technische stopwoorden", () => {
     const story = planCompareStory(summary());
     expect(story.overlapPercent).toBe(69);
     expect(story.lead).toContain("39 voorkeuren");
     expect(story.lead).toContain("27");
-    expect(story.lead).toMatch(/dezelfde lijn|komen vaak overeen/i);
+    expect(story.lead).toMatch(/overlap|gemeenschappelijke grond|interesse/i);
     expect(story.lead).not.toMatch(/[—–]/);
-    expect(story.lead).not.toMatch(/punten|complementair|asymmetrie/i);
+    expect(story.lead).not.toMatch(/punten|complementair|asymmetrie|sluiten er .* duidelijk aan/i);
+    expect((story.lead.match(/jullie/gi) ?? []).length).toBeLessThanOrEqual(1);
     expect(story.coverage).toContain("233 andere");
+  });
+
+  it("splitst gedeelde interesse en geven plus ontvangen begrijpelijk uit", () => {
+    const story = planCompareStory(summary({ shared: 24, complementary: 3, match: 27 }));
+    expect(story.lead).toMatch(/24.*positieve interesse/i);
+    expect(story.lead).toMatch(/3 andere.*geven en ontvangen/i);
   });
 
   it("houdt harde grenzen belangrijker dan gewone nuance", () => {
     const story = planCompareStory(summary({ conflict: 1, discuss: 5, jointlyAssessed: 36 }));
     expect(story.insights[0]).toMatch(/harde grens/i);
-    expect(story.insights[0]).toMatch(/even over praten/i);
+    expect(story.insights[0]).toMatch(/even samen over te praten/i);
   });
 
   it("laat andere harde grenzen niet verdwijnen wanneer er ook een conflict is", () => {
     const story = planCompareStory(summary({ conflict: 1, limit: 2, discuss: 5, jointlyAssessed: 39 }));
-    expect(story.insights[0]).toMatch(/positief antwoord tegenover een harde grens/i);
+    expect(story.insights[0]).toMatch(/enthousiasme tegenover een harde grens/i);
     expect(story.insights[0]).toMatch(/2 andere voorkeuren/i);
   });
 
@@ -92,7 +99,7 @@ describe("compare narrative copy", () => {
       match: 0,
     }));
     expect(story.overlapPercent).toBeNull();
-    expect(story.lead).toMatch(/nog geen voorkeuren allebei beoordeeld/i);
+    expect(story.lead).toMatch(/te weinig gedeelde informatie/i);
     expect(story.coverage).toMatch(/12 voorkeuren/i);
   });
 });
