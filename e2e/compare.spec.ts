@@ -64,6 +64,29 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).not.toMatch(/Spanking \(hand\).*↔.*Spanking \(hand\)/);
   });
 
+  test("houdt bijzondere complementaire participatie concreet zonder give-receive aanname", async ({ page }) => {
+    const alex: Profile = {
+      ...PROFILE_ALEX,
+      entries: {
+        ...PROFILE_ALEX.entries,
+        luiers_dragen: { status: "yes", comment: "" },
+      },
+    };
+    const sam: Profile = {
+      ...PROFILE_SAM,
+      entries: {
+        ...PROFILE_SAM.entries,
+        diaper_partner_wearing: { status: "willing", comment: "" },
+      },
+    };
+    await seedAndGo(page, URL, [alex, sam]);
+
+    const text = await page.evaluate(() => document.body.innerText);
+    expect(text).toContain("Diaper wearing");
+    expect(text).toContain("Alex: zelf dragen · Sam: partner draagt");
+    expect(text).not.toMatch(/Diaper wearing[\s\S]{0,120}geven.*ontvangen/i);
+  });
+
   test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
     const resultsTrigger = page.getByTestId("compare-results-filter");
     const categoriesTrigger = page.getByTestId("compare-categories-filter");
@@ -78,8 +101,9 @@ test.describe("Vergelijkingspagina", () => {
     await expect(resultsDialog).toBeVisible();
     await expect(resultsDialog.getByRole("button", { name: "Alles" })).toHaveAttribute("aria-pressed", "true");
 
-    const shared = resultsDialog.getByRole("button", { name: /Samen/ });
+    const shared = resultsDialog.getByRole("button", { name: /Zelfde interesse/ });
     const boundaries = resultsDialog.getByRole("button", { name: /Grenzen/ });
+    await expect(resultsDialog.getByRole("button", { name: /Vult elkaar aan/ })).toBeVisible();
     await shared.click();
     await boundaries.click();
     await expect(shared).toHaveAttribute("aria-pressed", "true");
