@@ -18,7 +18,7 @@ import Wordmark from '@/components/Wordmark';
 import TurnDial from '@/components/onboarding/TurnDial';
 import { hashPin } from '@/lib/crypto';
 import { isPlatformAuthenticatorAvailable, registerBiometric } from '@/lib/webauthn';
-import { useMotionSafe, TAP_SPRING, STAGGER_CHILDREN, fadeUp, SHAKE_ANIM } from '@/lib/motion';
+import { useMotionSafe, STAGGER_CHILDREN, fadeUp, SHAKE_ANIM } from '@/lib/motion';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -274,9 +274,11 @@ function Action({ children, onClick, primary = false, disabled = false, ariaLabe
   disabled?: boolean;
   ariaLabel?: string;
 }) {
+  const t = useMotionSafe();
+
   return (
     <motion.button
-      whileTap={disabled ? undefined : TAP_SPRING}
+      whileTap={disabled ? undefined : t.tap}
       type="button"
       onClick={onClick}
       disabled={disabled}
@@ -410,11 +412,13 @@ function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
 }
 
 function Pin({ sub, digits, shake, onKey }: { sub: 'pin1' | 'pin2'; digits: string[]; shake: boolean; onKey: (key: string) => void }) {
+  const t = useMotionSafe();
+
   return (
     <div className="mx-auto max-w-[19rem] pt-4 text-center">
       <Title compact>{sub === 'pin1' ? 'Hou nieuwsgierige vingers buiten.' : 'Nog één keer.'}</Title>
       <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>{sub === 'pin1' ? <>Vier cijfers.<br />Hou ze voor jezelf.</> : 'Dezelfde vier cijfers.'}</motion.p>
-      <motion.div variants={childV} animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake ? SHAKE_ANIM : undefined} className="my-8 flex justify-center gap-4">
+      <motion.div variants={childV} animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake && !t.reduced ? SHAKE_ANIM : t.fast} className="my-8 flex justify-center gap-4">
         {Array.from({ length: PIN_LENGTH }, (_, index) => <div key={index} className="h-3.5 w-3.5 rounded-full" style={{ background: index < digits.length ? 'var(--accent)' : 'var(--border)' }} />)}
       </motion.div>
       <motion.div variants={childV} className="grid grid-cols-3 gap-2.5">
