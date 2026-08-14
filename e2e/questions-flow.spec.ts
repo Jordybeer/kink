@@ -1,5 +1,21 @@
 import { expect, test } from "@playwright/test";
+import { KINKS } from "@/lib/kinks";
+import type { Profile } from "@/types";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
+
+const SAFETY_COPY = "Spreek een tastbaar non-verbaal stopsignaal af en behoud omgevingsbewustzijn voor alarmen, verkeer en andere gevaren.";
+const SAFETY_PROFILE: Profile = {
+  ...PROFILE_ALEX,
+  id: "pw-safety-003",
+  name: "Safety",
+  customKinks: [],
+  questionnaireSetup: { mode: "deepDive", interests: [], version: 2 },
+  entries: Object.fromEntries(
+    KINKS
+      .filter((kink) => kink.id !== "sound_deprivation_give")
+      .map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }]),
+  ),
+};
 
 test("questionnaire focus hands off to the dedicated questions route", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}?focus=questionnaire`, [PROFILE_ALEX]);
@@ -74,6 +90,36 @@ test("question card keeps its primary controls inside an iPhone viewport", async
 
   const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(hasHorizontalOverflow).toBe(false);
+});
+
+test("safety guidance stays compact until the user opens it", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${SAFETY_PROFILE.id}/questions`, [SAFETY_PROFILE]);
+
+  const card = page.locator('[data-tour="kink-card"]');
+  await expect(card.getByRole("heading", { name: "Sound deprivation — applying" })).toBeVisible();
+  await expect(card.getByText(SAFETY_COPY, { exact: true })).toHaveCount(0);
+
+  const disclosure = card.getByTestId("safety-disclosure");
+  await expect(disclosure).toBeVisible();
+  await expect(disclosure).toContainText("Veiligheid");
+  const disclosureBox = await disclosure.boundingBox();
+  expect(disclosureBox).not.toBeNull();
+  expect(disclosureBox!.height).toBeLessThanOrEqual(48);
+
+  await disclosure.click();
+  const dialog = page.getByRole("dialog", { name: "Veiligheid bij Sound deprivation — applying" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(SAFETY_COPY, { exact: true })).toBeVisible();
+
+  const dialogBox = await dialog.boundingBox();
+  const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.y).toBeGreaterThanOrEqual(-1);
+  expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+
+  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await expect(dialog).toBeHidden();
 });
 
 test("questionnaire modes live in the context menu and floating details fit a short browser viewport", async ({ page }) => {
