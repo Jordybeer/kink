@@ -44,6 +44,20 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).toMatch(/[Ff]logging/);
   });
 
+  test("maakt alle v2-resultaatfilters bereikbaar", async ({ page }) => {
+    const labels = ["Alles", "Gedeeld", "Complementair", "Bespreken", "Zacht", "Conflicten", "Grenzen"];
+    for (const label of labels) {
+      await expect(page.getByRole("button", { name: label, exact: true })).toBeVisible();
+    }
+
+    const all = page.getByRole("button", { name: "Alles", exact: true });
+    const complementary = page.getByRole("button", { name: "Complementair", exact: true });
+    await expect(all).toHaveAttribute("aria-pressed", "true");
+    await complementary.click();
+    await expect(complementary).toHaveAttribute("aria-pressed", "true");
+    await expect(all).toHaveAttribute("aria-pressed", "false");
+  });
+
   test("houdt eenzijdige antwoorden apart van pair-resultaten", async ({ page }) => {
     const details = page.locator("details").filter({ hasText: "Nog niet door beiden beoordeeld" });
     await expect(details).toBeVisible();
