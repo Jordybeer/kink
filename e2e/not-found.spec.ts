@@ -1,13 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 
 async function assertNotFoundFits(page: Page) {
-  await expect(page.getByRole("heading", { name: /heeft zich laten meeslepen/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /deze pagina is nergens te vinden/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Hoofdnavigatie" })).toBeVisible();
   await expect(page.locator(".bottom-nav")).toBeHidden();
 
   const homeLink = page.getByRole("link", { name: /terug naar home/i });
   await expect(homeLink).toHaveAttribute("href", "/");
-  await expect(page.getByText(/lokale profielen en antwoorden zijn niet weg/i)).toBeVisible();
+
+  const reassurance = page.getByTestId("not-found-reassurance");
+  await expect(reassurance).toContainText(/lokale profielen en antwoorden zijn niet weg/i);
+  await expect(reassurance.locator("br")).toHaveCount(1);
 
   const hero = page.getByTestId("not-found-hero");
   await expect(hero).toBeVisible();
@@ -63,7 +66,7 @@ test("landscape uses the wide two-column composition", async ({ page }) => {
   await page.goto("/this-route-is-not-collared");
 
   const heroBox = await page.getByTestId("not-found-hero").boundingBox();
-  const headingBox = await page.getByRole("heading", { name: /heeft zich laten meeslepen/i }).boundingBox();
+  const headingBox = await page.getByRole("heading", { name: /deze pagina is nergens te vinden/i }).boundingBox();
 
   expect(heroBox).not.toBeNull();
   expect(headingBox).not.toBeNull();
