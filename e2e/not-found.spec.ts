@@ -26,6 +26,8 @@ test("unknown route lands on the KinkSync 404", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+// These assertions intentionally guard composition, not pixels: the artwork may
+// be retuned later, but it may never escape its card or hide the recovery CTA.
 for (const viewport of MOBILE_VIEWPORTS) {
   test(`404 stays usable at ${viewport.label}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
