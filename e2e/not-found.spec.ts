@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const MOBILE_VIEWPORTS = [
   { width: 393, height: 852, label: "iPhone 15-class" },
@@ -6,7 +6,7 @@ const MOBILE_VIEWPORTS = [
   { width: 390, height: 600, label: "Safari chrome pressure" },
 ] as const;
 
-async function expectNoHorizontalOverflow(page: Parameters<typeof test>[0] extends never ? never : any) {
+async function expectNoHorizontalOverflow(page: Page) {
   const metrics = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
     bodyWidth: document.body.scrollWidth,
