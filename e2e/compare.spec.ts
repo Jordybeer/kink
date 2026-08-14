@@ -30,10 +30,19 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).toContain("Wat valt op tussen jullie");
     expect(text).toMatch(/\d+%/);
     expect(text).toContain("duidelijke overlap");
-    expect(text).toMatch(/voorkeuren die jullie allebei hebben beoordeeld/i);
+    expect(text).toMatch(/voorkeuren die aan beide kanten zijn ingevuld/i);
+    expect(text).not.toMatch(/sluiten er .* duidelijk aan/i);
     expect(text).not.toContain("Sterke compatibiliteit");
     expect(text).not.toContain("Goede basis");
     expect(text).not.toContain("compatibiliteitsscore");
+  });
+
+  test("toont vier stabiele hoofdvakken, ook wanneer grenzen nul zijn", async ({ page }) => {
+    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+    await expect(summary).toContainText("samen");
+    await expect(summary).toContainText("bespreken");
+    await expect(summary).toContainText("zachte verschillen");
+    await expect(summary).toContainText("grenzen");
   });
 
   test("toont de rol van beide gekozen profielen", async ({ page }) => {
@@ -44,25 +53,41 @@ test.describe("Vergelijkingspagina", () => {
   test("houdt profielrol en expliciete directionality van elkaar gescheiden", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).toContain("Samen");
-    expect(text).toContain("Geven & ontvangen");
     expect(text).toContain("Bespreken");
     expect(text).toContain("Grenzen");
     expect(text).toContain("Spanking (hand) — geven ↔ ontvangen");
     expect(text).toMatch(/[Ff]logging/);
   });
 
-  test("maakt alle v2-resultaatfilters bereikbaar", async ({ page }) => {
-    const labels = ["Alles", "Samen", "Geven & ontvangen", "Bespreken", "Zachte verschillen", "Conflicten", "Grenzen"];
-    for (const label of labels) {
-      await expect(page.getByRole("button", { name: label, exact: true })).toBeVisible();
-    }
+  test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
+    const resultsTrigger = page.getByRole("button", { name: "Resultaten" });
+    const categoriesTrigger = page.getByRole("button", { name: "Categorieën" });
+    await expect(resultsTrigger).toBeVisible();
+    await expect(categoriesTrigger).toBeVisible();
 
-    const all = page.getByRole("button", { name: "Alles", exact: true });
-    const complementary = page.getByRole("button", { name: "Geven & ontvangen", exact: true });
-    await expect(all).toHaveAttribute("aria-pressed", "true");
-    await complementary.click();
-    await expect(complementary).toHaveAttribute("aria-pressed", "true");
-    await expect(all).toHaveAttribute("aria-pressed", "false");
+    await resultsTrigger.click();
+    const resultsDialog = page.getByRole("dialog", { name: "Resultaten filteren" });
+    await expect(resultsDialog).toBeVisible();
+    await expect(resultsDialog.getByRole("button", { name: "Alles" })).toHaveAttribute("aria-pressed", "true");
+
+    const shared = resultsDialog.getByRole("button", { name: /Samen/ });
+    const boundaries = resultsDialog.getByRole("button", { name: /Grenzen/ });
+    await shared.click();
+    await boundaries.click();
+    await expect(shared).toHaveAttribute("aria-pressed", "true");
+    await expect(boundaries).toHaveAttribute("aria-pressed", "true");
+    await resultsDialog.getByRole("button", { name: "Klaar" }).click();
+    await expect(resultsTrigger).toContainText("· 2");
+
+    await categoriesTrigger.click();
+    const categoriesDialog = page.getByRole("dialog", { name: "Categorieën filteren" });
+    await expect(categoriesDialog).toBeVisible();
+    const categoryButtons = categoriesDialog.locator("button[aria-pressed]").filter({ hasNotText: "Alle categorieën" });
+    await expect(categoryButtons.first()).toBeVisible();
+    await categoryButtons.first().click();
+    await expect(categoryButtons.first()).toHaveAttribute("aria-pressed", "true");
+    await categoriesDialog.getByRole("button", { name: "Klaar" }).click();
+    await expect(categoriesTrigger).toContainText("· 1");
   });
 
   test("houdt eenzijdige antwoorden apart van pair-resultaten", async ({ page }) => {
@@ -70,7 +95,7 @@ test.describe("Vergelijkingspagina", () => {
     await expect(details).toBeVisible();
     await expect(details.locator("summary")).toContainText(/Nog niet door beiden beoordeeld · [1-9]/);
     await details.locator("summary").click();
-    await expect(details).toContainText("Deze punten tellen nergens mee als pair-resultaat");
+    await expect(details).toContainText("Deze voorkeuren tellen niet mee als vergelijking");
     await expect(details).toContainText(/Alex: (Heel graag|Ja|Misschien|Voor hen|Harde grens)|Sam: (Heel graag|Ja|Misschien|Voor hen|Harde grens)/);
   });
 
@@ -89,6 +114,8 @@ test.describe("Vergelijkingspagina", () => {
     await page.waitForLoadState("networkidle");
     const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
     expect(overflow).toBe(false);
+    await expect(page.getByRole("button", { name: "Resultaten" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Categorieën" })).toBeVisible();
   });
 
   test("statusbadges voor beide profielen zijn zichtbaar", async ({ page }) => {
