@@ -112,19 +112,29 @@ export function planCompareStory(
   const insights: string[] = [];
 
   if (summary.conflict > 0) {
-    insights.push(summary.conflict === 1
+    const conflictCopy = summary.conflict === 1
       ? "Bij één voorkeur staat een positief antwoord tegenover een harde grens. Daar zouden jullie best eerst even over praten."
-      : `Bij ${summary.conflict} voorkeuren staat een positief antwoord tegenover een harde grens. Daar zouden jullie best eerst even over praten.`);
+      : `Bij ${summary.conflict} voorkeuren staat een positief antwoord tegenover een harde grens. Daar zouden jullie best eerst even over praten.`;
+    const otherLimits = summary.limit === 0
+      ? ""
+      : summary.limit === 1
+        ? " Daarnaast heeft bij één andere voorkeur minstens één van jullie een harde grens."
+        : ` Daarnaast heeft bij ${summary.limit} andere voorkeuren minstens één van jullie een harde grens.`;
+    insights.push(`${conflictCopy}${otherLimits}`);
+  } else if (summary.limit > 0) {
+    insights.push(summary.limit === 1
+      ? "Bij één voorkeur heeft minstens één van jullie een harde grens. Die blijft apart staan van de overlap hierboven."
+      : `Bij ${summary.limit} voorkeuren heeft minstens één van jullie een harde grens. Die blijven apart staan van de overlap hierboven.`);
   }
 
-  if (summary.complementary > 0) {
+  if (summary.complementary > 0 && insights.length < 2) {
     insights.push(summary.complementary === 1
       ? "Bij één voorkeur sluiten jullie rollen mooi op elkaar aan. De ene wil geven wat de andere graag ontvangt."
       : `Bij ${summary.complementary} voorkeuren sluiten jullie rollen mooi op elkaar aan. De ene wil geven wat de andere graag ontvangt.`);
   }
 
   const clustered = categoryInsight(categoryScores);
-  if (clustered) insights.push(clustered);
+  if (clustered && insights.length < 2) insights.push(clustered);
 
   if (summary.discuss > 0 && insights.length < 2) {
     insights.push(choose([
@@ -140,12 +150,6 @@ export function planCompareStory(
       `Bij ${preferenceCount(summary.soft)} is één van jullie duidelijk positiever dan de ander.`,
       `Bij ${preferenceCount(summary.soft)} zit er verschil in hoe enthousiast jullie erover zijn.`,
     ], seed + 23));
-  }
-
-  if (summary.limit > 0 && summary.conflict === 0 && insights.length < 2) {
-    insights.push(summary.limit === 1
-      ? "Bij één voorkeur heeft minstens één van jullie een harde grens. Die blijft apart staan van de overlap hierboven."
-      : `Bij ${summary.limit} voorkeuren heeft minstens één van jullie een harde grens. Die blijven apart staan van de overlap hierboven.`);
   }
 
   const coverage = summary.unpairedVisible > 0
