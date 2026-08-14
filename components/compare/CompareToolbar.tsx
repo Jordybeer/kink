@@ -93,7 +93,7 @@ export default function CompareToolbar({
               ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
               : { background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <span className="min-w-0 flex-1 text-sm font-semibold">Alles</span>
+            <span className="min-w-0 flex-1 text-[14px] font-semibold">Alles</span>
             {selectedResults.size === 0 && <Check size={17} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />}
           </button>
 
@@ -112,8 +112,8 @@ export default function CompareToolbar({
                     : { background: "var(--surface2)", border: "1px solid var(--border)" }}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>{option.label}</p>
-                    <p className="mt-0.5 text-[13px] leading-snug" style={{ color: "var(--text2)" }}>{option.helper}</p>
+                    <p className="text-[15px] font-semibold" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>{option.label}</p>
+                    <p className="mt-0.5 text-[14px] leading-snug" style={{ color: "var(--text2)" }}>{option.helper}</p>
                   </div>
                   {active && <Check size={17} weight="bold" className="shrink-0" aria-hidden="true" style={{ color: "var(--accent)" }} />}
                 </button>
@@ -121,7 +121,7 @@ export default function CompareToolbar({
             })}
           </div>
 
-          <button type="button" onClick={() => setResultsOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-semibold" style={{ color: "var(--text2)" }}>
+          <button type="button" onClick={() => setResultsOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-[14px] font-semibold" style={{ color: "var(--text2)" }}>
             Klaar
           </button>
         </SheetContent>
@@ -148,7 +148,7 @@ export default function CompareToolbar({
               ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
               : { background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <span className="min-w-0 flex-1 text-sm font-semibold">Alle categorieën</span>
+            <span className="min-w-0 flex-1 text-[14px] font-semibold">Alle categorieën</span>
             {selectedCategories.size === 0 && <Check size={17} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />}
           </button>
 
@@ -161,18 +161,18 @@ export default function CompareToolbar({
                   type="button"
                   onClick={() => onToggleCategory(category.category)}
                   aria-pressed={active}
-                  className="focus-ring min-h-16 rounded-xl px-3 py-2.5 text-left"
+                  className="focus-ring min-h-[4.75rem] rounded-xl px-3 py-2.5 text-left"
                   style={active
                     ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
                     : { background: "var(--surface2)", border: "1px solid var(--border)" }}
                 >
                   <div className="flex items-start gap-2">
-                    <span className="min-w-0 flex-1 text-xs font-semibold leading-snug" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>
+                    <span className="min-w-0 flex-1 text-[14px] font-semibold leading-snug" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>
                       {kinkCategoryLabel(category.category)}
                     </span>
-                    {active && <Check size={14} weight="bold" className="mt-0.5 shrink-0" aria-hidden="true" style={{ color: "var(--accent)" }} />}
+                    {active && <Check size={15} weight="bold" className="mt-0.5 shrink-0" aria-hidden="true" style={{ color: "var(--accent)" }} />}
                   </div>
-                  <span className="mt-1 block text-[11px] tabular-nums" style={{ color: "var(--text2)" }}>
+                  <span className="mt-1 block text-[14px] leading-snug tabular-nums" style={{ color: "var(--text2)" }}>
                     {category.jointlyAssessed} samen beoordeeld
                   </span>
                 </button>
@@ -180,7 +180,7 @@ export default function CompareToolbar({
             })}
           </div>
 
-          <button type="button" onClick={() => setCategoriesOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-semibold" style={{ color: "var(--text2)" }}>
+          <button type="button" onClick={() => setCategoriesOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-[14px] font-semibold" style={{ color: "var(--text2)" }}>
             Klaar
           </button>
         </SheetContent>
