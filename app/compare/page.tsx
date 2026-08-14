@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowsLeftRight, FileText } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
@@ -55,6 +55,18 @@ function ComparePage() {
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
+  const pairKey = useMemo(
+    () => profileA && profileB ? [profileA.id, profileB.id].sort().join("|") : "",
+    [profileA, profileB],
+  );
+
+  useEffect(() => {
+    setSelectedResults(new Set());
+    setSelectedCategories(new Set());
+    setDiscussed(new Set());
+    setHideDiscussed(false);
+  }, [pairKey]);
+
   const navActions = useMemo<TopNavAction[]>(() => [
     {
       id: "swap-profiles",
