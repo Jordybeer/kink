@@ -56,3 +56,18 @@ for (const viewport of [
     await assertNotFoundFits(page);
   });
 }
+
+test("landscape uses the wide two-column composition", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto("/this-route-is-not-collared");
+
+  const heroBox = await page.getByTestId("not-found-hero").boundingBox();
+  const headingBox = await page.getByRole("heading", { name: /heeft zich laten meeslepen/i }).boundingBox();
+
+  expect(heroBox).not.toBeNull();
+  expect(headingBox).not.toBeNull();
+  if (heroBox && headingBox) {
+    expect(heroBox.x + heroBox.width).toBeLessThan(headingBox.x + 12);
+    expect(Math.abs((heroBox.y + heroBox.height / 2) - (headingBox.y + headingBox.height / 2))).toBeLessThan(heroBox.height / 2);
+  }
+});
