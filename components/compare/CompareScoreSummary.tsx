@@ -40,7 +40,7 @@ export default function CompareScoreSummary({
       key: "together",
       count: clearOverlapCount,
       label: "samen",
-      helper: "Duidelijke overlap",
+      helper: complementary > 0 ? "Zelfde interesse of passende kanten" : "Aan beide kanten positief",
       color: "var(--yes)",
       icon: Heart,
     },
