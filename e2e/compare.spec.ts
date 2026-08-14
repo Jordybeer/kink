@@ -91,8 +91,8 @@ test.describe("Vergelijkingspagina", () => {
     const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
     const summaryText = await summary.innerText();
     const leadMatch = summaryText.match(/interesse bij (\d+) aan beide kanten positief\. Bij (\d+) andere/);
-    test.skip(!leadMatch, "Fixture heeft geen combinatie van shared en complementary evidence");
-    const expectedClearOverlap = Number(leadMatch?.[1] ?? 0) + Number(leadMatch?.[2] ?? 0);
+    expect(leadMatch).not.toBeNull();
+    const expectedClearOverlap = Number(leadMatch![1]) + Number(leadMatch![2]);
     await expect(summary).toContainText(new RegExp(`${expectedClearOverlap}\\s+samen`, "i"));
   });
 
