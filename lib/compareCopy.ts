@@ -65,11 +65,11 @@ function categoryInsight(categoryScores: CompareCategoryScore[]): string | null 
     && second.difference >= 2
     && (first.difference + second.difference) / totalDifferences >= 0.65
   ) {
-    return `De meeste verschillen zitten rond ${kinkCategoryLabel(first.category)} en ${kinkCategoryLabel(second.category)}. Daarbuiten zitten jullie vaker op dezelfde lijn.`;
+    return `De meeste verschillen zitten rond ${kinkCategoryLabel(first.category)} en ${kinkCategoryLabel(second.category)}.`;
   }
 
   if (first.difference / totalDifferences >= 0.45) {
-    return `De meeste verschillen zitten rond ${kinkCategoryLabel(first.category)}. Daarbuiten zitten jullie vaker op dezelfde lijn.`;
+    return `De meeste verschillen zitten rond ${kinkCategoryLabel(first.category)}.`;
   }
 
   return null;
