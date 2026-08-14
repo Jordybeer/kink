@@ -14,7 +14,7 @@ export default function NotFound() {
             alt=""
             fill
             priority
-            sizes="(max-width: 759px) calc(100vw - 2rem), (max-width: 1099px) 52vw, 36rem"
+            sizes="(max-width: 759px) calc(100vw - 2rem), (orientation: portrait) 31rem, (max-width: 1099px) 52vw, 42rem"
             className={styles.heroImage}
           />
         </div>
