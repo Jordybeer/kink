@@ -41,6 +41,17 @@
 .heroImage {
   object-fit: cover;
   object-position: 50% 49%;
+  transform-origin: 50% 50%;
+  animation: notFoundDrift 8s ease-in-out infinite;
+}
+
+@keyframes notFoundDrift {
+  0%, 100% {
+    transform: scale(1.005) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.012) translate3d(0, -2px, 0);
+  }
 }
 
 .hero::after {
@@ -112,7 +123,7 @@
 }
 
 .homeLink:active {
-  transform: translateY(0);
+  transform: scale(0.985);
 }
 
 .reassurance {
@@ -209,7 +220,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .heroImage {
+    animation: none;
+    transform: none;
+  }
+
   .homeLink {
     transition: none;
+  }
+
+  .homeLink:hover,
+  .homeLink:active {
+    transform: none;
   }
 }

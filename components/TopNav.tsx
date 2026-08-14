@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CaretLeft, DotsThree, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
-import { TAP_SPRING } from "@/lib/motion";
+import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import ContextMenu from "@/components/ui/ContextMenu";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
@@ -18,6 +18,7 @@ export default function TopNav() {
   const scenes = useStore((state) => state.scenes);
   const onboardingComplete = useStore((state) => state.onboardingComplete);
   const { actions, title: contextualTitle } = useTopNav();
+  const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const previousProfilesRef = useRef(profiles);
@@ -118,7 +119,7 @@ export default function TopNav() {
       <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
         <MotionLink
           href={back}
-          whileTap={TAP_SPRING}
+          whileTap={t.tap}
           className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
           style={{ color: "var(--text2)" }}
           aria-label="Terug"
@@ -193,11 +194,13 @@ function TopNavActionButton({
   action: TopNavAction;
   emphasis: "primary" | "secondary";
 }) {
+  const t = useMotionSafe();
+
   return (
     <motion.button
       type="button"
       data-tour={action.id === "questionnaire-help" ? "questionnaire-info" : undefined}
-      whileTap={action.disabled ? undefined : TAP_SPRING}
+      whileTap={action.disabled ? undefined : t.tap}
       onClick={action.onClick}
       disabled={action.disabled}
       aria-label={action.label}

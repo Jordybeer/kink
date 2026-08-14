@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "@phosphor-icons/react";
-import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
+import { useMotionSafe } from "@/lib/motion";
 
 export default function UpdateBanner() {
   const t = useMotionSafe();
@@ -49,14 +49,16 @@ export default function UpdateBanner() {
             Nieuwe versie beschikbaar
           </span>
           <motion.button
+            type="button"
             onClick={applyUpdate}
-            whileTap={TAP_SPRING}
+            whileTap={t.tap}
             className="focus-ring text-sm font-semibold flex-none px-3 py-1.5 rounded-lg"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Herladen
           </motion.button>
           <button
+            type="button"
             onClick={() => setWaiting(null)}
             className="focus-ring text-xs flex-none"
             style={{ color: "var(--text2)" }}

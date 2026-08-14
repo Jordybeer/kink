@@ -50,6 +50,15 @@ test("unknown route lands on the focused KinkSync 404", async ({ page }) => {
   await assertNotFoundFits(page);
 });
 
+test("404 ambient motion collapses for reduced-motion users", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/this-route-is-not-collared");
+
+  const artwork = page.getByTestId("not-found-hero").locator('img[src*="404-pagina-niet-hier.PNG"]');
+  await expect(artwork).toBeVisible();
+  await expect(artwork).toHaveCSS("animation-name", "none");
+});
+
 for (const viewport of [
   { name: "375px mobile baseline", width: 375, height: 812 },
   { name: "iPhone portrait", width: 393, height: 852 },

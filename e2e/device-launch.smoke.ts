@@ -16,6 +16,7 @@ const ROUTES = [
   { slug: "scene", url: `/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}` },
 ] as const;
 
+const MOTION_SIZE_TOLERANCE_PX = 0.5;
 type CriticalRoute = (typeof ROUTES)[number];
 
 async function expectEffectivelyOpaque(locator: Locator) {
@@ -83,6 +84,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       break;
   }
 }
+
 async function expectVisualViewportContract(page: Page) {
   await expect.poll(async () => page.evaluate(() => {
     const rendered = Number.parseFloat(
@@ -119,6 +121,21 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   await expect(dialog).toBeHidden();
 }
 
+async function boxSize(target: Locator) {
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) throw new Error("Expected interactive target to have a bounding box");
+  return { width: box.width, height: box.height };
+}
+
+async function holdPress(page: Page, target: Locator) {
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+}
+
 test("critical launch routes hydrate with their real content inside the viewport", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM], {
@@ -150,4 +167,43 @@ test("critical launch routes hydrate with their real content inside the viewport
       fullPage: true,
     });
   }
+});
+
+test("iPhone tactile motion remains present normally and collapses with reduced motion", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("iphone-"), "Motion feel gate is iPhone/WebKit-specific");
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const begin = page.getByRole("button", { name: "Begin", exact: true });
+  await expect(begin).toBeVisible();
+
+  const normalSize = await boxSize(begin);
+  await holdPress(page, begin);
+  await expect.poll(async () => {
+    const held = await boxSize(begin);
+    return Math.max(normalSize.width - held.width, normalSize.height - held.height);
+  }).toBeGreaterThan(MOTION_SIZE_TOLERANCE_PX);
+  await page.screenshot({
+    path: `test-results/device-screenshots/${testInfo.project.name}/motion-normal-pressed.png`,
+  });
+  await page.mouse.up();
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  const reducedBegin = page.getByRole("button", { name: "Begin", exact: true });
+  await expect(reducedBegin).toBeVisible();
+
+  const reducedSize = await boxSize(reducedBegin);
+  await holdPress(page, reducedBegin);
+  await expect.poll(async () => {
+    const held = await boxSize(reducedBegin);
+    return Math.max(
+      Math.abs(held.width - reducedSize.width),
+      Math.abs(held.height - reducedSize.height),
+    );
+  }).toBeLessThanOrEqual(MOTION_SIZE_TOLERANCE_PX);
+  await page.screenshot({
+    path: `test-results/device-screenshots/${testInfo.project.name}/motion-reduced-pressed.png`,
+  });
+  await page.mouse.up();
 });

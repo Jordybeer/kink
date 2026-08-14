@@ -22,7 +22,7 @@ import {
   type IosInstallBrowser,
 } from "@/lib/installPrompt";
 import { useInstallPromptPolicyStore } from "@/lib/installPromptPolicyStore";
-import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
+import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useStore } from "@/lib/store";
 
@@ -40,14 +40,16 @@ interface InstallStep {
 }
 
 function InstructionList({ steps }: { steps: readonly InstallStep[] }) {
+  const t = useMotionSafe();
+
   return (
     <div className="flex flex-col gap-1">
       {steps.map((step, index) => (
         <motion.div
           key={step.title}
-          initial={{ opacity: 0, y: 8 }}
+          initial={t.reduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 + index * 0.06, duration: 0.24, ease: "easeOut" }}
+          transition={t.reduced ? t.fast : { delay: 0.1 + index * 0.06, duration: 0.24, ease: "easeOut" }}
           className="grid grid-cols-[1.75rem_2.5rem_1fr] items-start gap-2.5 rounded-2xl px-2 py-3"
         >
           <span
@@ -311,9 +313,9 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
               paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
               willChange: "transform",
             }}
-            initial={{ y: "105%" }}
+            initial={t.reduced ? false : { y: "105%" }}
             animate={{ y: 0 }}
-            exit={{ y: "105%", transition: t.sheetExit }}
+            exit={t.reduced ? { opacity: 0, transition: t.sheetExit } : { y: "105%", transition: t.sheetExit }}
             transition={enterTransition}
           >
             <div className="mx-auto h-7 w-full pt-2" aria-hidden="true">
@@ -343,7 +345,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
 
                 <motion.button
                   type="button"
-                  whileTap={TAP_SPRING}
+                  whileTap={t.tap}
                   onClick={dismiss}
                   aria-label="Sluit installatiemelding"
                   className="focus-ring -mr-2 flex h-11 w-11 flex-none items-center justify-center rounded-full"
@@ -381,7 +383,7 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
 
                     <motion.button
                       type="button"
-                      whileTap={TAP_SPRING}
+                      whileTap={t.tap}
                       onClick={() => { void install(); }}
                       className="focus-ring inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
                       style={{ background: "var(--accent)", color: "var(--on-accent)" }}

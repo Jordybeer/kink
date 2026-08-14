@@ -36,12 +36,17 @@ export const fadeUp = (distance = 10) => ({
 const INSTANT = { duration: 0 } as const;
 
 /**
- * Returns transition presets that collapse to {duration:0} when the user
- * has requested reduced motion via `prefers-reduced-motion: reduce`.
+ * Shared motion contract for interactive components.
+ *
+ * Motion is presentation-only: reduced-motion collapses timed transitions to an
+ * instant state change and disables press scaling entirely. Consumers must never
+ * rely on animation completion for navigation, persistence, consent, or focus.
  */
 export function useMotionSafe() {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotion() ?? false;
   return {
+    reduced,
+    tap:       reduced ? undefined : TAP_SPRING,
     fast:      reduced ? INSTANT : TWEEN_FAST,
     sheet:     reduced ? INSTANT : TWEEN_SHEET,
     sheetExit: reduced ? INSTANT : TWEEN_SHEET_EXIT,
