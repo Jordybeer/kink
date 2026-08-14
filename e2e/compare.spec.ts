@@ -87,6 +87,15 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).not.toMatch(/Diaper wearing[\s\S]{0,120}geven.*ontvangen/i);
   });
 
+  test("neemt aanvullende matches mee in het samen-vak", async ({ page }) => {
+    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+    const summaryText = await summary.innerText();
+    const leadMatch = summaryText.match(/interesse bij (\d+) aan beide kanten positief\. Bij (\d+) andere/);
+    test.skip(!leadMatch, "Fixture heeft geen combinatie van shared en complementary evidence");
+    const expectedClearOverlap = Number(leadMatch?.[1] ?? 0) + Number(leadMatch?.[2] ?? 0);
+    await expect(summary).toContainText(new RegExp(`${expectedClearOverlap}\\s+samen`, "i"));
+  });
+
   test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
     const resultsTrigger = page.getByTestId("compare-results-filter");
     const categoriesTrigger = page.getByTestId("compare-categories-filter");
