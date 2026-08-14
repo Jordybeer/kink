@@ -93,7 +93,8 @@ test.describe("Vergelijkingspagina", () => {
     const leadMatch = summaryText.match(/interesse bij (\d+) aan beide kanten positief\. Bij (\d+) andere/);
     expect(leadMatch).not.toBeNull();
     const expectedClearOverlap = Number(leadMatch![1]) + Number(leadMatch![2]);
-    await expect(summary).toContainText(new RegExp(`${expectedClearOverlap}\\s+samen`, "i"));
+    const togetherStat = summary.getByText("samen", { exact: true }).locator("..");
+    await expect(togetherStat).toContainText(String(expectedClearOverlap));
   });
 
   test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
