@@ -19,18 +19,22 @@ async function assertNotFoundFits(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+
   const heroBox = await hero.boundingBox();
   expect(heroBox).not.toBeNull();
-  if (heroBox) {
+  if (heroBox && viewport) {
     expect(heroBox.x).toBeGreaterThanOrEqual(0);
-    expect(heroBox.x + heroBox.width).toBeLessThanOrEqual((await page.viewportSize())!.width + 1);
+    expect(heroBox.x + heroBox.width).toBeLessThanOrEqual(viewport.width + 1);
   }
 
   await homeLink.scrollIntoViewIfNeeded();
   const linkBox = await homeLink.boundingBox();
   expect(linkBox).not.toBeNull();
-  if (linkBox) {
-    expect(linkBox.y + linkBox.height).toBeLessThanOrEqual((await page.viewportSize())!.height + page.evaluate(() => window.scrollY) + 1);
+  if (linkBox && viewport) {
+    const scrollY = await page.evaluate(() => window.scrollY);
+    expect(linkBox.y + linkBox.height).toBeLessThanOrEqual(viewport.height + scrollY + 1);
   }
 }
 
