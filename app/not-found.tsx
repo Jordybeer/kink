@@ -6,32 +6,64 @@ export default function NotFound() {
   return (
     <PageShell width="2xl" className="flex min-h-[calc(100dvh-var(--bottom-nav-h)-7rem)] items-center py-8">
       <section className="w-full text-center" aria-labelledby="not-found-title">
-        <div className="relative mx-auto mb-7 flex min-h-52 max-w-md items-center justify-center overflow-hidden rounded-[32px] border px-6 py-8"
+        <div
+          className="relative mx-auto mb-7 min-h-64 max-w-md overflow-hidden rounded-[32px] border px-4 pt-7"
           style={{
-            background: "radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 44%), var(--surface2)",
+            background: "radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 48%), linear-gradient(180deg, color-mix(in srgb, var(--surface2) 94%, black), var(--surface))",
             borderColor: "var(--border-accent)",
-            boxShadow: "0 24px 80px color-mix(in srgb, var(--accent) 10%, transparent)",
+            boxShadow: "0 24px 80px color-mix(in srgb, var(--accent) 12%, transparent)",
           }}
         >
-          <div className="pointer-events-none absolute inset-x-[-8%] bottom-9 h-6 rotate-[-2deg] rounded-full border-[5px] border-black/70 shadow-[0_2px_0_rgba(255,255,255,0.06)_inset,0_8px_30px_rgba(0,0,0,0.35)]" aria-hidden="true" />
-          <div className="relative">
-            <p className="select-none text-[7.5rem] font-black leading-none tracking-[-0.08em] sm:text-[9rem]"
+          <span className="absolute left-[14%] top-[29%] text-2xl opacity-70" style={{ color: "var(--accent)" }} aria-hidden="true">♡</span>
+          <span className="absolute right-[12%] top-[20%] text-xl opacity-75" style={{ color: "var(--accent)" }} aria-hidden="true">✦</span>
+          <span className="absolute right-[9%] top-[48%] text-2xl opacity-65" style={{ color: "var(--accent)" }} aria-hidden="true">♡</span>
+
+          <div className="relative z-10 flex justify-center" aria-hidden="true">
+            <span
+              className="select-none text-[7.5rem] font-black leading-none tracking-[-0.08em] sm:text-[9rem]"
               style={{
-                color: "var(--accent)",
-                textShadow: "0 0 30px color-mix(in srgb, var(--accent) 28%, transparent)",
+                color: "transparent",
+                WebkitTextStroke: "3px var(--accent)",
+                textShadow: "0 0 7px var(--accent), 0 0 22px color-mix(in srgb, var(--accent) 72%, transparent), 0 0 48px color-mix(in srgb, var(--accent) 38%, transparent)",
               }}
-              aria-hidden="true"
             >
               404
-            </p>
+            </span>
+          </div>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24" aria-hidden="true">
+            <div
+              className="absolute inset-x-[4%] bottom-3 h-[46px] rounded-[50%]"
+              style={{
+                background: "radial-gradient(ellipse, color-mix(in srgb, var(--accent) 16%, transparent), transparent 66%)",
+                filter: "blur(8px)",
+              }}
+            />
+            <div
+              className="absolute inset-x-[-9%] bottom-8 h-[18px] -rotate-2 rounded-full border-[6px] border-[#09090b]"
+              style={{ boxShadow: "inset 0 2px 2px rgba(255,255,255,.12), 0 7px 15px rgba(0,0,0,.7)" }}
+            />
+            <div
+              className="absolute left-1/2 bottom-4 h-[86px] w-[104px] -translate-x-1/2 rotate-[-8deg] rounded-[50%] border-[9px] border-[#09090b]"
+              style={{ boxShadow: "inset 2px 2px 2px rgba(255,255,255,.10), 0 8px 18px rgba(0,0,0,.65)" }}
+            />
+            <div
+              className="absolute left-1/2 bottom-[5px] h-[76px] w-[96px] -translate-x-[12%] rotate-[25deg] rounded-[50%] border-[9px] border-[#09090b]"
+              style={{ boxShadow: "inset 2px 2px 2px rgba(255,255,255,.10), 0 8px 18px rgba(0,0,0,.65)" }}
+            />
             <HeartStraight
-              size={52}
-              weight="duotone"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[18%]"
-              style={{ color: "var(--text)" }}
-              aria-hidden="true"
+              size={57}
+              weight="regular"
+              className="absolute bottom-[24px] left-1/2 -translate-x-1/2"
+              style={{ color: "var(--accent)", filter: "drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent))" }}
             />
           </div>
+
+          <div
+            className="pointer-events-none absolute inset-x-[8%] bottom-0 h-px"
+            style={{ boxShadow: "0 -10px 30px 9px color-mix(in srgb, var(--accent) 14%, transparent)" }}
+            aria-hidden="true"
+          />
         </div>
 
         <p className="mb-2 text-xs font-semibold tracking-[0.18em]" style={{ color: "var(--accent)" }}>
