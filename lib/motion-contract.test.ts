@@ -22,4 +22,14 @@ describe("shared motion accessibility contract", () => {
   ])("keeps %s on the shared useMotionSafe contract", (path) => {
     expect(source(path)).toContain("useMotionSafe");
   });
+
+  it.each([
+    "components/AppLock.tsx",
+    "components/onboarding/Onboarding.tsx",
+    "components/PwaInstallGuide.tsx",
+  ])("keeps launch-sensitive motion in %s explicit instead of direct TAP_SPRING usage", (path) => {
+    const content = source(path);
+    expect(content).toContain("useMotionSafe");
+    expect(content).not.toContain("TAP_SPRING");
+  });
 });
