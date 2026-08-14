@@ -168,7 +168,7 @@ export default function QuestionsScreen({ params }: Props) {
       style={{
         height: "calc(var(--visual-viewport-height, 100dvh) - var(--nav-h))",
         paddingTop: "1rem",
-        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
       }}
       data-testid="questions-screen"
     >
@@ -189,22 +189,24 @@ export default function QuestionsScreen({ params }: Props) {
       </div>
 
       <section
-        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 ${activeRuntime.complete ? "flex flex-col" : ""}`}
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
         data-testid="questions-scroll-region"
       >
         {!activeRuntime.complete ? (
-          <TriageDeck
-            key={runtimeKind}
-            kinks={activeRuntime.visibleKinks}
-            queueItems={activeRuntime.queue}
-            entries={currentProfile.entries}
-            focusCategory={null}
-            progressLabel={progressLabel}
-            onStatusChange={updateStatus}
-            onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
-            onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
-            onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
-          />
+          <div className="my-auto w-full" data-testid="questions-active-stage">
+            <TriageDeck
+              key={runtimeKind}
+              kinks={activeRuntime.visibleKinks}
+              queueItems={activeRuntime.queue}
+              entries={currentProfile.entries}
+              focusCategory={null}
+              progressLabel={progressLabel}
+              onStatusChange={updateStatus}
+              onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
+              onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}
+              onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
+            />
+          </div>
         ) : (
           <div className="my-auto mx-auto w-full max-w-sm px-4 py-8 text-center ks-fade-in" data-testid="questions-complete">
             <span
