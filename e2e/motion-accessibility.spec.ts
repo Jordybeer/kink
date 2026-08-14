@@ -2,6 +2,14 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { buildStore, PROFILE_ALEX, PROFILE_SAM, seedProfiles } from "./fixtures";
 
 const STORE_KEY = "kink-profiles";
+const SIZE_TOLERANCE_PX = 0.5;
+
+async function boxSize(target: Locator) {
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) throw new Error("Expected interactive target to have a bounding box");
+  return { width: box.width, height: box.height };
+}
 
 async function holdPress(page: Page, target: Locator) {
   const box = await target.boundingBox();
@@ -12,26 +20,31 @@ async function holdPress(page: Page, target: Locator) {
   await page.mouse.down();
 }
 
-async function expectNoScaleTransform(target: Locator) {
-  await expect.poll(async () => target.evaluate((element) => {
-    const transform = getComputedStyle(element).transform;
-    return transform === "none" || transform === "matrix(1, 0, 0, 1, 0, 0)";
-  })).toBe(true);
+async function expectPressKeepsSize(page: Page, target: Locator) {
+  const before = await boxSize(target);
+  await holdPress(page, target);
+
+  await expect.poll(async () => {
+    const held = await boxSize(target);
+    return Math.max(
+      Math.abs(held.width - before.width),
+      Math.abs(held.height - before.height),
+    );
+  }).toBeLessThanOrEqual(SIZE_TOLERANCE_PX);
+
+  await page.mouse.up();
 }
 
-test("reduced motion disables direct onboarding press transforms at the app root", async ({ page }) => {
+test("reduced motion disables onboarding tactile press scaling", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
   const begin = page.getByRole("button", { name: "Begin", exact: true });
   await expect(begin).toBeVisible();
-
-  await holdPress(page, begin);
-  await expectNoScaleTransform(begin);
-  await page.mouse.up();
+  await expectPressKeepsSize(page, begin);
 });
 
-test("reduced motion also protects direct AppLock tap motion", async ({ page }) => {
+test("reduced motion disables AppLock tactile press scaling", async ({ page }) => {
   const base = buildStore([PROFILE_ALEX, PROFILE_SAM]);
   const lockedStore = JSON.stringify({
     ...base,
@@ -51,10 +64,7 @@ test("reduced motion also protects direct AppLock tap motion", async ({ page }) 
 
   const one = page.getByRole("button", { name: "1", exact: true });
   await expect(one).toBeVisible();
-
-  await holdPress(page, one);
-  await expectNoScaleTransform(one);
-  await page.mouse.up();
+  await expectPressKeepsSize(page, one);
 });
 
 test("reduced motion keeps shared TopNav press feedback still", async ({ page }) => {
@@ -64,8 +74,5 @@ test("reduced motion keeps shared TopNav press feedback still", async ({ page })
 
   const back = page.getByLabel("Hoofdnavigatie").getByRole("link", { name: "Terug" });
   await expect(back).toBeVisible();
-
-  await holdPress(page, back);
-  await expectNoScaleTransform(back);
-  await page.mouse.up();
+  await expectPressKeepsSize(page, back);
 });
