@@ -56,6 +56,12 @@ describe("compare narrative copy", () => {
     expect(story.insights[0]).toMatch(/even over praten/i);
   });
 
+  it("laat andere harde grenzen niet verdwijnen wanneer er ook een conflict is", () => {
+    const story = planCompareStory(summary({ conflict: 1, limit: 2, discuss: 5, jointlyAssessed: 39 }));
+    expect(story.insights[0]).toMatch(/positief antwoord tegenover een harde grens/i);
+    expect(story.insights[0]).toMatch(/2 andere voorkeuren/i);
+  });
+
   it("beschrijft passende rollen zonder het woord complementair", () => {
     const story = planCompareStory(summary({ shared: 24, complementary: 3, match: 27 }));
     expect(story.insights.join(" ")).toMatch(/rollen mooi op elkaar aan/i);
