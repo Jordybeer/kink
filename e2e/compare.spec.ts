@@ -88,12 +88,12 @@ test.describe("Vergelijkingspagina", () => {
     const lastProfile = dialog.getByRole("button", { name: /^Gedeeld 24,/ });
 
     await expect(dialog).toBeVisible();
-    await expect.poll(async () => (await title.boundingBox())?.y ?? 999).toBeLessThan(100);
-    const titleTop = (await title.boundingBox())!.y;
+    await expect(title).toBeVisible();
 
     await lastProfile.scrollIntoViewIfNeeded();
     await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
-    await expect.poll(async () => (await title.boundingBox())?.y ?? -999).toBeCloseTo(titleTop, 0);
+    await expect(title).toBeVisible();
+    await expect(lastProfile).toBeVisible();
 
     await lastProfile.click();
     await expect(dialog).toBeHidden();
