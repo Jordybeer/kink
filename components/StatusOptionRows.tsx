@@ -18,7 +18,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
   return (
     <div
       data-tour="pills"
-      className="mt-3 grid grid-cols-2 gap-2"
+      className="mt-3 flex flex-col gap-1.5"
       role="group"
       aria-label="Status kiezen"
     >
@@ -32,7 +32,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
             data-tour={danger ? "hard-no" : undefined}
             onClick={() => onSelect(active ? null : s)}
             aria-pressed={active}
-            className={`focus-ring min-h-16 rounded-xl px-3 py-2.5 text-left transition-colors ${danger ? "col-span-2" : ""}`}
+            className="focus-ring min-h-12 w-full rounded-xl px-3 text-left transition-colors"
             style={{
               color: "var(--text)",
               background: active
@@ -45,10 +45,10 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
               }`,
             }}
           >
-            <span className={`flex gap-2.5 ${danger ? "items-center" : "items-start"}`}>
+            <span className="flex items-center gap-3">
               <span
                 aria-hidden="true"
-                className="mt-1 h-2.5 w-2.5 flex-none rounded-full"
+                className="h-2.5 w-2.5 flex-none rounded-full"
                 style={
                   danger
                     ? { border: `1.5px dashed ${colour}`, background: "transparent" }
@@ -60,15 +60,15 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
                       }
                 }
               />
-              <span className={`min-w-0 ${danger ? "flex flex-1 items-baseline justify-between gap-3" : ""}`}>
+              <span className="min-w-0 flex flex-1 items-baseline justify-between gap-3">
                 <span
-                  className="block text-sm font-semibold leading-5"
+                  className="flex-none text-sm font-semibold leading-5"
                   style={{ color: active ? colour : "var(--text)" }}
                 >
                   {label}
                 </span>
                 <span
-                  className={`${danger ? "text-right" : "mt-0.5 block"} text-xs leading-4`}
+                  className="min-w-0 truncate text-right text-xs leading-4"
                   style={{ color: "var(--text2)" }}
                 >
                   {hint}
