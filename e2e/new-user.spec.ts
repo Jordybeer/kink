@@ -27,7 +27,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /^verder/i }).click();
 
     await expect(page.getByRole("heading", { name: /niet voor iedere pottenkijker/i })).toBeVisible();
-    await expect(page.getByText(/privacy-first/i)).toBeVisible();
+    await expect(page.getByText(/privacy voorop/i)).toBeVisible();
     await page.getByRole("button", { name: "Niet nu" }).click();
 
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
