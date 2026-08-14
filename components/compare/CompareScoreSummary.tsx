@@ -33,13 +33,14 @@ export default function CompareScoreSummary({
   };
   const story = planCompareStory(summary, categoryScores);
   const hardBoundaryCount = conflict + limit;
+  const clearOverlapCount = shared + complementary;
 
   const stats = [
     {
       key: "together",
-      count: shared,
+      count: clearOverlapCount,
       label: "samen",
-      helper: "Allebei positief",
+      helper: "Duidelijke overlap",
       color: "var(--yes)",
       icon: Heart,
     },
@@ -47,7 +48,7 @@ export default function CompareScoreSummary({
       key: "discuss",
       count: discuss,
       label: "bespreken",
-      helper: "Verschil of twijfel",
+      helper: "Nog niet helemaal duidelijk",
       color: "var(--conflict)",
       icon: ChatCircle,
     },
