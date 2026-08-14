@@ -21,40 +21,40 @@ function overlapOpening(percent: number, seed: number): string {
   if (percent >= 80) {
     return choose([
       "Er is opvallend veel overlap.",
-      "De overlap springt meteen in het oog.",
-      "Veel voorkeuren komen hier mooi samen.",
+      "De overeenkomsten vallen meteen op.",
+      "Veel van de ingevulde voorkeuren liggen op één lijn.",
     ], seed);
   }
   if (percent >= 50) {
     return choose([
       "Er is behoorlijk wat overlap.",
-      "Op veel vlakken ligt de interesse dicht bij elkaar.",
-      "Er zit duidelijk veel gemeenschappelijke grond in de antwoorden.",
+      "Best veel antwoorden komen overeen.",
+      "Op veel voorkeuren ligt de interesse dicht bij elkaar.",
     ], seed);
   }
   if (percent >= 25) {
     return choose([
       "Er is duidelijke overlap, maar ook genoeg verschil om verder te verkennen.",
-      "Een deel van de voorkeuren ligt mooi op één lijn, een ander deel minder.",
-      "Er is een herkenbare overlap, met daarnaast wat meer nuance en verschil.",
+      "Een deel ligt mooi op één lijn, bij andere voorkeuren zit meer verschil.",
+      "Er is herkenbare overlap, met daarnaast genoeg nuance om over te praten.",
     ], seed);
   }
   return choose([
-    "Er is wat overlap, maar de verschillen vallen op dit moment meer op.",
-    "Een deel van de voorkeuren sluit aan, al ligt er ook aardig wat uit elkaar.",
-    "De overlap is voorlopig beperkt en er valt nog veel te bespreken.",
+    "Er is wat overlap, maar de verschillen vallen voorlopig meer op.",
+    "Op een paar voorkeuren zit er aansluiting, maar op veel andere nog niet.",
+    "De overlap is voorlopig beperkt. Er blijft genoeg om samen te bespreken.",
   ], seed);
 }
 
 function overlapDetail(summary: CompareSummary): string {
   const total = preferenceCount(summary.jointlyAssessed);
   if (summary.complementary > 0 && summary.shared > 0) {
-    return `Van de ${total} die aan beide kanten zijn ingevuld, is er bij ${summary.shared} dezelfde positieve interesse. Bij ${summary.complementary} andere sluiten geven en ontvangen op elkaar aan.`;
+    return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief. Bij ${summary.complementary} andere sluiten geven en ontvangen op elkaar aan.`;
   }
   if (summary.complementary > 0) {
-    return `Van de ${total} die aan beide kanten zijn ingevuld, sluiten er ${summary.complementary} aan doordat geven en ontvangen bij elkaar passen.`;
+    return `Van de ${total} die aan beide kanten zijn ingevuld, sluiten geven en ontvangen bij ${summary.complementary} op elkaar aan.`;
   }
-  return `Van de ${total} die aan beide kanten zijn ingevuld, is er bij ${summary.shared} dezelfde positieve interesse.`;
+  return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief.`;
 }
 
 function categoryInsight(categoryScores: CompareCategoryScore[]): string | null {
@@ -123,8 +123,8 @@ export function planCompareStory(
 
   if (summary.conflict > 0) {
     const conflictCopy = summary.conflict === 1
-      ? "Bij één voorkeur staat enthousiasme tegenover een harde grens. Dat is er eentje om eerst even samen over te praten."
-      : `Bij ${summary.conflict} voorkeuren staat enthousiasme tegenover een harde grens. Die zijn het waard om eerst even samen te bespreken.`;
+      ? "Bij één voorkeur staat enthousiasme tegenover een harde grens. Daar zou ik eerst even samen over praten."
+      : `Bij ${summary.conflict} voorkeuren staat enthousiasme tegenover een harde grens. Daar zou ik eerst even samen over praten.`;
     const otherLimits = summary.limit === 0
       ? ""
       : summary.limit === 1
@@ -133,8 +133,8 @@ export function planCompareStory(
     insights.push(`${conflictCopy}${otherLimits}`);
   } else if (summary.limit > 0) {
     insights.push(summary.limit === 1
-      ? "Er staat één harde grens tussen de gezamenlijk ingevulde voorkeuren. Die blijft bewust los van het percentage hierboven."
-      : `Er staan ${summary.limit} harde grenzen tussen de gezamenlijk ingevulde voorkeuren. Die blijven bewust los van het percentage hierboven.`);
+      ? "Er staat één harde grens tussen de gezamenlijk ingevulde voorkeuren. Die staat bewust los van het overlappercentage."
+      : `Er staan ${summary.limit} harde grenzen tussen de gezamenlijk ingevulde voorkeuren. Die staan bewust los van het overlappercentage.`);
   }
 
   if (summary.complementary > 0 && insights.length < 2) {
@@ -149,8 +149,8 @@ export function planCompareStory(
   if (summary.discuss > 0 && insights.length < 2) {
     insights.push(choose([
       `Bij ${preferenceCount(summary.discuss)} ligt het minder duidelijk. De antwoorden verschillen, of één van beiden twijfelt nog.`,
-      `${preferenceCount(summary.discuss)} vragen nog wat gesprek. Soms ligt de voorkeur anders, soms is één antwoord nog onzeker.`,
-      `Bij ${preferenceCount(summary.discuss)} zit nog wat ruimte om verder te verkennen. Daar verschillen de antwoorden of is er nog twijfel.`,
+      `Bij ${preferenceCount(summary.discuss)} zit nog wat verschil of twijfel. Dat zijn logische onderwerpen om samen verder te verkennen.`,
+      `${preferenceCount(summary.discuss)} zijn nog niet zo duidelijk. Soms verschillen de antwoorden, soms twijfelt één van beiden nog.`,
     ], seed + 19));
   }
 
