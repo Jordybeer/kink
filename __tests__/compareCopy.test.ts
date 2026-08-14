@@ -62,10 +62,11 @@ describe("compare narrative copy", () => {
     expect(story.insights[0]).toMatch(/2 andere voorkeuren/i);
   });
 
-  it("beschrijft passende rollen zonder het woord complementair", () => {
+  it("beschrijft directionality als geven en ontvangen, niet als profielrol", () => {
     const story = planCompareStory(summary({ shared: 24, complementary: 3, match: 27 }));
-    expect(story.insights.join(" ")).toMatch(/rollen mooi op elkaar aan/i);
-    expect(story.insights.join(" ")).not.toMatch(/complementair/i);
+    const copy = `${story.lead} ${story.insights.join(" ")}`;
+    expect(copy).toMatch(/geven en ontvangen/i);
+    expect(copy).not.toMatch(/rollen mooi|complementair/i);
   });
 
   it("noemt een categorie alleen wanneer verschillen er echt clusteren", () => {
