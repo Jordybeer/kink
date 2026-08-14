@@ -7,6 +7,7 @@ import { PROFILE_COLOUR_A, PROFILE_COLOUR_B, type CompareResultFilter } from "@/
 import { buildCompareModel, type ComparisonFact } from "@/lib/compareV2";
 import { directionalSideForKinkId } from "@/lib/directionality";
 import { CATEGORIES, kinkCategoryLabel } from "@/lib/kinks";
+import { complementaryParticipationSideLabel } from "@/lib/participation";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import type { KinkCategoryId, Profile } from "@/types";
 
@@ -30,10 +31,18 @@ function matchesResultFilter(fact: ComparisonFact, selected: ReadonlySet<Compare
 
 function directionNote(fact: ComparisonFact, profileA: Profile, profileB: Profile): string | undefined {
   if (fact.relation !== "complementary") return undefined;
+
   const sideA = directionalSideForKinkId(fact.kinkAId);
   if (sideA === "give") return `${profileA.name} geeft · ${profileB.name} ontvangt`;
   if (sideA === "receive") return `${profileA.name} ontvangt · ${profileB.name} geeft`;
-  return "Twee kanten van dezelfde voorkeur";
+
+  const participationA = complementaryParticipationSideLabel(fact.kinkAId);
+  const participationB = complementaryParticipationSideLabel(fact.kinkBId);
+  if (participationA && participationB) {
+    return `${profileA.name}: ${participationA.toLocaleLowerCase("nl-BE")} · ${profileB.name}: ${participationB.toLocaleLowerCase("nl-BE")}`;
+  }
+
+  return undefined;
 }
 
 export default function CompareResults({
