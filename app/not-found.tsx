@@ -90,7 +90,7 @@ export default function NotFound() {
         </Link>
 
         <p className="mx-auto mt-6 max-w-sm text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-          Je lokale profielen en antwoorden zijn niet weg. Alleen deze route mist z’n bestemming. 😏
+          Je lokale profielen en antwoorden zijn niet weg. Alleen deze route mist z’n bestemming.
         </p>
       </section>
     </PageShell>
