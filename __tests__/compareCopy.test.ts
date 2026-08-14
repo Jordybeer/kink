@@ -51,10 +51,11 @@ describe("compare narrative copy", () => {
     expect(story.coverage).toContain("233 andere");
   });
 
-  it("legt geven en ontvangen concreet uit zonder dezelfde boodschap als inzicht te herhalen", () => {
+  it("beschrijft complementaire overlap zonder aan te nemen dat elk paar geven en ontvangen is", () => {
     const story = planCompareStory(summary({ shared: 24, complementary: 3, discuss: 0, soft: 0, match: 27 }));
     expect(story.lead).toMatch(/interesse bij 24.*beide kanten positief/i);
-    expect(story.lead).toMatch(/3 andere.*wat de één wil geven.*wat de ander wil ontvangen/i);
+    expect(story.lead).toMatch(/3 andere.*twee kanten.*elkaar aan/i);
+    expect(story.lead).not.toMatch(/geven.*ontvangen/i);
     expect(story.insights.join(" ")).not.toMatch(/geven.*ontvangen/i);
   });
 
@@ -70,11 +71,11 @@ describe("compare narrative copy", () => {
     expect(story.insights[0]).toMatch(/2 andere voorkeuren/i);
   });
 
-  it("beschrijft directionality als geven en ontvangen, niet als profielrol", () => {
+  it("blijft in de samenvatting neutraal over het type complementaire participatie", () => {
     const story = planCompareStory(summary({ shared: 24, complementary: 3, match: 27 }));
     const copy = `${story.lead} ${story.insights.join(" ")}`;
-    expect(copy).toMatch(/geven.*ontvangen/i);
-    expect(copy).not.toMatch(/rollen mooi|complementair/i);
+    expect(copy).toMatch(/twee kanten/i);
+    expect(copy).not.toMatch(/rollen mooi|complementair|geven.*ontvangen/i);
   });
 
   it("noemt een categorie alleen wanneer verschillen er echt clusteren", () => {
