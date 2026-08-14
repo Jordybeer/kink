@@ -8,22 +8,31 @@ export default function NotFound() {
     <PageShell width="2xl" flush className={styles.pageShell}>
       <section className={styles.content} aria-labelledby="not-found-title">
         <div className={styles.hero} aria-hidden="true" data-testid="not-found-hero">
+          <div className={styles.backGlow} />
           <HeartStraight size={28} weight="regular" className={`${styles.heartAccent} ${styles.heartAccentOne}`} />
           <Sparkle size={22} weight="fill" className={styles.sparkle} />
           <HeartStraight size={24} weight="regular" className={`${styles.heartAccent} ${styles.heartAccentTwo}`} />
 
           <div className={styles.codeWrap}>
-            <span className={styles.code} data-reflection="404">
-              404
-            </span>
+            <span className={styles.code}>404</span>
+            <span className={styles.codeReflection}>404</span>
           </div>
 
+          <div className={styles.floor} />
           <div className={styles.floorGlow} />
-          <div className={styles.ropeScene}>
-            <div className={styles.rope} />
-            <div className={`${styles.ropeLoop} ${styles.ropeLoopLeft}`} />
-            <div className={`${styles.ropeLoop} ${styles.ropeLoopRight}`} />
-            <HeartStraight size={56} weight="regular" className={styles.ropeHeart} />
+
+          <div className={styles.whipScene}>
+            <div className={styles.whipShadow} />
+            <div className={styles.handle}>
+              <span className={styles.handleCap} />
+              <span className={styles.handleGrip} />
+            </div>
+            <div className={styles.lashMain} />
+            <div className={styles.lashLoopBack} />
+            <div className={styles.lashLoopFront} />
+            <div className={styles.lashTail} />
+            <div className={styles.lashTip} />
+            <HeartStraight size={58} weight="regular" className={styles.whipHeart} />
           </div>
         </div>
 
