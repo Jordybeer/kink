@@ -2,6 +2,7 @@
 
 import { useId, useRef, type KeyboardEvent } from "react";
 import { motion } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
 
 interface Segment<T extends string> {
   value: T;
@@ -17,6 +18,7 @@ interface Props<T extends string> {
 export default function SegmentedPill<T extends string>({ segments, value, onChange }: Props<T>) {
   const indicatorId = useId();
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const t = useMotionSafe();
 
   function selectAndFocus(index: number) {
     const segment = segments[index];
@@ -69,7 +71,7 @@ export default function SegmentedPill<T extends string>({ segments, value, onCha
             role="tab"
             aria-selected={active}
             tabIndex={active ? 0 : -1}
-            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-[13px] transition-colors duration-150"
+            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-[13px] transition-[color,transform] duration-150 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
             style={{
               color: active ? "var(--text)" : "var(--text2)",
               fontWeight: active ? 500 : 400,
@@ -82,7 +84,7 @@ export default function SegmentedPill<T extends string>({ segments, value, onCha
                 aria-hidden="true"
                 className="absolute bottom-[-1px] left-5 right-5 h-0.5 rounded-full"
                 style={{ background: "var(--accent)" }}
-                transition={{ type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.2 }}
+                transition={t.fast}
               />
             )}
           </button>
