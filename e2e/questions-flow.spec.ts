@@ -46,16 +46,29 @@ test("question card keeps its primary controls inside an iPhone viewport", async
   await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
 
+  const statusButtons = card.getByRole("group", { name: "Status kiezen" }).locator("button");
+  await expect(statusButtons).toHaveCount(5);
+  const firstStatusBox = await statusButtons.nth(0).boundingBox();
+  const lastStatusBox = await statusButtons.nth(4).boundingBox();
+  expect(firstStatusBox).not.toBeNull();
+  expect(lastStatusBox).not.toBeNull();
+  expect(Math.abs(firstStatusBox!.x - lastStatusBox!.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(firstStatusBox!.width - lastStatusBox!.width)).toBeLessThanOrEqual(1);
+
   const navBox = await nav.boundingBox();
   const cardBox = await card.boundingBox();
+  const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
   expect(navBox).not.toBeNull();
   expect(cardBox).not.toBeNull();
-  expect(cardBox!.y - (navBox!.y + navBox!.height)).toBeGreaterThanOrEqual(14);
+  const topGap = cardBox!.y - (navBox!.y + navBox!.height);
+  const bottomGap = visibleHeight - (cardBox!.y + cardBox!.height);
+  expect(topGap).toBeGreaterThanOrEqual(14);
+  expect(bottomGap).toBeGreaterThanOrEqual(12);
+  expect(Math.abs(topGap - bottomGap)).toBeLessThanOrEqual(24);
 
   const later = card.getByRole("button", { name: /Later/ });
   await expect(later).toBeVisible();
   const laterBox = await later.boundingBox();
-  const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
   expect(laterBox).not.toBeNull();
   expect(laterBox!.y + laterBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
 
