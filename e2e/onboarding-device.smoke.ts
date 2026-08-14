@@ -45,15 +45,17 @@ test("onboarding stays usable inside the browser viewport", async ({ page }, tes
   await expectCleanCopy(dialog);
 
   await page.getByRole("button", { name: /^begin$/i }).click();
+  await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
   await expectCleanCopy(dialog);
 
   await page.getByRole("button", { name: /18\+/i }).click();
+  await expect(page.getByRole("heading", { name: /hoe klinkt dit voor jou/i })).toBeVisible();
   await expectCleanCopy(dialog);
 
   await page.getByRole("button", { name: /kom maar door/i }).click();
+  await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
   await expectCleanCopy(dialog);
 
-  await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
   await expectInsideVisualViewport(page.getByRole("button", { name: /^verder/i }));
   await expectNoHorizontalOverflow(page);
   await capture(page, testInfo.project.name, "together");
