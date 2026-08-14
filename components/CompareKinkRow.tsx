@@ -71,6 +71,7 @@ export default function CompareKinkRow({
 }: Props) {
   const [notesOpen, setNotesOpen] = useState(false);
   const displayName = compactDirectionName(name);
+  const accessibleName = directionNote ? `${displayName}, ${directionNote}` : displayName;
 
   useEffect(() => {
     setNotesOpen(false);
@@ -118,7 +119,7 @@ export default function CompareKinkRow({
         <button
           type="button"
           onClick={onToggleDiscussed}
-          aria-label={isDiscussed ? `${displayName} als niet besproken markeren` : `${displayName} als besproken markeren`}
+          aria-label={isDiscussed ? `${accessibleName} als niet besproken markeren` : `${accessibleName} als besproken markeren`}
           className="focus-ring min-h-11 flex-none whitespace-nowrap rounded-full border px-3 text-[14px] transition-colors"
           style={isDiscussed
             ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
@@ -129,9 +130,9 @@ export default function CompareKinkRow({
       </div>
 
       <div className="mb-1 flex items-center gap-2">
-        <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${displayName}`} compact readable />
+        <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
         <div className="h-px flex-1" style={{ background: "var(--border)", opacity: 0.35 }} />
-        <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${displayName}`} compact readable />
+        <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
       </div>
 
       {(showReadOnlyA || showReadOnlyB) && (
@@ -142,7 +143,7 @@ export default function CompareKinkRow({
       )}
 
       {canEdit && !showEditors && (
-        <button type="button" onClick={() => setNotesOpen(true)} aria-label={`Notitie toevoegen voor ${displayName}`} className="focus-ring -mb-1 -ml-2 mt-1 inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] transition-colors" style={{ color: "var(--text2)" }}>
+        <button type="button" onClick={() => setNotesOpen(true)} aria-label={`Notitie toevoegen voor ${accessibleName}`} className="focus-ring -mb-1 -ml-2 mt-1 inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] transition-colors" style={{ color: "var(--text2)" }}>
           + Notitie
         </button>
       )}
@@ -150,10 +151,10 @@ export default function CompareKinkRow({
       {canEdit && showEditors && (
         <div className="mt-2 space-y-2">
           {canEditA && (
-            <textarea aria-label={`Notitie ${profileA.name}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
+            <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
           )}
           {canEditB && (
-            <textarea aria-label={`Notitie ${profileB.name}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
+            <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
           )}
         </div>
       )}
