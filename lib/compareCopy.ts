@@ -35,14 +35,14 @@ function overlapLead(percent: number, seed: number): string {
   if (percent >= 25) {
     return choose([
       "Er is duidelijke overlap, maar ook nog best wat om samen te bekijken.",
-      "Op een deel van jullie voorkeuren zitten jullie op dezelfde lijn, op andere minder.",
+      "Op een deel van jullie voorkeuren zitten jullie op dezelfde lijn, bij andere minder.",
       "Er is overlap in jullie antwoorden, met daarnaast een aantal duidelijke verschillen.",
     ], seed);
   }
   return choose([
-    "Er is wat overlap, maar jullie antwoorden verschillen op veel van wat jullie allebei hebben beoordeeld.",
-    "Jullie vinden elkaar op een aantal voorkeuren, maar er blijft ook veel verschil zichtbaar.",
-    "Een deel van jullie antwoorden sluit aan, maar op veel voorkeuren zitten jullie niet op dezelfde lijn.",
+    "Er is wat overlap, maar jullie antwoorden verschillen bij veel voorkeuren die jullie allebei hebben beoordeeld.",
+    "Op een aantal voorkeuren zitten jullie op dezelfde lijn, maar er zijn ook veel verschillen.",
+    "Een deel van jullie antwoorden sluit aan, maar bij veel voorkeuren denken jullie er anders over.",
   ], seed);
 }
 
@@ -130,22 +130,22 @@ export function planCompareStory(
     insights.push(choose([
       `Bij ${preferenceCount(summary.discuss)} denken jullie er anders over of twijfelt één van jullie nog.`,
       `Bij ${preferenceCount(summary.discuss)} zit er verschil in jullie antwoorden of twijfelt één van jullie nog.`,
-      `${preferenceCount(summary.discuss)} vragen nog wat gesprek omdat jullie antwoorden verschillen of één van jullie nog twijfelt.`,
+      `Bij ${preferenceCount(summary.discuss)} is er nog iets om over te praten, omdat jullie antwoorden verschillen of één van jullie nog twijfelt.`,
     ], seed + 19));
   }
 
   if (summary.soft > 0 && insights.length < 2) {
     insights.push(choose([
       `Bij ${preferenceCount(summary.soft)} staat één van jullie er positiever tegenover dan de ander.`,
-      `Bij ${preferenceCount(summary.soft)} verschilt hoe positief jullie er tegenover staan.`,
-      `${preferenceCount(summary.soft)} laten een zachter verschil zien in hoe jullie er tegenover staan.`,
+      `Bij ${preferenceCount(summary.soft)} is één van jullie duidelijk positiever dan de ander.`,
+      `Bij ${preferenceCount(summary.soft)} zit er verschil in hoe enthousiast jullie erover zijn.`,
     ], seed + 23));
   }
 
   if (summary.limit > 0 && summary.conflict === 0 && insights.length < 2) {
     insights.push(summary.limit === 1
-      ? "Bij één voorkeur staat minstens één harde grens. Die blijft apart staan van de overlap hierboven."
-      : `Bij ${summary.limit} voorkeuren staat minstens één harde grens. Die blijven apart staan van de overlap hierboven.`);
+      ? "Bij één voorkeur heeft minstens één van jullie een harde grens. Die blijft apart staan van de overlap hierboven."
+      : `Bij ${summary.limit} voorkeuren heeft minstens één van jullie een harde grens. Die blijven apart staan van de overlap hierboven.`);
   }
 
   const coverage = summary.unpairedVisible > 0
