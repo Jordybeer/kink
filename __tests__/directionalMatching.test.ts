@@ -119,14 +119,18 @@ describe("complementaire directionele matching", () => {
     expect(result.counts.perfect).toBe(0);
   });
 
-  it("uses the same complementary pairing in category scores and compare summary", () => {
+  it("uses the same complementary pairing in category evidence and compare summary", () => {
     const a = profile("A", "dominant", { pegging_give: { status: "yes" } });
     const b = profile("B", "submissive", { pegging_receive: { status: "yes" } });
 
     const penetration = getCompareCategoryScores(a, b).find((item) => item.category === "penetration");
-    expect(penetration?.compared).toBe(1);
-    expect(penetration?.rate).toBe(1);
-    expect(getCompareSummary(a, b).score).toBe(100);
+    expect(penetration?.jointlyAssessed).toBe(1);
+    expect(penetration?.complementary).toBe(1);
+
+    const summary = getCompareSummary(a, b);
+    expect(summary.jointlyAssessed).toBe(1);
+    expect(summary.complementary).toBe(1);
+    expect(summary.match).toBe(1);
   });
 
   it("makes the compare direction explicit and routes B to the counterpart ID", () => {
