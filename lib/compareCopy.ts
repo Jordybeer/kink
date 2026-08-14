@@ -107,7 +107,7 @@ export function planCompareStory(
     + summary.conflict * 13
     + summary.limit * 17;
 
-  const lead = `${overlapLead(overlapPercent, seed)} Van de ${preferenceCount(summary.jointlyAssessed)} die jullie allebei hebben beoordeeld, zijn er ${overlapCount} waar jullie allebei positief over zijn of waar jullie rollen op elkaar aansluiten.`;
+  const lead = `${overlapLead(overlapPercent, seed)} Van de ${preferenceCount(summary.jointlyAssessed)} die jullie allebei hebben beoordeeld, sluiten er ${overlapCount} duidelijk aan: jullie zijn allebei positief, of geven en ontvangen passen bij elkaar.`;
 
   const insights: string[] = [];
 
@@ -129,8 +129,8 @@ export function planCompareStory(
 
   if (summary.complementary > 0 && insights.length < 2) {
     insights.push(summary.complementary === 1
-      ? "Bij één voorkeur sluiten jullie rollen mooi op elkaar aan. De ene wil geven wat de andere graag ontvangt."
-      : `Bij ${summary.complementary} voorkeuren sluiten jullie rollen mooi op elkaar aan. De ene wil geven wat de andere graag ontvangt.`);
+      ? "Bij één voorkeur passen geven en ontvangen mooi bij elkaar. De ene wil geven wat de andere graag ontvangt."
+      : `Bij ${summary.complementary} voorkeuren passen geven en ontvangen mooi bij elkaar. De ene wil geven wat de andere graag ontvangt.`);
   }
 
   const clustered = categoryInsight(categoryScores);
@@ -153,8 +153,8 @@ export function planCompareStory(
   }
 
   const coverage = summary.unpairedVisible > 0
-    ? `Jullie hebben ${preferenceCount(summary.jointlyAssessed)} allebei beoordeeld. Bij ${summary.unpairedVisible} andere ontbreekt nog een zichtbaar antwoord van één van jullie.`
-    : `Jullie hebben ${preferenceCount(summary.jointlyAssessed)} allebei beoordeeld.`;
+    ? `${preferenceCount(summary.jointlyAssessed)} door jullie allebei beoordeeld. Bij ${summary.unpairedVisible} andere ontbreekt nog een zichtbaar antwoord van één van jullie.`
+    : `${preferenceCount(summary.jointlyAssessed)} door jullie allebei beoordeeld.`;
 
   return {
     overlapPercent,
