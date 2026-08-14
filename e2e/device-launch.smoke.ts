@@ -65,7 +65,8 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
     }
     case "compare":
       await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toBeVisible();
-      await expect(page.getByRole("img", { name: /^Verdeling:/ })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Alles", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Complementair", exact: true })).toBeVisible();
       await expect.poll(() => page.locator('section[id^="cat-"]').count()).toBeGreaterThan(0);
       break;
     case "contract":
