@@ -49,10 +49,10 @@ function overlapOpening(percent: number, seed: number): string {
 function overlapDetail(summary: CompareSummary): string {
   const total = preferenceCount(summary.jointlyAssessed);
   if (summary.complementary > 0 && summary.shared > 0) {
-    return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief. Bij ${summary.complementary} andere past wat de één wil geven bij wat de ander wil ontvangen.`;
+    return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief. Bij ${summary.complementary} andere vullen twee kanten van dezelfde voorkeur elkaar aan.`;
   }
   if (summary.complementary > 0) {
-    return `Van de ${total} die aan beide kanten zijn ingevuld, past bij ${summary.complementary} wat de één wil geven bij wat de ander wil ontvangen.`;
+    return `Van de ${total} die aan beide kanten zijn ingevuld, vullen bij ${summary.complementary} voorkeuren twee kanten elkaar aan.`;
   }
   return `Van de ${total} die aan beide kanten zijn ingevuld, is de interesse bij ${summary.shared} aan beide kanten positief.`;
 }
@@ -142,9 +142,9 @@ export function planCompareStory(
 
   if (summary.discuss > 0 && insights.length < 2) {
     insights.push(choose([
-      `Bij ${preferenceCount(summary.discuss)} zit nog verschil of twijfel. Daar valt dus nog wat uit te praten of te ontdekken.`,
-      `Bij ${preferenceCount(summary.discuss)} zit nog wat verschil of twijfel. Dat zijn logische onderwerpen om samen verder te verkennen.`,
-      `${preferenceCount(summary.discuss)} zijn nog niet zo duidelijk. Soms verschillen de antwoorden, soms twijfelt één van beiden nog.`,
+      `Bij ${preferenceCount(summary.discuss)} is het nog niet helemaal duidelijk. Daar valt dus nog wat uit te praten of te ontdekken.`,
+      `Bij ${preferenceCount(summary.discuss)} is het nog niet helemaal duidelijk. Dat zijn logische onderwerpen om samen verder te verkennen.`,
+      `${preferenceCount(summary.discuss)} zijn nog niet zo duidelijk. De antwoorden kunnen verschillen, twijfelen of vooral voor de ander bedoeld zijn.`,
     ], seed + 19));
   }
 
