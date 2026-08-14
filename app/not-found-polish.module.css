@@ -1,0 +1,115 @@
+.heroPolish {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 32%),
+    radial-gradient(ellipse at 50% 39%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface2) 90%, black), color-mix(in srgb, var(--surface) 84%, black));
+}
+
+.codeReflectionPolish {
+  top: 79%;
+  opacity: 0.13;
+  transform: translateX(-50%) scaleY(-0.5) skewX(-2deg);
+  filter: blur(1.9px);
+  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.62), transparent 64%);
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.62), transparent 64%);
+}
+
+.handlePolish {
+  left: -0.7rem;
+  bottom: 2.5rem;
+  height: 1.55rem;
+  transform: rotate(-11deg);
+  box-shadow:
+    inset 0 0.2rem 0.18rem rgb(255 255 255 / 0.1),
+    inset 0 -0.22rem 0.26rem rgb(0 0 0 / 0.82),
+    0.05rem 0.42rem 0.65rem rgb(0 0 0 / 0.72);
+}
+
+.lashMainPolish {
+  left: 16%;
+  right: -8%;
+  bottom: 2.72rem;
+  height: 1.02rem;
+  transform: rotate(-3.4deg) skewX(-3deg);
+  border-top-color: color-mix(in srgb, var(--leather-mid) 76%, var(--leather));
+  border-bottom-color: color-mix(in srgb, var(--leather) 92%, black);
+}
+
+.lashMainPolish::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 6%;
+  top: -0.23rem;
+  height: 0.12rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.09) 30%, rgb(255 255 255 / 0.025) 72%, transparent);
+  filter: blur(0.03rem);
+}
+
+.loopBackPolish {
+  left: 43%;
+  bottom: 0.42rem;
+  width: clamp(6.9rem, 30vw, 8.9rem);
+  height: clamp(4.35rem, 20vw, 5.8rem);
+  transform: translateX(-48%) rotate(-14deg) skewX(-7deg);
+  border-radius: 47% 53% 58% 42% / 43% 48% 52% 57%;
+  border-top-color: color-mix(in srgb, var(--leather-mid) 66%, var(--leather));
+}
+
+.loopFrontPolish {
+  left: 59%;
+  bottom: 0.02rem;
+  width: clamp(7rem, 30vw, 9.2rem);
+  height: clamp(4.5rem, 21vw, 6rem);
+  transform: translateX(-10%) rotate(19deg) skewX(6deg);
+  border-radius: 55% 45% 43% 57% / 49% 57% 43% 51%;
+  border-top-color: color-mix(in srgb, var(--leather-mid) 72%, var(--leather));
+}
+
+.tailPolish {
+  right: 1%;
+  bottom: 1.62rem;
+  width: clamp(5.4rem, 21vw, 6.9rem);
+  height: 0.62rem;
+  transform: rotate(13deg) skewX(-9deg);
+  border-top-color: color-mix(in srgb, var(--leather-mid) 58%, var(--leather));
+}
+
+.tipPolish {
+  right: -0.95rem;
+  bottom: 1.22rem;
+  width: 3.5rem;
+  height: 0.3rem;
+  transform: rotate(18deg) skewX(-16deg);
+  opacity: 0.88;
+}
+
+.whipScenePolish::after {
+  left: 3%;
+  right: 0;
+  bottom: -2.1rem;
+  height: 5.2rem;
+  opacity: 0.16;
+  transform: scaleY(-0.64) skewX(-7deg);
+  background:
+    radial-gradient(ellipse at 56% 20%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 29%),
+    linear-gradient(176deg, rgb(10 9 13 / 0.94), transparent 61%);
+  filter: blur(0.48rem);
+  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.58), transparent 66%);
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.58), transparent 66%);
+}
+
+@media (max-width: 380px) {
+  .handlePolish {
+    left: -1.35rem;
+  }
+
+  .loopBackPolish {
+    left: 41%;
+  }
+
+  .loopFrontPolish {
+    left: 57%;
+  }
+}
