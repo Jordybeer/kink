@@ -22,7 +22,7 @@ export default function NotFound() {
           <div className={styles.floor} />
           <div className={styles.floorGlow} />
 
-          <div className={`${styles.whipScene} ${polish.whipScenePolish}`}>
+          <div className={`${styles.whipScene} ${polish.whipScenePolish}`} data-testid="not-found-whip">
             <div className={styles.whipShadow} />
             <div className={`${styles.handle} ${polish.handlePolish}`}>
               <span className={styles.handleCap} />
