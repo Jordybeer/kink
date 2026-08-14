@@ -38,12 +38,19 @@ test("question card keeps its primary controls inside an iPhone viewport", async
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
 
+  const nav = page.getByLabel("Hoofdnavigatie");
   const card = page.locator('[data-tour="kink-card"]');
   await expect(card).toBeVisible();
   await expect(card.getByRole("button", { name: "Markeer als nieuwsgierig" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Antwoord verbergen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
+
+  const navBox = await nav.boundingBox();
+  const cardBox = await card.boundingBox();
+  expect(navBox).not.toBeNull();
+  expect(cardBox).not.toBeNull();
+  expect(cardBox!.y - (navBox!.y + navBox!.height)).toBeGreaterThanOrEqual(14);
 
   const later = card.getByRole("button", { name: /Later/ });
   await expect(later).toBeVisible();
