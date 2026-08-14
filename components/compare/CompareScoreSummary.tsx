@@ -44,10 +44,10 @@ export default function CompareScoreSummary({
       icon: Heart,
     },
     {
-      key: "roles",
+      key: "direction",
       count: complementary,
-      label: "rollen",
-      helper: "Geven en ontvangen sluiten aan",
+      label: "geven & ontvangen",
+      helper: "De één geeft, de ander ontvangt",
       color: "var(--yes)",
       icon: ArrowsLeftRight,
     },
@@ -63,7 +63,7 @@ export default function CompareScoreSummary({
       key: "soft",
       count: soft,
       label: "zachte verschillen",
-      helper: "De één staat er positiever tegenover",
+      helper: "De één is positiever",
       color: "var(--maybe)",
       icon: WaveSine,
     },
@@ -73,12 +73,12 @@ export default function CompareScoreSummary({
       label: hardBoundaryCount === 1 ? "harde grens" : "harde grenzen",
       helper: conflict > 0
         ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met een positief antwoord`
-        : "Minstens één van jullie trekt hier een harde grens",
+        : "Minstens één harde grens",
       color: "var(--hard-no-text)",
       icon: ShieldWarning,
     },
   ].filter((item) => item.count > 0);
-  const statColumns = stats.length === 3 ? 3 : stats.length > 1 ? 2 : 1;
+  const statColumns = stats.length > 1 ? 2 : 1;
 
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
@@ -95,19 +95,19 @@ export default function CompareScoreSummary({
         </h2>
 
         {story.overlapPercent !== null ? (
-          <div className="mt-4 grid grid-cols-[96px_minmax(0,1fr)] items-start gap-4">
-            <div className="pt-0.5 text-center">
+          <div className="mt-4">
+            <div className="flex items-end gap-2.5">
               <div
-                className="text-[48px] font-semibold leading-none tabular-nums"
+                className="text-[52px] font-semibold leading-none tabular-nums"
                 style={{ color: "var(--accent-text)" }}
               >
                 {story.overlapPercent}%
               </div>
-              <div className="mt-1 text-[15px] font-medium" style={{ color: "var(--accent-text)" }}>
-                overlap
+              <div className="pb-1 text-[15px] font-medium" style={{ color: "var(--accent-text)" }}>
+                duidelijke overlap
               </div>
             </div>
-            <p className="text-[17px] leading-[1.55]" style={{ color: "var(--text)" }}>
+            <p className="mt-3 max-w-2xl text-[17px] leading-[1.55]" style={{ color: "var(--text)" }}>
               {story.lead}
             </p>
           </div>
@@ -127,7 +127,7 @@ export default function CompareScoreSummary({
             }}
           >
             {stats.map(({ key, count, label, helper, color, icon: Icon }) => (
-              <div key={key} className="min-w-0 px-2 py-4 text-center" style={{ background: "var(--surface2)" }}>
+              <div key={key} className="min-w-0 px-3 py-4 text-center" style={{ background: "var(--surface2)" }}>
                 <div className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
                   {count}
                 </div>
@@ -154,17 +154,19 @@ export default function CompareScoreSummary({
           </div>
         )}
 
-        <div className="mt-4 flex items-start gap-2.5 text-[14px] leading-[1.45]" style={{ color: "var(--text2)" }}>
-          <Info size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-          <p>{story.coverage}</p>
-        </div>
-
-        <p
-          className="mt-4 border-t pt-4 text-[14px] leading-[1.45]"
+        <div
+          className="mt-4 space-y-2 border-t pt-4 text-[14px] leading-[1.45]"
           style={{ color: "var(--text2)", borderColor: "var(--border)" }}
         >
-          Dit vergelijkt alleen wat jullie zelf zichtbaar hebben gemaakt. Een match in jullie antwoorden betekent natuurlijk niet automatisch toestemming.
-        </p>
+          <div className="flex items-start gap-2.5">
+            <Info size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p>{story.coverage}</p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <ShieldWarning size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p>Alleen zichtbare antwoorden tellen mee. Overlap is geen toestemming.</p>
+          </div>
+        </div>
       </div>
     </section>
   );
