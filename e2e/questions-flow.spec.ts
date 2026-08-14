@@ -34,6 +34,28 @@ test("answered question persists across a reload without document-width overflow
   expect(hasHorizontalOverflow).toBe(false);
 });
 
+test("question card keeps its primary controls inside an iPhone viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
+
+  const card = page.locator('[data-tour="kink-card"]');
+  await expect(card).toBeVisible();
+  await expect(card.getByRole("button", { name: "Markeer als nieuwsgierig" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Antwoord verbergen" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
+
+  const later = card.getByRole("button", { name: /Later/ });
+  await expect(later).toBeVisible();
+  const laterBox = await later.boundingBox();
+  const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
+  expect(laterBox).not.toBeNull();
+  expect(laterBox!.y + laterBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+
+  const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+  expect(hasHorizontalOverflow).toBe(false);
+});
+
 test("questionnaire modes live in the context menu and floating details fit a short browser viewport", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 480 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);

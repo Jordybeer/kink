@@ -188,7 +188,10 @@ export default function QuestionsScreen({ params }: Props) {
         />
       </div>
 
-      <section className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2" data-testid="questions-scroll-region">
+      <section
+        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 ${activeRuntime.complete ? "flex flex-col" : ""}`}
+        data-testid="questions-scroll-region"
+      >
         {!activeRuntime.complete ? (
           <TriageDeck
             key={runtimeKind}
@@ -203,42 +206,58 @@ export default function QuestionsScreen({ params }: Props) {
             onTagsChange={(kinkId, tags) => setEntry(currentProfile.id, kinkId, { tags })}
           />
         ) : (
-          <div
-            className="rounded-2xl p-5 text-center ks-fade-in"
-            style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-          >
+          <div className="my-auto mx-auto w-full max-w-sm px-4 py-8 text-center ks-fade-in" data-testid="questions-complete">
             <span
-              className="mx-auto flex h-11 w-11 items-center justify-center rounded-full"
-              style={{ background: "color-mix(in srgb, var(--accent) 12%, var(--surface2))", color: "var(--accent)" }}
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+              style={{
+                background: "color-mix(in srgb, var(--accent) 13%, var(--surface2))",
+                border: "1px solid color-mix(in srgb, var(--accent) 24%, var(--border))",
+                color: "var(--accent)",
+              }}
             >
-              <Sparkle size={20} weight="duotone" aria-hidden="true" />
+              <Sparkle size={26} weight="duotone" aria-hidden="true" />
             </span>
+
+            <span
+              className="mt-4 inline-flex min-h-7 items-center rounded-full px-3 text-xs font-semibold tabular-nums"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+            >
+              {activeRuntime.scope.answered} / {activeRuntime.scope.total} beoordeeld
+            </span>
+
             <h2
-              className="mt-3 text-xl"
+              className="mt-4 text-3xl leading-tight"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}
             >
-              {runtimeKind === "dynamic" ? "Brede profieldekking bereikt." : "Voor nu alles op tafel."}
+              {runtimeKind === "dynamic"
+                ? "Je brede profiel staat."
+                : runtimeKind === "discover"
+                  ? "Discover afgerond."
+                  : "Deep Dive compleet."}
             </h2>
-            <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-6" style={{ color: "var(--text2)" }}>
               {runtimeKind === "dynamic"
                 ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken."
-                : `${activeRuntime.scope.answered} van ${activeRuntime.scope.total} onderwerpen in deze modus zijn expliciet beoordeeld.`}
+                : runtimeKind === "discover"
+                  ? "Alles in deze ronde is expliciet beoordeeld. Genoeg ontdekt voor nu — of duik verder wanneer je wilt."
+                  : "Je hebt alle onderwerpen in deze modus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
             </p>
+
             {runtimeKind === "dynamic" && (
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-6 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={startDiscover}
                   disabled={discoverComplete}
-                  className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-40"
-                  style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                  className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold disabled:opacity-40"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 >
                   Discover
                 </button>
                 <button
                   type="button"
                   onClick={startDeepDive}
-                  className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold"
+                  className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold"
                   style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                 >
                   Deep Dive
@@ -249,8 +268,8 @@ export default function QuestionsScreen({ params }: Props) {
               <button
                 type="button"
                 onClick={startDynamic}
-                className="focus-ring mt-4 min-h-11 w-full rounded-xl px-3 text-xs font-semibold"
-                style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
+                className="focus-ring mt-6 min-h-11 w-full rounded-xl px-4 text-sm font-semibold"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Genoeg voor nu
               </button>
@@ -259,8 +278,8 @@ export default function QuestionsScreen({ params }: Props) {
               <Link
                 href={`/profile/${currentProfile.id}`}
                 prefetch={false}
-                className="focus-ring mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl px-3 text-xs font-semibold"
-                style={{ border: "1px solid var(--border)", color: "var(--accent-text)" }}
+                className="focus-ring mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Terug naar profiel
               </Link>

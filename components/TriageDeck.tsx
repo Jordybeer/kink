@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Circle, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
+import { ArrowRight, Check, Circle, Eye, EyeSlash, Star } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import {
@@ -141,7 +141,7 @@ export default function TriageDeck({
           className="rounded-2xl p-4"
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border-accent)",
+            border: "1px solid var(--border)",
             scrollMarginTop: "calc(var(--nav-h) + 12px)",
           }}
         >
@@ -151,22 +151,23 @@ export default function TriageDeck({
             animate={{ opacity: 1 }}
             transition={fadeTransition}
           >
-            <div className="flex items-center gap-1.5">
-              <p className="flex-1 text-xs truncate" style={{ color: "var(--text2)" }}>
+            <div className="flex items-center gap-2">
+              <p className="min-w-0 flex-1 truncate text-xs" style={{ color: "var(--text2)" }}>
                 {kinkCategoryLabel(current.category)} · <span className="tabular-nums">nog {remainingInCat}</span>
               </p>
               <button
+                type="button"
                 data-tour="curious"
                 onClick={() => onCuriousChange(current.id, !currentEntry?.curious)}
                 aria-pressed={!!currentEntry?.curious}
                 aria-label={currentEntry?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}
-                className="focus-ring rounded-full border transition-colors text-xs px-2.5 min-h-9 inline-flex items-center gap-1 flex-none"
+                title={currentEntry?.curious ? "Niet meer nieuwsgierig" : "Nieuwsgierig"}
+                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-colors"
                 style={currentEntry?.curious
-                  ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
-                  : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
+                  ? { background: "color-mix(in srgb, var(--curious) 14%, var(--surface2))", borderColor: "color-mix(in srgb, var(--curious) 55%, var(--border))", color: "var(--curious)" }
+                  : { background: "var(--surface2)", borderColor: "var(--border)", color: "var(--text2)" }}
               >
-                <Star size={11} weight={currentEntry?.curious ? "fill" : "regular"} aria-hidden="true" />
-                Nieuwsgierig
+                <Star size={17} weight={currentEntry?.curious ? "fill" : "regular"} aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -174,19 +175,19 @@ export default function TriageDeck({
                 onClick={() => onPrivateChange(current.id, !currentEntry?.privateResponse)}
                 aria-pressed={!!currentEntry?.privateResponse}
                 aria-label={currentEntry?.privateResponse ? "Antwoord niet langer verbergen" : "Antwoord verbergen"}
-                className="focus-ring px-2.5 min-h-9 inline-flex items-center justify-center gap-1 rounded-lg border transition-colors flex-none text-xs"
+                title={currentEntry?.privateResponse ? "Verborgen antwoord" : "Antwoord verbergen"}
+                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-colors"
                 style={currentEntry?.privateResponse
-                  ? { color: "var(--accent)", borderColor: "var(--accent)", background: "color-mix(in srgb, var(--accent) 12%, transparent)" }
-                  : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
+                  ? { color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 55%, var(--border))", background: "color-mix(in srgb, var(--accent) 12%, var(--surface2))" }
+                  : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--surface2)" }}
               >
                 {currentEntry?.privateResponse
-                  ? <EyeSlash size={13} weight="bold" aria-hidden="true" />
-                  : <Eye size={13} aria-hidden="true" />}
-                <span>{currentEntry?.privateResponse ? "Verborgen" : "Verberg"}</span>
+                  ? <EyeSlash size={17} weight="bold" aria-hidden="true" />
+                  : <Eye size={17} aria-hidden="true" />}
               </button>
             </div>
 
-            <div className="mt-1">
+            <div className="mt-2">
               <h3
                 className="text-2xl leading-tight"
                 style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
@@ -196,7 +197,7 @@ export default function TriageDeck({
               {current.description ? (
                 <ClampText
                   text={current.description}
-                  className="text-sm mt-1 leading-relaxed"
+                  className="mt-1 text-sm leading-relaxed"
                   style={{ color: "var(--text2)" }}
                 />
               ) : (
@@ -210,7 +211,7 @@ export default function TriageDeck({
                   <span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
                   <ClampText
                     text={current.safetyNote}
-                    className="text-xs mt-0.5 leading-relaxed"
+                    className="mt-0.5 text-xs leading-relaxed"
                     style={{ color: "var(--text2)" }}
                   />
                 </aside>
@@ -222,10 +223,10 @@ export default function TriageDeck({
               onSelect={(status) => handleSelect(current, status)}
             />
 
-            <section className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <div className="flex items-center gap-1.5 mb-2">
-                <WarningCircle size={14} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
-                <p className="text-xs font-semibold">Afspraken</p>
+            <section className="mt-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+              <div className="mb-2 flex items-baseline justify-between gap-3">
+                <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>Afspraken</p>
+                <span className="text-xs" style={{ color: "var(--text2)" }}>optioneel</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {AGREEMENTS.map((agreement) => {
@@ -237,14 +238,14 @@ export default function TriageDeck({
                       data-tour={agreement.tour}
                       onClick={() => toggleAgreement(agreement.value)}
                       aria-pressed={active}
-                      className="focus-ring min-h-10 rounded-xl px-2.5 inline-flex items-center justify-center gap-1.5 text-xs font-semibold"
+                      className="focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold"
                       style={active
                         ? {
                             color: agreement.emphasized ? "var(--accent)" : "var(--text)",
                             background: agreement.emphasized
-                              ? "color-mix(in srgb, var(--accent) 13%, var(--surface2))"
+                              ? "color-mix(in srgb, var(--accent) 11%, var(--surface2))"
                               : "var(--surface3)",
-                            border: `1px solid ${agreement.emphasized ? "var(--accent)" : "var(--border-accent)"}`,
+                            border: `1px solid ${agreement.emphasized ? "color-mix(in srgb, var(--accent) 55%, var(--border))" : "var(--border-accent)"}`,
                           }
                         : { color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)" }}
                     >
@@ -256,13 +257,14 @@ export default function TriageDeck({
               </div>
             </section>
 
-            <div className="flex items-center mt-2">
+            <div className="mt-3 flex items-center">
               <span className="flex-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                 {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}
               </span>
               <button
+                type="button"
                 onClick={() => skip(current)}
-                className="focus-ring h-9 px-3 rounded-lg text-xs transition-colors inline-flex items-center gap-1"
+                className="focus-ring inline-flex h-9 items-center gap-1 rounded-lg px-3 text-xs transition-colors"
                 style={{ color: "var(--text2)" }}
               >
                 Later <ArrowRight size={13} aria-hidden="true" />
@@ -285,13 +287,13 @@ export default function TriageDeck({
           >
             {skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld."}
           </p>
-          <p className="text-xs mt-1 tabular-nums" style={{ color: "var(--text2)" }}>
+          <p className="mt-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
             {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`} — tik een kink hieronder om bij te stellen.
           </p>
           {skippedUnansweredCount > 0 && (
             <button
               onClick={() => setSkipped(new Set())}
-              className="focus-ring mt-3 h-9 px-4 rounded-lg text-xs border transition-colors"
+              className="focus-ring mt-3 h-9 rounded-lg border px-4 text-xs transition-colors"
               style={{ color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}
             >
               {skippedUnansweredCount} overgeslagen — toon opnieuw
