@@ -1,4 +1,4 @@
-import { ArrowsLeftRight, ChatCircle, Heart, Info, ShieldWarning, WaveSine } from "@phosphor-icons/react";
+import { ChatCircle, Heart, Info, ShieldWarning, WaveSine } from "@phosphor-icons/react";
 import { planCompareStory } from "@/lib/compareCopy";
 import type { CompareCategoryScore, CompareSummary } from "@/lib/compare";
 
@@ -33,29 +33,22 @@ export default function CompareScoreSummary({
   };
   const story = planCompareStory(summary, categoryScores);
   const hardBoundaryCount = conflict + limit;
+  const clearOverlapCount = shared + complementary;
 
   const stats = [
     {
       key: "together",
-      count: shared,
+      count: clearOverlapCount,
       label: "samen",
-      helper: "Allebei positief",
+      helper: complementary > 0 ? "Zelfde interesse of passende kanten" : "Aan beide kanten positief",
       color: "var(--yes)",
       icon: Heart,
-    },
-    {
-      key: "direction",
-      count: complementary,
-      label: "geven & ontvangen",
-      helper: "De één geeft, de ander ontvangt",
-      color: "var(--yes)",
-      icon: ArrowsLeftRight,
     },
     {
       key: "discuss",
       count: discuss,
       label: "bespreken",
-      helper: "Verschil of twijfel",
+      helper: "Nog niet helemaal duidelijk",
       color: "var(--conflict)",
       icon: ChatCircle,
     },
@@ -70,15 +63,18 @@ export default function CompareScoreSummary({
     {
       key: "boundaries",
       count: hardBoundaryCount,
-      label: hardBoundaryCount === 1 ? "harde grens" : "harde grenzen",
-      helper: conflict > 0
-        ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met een positief antwoord`
-        : "Minstens één harde grens",
-      color: "var(--hard-no-text)",
+      label: "grenzen",
+      helper: hardBoundaryCount === 0
+        ? "Geen harde grens"
+        : conflict > 0
+          ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met positief antwoord`
+          : hardBoundaryCount === 1
+            ? "Eén harde grens"
+            : `${hardBoundaryCount} harde grenzen`,
+      color: hardBoundaryCount > 0 ? "var(--hard-no-text)" : "var(--text2)",
       icon: ShieldWarning,
     },
-  ].filter((item) => item.count > 0);
-  const statColumns = stats.length > 1 ? 2 : 1;
+  ];
 
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
@@ -117,31 +113,25 @@ export default function CompareScoreSummary({
           </p>
         )}
 
-        {stats.length > 0 && (
-          <div
-            className="mt-5 grid gap-px overflow-hidden rounded-2xl border"
-            style={{
-              gridTemplateColumns: `repeat(${statColumns}, minmax(0, 1fr))`,
-              borderColor: "var(--border)",
-              background: "var(--border)",
-            }}
-          >
-            {stats.map(({ key, count, label, helper, color, icon: Icon }) => (
-              <div key={key} className="min-w-0 px-3 py-4 text-center" style={{ background: "var(--surface2)" }}>
-                <div className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
-                  {count}
-                </div>
-                <div className="mt-2 text-[15px] font-semibold leading-tight" style={{ color: "var(--text)" }}>
-                  {label}
-                </div>
-                <div className="mt-2 flex items-start justify-center gap-1.5 text-[14px] leading-[1.35]" style={{ color: "var(--text2)" }}>
-                  <Icon size={16} weight="regular" className="mt-0.5 shrink-0" aria-hidden="true" style={{ color }} />
-                  <span>{helper}</span>
-                </div>
+        <div
+          className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border"
+          style={{ borderColor: "var(--border)", background: "var(--border)" }}
+        >
+          {stats.map(({ key, count, label, helper, color, icon: Icon }) => (
+            <div key={key} className="min-w-0 px-3 py-4 text-center" style={{ background: "var(--surface2)" }}>
+              <div className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
+                {count}
               </div>
-            ))}
-          </div>
-        )}
+              <div className="mt-2 text-[15px] font-semibold leading-tight" style={{ color: "var(--text)" }}>
+                {label}
+              </div>
+              <div className="mt-2 flex items-start justify-center gap-1.5 text-[14px] leading-[1.35]" style={{ color: "var(--text2)" }}>
+                <Icon size={16} weight="regular" className="mt-0.5 shrink-0" aria-hidden="true" style={{ color }} />
+                <span>{helper}</span>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {story.insights.length > 0 && (
           <div

@@ -10,6 +10,7 @@ import {
   type VisibleCompareStatus,
 } from "@/lib/compareV2";
 import { DIRECTIONAL_KINK_PAIRS } from "@/lib/directionality";
+import { complementaryParticipationSideLabel } from "@/lib/participation";
 import type { Profile } from "@/types";
 
 function profile(id: string, name: string, overrides: Partial<Profile> = {}): Profile {
@@ -95,6 +96,12 @@ describe("compare v2 status contract", () => {
     expect(ab.summary).toEqual(ba.summary);
     expect(ab.facts.map(({ id, label, kind }) => ({ id, label, kind })))
       .toEqual(ba.facts.map(({ id, label, kind }) => ({ id, label, kind })));
+  });
+
+  it("behoudt expliciete kanten van bijzondere complementaire participatie", () => {
+    expect(complementaryParticipationSideLabel("luiers_dragen")).toBe("Zelf dragen");
+    expect(complementaryParticipationSideLabel("diaper_partner_wearing")).toBe("Partner draagt");
+    expect(complementaryParticipationSideLabel(DIRECTIONAL_KINK_PAIRS[0].giveId)).toBeNull();
   });
 
   it("maakt van een eenzijdig zichtbaar antwoord alleen unpaired evidence", () => {

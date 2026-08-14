@@ -9,10 +9,11 @@ interface Props {
 export default function DiscussedToggle({ count, hidden, onToggle }: Props) {
   if (count === 0) return null;
   return (
-    <div className="flex justify-end mb-3">
+    <div className="mb-3 flex justify-end">
       <button
+        type="button"
         onClick={onToggle}
-        className="focus-ring text-xs px-3 py-1.5 rounded-full border transition-colors"
+        className="focus-ring min-h-11 rounded-full border px-3 text-[14px] transition-colors"
         style={{
           borderColor: hidden ? "var(--accent)" : "var(--border)",
           color: hidden ? "var(--accent)" : "var(--text2)",
