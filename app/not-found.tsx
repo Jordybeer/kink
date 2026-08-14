@@ -2,12 +2,13 @@ import Link from "next/link";
 import { ArrowRight, HeartStraight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import PageShell from "@/components/PageShell";
 import styles from "./not-found.module.css";
+import polish from "./not-found-polish.module.css";
 
 export default function NotFound() {
   return (
     <PageShell width="2xl" flush className={styles.pageShell}>
       <section className={styles.content} aria-labelledby="not-found-title">
-        <div className={styles.hero} aria-hidden="true" data-testid="not-found-hero">
+        <div className={`${styles.hero} ${polish.heroPolish}`} aria-hidden="true" data-testid="not-found-hero">
           <div className={styles.backGlow} />
           <HeartStraight size={28} weight="regular" className={`${styles.heartAccent} ${styles.heartAccentOne}`} />
           <Sparkle size={22} weight="fill" className={styles.sparkle} />
@@ -15,23 +16,23 @@ export default function NotFound() {
 
           <div className={styles.codeWrap}>
             <span className={styles.code}>404</span>
-            <span className={styles.codeReflection}>404</span>
+            <span className={`${styles.codeReflection} ${polish.codeReflectionPolish}`}>404</span>
           </div>
 
           <div className={styles.floor} />
           <div className={styles.floorGlow} />
 
-          <div className={styles.whipScene}>
+          <div className={`${styles.whipScene} ${polish.whipScenePolish}`}>
             <div className={styles.whipShadow} />
-            <div className={styles.handle}>
+            <div className={`${styles.handle} ${polish.handlePolish}`}>
               <span className={styles.handleCap} />
               <span className={styles.handleGrip} />
             </div>
-            <div className={styles.lashMain} />
-            <div className={styles.lashLoopBack} />
-            <div className={styles.lashLoopFront} />
-            <div className={styles.lashTail} />
-            <div className={styles.lashTip} />
+            <div className={`${styles.lashMain} ${polish.lashMainPolish}`} />
+            <div className={`${styles.lashLoopBack} ${polish.loopBackPolish}`} />
+            <div className={`${styles.lashLoopFront} ${polish.loopFrontPolish}`} />
+            <div className={`${styles.lashTail} ${polish.tailPolish}`} />
+            <div className={`${styles.lashTip} ${polish.tipPolish}`} />
             <HeartStraight size={58} weight="regular" className={styles.whipHeart} />
           </div>
         </div>
