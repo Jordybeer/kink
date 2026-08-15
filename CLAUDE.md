@@ -41,6 +41,17 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 The `frontend-design` skill is available for UI/visual decisions.
 **Never auto-invoke it** — only call `/frontend-design` when the user explicitly asks. It freezes when auto-triggered.
 
+## KinkSync UI principles (mandatory — every UI/UX decision)
+`UI-principles.md` is the repository's source of truth for interface design.
+
+- **Read `UI-principles.md` at session start before touching any UI, UX, component layout, visual hierarchy, interaction, motion, responsive behaviour, or user-facing interface copy.** This applies even to tiny polish fixes.
+- Every new UI decision, component, feature, redesign, visual audit, and frontend review **must** be evaluated against its conflict priority and its `UI decision gate` before implementation and again before calling the work done.
+- The priority order in `UI-principles.md` is binding inside UI decisions: consent/safety/privacy → readability → stable interaction geometry → hierarchy/calm → expression/decoration → density/speed.
+- Essential consent, safety, privacy, or decision-making context must never be hidden merely to make a layout cleaner, smaller, faster, or more visually stable.
+- `frontend-design`, personal taste, screenshots, trends, existing component conventions, and visual polish may refine an interface but **may not override `UI-principles.md`**.
+- If a requested UI direction conflicts with a higher principle and the conflict cannot be resolved cleanly, stop and surface the trade-off instead of silently choosing the prettier or more compact option.
+- Preserve KinkSync's character: private, warm, human, expressive in colour, restrained in structure, mobile-native, reflective rather than rushed.
+
 ## Tone (mandatory, entire repo)
 Playful, kinky, BDSM-themed throughout — commits, docs, comments, PRs.
 Think "finally collared that hydration bug" not "fix: prevent SSR flash".
@@ -73,6 +84,7 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - `e2e/` — Playwright tests
 - `e2e-offline/` — Playwright offline tests
 - `docs/` — internal documentation
+- `UI-principles.md` — mandatory KinkSync interface doctrine; read before every UI/UX change
 - `corrections.md` — mistake log (read at session start)
 - `planned-changes.md` — the single backlog: active phases + suggestion pool + shipped ledger (read at session start, update when work lands; absorbed `future.md` on 2026-07-08)
 - `ideas.md` — raw ideas, read only
