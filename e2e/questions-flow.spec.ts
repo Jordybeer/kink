@@ -173,6 +173,25 @@ test("safety guidance stays compact until the user opens it", async ({ page }) =
   await expect(dialog).toBeHidden();
 });
 
+test("questionnaire help stays inside a short visual viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 480 });
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
+
+  const nav = page.getByLabel("Hoofdnavigatie");
+  await nav.getByRole("button", { name: "Uitleg antwoordkeuzes" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Uitleg keuzes" });
+  await expect(dialog).toBeVisible();
+  const dialogBox = await dialog.boundingBox();
+  const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.y).toBeGreaterThanOrEqual(-1);
+  expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+
+  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await expect(dialog).toBeHidden();
+});
+
 test("questionnaire modes live in the context menu and floating details fit a short browser viewport", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 480 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
