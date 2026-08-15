@@ -183,7 +183,8 @@ export default function QuestionsScreen({ params }: Props) {
         data-testid="questions-top-progress"
       >
         <div
-          className="h-full transition-[width]"
+          data-testid="questions-top-progress-fill"
+          className="h-full"
           style={{ width: `${progressPercent}%`, background: "var(--accent)" }}
         />
       </div>
@@ -208,7 +209,7 @@ export default function QuestionsScreen({ params }: Props) {
             />
           </div>
         ) : (
-          <div className="my-auto mx-auto w-full max-w-sm px-4 py-8 text-center ks-fade-in" data-testid="questions-complete">
+          <div className="my-auto mx-auto w-full max-w-sm px-4 py-8 text-center" data-testid="questions-complete">
             <span
               className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
               style={{
