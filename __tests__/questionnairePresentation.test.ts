@@ -23,6 +23,14 @@ describe("questionnaire presentation", () => {
     }
   });
 
+  it("keeps visible questionnaire titles English by default", () => {
+    for (const id of ["spanking_hand_receive", "pegging_receive", "sound_deprivation_receive"]) {
+      const kink = KINKS.find((candidate) => candidate.id === id);
+      expect(kink).toBeDefined();
+      expect(getQuestionnairePresentation(kink!).title).not.toMatch(/\b(ontvangen|geven|worden|gehoor beperken)\b/i);
+    }
+  });
+
   it("gives cuckolding a concise decision surface and keeps depth available", () => {
     const kink = KINKS.find((candidate) => candidate.id === "cuckolding");
     expect(kink).toBeDefined();
@@ -34,6 +42,14 @@ describe("questionnaire presentation", () => {
     );
     expect(presentation.hasDetails).toBe(true);
     expect(presentation.details).toContain("specifieke cuckolding-dynamiek");
+  });
+
+  it("does not manufacture depth when a complete one-sentence essence already suffices", () => {
+    const kink = KINKS.find((candidate) => candidate.id === "orgasm_control");
+    expect(kink).toBeDefined();
+    const presentation = getQuestionnairePresentation(kink!);
+    expect(presentation.details).toBeNull();
+    expect(presentation.hasDetails).toBe(false);
   });
 
   it("keeps essential stop-signal context on the sound-deprivation surface", () => {
