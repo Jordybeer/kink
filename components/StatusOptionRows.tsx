@@ -15,13 +15,12 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
         const colour = STATUS_VAR[s];
         return (
           <button key={s} type="button" data-tour={danger ? "hard-no" : undefined} onClick={() => onSelect(active ? null : s)} aria-pressed={active} className="focus-ring h-full min-h-11 w-full rounded-xl px-3.5 py-1.5 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none" style={{ color: "var(--text)", background: active ? `color-mix(in srgb, ${colour} 13%, var(--surface2))` : `color-mix(in srgb, ${colour} ${danger ? 3 : 4}%, var(--surface2))`, border: `1px ${danger ? "dashed" : "solid"} ${active ? `color-mix(in srgb, ${colour} ${danger ? 52 : 58}%, var(--border))` : `color-mix(in srgb, ${colour} ${danger ? 22 : 13}%, var(--border))`}`, boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${colour} 16%, transparent), 0 8px 22px color-mix(in srgb, ${colour} 9%, transparent)` : "inset 0 1px 0 color-mix(in srgb, white 3%, transparent)" }}>
-            <span className="flex h-full items-center gap-3">
-              <span aria-hidden="true" className="h-2.5 w-2.5 flex-none rounded-full" style={danger ? { border: `1.5px dashed ${colour}`, background: active ? `color-mix(in srgb, ${colour} 18%, transparent)` : "transparent" } : { background: colour, boxShadow: active ? `0 0 0 3px color-mix(in srgb, ${colour} 12%, transparent)` : `0 0 8px color-mix(in srgb, ${colour} 18%, transparent)` }} />
-              <span className="min-w-0 flex flex-1 items-center justify-between gap-3">
-                <span className="flex-none text-sm font-semibold leading-5" style={{ color: active ? colour : "var(--text)" }}>{label}</span>
-                <span className="min-w-0 text-right text-xs leading-4" style={{ color: "var(--text2)" }}>{hint}</span>
-                <span data-status-check={active ? s : undefined} className="inline-flex h-5 w-5 flex-none items-center justify-center rounded-full transition-opacity duration-100 motion-reduce:transition-none" style={{ opacity: active ? 1 : 0, color: colour, background: `color-mix(in srgb, ${colour} 13%, var(--surface3))`, border: `1px solid color-mix(in srgb, ${colour} 36%, var(--border))` }} aria-hidden="true"><Check size={11} weight="bold" /></span>
+            <span className="grid h-full min-w-0 grid-cols-[1.25rem_auto_minmax(0,1fr)] items-center gap-3">
+              <span data-status-indicator={s} aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full transition-[background-color,border-color,box-shadow,color] duration-100 motion-reduce:transition-none" style={active ? { color: colour, background: `color-mix(in srgb, ${colour} 13%, var(--surface3))`, border: `1px ${danger ? "dashed" : "solid"} color-mix(in srgb, ${colour} 38%, var(--border))`, boxShadow: `0 0 0 3px color-mix(in srgb, ${colour} 8%, transparent)` } : { color: colour, background: "transparent", border: "1px solid transparent" }}>
+                {active ? <Check size={11} weight="bold" /> : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour, boxShadow: `0 0 8px color-mix(in srgb, ${colour} 18%, transparent)` }} />}
               </span>
+              <span className="whitespace-nowrap text-sm font-semibold leading-5" style={{ color: active ? colour : "var(--text)" }}>{label}</span>
+              <span data-status-hint={s} className="min-w-0 justify-self-end text-right text-xs leading-4" style={{ color: "var(--text2)" }}>{hint}</span>
             </span>
           </button>
         );
