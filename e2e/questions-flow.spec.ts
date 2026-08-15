@@ -163,11 +163,14 @@ test("safety guidance stays compact until the user opens it", async ({ page }) =
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(SAFETY_COPY, { exact: true })).toBeVisible();
 
-  const dialogBox = await dialog.boundingBox();
   const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
-  expect(dialogBox).not.toBeNull();
-  expect(dialogBox!.y).toBeGreaterThanOrEqual(-1);
-  expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+  await expect.poll(async () => {
+    const box = await dialog.boundingBox();
+    return box ? box.y + box.height : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(visibleHeight + 1);
+  const settledDialogBox = await dialog.boundingBox();
+  expect(settledDialogBox).not.toBeNull();
+  expect(settledDialogBox!.y).toBeGreaterThanOrEqual(-1);
 
   await dialog.getByRole("button", { name: "Sluit" }).click();
   await expect(dialog).toBeHidden();
@@ -182,11 +185,14 @@ test("questionnaire help stays inside a short visual viewport", async ({ page })
 
   const dialog = page.getByRole("dialog", { name: "Uitleg keuzes" });
   await expect(dialog).toBeVisible();
-  const dialogBox = await dialog.boundingBox();
   const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
-  expect(dialogBox).not.toBeNull();
-  expect(dialogBox!.y).toBeGreaterThanOrEqual(-1);
-  expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
+  await expect.poll(async () => {
+    const box = await dialog.boundingBox();
+    return box ? box.y + box.height : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(visibleHeight + 1);
+  const settledDialogBox = await dialog.boundingBox();
+  expect(settledDialogBox).not.toBeNull();
+  expect(settledDialogBox!.y).toBeGreaterThanOrEqual(-1);
 
   await dialog.getByRole("button", { name: "Sluit" }).click();
   await expect(dialog).toBeHidden();
