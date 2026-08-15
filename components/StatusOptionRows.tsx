@@ -34,7 +34,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
             data-tour={danger ? "hard-no" : undefined}
             onClick={() => onSelect(active ? null : s)}
             aria-pressed={active}
-            className="focus-ring min-h-12 w-full rounded-xl px-3.5 py-2.5 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.995] motion-reduce:transition-none"
+            className="focus-ring min-h-12 w-full rounded-xl px-3.5 py-2.5 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none"
             style={{
               color: "var(--text)",
               background: active
