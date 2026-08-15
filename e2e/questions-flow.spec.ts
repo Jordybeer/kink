@@ -50,6 +50,36 @@ test("answered question persists across a reload without document-width overflow
   expect(hasHorizontalOverflow).toBe(false);
 });
 
+test("question change keeps a stable visual shell without a full-content fade", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
+
+  const card = page.locator('[data-tour="kink-card"]');
+  const content = card.getByTestId("question-content");
+  const title = card.locator("h3");
+  const firstQuestion = await title.innerText();
+
+  await expect(content).toBeVisible();
+  await expect(content).toHaveCSS("opacity", "1");
+  await content.evaluate((node) => {
+    (window as typeof window & { __questionContentNode?: Element }).__questionContentNode = node;
+  });
+
+  await card.getByRole("button", { name: /Heel graag/i }).click();
+
+  for (const delay of [40, 80, 100]) {
+    await page.waitForTimeout(delay);
+    await expect(content).toHaveCSS("opacity", "1");
+  }
+
+  await expect(title).not.toHaveText(firstQuestion);
+  const contentNodeStayedMounted = await content.evaluate((node) =>
+    (window as typeof window & { __questionContentNode?: Element }).__questionContentNode === node,
+  );
+  expect(contentNodeStayedMounted).toBe(true);
+  await expect(content).toHaveCSS("opacity", "1");
+});
+
 test("question card keeps its primary controls inside an iPhone viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
