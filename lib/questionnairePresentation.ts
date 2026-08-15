@@ -91,11 +91,7 @@ export function getQuestionnairePresentation(kink: Kink): QuestionnairePresentat
   const description = kink.description?.trim() ?? "";
   const copyOverride = QUESTIONNAIRE_COPY_OVERRIDES[kink.id];
   const essence = copyOverride?.essence ?? (description ? firstCompleteSentence(description) : "");
-  const details = copyOverride?.details ?? (
-    description && description !== essence
-      ? description
-      : null
-  );
+  const details = copyOverride?.details ?? (description && description !== essence ? description : null);
   const hasAliases = Boolean(kink.aliases?.length);
 
   return {
