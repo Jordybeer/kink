@@ -19,7 +19,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
   return (
     <div
       data-tour="pills"
-      className="mt-4 flex flex-col gap-2"
+      className="grid h-full min-h-0 grid-rows-5 gap-2"
       role="group"
       aria-label="Status kiezen"
     >
@@ -34,7 +34,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
             data-tour={danger ? "hard-no" : undefined}
             onClick={() => onSelect(active ? null : s)}
             aria-pressed={active}
-            className="focus-ring min-h-12 w-full rounded-xl px-3.5 py-2.5 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none"
+            className="focus-ring h-full min-h-0 w-full rounded-xl px-3.5 py-2 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none"
             style={{
               color: "var(--text)",
               background: active
@@ -50,7 +50,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
                 : "inset 0 1px 0 color-mix(in srgb, white 3%, transparent)",
             }}
           >
-            <span className="flex items-center gap-3">
+            <span className="flex h-full items-center gap-3">
               <span
                 aria-hidden="true"
                 className="h-2.5 w-2.5 flex-none rounded-full"
