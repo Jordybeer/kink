@@ -84,7 +84,7 @@ export default function QuestionsScreen({ params }: Props) {
   return (
     <main
       className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4"
-      style={{ height: "calc(var(--visual-viewport-height, 100dvh) - var(--nav-h))", paddingTop: "1rem", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      style={{ height: "min(calc(100svh - var(--nav-h)), calc(var(--visual-viewport-height, 100dvh) - var(--nav-h)))", paddingTop: "1rem", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       data-testid="questions-screen"
     >
       <div
