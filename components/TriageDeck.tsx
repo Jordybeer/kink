@@ -395,7 +395,7 @@ export default function TriageDeck({
         >
           <SheetContent
             className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
-            style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) * 0.7), 32rem)" }}
+            style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), 32rem)" }}
           >
             <div className="flex items-center gap-2">
               <ShieldCheck size={20} weight="duotone" style={{ color: "var(--accent-text)" }} aria-hidden="true" />
