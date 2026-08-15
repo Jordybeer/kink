@@ -6,7 +6,8 @@ import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 const SAFETY_COPY = "Spreek een tastbaar non-verbaal stopsignaal af en behoud omgevingsbewustzijn voor alarmen, verkeer en andere gevaren.";
 const CUCKOLDING_ESSENCE = "Een afgesproken scenario waarin jij weet of ziet dat je partner seks heeft met een instemmende derde.";
 
-function profileWithOnlyQuestion(id: string, name: string, kinkId: string): Profile {
+function profileWithQuestions(id: string, name: string, kinkIds: string[]): Profile {
+  const unanswered = new Set(kinkIds);
   return {
     ...PROFILE_ALEX,
     id,
@@ -14,19 +15,28 @@ function profileWithOnlyQuestion(id: string, name: string, kinkId: string): Prof
     customKinks: [],
     questionnaireSetup: { mode: "deepDive", interests: [], version: 2 },
     entries: Object.fromEntries(
-      KINKS.filter((kink) => kink.id !== kinkId).map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }]),
+      KINKS.filter((kink) => !unanswered.has(kink.id)).map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }]),
     ),
   };
+}
+
+function profileWithOnlyQuestion(id: string, name: string, kinkId: string): Profile {
+  return profileWithQuestions(id, name, [kinkId]);
 }
 
 const SAFETY_PROFILE = profileWithOnlyQuestion("pw-safety-003", "Safety", "sound_deprivation_give");
 const CUCKOLDING_PROFILE = profileWithOnlyQuestion("pw-cuckolding-004", "Cuckolding", "cuckolding");
 const SIMPLE_PROFILE = profileWithOnlyQuestion("pw-simple-005", "Simple", "orgasm_control");
+const SELECTION_PROFILE = profileWithQuestions("pw-selection-006", "Selection", ["spanking_hand_give", "spanking_hand_receive"]);
 
 async function stableControlGeometry(page: import("@playwright/test").Page) {
   const card = page.locator('[data-tour="kink-card"]');
   const names = [/Heel graag/i, /^Ja/, /Misschien/, /Voor hen/, /Harde grens/, /Eerst vragen/, /Eerste keer/, /Later/];
-  return Promise.all(names.map(async (name) => { const box = await card.getByRole("button", { name }).boundingBox(); expect(box).not.toBeNull(); return { y: box!.y, height: box!.height }; }));
+  return Promise.all(names.map(async (name) => {
+    const box = await card.getByRole("button", { name }).boundingBox();
+    expect(box).not.toBeNull();
+    return { y: box!.y, height: box!.height };
+  }));
 }
 
 async function statusHintRightEdges(page: import("@playwright/test").Page) {
@@ -35,7 +45,10 @@ async function statusHintRightEdges(page: import("@playwright/test").Page) {
 
 function expectSameGeometry(before: { y: number; height: number }[], after: { y: number; height: number }[]) {
   expect(after).toHaveLength(before.length);
-  for (let index = 0; index < before.length; index += 1) { expect(Math.abs(after[index].y - before[index].y)).toBeLessThanOrEqual(1); expect(Math.abs(after[index].height - before[index].height)).toBeLessThanOrEqual(1); }
+  for (let index = 0; index < before.length; index += 1) {
+    expect(Math.abs(after[index].y - before[index].y)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after[index].height - before[index].height)).toBeLessThanOrEqual(1);
+  }
 }
 
 function expectAlignedRightEdges(edges: number[]) {
@@ -99,6 +112,7 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   expect(cardBefore).not.toBeNull();
   expect(essenceBefore).not.toBeNull();
   expect(essenceBefore!.height).toBeLessThanOrEqual(41);
+
   await card.getByRole("button", { name: /Heel graag/i }).click();
   await expect(title).not.toHaveText(firstTitle);
   const after = await stableControlGeometry(page);
@@ -152,7 +166,7 @@ test("category explainer teaches context without changing answers", async ({ pag
 
 test("answer hints share one right edge and selection never steals their space", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
+  await seedAndGo(page, `/profile/${SELECTION_PROFILE.id}/questions`, [SELECTION_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
   const beforeGeometry = await stableControlGeometry(page);
   const beforeEdges = await statusHintRightEdges(page);
@@ -164,7 +178,9 @@ test("answer hints share one right edge and selection never steals their space",
   await expect(selectedIndicator.locator("svg")).toBeVisible();
   const afterEdges = await statusHintRightEdges(page);
   expectAlignedRightEdges(afterEdges);
-  for (let index = 0; index < beforeEdges.length; index += 1) expect(Math.abs(beforeEdges[index] - afterEdges[index])).toBeLessThanOrEqual(1);
+  for (let index = 0; index < beforeEdges.length; index += 1) {
+    expect(Math.abs(beforeEdges[index] - afterEdges[index])).toBeLessThanOrEqual(1);
+  }
   expectSameGeometry(beforeGeometry, await stableControlGeometry(page));
 });
 
@@ -177,7 +193,8 @@ test("question card keeps all primary controls visible with balanced inner breat
   await expect(card.getByTestId("question-title")).toBeVisible();
   await expect(card.getByTestId("question-essence")).toBeVisible();
   await expect(card.getByTestId("question-info-disclosure")).toBeVisible();
-  await expect(card.getByRole("button", { name: "Markeer als nieuwsgierig" })).toBeVisible();
+  const curious = card.getByRole("button", { name: "Markeer als nieuwsgierig" });
+  await expect(curious).toBeVisible();
   await expect(card.getByRole("button", { name: "Antwoord verbergen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
@@ -186,11 +203,11 @@ test("question card keeps all primary controls visible with balanced inner breat
   await expect(card.getByRole("group", { name: "Status kiezen" }).locator("button")).toHaveCount(5);
 
   const cardBox = await card.boundingBox();
-  const categoryBox = await card.getByTestId("question-category-meta").boundingBox();
+  const topControlBox = await curious.boundingBox();
   const footerBox = await card.getByTestId("question-progress").boundingBox();
   const laterBox = await card.getByRole("button", { name: /Later/ }).boundingBox();
-  expect(cardBox && categoryBox && footerBox && laterBox).toBeTruthy();
-  const topBreathing = categoryBox!.y - cardBox!.y;
+  expect(cardBox && topControlBox && footerBox && laterBox).toBeTruthy();
+  const topBreathing = topControlBox!.y - cardBox!.y;
   const bottomBreathing = cardBox!.y + cardBox!.height - Math.max(footerBox!.y + footerBox!.height, laterBox!.y + laterBox!.height);
   expect(topBreathing).toBeGreaterThanOrEqual(12);
   expect(bottomBreathing).toBeGreaterThanOrEqual(12);
@@ -231,7 +248,10 @@ test("questionnaire help stays inside a short visual viewport", async ({ page })
   const dialog = page.getByRole("dialog", { name: "Uitleg keuzes" });
   await expect(dialog).toBeVisible();
   const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
-  await expect.poll(async () => { const box = await dialog.boundingBox(); return box ? box.y + box.height : Number.POSITIVE_INFINITY; }).toBeLessThanOrEqual(visibleHeight + 1);
+  await expect.poll(async () => {
+    const box = await dialog.boundingBox();
+    return box ? box.y + box.height : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(visibleHeight + 1);
   await dialog.getByRole("button", { name: "Sluit" }).click();
 });
 
