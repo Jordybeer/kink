@@ -70,6 +70,10 @@ export const QUESTIONNAIRE_TITLE_OVERRIDES: Readonly<Record<string, string>> = {
  * catalog sentence is too long or misses a consent/safety fact that belongs on
  * the stable surface. This map is intentionally editorial, never inferred from
  * profile role or answers.
+ *
+ * This is deliberately a curated map, not a runtime summarizer. The existing
+ * complete first catalog sentence remains the safe fallback while content is
+ * reviewed in batches.
  */
 const QUESTIONNAIRE_COPY_OVERRIDES: Readonly<Record<string, QuestionnaireCopyOverride>> = {
   cuckolding: {
