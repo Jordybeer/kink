@@ -58,16 +58,27 @@ test("question change keeps a stable visual shell without a full-content fade", 
   const content = card.getByTestId("question-content");
   const title = card.locator("h3");
   const firstQuestion = await title.innerText();
+  const progressFill = page.getByTestId("questions-top-progress-fill");
+  const eagerAnswer = card.getByRole("button", { name: /Heel graag/i });
+  const eagerHint = eagerAnswer.getByText("zoek ik actief op", { exact: true });
 
   await expect(content).toBeVisible();
   await expect(content).toHaveCSS("opacity", "1");
+  await expect(progressFill).toHaveCSS("transition-duration", "0s");
+  const hintBefore = await eagerHint.boundingBox();
+  expect(hintBefore).not.toBeNull();
   await content.evaluate((node) => {
     (window as typeof window & { __questionContentNode?: Element }).__questionContentNode = node;
   });
 
-  await card.getByRole("button", { name: /Heel graag/i }).click();
+  await eagerAnswer.click();
+  await page.waitForTimeout(40);
+  await expect(content).toHaveCSS("opacity", "1");
+  const hintAfterSelection = await eagerHint.boundingBox();
+  expect(hintAfterSelection).not.toBeNull();
+  expect(Math.abs(hintAfterSelection!.x - hintBefore!.x)).toBeLessThanOrEqual(1);
 
-  for (const delay of [40, 80, 100]) {
+  for (const delay of [80, 100]) {
     await page.waitForTimeout(delay);
     await expect(content).toHaveCSS("opacity", "1");
   }
@@ -78,6 +89,7 @@ test("question change keeps a stable visual shell without a full-content fade", 
   );
   expect(contentNodeStayedMounted).toBe(true);
   await expect(content).toHaveCSS("opacity", "1");
+  await expect(progressFill).toHaveCSS("transition-duration", "0s");
 });
 
 test("question card keeps its primary controls inside an iPhone viewport", async ({ page }) => {
