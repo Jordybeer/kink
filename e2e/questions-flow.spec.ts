@@ -4,7 +4,24 @@ import type { Profile } from "@/types";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
 const SAFETY_COPY = "Spreek een tastbaar non-verbaal stopsignaal af en behoud omgevingsbewustzijn voor alarmen, verkeer en andere gevaren.";
-const SAFETY_PROFILE: Profile = { ...PROFILE_ALEX, id: "pw-safety-003", name: "Safety", customKinks: [], questionnaireSetup: { mode: "deepDive", interests: [], version: 2 }, entries: Object.fromEntries(KINKS.filter((kink) => kink.id !== "sound_deprivation_give").map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }])) };
+const CUCKOLDING_ESSENCE = "Een afgesproken scenario waarin jij weet of ziet dat je partner seks heeft met een instemmende derde.";
+
+function profileWithOnlyQuestion(id: string, name: string, kinkId: string): Profile {
+  return {
+    ...PROFILE_ALEX,
+    id,
+    name,
+    customKinks: [],
+    questionnaireSetup: { mode: "deepDive", interests: [], version: 2 },
+    entries: Object.fromEntries(
+      KINKS.filter((kink) => kink.id !== kinkId).map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }]),
+    ),
+  };
+}
+
+const SAFETY_PROFILE = profileWithOnlyQuestion("pw-safety-003", "Safety", "sound_deprivation_give");
+const CUCKOLDING_PROFILE = profileWithOnlyQuestion("pw-cuckolding-004", "Cuckolding", "cuckolding");
+const SIMPLE_PROFILE = profileWithOnlyQuestion("pw-simple-005", "Simple", "orgasm_control");
 
 async function stableControlGeometry(page: import("@playwright/test").Page) {
   const card = page.locator('[data-tour="kink-card"]');
@@ -12,9 +29,18 @@ async function stableControlGeometry(page: import("@playwright/test").Page) {
   return Promise.all(names.map(async (name) => { const box = await card.getByRole("button", { name }).boundingBox(); expect(box).not.toBeNull(); return { y: box!.y, height: box!.height }; }));
 }
 
+async function statusHintRightEdges(page: import("@playwright/test").Page) {
+  return page.locator("[data-status-hint]").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().right));
+}
+
 function expectSameGeometry(before: { y: number; height: number }[], after: { y: number; height: number }[]) {
   expect(after).toHaveLength(before.length);
   for (let index = 0; index < before.length; index += 1) { expect(Math.abs(after[index].y - before[index].y)).toBeLessThanOrEqual(1); expect(Math.abs(after[index].height - before[index].height)).toBeLessThanOrEqual(1); }
+}
+
+function expectAlignedRightEdges(edges: number[]) {
+  expect(edges).toHaveLength(5);
+  expect(Math.max(...edges) - Math.min(...edges)).toBeLessThanOrEqual(1);
 }
 
 test("questionnaire focus hands off to the dedicated questions route", async ({ page }) => {
@@ -82,26 +108,38 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   expectSameGeometry(before, after);
 });
 
-test("detail layer leaves the question canvas untouched when opened and closed", async ({ page }) => {
+test("cuckolding keeps a concise essence and optional depth above the stable canvas", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
+  await expect(card.getByRole("heading", { name: "Cuckolding" })).toBeVisible();
+  await expect(card.getByTestId("question-essence")).toHaveText(CUCKOLDING_ESSENCE);
   const details = card.getByRole("button", { name: /Info & uitleg/ });
   await expect(details).toBeVisible();
   const before = await stableControlGeometry(page);
-  const titleBefore = await card.getByTestId("question-title").innerText();
+
   await details.click();
-  const dialog = page.getByRole("dialog", { name: new RegExp(`Info en uitleg bij ${titleBefore.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`) });
+  const dialog = page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" });
   await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("specifieke cuckolding-dynamiek");
+  await expect(dialog).toContainText("Cuckolding / hotwifing");
   await dialog.getByRole("button", { name: "Sluit" }).click();
   await expect(dialog).toBeHidden();
-  await expect(card.getByTestId("question-title")).toHaveText(titleBefore);
+  await expect(card.getByRole("heading", { name: "Cuckolding" })).toBeVisible();
   expectSameGeometry(before, await stableControlGeometry(page));
+});
+
+test("simple questionnaire copy does not manufacture an info disclosure", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${SIMPLE_PROFILE.id}/questions`, [SIMPLE_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+  await expect(card.getByRole("heading", { name: "Orgasm control / permission" })).toBeVisible();
+  await expect(card.getByTestId("question-info-disclosure")).toHaveCount(0);
 });
 
 test("category explainer teaches context without changing answers", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
   const before = await stableControlGeometry(page);
   await card.getByTestId("question-category-meta").click();
@@ -112,9 +150,27 @@ test("category explainer teaches context without changing answers", async ({ pag
   expectSameGeometry(before, await stableControlGeometry(page));
 });
 
+test("answer hints share one right edge and selection never steals their space", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+  const beforeGeometry = await stableControlGeometry(page);
+  const beforeEdges = await statusHintRightEdges(page);
+  expectAlignedRightEdges(beforeEdges);
+
+  await card.getByRole("button", { name: /Heel graag/i }).click();
+  await page.waitForTimeout(40);
+  const selectedIndicator = card.locator('[data-status-indicator="yes"]');
+  await expect(selectedIndicator.locator("svg")).toBeVisible();
+  const afterEdges = await statusHintRightEdges(page);
+  expectAlignedRightEdges(afterEdges);
+  for (let index = 0; index < beforeEdges.length; index += 1) expect(Math.abs(beforeEdges[index] - afterEdges[index])).toBeLessThanOrEqual(1);
+  expectSameGeometry(beforeGeometry, await stableControlGeometry(page));
+});
+
 test("question card keeps all primary controls visible with balanced inner breathing room", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
   await expect(card).toBeVisible();
   await expect(card.getByTestId("question-category-meta")).toBeVisible();
@@ -142,19 +198,25 @@ test("question card keeps all primary controls visible with balanced inner breat
   expect(laterBox!.y + laterBox!.height).toBeLessThanOrEqual(await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight) + 1);
   expect(await card.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)).toBe(false);
+
+  const titleMetrics = await card.getByTestId("question-title").evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { fontSize: Number.parseFloat(style.fontSize), lineHeight: Number.parseFloat(style.lineHeight) };
+  });
+  expect(titleMetrics.lineHeight / titleMetrics.fontSize).toBeGreaterThanOrEqual(1.14);
 });
 
-test("safety guidance stays compact until the user opens it", async ({ page }) => {
+test("safety guidance keeps its essential stop signal visible before the sheet opens", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${SAFETY_PROFILE.id}/questions`, [SAFETY_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
-  await expect(card.getByRole("heading", { name: "Sound deprivation — applying" })).toBeVisible();
-  await expect(card.getByTestId("question-info-disclosure")).toBeVisible();
+  await expect(card.getByRole("heading", { name: "Restricting a partner’s hearing" })).toBeVisible();
+  await expect(card.getByTestId("question-essence")).toContainText("tastbaar stopsignaal");
   await expect(card.getByText(SAFETY_COPY, { exact: true })).toHaveCount(0);
   const disclosure = card.getByTestId("safety-disclosure");
   await expect(disclosure).toBeVisible();
   await disclosure.click();
-  const dialog = page.getByRole("dialog", { name: "Veiligheid bij Sound deprivation — applying" });
+  const dialog = page.getByRole("dialog", { name: "Veiligheid bij Restricting a partner’s hearing" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(SAFETY_COPY, { exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Sluit" }).click();
