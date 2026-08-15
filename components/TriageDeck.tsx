@@ -19,6 +19,29 @@ const AGREEMENTS = [
   { value: "eerste keer", label: "Eerste keer", emphasized: false, tour: "agreement-first-time" },
 ] as const;
 
+const CATEGORY_ACCENT: Record<Kink["category"], string> = {
+  impact: "#c77a68",
+  bondage: "#8774c9",
+  power: "#9a70c4",
+  rituals: "#7768b7",
+  discipline: "#a26c7d",
+  roleplay: "#a26d9c",
+  sensation: "#6e85c8",
+  exhibition: "#986d9d",
+  media: "#6676b0",
+  group_partner: "#7f70ac",
+  body_focus: "#9575ae",
+  materials_scent: "#897493",
+  pet_play: "#9d718b",
+  fluids: "#836b90",
+  toys: "#6c79c4",
+  penetration: "#a36e7f",
+  aftercare: "#638fa3",
+  appearance: "#9174a6",
+  adult_ageplay: "#956f8b",
+  custom: "#8170bd",
+};
+
 const CARD_FEEDBACK_MS = 200;
 const CARD_FADE_SECONDS = 0.17;
 
@@ -134,6 +157,7 @@ export default function TriageDeck({
   const totalDone = kinks.filter((kink) => entries[kink.id]?.status != null).length;
   const currentEntry = current ? entries[current.id] : undefined;
   const safetyOpen = Boolean(current?.safetyNote && safetyKinkId === current.id);
+  const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "#8170bd";
 
   return (
     <>
@@ -141,23 +165,42 @@ export default function TriageDeck({
       {current ? (
         <div
           data-tour="kink-card"
-          className="rounded-2xl p-4"
+          className="relative isolate rounded-[1.75rem] p-4"
           style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
+            background: "color-mix(in srgb, var(--surface) 94%, #180f20)",
+            border: "1px solid color-mix(in srgb, var(--border) 88%, var(--text2))",
+            boxShadow: "0 18px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.035)",
             scrollMarginTop: "calc(var(--nav-h) + 12px)",
           }}
         >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-40 rounded-[1.75rem]"
+            style={{
+              background: `radial-gradient(circle at 18% 0%, color-mix(in srgb, ${categoryAccent} 17%, transparent), transparent 64%)`,
+            }}
+          />
           <motion.div
             key={current.id}
             initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={fadeTransition}
+            className="relative z-[1]"
           >
-            <div className="flex items-center gap-2">
-              <p className="min-w-0 flex-1 truncate text-xs" style={{ color: "var(--text2)" }}>
-                {kinkCategoryLabel(current.category)} · <span className="tabular-nums">nog {remainingInCat}</span>
-              </p>
+            <div className="flex items-center gap-2.5">
+              <div data-testid="question-category-meta" className="min-w-0 flex flex-1 items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-1.5 w-1.5 flex-none rounded-full"
+                  style={{
+                    background: categoryAccent,
+                    boxShadow: `0 0 10px color-mix(in srgb, ${categoryAccent} 32%, transparent)`,
+                  }}
+                />
+                <p className="min-w-0 truncate text-xs" style={{ color: "var(--text2)" }}>
+                  {kinkCategoryLabel(current.category)} · <span className="tabular-nums">nog {remainingInCat}</span>
+                </p>
+              </div>
               <button
                 type="button"
                 data-tour="curious"
@@ -165,12 +208,22 @@ export default function TriageDeck({
                 aria-pressed={!!currentEntry?.curious}
                 aria-label={currentEntry?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}
                 title={currentEntry?.curious ? "Niet meer nieuwsgierig" : "Nieuwsgierig"}
-                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-colors"
+                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-95 motion-reduce:transition-none"
                 style={currentEntry?.curious
-                  ? { background: "color-mix(in srgb, var(--curious) 14%, var(--surface2))", borderColor: "color-mix(in srgb, var(--curious) 55%, var(--border))", color: "var(--curious)" }
-                  : { background: "var(--surface2)", borderColor: "var(--border)", color: "var(--text2)" }}
+                  ? {
+                      background: "color-mix(in srgb, var(--curious) 12%, var(--surface2))",
+                      borderColor: "color-mix(in srgb, var(--curious) 38%, var(--border))",
+                      color: "var(--curious)",
+                      boxShadow: "inset 0 1px 0 color-mix(in srgb, var(--curious) 12%, transparent)",
+                    }
+                  : {
+                      background: "color-mix(in srgb, var(--surface2) 78%, transparent)",
+                      borderColor: "color-mix(in srgb, var(--border) 90%, var(--text2))",
+                      color: "var(--text2)",
+                      boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.025)",
+                    }}
               >
-                <Star size={17} weight={currentEntry?.curious ? "fill" : "regular"} aria-hidden="true" />
+                <Star size={18} weight={currentEntry?.curious ? "fill" : "regular"} aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -179,20 +232,30 @@ export default function TriageDeck({
                 aria-pressed={!!currentEntry?.privateResponse}
                 aria-label={currentEntry?.privateResponse ? "Antwoord niet langer verbergen" : "Antwoord verbergen"}
                 title={currentEntry?.privateResponse ? "Verborgen antwoord" : "Antwoord verbergen"}
-                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-colors"
+                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-95 motion-reduce:transition-none"
                 style={currentEntry?.privateResponse
-                  ? { color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 55%, var(--border))", background: "color-mix(in srgb, var(--accent) 12%, var(--surface2))" }
-                  : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--surface2)" }}
+                  ? {
+                      color: "var(--accent)",
+                      borderColor: "color-mix(in srgb, var(--accent) 36%, var(--border))",
+                      background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))",
+                      boxShadow: "inset 0 1px 0 color-mix(in srgb, var(--accent) 10%, transparent)",
+                    }
+                  : {
+                      color: "var(--text2)",
+                      borderColor: "color-mix(in srgb, var(--border) 90%, var(--text2))",
+                      background: "color-mix(in srgb, var(--surface2) 78%, transparent)",
+                      boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.025)",
+                    }}
               >
                 {currentEntry?.privateResponse
-                  ? <EyeSlash size={17} weight="bold" aria-hidden="true" />
-                  : <Eye size={17} aria-hidden="true" />}
+                  ? <EyeSlash size={18} weight="bold" aria-hidden="true" />
+                  : <Eye size={18} aria-hidden="true" />}
               </button>
             </div>
 
-            <div className="mt-2">
+            <div className="mt-3">
               <h3
-                className="text-2xl leading-tight"
+                className="text-[1.9rem] leading-[1.08] tracking-[-0.018em]"
                 style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
               >
                 {current.name}
@@ -200,7 +263,7 @@ export default function TriageDeck({
               {current.description ? (
                 <ClampText
                   text={current.description}
-                  className="mt-1 text-sm leading-relaxed"
+                  className="mt-2 text-[15px] leading-6"
                   style={{ color: "var(--text2)" }}
                 />
               ) : (
@@ -213,8 +276,12 @@ export default function TriageDeck({
                   aria-haspopup="dialog"
                   aria-expanded={safetyOpen}
                   onClick={() => setSafetyKinkId(current.id)}
-                  className="focus-ring mt-2 flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left transition-colors"
-                  style={{ background: "var(--surface2)", color: "var(--text2)" }}
+                  className="focus-ring mt-3 flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color,border-color] duration-150 active:scale-[0.995] motion-reduce:transition-none"
+                  style={{
+                    background: "color-mix(in srgb, var(--surface2) 78%, transparent)",
+                    border: "1px solid color-mix(in srgb, var(--border) 90%, var(--text2))",
+                    color: "var(--text2)",
+                  }}
                 >
                   <ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent-text)" }} aria-hidden="true" />
                   <span className="flex-1 text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span>
@@ -229,8 +296,8 @@ export default function TriageDeck({
               onSelect={(status) => handleSelect(current, status)}
             />
 
-            <section className="mt-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-              <div className="mb-2 flex items-baseline justify-between gap-3">
+            <section className="mt-4 border-t pt-4" style={{ borderColor: "color-mix(in srgb, var(--border) 88%, transparent)" }}>
+              <div className="mb-2.5 flex items-baseline justify-between gap-3">
                 <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>Afspraken</p>
                 <span className="text-xs" style={{ color: "var(--text2)" }}>optioneel</span>
               </div>
@@ -244,16 +311,22 @@ export default function TriageDeck({
                       data-tour={agreement.tour}
                       onClick={() => toggleAgreement(agreement.value)}
                       aria-pressed={active}
-                      className="focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold"
+                      className="focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.99] motion-reduce:transition-none"
                       style={active
                         ? {
                             color: agreement.emphasized ? "var(--accent)" : "var(--text)",
                             background: agreement.emphasized
-                              ? "color-mix(in srgb, var(--accent) 11%, var(--surface2))"
-                              : "var(--surface3)",
-                            border: `1px solid ${agreement.emphasized ? "color-mix(in srgb, var(--accent) 55%, var(--border))" : "var(--border-accent)"}`,
+                              ? "color-mix(in srgb, var(--accent) 10%, var(--surface2))"
+                              : "color-mix(in srgb, var(--surface3) 82%, transparent)",
+                            border: `1px solid ${agreement.emphasized ? "color-mix(in srgb, var(--accent) 34%, var(--border))" : "color-mix(in srgb, var(--text2) 20%, var(--border))"}`,
+                            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
                           }
-                        : { color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)" }}
+                        : {
+                            color: "var(--text2)",
+                            background: "color-mix(in srgb, var(--surface2) 76%, transparent)",
+                            border: "1px solid color-mix(in srgb, var(--border) 92%, var(--text2))",
+                            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.02)",
+                          }}
                     >
                       {active ? <Check size={13} weight="bold" aria-hidden="true" /> : <Circle size={13} aria-hidden="true" />}
                       {agreement.label}
@@ -263,15 +336,18 @@ export default function TriageDeck({
               </div>
             </section>
 
-            <div className="mt-3 flex items-center">
-              <span className="flex-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+            <div className="mt-4 flex items-center gap-3">
+              <span data-testid="question-progress" className="min-w-0 flex-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                 {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}
               </span>
               <button
                 type="button"
                 onClick={() => skip(current)}
-                className="focus-ring inline-flex h-9 items-center gap-1 rounded-lg px-3 text-xs transition-colors"
-                style={{ color: "var(--text2)" }}
+                className="focus-ring inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs transition-[transform,background-color,color] duration-150 active:scale-[0.98] motion-reduce:transition-none"
+                style={{
+                  color: "var(--text2)",
+                  background: "color-mix(in srgb, var(--surface2) 66%, transparent)",
+                }}
               >
                 Later <ArrowRight size={13} aria-hidden="true" />
               </button>

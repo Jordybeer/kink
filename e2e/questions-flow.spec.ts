@@ -57,13 +57,22 @@ test("question card keeps its primary controls inside an iPhone viewport", async
   const nav = page.getByLabel("Hoofdnavigatie");
   const card = page.locator('[data-tour="kink-card"]');
   await expect(card).toBeVisible();
+  await expect(card.getByTestId("question-category-meta")).toBeVisible();
+  await expect(card.locator("h3")).toBeVisible();
   await expect(card.getByRole("button", { name: "Markeer als nieuwsgierig" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Antwoord verbergen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
+  await expect(card.getByText("optioneel", { exact: true })).toBeVisible();
+  await expect(card.getByTestId("question-progress")).toBeVisible();
 
   const statusButtons = card.getByRole("group", { name: "Status kiezen" }).locator("button");
   await expect(statusButtons).toHaveCount(5);
+  await expect(card.getByRole("button", { name: /Heel graag/ })).toBeVisible();
+  await expect(card.getByRole("button", { name: /^Ja/ })).toBeVisible();
+  await expect(card.getByRole("button", { name: /Misschien/ })).toBeVisible();
+  await expect(card.getByRole("button", { name: /Voor hen/ })).toBeVisible();
+  await expect(card.getByRole("button", { name: /Harde grens/ })).toBeVisible();
   const firstStatusBox = await statusButtons.nth(0).boundingBox();
   const lastStatusBox = await statusButtons.nth(4).boundingBox();
   expect(firstStatusBox).not.toBeNull();
