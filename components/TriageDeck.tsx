@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CaretRight, Check, Circle, Eye, EyeSlash, ShieldCheck, Star } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
@@ -43,7 +42,6 @@ const CATEGORY_ACCENT: Record<Kink["category"], string> = {
 };
 
 const CARD_FEEDBACK_MS = 200;
-const CARD_FADE_SECONDS = 0.17;
 
 interface Props {
   kinks: Kink[];
@@ -68,16 +66,12 @@ export default function TriageDeck({
   onPrivateChange,
   onTagsChange,
 }: Props) {
-  const reducedMotion = useReducedMotion();
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [holding, setHolding] = useState<string | null>(null);
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
   const [safetyKinkId, setSafetyKinkId] = useState<string | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fadeTransition = reducedMotion
-    ? { duration: 0 }
-    : { duration: CARD_FADE_SECONDS, ease: "easeOut" as const };
 
   useEffect(() => {
     return () => {
@@ -112,15 +106,28 @@ export default function TriageDeck({
   const held = holding ? kinks.find((kink) => kink.id === holding) : null;
   const current = held ?? currentItem?.kink ?? null;
 
+  function clearHoldTimer() {
+    if (!holdTimer.current) return;
+    clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+  }
+
   function handleSelect(kink: Kink, status: KinkStatus) {
     const answeredWasContinuation = isConversationContinuation(currentItem, lastAnsweredId);
-    onStatusChange(kink.id, status);
-    if (holdTimer.current) clearTimeout(holdTimer.current);
+    clearHoldTimer();
+
     if (status == null) {
       setHolding(null);
+      onStatusChange(kink.id, status);
       setConversationPhase("normal");
       return;
     }
+
+    // Pin the visible question before persisted state removes it from the queue.
+    // The user gets local selection feedback, then one direct content swap — no
+    // transient next-question/old-question bounce and no full-card opacity flash.
+    setHolding(kink.id);
+    onStatusChange(kink.id, status);
     setLastAnsweredId(kink.id);
     setConversationPhase(
       answeredWasContinuation
@@ -129,8 +136,10 @@ export default function TriageDeck({
           ? "preferContinuation"
           : "preferComplement",
     );
-    setHolding(kink.id);
-    holdTimer.current = setTimeout(() => setHolding(null), CARD_FEEDBACK_MS);
+    holdTimer.current = setTimeout(() => {
+      holdTimer.current = null;
+      setHolding(null);
+    }, CARD_FEEDBACK_MS);
   }
 
   function toggleAgreement(tag: string) {
@@ -145,6 +154,7 @@ export default function TriageDeck({
   }
 
   function skip(kink: Kink) {
+    clearHoldTimer();
     setHolding(null);
     setLastAnsweredId(kink.id);
     setConversationPhase("normal");
@@ -175,18 +185,13 @@ export default function TriageDeck({
         >
           <div
             aria-hidden="true"
+            data-testid="question-ambient-glow"
             className="pointer-events-none absolute inset-x-0 top-0 h-40 rounded-[1.75rem]"
             style={{
-              background: `radial-gradient(circle at 18% 0%, color-mix(in srgb, ${categoryAccent} 17%, transparent), transparent 64%)`,
+              background: `radial-gradient(circle at 18% 0%, color-mix(in srgb, ${categoryAccent} 12%, transparent), transparent 64%)`,
             }}
           />
-          <motion.div
-            key={current.id}
-            initial={reducedMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={fadeTransition}
-            className="relative z-[1]"
-          >
+          <div data-testid="question-content" className="relative z-[1]">
             <div className="flex items-center gap-2.5">
               <div data-testid="question-category-meta" className="min-w-0 flex flex-1 items-center gap-2">
                 <span
@@ -352,14 +357,10 @@ export default function TriageDeck({
                 Later <ArrowRight size={13} aria-hidden="true" />
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       ) : (
-        <motion.div
-          key="deck-done"
-          initial={reducedMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={fadeTransition}
+        <div
           className="rounded-2xl p-5 text-center"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
@@ -381,7 +382,7 @@ export default function TriageDeck({
               {skippedUnansweredCount} overgeslagen — toon opnieuw
             </button>
           )}
-        </motion.div>
+        </div>
       )}
       </div>
 
