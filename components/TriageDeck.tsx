@@ -213,7 +213,7 @@ export default function TriageDeck({
                 aria-pressed={!!currentEntry?.curious}
                 aria-label={currentEntry?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"}
                 title={currentEntry?.curious ? "Niet meer nieuwsgierig" : "Nieuwsgierig"}
-                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-95 motion-reduce:transition-none"
+                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-95 motion-reduce:active:scale-100 motion-reduce:transition-none"
                 style={currentEntry?.curious
                   ? {
                       background: "color-mix(in srgb, var(--curious) 12%, var(--surface2))",
@@ -237,7 +237,7 @@ export default function TriageDeck({
                 aria-pressed={!!currentEntry?.privateResponse}
                 aria-label={currentEntry?.privateResponse ? "Antwoord niet langer verbergen" : "Antwoord verbergen"}
                 title={currentEntry?.privateResponse ? "Verborgen antwoord" : "Antwoord verbergen"}
-                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-95 motion-reduce:transition-none"
+                className="focus-ring inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-95 motion-reduce:active:scale-100 motion-reduce:transition-none"
                 style={currentEntry?.privateResponse
                   ? {
                       color: "var(--accent)",
@@ -281,7 +281,7 @@ export default function TriageDeck({
                   aria-haspopup="dialog"
                   aria-expanded={safetyOpen}
                   onClick={() => setSafetyKinkId(current.id)}
-                  className="focus-ring mt-3 flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color,border-color] duration-150 active:scale-[0.995] motion-reduce:transition-none"
+                  className="focus-ring mt-3 flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color,border-color] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none"
                   style={{
                     background: "color-mix(in srgb, var(--surface2) 78%, transparent)",
                     border: "1px solid color-mix(in srgb, var(--border) 90%, var(--text2))",
@@ -316,7 +316,7 @@ export default function TriageDeck({
                       data-tour={agreement.tour}
                       onClick={() => toggleAgreement(agreement.value)}
                       aria-pressed={active}
-                      className="focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.99] motion-reduce:transition-none"
+                      className="focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.99] motion-reduce:active:scale-100 motion-reduce:transition-none"
                       style={active
                         ? {
                             color: agreement.emphasized ? "var(--accent)" : "var(--text)",
@@ -348,7 +348,7 @@ export default function TriageDeck({
               <button
                 type="button"
                 onClick={() => skip(current)}
-                className="focus-ring inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs transition-[transform,background-color,color] duration-150 active:scale-[0.98] motion-reduce:transition-none"
+                className="focus-ring inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs transition-[transform,background-color,color] duration-150 active:scale-[0.98] motion-reduce:active:scale-100 motion-reduce:transition-none"
                 style={{
                   color: "var(--text2)",
                   background: "color-mix(in srgb, var(--surface2) 66%, transparent)",
