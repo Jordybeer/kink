@@ -80,20 +80,19 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
                 <span className="min-w-0 text-right text-xs leading-4" style={{ color: "var(--text2)" }}>
                   {hint}
                 </span>
-                {active && (
-                  <span
-                    data-status-check={s}
-                    className="inline-flex h-5 w-5 flex-none items-center justify-center rounded-full"
-                    style={{
-                      color: colour,
-                      background: `color-mix(in srgb, ${colour} 13%, var(--surface3))`,
-                      border: `1px solid color-mix(in srgb, ${colour} 36%, var(--border))`,
-                    }}
-                    aria-hidden="true"
-                  >
-                    <Check size={11} weight="bold" />
-                  </span>
-                )}
+                <span
+                  data-status-check={active ? s : undefined}
+                  className="inline-flex h-5 w-5 flex-none items-center justify-center rounded-full transition-opacity duration-100 motion-reduce:transition-none"
+                  style={{
+                    opacity: active ? 1 : 0,
+                    color: colour,
+                    background: `color-mix(in srgb, ${colour} 13%, var(--surface3))`,
+                    border: `1px solid color-mix(in srgb, ${colour} 36%, var(--border))`,
+                  }}
+                  aria-hidden="true"
+                >
+                  <Check size={11} weight="bold" />
+                </span>
               </span>
             </span>
           </button>
