@@ -92,3 +92,15 @@ Files changed in sweep: compare, contract, profile, scene, scenes, session, time
 - Phase B — Agreement Archive Data Model (deferred structural)
 - Phase 8 — External Imports (bdsmtest portion DONE; FetLife paste + dupe matching still open)
 - Phase 10 — Brand polish (deferred, do after Phase 20 settled)
+
+## UI doctrine — mandatory, user-locked 2026-08-15
+
+The user explicitly requires the KinkSync UI principles to be used **always, without exception for convenience or visual taste**.
+
+- Root file `UI-principles.md` is the source of truth for KinkSync UI/UX decisions.
+- Read it before **every** task that touches UI, UX, components, layout, hierarchy, interaction, motion, responsive behaviour, user-facing interface copy, or visual audit.
+- Apply its conflict order when principles compete: **consent/safety/privacy → readability → stable interaction geometry → hierarchy/calm → expression/decoration → density/speed**.
+- Run its `UI decision gate` before implementation and again during the final self-review.
+- Essential decision, consent, safety, or privacy context may not be hidden to gain cleaner visuals, tighter density, more stable geometry, or a faster flow.
+- KinkSync must keep character: intimate by default; many hues with few visual weights; expressive in colour but restrained in structure; organised by hierarchy; mobile-native; reflective, not clinical or rushed.
+- Existing patterns, design trends, screenshots, `frontend-design`, or prior code do not overrule `UI-principles.md`.
