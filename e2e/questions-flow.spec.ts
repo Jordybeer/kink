@@ -83,6 +83,8 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
   const card = page.locator('[data-tour="kink-card"]');
+  const title = card.getByTestId("question-title");
+  const firstTitle = await title.innerText();
   const before = await stableControlGeometry(page);
   const cardBefore = await card.boundingBox();
   const essenceBefore = await card.getByTestId("question-essence").boundingBox();
@@ -91,8 +93,7 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   expect(essenceBefore!.height).toBeLessThanOrEqual(41);
 
   await card.getByRole("button", { name: /Heel graag/i }).click();
-  await expect(card.getByTestId("question-title")).not.toHaveText(await card.getByTestId("question-title").innerText());
-  await page.waitForTimeout(240);
+  await expect(title).not.toHaveText(firstTitle);
   const after = await stableControlGeometry(page);
   const cardAfter = await card.boundingBox();
   expect(cardAfter).not.toBeNull();
