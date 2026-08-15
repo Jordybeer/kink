@@ -9,7 +9,7 @@ interface Props { current: KinkStatus; onSelect: (s: KinkStatus) => void; }
 
 export default function StatusOptionRows({ current, onSelect }: Props) {
   return (
-    <div data-tour="pills" className="grid h-full min-h-0 grid-rows-5 gap-1.5" role="group" aria-label="Status kiezen">
+    <div data-tour="pills" className="grid h-full min-h-0 grid-rows-5 gap-1" role="group" aria-label="Status kiezen">
       {OPTIONS.map(({ status: s, label, hint, danger }) => {
         const active = current === s;
         const colour = STATUS_VAR[s];
