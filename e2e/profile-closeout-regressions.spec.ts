@@ -10,6 +10,13 @@ const PROFILE: Profile = {
   questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
 };
 
+const EMPTY_PROFILE: Profile = {
+  ...PROFILE,
+  id: "pw-profile-empty-catalog",
+  name: "Empty catalog",
+  entries: {},
+};
+
 const DENSE_PROFILE: Profile = {
   ...PROFILE,
   id: "pw-profile-dense-share",
@@ -37,6 +44,18 @@ test("profile keeps catalog search and category filtering available from Overvie
   await page.getByRole("tab", { name: "Bewerken" }).click();
   await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+});
+
+test("empty profile keeps the full catalog searchable from Edit", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${EMPTY_PROFILE.id}`, [EMPTY_PROFILE]);
+
+  await expect(page.getByRole("tab", { name: "Bewerken" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+  const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
+  await expect(search).toBeVisible();
+  await search.fill("spanking");
+  await expect(page.locator('button[aria-label*="spanking" i][aria-label*="— bewerken"]').first()).toBeVisible();
 });
 
 test("profile completion card avoids coverage jargon and percentage metrics", async ({ page }) => {
