@@ -115,15 +115,14 @@ test.describe("UI audit", () => {
   test("profile page — status bar renders, kink overview shows 5 statuses", async ({ page }) => {
     await seedAndGo(page, "/profile/test-pw-001", [AUDIT_PROFILE]);
 
-    // Overview should count the five rated kinks — not the vacuous
-    // "Nog niets beoordeeld." that also contains the word.
-    await expect(page.locator("text=5 beoordeeld").first()).toBeVisible();
+    const statusBar = page.getByRole("img", {
+      name: "1 Heel graag, 1 Ja, 1 Misschien, 1 Voor hen, 1 Harde grens",
+      exact: true,
+    });
+    await expect(statusBar).toBeVisible();
 
     await page.getByRole("tab", { name: "Bewerken" }).click();
-    const statusBar = page.getByRole("img", { name: /Harde grens/ });
-    await expect(statusBar).toBeVisible();
-    const statusLabel = await statusBar.getAttribute("aria-label");
-    expect(statusLabel).not.toContain("nog niets beoordeeld");
+    await expect(statusBar).toHaveCount(0);
 
     // No ★ characters anywhere on page
     const pageText = await page.evaluate(() => document.body.innerText);
