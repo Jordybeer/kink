@@ -13,8 +13,6 @@ const COMPLETE_AT = 78;
 const DETENT_DEGREES = 15;
 const MIN_GESTURE_MS = 320;
 const MIN_TRAVEL_PX = 56;
-const TRACK_RADIUS = 44;
-const TRACK_CIRCUMFERENCE = 2 * Math.PI * TRACK_RADIUS;
 
 function pointAngle(element: HTMLElement, clientX: number, clientY: number) {
   const bounds = element.getBoundingClientRect();
@@ -50,8 +48,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
   const previousPointRef = useRef<{ x: number; y: number } | null>(null);
   const completingRef = useRef(false);
 
-  const progress = Math.min(rotation / END_ROTATION, 1);
-  const progressOffset = TRACK_CIRCUMFERENCE * (1 - progress);
+  const progressDegrees = Math.max(0, Math.min(rotation, END_ROTATION));
 
   function applyRotation(next: number, withFeedback = false) {
     rotationRef.current = next;
@@ -174,35 +171,17 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
           transition: reduceMotion ? "none" : "border-color 180ms ease, box-shadow 220ms ease",
         }}
       >
-        <svg
+        <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-1.5 size-[calc(100%_-_0.75rem)] -rotate-90"
-          viewBox="0 0 100 100"
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r={TRACK_RADIUS}
-            fill="none"
-            strokeWidth="1.25"
-            style={{ stroke: "color-mix(in srgb, var(--text2) 28%, transparent)" }}
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r={TRACK_RADIUS}
-            fill="none"
-            strokeWidth="2.25"
-            strokeLinecap="round"
-            strokeDasharray={TRACK_CIRCUMFERENCE}
-            strokeDashoffset={progressOffset}
-            style={{
-              stroke: "var(--accent)",
-              opacity: done ? 1 : armed ? 0.92 : 0.62,
-              transition: dragging || reduceMotion ? "none" : "stroke-dashoffset 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease",
-            }}
-          />
-        </svg>
+          className="pointer-events-none absolute inset-1.5 rounded-full"
+          style={{
+            background: `conic-gradient(from -90deg, var(--accent) 0deg ${progressDegrees}deg, color-mix(in srgb, var(--text2) 28%, transparent) ${progressDegrees}deg 360deg)`,
+            WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0)",
+            mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0)",
+            opacity: done ? 1 : armed ? 0.92 : 0.62,
+            transition: reduceMotion ? "none" : "opacity 180ms ease",
+          }}
+        />
 
         <span
           aria-hidden="true"
