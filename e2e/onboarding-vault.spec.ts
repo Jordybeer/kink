@@ -16,7 +16,7 @@ async function reachVault(page: Page) {
   await expect(page.getByTestId("onboarding-turn-dial")).toBeVisible();
 }
 
-async function deliberateQuarterTurn(page: Page) {
+async function deliberateQuarterTurn(page: Page, finish: "up" | "cancel" = "up") {
   const dial = page.getByTestId("onboarding-turn-dial");
   const box = await dial.boundingBox();
   expect(box).not.toBeNull();
@@ -37,10 +37,21 @@ async function deliberateQuarterTurn(page: Page) {
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
 
+  let last = start;
   for (const angle of angles.slice(1)) {
-    const next = point(angle);
-    await page.mouse.move(next.x, next.y);
+    last = point(angle);
+    await page.mouse.move(last.x, last.y);
     await page.waitForTimeout(55);
+  }
+
+  if (finish === "cancel") {
+    await dial.dispatchEvent("pointercancel", {
+      pointerId: 1,
+      clientX: last.x,
+      clientY: last.y,
+    });
+    await page.mouse.up();
+    return;
   }
 
   await page.mouse.up();
@@ -57,6 +68,16 @@ test.describe("Onboarding vault", () => {
 
     await deliberateQuarterTurn(page);
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible({ timeout: 2500 });
+  });
+
+  test("an interrupted quarter-turn always resets closed", async ({ page }) => {
+    await reachVault(page);
+
+    await deliberateQuarterTurn(page, "cancel");
+
+    await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
+    await expect(page.getByText("Draai met de klok mee", { exact: true })).toBeVisible();
   });
 
   test("the vault stays fully visible on the compact iPhone viewport", async ({ page }) => {
