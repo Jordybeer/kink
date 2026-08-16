@@ -44,25 +44,31 @@ for (const viewport of IPHONE_VIEWPORTS) {
       const eyebrowRect = element.getBoundingClientRect();
       const iconRect = element.previousElementSibling?.getBoundingClientRect();
       const titleElement = element.nextElementSibling as HTMLElement | null;
-      const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+      // Resolve the authored responsive token in the browser itself. Dynamic viewport
+      // units are browser-defined and must not be approximated from Playwright's requested
+      // viewport height: mobile emulation can resolve dvh against a different visual viewport.
+      const probe = document.createElement("div");
+      probe.style.marginTop = "clamp(0.875rem, 2.2dvh, 1.25rem)";
+      probe.style.position = "absolute";
+      probe.style.visibility = "hidden";
+      document.body.appendChild(probe);
+
+      const expectedTitleMargin = Number.parseFloat(getComputedStyle(probe).marginTop);
+      probe.remove();
 
       return {
         iconGap: iconRect ? eyebrowRect.top - iconRect.bottom : -1,
         titleMargin: titleElement ? Number.parseFloat(getComputedStyle(titleElement).marginTop) : -1,
-        rootFontSize,
+        expectedTitleMargin,
       };
     });
 
     expect(rhythm.iconGap).toBeGreaterThanOrEqual(12);
 
-    // Title spacing is authored as clamp(0.875rem, 2.2dvh, 1.25rem). Text element
-    // bounding boxes include font ascent/descent and can overlap despite visible whitespace,
-    // so validate the responsive spacing token itself rather than font-metric line boxes.
-    const expectedTitleMargin = Math.min(
-      rhythm.rootFontSize * 1.25,
-      Math.max(rhythm.rootFontSize * 0.875, viewport.height * 0.022),
-    );
-    expect(Math.abs(rhythm.titleMargin - expectedTitleMargin)).toBeLessThanOrEqual(0.75);
+    // This still verifies the exact authored clamp token. It simply lets the browser be
+    // the source of truth for dvh instead of duplicating viewport-unit semantics in JS.
+    expect(Math.abs(rhythm.titleMargin - rhythm.expectedTitleMargin)).toBeLessThanOrEqual(0.25);
 
     const actionBox = await primaryAction.boundingBox();
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
