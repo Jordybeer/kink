@@ -126,9 +126,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("statusbalk blijft bij het overzicht en niet bij bewerken", async ({ page }) => {
-    await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();
+    const statusBar = page.getByRole("img", {
+      name: "6 Heel graag, 2 Ja, 1 Voor hen, 1 Harde grens",
+      exact: true,
+    });
+    await expect(statusBar).toBeVisible();
     await page.getByRole("tab", { name: "Bewerken" }).click();
-    await expect(page.getByRole("img", { name: /Heel graag/ })).toHaveCount(0);
+    await expect(statusBar).toHaveCount(0);
   });
 
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
@@ -218,7 +222,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await statusGroup.getByRole("button", { name: /Heel graag/ }).click();
     await page.getByRole("button", { name: "Klaar" }).click();
 
-    await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible();
   });
 });
 
@@ -273,7 +277,10 @@ test.describe("Profielpagina — Sam (gevorderd, Submissive)", () => {
   });
 
   test("hard grens (humiliation) blijft zichtbaar in het overzicht", async ({ page }) => {
-    await expect(page.getByRole("img", { name: /Hard nee/ })).toBeVisible();
+    await expect(page.getByRole("img", {
+      name: "5 Heel graag, 1 Ja, 2 Misschien, 1 Harde grens",
+      exact: true,
+    })).toBeVisible();
   });
 });
 
@@ -310,7 +317,7 @@ test.describe("Gedeeld profiel", () => {
       isImported: true,
       entries: {
         ...PROFILE_ALEX.entries,
-        "impact-spanking": {
+        spanking_hand_give: {
           status: "yes" as const,
           comment: "Dit is alleen voor mezelf bedoeld",
           privateResponse: true,
