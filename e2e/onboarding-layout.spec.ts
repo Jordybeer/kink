@@ -24,14 +24,21 @@ for (const viewport of IPHONE_VIEWPORTS) {
     await expect(title).toBeVisible();
     await expect(primaryAction).toBeVisible();
 
+    // Measure normal document flow rather than transformed paint boxes. Framer Motion
+    // deliberately translates staggered children during entry, while offset geometry
+    // remains the stable layout contract we want this regression test to protect.
     const rhythm = await eyebrow.evaluate((element) => {
-      const eyebrowRect = element.getBoundingClientRect();
-      const iconRect = element.previousElementSibling?.getBoundingClientRect();
-      const titleRect = element.nextElementSibling?.getBoundingClientRect();
+      const eyebrowElement = element as HTMLElement;
+      const iconElement = element.previousElementSibling as HTMLElement | null;
+      const titleElement = element.nextElementSibling as HTMLElement | null;
 
       return {
-        iconGap: iconRect ? eyebrowRect.top - iconRect.bottom : -1,
-        titleGap: titleRect ? titleRect.top - eyebrowRect.bottom : -1,
+        iconGap: iconElement
+          ? eyebrowElement.offsetTop - (iconElement.offsetTop + iconElement.offsetHeight)
+          : -1,
+        titleGap: titleElement
+          ? titleElement.offsetTop - (eyebrowElement.offsetTop + eyebrowElement.offsetHeight)
+          : -1,
       };
     });
 
