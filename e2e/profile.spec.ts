@@ -309,12 +309,13 @@ test.describe("Gedeeld profiel", () => {
     await note.fill("Goede eerste date");
     await expect(note).toHaveValue("Goede eerste date");
   });
+});
 
-  test("gedeeld profiel verbergt antwoord en volledige notitie", async ({ page }) => {
-    const sharedAlex = {
+test.describe("Privé antwoorden op eigen profiel", () => {
+  test("blijven verborgen tot bewust onthuld en kunnen opnieuw verborgen worden", async ({ page }) => {
+    const privateAlex = {
       ...PROFILE_ALEX,
-      id: "pw-shared-private",
-      isImported: true,
+      id: "pw-local-private",
       entries: {
         ...PROFILE_ALEX.entries,
         spanking_hand_give: {
@@ -324,15 +325,19 @@ test.describe("Gedeeld profiel", () => {
         },
       },
     };
-    await seedAndGo(page, "/profile/pw-shared-private", [sharedAlex]);
+    await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
 
-    const hidden = page.getByText("Privé antwoord", { exact: true }).first();
-    await expect(hidden).toBeVisible();
-    await expect(page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true })).toHaveCount(0);
+    const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
+    await expect(secret).toHaveCount(0);
 
-    await page.getByRole("button", { name: /Toon privé antwoord voor Spanking/i }).click();
-    await expect(page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: /Verberg privé antwoord voor Spanking/i }).click();
-    await expect(page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true })).toHaveCount(0);
+    const reveal = page.getByRole("button", { name: /Privéantwoord voor Spanking a partner \(hand\) tonen/i });
+    await expect(reveal).toBeVisible();
+    await reveal.click();
+    await expect(secret).toBeVisible();
+
+    const conceal = page.getByRole("button", { name: /Privéantwoord voor Spanking a partner \(hand\) opnieuw verbergen/i });
+    await expect(conceal).toBeVisible();
+    await conceal.click();
+    await expect(secret).toHaveCount(0);
   });
 });
