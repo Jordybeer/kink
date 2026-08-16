@@ -56,6 +56,14 @@ describe("questionnaire presentation", () => {
     expect(presentation.details).not.toContain(presentation.essence);
   });
 
+  it("keeps every visible essence short enough for the reserved three-line surface", () => {
+    const tooLong = KINKS.map((kink) => ({ id: kink.id, essence: getQuestionnairePresentation(kink).essence }))
+      .filter(({ essence }) => essence.length > 160)
+      .map(({ id, essence }) => `${id}: ${essence.length}`);
+
+    expect(tooLong).toEqual([]);
+  });
+
   it("does not manufacture depth when a complete one-sentence essence already suffices", () => {
     const kink = KINKS.find((candidate) => candidate.id === "orgasm_control");
     expect(kink).toBeDefined();
