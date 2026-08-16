@@ -29,6 +29,7 @@ export default function QuestionsScreen({ params }: Props) {
   const storedMode = profile?.questionnaireSetup?.mode;
   const [intent, setIntent] = useState<GuidedQuestionnaireIntent>(DYNAMIC_INTENT);
   const [statusExplainerOpen, setStatusExplainerOpen] = useState(false);
+  const [completionOptionsOpen, setCompletionOptionsOpen] = useState(false);
   const seededMode = useRef(false);
 
   useEffect(() => {
@@ -62,6 +63,10 @@ export default function QuestionsScreen({ params }: Props) {
     ];
   }, [profile, runtimeKind, shared, startDeepDive, startDiscover, startDynamic]);
   useTopNavActions(navActions, `Vragenlijst · ${modeLabel}`);
+
+  useEffect(() => {
+    setCompletionOptionsOpen(false);
+  }, [runtimeKind]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -162,23 +167,35 @@ export default function QuestionsScreen({ params }: Props) {
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--accent) 13%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--accent) 24%, var(--border))", color: "var(--accent)" }}>
               <Sparkle size={26} weight="duotone" aria-hidden="true" />
             </span>
-            <span className="mt-4 inline-flex min-h-7 items-center rounded-full px-3 text-xs font-semibold tabular-nums" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
-              {activeRuntime.scope.answered} / {activeRuntime.scope.total} beoordeeld
-            </span>
-            <h2 className="mt-4 text-3xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}>
-              {runtimeKind === "dynamic" ? "Je brede profiel staat." : runtimeKind === "discover" ? "Discover afgerond." : "Deep Dive compleet."}
+            <h2 className="mt-5 text-3xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600, color: "var(--text)" }}>
+              {runtimeKind === "dynamic" ? "Je eerste ronde is klaar." : runtimeKind === "discover" ? "Discover afgerond." : "Deep Dive compleet."}
             </h2>
             <p className="mx-auto mt-2 max-w-xs text-sm leading-6" style={{ color: "var(--text2)" }}>
-              {runtimeKind === "dynamic" ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken." : runtimeKind === "discover" ? "Alles in deze ronde is expliciet beoordeeld. Genoeg ontdekt voor nu. Duik verder wanneer je wilt." : "Je hebt alle onderwerpen in deze modus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
+              {runtimeKind === "dynamic" ? "Niets is ingevuld of voorspeld. Je kunt later verder ontdekken of de volledige catalogus doorlopen." : runtimeKind === "discover" ? "Genoeg ontdekt voor nu. Je kunt later verdergaan of bewust de volledige catalogus doorlopen." : "Je hebt de volledige catalogus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
             </p>
-            {runtimeKind === "dynamic" && (
-              <div className="mt-6 grid grid-cols-2 gap-2">
+
+            <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+              Terug naar profiel
+            </Link>
+
+            {runtimeKind === "dynamic" && !completionOptionsOpen && (
+              <button type="button" onClick={() => setCompletionOptionsOpen(true)} className="focus-ring mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+                Verder ontdekken
+              </button>
+            )}
+
+            {runtimeKind === "dynamic" && completionOptionsOpen && (
+              <div className="mt-3 grid grid-cols-2 gap-2" data-testid="questions-complete-next-options">
                 <button type="button" onClick={startDiscover} disabled={discoverComplete} className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold disabled:opacity-40" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>Discover</button>
-                <button type="button" onClick={startDeepDive} className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>Deep Dive</button>
+                <button type="button" onClick={startDeepDive} className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>Deep Dive</button>
               </div>
             )}
-            {runtimeKind === "discover" && <button type="button" onClick={startDynamic} className="focus-ring mt-6 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>Genoeg voor nu</button>}
-            {runtimeKind === "deepDive" && <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="focus-ring mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>Terug naar profiel</Link>}
+
+            {runtimeKind === "discover" && (
+              <button type="button" onClick={startDeepDive} className="focus-ring mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+                Verder met Deep Dive
+              </button>
+            )}
           </div>
         )}
       </section>
