@@ -143,6 +143,20 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
     applyRotation(0);
   }
 
+  function cancelPointer(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!dragging || done) return;
+    event.preventDefault();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    setDragging(false);
+    setArmed(false);
+    lastDetentRef.current = 0;
+    resetGesture();
+    applyRotation(0);
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-[19rem] flex-col items-center px-2 py-1">
       <button
@@ -153,7 +167,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={finishPointer}
-        onPointerCancel={finishPointer}
+        onPointerCancel={cancelPointer}
         onClick={(event) => {
           // Keyboard and assistive-technology activation remain a deliberate fallback.
           if (event.detail === 0 && !done) complete();
