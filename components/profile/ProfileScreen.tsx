@@ -313,7 +313,7 @@ export default function ProfilePage({ params }: Props) {
         </div>
       )}
 
-      {effectiveTab && totalRated > 0 && (
+      {effectiveTab && (effectiveTab === "bewerken" || totalRated > 0) && (
         <div className="px-4 mb-3" data-testid="profile-catalog-controls">
           <input
             value={search}
