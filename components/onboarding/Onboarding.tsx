@@ -329,7 +329,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <motion.p
       variants={childV}
-      className="inline-flex min-h-5 items-center gap-2 text-[0.8125rem] font-semibold uppercase tracking-[0.16em]"
+      className="flex w-fit min-h-5 items-center gap-2 text-[0.8125rem] font-semibold uppercase tracking-[0.16em]"
       style={{ color: 'var(--accent)' }}
     >
       <span className="h-px w-4 flex-none" aria-hidden="true" style={{ background: 'var(--accent)' }} />
