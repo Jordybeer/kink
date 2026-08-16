@@ -311,7 +311,7 @@ test.describe("Gedeeld profiel", () => {
       entries: {
         ...PROFILE_ALEX.entries,
         "impact-spanking": {
-          status: "love" as const,
+          status: "yes" as const,
           comment: "Dit is alleen voor mezelf bedoeld",
           privateResponse: true,
         },
