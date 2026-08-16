@@ -330,12 +330,12 @@ test.describe("Privé antwoorden op eigen profiel", () => {
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
     await expect(secret).toHaveCount(0);
 
-    const reveal = page.getByRole("button", { name: /Privéantwoord voor Spanking a partner \(hand\) tonen/i });
+    const reveal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving tonen", exact: true });
     await expect(reveal).toBeVisible();
     await reveal.click();
     await expect(secret).toBeVisible();
 
-    const conceal = page.getByRole("button", { name: /Privéantwoord voor Spanking a partner \(hand\) opnieuw verbergen/i });
+    const conceal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving opnieuw verbergen", exact: true });
     await expect(conceal).toBeVisible();
     await conceal.click();
     await expect(secret).toHaveCount(0);
