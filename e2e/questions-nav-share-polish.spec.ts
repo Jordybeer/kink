@@ -30,6 +30,6 @@ test("sharing keeps local-only warning and links to the trust explanation", asyn
 
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText(/Verborgen antwoorden.*persoonlijke notitie.*uitsluitend op dit toestel/i)).toBeVisible();
-  await expect(dialog.getByRole("link", { name: "Hoe delen en cryptografie werken" })).toHaveAttribute("href", "/about#limits-title");
+  await expect(dialog.getByText(/Verborgen antwoorden.*persoonlijke notitie.*blijven op dit toestel/i)).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Hoe delen en beveiliging werken" })).toHaveAttribute("href", "/about#limits-title");
 });
