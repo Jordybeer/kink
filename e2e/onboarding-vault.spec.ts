@@ -58,7 +58,7 @@ async function deliberateQuarterTurn(page: Page, finish: "up" | "cancel" = "up")
 }
 
 test.describe("Onboarding vault", () => {
-  test("a tap never opens it, a deliberate quarter-turn does", async ({ page }) => {
+  test("a tap never opens it, a deliberate quarter-turn gets a visible unlock payoff before Home", async ({ page }) => {
     await reachVault(page);
     const dial = page.getByTestId("onboarding-turn-dial");
 
@@ -67,6 +67,10 @@ test.describe("Onboarding vault", () => {
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
 
     await deliberateQuarterTurn(page);
+    await expect(page.getByText("Open.", { exact: true })).toBeVisible();
+    await page.waitForTimeout(220);
+    await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible({ timeout: 100 });
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible({ timeout: 2500 });
   });
 
