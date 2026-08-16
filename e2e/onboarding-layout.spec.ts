@@ -16,29 +16,38 @@ for (const viewport of IPHONE_VIEWPORTS) {
 
     await page.getByRole("button", { name: "Begin", exact: true }).click();
 
-    const eyebrow = page.getByText("Voor we beginnen", { exact: true });
+    const eyebrowLabel = page.getByText("Voor we beginnen", { exact: true });
+    const eyebrow = eyebrowLabel.locator("..");
     const title = page.getByRole("heading", { name: "18+?" });
     const primaryAction = page.getByRole("button", { name: "Ik ben 18+", exact: true });
 
-    await expect(eyebrow).toBeVisible();
+    await expect(eyebrowLabel).toBeVisible();
     await expect(title).toBeVisible();
     await expect(primaryAction).toBeVisible();
 
-    // Measure normal document flow rather than transformed paint boxes. Framer Motion
-    // deliberately translates staggered children during entry, while offset geometry
-    // remains the stable layout contract we want this regression test to protect.
+    // The label lives in a child span because the eyebrow also contains its accent rule.
+    // Measure from the actual eyebrow container to its block siblings, after the short
+    // staggered entrance motion has reached its final painted geometry.
+    await expect.poll(async () => eyebrow.evaluate((element) => {
+      const siblings = [element.previousElementSibling, element, element.nextElementSibling]
+        .filter((candidate): candidate is Element => candidate !== null);
+
+      return siblings.every((candidate) => {
+        const transform = getComputedStyle(candidate).transform;
+        if (transform === "none") return true;
+        const matrix = new DOMMatrixReadOnly(transform);
+        return Math.abs(matrix.m41) < 0.1 && Math.abs(matrix.m42) < 0.1;
+      });
+    })).toBe(true);
+
     const rhythm = await eyebrow.evaluate((element) => {
-      const eyebrowElement = element as HTMLElement;
-      const iconElement = element.previousElementSibling as HTMLElement | null;
-      const titleElement = element.nextElementSibling as HTMLElement | null;
+      const eyebrowRect = element.getBoundingClientRect();
+      const iconRect = element.previousElementSibling?.getBoundingClientRect();
+      const titleRect = element.nextElementSibling?.getBoundingClientRect();
 
       return {
-        iconGap: iconElement
-          ? eyebrowElement.offsetTop - (iconElement.offsetTop + iconElement.offsetHeight)
-          : -1,
-        titleGap: titleElement
-          ? titleElement.offsetTop - (eyebrowElement.offsetTop + eyebrowElement.offsetHeight)
-          : -1,
+        iconGap: iconRect ? eyebrowRect.top - iconRect.bottom : -1,
+        titleGap: titleRect ? titleRect.top - eyebrowRect.bottom : -1,
       };
     });
 
