@@ -147,7 +147,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
   }
 
   return (
-    <div className="mx-auto mt-[clamp(0.75rem,2dvh,1rem)] flex w-full max-w-[19rem] flex-col items-center px-2 py-1">
+    <div className="mx-auto flex w-full max-w-[19rem] flex-col items-center px-2 py-1">
       <button
         type="button"
         aria-label="Draai open en ga naar KinkSync"
@@ -176,7 +176,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
       >
         <svg
           aria-hidden="true"
-          className="pointer-events-none absolute inset-1.5 h-[calc(100%-0.75rem)] w-[calc(100%-0.75rem)] -rotate-90"
+          className="pointer-events-none absolute inset-1.5 size-[calc(100%_-_0.75rem)] -rotate-90"
           viewBox="0 0 100 100"
         >
           <circle
