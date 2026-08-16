@@ -175,7 +175,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
           aria-hidden="true"
           className="pointer-events-none absolute inset-1.5 rounded-full"
           style={{
-            background: `conic-gradient(from -90deg, var(--accent) 0deg ${progressDegrees}deg, color-mix(in srgb, var(--text2) 28%, transparent) ${progressDegrees}deg 360deg)`,
+            background: `conic-gradient(var(--accent) 0deg ${progressDegrees}deg, color-mix(in srgb, var(--text2) 28%, transparent) ${progressDegrees}deg 360deg)`,
             WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0)",
             mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0)",
             opacity: done ? 1 : armed ? 0.92 : 0.62,
