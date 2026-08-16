@@ -28,6 +28,7 @@ const SAFETY_PROFILE = profileWithOnlyQuestion("pw-safety-003", "Safety", "sound
 const CUCKOLDING_PROFILE = profileWithOnlyQuestion("pw-cuckolding-004", "Cuckolding", "cuckolding");
 const SIMPLE_PROFILE = profileWithOnlyQuestion("pw-simple-005", "Simple", "orgasm_control");
 const SELECTION_PROFILE = profileWithQuestions("pw-selection-006", "Selection", ["spanking_hand_give", "spanking_hand_receive"]);
+const LONG_TITLE_PROFILE = profileWithOnlyQuestion("pw-long-title-007", "Long title", "spanking_implement_give");
 
 async function stableControlGeometry(page: import("@playwright/test").Page) {
   const card = page.locator('[data-tour="kink-card"]');
@@ -64,6 +65,33 @@ test("questionnaire focus hands off to the dedicated questions route", async ({ 
   await expect(nav.getByText("Vragenlijst", { exact: true })).toBeVisible();
   await expect(nav).toContainText("Vragenlijst · Dynamic");
   await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
+});
+
+test("questions route locks the document while sheets keep their own scroll", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
+
+  const locked = await page.evaluate(() => ({
+    rootOverflow: document.documentElement.style.overflow,
+    rootOverscroll: document.documentElement.style.overscrollBehavior,
+    bodyOverflow: document.body.style.overflow,
+    bodyOverscroll: document.body.style.overscrollBehavior,
+  }));
+  expect(locked).toEqual({ rootOverflow: "hidden", rootOverscroll: "none", bodyOverflow: "hidden", bodyOverscroll: "none" });
+
+  await page.evaluate(() => window.scrollTo(0, 240));
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+  const card = page.locator('[data-tour="kink-card"]');
+  await card.getByRole("button", { name: /Info & uitleg/ }).click();
+  const sheetScrollBody = page.getByTestId("sheet-scroll-body");
+  await expect(sheetScrollBody).toBeVisible();
+  await expect(sheetScrollBody).toHaveCSS("overflow-y", "auto");
+  await page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" }).getByRole("button", { name: "Sluit" }).click();
+
+  await page.getByRole("link", { name: "Terug" }).click();
+  await expect(page).toHaveURL(new RegExp(`/profile/${CUCKOLDING_PROFILE.id}$`));
+  expect(await page.evaluate(() => ({ root: document.documentElement.style.overflow, body: document.body.style.overflow }))).toEqual({ root: "", body: "" });
 });
 
 test("answered question persists across a reload without document-width overflow", async ({ page }) => {
@@ -122,6 +150,21 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   expectSameGeometry(before, after);
 });
 
+test("long questionnaire titles fit their fixed slot without borrowing from agreements", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${LONG_TITLE_PROFILE.id}/questions`, [LONG_TITLE_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+  const title = card.getByTestId("question-title");
+  const titleSlot = card.getByTestId("question-title-slot");
+  await expect(title).toHaveText("Spanking a partner (with an implement)");
+  const titleMetrics = await title.evaluate((node) => ({ clientHeight: node.clientHeight, scrollHeight: node.scrollHeight }));
+  const slotBox = await titleSlot.boundingBox();
+  const agreementsBox = await card.getByText("Afspraken", { exact: true }).boundingBox();
+  expect(slotBox && agreementsBox).toBeTruthy();
+  expect(titleMetrics.scrollHeight).toBeLessThanOrEqual(titleMetrics.clientHeight + 1);
+  expect(slotBox!.y + slotBox!.height).toBeLessThan(agreementsBox!.y);
+});
+
 test("cuckolding keeps the exact visible essence when depth opens", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
@@ -173,10 +216,15 @@ test("answer hints share one right edge and selection never steals their space",
   const beforeEdges = await statusHintRightEdges(page);
   expectAlignedRightEdges(beforeEdges);
 
-  await card.getByRole("button", { name: /Heel graag/i }).click();
+  const yesButton = card.getByRole("button", { name: /Heel graag/i });
+  const idleBackground = await yesButton.evaluate((node) => getComputedStyle(node).backgroundColor);
+  const idleShadow = await yesButton.evaluate((node) => getComputedStyle(node).boxShadow);
+  await yesButton.click();
   await page.waitForTimeout(40);
   const selectedIndicator = card.locator('[data-status-indicator="yes"]');
   await expect(selectedIndicator.locator("svg")).toBeVisible();
+  expect(await yesButton.evaluate((node) => getComputedStyle(node).backgroundColor)).not.toBe(idleBackground);
+  expect(await yesButton.evaluate((node) => getComputedStyle(node).boxShadow)).not.toBe(idleShadow);
   const afterEdges = await statusHintRightEdges(page);
   expectAlignedRightEdges(afterEdges);
   for (let index = 0; index < beforeEdges.length; index += 1) {
