@@ -342,8 +342,12 @@ function Title({ children, compact = false }: { children: React.ReactNode; compa
   return (
     <motion.h2
       variants={childV}
-      className={`serif-safe mt-[clamp(0.875rem,2.2dvh,1.25rem)] leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
-      style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+      className={`serif-safe leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
+      style={{
+        fontFamily: "var(--font-display, Georgia, serif)",
+        fontWeight: 500,
+        marginTop: 'clamp(0.875rem, 2.2dvh, 1.25rem)',
+      }}
     >
       {children}
     </motion.h2>
