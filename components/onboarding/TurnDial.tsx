@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { LockKey, LockKeyOpen } from "@phosphor-icons/react";
 
 interface TurnDialProps {
@@ -13,6 +13,7 @@ const COMPLETE_AT = 78;
 const DETENT_DEGREES = 15;
 const MIN_GESTURE_MS = 320;
 const MIN_TRAVEL_PX = 56;
+const UNLOCK_SETTLE_MS = 650;
 
 function pointAngle(element: HTMLElement, clientX: number, clientY: number) {
   const bounds = element.getBoundingClientRect();
@@ -71,7 +72,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
     setDone(true);
     applyRotation(END_ROTATION);
     vibrate([12, 18, 30]);
-    window.setTimeout(onComplete, reduceMotion ? 0 : 360);
+    window.setTimeout(onComplete, reduceMotion ? 0 : UNLOCK_SETTLE_MS);
   }
 
   function resetGesture() {
@@ -159,7 +160,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-[19rem] flex-col items-center px-2 py-1">
-      <button
+      <motion.button
         type="button"
         aria-label="Draai open en ga naar KinkSync"
         aria-describedby="onboarding-turn-dial-hint"
@@ -172,6 +173,12 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
           // Keyboard and assistive-technology activation remain a deliberate fallback.
           if (event.detail === 0 && !done) complete();
         }}
+        animate={done && !reduceMotion
+          ? { scale: [1, 1.035, 1.015], y: [0, -2, 0] }
+          : { scale: 1, y: 0 }}
+        transition={done && !reduceMotion
+          ? { duration: 0.52, times: [0, 0.46, 1], ease: "easeOut" }
+          : { duration: 0 }}
         className="focus-ring relative flex h-[clamp(8.25rem,21dvh,9.5rem)] w-[clamp(8.25rem,21dvh,9.5rem)] touch-none select-none items-center justify-center rounded-full border"
         style={{
           background: "radial-gradient(circle at 36% 30%, var(--surface), var(--surface2) 54%, var(--surface3))",
@@ -185,6 +192,17 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
           transition: reduceMotion ? "none" : "border-color 180ms ease, box-shadow 220ms ease",
         }}
       >
+        {done && !reduceMotion && (
+          <motion.span
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-1 rounded-full border"
+            style={{ borderColor: "var(--accent)" }}
+            initial={{ opacity: 0.52, scale: 0.9 }}
+            animate={{ opacity: 0, scale: 1.18 }}
+            transition={{ duration: 0.58, ease: "easeOut" }}
+          />
+        )}
+
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-1.5 rounded-full"
@@ -244,11 +262,19 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
             transition: reduceMotion ? "none" : "background 180ms ease, color 180ms ease, border-color 180ms ease, transform 150ms ease, box-shadow 180ms ease",
           }}
         >
-          {done
-            ? <LockKeyOpen size={29} weight="duotone" />
-            : <LockKey size={28} weight="duotone" />}
+          {done ? (
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.68, rotate: -16 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.28, ease: "easeOut" }}
+            >
+              <LockKeyOpen size={29} weight="duotone" />
+            </motion.span>
+          ) : (
+            <LockKey size={28} weight="duotone" />
+          )}
         </span>
-      </button>
+      </motion.button>
 
       <p
         id="onboarding-turn-dial-hint"
