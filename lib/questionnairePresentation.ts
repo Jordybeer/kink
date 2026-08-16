@@ -86,6 +86,34 @@ const QUESTIONNAIRE_COPY_OVERRIDES: Readonly<Record<string, QuestionnaireCopyOve
   sound_deprivation_receive: {
     essence: "Zelf tijdelijk minder horen; spreek vooraf een tastbaar stopsignaal af.",
   },
+  crossdressing_mtf: {
+    essence: "Als volwassene tijdelijk een expliciet feminiene kleding- of presentatiestijl aannemen als erotisch, esthetisch of rollenspelelement.",
+    details: "Dat zegt op zichzelf niets over je genderidentiteit.",
+  },
+  crossdressing_ftm: {
+    essence: "Als volwassene tijdelijk een expliciet masculiene kleding- of presentatiestijl aannemen als erotisch, esthetisch of rollenspelelement.",
+    details: "Dat zegt op zichzelf niets over je genderidentiteit.",
+  },
+  little_speelgoed: {
+    essence: "Als volwassene kinderlijke comfortobjecten, spel of rustige activiteiten gebruiken.",
+    details: "Dat veronderstelt niet automatisch little headspace of een caregiver-dynamiek.",
+  },
+  diaper_partner_wearing: {
+    essence: "Het aantrekkelijk, erotisch of betekenisvol vinden dat een volwassen partner een luier draagt.",
+    details: "Dat zegt niet dat je zelf een luier wilt dragen en veronderstelt geen ageplay, controle of vernedering.",
+  },
+  laarzen_aanbidding_receive: {
+    essence: "Een partner je laarzen of schoenen laten kussen, likken of aanbidden als afgesproken fetisj- of D/s-spel.",
+    details: "Daaruit wordt geen vaste dominante of submissieve profielrol afgeleid.",
+  },
+  ass_worship_give: {
+    essence: "De billen van een partner aanbidden, bijvoorbeeld door te kussen, likken, masseren of ertegenaan te liggen.",
+    details: "Dit veronderstelt geen vaste dominante of submissieve kant.",
+  },
+  ass_worship_receive: {
+    essence: "Je billen door een partner laten aanbidden, bijvoorbeeld met kussen, likken, massage of andere lichamelijke aandacht.",
+    details: "Dit veronderstelt geen vaste dominante of submissieve kant.",
+  },
 };
 
 function splitDescription(description: string): { essence: string; details: string | null } {
