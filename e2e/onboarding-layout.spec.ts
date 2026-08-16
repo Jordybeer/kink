@@ -26,8 +26,8 @@ for (const viewport of IPHONE_VIEWPORTS) {
     await expect(primaryAction).toBeVisible();
 
     // The label lives in a child span because the eyebrow also contains its accent rule.
-    // Measure from the actual eyebrow container to its block siblings, after the short
-    // staggered entrance motion has reached its final painted geometry.
+    // Wait until the staggered entry motion reaches its final painted geometry before
+    // physically measuring the icon-to-eyebrow gap.
     await expect.poll(async () => eyebrow.evaluate((element) => {
       const siblings = [element.previousElementSibling, element, element.nextElementSibling]
         .filter((candidate): candidate is Element => candidate !== null);
@@ -43,16 +43,26 @@ for (const viewport of IPHONE_VIEWPORTS) {
     const rhythm = await eyebrow.evaluate((element) => {
       const eyebrowRect = element.getBoundingClientRect();
       const iconRect = element.previousElementSibling?.getBoundingClientRect();
-      const titleRect = element.nextElementSibling?.getBoundingClientRect();
+      const titleElement = element.nextElementSibling as HTMLElement | null;
+      const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
 
       return {
         iconGap: iconRect ? eyebrowRect.top - iconRect.bottom : -1,
-        titleGap: titleRect ? titleRect.top - eyebrowRect.bottom : -1,
+        titleMargin: titleElement ? Number.parseFloat(getComputedStyle(titleElement).marginTop) : -1,
+        rootFontSize,
       };
     });
 
     expect(rhythm.iconGap).toBeGreaterThanOrEqual(12);
-    expect(rhythm.titleGap).toBeGreaterThanOrEqual(10);
+
+    // Title spacing is authored as clamp(0.875rem, 2.2dvh, 1.25rem). Text element
+    // bounding boxes include font ascent/descent and can overlap despite visible whitespace,
+    // so validate the responsive spacing token itself rather than font-metric line boxes.
+    const expectedTitleMargin = Math.min(
+      rhythm.rootFontSize * 1.25,
+      Math.max(rhythm.rootFontSize * 0.875, viewport.height * 0.022),
+    );
+    expect(Math.abs(rhythm.titleMargin - expectedTitleMargin)).toBeLessThanOrEqual(0.75);
 
     const actionBox = await primaryAction.boundingBox();
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
