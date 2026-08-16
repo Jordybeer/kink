@@ -25,7 +25,6 @@ for (const viewport of IPHONE_VIEWPORTS) {
     await expect(title).toBeVisible();
     await expect(primaryAction).toBeVisible();
 
-    // The label lives in a child span because the eyebrow also contains its accent rule.
     // Wait until the staggered entry motion reaches its final painted geometry before
     // physically measuring the icon-to-eyebrow gap.
     await expect.poll(async () => eyebrow.evaluate((element) => {
@@ -40,35 +39,31 @@ for (const viewport of IPHONE_VIEWPORTS) {
       });
     })).toBe(true);
 
-    const rhythm = await eyebrow.evaluate((element) => {
+    const iconGap = await eyebrow.evaluate((element) => {
       const eyebrowRect = element.getBoundingClientRect();
       const iconRect = element.previousElementSibling?.getBoundingClientRect();
-      const titleElement = element.nextElementSibling as HTMLElement | null;
+      return iconRect ? eyebrowRect.top - iconRect.bottom : -1;
+    });
 
-      // Resolve the authored responsive token in the browser itself. Dynamic viewport
-      // units are browser-defined and must not be approximated from Playwright's requested
-      // viewport height: mobile emulation can resolve dvh against a different visual viewport.
+    const titleMargin = await title.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).marginTop),
+    );
+
+    const expectedTitleMargin = await page.evaluate(() => {
+      // Resolve the exact authored responsive token in the browser itself. Dynamic viewport
+      // units are browser-defined, so the browser remains the source of truth for dvh.
       const probe = document.createElement("div");
       probe.style.marginTop = "clamp(0.875rem, 2.2dvh, 1.25rem)";
       probe.style.position = "absolute";
       probe.style.visibility = "hidden";
       document.body.appendChild(probe);
-
-      const expectedTitleMargin = Number.parseFloat(getComputedStyle(probe).marginTop);
+      const value = Number.parseFloat(getComputedStyle(probe).marginTop);
       probe.remove();
-
-      return {
-        iconGap: iconRect ? eyebrowRect.top - iconRect.bottom : -1,
-        titleMargin: titleElement ? Number.parseFloat(getComputedStyle(titleElement).marginTop) : -1,
-        expectedTitleMargin,
-      };
+      return value;
     });
 
-    expect(rhythm.iconGap).toBeGreaterThanOrEqual(12);
-
-    // This still verifies the exact authored clamp token. It simply lets the browser be
-    // the source of truth for dvh instead of duplicating viewport-unit semantics in JS.
-    expect(Math.abs(rhythm.titleMargin - rhythm.expectedTitleMargin)).toBeLessThanOrEqual(0.25);
+    expect(iconGap).toBeGreaterThanOrEqual(12);
+    expect(Math.abs(titleMargin - expectedTitleMargin)).toBeLessThanOrEqual(0.25);
 
     const actionBox = await primaryAction.boundingBox();
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
