@@ -78,6 +78,7 @@ export const QUESTIONNAIRE_TITLE_OVERRIDES: Readonly<Record<string, string>> = {
 const QUESTIONNAIRE_COPY_OVERRIDES: Readonly<Record<string, QuestionnaireCopyOverride>> = {
   cuckolding: {
     essence: "Een afgesproken scenario waarin jij weet of ziet dat je partner seks heeft met een instemmende derde.",
+    details: "De specifieke cuckolding-dynamiek wordt daarbij expliciet benoemd.",
   },
   sound_deprivation_give: {
     essence: "Het gehoor van je partner tijdelijk beperken; spreek vooraf een tastbaar stopsignaal af.",
@@ -87,15 +88,20 @@ const QUESTIONNAIRE_COPY_OVERRIDES: Readonly<Record<string, QuestionnaireCopyOve
   },
 };
 
-function firstCompleteSentence(description: string): string {
-  return description.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? description;
+function splitDescription(description: string): { essence: string; details: string | null } {
+  const essence = description.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? description;
+  const details = description.slice(essence.length).trim() || null;
+  return { essence, details };
 }
 
 export function getQuestionnairePresentation(kink: Kink): QuestionnairePresentation {
   const description = kink.description?.trim() ?? "";
+  const fallback = description ? splitDescription(description) : { essence: "", details: null };
   const copyOverride = QUESTIONNAIRE_COPY_OVERRIDES[kink.id];
-  const essence = copyOverride?.essence ?? (description ? firstCompleteSentence(description) : "");
-  const details = copyOverride?.details ?? (description && description !== essence ? description : null);
+  const essence = copyOverride?.essence ?? fallback.essence;
+  const details = copyOverride
+    ? copyOverride.details ?? (description && description !== essence ? description : null)
+    : fallback.details;
 
   return {
     title: QUESTIONNAIRE_TITLE_OVERRIDES[kink.id] ?? kink.name,
