@@ -63,6 +63,30 @@ export default function QuestionsScreen({ params }: Props) {
   }, [profile, runtimeKind, shared, startDeepDive, startDiscover, startDynamic]);
   useTopNavActions(navActions, `Vragenlijst · ${modeLabel}`);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const previous = {
+      rootOverflow: root.style.overflow,
+      rootOverscroll: root.style.overscrollBehavior,
+      bodyOverflow: body.style.overflow,
+      bodyOverscroll: body.style.overscrollBehavior,
+    };
+
+    window.scrollTo(0, 0);
+    root.style.overflow = "hidden";
+    root.style.overscrollBehavior = "none";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+
+    return () => {
+      root.style.overflow = previous.rootOverflow;
+      root.style.overscrollBehavior = previous.rootOverscroll;
+      body.style.overflow = previous.bodyOverflow;
+      body.style.overscrollBehavior = previous.bodyOverscroll;
+    };
+  }, []);
+
   if (!hydrated) return <PageShell loading width="lg" />;
   if (!profile) return <PageShell width="lg"><EmptyState icon={UserMinus} title="Profiel niet gevonden" message="Het is misschien verwijderd of de link is niet meer geldig." ctaHref="/" ctaLabel="Terug naar start" /></PageShell>;
 
