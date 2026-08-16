@@ -66,24 +66,41 @@ export default function QuestionsScreen({ params }: Props) {
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
+    const previousScroll = { x: window.scrollX, y: window.scrollY };
     const previous = {
       rootOverflow: root.style.overflow,
       rootOverscroll: root.style.overscrollBehavior,
+      rootHeight: root.style.height,
       bodyOverflow: body.style.overflow,
       bodyOverscroll: body.style.overscrollBehavior,
+      bodyPosition: body.style.position,
+      bodyInset: body.style.inset,
+      bodyHeight: body.style.height,
+      bodyWidth: body.style.width,
     };
 
     window.scrollTo(0, 0);
     root.style.overflow = "hidden";
     root.style.overscrollBehavior = "none";
+    root.style.height = "100%";
     body.style.overflow = "hidden";
     body.style.overscrollBehavior = "none";
+    body.style.position = "fixed";
+    body.style.inset = "0";
+    body.style.height = "100%";
+    body.style.width = "100%";
 
     return () => {
       root.style.overflow = previous.rootOverflow;
       root.style.overscrollBehavior = previous.rootOverscroll;
+      root.style.height = previous.rootHeight;
       body.style.overflow = previous.bodyOverflow;
       body.style.overscrollBehavior = previous.bodyOverscroll;
+      body.style.position = previous.bodyPosition;
+      body.style.inset = previous.bodyInset;
+      body.style.height = previous.bodyHeight;
+      body.style.width = previous.bodyWidth;
+      window.scrollTo(previousScroll.x, previousScroll.y);
     };
   }, []);
 
@@ -107,7 +124,7 @@ export default function QuestionsScreen({ params }: Props) {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4"
+      className="mx-auto flex w-full max-w-lg flex-col overflow-hidden px-4 sm:max-w-3xl lg:max-w-4xl"
       style={{ height: "min(calc(100svh - var(--nav-h)), calc(var(--visual-viewport-height, 100dvh) - var(--nav-h)))", paddingTop: "1rem", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       data-testid="questions-screen"
     >
@@ -152,7 +169,7 @@ export default function QuestionsScreen({ params }: Props) {
               {runtimeKind === "dynamic" ? "Je brede profiel staat." : runtimeKind === "discover" ? "Discover afgerond." : "Deep Dive compleet."}
             </h2>
             <p className="mx-auto mt-2 max-w-xs text-sm leading-6" style={{ color: "var(--text2)" }}>
-              {runtimeKind === "dynamic" ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken." : runtimeKind === "discover" ? "Alles in deze ronde is expliciet beoordeeld. Genoeg ontdekt voor nu — of duik verder wanneer je wilt." : "Je hebt alle onderwerpen in deze modus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
+              {runtimeKind === "dynamic" ? "Niets is ingevuld of voorspeld. Je kunt verder ontdekken of bewust de volledige catalogus afwerken." : runtimeKind === "discover" ? "Alles in deze ronde is expliciet beoordeeld. Genoeg ontdekt voor nu. Duik verder wanneer je wilt." : "Je hebt alle onderwerpen in deze modus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
             </p>
             {runtimeKind === "dynamic" && (
               <div className="mt-6 grid grid-cols-2 gap-2">
