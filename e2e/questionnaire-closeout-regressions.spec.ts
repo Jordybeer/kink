@@ -29,15 +29,26 @@ function completedDynamicProfile(id: string): Profile {
   };
 }
 
-const PRIVATE_PROFILE = deepDiveWithOnlyOneQuestion("pw-closeout-private", "orgasm_control");
+const PRIVATE_PROFILE = deepDiveWithOnlyOneQuestion("pw-closeout-private", "cuckolding");
 const COMPLETE_PROFILE = completedDynamicProfile("pw-closeout-complete");
 
-test("privacy and curious stay independent when the top-right utilities are tapped", async ({ page }) => {
+test("privacy and curious stay independent with non-overlapping top-right touch targets", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PRIVATE_PROFILE.id}/questions`, [PRIVATE_PROFILE]);
 
+  const category = page.getByTestId("question-category-meta");
   const curious = page.getByTestId("question-curious");
   const privateAnswer = page.getByTestId("question-private");
+  const [categoryBox, curiousBox, privateBox] = await Promise.all([
+    category.boundingBox(),
+    curious.boundingBox(),
+    privateAnswer.boundingBox(),
+  ]);
+  expect(categoryBox).not.toBeNull();
+  expect(curiousBox).not.toBeNull();
+  expect(privateBox).not.toBeNull();
+  expect(curiousBox!.x - (categoryBox!.x + categoryBox!.width)).toBeGreaterThanOrEqual(4);
+  expect(privateBox!.x - (curiousBox!.x + curiousBox!.width)).toBeGreaterThanOrEqual(4);
 
   await expect(curious).toHaveAttribute("aria-pressed", "false");
   await expect(privateAnswer).toHaveAttribute("aria-pressed", "false");
@@ -70,7 +81,7 @@ test("dynamic completion is an exit-first state without an ambiguous assessed co
   await expect(page.getByTestId("questions-complete-next-options").getByRole("button", { name: "Deep Dive" })).toBeVisible();
 });
 
-test("short landscape keeps the question card inside its locked stage", async ({ page }) => {
+test("short landscape keeps the question card inside its locked stage and leaves detail affordances readable", async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await seedAndGo(page, `/profile/${PRIVATE_PROFILE.id}/questions`, [PRIVATE_PROFILE]);
 
@@ -84,9 +95,8 @@ test("short landscape keeps the question card inside its locked stage", async ({
   expect(card!.y + card!.height).toBeLessThanOrEqual(screen!.y + screen!.height + 1);
 
   const detail = page.getByTestId("question-info-disclosure");
-  if (await detail.count()) {
-    const box = await detail.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.height).toBeGreaterThanOrEqual(48);
-  }
+  await expect(detail).toBeVisible();
+  const box = await detail.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.height).toBeGreaterThanOrEqual(48);
 });
