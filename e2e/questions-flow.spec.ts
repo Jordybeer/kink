@@ -74,10 +74,21 @@ test("questions route locks the document while sheets keep their own scroll", as
   const locked = await page.evaluate(() => ({
     rootOverflow: document.documentElement.style.overflow,
     rootOverscroll: document.documentElement.style.overscrollBehavior,
+    rootHeight: document.documentElement.style.height,
     bodyOverflow: document.body.style.overflow,
     bodyOverscroll: document.body.style.overscrollBehavior,
+    bodyPosition: document.body.style.position,
+    bodyInset: document.body.style.inset,
   }));
-  expect(locked).toEqual({ rootOverflow: "hidden", rootOverscroll: "none", bodyOverflow: "hidden", bodyOverscroll: "none" });
+  expect(locked).toEqual({
+    rootOverflow: "hidden",
+    rootOverscroll: "none",
+    rootHeight: "100%",
+    bodyOverflow: "hidden",
+    bodyOverscroll: "none",
+    bodyPosition: "fixed",
+    bodyInset: "0px",
+  });
 
   await page.evaluate(() => window.scrollTo(0, 240));
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
@@ -91,7 +102,34 @@ test("questions route locks the document while sheets keep their own scroll", as
 
   await page.getByRole("link", { name: "Terug" }).click();
   await expect(page).toHaveURL(new RegExp(`/profile/${CUCKOLDING_PROFILE.id}$`));
-  expect(await page.evaluate(() => ({ root: document.documentElement.style.overflow, body: document.body.style.overflow }))).toEqual({ root: "", body: "" });
+  expect(await page.evaluate(() => ({
+    rootOverflow: document.documentElement.style.overflow,
+    rootHeight: document.documentElement.style.height,
+    bodyOverflow: document.body.style.overflow,
+    bodyPosition: document.body.style.position,
+  }))).toEqual({ rootOverflow: "", rootHeight: "", bodyOverflow: "", bodyPosition: "" });
+});
+
+test("questionnaire width stays intimate in portrait and grows on landscape and tablet", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${SELECTION_PROFILE.id}/questions`, [SELECTION_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+
+  const portrait = await card.boundingBox();
+  expect(portrait).not.toBeNull();
+  expect(portrait!.width).toBeLessThanOrEqual(370);
+
+  await page.setViewportSize({ width: 844, height: 390 });
+  const landscape = await card.boundingBox();
+  expect(landscape).not.toBeNull();
+  expect(landscape!.width).toBeGreaterThanOrEqual(700);
+
+  await page.setViewportSize({ width: 1024, height: 768 });
+  const tablet = await card.boundingBox();
+  expect(tablet).not.toBeNull();
+  expect(tablet!.width).toBeGreaterThanOrEqual(820);
+  expect(tablet!.width).toBeLessThanOrEqual(900);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)).toBe(false);
 });
 
 test("answered question persists across a reload without document-width overflow", async ({ page }) => {
@@ -159,7 +197,7 @@ test("long questionnaire titles fit their fixed slot without borrowing from agre
   await expect(title).toHaveText("Spanking a partner (with an implement)");
   const titleMetrics = await title.evaluate((node) => ({ clientHeight: node.clientHeight, scrollHeight: node.scrollHeight }));
   const slotBox = await titleSlot.boundingBox();
-  const agreementsBox = await card.getByText("Afspraken", { exact: true }).boundingBox();
+  const agreementsBox = await card.getByTestId("question-agreements-label").boundingBox();
   expect(slotBox && agreementsBox).toBeTruthy();
   expect(titleMetrics.scrollHeight).toBeLessThanOrEqual(titleMetrics.clientHeight + 1);
   expect(slotBox!.y + slotBox!.height).toBeLessThan(agreementsBox!.y);
@@ -217,6 +255,7 @@ test("answer hints share one right edge and selection never steals their space",
   expectAlignedRightEdges(beforeEdges);
 
   const yesButton = card.getByRole("button", { name: /Heel graag/i });
+  await expect(yesButton).toHaveClass(/active:scale-\[0\.994\]/);
   const idleBackground = await yesButton.evaluate((node) => getComputedStyle(node).backgroundColor);
   const idleShadow = await yesButton.evaluate((node) => getComputedStyle(node).boxShadow);
   await yesButton.click();
@@ -231,6 +270,24 @@ test("answer hints share one right edge and selection never steals their space",
     expect(Math.abs(beforeEdges[index] - afterEdges[index])).toBeLessThanOrEqual(1);
   }
   expectSameGeometry(beforeGeometry, await stableControlGeometry(page));
+});
+
+test("agreements keep breathing room around their inline optional label", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+  const section = card.getByTestId("question-agreements");
+  const label = card.getByTestId("question-agreements-label");
+  const firstButton = card.getByRole("button", { name: "Eerst vragen" });
+  await expect(label).toHaveText("Afspraken · optioneel");
+
+  const sectionBox = await section.boundingBox();
+  const labelBox = await label.boundingBox();
+  const buttonBox = await firstButton.boundingBox();
+  expect(sectionBox && labelBox && buttonBox).toBeTruthy();
+  expect(labelBox!.y - sectionBox!.y).toBeGreaterThanOrEqual(8);
+  expect(buttonBox!.y - (labelBox!.y + labelBox!.height)).toBeGreaterThanOrEqual(6);
+  expect(sectionBox!.y + sectionBox!.height - (buttonBox!.y + buttonBox!.height)).toBeGreaterThanOrEqual(6);
 });
 
 test("question card keeps all primary controls visible with unclipped copy", async ({ page }) => {
@@ -249,7 +306,7 @@ test("question card keeps all primary controls visible with unclipped copy", asy
   await expect(card.getByRole("button", { name: "Antwoord verbergen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
-  await expect(card.getByText("optioneel", { exact: true })).toBeVisible();
+  await expect(card.getByTestId("question-agreements-label")).toHaveText("Afspraken · optioneel");
   await expect(card.getByTestId("question-progress")).toBeVisible();
   await expect(card.getByRole("group", { name: "Status kiezen" }).locator("button")).toHaveCount(5);
 
