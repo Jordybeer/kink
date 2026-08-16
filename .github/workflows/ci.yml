@@ -64,6 +64,16 @@ jobs:
           path: test-results/device-screenshots
           if-no-files-found: ignore
           retention-days: 14
+      - name: Keep Playwright failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-failure-diagnostics
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 14
 
   # PWA/offline behavior only exists in a production build. It used to be a
   # local-only suite; for a mobile-first public release it belongs in CI too.
