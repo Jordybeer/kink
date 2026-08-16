@@ -56,6 +56,23 @@ describe("questionnaire presentation", () => {
     expect(presentation.details).not.toContain(presentation.essence);
   });
 
+  it("uses the agreed plain-language silence copy without a literary dash", () => {
+    const kink = KINKS.find((candidate) => candidate.id === "opgelegde_stilte");
+    expect(kink).toBeDefined();
+
+    const presentation = getQuestionnairePresentation(kink!);
+    expect(presentation.essence).toBe("Een afgesproken periode niet mogen spreken na het overtreden van een regel.");
+    expect(presentation.details).toBe("Spreek een non-verbaal veiligheidssignaal af. Een straf mag nooit het stopwoord blokkeren.");
+  });
+
+  it("keeps stylistic em dashes out of questionnaire essence and detail copy", () => {
+    for (const kink of KINKS) {
+      const presentation = getQuestionnairePresentation(kink);
+      expect(presentation.essence, `${kink.id} essence`).not.toContain("—");
+      expect(presentation.details ?? "", `${kink.id} details`).not.toContain("—");
+    }
+  });
+
   it("keeps every visible essence short enough for the reserved three-line surface", () => {
     const tooLong = KINKS.map((kink) => ({ id: kink.id, essence: getQuestionnairePresentation(kink).essence }))
       .filter(({ essence }) => essence.length > 160)
