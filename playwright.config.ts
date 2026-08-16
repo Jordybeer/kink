@@ -1,23 +1,18 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const reporter = process.env.CI
-  ? [
-      ["github" as const],
-      ["list" as const, { printFailuresInline: true }],
-      ["html" as const, { open: "never" as const, outputFolder: "playwright-report" }],
-    ]
-  : [
-      ["list" as const],
-      ["html" as const, { open: "never" as const, outputFolder: "playwright-report" }],
-    ];
-
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   workers: 1,
   retries: 1,
   timeout: 45000,
-  reporter,
+  reporter: process.env.CI
+    ? [
+        ["github"],
+        ["list", { printFailuresInline: true }],
+        ["html", { open: "never", outputFolder: "playwright-report" }],
+      ]
+    : [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
     baseURL: "http://localhost:3000",
     screenshot: "only-on-failure",
