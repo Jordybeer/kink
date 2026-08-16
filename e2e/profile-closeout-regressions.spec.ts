@@ -14,7 +14,7 @@ test("profile keeps catalog search and category filtering available from Overvie
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
 
-  await expect(page.getByRole("button", { name: "Overzicht" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("tab", { name: "Overzicht" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
   await expect(page.getByPlaceholder("Zoek in je profiel…")).toBeVisible();
   await expect(page.getByRole("button", { name: "Wat betekenen deze keuzes?" })).toHaveCount(0);
@@ -25,7 +25,7 @@ test("profile keeps catalog search and category filtering available from Overvie
   await expect(page.getByText(/spanking/i).first()).toBeVisible();
   await search.fill("");
 
-  await page.getByRole("button", { name: "Bewerken" }).click();
+  await page.getByRole("tab", { name: "Bewerken" }).click();
   await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
 });
