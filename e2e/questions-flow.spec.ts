@@ -111,7 +111,7 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   const essenceBefore = await card.getByTestId("question-essence").boundingBox();
   expect(cardBefore).not.toBeNull();
   expect(essenceBefore).not.toBeNull();
-  expect(essenceBefore!.height).toBeLessThanOrEqual(41);
+  expect(essenceBefore!.height).toBeLessThanOrEqual(49);
 
   await card.getByRole("button", { name: /Heel graag/i }).click();
   await expect(title).not.toHaveText(firstTitle);
@@ -122,7 +122,7 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   expectSameGeometry(before, after);
 });
 
-test("cuckolding keeps a concise essence and optional depth above the stable canvas", async ({ page }) => {
+test("cuckolding keeps the exact visible essence when depth opens", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
@@ -135,7 +135,8 @@ test("cuckolding keeps a concise essence and optional depth above the stable can
   await details.click();
   const dialog = page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("specifieke cuckolding-dynamiek");
+  await expect(dialog.getByTestId("question-detail-essence")).toHaveText(CUCKOLDING_ESSENCE);
+  await expect(dialog).toContainText("De specifieke cuckolding-dynamiek wordt daarbij expliciet benoemd.");
   await expect(dialog).toContainText("Cuckolding / hotwifing");
   await dialog.getByRole("button", { name: "Sluit" }).click();
   await expect(dialog).toBeHidden();
@@ -184,14 +185,16 @@ test("answer hints share one right edge and selection never steals their space",
   expectSameGeometry(beforeGeometry, await stableControlGeometry(page));
 });
 
-test("question card keeps all primary controls visible with balanced inner breathing room", async ({ page }) => {
+test("question card keeps all primary controls visible with unclipped copy", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
   await expect(card).toBeVisible();
   await expect(card.getByTestId("question-category-meta")).toBeVisible();
-  await expect(card.getByTestId("question-title")).toBeVisible();
-  await expect(card.getByTestId("question-essence")).toBeVisible();
+  const title = card.getByTestId("question-title");
+  const essence = card.getByTestId("question-essence");
+  await expect(title).toBeVisible();
+  await expect(essence).toBeVisible();
   await expect(card.getByTestId("question-info-disclosure")).toBeVisible();
   const curious = card.getByRole("button", { name: "Markeer als nieuwsgierig" });
   await expect(curious).toBeVisible();
@@ -215,12 +218,14 @@ test("question card keeps all primary controls visible with balanced inner breat
   expect(laterBox!.y + laterBox!.height).toBeLessThanOrEqual(await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight) + 1);
   expect(await card.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)).toBe(false);
+  expect(await essence.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
 
-  const titleMetrics = await card.getByTestId("question-title").evaluate((node) => {
+  const titleMetrics = await title.evaluate((node) => {
     const style = getComputedStyle(node);
-    return { fontSize: Number.parseFloat(style.fontSize), lineHeight: Number.parseFloat(style.lineHeight) };
+    return { fontSize: Number.parseFloat(style.fontSize), lineHeight: Number.parseFloat(style.lineHeight), clientHeight: node.clientHeight, scrollHeight: node.scrollHeight };
   });
-  expect(titleMetrics.lineHeight / titleMetrics.fontSize).toBeGreaterThanOrEqual(1.14);
+  expect(titleMetrics.lineHeight / titleMetrics.fontSize).toBeGreaterThanOrEqual(1.18);
+  expect(titleMetrics.scrollHeight).toBeLessThanOrEqual(titleMetrics.clientHeight + 1);
 });
 
 test("safety guidance keeps its essential stop signal visible before the sheet opens", async ({ page }) => {
