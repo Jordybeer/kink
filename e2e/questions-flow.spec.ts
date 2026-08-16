@@ -305,7 +305,7 @@ test("question card keeps all primary controls visible with unclipped copy", asy
   await expect(card.getByTestId("question-info-disclosure")).toBeVisible();
   const curious = card.getByRole("button", { name: "Markeer als nieuwsgierig" });
   await expect(curious).toBeVisible();
-  await expect(card.getByRole("button", { name: "Antwoord verbergen" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Antwoord privé maken" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
   await expect(card.getByTestId("question-agreements-label")).toHaveText("Afspraken · optioneel");
