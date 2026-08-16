@@ -80,6 +80,10 @@ const QUESTIONNAIRE_COPY_OVERRIDES: Readonly<Record<string, QuestionnaireCopyOve
     essence: "Een afgesproken scenario waarin jij weet of ziet dat je partner seks heeft met een instemmende derde.",
     details: "De specifieke cuckolding-dynamiek wordt daarbij expliciet benoemd.",
   },
+  opgelegde_stilte: {
+    essence: "Een afgesproken periode niet mogen spreken na het overtreden van een regel.",
+    details: "Spreek een non-verbaal veiligheidssignaal af. Een straf mag nooit het stopwoord blokkeren.",
+  },
   sound_deprivation_give: {
     essence: "Het gehoor van je partner tijdelijk beperken; spreek vooraf een tastbaar stopsignaal af.",
   },
@@ -116,6 +120,10 @@ const QUESTIONNAIRE_COPY_OVERRIDES: Readonly<Record<string, QuestionnaireCopyOve
   },
 };
 
+function normalizeQuestionnaireCopy(text: string): string {
+  return text.replace(/\s+—\s+/g, ", ").replace(/\s{2,}/g, " ").trim();
+}
+
 function splitDescription(description: string): { essence: string; details: string | null } {
   const essence = description.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? description;
   const details = description.slice(essence.length).trim() || null;
@@ -126,10 +134,10 @@ export function getQuestionnairePresentation(kink: Kink): QuestionnairePresentat
   const description = kink.description?.trim() ?? "";
   const fallback = description ? splitDescription(description) : { essence: "", details: null };
   const copyOverride = QUESTIONNAIRE_COPY_OVERRIDES[kink.id];
-  const essence = copyOverride?.essence ?? fallback.essence;
-  const details = copyOverride
-    ? copyOverride.details ?? (description && description !== essence ? description : null)
-    : fallback.details;
+  const rawEssence = copyOverride?.essence ?? fallback.essence;
+  const rawDetails = copyOverride ? copyOverride.details ?? fallback.details : fallback.details;
+  const essence = normalizeQuestionnaireCopy(rawEssence);
+  const details = rawDetails ? normalizeQuestionnaireCopy(rawDetails) : null;
 
   return {
     title: QUESTIONNAIRE_TITLE_OVERRIDES[kink.id] ?? kink.name,
