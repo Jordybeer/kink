@@ -95,10 +95,12 @@ test("questions route locks the document while sheets keep their own scroll", as
 
   const card = page.locator('[data-tour="kink-card"]');
   await card.getByRole("button", { name: /Info & uitleg/ }).click();
-  const sheetScrollBody = page.getByTestId("sheet-scroll-body");
-  await expect(sheetScrollBody).toBeVisible();
-  await expect(sheetScrollBody).toHaveCSS("overflow-y", "auto");
-  await page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" }).getByRole("button", { name: "Sluit" }).click();
+  const dialog = page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveCSS("touch-action", "auto");
+  const sheetContent = dialog.locator(":scope > div").first();
+  await expect(sheetContent).toHaveCSS("overflow-y", "auto");
+  await dialog.getByRole("button", { name: "Sluit" }).click();
 
   await page.getByRole("link", { name: "Terug" }).click();
   await expect(page).toHaveURL(new RegExp(`/profile/${CUCKOLDING_PROFILE.id}$`));
