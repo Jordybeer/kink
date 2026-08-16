@@ -136,7 +136,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         >
           <HeartBreak size={38} aria-hidden="true" style={{ color: 'var(--text2)' }} />
           <h2
-            className="serif-safe mt-6 text-[2.25rem] leading-tight"
+            className="serif-safe mt-6 text-[clamp(2.05rem,9vw,2.25rem)] leading-tight"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
             Kom terug als je 18 bent.
@@ -156,7 +156,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 {step + 1} / {STEP_COUNT}
               </span>
             </div>
-            <div className="mx-auto mt-4 grid max-w-sm grid-cols-6 gap-1.5" aria-hidden="true">
+            <div className="mx-auto mt-[clamp(0.75rem,2dvh,1rem)] grid max-w-sm grid-cols-6 gap-1.5" aria-hidden="true">
               {Array.from({ length: STEP_COUNT }, (_, index) => (
                 <div
                   key={index}
@@ -168,7 +168,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           </div>
 
           <div
-            className={`min-h-0 overflow-y-auto overscroll-contain px-5 pb-10 ${denseSlide ? 'pt-5' : 'pt-8 sm:pt-10'}`}
+            className={`min-h-0 overflow-y-auto overscroll-contain px-5 pb-[clamp(1.5rem,4dvh,2.5rem)] ${denseSlide ? 'pt-[clamp(1rem,2.5dvh,1.5rem)]' : 'pt-[clamp(1.5rem,4dvh,2.5rem)]'}`}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -203,7 +203,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={t.fast}
-                className="relative z-10 shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+                className="relative z-10 shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[clamp(0.5rem,1.6dvh,0.75rem)]"
                 style={{ background: 'var(--bg)' }}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -283,7 +283,7 @@ function Action({ children, onClick, primary = false, disabled = false, ariaLabe
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="focus-ring flex min-h-[3.25rem] w-full items-center justify-center gap-2 rounded-full border px-5 text-base transition-opacity disabled:cursor-default disabled:opacity-50"
+      className="focus-ring flex min-h-[clamp(3rem,6.2dvh,3.25rem)] w-full items-center justify-center gap-2 rounded-full border px-5 text-base transition-opacity disabled:cursor-default disabled:opacity-50"
       style={primary
         ? { ...primaryButton, borderColor: 'transparent' }
         : { background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text2)' }}
@@ -293,10 +293,47 @@ function Action({ children, onClick, primary = false, disabled = false, ariaLabe
   );
 }
 
+function IconBadge({ children, bordered = false }: { children: React.ReactNode; bordered?: boolean }) {
+  return (
+    <motion.div
+      variants={childV}
+      className="mb-[clamp(1.15rem,2.8dvh,1.5rem)] flex h-[clamp(2.75rem,6dvh,3rem)] w-[clamp(2.75rem,6dvh,3rem)] items-center justify-center rounded-[1.05rem] border"
+      style={{
+        background: 'color-mix(in srgb, var(--accent) 9%, var(--surface2))',
+        borderColor: bordered ? 'var(--border-accent)' : 'color-mix(in srgb, var(--accent) 16%, var(--border))',
+        color: 'var(--accent)',
+        boxShadow: 'inset 0 1px 0 color-mix(in srgb, white 6%, transparent)',
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function FeatureIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border"
+      style={{
+        background: 'color-mix(in srgb, var(--accent) 7%, var(--surface2))',
+        borderColor: 'color-mix(in srgb, var(--accent) 14%, var(--border))',
+        color: 'var(--accent)',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <motion.p variants={childV} className="text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>
-      {children}
+    <motion.p
+      variants={childV}
+      className="flex w-fit min-h-5 items-center gap-2 text-[0.8125rem] font-semibold uppercase tracking-[0.16em]"
+      style={{ color: 'var(--accent)' }}
+    >
+      <span className="h-px w-4 flex-none" aria-hidden="true" style={{ background: 'var(--accent)' }} />
+      <span>{children}</span>
     </motion.p>
   );
 }
@@ -305,8 +342,12 @@ function Title({ children, compact = false }: { children: React.ReactNode; compa
   return (
     <motion.h2
       variants={childV}
-      className={`serif-safe mt-4 leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[2.25rem]'}`}
-      style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+      className={`serif-safe leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
+      style={{
+        fontFamily: "var(--font-display, Georgia, serif)",
+        fontWeight: 500,
+        marginTop: 'clamp(0.875rem, 2.2dvh, 1.25rem)',
+      }}
     >
       {children}
     </motion.h2>
@@ -315,10 +356,10 @@ function Title({ children, compact = false }: { children: React.ReactNode; compa
 
 function Welcome() {
   return (
-    <div className="relative pt-[clamp(3.5rem,8dvh,5.5rem)] text-center">
+    <div className="relative pt-[clamp(3rem,8dvh,5.5rem)] text-center">
       <motion.div aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.2 }} className="pointer-events-none absolute left-1/2 top-1/2 h-48 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: 'var(--accent-glow)' }} />
-      <motion.h1 variants={childV} className="relative text-[3.5rem] leading-none"><Wordmark /></motion.h1>
-      <motion.p variants={childV} className="relative mx-auto mt-9 max-w-xs text-xl font-medium leading-8">Ontdek waar je voor openstaat.</motion.p>
+      <motion.h1 variants={childV} className="relative text-[clamp(3rem,14vw,3.5rem)] leading-none"><Wordmark /></motion.h1>
+      <motion.p variants={childV} className="relative mx-auto mt-[clamp(1.75rem,4.5dvh,2.25rem)] max-w-xs text-xl font-medium leading-8">Ontdek waar je voor openstaat.</motion.p>
       <motion.p variants={childV} className="relative mx-auto mt-5 max-w-xs text-base leading-7" style={{ color: 'var(--text2)' }}>
         Wat je graag doet.<br />
         Wat je misschien eens wilt proberen.<br />
@@ -331,11 +372,11 @@ function Welcome() {
 
 function AgeGate() {
   return (
-    <div className="pt-5">
-      <motion.div variants={childV} className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}><ShieldWarning size={24} aria-hidden="true" /></motion.div>
+    <div className="pt-[clamp(0.75rem,2.5dvh,1.25rem)]">
+      <IconBadge><ShieldWarning size={24} weight="duotone" aria-hidden="true" /></IconBadge>
       <Eyebrow>Voor we beginnen</Eyebrow>
       <Title>18+?</Title>
-      <motion.p variants={childV} className="mt-7 text-lg leading-8" style={{ color: 'var(--text2)' }}>KinkSync gaat openlijk over BDSM, seks, fantasieën, verlangens en grenzen.</motion.p>
+      <motion.p variants={childV} className="mt-[clamp(1.5rem,3.5dvh,1.75rem)] text-lg leading-8" style={{ color: 'var(--text2)' }}>KinkSync gaat openlijk over BDSM, seks, fantasieën, verlangens en grenzen.</motion.p>
       <motion.p variants={childV} className="mt-5 text-base leading-7" style={{ color: 'var(--text2)' }}>Daar hoef je hier niet omheen te draaien.</motion.p>
       <motion.p variants={childV} className="mt-5 text-base font-semibold leading-7">Je moet wel 18 of ouder zijn.</motion.p>
     </div>
@@ -352,14 +393,17 @@ const statuses = [
 
 function Discover() {
   return (
-    <div className="pt-2">
+    <div className="pt-[clamp(0.25rem,1dvh,0.75rem)]">
       <Eyebrow>Jouw profiel</Eyebrow>
       <Title>Hoe klinkt dit voor jou?</Title>
       <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>Sommige dingen weet je meteen.<br />Bij andere wil je misschien eerst weten wat er precies bedoeld wordt.</motion.p>
       <motion.div variants={childV} className="mt-7 overflow-hidden rounded-2xl border px-5 py-6" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <div className="flex items-center gap-3"><Sparkle size={20} aria-hidden="true" style={{ color: 'var(--accent)' }} /><span className="text-base font-semibold">Waar sta jij?</span></div>
+        <div className="flex items-center gap-3">
+          <FeatureIcon><Sparkle size={18} weight="duotone" aria-hidden="true" /></FeatureIcon>
+          <span className="text-base font-semibold">Waar sta jij?</span>
+        </div>
         <div className="mt-5 flex flex-wrap gap-2.5">
-          {statuses.map(([label, color]) => <span key={label} className="rounded-full border px-3 py-1.5 text-[13px] font-medium" style={{ borderColor: `color-mix(in srgb, ${color} 45%, var(--border))`, color }}>{label}</span>)}
+          {statuses.map(([label, color]) => <span key={label} className="rounded-full border px-3 py-1.5 text-[0.8125rem] font-medium" style={{ borderColor: `color-mix(in srgb, ${color} 45%, var(--border))`, color }}>{label}</span>)}
         </div>
       </motion.div>
       <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>Geen goed of fout.<br />Geen score voor hoe kinky je bent.</motion.p>
@@ -370,13 +414,13 @@ function Discover() {
 
 function Together() {
   return (
-    <div>
+    <div className="pt-[clamp(0.25rem,1dvh,0.75rem)]">
       <Eyebrow>Samen</Eyebrow>
       <Title compact>Leg jullie kaarten op tafel.</Title>
       <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>Misschien weten jullie al precies waar jullie samen van genieten.<br />Maar er is altijd iets dat nog niet ter sprake kwam.</motion.p>
       <motion.div variants={childV} className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl border px-4 py-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <div className="rounded-xl px-3 py-3.5 text-center text-sm font-semibold" style={{ background: 'var(--surface2)' }}>Jij</div>
-        <UsersThree size={21} aria-hidden="true" style={{ color: 'var(--accent)' }} />
+        <FeatureIcon><UsersThree size={19} weight="duotone" aria-hidden="true" /></FeatureIcon>
         <div className="rounded-xl px-3 py-3.5 text-center text-sm font-semibold" style={{ background: 'var(--surface2)' }}>De ander</div>
       </motion.div>
       <motion.p variants={childV} className="mt-5 text-base leading-[1.65]" style={{ color: 'var(--text2)' }}>Leg jullie profielen naast elkaar en ontdek wat jullie delen.<br />En waar jullie nét anders in staan.</motion.p>
@@ -391,18 +435,18 @@ function Together() {
 
 function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
   return (
-    <div>
+    <div className="pt-[clamp(0.25rem,1dvh,0.75rem)]">
       <Eyebrow>Privé</Eyebrow>
       <Title compact>Niet voor iedere pottenkijker.</Title>
       <motion.p variants={childV} className="mt-5 text-base leading-[1.65]">Al jouw data blijft standaard op jouw toestel.<span className="mt-2 block font-semibold" style={{ color: 'var(--accent)' }}>Volledig offline. Privacy voorop.</span></motion.p>
       <motion.div variants={childV} className="mt-5 rounded-2xl border px-4 py-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <div className="flex items-start gap-3.5">
-          <Lock size={21} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
+          <FeatureIcon><Lock size={18} weight="duotone" aria-hidden="true" /></FeatureIcon>
           <div><p className="text-base font-semibold">Lokaal, zonder account</p><p className="mt-2 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>Geen centrale database.<br />Geen stille synchronisatie.</p></div>
         </div>
         <div className="my-4 h-px" style={{ background: 'var(--border)' }} />
         <div className="flex items-start gap-3.5">
-          <QrCode size={21} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: 'var(--accent)' }} />
+          <FeatureIcon><QrCode size={18} weight="duotone" aria-hidden="true" /></FeatureIcon>
           <div><p className="text-base font-semibold">Delen wanneer jij dat wilt</p><p className="mt-2 text-[15px] leading-6" style={{ color: 'var(--text2)' }}>Via QR, link, export of reservekopie.<br />Jij kiest wat vertrekt.</p></div>
         </div>
       </motion.div>
@@ -415,10 +459,10 @@ function Pin({ sub, digits, shake, onKey }: { sub: 'pin1' | 'pin2'; digits: stri
   const t = useMotionSafe();
 
   return (
-    <div className="mx-auto max-w-[19rem] pt-4 text-center">
+    <div className="mx-auto max-w-[19rem] pt-[clamp(0.75rem,2dvh,1rem)] text-center">
       <Title compact>{sub === 'pin1' ? 'Hou nieuwsgierige vingers buiten.' : 'Nog één keer.'}</Title>
       <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>{sub === 'pin1' ? <>Vier cijfers.<br />Hou ze voor jezelf.</> : 'Dezelfde vier cijfers.'}</motion.p>
-      <motion.div variants={childV} animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake && !t.reduced ? SHAKE_ANIM : t.fast} className="my-8 flex justify-center gap-4">
+      <motion.div variants={childV} animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake && !t.reduced ? SHAKE_ANIM : t.fast} className="my-[clamp(1.5rem,4dvh,2rem)] flex justify-center gap-4">
         {Array.from({ length: PIN_LENGTH }, (_, index) => <div key={index} className="h-3.5 w-3.5 rounded-full" style={{ background: index < digits.length ? 'var(--accent)' : 'var(--border)' }} />)}
       </motion.div>
       <motion.div variants={childV} className="grid grid-cols-3 gap-2.5">
@@ -430,11 +474,11 @@ function Pin({ sub, digits, shake, onKey }: { sub: 'pin1' | 'pin2'; digits: stri
 
 function Biometric({ bioError }: { bioError: string | null }) {
   return (
-    <div className="pt-5">
-      <motion.div variants={childV} className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'var(--surface2)', color: 'var(--accent)' }}><Fingerprint size={24} aria-hidden="true" /></motion.div>
+    <div className="pt-[clamp(0.75rem,2.5dvh,1.25rem)]">
+      <IconBadge><Fingerprint size={24} weight="duotone" aria-hidden="true" /></IconBadge>
       <Eyebrow>Extra slot</Eyebrow>
       <Title compact>Liever met één blik naar binnen?</Title>
-      <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>Gebruik Face ID of je vingerafdruk.<br />Je PIN blijft altijd achter de hand.</motion.p>
+      <motion.p variants={childV} className="mt-[clamp(1.5rem,3.5dvh,1.75rem)] text-base leading-7" style={{ color: 'var(--text2)' }}>Gebruik Face ID of je vingerafdruk.<br />Je PIN blijft altijd achter de hand.</motion.p>
       {bioError && <motion.p variants={childV} className="mt-6 whitespace-pre-line text-base leading-7" style={{ color: 'var(--hard-no)' }}>{bioError}</motion.p>}
     </div>
   );
@@ -442,11 +486,11 @@ function Biometric({ bioError }: { bioError: string | null }) {
 
 function Finale({ onComplete }: { onComplete: () => void }) {
   return (
-    <div className="pt-[clamp(1.25rem,4dvh,2.75rem)]">
-      <motion.div variants={childV} className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: 'color-mix(in srgb, var(--accent) 12%, var(--surface2))', color: 'var(--accent)', border: '1px solid var(--border-accent)' }}><Lock size={24} weight="bold" aria-hidden="true" /></motion.div>
-      <motion.h2 variants={childV} className="serif-safe mt-7 text-[2.5rem] leading-[1.05]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>Genoeg voorspel.</motion.h2>
-      <motion.p variants={childV} className="mt-5 text-xl font-medium leading-8">Nu is de beurt aan jou.</motion.p>
-      <motion.div variants={childV} className="mt-8">
+    <div className="pt-[clamp(1rem,3.5dvh,2.5rem)]">
+      <IconBadge bordered><Lock size={24} weight="duotone" aria-hidden="true" /></IconBadge>
+      <motion.h2 variants={childV} className="serif-safe mt-[clamp(1.25rem,3dvh,1.75rem)] text-[clamp(2.2rem,9.5vw,2.5rem)] leading-[1.05]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>Genoeg voorspel.</motion.h2>
+      <motion.p variants={childV} className="mt-[clamp(1rem,2.4dvh,1.25rem)] text-xl font-medium leading-8">Nu is de beurt aan jou.</motion.p>
+      <motion.div variants={childV} className="mt-[clamp(1.5rem,4dvh,2rem)]">
         <TurnDial onComplete={onComplete} />
       </motion.div>
     </div>
