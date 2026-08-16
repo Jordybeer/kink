@@ -1,17 +1,20 @@
 "use client";
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Check, LockKeyOpen } from "@phosphor-icons/react";
+import { useReducedMotion } from "framer-motion";
+import { LockKey, LockKeyOpen } from "@phosphor-icons/react";
 
 interface TurnDialProps {
   onComplete: () => void;
 }
 
 const END_ROTATION = 94;
-const COMPLETE_AT = 84;
+const COMPLETE_AT = 78;
 const DETENT_DEGREES = 15;
-const MIN_GESTURE_MS = 420;
-const MIN_TRAVEL_PX = 72;
+const MIN_GESTURE_MS = 320;
+const MIN_TRAVEL_PX = 56;
+const TRACK_RADIUS = 44;
+const TRACK_CIRCUMFERENCE = 2 * Math.PI * TRACK_RADIUS;
 
 function pointAngle(element: HTMLElement, clientX: number, clientY: number) {
   const bounds = element.getBoundingClientRect();
@@ -34,6 +37,7 @@ function vibrate(pattern: number | number[]) {
 }
 
 export default function TurnDial({ onComplete }: TurnDialProps) {
+  const reduceMotion = useReducedMotion() ?? false;
   const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -45,6 +49,9 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
   const travelRef = useRef(0);
   const previousPointRef = useRef<{ x: number; y: number } | null>(null);
   const completingRef = useRef(false);
+
+  const progress = Math.min(rotation / END_ROTATION, 1);
+  const progressOffset = TRACK_CIRCUMFERENCE * (1 - progress);
 
   function applyRotation(next: number, withFeedback = false) {
     rotationRef.current = next;
@@ -66,8 +73,8 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
     setArmed(true);
     setDone(true);
     applyRotation(END_ROTATION);
-    vibrate([16, 20, 28]);
-    window.setTimeout(onComplete, 320);
+    vibrate([12, 18, 30]);
+    window.setTimeout(onComplete, reduceMotion ? 0 : 360);
   }
 
   function resetGesture() {
@@ -140,21 +147,12 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
   }
 
   return (
-    <div
-      className="mx-auto mt-5 flex w-full max-w-[18rem] flex-col items-center rounded-[1.75rem] px-5 py-5"
-      style={{
-        background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
-        border: `1px solid ${armed || done ? "var(--accent)" : "var(--border-accent)"}`,
-        boxShadow: armed || done
-          ? "0 18px 54px color-mix(in srgb, var(--accent) 20%, transparent)"
-          : "0 18px 54px rgba(0,0,0,0.16)",
-        transition: "border-color 180ms ease, box-shadow 180ms ease",
-      }}
-    >
+    <div className="mx-auto mt-[clamp(0.75rem,2dvh,1rem)] flex w-full max-w-[19rem] flex-col items-center px-2 py-1">
       <button
         type="button"
         aria-label="Draai open en ga naar KinkSync"
         aria-describedby="onboarding-turn-dial-hint"
+        data-testid="onboarding-turn-dial"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={finishPointer}
@@ -163,30 +161,70 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
           // Keyboard and assistive-technology activation remain a deliberate fallback.
           if (event.detail === 0 && !done) complete();
         }}
-        className="focus-ring relative flex h-36 w-36 touch-none select-none items-center justify-center rounded-full"
+        className="focus-ring relative flex h-[clamp(8.25rem,21dvh,9.5rem)] w-[clamp(8.25rem,21dvh,9.5rem)] touch-none select-none items-center justify-center rounded-full border"
         style={{
           background: "radial-gradient(circle at 36% 30%, var(--surface), var(--surface2) 54%, var(--surface3))",
-          border: "1px solid var(--border-accent)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(0,0,0,0.28)",
+          borderColor: armed || done ? "var(--accent)" : "var(--border-accent)",
+          boxShadow: done
+            ? "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent), 0 18px 44px color-mix(in srgb, var(--accent) 22%, transparent)"
+            : armed
+              ? "inset 0 1px 0 rgba(255,255,255,0.09), 0 14px 38px color-mix(in srgb, var(--accent) 16%, transparent)"
+              : "inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(0,0,0,0.28)",
           cursor: dragging ? "grabbing" : "grab",
+          transition: reduceMotion ? "none" : "border-color 180ms ease, box-shadow 220ms ease",
         }}
       >
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-1.5 h-[calc(100%-0.75rem)] w-[calc(100%-0.75rem)] -rotate-90"
+          viewBox="0 0 100 100"
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r={TRACK_RADIUS}
+            fill="none"
+            strokeWidth="1.25"
+            style={{ stroke: "color-mix(in srgb, var(--text2) 28%, transparent)" }}
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={TRACK_RADIUS}
+            fill="none"
+            strokeWidth="2.25"
+            strokeLinecap="round"
+            strokeDasharray={TRACK_CIRCUMFERENCE}
+            strokeDashoffset={progressOffset}
+            style={{
+              stroke: "var(--accent)",
+              opacity: done ? 1 : armed ? 0.92 : 0.62,
+              transition: dragging || reduceMotion ? "none" : "stroke-dashoffset 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease",
+            }}
+          />
+        </svg>
+
         <span
           aria-hidden="true"
-          className="absolute inset-2 rounded-full"
-          style={{ border: "1px dashed color-mix(in srgb, var(--text2) 42%, transparent)" }}
+          className="absolute left-1/2 top-1.5 h-2.5 w-1 -translate-x-1/2 rounded-full"
+          style={{ background: "color-mix(in srgb, var(--text2) 62%, transparent)" }}
         />
         <span
           aria-hidden="true"
-          className="absolute left-1/2 top-2.5 h-3 w-1 -translate-x-1/2 rounded-full"
-          style={{ background: "var(--accent)" }}
+          className="absolute right-1.5 top-1/2 h-1 w-3 -translate-y-1/2 rounded-full"
+          style={{
+            background: "var(--accent)",
+            boxShadow: armed || done ? "0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent)" : "none",
+            transition: reduceMotion ? "none" : "box-shadow 180ms ease",
+          }}
         />
+
         <span
           aria-hidden="true"
-          className="absolute flex h-[6.25rem] w-[6.25rem] items-start justify-center rounded-full pt-2.5"
+          className="absolute inset-[16%] flex items-start justify-center rounded-full pt-1.5"
           style={{
             transform: `rotate(${rotation}deg)`,
-            transition: dragging ? "none" : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
+            transition: dragging || reduceMotion ? "none" : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
           <span
@@ -194,29 +232,37 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
             style={{
               background: armed || done ? "var(--accent)" : "var(--text2)",
               boxShadow: armed || done ? "0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent)" : "none",
+              transition: reduceMotion ? "none" : "background 160ms ease, box-shadow 160ms ease",
             }}
           />
         </span>
+
         <span
           aria-hidden="true"
-          className="relative z-10 flex h-[4.6rem] w-[4.6rem] items-center justify-center rounded-full"
+          className="relative z-10 flex h-[52%] w-[52%] items-center justify-center rounded-full"
           style={{
             background: done ? "var(--accent)" : "var(--surface)",
-            color: done ? "var(--on-accent)" : "var(--text)",
-            border: "1px solid var(--border)",
+            color: done ? "var(--on-accent)" : armed ? "var(--accent)" : "var(--text)",
+            border: `1px solid ${done ? "var(--accent)" : "var(--border)"}`,
+            boxShadow: done
+              ? "inset 0 -5px 14px color-mix(in srgb, black 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.16)"
+              : "inset 0 1px 0 rgba(255,255,255,0.06)",
+            transform: !reduceMotion && done ? "scale(0.94)" : !reduceMotion && armed ? "scale(1.035)" : "scale(1)",
+            transition: reduceMotion ? "none" : "background 180ms ease, color 180ms ease, border-color 180ms ease, transform 150ms ease, box-shadow 180ms ease",
           }}
         >
           {done
-            ? <Check size={28} weight="bold" />
-            : <LockKeyOpen size={27} weight="duotone" />}
+            ? <LockKeyOpen size={29} weight="duotone" />
+            : <LockKey size={28} weight="duotone" />}
         </span>
       </button>
 
-      <p id="onboarding-turn-dial-hint" className="mt-3 text-center text-sm font-semibold" style={{ color: "var(--text)" }}>
-        {done ? "Open." : armed ? "Loslaten om te openen" : "Draai tot de stip"}
-      </p>
-      <p className="mt-1 text-center text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-        Draai een kwartslag met de klok mee.
+      <p
+        id="onboarding-turn-dial-hint"
+        className="mt-[clamp(0.75rem,1.8dvh,1rem)] min-h-5 text-center text-sm font-semibold"
+        style={{ color: done || armed ? "var(--text)" : "var(--text2)" }}
+      >
+        {done ? "Open." : armed ? "Loslaten om te openen" : "Draai met de klok mee"}
       </p>
     </div>
   );
