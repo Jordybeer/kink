@@ -10,6 +10,15 @@ const PROFILE: Profile = {
   questionnaireSetup: { mode: "dynamic", interests: [], version: 2 },
 };
 
+const DENSE_PROFILE: Profile = {
+  ...PROFILE,
+  id: "pw-profile-dense-share",
+  name: "Dense share",
+  entries: Object.fromEntries(
+    KINKS.map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }]),
+  ),
+};
+
 test("profile keeps catalog search and category filtering available from Overview without duplicate answer help", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
@@ -31,14 +40,7 @@ test("profile keeps catalog search and category filtering available from Overvie
 });
 
 test("profile completion card avoids coverage jargon and percentage metrics", async ({ page }) => {
-  const complete: Profile = {
-    ...PROFILE,
-    id: "pw-profile-complete",
-    entries: Object.fromEntries(
-      KINKS.map((kink) => [kink.id, { status: "maybe" as const, score: null, comment: "" }]),
-    ),
-  };
-  await seedAndGo(page, `/profile/${complete.id}`, [complete]);
+  await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
   const continueCard = page.getByRole("link", { name: /Verder ontdekken/ });
   await expect(continueCard).toBeVisible();
@@ -47,14 +49,15 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).not.toContainText(/100%/);
 });
 
-test("normal profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {
+test("dense profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
+  await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
   await page.getByRole("button", { name: "Profiel delen" }).click();
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByTestId("profile-share-qr")).toBeVisible({ timeout: 15_000 });
+  await expect(dialog.getByText(/Profiel QR \d+ van \d+/)).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Kopieer volledige link" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Sluit" })).toBeVisible();
 
