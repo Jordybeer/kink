@@ -240,7 +240,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   async function downloadPdf() {
-    const { doc, filename } = buildProfilePdf(currentProfile, exportMaxLevel, {
+    const { doc, filename } = await buildProfilePdf(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
     });
     doc.save(filename);
