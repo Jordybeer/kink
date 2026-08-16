@@ -31,7 +31,7 @@ describe("questionnaire presentation", () => {
     }
   });
 
-  it("gives cuckolding a concise decision surface and keeps depth available", () => {
+  it("gives cuckolding one coherent decision surface and continuation", () => {
     const kink = KINKS.find((candidate) => candidate.id === "cuckolding");
     expect(kink).toBeDefined();
 
@@ -41,7 +41,19 @@ describe("questionnaire presentation", () => {
       "Een afgesproken scenario waarin jij weet of ziet dat je partner seks heeft met een instemmende derde.",
     );
     expect(presentation.hasDetails).toBe(true);
-    expect(presentation.details).toContain("specifieke cuckolding-dynamiek");
+    expect(presentation.details).toBe("De specifieke cuckolding-dynamiek wordt daarbij expliciet benoemd.");
+  });
+
+  it("continues after the visible first sentence instead of replaying the full description", () => {
+    const kink = KINKS.find((candidate) => candidate.id === "spanking_hand_give");
+    expect(kink).toBeDefined();
+
+    const presentation = getQuestionnairePresentation(kink!);
+    expect(presentation.essence).toBe("Een partner met de hand op het zitvlak slaan als afgesproken impactspel.");
+    expect(presentation.details).toBe(
+      "Stem intensiteit, zones en stopmomenten vooraf af zonder een vaste rol te veronderstellen.",
+    );
+    expect(presentation.details).not.toContain(presentation.essence);
   });
 
   it("does not manufacture depth when a complete one-sentence essence already suffices", () => {
