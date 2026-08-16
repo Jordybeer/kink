@@ -340,16 +340,18 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 function Title({ children, compact = false }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <motion.h2
-      variants={childV}
-      className={`serif-safe mt-[clamp(0.875rem,2.2dvh,1.25rem)] leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
-      style={{
-        fontFamily: "var(--font-display, Georgia, serif)",
-        fontWeight: 500,
-      }}
-    >
-      {children}
-    </motion.h2>
+    <motion.div variants={childV}>
+      <h2
+        className={`serif-safe leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
+        style={{
+          marginTop: 'clamp(0.875rem, 2.2dvh, 1.25rem)',
+          fontFamily: "var(--font-display, Georgia, serif)",
+          fontWeight: 500,
+        }}
+      >
+        {children}
+      </h2>
+    </motion.div>
   );
 }
 
