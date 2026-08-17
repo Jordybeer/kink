@@ -299,7 +299,7 @@ export async function buildContractPdf(inputs: ContractPdfInputs): Promise<{ doc
   doc.setFontSize(9);
   doc.setTextColor(...ink);
   const clauses = [
-    "Safeword stopt alles — altijd en zonder uitleg.",
+    "Safeword stopt alles, altijd en zonder uitleg.",
     "Aftercare is geen optie, maar een afspraak.",
     "Dit contract kan op elk moment door beiden worden herzien.",
     "Grenzen die hier niet staan, worden voor elke scène besproken.",

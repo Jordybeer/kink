@@ -130,7 +130,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
             >
               <h2 className="text-base font-bold">Backup versleutelen</h2>
               <div className="rounded-xl p-4 text-sm flex flex-col gap-3" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
-                <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen — informatie die niemand anders mag zien.</p>
+                <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen: informatie die niemand anders mag zien.</p>
                 <p>De versleutelde backup bevat ook de private eigendomssleutels van je profielen. Wie zowel dit bestand als het wachtwoord bezit, kan nieuwe profielversies ondertekenen alsof die van jouw lokale profielbron komen.</p>
                 <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="font-semibold flex items-start gap-1.5" style={{ color: "var(--hard-no)" }}><Warning size={16} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" /><span>Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</span></p>
@@ -263,7 +263,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
 
       if (!Array.isArray(parsed.profiles)) {
         handleClose();
-        onError("Ongeldig backupbestand — geen profielen gevonden.");
+        onError("Ongeldig backupbestand: geen profielen gevonden.");
         return;
       }
 

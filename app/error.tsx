@@ -36,7 +36,7 @@ export default function Error({
             Deze pagina liep vast.
           </h1>
           <p className={styles.description}>
-            Niet jouw schuld — er ging hier iets onverwachts mis. Opnieuw proberen helpt meestal.
+            Niet jouw schuld. Er ging hier iets onverwachts mis. Opnieuw proberen helpt meestal.
           </p>
 
           <div className={styles.actions}>

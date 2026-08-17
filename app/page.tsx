@@ -158,7 +158,7 @@ function HomeContent() {
       const { prepareBackupRestore } = await import("@/lib/backupRestore");
       const prepared = await prepareBackupRestore(parsed);
       if (!prepared.profiles.length && !prepared.contracts.length) {
-        setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+        setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
         return;
       }
       if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
@@ -168,7 +168,7 @@ function HomeContent() {
         `${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`,
       );
     } catch {
-      setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+      setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
     }
   }
 

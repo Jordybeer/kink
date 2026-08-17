@@ -111,7 +111,7 @@ function ContractGate({
           style={{ color: "var(--text2)", lineHeight: 1.65 }}
         >
           Elke scène begint met toestemming. Een verbond legt jullie grenzen,
-          verlangens en safewords vast — zodat wat je speelt bewust en veilig is
+          verlangens en safewords vast, zodat wat je speelt bewust en veilig is
           voor beiden.
         </p>
         <p
@@ -119,7 +119,7 @@ function ContractGate({
           style={{ color: "var(--text2)", lineHeight: 1.65 }}
         >
           Spelen zonder afspraken is spelen in het donker. Het verbond is geen
-          formaliteit — het is de fundering waarop vertrouwen en overgave kunnen
+          formaliteit. Het is de fundering waarop vertrouwen en overgave kunnen
           bestaan. Kies hieronder twee profielen en maak eerst een verbond aan.
         </p>
 
@@ -641,7 +641,7 @@ function ScenePage() {
         {/* Profile hint */}
         {!profileA && !profileB && !sceneIdParam && (
           <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-            <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties — of voeg items handmatig toe.</p>
+            <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties, of voeg items handmatig toe.</p>
             <Link href="/compare" className="inline-flex items-center gap-1" style={{ color: "var(--accent)" }}><ArrowRight size={13} aria-hidden="true" />Profielen kiezen via Vergelijk</Link>
           </div>
         )}

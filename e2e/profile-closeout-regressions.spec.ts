@@ -55,7 +55,7 @@ test("empty profile keeps the full catalog searchable from Edit", async ({ page 
   const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
   await expect(search).toBeVisible();
   await search.fill("spanking");
-  await expect(page.locator('button[aria-label*="spanking" i][aria-label*="— bewerken"]').first()).toBeVisible();
+  await expect(page.locator('button[aria-label*="spanking" i][aria-label*=", bewerken"]').first()).toBeVisible();
 });
 
 test("profile completion card avoids coverage jargon and percentage metrics", async ({ page }) => {

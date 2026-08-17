@@ -75,7 +75,7 @@ function TimelinePage() {
         <div className="rounded-xl p-6 text-center flex flex-col gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <p className="text-sm font-medium">Nog geen contracten</p>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
-            Leg een moment vast met een contract — dan zie je hier hoe jullie afspraken zich ontwikkelen.
+            Leg een moment vast met een contract, dan zie je hier hoe jullie afspraken zich ontwikkelen.
           </p>
           <Link
             href={`/contract?a=${aId}&b=${bId}`}

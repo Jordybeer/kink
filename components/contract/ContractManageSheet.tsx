@@ -282,7 +282,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
               )}
               <label className="mt-4 block">
                 <span className="text-xs font-medium" style={{ color: "var(--text2)" }}>
-                  Notitie bij deze wijziging — optioneel
+                  Notitie bij deze wijziging (optioneel)
                 </span>
                 <textarea
                   value={note}

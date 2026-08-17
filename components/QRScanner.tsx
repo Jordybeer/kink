@@ -250,9 +250,9 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           {bundleProgress
             ? bundleProgress.profileComplete
               ? "Profiel ontvangen"
-              : `Profiel scannen — ${bundleProgress.profileReceived} van ${bundleProgress.profileTotal || "…"}`
+              : `Profiel scannen: ${bundleProgress.profileReceived} van ${bundleProgress.profileTotal || "…"}`
             : assembly
-              ? `Scan verder — ${received} van ${assembly.total}`
+              ? `Scan verder: ${received} van ${assembly.total}`
               : showPaste ? "Plak link of code" : "Scan QR-code"}
         </h2>
 

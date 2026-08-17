@@ -129,9 +129,9 @@ function SceneCard({
 }
 
 const SECTION_INVITES: Record<string, string> = {
-  planned:   "Niets gepland — kies een moment en zet het vast.",
-  drafts:    "Geen concepten — half afgemaakte ideeën wachten hier.",
-  completed: "Nog niets afgerond — na het spelen leeft de scène hier verder.",
+  planned:   "Niets gepland. Kies een moment en zet het vast.",
+  drafts:    "Geen concepten. Half afgemaakte ideeën wachten hier.",
+  completed: "Nog niets afgerond. Na het spelen leeft de scène hier verder.",
 };
 
 function EmptySection({ invite }: { invite: string }) {

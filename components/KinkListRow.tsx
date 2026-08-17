@@ -22,7 +22,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
   return (
     <button
       onClick={onOpen}
-      aria-label={`${kink.name}, ${status ? STATUS_LABEL[status] : "nog niet beoordeeld"}${tagSpeech ? `, ${tagSpeech}` : ""} — bewerken`}
+      aria-label={`${kink.name}, ${status ? STATUS_LABEL[status] : "nog niet beoordeeld"}${tagSpeech ? `, ${tagSpeech}` : ""}, bewerken`}
       className="focus-ring w-full min-h-12 rounded-xl mb-1 px-3 py-2.5 flex items-center gap-2 text-left transition-colors"
       style={{
         background: status

@@ -166,6 +166,38 @@ Niet zonder reden:
 
 De toon mag speels, warm of licht provocerend zijn waar dat past, zolang betekenis en consent nooit ambigu worden.
 
+### Geen gedachtestreepjes in interface-copy
+
+De em-dash en de en-dash horen niet in zichtbare copy. Geen `—`, geen `–`.
+
+Een gedachtestreepje is een uitstelteken: het hangt een bijzin achter een zin die
+al af was. In gesproken taal doet niemand dat. Het leest bovendien machinaal,
+precies de toon die KinkSync niet wil.
+
+Schrijf in plaats daarvan twee zinnen, of gebruik een komma of dubbele punt:
+
+Wel:
+
+**“Niets gepland. Kies een moment en zet het vast.”**
+
+**“Ongeldig bestand: geen geldige profielen gevonden.”**
+
+Niet:
+
+**“Niets gepland — kies een moment en zet het vast.”**
+
+Dit geldt voor alles wat een gebruiker leest: knoppen, labels, lege staten,
+toasts, sheets, foutmeldingen, uitleg, PDF- en exporttekst. Het geldt níét voor
+code, comments, documentatie of commitberichten, en niet voor het koppelteken in
+gewone samenstellingen zoals `back-up` of `check-in`.
+
+Eén uitzondering, bewust: een streepje dat in een samengestelde **naam** twee
+vaste delen scheidt is geen uitstelteken maar een naamconventie. De catalogus
+gebruikt die vorm voor geef- en ontvangvarianten (`Rope bondage — tying`,
+`Spanking (hand) — giving`). Die blijven zoals ze zijn. Wil je die conventie
+veranderen, behandel dat dan als een naamgevingsbeslissing met eigen gevolgen
+voor compare, PDF-export en tests, niet als interpunctie-opruiming.
+
 ---
 
 ## 10. Consent and limits deserve clarity, not alarm

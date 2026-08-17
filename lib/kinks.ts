@@ -523,7 +523,7 @@ export const KINKS: CatalogKink[] = [
     name: "Consensual non-consent (CNC)",
     category: "roleplay",
     level: 3,
-    description: "Consensuele non-consent — spelen met de fantasie van gedwongen seks, terwijl alles vooraf afgesproken is. Vereist intensieve voorbereiding en duidelijke safewords.",
+    description: "Consensuele non-consent: spelen met de fantasie van gedwongen seks, terwijl alles vooraf afgesproken is. Vereist intensieve voorbereiding en duidelijke safewords.",
   },
   {
     id: "interrogation",
@@ -623,7 +623,7 @@ export const KINKS: CatalogKink[] = [
     name: "Pinching",
     category: "sensation",
     level: 2,
-    description: "Knijpen van huid voor scherpe, gelokaliseerde pijn — vingers, nagels of een tang. Eenvoudig maar intens. Communiceer over voorkeurzones en intensiteit.",
+    description: "Knijpen van huid voor scherpe, gelokaliseerde pijn: vingers, nagels of een tang. Eenvoudig maar intens. Communiceer over voorkeurzones en intensiteit.",
   },
   {
     id: "scratching",
@@ -1087,7 +1087,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Leren kleding dragen"],
     category: "appearance",
     level: 2,
-    description: "Leer als kledingmateriaal dragen — broeken, bustiers, harnasen. Combinatie van esthetiek en fetish.",
+    description: "Leer als kledingmateriaal dragen: broeken, bustiers, harnasen. Combinatie van esthetiek en fetish.",
   },
   {
     id: "rubber_latex_kleding",
@@ -1242,21 +1242,21 @@ export const KINKS: CatalogKink[] = [
     name: "Puppyplay",
     category: "pet_play",
     level: 2,
-    description: "De rol van een hond aannemen — gedrag, geluiden en interacties. Vereist duidelijke in/out-scene cues en communicatie over grenzen.",
+    description: "De rol van een hond aannemen: gedrag, geluiden en interacties. Vereist duidelijke in/out-scene cues en communicatie over grenzen.",
   },
   {
     id: "petplay_kitten",
     name: "Kittenplay",
     category: "pet_play",
     level: 2,
-    description: "De rol van een kat aannemen — sierlijk, speels, soms weerbarstig. Populair in het BDSM-spectrum voor zijn combinatie van schattigheid en zelfstandigheid.",
+    description: "De rol van een kat aannemen: sierlijk, speels, soms weerbarstig. Populair in het BDSM-spectrum voor zijn combinatie van schattigheid en zelfstandigheid.",
   },
   {
     id: "petplay_pony",
     name: "Ponyplay",
     category: "pet_play",
     level: 2,
-    description: "De rol van een paard aannemen — rijden, africhten, optredens. Kan uitgebreide uitrusting omvatten (bit, zweep, tuig).",
+    description: "De rol van een paard aannemen: rijden, africhten, optredens. Kan uitgebreide uitrusting omvatten (bit, zweep, tuig).",
   },
   {
     id: "petplay_harnas",
@@ -1304,7 +1304,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Vossenstaart / dierstaart butt plug"],
     category: "pet_play",
     level: 3,
-    description: "Een dierstaart dragen via een butt plug — vos, kat, hond. Combineert anaal spel met pet play-esthetiek. Gebruik altijd een plug met brede voet.",
+    description: "Een dierstaart dragen via een butt plug: vos, kat, hond. Combineert anaal spel met pet play-esthetiek. Gebruik altijd een plug met brede voet.",
   },
   {
     id: "petplay_kooi",
@@ -1528,7 +1528,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Rituelen en dagelijkse protocollen"],
     category: "rituals",
     level: 2,
-    description: "Vaste rituelen en protocollen in de D/s-relatie — aanspreekvorm, houding, dagelijkse taken. Structuur als fundament van de dynamiek.",
+    description: "Vaste rituelen en protocollen in de D/s-relatie: aanspreekvorm, houding, dagelijkse taken. Structuur als fundament van de dynamiek.",
   },
   {
     id: "straf_standjes",
@@ -1552,7 +1552,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Oogcontact beperkingen"],
     category: "power",
     level: 2,
-    description: "Regels rond oogcontact — vermijden, zoeken, of enkel op toestemming. Subtiel maar impactvol D/s-element.",
+    description: "Regels rond oogcontact: vermijden, zoeken, of enkel op toestemming. Subtiel maar impactvol D/s-element.",
   },
   {
     id: "dienen_als_meubel",
@@ -1560,7 +1560,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Dienen als meubel (furniture play)"],
     category: "power",
     level: 3,
-    description: "De sub fungeert als levend meubel — voetenbankje, tafel, kapstok. Vergaande objectificatie met strikte communicatieafspraken.",
+    description: "De sub fungeert als levend meubel: voetenbankje, tafel, kapstok. Vergaande objectificatie met strikte communicatieafspraken.",
   },
   {
     id: "badkamer_controle",
@@ -1685,7 +1685,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Violet Wand (niet intiem)"],
     category: "sensation",
     level: 2,
-    description: "Violet wand op armen, rug, benen — een elektrisch tintelende staf. Veilig als je pacemakers/metalen implantaten uitsluit. Vermijd hoofd en hart.",
+    description: "Violet wand op armen, rug, benen: een elektrisch tintelende staf. Veilig als je pacemakers/metalen implantaten uitsluit. Vermijd hoofd en hart.",
     safetyNote: "Gebruik alleen een intact, daarvoor ontworpen apparaat volgens de fabrikant. Vermijd hals, hoofd, beschadigde huid en gebruik bij een elektronisch implantaat zonder medische toestemming.",
   },
   {
@@ -1694,7 +1694,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Violet Wand (borsten / tepels)"],
     category: "sensation",
     level: 3,
-    description: "Violet wand op borsten en tepels — intense tintelende pijn. Korte pulsen; check continue op huidreactie.",
+    description: "Violet wand op borsten en tepels: intense tintelende pijn. Korte pulsen; check continue op huidreactie.",
     safetyNote: "Gebruik alleen een intact, daarvoor ontworpen apparaat en laat stroom nooit door de borstkas lopen. Vermijd beschadigde huid en elektronische implantaten zonder medische toestemming.",
   },
   {
@@ -1832,7 +1832,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Voetgeur / foot sniffing"],
     category: "body_focus",
     level: 2,
-    description: "Opwinding door het ruiken aan voeten of sokken van de partner. Geurcomponent van voetenfetish — kan gecombineerd worden met worship of onderdanigheid.",
+    description: "Opwinding door het ruiken aan voeten of sokken van de partner. Geurcomponent van voetenfetish: kan gecombineerd worden met worship of onderdanigheid.",
   },
 
   {
@@ -1849,7 +1849,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Voeten / tenen in mond"],
     category: "body_focus",
     level: 2,
-    description: "Tenen of voeten in de mond nemen — zuigen, likken. Diepere vorm van voetaanbidding, vereist hygiëne en wederzijdse bereidheid.",
+    description: "Tenen of voeten in de mond nemen: zuigen, likken. Diepere vorm van voetaanbidding, vereist hygiëne en wederzijdse bereidheid.",
   },
   {
     id: "voet_vernedering",
@@ -1932,7 +1932,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Plas-merken / territoriummarkering"],
     category: "fluids",
     level: 3,
-    description: "Urineren op partner als eigendomsbewijs of territoriummarkering. Krachtig D/s-element — spreek duidelijk af op welke lichaamsdelen en in welke context.",
+    description: "Urineren op partner als eigendomsbewijs of territoriummarkering. Krachtig D/s-element. Spreek duidelijk af op welke lichaamsdelen en in welke context.",
   },
   {
     id: "plas_desperation",
@@ -2054,7 +2054,7 @@ export const KINKS: CatalogKink[] = [
     name: "Dirty talk",
     category: "power",
     level: 1,
-    description: "Expliciete, opwindende taal tijdens het spel — van fluisteren tot bevelen. Bespreek vooraf welke woorden aanslaan en welke juist killing zijn.",
+    description: "Expliciete, opwindende taal tijdens het spel: van fluisteren tot bevelen. Bespreek vooraf welke woorden aanslaan en welke juist killing zijn.",
   },
   {
     id: "titels_aanspreekvormen",
@@ -2062,7 +2062,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Titels & aanspreekvormen"],
     category: "power",
     level: 1,
-    description: "Vaste titels zoals Sir, Meester, Meesteres of prinses als teken van de dynamiek. Klein ritueel, groot effect. Spreek af wanneer ze gelden — alleen in de scène of ook daarbuiten.",
+    description: "Vaste titels zoals Sir, Meester, Meesteres of prinses als teken van de dynamiek. Klein ritueel, groot effect. Spreek af wanneer ze gelden: alleen in de scène of ook daarbuiten.",
   },
   {
     id: "joi",
@@ -2077,7 +2077,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Overstimulatie"],
     category: "power",
     level: 3,
-    description: "Doorgaan met stimuleren ná het orgasme, wanneer alles hypergevoelig is. Intens en snel overweldigend — spreek een duidelijk stopsignaal af en bouw de duur langzaam op.",
+    description: "Doorgaan met stimuleren ná het orgasme, wanneer alles hypergevoelig is. Intens en snel overweldigend. Spreek een duidelijk stopsignaal af en bouw de duur langzaam op.",
   },
   {
     id: "geruineerd_orgasme",
@@ -2144,7 +2144,7 @@ export const KINKS: CatalogKink[] = [
     name: "Predicament bondage",
     category: "bondage",
     level: 4,
-    description: "Vastbinden in een houding waarin elke verlichting van de ene spanning een andere verergert — een duivels dilemma. Vereist ervaren rigging, korte sessies en scherp toezicht.",
+    description: "Vastbinden in een houding waarin elke verlichting van de ene spanning een andere verergert: een duivels dilemma. Vereist ervaren rigging, korte sessies en scherp toezicht.",
   },
   {
     id: "vacuumbed",
@@ -2171,21 +2171,21 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Sekswerker / cliënt"],
     category: "roleplay",
     level: 2,
-    description: "Rollenspel rond betaalde seks — onderhandeling, transactie en vervreemding als kink. Spreek vooraf af wat de 'dienst' inhoudt en waar het spel eindigt.",
+    description: "Rollenspel rond betaalde seks: onderhandeling, transactie en vervreemding als kink. Spreek vooraf af wat de 'dienst' inhoudt en waar het spel eindigt.",
   },
   {
     id: "fantasy_monster",
     name: "Fantasy / monster",
     category: "roleplay",
     level: 2,
-    description: "Rollenspel met niet-menselijke wezens — monsters, tentakels, mythische figuren. Pure verbeelding, vaak met speciaal speelgoed. Alles mag bestaan zolang beide spelers het script kennen.",
+    description: "Rollenspel met niet-menselijke wezens: monsters, tentakels, mythische figuren. Pure verbeelding, vaak met speciaal speelgoed. Alles mag bestaan zolang beide spelers het script kennen.",
   },
   {
     id: "primal_play",
     name: "Primal (jagen & prooi)",
     category: "roleplay",
     level: 3,
-    description: "Instinctief spel zonder woorden — jagen, worstelen, grommen, bijten. De prooi vlucht, de jager vangt. Fysiek intens; spreek vooraf een duidelijk stopsignaal af dat ook mid-worsteling werkt.",
+    description: "Instinctief spel zonder woorden: jagen, worstelen, grommen, bijten. De prooi vlucht, de jager vangt. Fysiek intens; spreek vooraf een duidelijk stopsignaal af dat ook mid-worsteling werkt.",
   },
   {
     id: "somnofilie",
@@ -2203,14 +2203,14 @@ export const KINKS: CatalogKink[] = [
     name: "Body writing",
     category: "appearance",
     level: 1,
-    description: "Woorden of tekens op het lichaam schrijven — namen, titels, vernederingen of bezitsclaims. Gebruik huidvriendelijke stiften; de tekst wast weg, het gevoel blijft.",
+    description: "Woorden of tekens op het lichaam schrijven: namen, titels, vernederingen of bezitsclaims. Gebruik huidvriendelijke stiften; de tekst wast weg, het gevoel blijft.",
   },
   {
     id: "maskers",
     name: "Maskers",
     category: "appearance",
     level: 2,
-    description: "Maskers voor anonimiteit, transformatie of esthetiek — van venetiaans tot leer. Wie zijn gezicht verliest, wint een rol. Let op zicht en ademruimte bij gesloten modellen.",
+    description: "Maskers voor anonimiteit, transformatie of esthetiek: van venetiaans tot leer. Wie zijn gezicht verliest, wint een rol. Let op zicht en ademruimte bij gesloten modellen.",
   },
   {
     id: "sissificatie",
@@ -2228,7 +2228,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Spiegelspel"],
     category: "exhibition",
     level: 1,
-    description: "Seks of spel voor de spiegel — jezelf en elkaar zien als voyeur én exhibitionist tegelijk. Laagdrempelig en thuis te doen; de blik went, de spanning niet.",
+    description: "Seks of spel voor de spiegel: jezelf en elkaar zien als voyeur én exhibitionist tegelijk. Laagdrempelig en thuis te doen; de blik went, de spanning niet.",
   },
   {
     id: "remote_toy_publiek",
@@ -2246,7 +2246,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Trio / groepsseks"],
     category: "group_partner",
     level: 3,
-    description: "Seks met drie of meer — van trio tot groepsspel. Bekeken worden en kijken zit ingebakken. Bespreek vooraf grenzen per persoon, soa-afspraken en wat het voor de eigen relatie betekent.",
+    description: "Seks met drie of meer: van trio tot groepsspel. Bekeken worden en kijken zit ingebakken. Bespreek vooraf grenzen per persoon, soa-afspraken en wat het voor de eigen relatie betekent.",
     safetyNote: "Iedere deelnemer spreekt afzonderlijk grenzen, bescherming, privacy en stopmomenten af; toestemming van één persoon geldt nooit voor de rest.",
   },
   {
@@ -2298,28 +2298,28 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Voedselspel / sploshing"],
     category: "sensation",
     level: 2,
-    description: "Spelen met voedsel op het lichaam — slagroom, chocolade, of volledig sploshing met natte, kliederige substanties. Leg handdoeken klaar en houd suiker weg bij slijmvliezen.",
+    description: "Spelen met voedsel op het lichaam: slagroom, chocolade, of volledig sploshing met natte, kliederige substanties. Leg handdoeken klaar en houd suiker weg bij slijmvliezen.",
   },
   {
     id: "fear_play",
     name: "Fear play",
     category: "sensation",
     level: 3,
-    description: "Bewust angst opwekken als spel — dreiging, verrassing, duisternis, messen die nooit snijden. De adrenaline is echt, het gevaar niet. Aftercare is hier geen optie maar een vereiste.",
+    description: "Bewust angst opwekken als spel: dreiging, verrassing, duisternis, messen die nooit snijden. De adrenaline is echt, het gevaar niet. Aftercare is hier geen optie maar een vereiste.",
   },
   {
     id: "figging",
     name: "Figging (gember)",
     category: "sensation",
     level: 3,
-    description: "Een geschilde gemberwortel anaal of vaginaal inbrengen voor een intense, brandende sensatie. Ouderwets straf-element; de branding piekt na minuten en is niet weg te spoelen — doseer klein.",
+    description: "Een geschilde gemberwortel anaal of vaginaal inbrengen voor een intense, brandende sensatie. Ouderwets straf-element; de branding piekt na minuten en is niet weg te spoelen. Doseer klein.",
   },
   {
     id: "ballbusting",
     name: "Ballbusting / CBT-impact",
     category: "sensation",
     level: 4,
-    description: "Slaan, tikken of drukken op de testikels als pijnspel. Klein doelwit, groot risico — begin extreem licht, vermijd torsie en stop direct bij misselijkheid of doffe napijn.",
+    description: "Slaan, tikken of drukken op de testikels als pijnspel. Klein doelwit, groot risico. Begin extreem licht, vermijd torsie en stop direct bij misselijkheid of doffe napijn.",
   },
 
   // ─── Impact Play (verdieping) ───────────────────────────────────────────────
@@ -2328,7 +2328,7 @@ export const KINKS: CatalogKink[] = [
     name: "Body slapping",
     category: "impact",
     level: 2,
-    description: "Slaan met de vlakke hand op vlezige zones — dijen, billen, borst. Directer en intiemer dan speeltjes. Blijf weg van nieren, wervelkolom en gewrichten.",
+    description: "Slaan met de vlakke hand op vlezige zones: dijen, billen, borst. Directer en intiemer dan speeltjes. Blijf weg van nieren, wervelkolom en gewrichten.",
   },
 
   // ─── Straf & Correctie ──────────────────────────────────────────────────────
@@ -2347,7 +2347,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Reflectie & excuses"],
     category: "discipline",
     level: 1,
-    description: "Opschrijven of uitspreken wat er misging, waarom de regel bestaat en hoe het anders gaat. De mildste en vaak effectiefste correctie — gedrag verandert door begrip, niet door pijn.",
+    description: "Opschrijven of uitspreken wat er misging, waarom de regel bestaat en hoe het anders gaat. De mildste en vaak effectiefste correctie: gedrag verandert door begrip, niet door pijn.",
   },
   {
     id: "privileges_intrekken",
@@ -2355,7 +2355,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Privileges intrekken"],
     category: "discipline",
     level: 1,
-    description: "Tijdelijk verlies van een afgesproken voorrecht — de bank in plaats van de schoot, geen toetje, geen telefoon in de avond. Duur en reden vooraf helder; het privilege keert terug zodra de les geleerd is.",
+    description: "Tijdelijk verlies van een afgesproken voorrecht: de bank in plaats van de schoot, geen toetje, geen telefoon in de avond. Duur en reden vooraf helder; het privilege keert terug zodra de les geleerd is.",
   },
   {
     id: "strafklusjes",
@@ -2363,7 +2363,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Strafklusjes"],
     category: "discipline",
     level: 1,
-    description: "Extra huishoudelijke taken als correctie — zilver poetsen, de vloer op handen en knieën. Nuttig én corrigerend. Koppel de klus zichtbaar aan de overtreding, anders is het gewoon huishouden.",
+    description: "Extra huishoudelijke taken als correctie: zilver poetsen, de vloer op handen en knieën. Nuttig én corrigerend. Koppel de klus zichtbaar aan de overtreding, anders is het gewoon huishouden.",
   },
   {
     id: "speeltijd_ontzegd",
@@ -2371,7 +2371,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Speeltijd ontzegd"],
     category: "discipline",
     level: 1,
-    description: "Een geplande scène of speelmoment vervalt als gevolg van een overtreding. Raakt precies waar de dynamiek leeft. Wees zuinig met deze straf — wie te vaak niets te verliezen heeft, stopt met proberen.",
+    description: "Een geplande scène of speelmoment vervalt als gevolg van een overtreding. Raakt precies waar de dynamiek leeft. Wees zuinig met deze straf: wie te vaak niets te verliezen heeft, stopt met proberen.",
   },
   {
     id: "avondklok_straf",
@@ -2387,7 +2387,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Opgelegde stilte"],
     category: "discipline",
     level: 2,
-    description: "Een afgebakende periode niet mogen spreken na een overtreding — de mond die de regel brak, rust even. Spreek een non-verbaal veiligheidssignaal af; een straf mag nooit het stopwoord blokkeren.",
+    description: "Een afgebakende periode niet mogen spreken na een overtreding: de mond die de regel brak, rust even. Spreek een non-verbaal veiligheidssignaal af; een straf mag nooit het stopwoord blokkeren.",
   },
   {
     id: "strafoefeningen",
@@ -2404,7 +2404,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Orgasme-uitstel als straf"],
     category: "discipline",
     level: 2,
-    description: "Een afgesproken aantal dagen geen orgasme na een overtreding. Correctie via verlangen in plaats van pijn. Duur vooraf vastgelegd — onbepaald uitstel is geen straf maar een machtslek.",
+    description: "Een afgesproken aantal dagen geen orgasme na een overtreding. Correctie via verlangen in plaats van pijn. Duur vooraf vastgelegd: onbepaald uitstel is geen straf maar een machtslek.",
   },
   {
     id: "strafspanking",
@@ -2412,7 +2412,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Strafspanking"],
     category: "discipline",
     level: 2,
-    description: "Een spanking als correctie: nuchter, geteld en afgebakend — geen erotisch spel maar een gevolg. Regel en aantal zijn vooraf bekend, woede diskwalificeert de gever, en na afloop volgt herstel en een schone lei.",
+    description: "Een spanking als correctie: nuchter, geteld en afgebakend. Geen erotisch spel maar een gevolg. Regel en aantal zijn vooraf bekend, woede diskwalificeert de gever, en na afloop volgt herstel en een schone lei.",
   },
   {
     id: "strafessay",
@@ -2420,7 +2420,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Strafessay"],
     category: "discipline",
     level: 2,
-    description: "Een opstel schrijven over de overtreden regel — waarom die bestaat, wat er misging, wat er verandert. Zwaarder dan regels schrijven: hier moet nagedacht worden. De Dom leest en bespreekt het na.",
+    description: "Een opstel schrijven over de overtreden regel: waarom die bestaat, wat er misging, wat er verandert. Zwaarder dan regels schrijven: hier moet nagedacht worden. De Dom leest en bespreekt het na.",
   },
   {
     id: "mondzeep",
@@ -2439,7 +2439,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Ochtend- & avondritueel"],
     category: "rituals",
     level: 1,
-    description: "Een vast begin- en eindpunt van de dag binnen de dynamiek — een groet, een kniel-moment, een bericht op vaste tijd. Klein en herhaalbaar; het ritme draagt de dynamiek door drukke dagen heen.",
+    description: "Een vast begin- en eindpunt van de dag binnen de dynamiek: een groet, een kniel-moment, een bericht op vaste tijd. Klein en herhaalbaar; het ritme draagt de dynamiek door drukke dagen heen.",
   },
   {
     id: "begroetingsritueel",
@@ -2447,7 +2447,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Begroetingsritueel"],
     category: "rituals",
     level: 1,
-    description: "Een vaste handeling bij thuiskomst of weerzien — knielen bij de deur, een kus op de hand, een vaste zin. Markeert de overgang van buitenwereld naar dynamiek.",
+    description: "Een vaste handeling bij thuiskomst of weerzien: knielen bij de deur, een kus op de hand, een vaste zin. Markeert de overgang van buitenwereld naar dynamiek.",
   },
   {
     id: "verantwoordingsdagboek",
@@ -2463,7 +2463,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Positietraining"],
     category: "rituals",
     level: 2,
-    description: "Vaste houdingen aanleren die op commando aangenomen worden — wachten, presenteren, rusten. Herhaling bouwt lichaamsgeheugen. Bouw langzaam op en let op knieën, polsen en rug.",
+    description: "Vaste houdingen aanleren die op commando aangenomen worden: wachten, presenteren, rusten. Herhaling bouwt lichaamsgeheugen. Bouw langzaam op en let op knieën, polsen en rug.",
   },
   {
     id: "wachttraining",
@@ -2471,7 +2471,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Wachttraining"],
     category: "rituals",
     level: 2,
-    description: "Leren wachten — stil, in positie, zonder aandacht op te eisen — tot de Dom beschikbaar is. Traint geduld en overgave. Begin met minuten, niet met uren, en houd zicht op comfort.",
+    description: "Leren wachten (stil, in positie, zonder aandacht op te eisen) tot de Dom beschikbaar is. Traint geduld en overgave. Begin met minuten, niet met uren, en houd zicht op comfort.",
   },
   {
     id: "diensttraining",
@@ -2479,7 +2479,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Diensttraining"],
     category: "rituals",
     level: 2,
-    description: "Het aanleren van perfecte, persoonlijke service — thee precies goed, kleding klaargelegd, anticiperen op behoeften. De training zit in de standaard: goed is niet genoeg, het moet zóals afgesproken.",
+    description: "Het aanleren van perfecte, persoonlijke service: thee precies goed, kleding klaargelegd, anticiperen op behoeften. De training zit in de standaard: goed is niet genoeg, het moet zóals afgesproken.",
   },
   {
     id: "inspectie_ritueel",
@@ -2512,7 +2512,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Spraakprotocol"],
     category: "rituals",
     level: 3,
-    description: "Vaste spreekregels als training — in de derde persoon spreken, zinnen beginnen met de titel van de Dom, of alleen spreken na aanraking. Houd het vol te leren; te complexe protocollen breken zichzelf.",
+    description: "Vaste spreekregels als training: in de derde persoon spreken, zinnen beginnen met de titel van de Dom, of alleen spreken na aanraking. Houd het vol te leren; te complexe protocollen breken zichzelf.",
   },
   {
     id: "hoog_protocol",
@@ -2520,7 +2520,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Hoog protocol"],
     category: "rituals",
     level: 3,
-    description: "Afgebakende periodes waarin alle regels tegelijk gelden — houding, spraak, blik, beweging. Formeel en intens; niet vol te houden als levensstijl. Duidelijk begin- en eindsignaal is essentieel.",
+    description: "Afgebakende periodes waarin alle regels tegelijk gelden: houding, spraak, blik, beweging. Formeel en intens; niet vol te houden als levensstijl. Duidelijk begin- en eindsignaal is essentieel.",
   },
   {
     id: "orgasme_op_commando",
@@ -2528,7 +2528,7 @@ export const KINKS: CatalogKink[] = [
     aliases: ["Orgasme op commando (training)"],
     category: "rituals",
     level: 3,
-    description: "Trainen om op een woord of signaal klaar te komen — conditionering over weken of maanden. Vraagt geduld en veel herhaling; vier de vooruitgang in plaats van het missen te bestraffen.",
+    description: "Trainen om op een woord of signaal klaar te komen: conditionering over weken of maanden. Vraagt geduld en veel herhaling; vier de vooruitgang in plaats van het missen te bestraffen.",
   },
   // ─── Catalogus v2 — expliciete nieuwe vragen, zonder propagation ───────────
   {

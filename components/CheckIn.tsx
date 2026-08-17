@@ -31,7 +31,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
           {profileName ? `Hoe voel je je nu, ${profileName}?` : "Hoe voel je je nu?"}
         </h2>
         <p className="text-sm mb-8" style={{ color: "var(--text2)" }}>
-          Neem je tijd — er is geen haast.
+          Neem je tijd, er is geen haast.
         </p>
 
         <div className="flex gap-4 justify-center">
