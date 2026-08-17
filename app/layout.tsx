@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
 import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
+import StorageFullNotice from "@/components/StorageFullNotice";
 import AmbientGlow from "@/components/ui/AmbientGlow";
 import OfflineCacheWarmup from "@/components/OfflineCacheWarmup";
 import ImportedProfileIntegrityGate from "@/components/ImportedProfileIntegrityGate";
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     {children}
                     <UpdateBanner />
                     <NotificationPrompt />
+                    <StorageFullNotice />
                   </ImportedProfileIntegrityGate>
                 </ToastProvider>
               </TopNavProvider>

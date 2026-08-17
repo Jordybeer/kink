@@ -87,7 +87,7 @@ notifications is byte-for-byte unchanged.
 
 Ranked by what actually threatens a launch.
 
-### L-02 — localStorage has no quota safeword · HIGH
+### L-02 — localStorage has no quota safeword · FIXED
 
 There is **no `QuotaExceededError` handling anywhere** in the app.
 
@@ -109,15 +109,44 @@ Worth noting: the two *direct* `localStorage.setItem` callers are already
 guarded (`lib/profileQuarantine.ts:107`, `components/TriageDeck.tsx:115`). It's
 only the persist store — the one holding everything that matters — that is bare.
 
-**Suggested shape:** a `storage` wrapper in the persist config that catches the
-quota error, keeps the in-memory state authoritative, and raises a toast
-("je kluis zit vol") plus a pointer at the backup export. Needs design; that's
-why I didn't ship it blind.
+**Shipped.** `lib/persistStorage.ts` wraps the backing store and is wired into the
+persist config as `storage: createJSONStorage(() => quotaSafeStorage)`. On a
+quota rejection it swallows the throw, leaves the previous good state in place
+(a failed `setItem` overwrites nothing), keeps the in-memory state authoritative,
+and dispatches `ks:storage-full` once. `components/StorageFullNotice.tsx` turns
+that into a toast with a route to the backup export, reusing the existing
+`ks:open-settings` plumbing.
+
+**No format change.** Zustand's own default is
+`createJSONStorage(() => window.localStorage)` (`node_modules/zustand/middleware.js:334`);
+ours delegates to the same backing store, so the key, serialization and persisted
+shape are byte-identical. The only difference is the `try/catch`.
+
+**Proven end to end**, not just unit-tested. In real Chromium against a
+production build, `localStorage` was filled to the last byte (coarse blocks, then
+16 KB, 1 KB and 64 B, until even a 64-byte write was refused). Then the page was
+reloaded with **no manual event dispatch** — the app's own store write hit the
+full vault:
+
+```
+vulling            { keys: 55, smallWriteFails: true }
+meldingZichtbaar   true
+backupKnop         true
+appLeeftNog        true
+```
+
+Worth recording: an earlier attempt filled only in 256 KB blocks and produced a
+false negative, because ~200 KB of headroom was still plenty for the small state
+blob. A quota test that stops at coarse granularity does not prove anything.
+
+Cover: `__tests__/persistStorage.test.ts` (12 cases) pins the throw-swallowing,
+the single announcement, the preserved prior state, private-mode refusal, and the
+SSR no-op.
 
 Per `UI-principles.md`: data loss sits at **priority 1** (consent, veiligheid,
-privacy), so this may not be resolved silently and may not be tucked into an
-overflow — *Quiet is good. Invisible is not.* (#12). The copy is **human before
-clinical** (#9) and names the consequence plainly.
+privacy), so it is neither resolved silently nor tucked into an overflow
+(*Quiet is good. Invisible is not.*, #12), and the copy names the consequence
+plainly without alarm (#9, #10).
 
 ### L-03 — No error boundary · FIXED
 

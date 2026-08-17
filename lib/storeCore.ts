@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createQuotaSafeStorage } from "@/lib/persistStorage";
 import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
@@ -81,6 +82,9 @@ interface State {
 }
 
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
+
+/** Eén kluisdeur voor de hele store; zie lib/persistStorage. */
+const quotaSafeStorage = createQuotaSafeStorage();
 
 // One auto-moment per profile per day, and only when something actually
 // changed — Verloop feeds itself without the owner performing rituals,
@@ -591,6 +595,9 @@ export const useStore = create<State>()(
     },
     {
       name: "kink-profiles",
+      // Zonder deze wrapper gooit een volle localStorage dwars door elke
+      // store-actie heen en verdwijnt het laatste antwoord zonder een woord.
+      storage: createJSONStorage(() => quotaSafeStorage),
       partialize: (state) => ({
         profiles: state.profiles,
         contracts: state.contracts,
