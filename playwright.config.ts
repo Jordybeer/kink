@@ -6,7 +6,13 @@ export default defineConfig({
   workers: 1,
   retries: 1,
   timeout: 45000,
-  reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
+  reporter: process.env.CI
+    ? [
+        ["github"],
+        ["list", { printFailuresInline: true }],
+        ["html", { open: "never", outputFolder: "playwright-report" }],
+      ]
+    : [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
     baseURL: "http://localhost:3000",
     screenshot: "only-on-failure",

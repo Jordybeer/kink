@@ -13,7 +13,6 @@ import {
   PROFILE_QR_SLOW_INTERVAL_MS,
   type ProfileQrFrame,
 } from "@/lib/profileQr";
-import { profileConsentAlias } from "@/lib/consentProof";
 import { useStore } from "@/lib/store";
 import { qrRenderOptions } from "@/lib/qrAppearance";
 import Sheet, { SheetContent } from "./Sheet";
@@ -250,37 +249,47 @@ export default function QRModal({ profile, onClose }: Props) {
   const multi = qrValues.length > 1;
   const qrDataUrl = qrDataUrls[qrIndex] ?? null;
   const currentFrame = qrFrames[qrIndex] ?? null;
-  const readableAlias = preparedProfile?.consentProof ? profileConsentAlias(preparedProfile) : null;
   const avatarIncluded = canShareAvatar && includeAvatar && !avatarSkipped;
   const avatarInQrSequence = avatarIncluded && !avatarLinkOnly;
+  const proofConfirmed = Boolean(preparedProfile?.consentProof || switchPair?.some((member) => member.consentProof));
 
   return (
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
       <SheetContent
         showHandle={false}
-        className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4"
+        className="overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
+        data-testid="profile-share-sheet"
       >
-        <h2 className="text-lg font-bold text-center mb-1">Deel profiel</h2>
-        {profile && (
-          <div className="text-center mb-3">
-            <p className="text-sm" style={{ color: "var(--accent-text)" }}>{profile.name}</p>
-            {readableAlias && <p className="text-xs mt-1" style={{ color: "var(--yes)" }}>{switchPair ? "Switch-koppeling bevestigd" : `Bron bevestigd · ${readableAlias}`}</p>}
-          </div>
-        )}
+        <div className="text-center">
+          <h2 className="text-base font-bold">Deel profiel</h2>
+          {profile && (
+            <p className="mt-0.5 text-sm" style={{ color: "var(--accent-text)" }}>
+              {profile.name}{proofConfirmed ? <span className="ml-1.5 text-xs" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
+            </p>
+          )}
+        </div>
 
         {multi && currentFrame && (
-          <p className="text-xs text-center font-semibold mb-1" style={{ color: "var(--text)" }}>
-            {autoAdvance ? "Automatisch" : "Gepauzeerd"} · {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
+          <p className="mt-2 text-center text-xs font-semibold" style={{ color: "var(--text2)" }}>
+            {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
           </p>
         )}
 
         {qrTooLarge ? (
-          <div className="mx-auto my-3 rounded-xl flex items-center justify-center text-sm text-center px-6" style={{ width: 280, height: 180, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }} role="status">
-            Dit profiel bevat te veel gegevens voor een betrouwbare QR-set. De volledige link hieronder deelt wel alles zonder dataverlies.
+          <div
+            className="mx-auto my-2.5 flex aspect-square w-[min(64vw,15rem)] items-center justify-center rounded-xl px-5 text-center text-sm"
+            style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+            role="status"
+          >
+            Te veel gegevens voor een betrouwbare QR-reeks. De volledige link hieronder deelt alles zonder dataverlies.
           </div>
         ) : qrDataUrl ? (
-          <div className="profile-share-qr mx-auto my-3 flex items-center justify-center overflow-hidden rounded-xl" style={{ background: "#FFFFFF", border: "1px solid var(--border)" }} data-testid="profile-share-qr">
+          <div
+            className="profile-share-qr mx-auto my-2.5 flex aspect-square w-[min(64vw,15rem)] items-center justify-center overflow-hidden rounded-xl"
+            style={{ background: "#FFFFFF", border: "1px solid var(--border)" }}
+            data-testid="profile-share-qr"
+          >
             <img
               src={qrDataUrl}
               width={280}
@@ -288,87 +297,103 @@ export default function QRModal({ profile, onClose }: Props) {
               alt={currentFrame
                 ? `${currentFrame.phase === "avatar" ? "Profielfoto" : "Profiel"} QR-code ${currentFrame.index} van ${currentFrame.total}`
                 : "QR-code voor profielimport"}
-              className="profile-share-qr-image shrink-0"
+              className="profile-share-qr-image h-full w-full shrink-0"
             />
           </div>
         ) : (
-          <div className="profile-share-qr mx-auto my-3 rounded-xl animate-pulse flex items-center justify-center text-xs text-center px-6" style={{ background: "#FFFFFF", color: "#4b5563", border: "1px solid var(--border)" }} aria-label="QR-code laden…">
+          <div
+            className="profile-share-qr mx-auto my-2.5 flex aspect-square w-[min(64vw,15rem)] animate-pulse items-center justify-center rounded-xl px-5 text-center text-xs"
+            style={{ background: "#FFFFFF", color: "#4b5563", border: "1px solid var(--border)" }}
+            aria-label="QR-code laden…"
+          >
             {generationError ?? (multi ? "QR-reeks voorbereiden…" : "Volledig profiel inpakken…")}
           </div>
         )}
 
         {multi && (
           <>
-            <button type="button" onClick={() => setAutoAdvance((active) => !active)} disabled={qrDataUrls.length !== qrValues.length} aria-pressed={autoAdvance} className="focus-ring w-full min-h-11 rounded-xl border text-sm font-semibold disabled:opacity-35" style={{ borderColor: "var(--border)", color: "var(--text)" }}>
-              {autoAdvance ? "Pauzeer" : "Hervat"}
-            </button>
-            <button type="button" onClick={() => setSlowMode((slow) => !slow)} aria-pressed={slowMode} className="focus-ring min-h-11 block mx-auto px-3 text-xs underline-offset-2 hover:underline" style={{ color: "var(--text2)" }}>
-              Snelheid: {slowMode ? "rustig" : "normaal"}
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAutoAdvance((active) => !active)}
+                disabled={qrDataUrls.length !== qrValues.length}
+                aria-pressed={autoAdvance}
+                className="focus-ring min-h-11 rounded-xl border text-sm font-semibold disabled:opacity-35"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                {autoAdvance ? "Pauzeer" : "Hervat"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlowMode((slow) => !slow)}
+                aria-pressed={slowMode}
+                className="focus-ring min-h-11 rounded-xl border text-xs font-semibold"
+                style={{ borderColor: slowMode ? "var(--border-accent)" : "var(--border)", color: slowMode ? "var(--accent-text)" : "var(--text2)" }}
+              >
+                {slowMode ? "Rustig tempo" : "Rustiger"}
+              </button>
+            </div>
             {!autoAdvance && (
-              <div className="flex gap-2 mb-3">
-                <button type="button" onClick={showPrevious} className="focus-ring min-h-11 flex-1 rounded-lg border text-xs" style={{ borderColor: "var(--border)", color: "var(--text2)" }}><ArrowLeft size={13} aria-hidden="true" /> Vorige</button>
-                <button type="button" onClick={showNext} className="focus-ring min-h-11 flex-1 rounded-lg border text-xs" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Volgende <ArrowRight size={13} aria-hidden="true" /></button>
+              <div className="mt-2 flex gap-2">
+                <button type="button" onClick={showPrevious} className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border text-xs" style={{ borderColor: "var(--border)", color: "var(--text2)" }}><ArrowLeft size={13} aria-hidden="true" /> Vorige</button>
+                <button type="button" onClick={showNext} className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border text-xs" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Volgende <ArrowRight size={13} aria-hidden="true" /></button>
               </div>
             )}
-            {reducedMotion && !autoAdvance && <p className="text-xs text-center mb-3" style={{ color: "var(--text2)" }}>Automatisch wisselen staat standaard uit volgens de bewegingsinstelling van dit toestel.</p>}
+            <p className="mt-2 text-center text-xs" style={{ color: "var(--text2)" }}>
+              Volgorde maakt niet uit. Dubbele scans zijn oké.
+            </p>
+            {reducedMotion && !autoAdvance && <p className="mt-1 text-center text-xs" style={{ color: "var(--text2)" }}>Automatisch wisselen blijft uit volgens je bewegingsinstelling.</p>}
           </>
         )}
 
-        <p className="text-xs text-center mb-1" style={{ color: "var(--text2)" }}>
-          {switchPair
-            ? "Beide Switch-perspectieven reizen samen; antwoorden blijven apart en verborgen reacties blijven thuis."
-            : "Niet-verborgen profielgegevens worden volledig gedeeld. Deze versie blijft met jouw eigendomssleutel bevestigd."}
-        </p>
-        {avatarInQrSequence && <p className="text-xs text-center mb-1" style={{ color: "var(--yes)" }}>{switchPair ? "De bevestigde profielfoto reist mee met de Switch-overdracht." : "De bevestigde profielfoto volgt na het profiel."}</p>}
-        {avatarLinkOnly && <p className="text-xs text-center mb-2" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
-        {multi && (
-          <p className="text-xs text-center mb-3" style={{ color: "var(--accent-text)" }}>
-            {autoAdvance
-              ? "Laat de codes wisselen; volgorde en dubbele scans zijn geen probleem."
-              : `Toon de ${qrValues.length} delen één voor één; volgorde maakt niet uit.`}
-          </p>
+        {avatarInQrSequence && <p className="mt-1 text-center text-xs" style={{ color: "var(--yes)" }}>De bevestigde profielfoto reist mee.</p>}
+        {avatarLinkOnly && <p className="mt-1 text-center text-xs" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
+
+        {(canShareAvatar || profile?.fetLifeUsername) && (
+          <div className="mt-2 grid gap-1">
+            {canShareAvatar && (
+              <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm">
+                <span className="flex h-5 w-5 flex-none items-center justify-center rounded border transition-colors" style={includeAvatar ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
+                  {includeAvatar && <Check size={11} weight="bold" aria-hidden="true" />}
+                </span>
+                <input type="checkbox" className="sr-only" checked={includeAvatar} onChange={(event) => setIncludeAvatar(event.target.checked)} />
+                <span style={{ color: "var(--text2)" }}>Profielfoto meesturen</span>
+              </label>
+            )}
+
+            {profile?.fetLifeUsername && (
+              <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm">
+                <span className="flex h-5 w-5 flex-none items-center justify-center rounded border transition-colors" style={includeFetLife ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
+                  {includeFetLife && <Check size={11} weight="bold" aria-hidden="true" />}
+                </span>
+                <input type="checkbox" className="sr-only" checked={includeFetLife} onChange={(event) => setIncludeFetLife(event.target.checked)} />
+                <span style={{ color: "var(--text2)" }}>FetLife-link meesturen</span>
+              </label>
+            )}
+          </div>
         )}
 
-        {canShareAvatar && (
-          <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--bg)] -mx-2 flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm mb-2">
-            <span className="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-none" style={includeAvatar ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
-              {includeAvatar && <Check size={11} weight="bold" aria-hidden="true" />}
-            </span>
-            <input type="checkbox" className="sr-only" checked={includeAvatar} onChange={(event) => setIncludeAvatar(event.target.checked)} />
-            <span style={{ color: "var(--text2)" }}>Profielfoto meesturen <span className="text-xs opacity-60">(standaard aan)</span></span>
-          </label>
-        )}
+        {avatarSkipped && <p className="mt-2 text-xs" style={{ color: "var(--hard-no-text)" }} role="alert">De profielfoto kon niet veilig worden bevestigd en wordt niet meegestuurd.</p>}
 
-        {avatarSkipped && <p className="text-xs mb-3" style={{ color: "var(--hard-no-text)" }} role="alert">De profielfoto kon niet veilig worden voorbereid of met de eigendomssleutel worden bevestigd en wordt daarom niet meegestuurd.</p>}
-
-        {profile?.fetLifeUsername && (
-          <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--bg)] -mx-2 flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm mb-2">
-            <span className="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-none" style={includeFetLife ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
-              {includeFetLife && <Check size={11} weight="bold" aria-hidden="true" />}
-            </span>
-            <input type="checkbox" className="sr-only" checked={includeFetLife} onChange={(event) => setIncludeFetLife(event.target.checked)} />
-            <span style={{ color: "var(--text2)" }}>FetLife-link meesturen <span className="text-xs opacity-60">({profile.fetLifeUsername})</span></span>
-          </label>
-        )}
-
-        <button onClick={handleCopy} disabled={!url} className="focus-ring w-full min-h-11 rounded-xl text-sm font-medium border transition-colors mb-3 disabled:opacity-40" style={copied ? { borderColor: "var(--yes)", color: "var(--yes)" } : { borderColor: "var(--border)", color: "var(--text)" }}>
+        <button onClick={handleCopy} disabled={!url} className="focus-ring mt-2 w-full min-h-11 rounded-xl text-sm font-medium border transition-colors disabled:opacity-40" style={copied ? { borderColor: "var(--yes)", color: "var(--yes)" } : { borderColor: "var(--border)", color: "var(--text)" }}>
           {copied ? <span className="inline-flex items-center justify-center gap-1.5"><Check size={14} weight="bold" aria-hidden="true" />Gekopieerd!</span> : <span className="inline-flex items-center justify-center gap-1.5"><CopySimple size={14} aria-hidden="true" />Kopieer volledige link</span>}
         </button>
 
-        <p className="text-xs text-center mt-1 mb-2" style={{ color: "var(--text2)" }}>
-          {avatarIncluded ? "Verborgen antwoorden en persoonlijke notitie blijven uitsluitend op dit toestel. De profielfoto wordt meegestuurd." : "Verborgen antwoorden, profielfoto en persoonlijke notitie blijven uitsluitend op dit toestel."}
+        <p className="mt-2 text-center text-xs leading-5" style={{ color: "var(--text2)" }}>
+          {avatarIncluded
+            ? "Verborgen antwoorden en persoonlijke notitie blijven op dit toestel. De profielfoto wordt meegestuurd."
+            : "Verborgen antwoorden, profielfoto en persoonlijke notitie blijven op dit toestel."}
         </p>
         <Link
           href="/about#limits-title"
-          className="focus-ring mx-auto mb-4 flex min-h-10 w-fit items-center gap-1 px-2 text-xs font-semibold"
+          className="focus-ring mx-auto flex min-h-9 w-fit items-center gap-1 px-2 text-xs font-semibold"
           style={{ color: "var(--accent-text)" }}
         >
-          Hoe delen en cryptografie werken
+          Hoe delen en beveiliging werken
           <ArrowRight size={13} aria-hidden="true" />
         </Link>
 
-        <button onClick={onClose} className="focus-ring w-full min-h-11 rounded-xl text-sm font-medium border transition-colors" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Sluit</button>
+        <button onClick={onClose} className="focus-ring mt-1 w-full min-h-11 rounded-xl text-sm font-medium border transition-colors" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Sluit</button>
       </SheetContent>
     </Sheet>
   );

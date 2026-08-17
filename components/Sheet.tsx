@@ -22,6 +22,7 @@ interface SheetContentProps {
   /** Kept for source compatibility; visible close actions belong in the footer. */
   showClose?: boolean;
   style?: CSSProperties;
+  "data-testid"?: string;
 }
 
 /** Standardized sheet content wrapper: surface bg, border and optional drag handle. */
@@ -30,11 +31,13 @@ export function SheetContent({
   className = "px-6 pb-6 pt-4",
   showHandle = true,
   style,
+  "data-testid": dataTestId,
 }: SheetContentProps) {
   return (
     <div
       className={`rounded-t-2xl ${className}`}
       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none", ...style }}
+      data-testid={dataTestId}
     >
       {showHandle && (
         <div className="h-7 mb-1" aria-hidden="true">

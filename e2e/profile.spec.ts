@@ -125,14 +125,14 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("statusbalk is aanwezig op het bewerken-tabblad", async ({ page }) => {
+  test("statusbalk blijft bij het overzicht en niet bij bewerken", async ({ page }) => {
+    const statusBar = page.getByRole("img", {
+      name: "6 Heel graag, 2 Ja, 1 Voor hen, 1 Harde grens",
+      exact: true,
+    });
+    await expect(statusBar).toBeVisible();
     await page.getByRole("tab", { name: "Bewerken" }).click();
-    await expect(page.getByRole("img", { name: /Heel graag/ })).toBeVisible();
-  });
-
-  test("ingevulde kinks tellen mee — teller zichtbaar", async ({ page }) => {
-    const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/\d+\s*BEOORDEELD|\d+\s*beoordeeld/i);
+    await expect(statusBar).toHaveCount(0);
   });
 
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
@@ -196,12 +196,10 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await search.fill("spanking");
 
     await expect(activeFilter).toBeVisible();
-    await expect(page.getByText("0 resultaten", { exact: true })).toBeVisible();
     await expect(page.getByText("Geen onderwerpen gevonden.")).toBeVisible();
 
     await page.getByRole("button", { name: "Filter Bondage wissen" }).click();
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveValue("spanking");
-    await expect(page.getByText(/^[1-9]\d* resultaten$/)).toBeVisible();
     await expect(page.locator('button[aria-label*="— bewerken"]').first()).toBeVisible();
   });
 
@@ -224,7 +222,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await statusGroup.getByRole("button", { name: /Heel graag/ }).click();
     await page.getByRole("button", { name: "Klaar" }).click();
 
-    await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible();
   });
 });
 
@@ -278,13 +276,68 @@ test.describe("Profielpagina — Sam (gevorderd, Submissive)", () => {
     await expect(page.getByText("Submissive").first()).toBeVisible();
   });
 
-  test("teller toont ingevulde kinks", async ({ page }) => {
-    const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/\d+\s*BEOORDEELD|\d+\s*beoordeeld/i);
+  test("hard grens (humiliation) blijft zichtbaar in het overzicht", async ({ page }) => {
+    await expect(page.getByRole("img", {
+      name: "5 Heel graag, 1 Ja, 2 Misschien, 1 Harde grens",
+      exact: true,
+    })).toBeVisible();
+  });
+});
+
+// Gedeeld profiel — read-only
+test.describe("Gedeeld profiel", () => {
+  test.beforeEach(async ({ page }) => {
+    const sharedSam = { ...PROFILE_SAM, id: "pw-shared-sam", isImported: true };
+    await seedAndGo(page, "/profile/pw-shared-sam", [sharedSam]);
   });
 
-  test("hard grens (humiliation_verbal) is verwerkt in de statusbalk", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
-    await expect(page.getByRole("img", { name: /\d+ Harde grens/ })).toBeVisible();
+  test("naam is zichtbaar", async ({ page }) => {
+    await expect(page.getByText("Sam", { exact: true }).first()).toBeVisible();
+  });
+
+  test("bewerken-tab is niet aanwezig", async ({ page }) => {
+    await expect(page.getByRole("tab", { name: "Bewerken" })).toHaveCount(0);
+  });
+
+  test("gedeeld profiel kan niet opnieuw gedeeld worden", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Profiel delen" })).toHaveCount(0);
+  });
+
+  test("persoonlijke notitie blijft lokaal bewerkbaar", async ({ page }) => {
+    const note = page.getByPlaceholder("Wanneer ontmoet, indrukken…");
+    await expect(note).toBeVisible();
+    await note.fill("Goede eerste date");
+    await expect(note).toHaveValue("Goede eerste date");
+  });
+});
+
+test.describe("Privé antwoorden op eigen profiel", () => {
+  test("blijven verborgen tot bewust onthuld en kunnen opnieuw verborgen worden", async ({ page }) => {
+    const privateAlex = {
+      ...PROFILE_ALEX,
+      id: "pw-local-private",
+      entries: {
+        ...PROFILE_ALEX.entries,
+        spanking_hand_give: {
+          status: "yes" as const,
+          comment: "Dit is alleen voor mezelf bedoeld",
+          privateResponse: true,
+        },
+      },
+    };
+    await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
+
+    const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
+    await expect(secret).toHaveCount(0);
+
+    const reveal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving tonen", exact: true });
+    await expect(reveal).toBeVisible();
+    await reveal.click();
+    await expect(secret).toBeVisible();
+
+    const conceal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving opnieuw verbergen", exact: true });
+    await expect(conceal).toBeVisible();
+    await conceal.click();
+    await expect(secret).toHaveCount(0);
   });
 });

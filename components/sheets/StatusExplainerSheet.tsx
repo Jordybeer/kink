@@ -22,7 +22,7 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
     <Sheet open={open} onClose={onClose} scrollable aria-label="Uitleg keuzes">
       <SheetContent
         className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
-        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) * 0.8)" }}
+        style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), 32rem)" }}
       >
         <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
         <ul className="flex flex-col gap-3">
