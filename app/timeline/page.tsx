@@ -31,7 +31,6 @@ function TimelinePage() {
         (c.profileAId === bId && c.profileBId === aId)
       );
     }
-    // Legacy: match by name
     if (!profileA || !profileB) return false;
     const names = new Set([profileA.name.toLowerCase(), profileB.name.toLowerCase()]);
     return (
@@ -43,13 +42,8 @@ function TimelinePage() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-4xl">
-      {/* Masthead */}
-      <div className="mb-5">
-        <h1 className="text-2xl" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text)" }}>Verloop</h1>
-        <p className="text-xs uppercase tracking-[0.22em] mt-1" style={{ color: "var(--text2)" }}>hoe jullie afspraken bewegen</p>
-      </div>
+      <h1 className="sr-only">Verloop</h1>
 
-      {/* Profile selectors */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {(
           [
@@ -71,7 +65,6 @@ function TimelinePage() {
         ))}
       </div>
 
-      {/* Content */}
       {!bothSelected ? (
         <div className="rounded-xl p-6 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
@@ -82,12 +75,13 @@ function TimelinePage() {
         <div className="rounded-xl p-6 text-center flex flex-col gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <p className="text-sm font-medium">Nog geen contracten</p>
           <p className="text-sm" style={{ color: "var(--text2)" }}>
-            Leg een moment vast met een contract — dan zie je hier hoe jullie afspraken zich ontwikkelen.
+            Leg een moment vast met een contract, dan zie je hier hoe jullie afspraken zich ontwikkelen.
           </p>
           <Link
             href={`/contract?a=${aId}&b=${bId}`}
-            className="focus-ring mt-1 inline-block rounded-xl px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            prefetch={false}
+            className="focus-ring mt-1 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Maak contract
           </Link>

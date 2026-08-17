@@ -144,7 +144,7 @@ describe("shared profile store locks", () => {
     expect(useStore.getState().scenes[0].consentSnapshots).toBeUndefined();
   });
 
-  it("restores a newer own backup over an existing own profile but never downgrades it", async () => {
+  it("never lets unsigned legacy backup metadata overwrite an existing own profile", async () => {
     const existing = ownProfile("owner", "Old local", "KS-7H3P-9Q2M-A4BC", 10);
     const newer = ownProfile("owner", "From newer backup", "KS-7H3P-9Q2M-A4BC", 20);
     const older = ownProfile("owner", "From older backup", "KS-7H3P-9Q2M-A4BC", 5);
@@ -152,12 +152,12 @@ describe("shared profile store locks", () => {
     useStore.setState({ profiles: [existing] });
 
     const first = useStore.getState().restoreBackupProfiles([newer], [key]);
-    expect(first.updated).toBe(1);
-    expect(useStore.getState().profiles[0].name).toBe("From newer backup");
+    expect(first.updated).toBe(0);
+    expect(useStore.getState().profiles[0].name).toBe("Old local");
 
     const second = useStore.getState().restoreBackupProfiles([older], [key]);
     expect(second.updated).toBe(0);
-    expect(useStore.getState().profiles[0].name).toBe("From newer backup");
+    expect(useStore.getState().profiles[0].name).toBe("Old local");
   });
 
   it("never replaces an established source with a newer timestamp from another key", async () => {

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  /* JS keeps this in lockstep with iOS visualViewport; 100dvh is the no-JS fallback. */
+  --visual-viewport-height: 100dvh;
   --bg: #09080E;
   --surface: #110F19;
   --surface2: #16141F;
@@ -16,7 +18,17 @@
   --accent: #D946AF;
   --accent2: #D4527C;
   --accent-glow: rgba(217, 70, 175, 0.18);
-  --on-accent: #09080E;
+  /* Plumzwart in plaats van blauwzwart: deelt de hue van het accent, zodat vette
+     letters er niet meer tegenaan trillen. 5,02:1 op --accent en 4,89:1 op
+     --accent2, beide ruim boven AA. Wit zou hier op 3,86:1 zakken.
+     Nog in gebruik voor kleine accentvlakken: avatarinitialen, badges. */
+  --on-accent: #1A0714;
+
+  /* Gevulde knoppen dragen niet --accent maar deze diepere variant, zodat er
+     witte tekst op kan (6,04:1; op --accent zelf zou wit op 3,86:1 zakken).
+     --accent blijft #D946AF voor randen, gloed, iconen en tekst. */
+  --accent-fill: #a93187;
+  --on-accent-fill: #ffffff;
   --yes: #f97316;
   --willing: #10b981;
   --curious: #eab308;
@@ -155,70 +167,6 @@ html, body {
   display: none;
 }
 
-/* Theme: Deep Red */
-.theme-red {
-  --bg: #0f0505;
-  --surface: #1a0808;
-  --surface2: #1e0a0a;
-  --surface3: #36161a;
-  --border: #4a1a1a;
-  --border-accent: rgba(239, 68, 68, 0.3);
-  --text: #f5ede8;
-  --text2: #b89898;
-  --accent: #ef4444;
-  --accent2: #f97316;
-  --accent-glow: rgba(239, 68, 68, 0.18);
-}
-
-/* Theme: Forest */
-.theme-forest {
-  --bg: #050f08;
-  --surface: #0c1e10;
-  --surface2: #0d2213;
-  --surface3: #163a22;
-  --border: #1e4a28;
-  --border-accent: rgba(74, 222, 128, 0.3);
-  --text: #e8f5ed;
-  --text2: #9ab5a0;
-  --accent: #4ade80;
-  --accent2: #34d399;
-  --accent-glow: rgba(74, 222, 128, 0.18);
-  --on-accent: #0A0908;
-}
-
-/* Theme: Ledger — paper-at-night, seal-wax red, patinated brass.
-   For people who treat negotiation as paperwork, not a swipe feed. */
-.theme-ledger {
-  --bg: #0F0D0B;             /* warm ink */
-  --surface: #1A1715;        /* barely-lifted */
-  --surface2: #221E1B;       /* one rung up */
-  --surface3: #2C2622;       /* hover / nested */
-  --border: #2A2522;         /* hairline */
-  --border-accent: rgba(232, 84, 69, 0.28);
-  --text: #EEE6D8;           /* bone */
-  --text2: #8A8378;          /* ash */
-  --accent: #E85445;         /* vermilion — brightened from cochineal for AA contrast */
-  --accent2: #B89968;        /* patinated brass — Profile B */
-  --accent-glow: rgba(232, 84, 69, 0.14);
-  --on-accent: #160806;      /* near-black warm — AA on the lighter vermilion */
-}
-
-/* Theme: Monochrome */
-.theme-mono {
-  --bg: #080808;
-  --surface: #141414;
-  --surface2: #181818;
-  --surface3: #2e2e2e;
-  --border: #363636;
-  --border-accent: rgba(255, 255, 255, 0.2);
-  --text: #f0f0f0;
-  --text2: #888888;
-  --accent: #e5e5e5;
-  --accent2: #a3a3a3;
-  --accent-glow: rgba(255, 255, 255, 0.1);
-  --on-accent: #0A0908;
-}
-
 @keyframes ksFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -272,6 +220,24 @@ html, body {
   width: 120px;
   background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
   opacity: 0.6;
+}
+
+/* Dense multi-frame QR codes keep their 280px source resolution, but yield vertical
+   room to Safari chrome. Installed PWAs at normal phone heights stay at 280px. */
+.profile-share-qr {
+  --profile-share-qr-image-size: min(
+    280px,
+    max(224px, calc(var(--visual-viewport-height, 100dvh) * 0.36)),
+    calc(100vw - 3rem - 2px)
+  );
+
+  width: calc(var(--profile-share-qr-image-size) + 2px);
+  height: calc(var(--profile-share-qr-image-size) + 2px);
+}
+
+.profile-share-qr-image {
+  width: var(--profile-share-qr-image-size);
+  height: var(--profile-share-qr-image-size);
 }
 
 /* Prevent iOS Safari auto-zoom on focus (font-size < 16px triggers it and page stays zoomed) */
@@ -451,7 +417,15 @@ select {
 :root { --bottom-nav-h: calc(env(safe-area-inset-bottom) + 3.5rem); }
 
 .bottom-nav { display: none; }
+
+/* Hoe hoog de toast boven de onderrand zweeft. In de browser is dat gewoon wat
+   lucht; in de geïnstalleerde PWA moet hij ook nog over de bottom-nav heen.
+   De safe-area zit al in de calc van de toast zelf, dus hier alleen de
+   navhoogte optellen. */
+:root { --toast-lift: 0.75rem; }
+
 @media (display-mode: standalone) {
   .bottom-nav { display: flex; }
   main { padding-bottom: var(--bottom-nav-h); }
+  :root { --toast-lift: calc(3.5rem + 0.75rem); }
 }

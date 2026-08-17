@@ -1,9 +1,18 @@
 import { test, expect } from "@playwright/test";
-import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
+import {
+  seedAndGo,
+  PROFILE_ALEX,
+  PROFILE_SAM,
+  CONTRACT_ALEX_SAM,
+  CONTRACT_SERIES_ALEX_SAM,
+} from "./fixtures";
 
 test.describe("Scene planner", () => {
   test.beforeEach(async ({ page }) => {
-    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM], {
+      contracts: [CONTRACT_ALEX_SAM],
+      contractSeries: [CONTRACT_SERIES_ALEX_SAM],
+    });
   });
 
   test("laadt zonder overflow", async ({ page }) => {
@@ -12,8 +21,8 @@ test.describe("Scene planner", () => {
   });
 
   test("toont scène menu interface", async ({ page }) => {
-    const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/[Ss]cène|[Ss]cene/);
+    await expect(page.getByRole("button", { name: "Kinks toevoegen" })).toBeVisible();
+    await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
   });
 
   test("toont profielnamen in de koptekst", async ({ page }) => {
@@ -22,8 +31,10 @@ test.describe("Scene planner", () => {
   });
 
   test("toont matches als suggesties", async ({ page }) => {
-    const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/Spanking|Bondage|Blindfold|match/i);
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    await expect(page.getByRole("heading", { name: "Toevoegen aan setlist" })).toBeVisible();
+    await expect(page.getByText("Wederzijds", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen" })).toBeVisible();
   });
 
   test("geen overflow op mobiel (390px)", async ({ page }) => {
@@ -50,6 +61,19 @@ test.describe("Scene planner", () => {
   });
 });
 
+test("scene planner requires a contract for a selected pair", async ({ page }) => {
+  await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Contract opstellen" })).toBeVisible();
+});
+
+test("a legacy contract snapshot alone never opens the scene gate", async ({ page }) => {
+  await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM], {
+    contracts: [CONTRACT_ALEX_SAM],
+  });
+  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
+});
+
 test.describe("Scene planner — zonder URL-params", () => {
   test("laadt zonder profielen en toont scène menu", async ({ page }) => {
     await seedAndGo(page, "/scene", [PROFILE_ALEX, PROFILE_SAM]);
@@ -62,4 +86,77 @@ test.describe("Scene planner — zonder URL-params", () => {
     const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
     expect(overflow).toBe(false);
   });
+});
+
+const DIRECTIONAL_SCENE_A = {
+  ...PROFILE_ALEX,
+  entries: {
+    spanking_hand_give: { status: "yes", comment: "" },
+    pegging_give: { status: "yes", comment: "geven", tags: ["rustig"] },
+  },
+} satisfies typeof PROFILE_ALEX;
+
+const DIRECTIONAL_SCENE_B_RECEIVE = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand_receive: { status: "yes", comment: "" },
+    pegging_receive: { status: "yes", comment: "ontvangen", tags: ["veel glijmiddel"] },
+  },
+} satisfies typeof PROFILE_SAM;
+
+const DIRECTIONAL_SCENE_B_GIVE = {
+  ...PROFILE_SAM,
+  entries: {
+    spanking_hand_receive: { status: "yes", comment: "" },
+    pegging_give: { status: "yes", comment: "ook geven" },
+  },
+} satisfies typeof PROFILE_SAM;
+
+test.describe("Scene planner — directionele pairing", () => {
+  const extras = { contracts: [CONTRACT_ALEX_SAM], contractSeries: [CONTRACT_SERIES_ALEX_SAM] };
+
+  test("toont geven plus ontvangen als wederzijdse Pegging-suggestie", async ({ page }) => {
+    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [DIRECTIONAL_SCENE_A, DIRECTIONAL_SCENE_B_RECEIVE], extras);
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    const mutual = page.getByText("Wederzijds", { exact: true }).locator("..");
+    await expect(mutual.getByRole("button", { name: "Pegging — geven ↔ ontvangen" })).toBeVisible();
+  });
+
+  test("toont geven plus geven niet als wederzijdse Pegging-suggestie", async ({ page }) => {
+    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [DIRECTIONAL_SCENE_A, DIRECTIONAL_SCENE_B_GIVE], extras);
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    await expect(page.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pegging — geven ↔ ontvangen" })).toHaveCount(0);
+  });
+});
+
+test("houdt tags van een private directionele counterpart verborgen", async ({ page }) => {
+  const privateA = {
+    ...DIRECTIONAL_SCENE_A,
+    entries: {
+      ...DIRECTIONAL_SCENE_A.entries,
+      pegging_give: { status: "yes", comment: "", tags: ["publiek"], usedInScene: 1 },
+    },
+  } satisfies typeof PROFILE_ALEX;
+  const privateB = {
+    ...DIRECTIONAL_SCENE_B_RECEIVE,
+    entries: {
+      ...DIRECTIONAL_SCENE_B_RECEIVE.entries,
+      pegging_receive: {
+        status: "yes", comment: "", tags: ["GEHEIME-PARTNER-TAG"], privateResponse: true,
+      },
+    },
+  } satisfies typeof PROFILE_SAM;
+
+  await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [privateA, privateB], {
+    contracts: [CONTRACT_ALEX_SAM],
+    contractSeries: [CONTRACT_SERIES_ALEX_SAM],
+  });
+  await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+  const mostUsed = page.getByText("Meest gebruikt", { exact: true }).locator("..");
+  await mostUsed.getByRole("button", { name: "Pegging — geven ↔ ontvangen" }).click();
+  await page.getByRole("button", { name: "Sluiten" }).click();
+
+  await expect(page.getByText("publiek", { exact: true })).toBeVisible();
+  await expect(page.getByText("GEHEIME-PARTNER-TAG", { exact: true })).toHaveCount(0);
 });

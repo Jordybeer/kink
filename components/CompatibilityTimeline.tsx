@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { ContractSnapshot } from "@/types";
 
 interface Props {
@@ -46,10 +47,11 @@ export function CompatibilityTimeline({ contracts }: Props) {
               {c.profileAId && c.profileBId && (
                 <Link
                   href={`/contract?a=${c.profileAId}&b=${c.profileBId}`}
-                  className="focus-ring text-xs transition-colors"
+                  prefetch={false}
+                  className="focus-ring inline-flex items-center gap-1 text-xs transition-colors"
                   style={{ color: "var(--accent)" }}
                 >
-                  Bekijk →
+                  Bekijk <ArrowRight size={12} aria-hidden="true" />
                 </Link>
               )}
             </div>

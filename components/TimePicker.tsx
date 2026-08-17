@@ -95,7 +95,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
                     className="focus-ring rounded-lg py-2 text-xs tabular-nums font-medium"
                     style={
                       hour === h
-                        ? { background: "var(--accent)", color: "var(--on-accent)" }
+                        ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
                         : { background: "var(--surface2)", color: "var(--text2)" }
                     }
                   >
@@ -114,7 +114,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
                     className="focus-ring rounded-lg py-2 px-2 text-xs tabular-nums font-medium"
                     style={
                       minute === m
-                        ? { background: "var(--accent)", color: "var(--on-accent)" }
+                        ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
                         : { background: "var(--surface2)", color: "var(--text2)" }
                     }
                   >
@@ -131,7 +131,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
                 type="button"
                 onClick={confirm}
                 className="focus-ring px-4 py-2 rounded-lg text-xs font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)", minHeight: 36 }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)", minHeight: 36 }}
               >
                 Bevestigen
               </button>

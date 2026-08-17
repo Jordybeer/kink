@@ -6,6 +6,80 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-17 — Zichtbaars veranderd zonder te kijken wie het vastpinde
+
+**What went wrong:** Twee keer in één sessie dezelfde fout, allebei pas gevangen
+door de browserrepetitie in CI.
+
+1. **De dash-sweep.** `KinkListRow` kreeg een komma in plaats van een streepje in
+   zijn `aria-label`. Ik zocht met `grep -rn "bewerken" e2e | head -6`, zag één
+   spec, trok die mee en dacht klaar te zijn. **Mijn eigen `head -6` kapte de
+   treffers af**: vier asserties in `e2e/profile.spec.ts` bleven op `— bewerken`
+   staan en vielen om.
+2. **De regelbreuk.** `app/not-found.tsx` verloor zijn `<br />` zodat de twee
+   zinnen doorlopen. `e2e/not-found.spec.ts` pinde `locator("br")` op precies
+   één. Ik had na die wijziging wel op *tekst* gezocht, niet op *structuur*.
+   Veertien rode tests over twee projecten en zes viewports, allemaal via die ene
+   regel.
+
+Verzwarend: ik duwde drie keer een nieuwe commit bovenop een lopende
+devicerepetitie, waardoor die telkens `cancelled` raakte. Lint, test en build
+bleven al die tijd groen, dus het leek in orde terwijl juist de laag die layout
+en raakvlakken toetst nooit afliep. De tweede fout had drie runs eerder zichtbaar
+kunnen zijn.
+
+**Rule:** verander je iets dat een gebruiker ziet — copy, `aria-label`, markup,
+een `<br>`, een class die een test selecteert — grep dan **`e2e/` én `__tests__/`
+volledig, zonder `head`**, op zowel de oude tekst als de structuur eromheen. Een
+afgekapte grep is geen bewijs. En zolang een devicerepetitie loopt: niet pushen.
+Een `cancelled` run is geen groene run, en lint/test/build dekken layout en
+touch-geometrie niet af.
+
+## 2026-08-17 — "Geen UI" was een aanname, geen toets
+
+**What went wrong:** Tijdens de launch-readiness audit werd `UI-principles.md` niet
+gelezen bij sessiestart. De redenering was dat de wijziging geen UI raakte:
+`app/sw.ts`, een pure functie in `lib/`, tests en documentatie — geen component,
+geen layout, geen copy. Die redenering ging over de *diff*, terwijl de fix in
+gebruikerstermen precies een UI-vraag beantwoordde: of `UpdateBanner` ooit
+verschijnt en of een systeemmelding zonder toestemming wordt geprobeerd. Dat
+raakt principe 12 (*Quiet is good. Invisible is not.*) en prioriteit 1 (consent).
+Het werk bleek achteraf in lijn, maar dat was geluk, geen controle. Twee
+UI-aanbevelingen in de audit (error boundary, quota-toast) waren bovendien
+geformuleerd zonder de doctrine en misten daardoor hun scherpste eis: *Serious ≠
+scary* en "essentiële veiligheidscontext mag niet stil worden opgelost".
+
+**Rule:** `UI-principles.md` wordt gelezen bij sessiestart, punt — niet pas
+wanneer een diff er "UI genoeg" uitziet. De toets is niet *welke bestanden raak
+ik*, maar *verandert dit wat de gebruiker ziet, kan of moet beslissen*. Een
+service worker, een store-guard of een route-gate telt mee zodra het antwoord ja
+is. Dat geldt ook voor aanbevelingen in een auditdocument: UI-advies zonder de
+doctrine erbij is ongedekt advies.
+
+## 2026-08-11 — De voortgang at de onderkant van de vraagkaart op
+
+**What went wrong:** De dedicated Questions-route kreeg boven de triagekaart een volledige voortgangsheader met label, infoknop, balk en percentage. Op iPhone Safari bleef daardoor te weinig verticale ruimte over: de statuskeuzes waren zichtbaar, maar `Eerst vragen`, `Eerste keer` en `Later` vielen onder de fold. De kaart zelf was niet te groot; dubbele chrome stal de viewport.
+
+**Rule:** Een gefocuste one-question-per-screen flow krijgt een expliciet viewportbudget. Globale/routechrome mag de primaire kaart niet onder de fold duwen. Stop compacte voortgang in bestaande navigatiechrome, laat detailtellers op de kaart zelf staan en bewijs op een 390×844 mobiele viewport dat de onderste primaire affordances zonder scroll zichtbaar zijn. Scroll blijft alleen fallback voor echt korte schermen en uitgeklapte details.
+
+---
+
+## 2026-08-08 — Dependency-setup zat in de verkeerde speelkamer
+
+**What went wrong:** Na het aantrekken van `worktree-arousal` bleef de shell in de hoofdcheckout hangen en liet daar `npm ci` los — braaf commando, verkeerde speelkamer. Die run faalde ook omdat npm zijn standaardcache onder `/root/.npm` niet kon aanmaken. Er zijn geen tracked bestanden gewijzigd, maar de geïsoleerde-worktreegrens werd operationeel wel overschreden.
+
+**Rule:** Klik de riem vast vóór iedere install-, test-, build- en edit-opdracht: zet `workdir` expliciet op de actieve worktree en laat `git branch --show-current` bewijzen dat de shell in de juiste kamer zit. Geef npm in deze sandbox expliciet een schrijfbare cache buiten de repository; de standaardcache onder `/root/.npm` blijft verboden terrein.
+
+---
+
+## 2026-08-05 — PR-metadata werd per ongeluk als repositorybestand behandeld
+
+**What went wrong:** Bij het bijwerken van de PR-beschrijving werd de contents-API aangeroepen met een nieuw tijdelijk pad in plaats van de pull-requestmetadata-API. Daardoor verscheen kort een betekenisloos bestand op de featurebranch. Het bestand is onmiddellijk verwijderd en heeft de producttree niet veranderd.
+
+**Rule:** Titel, body, base en reviewstatus van een PR worden uitsluitend via de pull-request-API gewijzigd. Gebruik `create_file`/`update_file` alleen wanneer het bedoelde eindresultaat werkelijk een repositorybestand is; controleer vóór iedere write dat resource-type en toolnaam overeenkomen.
+
+---
+
 ## 2026-07-28 — Twee schrijvende workflowtriggers botsten op dezelfde branch
 
 **What went wrong:** Een tijdelijke transform-workflow luisterde tegelijk naar `push` en `pull_request synchronize`. Eén stagingcommit startte daardoor twee identieke schrijvers. Beide doorliepen tests en build; de eerste pushte de bewezen productcommit, de tweede werd terecht als non-fast-forward geweigerd.
@@ -133,3 +207,37 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 **What went wrong:** When computing the next alphabetical kink word for a new worktree, only remote branches on `origin` were checked. A local branch (`worktree-inversion`) was missed, causing a letter collision.
 
 **Rule:** Always check both local and remote branches: `git branch -a | grep worktree-`. Never rely on `remotes/origin/` alone.
+
+## 2026-08-05 — De zojuist vastgelegde API-grens werd meteen opnieuw gebroken
+
+**What went wrong:** Meteen na het documenteren van de scheiding tussen PR-metadata en repositorybestanden werd opnieuw `update_file` gebruikt terwijl `update_pull_request` nodig was. Daardoor werd `CLAUDE.md` tijdelijk ingekort. Het bestand is direct volledig hersteld en heeft opnieuw exact zijn oorspronkelijke blob-SHA.
+
+**Rule:** Na een toolverwisseling geen volgende write op routine uitvoeren. Pauzeer, benoem het gewenste resource-type hardop, controleer de volledige toolnaam en argumenten, en voer pas dan exact één mutatie uit. Voor PR-titel of PR-body is de enige toegestane writer `update_pull_request`.
+
+---
+
+
+## 2026-08-11 — Een gerichte E2E-wijziging herschreef de hele onboardingguard
+
+**What went wrong:** Tijdens PR #318 moest alleen de laatste profiel-create test van drie naar twee stappen. De contents-rewrite verving echter vrijwel `e2e/new-user.spec.ts`, waardoor bewezen onboarding- en PIN-regressieguards verdwenen en CI op oude selectors vastliep.
+
+**Rule:** Voor een gerichte testflowwijziging blijft de rest van het specbestand byte-identiek aan de branchbasis. Controleer altijd de per-file PR patch vóór de gate; als de diff groter is dan de bedoelde test, herstel eerst vanaf `origin/dev` en pas alleen het minimale blok aan.
+
+## 2026-08-11 — Forge vertrouwde op de inspringing van een heel catalogusblok
+
+**What went wrong:** De eerste Impact-forge probeerde acht opeenvolgende catalogusitems als één exact multiline blok te vervangen. YAML-inspringing maakte die assertion fragiel; de workflow stopte veilig vóór enige wijziging, maar de transform was onnodig breed.
+
+**Rule:** Bij catalogusmigraties elk item afzonderlijk ankeren op zijn stabiele ID en exact één object vervangen. Gebruik een count-assertie per item; bundel nooit meerdere zelfstandige catalogusobjecten in één whitespace-gevoelige match.
+
+## 2026-08-11 — Een semantische ID-split liet contracttests met oude namen staan
+
+**What went wrong:** De Impact-transform werkte, maar de eerste echte unitrun vond stale verwachtingen buiten de directionality-tests: cataloguscount/retire-add ledger en twee questionnaire-fixtures gebruikten nog de oude singles. De suite stopte terecht vóór build en commit. Een vervolgrun maakte vervolgens `sound_deprivation` ten onrechte onderdeel van de historische v2-retirementset, terwijl die ID pas post-v2 werd retired.
+
+**Rule:** Bij iedere pre-launch ID-retirement vóór de eerste volledige unitrun expliciet alle testreferenties naar de oude IDs inventariseren. Houd historische compact-catalogusretirements en latere post-v2 retirements als aparte testsets; actieve fixtures moeten naar één concrete nieuwe betekenis worden gezet en hun oorspronkelijke testsemantiek behouden.
+
+
+## 2026-08-11 — Een oude dev-head verborg parallel gemergd werk
+
+**What went wrong:** Na het afronden van de Questions-viewportfix werd een eerder opgehaalde `dev`-head gebruikt om het volgende directionalitywerk te kiezen. Intussen waren parallel PR #321, #322 en #323 geland. Daardoor leek de al uitgevoerde Impact-split opnieuw open werk en stopte de uitvoering onnodig midden in de audit.
+
+**Rule:** In deze parallelle repository is een branchstatus alleen geldig op het moment van lezen. Vlak vóór elke nieuwe fase altijd in één verse check actuele `dev`, recente PR's en de bedoelde featurebranch ophalen; een eerder in dezelfde sessie gelezen SHA is geen startbewijs.

@@ -1,8 +1,12 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createQuotaSafeStorage } from "@/lib/persistStorage";
 import { useState, useEffect } from "react";
-import type { Profile, KinkEntry, KinkStatus, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
+import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
+import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from "@/lib/questionnaireSetup";
+import { partnerDirectionalKinkId, stripDeprecatedDirectionalEntries, stripDeprecatedDirectionalProfile } from "@/lib/directionality";
+import { STORE_PERSIST_VERSION } from "@/lib/storePersistVersion";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   createConsentLedgerEvent,
@@ -20,7 +24,10 @@ function uid() {
   return crypto.randomUUID();
 }
 
-type Theme = "midnight" | "red" | "forest" | "mono" | "ledger";
+// Eén kamer, één licht. De vier oude themaklassen zijn nooit op de DOM gezet
+// en zijn met hun dode CSS meegegaan; dit veld reist alleen nog mee in de
+// opslag van bestaande installaties.
+type Theme = "midnight";
 
 interface State {
   profiles: Profile[];
@@ -66,7 +73,6 @@ interface State {
   lockSceneConsent: (sceneId: string) => Promise<{ ok: boolean; message: string }>;
   appendSceneConsentEvent: (sceneId: string, profileId: string, type: Exclude<ConsentLedgerEventType, "locked">, note?: string) => Promise<{ ok: boolean; message: string }>;
   dismissInstallPrompt: () => void;
-  setTheme: (t: Theme) => void;
   appLockEnabled: boolean;
   appLockPin: string | null;
   biometricEnabled: boolean;
@@ -79,10 +85,44 @@ interface State {
 
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 
+/** Eén kluisdeur voor de hele store; zie lib/persistStorage. */
+const quotaSafeStorage = createQuotaSafeStorage();
+
 // One auto-moment per profile per day, and only when something actually
 // changed — Verloop feeds itself without the owner performing rituals,
 // and the 30-cap becomes a rolling month instead of a burst of noise.
 const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+export { STORE_PERSIST_VERSION };
+
+export function migrateStoredDirectionalityV24<T extends {
+  profiles?: Profile[];
+  profileSnapshots?: ProfileSnapshot[];
+}>(
+  state: T,
+  version: number,
+): T {
+  if (version >= STORE_PERSIST_VERSION) return state;
+
+  if (state.profiles) {
+    // Preserve the previous proof as a cryptographic chain anchor. Because the
+    // projected entries changed, verifyProfileConsent will reject it until the
+    // source profile is re-sealed/re-shared; keeping the proof hash lets that
+    // next proof link to the same identity instead of weakening continuity.
+    state.profiles = state.profiles.map(stripDeprecatedDirectionalProfile);
+  }
+
+  if (state.profileSnapshots) {
+    state.profileSnapshots = state.profileSnapshots.map((snapshot) => {
+      const entries = stripDeprecatedDirectionalEntries(snapshot.entries);
+      return entries === snapshot.entries
+        ? snapshot
+        : { ...snapshot, entries, counts: deriveCounts(entries) };
+    });
+  }
+
+  return state;
+}
 
 export const useStore = create<State>()(
   persist(
@@ -140,6 +180,7 @@ export const useStore = create<State>()(
               name,
               role,
               experienceLevel,
+              questionnaireSetup: defaultQuestionnaireSetup(),
               relationshipStatus: relationshipStatus || undefined,
               origin: "own" as const,
               customKinks: [],
@@ -336,8 +377,18 @@ export const useStore = create<State>()(
             const kinkId = item.kinkId;
             profiles = profiles.map((p) => {
               if (p.id !== scene.profileAId && p.id !== scene.profileBId) return p;
-              const prev = p.entries[kinkId] ?? { status: null, comment: "" };
-              return { ...p, entries: { ...p.entries, [kinkId]: { ...prev, usedInScene: (prev.usedInScene ?? 0) + 1 } } };
+              // Scene kinkId is anchored to profile A; profile B records the explicit counterpart.
+              const participantKinkId = p.id === scene.profileBId
+                ? partnerDirectionalKinkId(kinkId)
+                : kinkId;
+              const prev = p.entries[participantKinkId] ?? { status: null, comment: "" };
+              return {
+                ...p,
+                entries: {
+                  ...p.entries,
+                  [participantKinkId]: { ...prev, usedInScene: (prev.usedInScene ?? 0) + 1 },
+                },
+              };
             });
           }
           return {
@@ -523,10 +574,6 @@ export const useStore = create<State>()(
         set({ notificationPermissionAsked: true });
       },
 
-      setTheme(t) {
-        set({ theme: t });
-      },
-
       setAppLockPin(hash) {
         set({ appLockEnabled: true, appLockPin: hash });
       },
@@ -546,6 +593,9 @@ export const useStore = create<State>()(
     },
     {
       name: "kink-profiles",
+      // Zonder deze wrapper gooit een volle localStorage dwars door elke
+      // store-actie heen en verdwijnt het laatste antwoord zonder een woord.
+      storage: createJSONStorage(() => quotaSafeStorage),
       partialize: (state) => ({
         profiles: state.profiles,
         contracts: state.contracts,
@@ -563,7 +613,7 @@ export const useStore = create<State>()(
         biometricEnabled: state.biometricEnabled,
         biometricCredentialId: state.biometricCredentialId,
       }),
-      version: 17,
+      version: STORE_PERSIST_VERSION,
       migrate(persisted: unknown, version: number) {
         const state = persisted as {
           profiles?: Profile[];
@@ -668,6 +718,10 @@ export const useStore = create<State>()(
         if (version < 17) {
           state.profileOwnerKeys = [];
         }
+        if (version < 18 && state.profiles) {
+          state.profiles = normalizeStoredQuestionnaireProfiles(state.profiles);
+        }
+        migrateStoredDirectionalityV24(state, version);
         return state;
       },
     }

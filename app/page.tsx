@@ -1,30 +1,28 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
-import { Camera, PlusCircle, X } from "@phosphor-icons/react";
-import Sheet from "@/components/ui/Sheet";
-import Link from "next/link";
+
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useStore, useHasHydrated } from "@/lib/store";
-import { EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
-import RolePicker from "@/components/RolePicker";
-import type { ExperienceLevel, Profile } from "@/types";
-import Onboarding from "@/components/Onboarding";
-import PwaInstallGuide from "@/components/PwaInstallGuide";
-import AppLock from "@/components/AppLock";
-import PageShell from "@/components/PageShell";
-import Wordmark from "@/components/Wordmark";
+import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
-import { decodeSharedProfile } from "@/lib/profileShareV3";
+import type { Profile } from "@/types";
+import type { EncryptedBackup } from "@/lib/crypto";
+import { useStore, useHasHydrated } from "@/lib/store";
+import { decodeSharedProfileTransfer } from "@/lib/profileSwitchShare";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
 import { profileConsentAlias } from "@/lib/consentProof";
-import { eligibleParentProfiles } from "@/lib/subprofile";
+import Onboarding from "@/components/Onboarding";
+import PwaInstallGuide from "@/components/PwaInstallGuide";
+import PageShell from "@/components/PageShell";
+import Wordmark from "@/components/Wordmark";
 import ProfileList from "@/components/ProfileList";
+import ProfileCreateSheet from "@/components/ProfileCreateSheet";
 import SettingsSheet from "@/components/sheets/SettingsSheet";
 import PinFlowSheet from "@/components/sheets/PinFlowSheet";
 import DestroyAllSheet from "@/components/sheets/DestroyAllSheet";
 import { EncryptedExportSheet, EncryptedImportSheet } from "@/components/sheets/EncryptedBackupSheets";
-import type { EncryptedBackup } from "@/lib/crypto";
+import { backupFileSizeAllowed } from "@/lib/importLimits";
+import Sheet from "@/components/ui/Sheet";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 
@@ -38,7 +36,6 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const {
     profiles,
-    createProfile,
     deleteProfile,
     importProfiles,
     restoreBackupProfiles,
@@ -47,34 +44,14 @@ function HomeContent() {
     completeOnboarding,
     installPromptDismissed,
     dismissInstallPrompt,
-    pinnedProfileId,
-    resetProfileTour,
-    appLockEnabled,
-    appLockPin,
-    biometricEnabled,
-    biometricCredentialId,
   } = useStore();
-  const _hasHydrated = useHasHydrated();
+  const hydrated = useHasHydrated();
 
-  // PWA install
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   const [hasNativePrompt, setHasNativePrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-
-  // App lock
-  const [lockState, setLockState] = useState<"locked" | "unlocked">("unlocked");
-
-  // Profile create form
-  const [name, setName] = useState("");
-  const [nameError, setNameError] = useState<string | null>(null);
-  const [role, setRole] = useState("");
-  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("beginner");
-  const [relationshipStatus, setRelationshipStatus] = useState("");
-  const [parentName, setParentName] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-
-  // Sheet orchestration
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -87,27 +64,37 @@ function HomeContent() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
-  // QR / share import
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [importPreview, setImportPreview] = useState<Profile | null>(null);
+  const [importTransfer, setImportTransfer] = useState<Profile[] | null>(null);
   const [importDone, setImportDone] = useState(false);
-  const importIdentity = importPreview ? classifyProfileImport(profiles, importPreview) : null;
+  const importPreview = importTransfer?.[0] ?? null;
+  const importIdentities = importTransfer?.map((candidate) => classifyProfileImport(profiles, candidate)) ?? [];
+  const importIdentity = (() => {
+    const sourceConflict = importIdentities.find((identity) => identity.kind === "source-conflict");
+    if (sourceConflict) return sourceConflict;
+    if (importIdentities.length > 0 && importIdentities.every((identity) => identity.kind === "same-code")) {
+      return importIdentities[0];
+    }
+    return importIdentities.find((identity) => identity.kind === "signed-update")
+      ?? importIdentities.find((identity) => identity.kind === "same-name-role")
+      ?? importIdentities.find((identity) => identity.kind === "new")
+      ?? null;
+  })();
+  const isSwitchImport = importTransfer?.length === 2
+    && !!importTransfer[0].switchShareProof
+    && !!importTransfer[0].personGroupId
+    && importTransfer.every((candidate) =>
+      candidate.personGroupId === importTransfer[0].personGroupId);
 
   useEffect(() => {
-    // Read the flag live, never a mount-time snapshot — onboarding raises it
-    // mid-session the moment a PIN is chosen, and a stale read here yanks the
-    // wizard back to slide one (corrections.md 2026-07-11).
-    if (_hasHydrated && appLockEnabled && sessionStorage.getItem("app_unlocked") !== "1") setLockState("locked");
-  }, [_hasHydrated, appLockEnabled]);
-
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    setIsIos(/iPhone|iPad|iPod/.test(ua) && !/Chrome/.test(ua));
+    const userAgent = navigator.userAgent;
+    setIsIos(/iPhone|iPad|iPod/.test(userAgent) && !/Chrome/.test(userAgent));
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
-    const handler = (e: Event) => {
-      e.preventDefault();
-      deferredPrompt.current = e as BeforeInstallPromptEvent;
+
+    const handler = (event: Event) => {
+      event.preventDefault();
+      deferredPrompt.current = event as BeforeInstallPromptEvent;
       setHasNativePrompt(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
@@ -116,16 +103,18 @@ function HomeContent() {
 
   useEffect(() => {
     let cancelled = false;
+
     async function readShareLocation() {
       const parsed = parseSharePaste(window.location.href);
       if (parsed.kind !== "profile") return;
       try {
-        const decoded = await decodeSharedProfile(parsed.encoded);
-        if (!cancelled) setImportPreview(decoded);
+        const decoded = await decodeSharedProfileTransfer(parsed.encoded);
+        if (!cancelled) setImportTransfer(decoded.profiles);
       } catch {
-        // Ongeldige of beschadigde deelcode blijft buiten de store.
+        // Beschadigde of ongeldige deelcodes komen niet in de store.
       }
     }
+
     void readShareLocation();
     window.addEventListener("hashchange", readShareLocation);
     return () => {
@@ -149,32 +138,19 @@ function HomeContent() {
     dismissInstallPrompt();
   }
 
-  // Returns whether the profile was actually born — the form only closes on obedience.
-  function handleCreate(e: React.FormEvent): boolean {
-    e.preventDefault();
-    if (!name.trim()) return false;
-    if (parentName === null) {
-      const duplicate = profiles.some(
-        (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
-      );
-      if (duplicate) { setNameError("Er bestaat al een profiel met deze naam."); return false; }
-    }
-    setNameError(null);
-    const id = createProfile(name.trim(), role, experienceLevel, relationshipStatus || undefined);
-    setName(""); setRelationshipStatus(""); setParentName(null);
-    router.push(`/profile/${id}`);
-    return true;
-  }
-
   function promptDelete(id: string) {
     setDeleteTarget(id);
     setDeleteSheetOpen(true);
   }
 
+  function closeDeleteSheet() {
+    setDeleteSheetOpen(false);
+    window.setTimeout(() => setDeleteTarget(null), 300);
+  }
+
   function confirmDelete() {
     if (deleteTarget) deleteProfile(deleteTarget);
-    setDeleteSheetOpen(false);
-    setTimeout(() => setDeleteTarget(null), 300);
+    closeDeleteSheet();
   }
 
   async function restoreFromParsed(parsed: Record<string, unknown>) {
@@ -182,27 +158,35 @@ function HomeContent() {
       const { prepareBackupRestore } = await import("@/lib/backupRestore");
       const prepared = await prepareBackupRestore(parsed);
       if (!prepared.profiles.length && !prepared.contracts.length) {
-        setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+        setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
         return;
       }
       if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
       else importProfiles(prepared.profiles);
       if (prepared.contracts.length) restoreContracts(prepared.contracts);
-      setImportSuccess(`${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`);
+      setImportSuccess(
+        `${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`,
+      );
     } catch {
-      setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+      setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
     }
   }
 
-  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
     setImportError(null);
     setImportSuccess(null);
-    const file = e.target.files?.[0];
+    const file = event.target.files?.[0];
     if (!file) return;
+    if (!backupFileSizeAllowed(file.size)) {
+      setImportError("Backupbestand is te groot (max. 10 MB).");
+      event.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onload = async (ev) => {
+    reader.onload = async (loadEvent) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string);
+        const parsed = JSON.parse(loadEvent.target?.result as string);
         if (parsed.encrypted === true) {
           setPendingEncrypted(parsed as EncryptedBackup);
           setImportPwOpen(true);
@@ -214,291 +198,212 @@ function HomeContent() {
       }
     };
     reader.readAsText(file);
-    e.target.value = "";
+    event.target.value = "";
   }
 
-  if (!_hasHydrated) return <PageShell loading width="2xl" />;
-
-  if (appLockEnabled && lockState === "locked") {
-    return (
-      <AppLock
-        storedHash={appLockPin}
-        biometricCredentialId={biometricEnabled ? biometricCredentialId : null}
-        onUnlock={() => {
-          sessionStorage.setItem("app_unlocked", "1");
-          setLockState("unlocked");
-        }}
-      />
-    );
-  }
+  if (!hydrated) return <PageShell loading width="2xl" />;
 
   if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
 
-  const parentCandidates = eligibleParentProfiles(profiles, pinnedProfileId);
-  const deleteTargetProfile = profiles.find((p) => p.id === deleteTarget);
-
-  // The hero speaks to the state of the house, not into the void.
-  const tagline =
-    profiles.length === 1 ? "Eén profiel staat klaar. Nodig je partner uit."
-    : profiles.length === 2 ? "Twee profielen. Eén gesprek."
-    : profiles.length > 2 ? "Alle stemmen aan tafel. Eén gesprek."
-    : "Verken grenzen. Samen.";
+  const deleteTargetProfile = profiles.find((profile) => profile.id === deleteTarget);
 
   return (
     <>
       <PageShell width="2xl" className="lg:max-w-4xl">
-        {/* Hero */}
         <div className="mb-6 pt-3 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>
           <div className="ks-gradient-rule mx-auto my-4" />
-          {/* The vow stays on the door; the house-state whisper sits beneath it. */}
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
             Verken grenzen. Samen.
           </p>
-          {profiles.length > 0 && (
-            <p className="text-xs mt-1" style={{ color: "var(--text2)", opacity: 0.7 }}>
-              {tagline}
-            </p>
-          )}
         </div>
 
-        {/* The salon: profiles take the stage first, admin waits by the door */}
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
-        {/* Quiet footer actions — the staff entrance */}
-        {profiles.length > 0 && (
-          <div className="flex items-center justify-center gap-2 mt-6 mb-4">
+        {profiles.length > 0 ? (
+          <div className={`grid ${importPreview ? "grid-cols-1" : "grid-cols-2"} gap-2 mt-6 mb-5`}>
             <button
-              onClick={() => setFormOpen((v) => !v)}
-              className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
-              style={{ color: formOpen ? "var(--text2)" : "var(--accent)" }}
+              type="button"
+              onClick={() => setFormOpen(true)}
+              className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
+              style={{
+                background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+                border: "1px solid var(--border-accent)",
+              }}
             >
-              {formOpen
-                ? <X size={16} aria-hidden="true" />
-                : <PlusCircle size={16} aria-hidden="true" />}
-              {formOpen ? "Annuleer" : "Nieuw profiel"}
+              <span
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              >
+                <UserPlus size={19} weight="bold" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">Nieuw profiel</span>
+                <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                  Perspectief en startlijst
+                </span>
+              </span>
+              <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
             </button>
+
             {!importPreview && (
-              <>
-                <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
-                <button
-                  onClick={() => { setScanError(null); setScanOpen(true); }}
-                  className="focus-ring inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full text-sm font-medium transition-colors"
-                  style={{ color: "var(--text2)" }}
+              <button
+                type="button"
+                onClick={() => {
+                  setScanError(null);
+                  setScanOpen(true);
+                }}
+                className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+              >
+                <span
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
+                  style={{ background: "var(--surface3)", color: "var(--text2)" }}
                 >
-                  <Camera size={16} aria-hidden="true" />
-                  Scan QR
-                </button>
-              </>
+                  <Camera size={19} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">Scan profiel</span>
+                  <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                    Voeg je partner toe
+                  </span>
+                </span>
+                <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+              </button>
             )}
           </div>
-        )}
-
-        {(profiles.length === 0 || formOpen) && (
-          <form
-            onSubmit={(e) => { if (handleCreate(e)) setFormOpen(false); }}
-            className="relative overflow-hidden rounded-xl p-5 mb-8"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+        ) : (
+          <section
+            className="relative overflow-hidden rounded-[26px] p-5 mb-5"
+            style={{
+              background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+              border: "1px solid var(--border-accent)",
+              boxShadow: "0 18px 60px color-mix(in srgb, var(--accent) 10%, transparent)",
+            }}
           >
-            {/* The toggle above already announces "Nieuw profiel" — only title
-                the form when it stands alone (first-run, no toggle). */}
-            {profiles.length === 0 && (
-              <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>
-                Nieuw profiel
-              </h2>
-            )}
-
-            {parentCandidates.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs mb-1 font-medium" style={{ color: "var(--text2)" }}>Subprofiel van</p>
-                <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>Maak een tweede rol onder dezelfde naam — bijv. Dominant naast Submissive.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => { setParentName(null); setName(""); }}
-                    aria-pressed={parentName === null}
-                    className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                    style={parentName === null
-                      ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                      : { color: "var(--text2)", borderColor: "var(--border)" }}
-                  >
-                    Nieuw persoon
-                  </button>
-                  {parentCandidates.map((candidate) => (
-                    <button
-                      key={candidate}
-                      type="button"
-                      onClick={() => { setParentName(candidate); setName(candidate); }}
-                      aria-pressed={parentName === candidate}
-                      className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                      style={parentName === candidate
-                        ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                        : { color: "var(--text2)", borderColor: "var(--border)" }}
-                    >
-                      {candidate}
-                    </button>
-                  ))}
-                </div>
+            <div
+              className="absolute -right-14 -top-14 w-36 h-36 rounded-full blur-3xl pointer-events-none"
+              style={{ background: "color-mix(in srgb, var(--accent) 24%, transparent)" }}
+              aria-hidden="true"
+            />
+            <div className="relative">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              >
+                <UserPlus size={23} weight="duotone" aria-hidden="true" />
               </div>
-            )}
+              <p className="text-xs uppercase tracking-[0.2em] mb-1.5" style={{ color: "var(--accent)" }}>
+                Jouw startpunt
+              </p>
+              <h2
+                className="text-3xl leading-tight mb-2"
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
+              >
+                Maak je eerste profiel
+              </h2>
+              <p className="text-sm leading-relaxed mb-5 max-w-md" style={{ color: "var(--text2)" }}>
+                Kies je naam, perspectief, interesses en gewenste lijstomvang. Je antwoorden en foto volgen daarna in je eigen tempo.
+              </p>
 
-            <div className="mb-3">
-              <input
-                value={name}
-                onChange={(e) => { setName(e.target.value); setNameError(null); }}
-                placeholder="Naam of alias…"
-                className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-[color:var(--text2)]"
-                style={{ background: "var(--surface2)", border: `1px solid ${nameError ? "var(--hard-no)" : "var(--border)"}`, color: "var(--text)" }}
-              />
-              {nameError && <p className="text-xs mt-1" style={{ color: "var(--hard-no)" }}>{nameError}</p>}
-              {parentName && (
-                <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>Wordt gegroepeerd onder &ldquo;{parentName}&rdquo;</p>
+              <button
+                type="button"
+                onClick={() => setFormOpen(true)}
+                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+              >
+                Begin met jouw profiel
+                <ArrowRight size={16} weight="bold" aria-hidden="true" />
+              </button>
+
+              {!importPreview && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScanError(null);
+                    setScanOpen(true);
+                  }}
+                  className="focus-ring w-full min-h-11 mt-2 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+                  style={{ color: "var(--text2)", border: "1px solid var(--border)", background: "var(--surface)" }}
+                >
+                  <Camera size={16} aria-hidden="true" />
+                  Scan het profiel van je partner
+                </button>
               )}
             </div>
-
-            <p className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Rol</p>
-            <div className="mb-4">
-              <RolePicker value={role} onChange={setRole} />
-            </div>
-
-            <fieldset className="mb-4 border-0 p-0 m-0">
-            <legend className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Ervaringsniveau</legend>
-            <div className="grid grid-cols-4 gap-1.5">
-              {EXPERIENCE_LEVELS.map((l) => (
-                <button
-                  key={l.value}
-                  type="button"
-                  onClick={() => setExperienceLevel(l.value)}
-                  aria-pressed={experienceLevel === l.value}
-                  className="focus-ring flex flex-col items-center py-2 rounded-lg text-xs font-medium transition-colors border"
-                  style={experienceLevel === l.value
-                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }}
-                >
-                  <span className="font-semibold">{l.label}</span>
-                  <span className="text-xs opacity-70">{l.sub}</span>
-                </button>
-              ))}
-            </div>
-            </fieldset>
-
-            <fieldset className="mb-4 border-0 p-0 m-0">
-            <legend className="text-xs mb-1.5 font-medium" style={{ color: "var(--text2)" }}>Relatiestatus <span className="font-normal opacity-60">(optioneel)</span></legend>
-            <div className="flex flex-wrap gap-1.5">
-              {RELATIONSHIP_STATUSES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setRelationshipStatus((rs) => (rs === s ? "" : s))}
-                  aria-pressed={relationshipStatus === s}
-                  className="focus-ring px-3 min-h-9 rounded-full text-xs font-medium transition-colors border"
-                  style={relationshipStatus === s
-                    ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" }
-                    : { color: "var(--text2)", borderColor: "var(--border)" }}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-            </fieldset>
-
-            <button
-              type="submit"
-              className="focus-ring w-full py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-            >
-              Sla jezelf vast
-            </button>
-          </form>
-        )}
-
-        {/* First-run keeps the full-width invitation to scan */}
-        {profiles.length === 0 && !importPreview && (
-          <button
-            onClick={() => setScanOpen(true)}
-            className="relative overflow-hidden focus-ring w-full rounded-xl p-4 mb-3 flex items-center gap-3 text-left"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <Camera size={16} aria-hidden="true" style={{ color: "var(--accent)", flexShrink: 0 }} />
-            <span className="flex-1 text-sm font-medium" style={{ color: "var(--text)" }}>
-              Scan QR — importeer profiel van partner
-            </span>
-          </button>
+          </section>
         )}
 
         {profiles.length === 0 && (
-          <p
-            className="text-center py-12"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-              fontSize: "1.25rem",
-              lineHeight: 1.35,
-              color: "var(--text2)",
-            }}
-          >
-            Wie ben jij in de speelkamer?
+          <p className="text-xs text-center px-4 mb-8" style={{ color: "var(--text2)" }}>
+            Je kunt later altijd een extra perspectief of partnerprofiel toevoegen.
           </p>
         )}
       </PageShell>
 
-      {/* Settings sheet */}
+      <ProfileCreateSheet
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+      />
+
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        onOpenPinFlow={(step = 0) => { setPinFlowStep(step); setPinFlowOpen(true); }}
+        onOpenPinFlow={(step = 0) => {
+          setPinFlowStep(step);
+          setPinFlowOpen(true);
+        }}
         onOpenDestroy={() => setDestroyOpen(true)}
-        onResetTour={resetProfileTour}
-        onExportBackup={() => { setSettingsOpen(false); setExportOpen(true); }}
+        onExportBackup={() => {
+          setSettingsOpen(false);
+          setExportOpen(true);
+        }}
         onImportFile={handleImportFile}
         importError={importError}
         importSuccess={importSuccess}
       />
 
-      {/* PIN flow */}
       <PinFlowSheet
         open={pinFlowOpen}
         initialStep={pinFlowStep}
         onClose={() => setPinFlowOpen(false)}
       />
 
-      {/* Destroy all */}
       <DestroyAllSheet
         open={destroyOpen}
         onClose={() => setDestroyOpen(false)}
       />
 
-      {/* Encrypted export */}
       <EncryptedExportSheet
         open={exportOpen}
         onClose={() => setExportOpen(false)}
       />
 
-      {/* Encrypted import */}
       <EncryptedImportSheet
         open={importPwOpen}
         data={pendingEncrypted}
-        onClose={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
-        onSuccess={(msg) => setImportSuccess(msg)}
-        onError={(msg) => setImportError(msg)}
+        onClose={() => {
+          setImportPwOpen(false);
+          setPendingEncrypted(null);
+        }}
+        onSuccess={(message) => setImportSuccess(message)}
+        onError={(message) => setImportError(message)}
       />
 
-      {/* Delete profile sheet */}
       <Sheet
         open={deleteSheetOpen}
-        onClose={() => { setDeleteSheetOpen(false); setTimeout(() => setDeleteTarget(null), 300); }}
+        onClose={closeDeleteSheet}
         title="Profiel verwijderen?"
         aria-label="Profiel verwijderen"
       >
         {deleteTargetProfile && (
           <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
-            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist.
-            Dit kan niet ongedaan worden gemaakt.
+            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist. Dit kan niet ongedaan worden gemaakt.
           </p>
         )}
         <div className="flex flex-col gap-3">
           <button
+            type="button"
             onClick={confirmDelete}
             className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
@@ -506,7 +411,8 @@ function HomeContent() {
             Verwijder voor altijd
           </button>
           <button
-            onClick={() => { setDeleteSheetOpen(false); setTimeout(() => setDeleteTarget(null), 300); }}
+            type="button"
+            onClick={closeDeleteSheet}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
@@ -515,13 +421,12 @@ function HomeContent() {
         </div>
       </Sheet>
 
-      {/* QR scanner */}
       {scanOpen && (
         <QRScanner
           open={scanOpen}
-          onResult={async (p) => {
+          onResult={async (payload) => {
             try {
-              setImportPreview(await decodeSharedProfile(p));
+              setImportTransfer((await decodeSharedProfileTransfer(payload)).profiles);
               setScanError(null);
             } catch {
               setScanError("Profielcode is ongeldig of beschadigd.");
@@ -550,8 +455,12 @@ function HomeContent() {
         </div>
       )}
 
-      {/* Import profile sheet */}
-      <Sheet open={!!importPreview} onClose={() => setImportPreview(null)} title="Profiel importeren?" aria-label="Profiel importeren">
+      <Sheet
+        open={!!importPreview}
+        onClose={() => setImportTransfer(null)}
+        title={isSwitchImport ? "Switch-profiel importeren?" : "Profiel importeren?"}
+        aria-label="Profiel importeren"
+      >
         {importPreview && (
           <div
             className="rounded-xl p-4 mb-5 flex items-center gap-3"
@@ -568,21 +477,22 @@ function HomeContent() {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold truncate">{importPreview.name}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-                  {importPreview.role}
+                  {isSwitchImport ? "Switch" : importPreview.role}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}>
                   {importPreview.experienceLevel}
                 </span>
               </div>
               <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>
-                {Object.values(importPreview.entries).filter((e) => e.status).length} kinks beoordeeld
+                {(importTransfer ?? [importPreview]).reduce((total, candidate) => total + Object.values(candidate.entries).filter((entry) => entry.status).length, 0)} kinks beoordeeld{isSwitchImport ? " · 2 perspectieven" : ""}
               </div>
               <div className="text-xs mt-1" style={{ color: importPreview.consentProof ? "var(--yes)" : "var(--text2)" }}>
-                {importPreview.consentProof ? "Bron bevestigd" : "Niet ondertekend"} · {profileConsentAlias(importPreview)}
+                {isSwitchImport ? "Switch-koppeling bevestigd" : `${importPreview.consentProof ? "Bron bevestigd" : "Niet ondertekend"} · ${profileConsentAlias(importPreview)}`}
               </div>
             </div>
           </div>
         )}
+
         {importIdentity?.kind === "same-code" && (
           <div className="rounded-xl px-3 py-2.5 mb-4 text-xs" style={{ background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)", color: "var(--text2)" }}>
             Dezelfde profielcode staat al bij <strong style={{ color: "var(--text)" }}>{importIdentity.profile.name}</strong>. Dit is hetzelfde profiel, niet een nieuwe kopie.
@@ -603,36 +513,63 @@ function HomeContent() {
             Zelfde naam en rol, maar een andere profielcode. Importeer dit alleen wanneer het bewust een apart profiel is.
           </div>
         )}
+
         <div className="flex flex-col gap-3">
           {importDone ? (
             <p className="text-sm text-center py-2 font-semibold" style={{ color: "var(--accent)" }}>
-              ✓ Profiel geïmporteerd!
+              {isSwitchImport ? "Switch-profiel geïmporteerd" : "Profiel geïmporteerd"}
             </p>
           ) : importIdentity?.kind === "same-code" || importIdentity?.kind === "source-conflict" ? (
             <button
-              onClick={() => { setImportPreview(null); router.push(`/profile/${importIdentity.profile.id}`); }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              type="button"
+              onClick={() => {
+                setImportTransfer(null);
+                router.push(`/profile/${importIdentity.profile.id}`);
+              }}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Open bestaand profiel
             </button>
           ) : (
             <button
+              type="button"
               onClick={() => {
-                if (!importPreview) return;
-                importProfiles([{ ...importPreview, verificationCode: getProfileVerificationCode(importPreview), isImported: true, origin: "shared", lockedAt: Date.now() }]);
+                if (!importTransfer?.length) return;
+                importProfiles(importTransfer.map((candidate) => ({
+                  ...candidate,
+                  verificationCode: getProfileVerificationCode(candidate),
+                  isImported: true,
+                  origin: "shared" as const,
+                  lockedAt: Date.now(),
+                })));
                 setImportDone(true);
                 router.replace("/");
-                setTimeout(() => { setImportPreview(null); setImportDone(false); }, 1500);
+                window.setTimeout(() => {
+                  setImportTransfer(null);
+                  setImportDone(false);
+                }, 1500);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              {importIdentity?.kind === "signed-update" ? "Bevestigde update importeren" : importIdentity?.kind === "same-name-role" ? "Importeer als apart profiel" : "Importeer profiel"}
+              {isSwitchImport
+                ? importIdentity?.kind === "signed-update"
+                  ? "Bevestigde Switch-update importeren"
+                  : "Importeer Switch-profiel"
+                : importIdentity?.kind === "signed-update"
+                  ? "Bevestigde update importeren"
+                  : importIdentity?.kind === "same-name-role"
+                    ? "Importeer als apart profiel"
+                    : "Importeer profiel"}
             </button>
           )}
           <button
-            onClick={() => { setImportPreview(null); router.replace("/"); }}
+            type="button"
+            onClick={() => {
+              setImportTransfer(null);
+              router.replace("/");
+            }}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
@@ -641,8 +578,7 @@ function HomeContent() {
         </div>
       </Sheet>
 
-      {/* PWA install guide */}
-      {_hasHydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
+      {hydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
         <PwaInstallGuide
           isIos={isIos}
           onInstall={handleInstall}

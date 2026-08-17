@@ -2,10 +2,153 @@ import { describe, it, expect } from "vitest";
 import {
   KINKS,
   CATEGORIES,
+  KINK_CATEGORY_DEFINITIONS,
   LEVEL_MAX,
   getKinksByCategory,
   getKinksByCategoryAndLevel,
+  kinkCategoryLabel,
 } from "@/lib/kinks";
+import { kinkCategorySearchTerms } from "@/lib/kinkCategories";
+import { LEGACY_COMPACT_KINK_IDS_V2 } from "@/lib/legacyCompactCatalog";
+
+const RELEASE_A_IDS = [
+  "remote_toy",
+  "nude_photography",
+  "adult_content_creation",
+  "mutual_masturbation",
+  "partner_masturbation_watch",
+  "thigh_focus",
+  "muscle_focus",
+  "pregnancy_attraction",
+  "smeared_makeup",
+  "crying_tears",
+  "vampire_fangs",
+  "vibration_play",
+  "wetlook",
+  "sex_machine",
+  "drool_play",
+  "being_heard",
+  "play_party",
+  "next_day_check_in",
+  "aftercare_cleanup",
+  "dollification",
+  "diaper_wetting",
+  "diaper_messing",
+  "breeding_fantasy",
+  "creampie",
+] as const;
+
+const DIRECTIONAL_RELEASE_IDS = [
+  "pegging_give", "pegging_receive",
+  "anal_sex_give", "anal_sex_receive",
+  "anal_fingering_give", "anal_fingering_receive",
+  "fisting_anal_give", "fisting_anal_receive",
+  "fisting_vaginal_give", "fisting_vaginal_receive",
+  "deep_throat_give", "deep_throat_receive",
+  "rimming_give", "rimming_receive",
+  "footjob_give", "footjob_receive",
+  "spanking_hand_give", "spanking_hand_receive",
+  "spanking_implement_give", "spanking_implement_receive",
+  "flogging_give", "flogging_receive",
+  "rope_bondage_give", "rope_bondage_receive",
+  "shibari_give", "shibari_receive",
+  "handcuffs_give", "handcuffs_receive",
+  "leather_cuffs_give", "leather_cuffs_receive",
+  "gag_ball_give", "gag_ball_receive",
+  "gag_bit_give", "gag_bit_receive",
+  "blindfold_give", "blindfold_receive",
+  "sound_deprivation_give", "sound_deprivation_receive",
+  "caning_give", "caning_receive",
+  "cropping_give", "cropping_receive",
+  "paddling_give", "paddling_receive",
+  "whipping_give", "whipping_receive",
+  "belt_give", "belt_receive",
+  "slapping_face_give", "slapping_face_receive",
+  "punching_give", "punching_receive",
+  "trampling_give", "trampling_receive",
+  "spreader_bar_give", "spreader_bar_receive",
+  "hogtie_give", "hogtie_receive",
+  "mummification_give", "mummification_receive",
+  "straitjacket_give", "straitjacket_receive",
+  "gag_tape_give", "gag_tape_receive",
+  "hood_give", "hood_receive",
+  "gag_opblaasbaar_give", "gag_opblaasbaar_receive",
+  "gag_penisvorm_give", "gag_penisvorm_receive",
+  "gag_rubber_give", "gag_rubber_receive",
+  "suspension_rechtop_give", "suspension_rechtop_receive",
+  "suspension_ondersteboven_give", "suspension_ondersteboven_receive",
+  "suspension_horizontaal_give", "suspension_horizontaal_receive",
+  "opsluiting_kooi_give", "opsluiting_kooi_receive",
+  "opsluiting_donker_give", "opsluiting_donker_receive",
+  "opsluiting_kleine_ruimte_give", "opsluiting_kleine_ruimte_receive",
+  "body_worship_give", "body_worship_receive",
+  "vagina_aanbidding_give", "vagina_aanbidding_receive",
+  "cock_worship_give", "cock_worship_receive",
+  "ass_worship_give", "ass_worship_receive",
+  "laarzen_aanbidding_give", "laarzen_aanbidding_receive",
+  "erotic_massage_give", "erotic_massage_receive",
+  "prostate_massage_give", "prostate_massage_receive",
+  "pet_training_give", "pet_training_receive",
+  "pet_grooming_give", "pet_grooming_receive",
+  "diaper_changing_give", "diaper_changing_receive",
+] as const;
+
+const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
+  "filmen_prive",
+  "trampling_voeten",
+  "breeding_creampie",
+  "luiers_gebruik",
+  "deepthroat",
+  "pegging",
+  "anal_sex",
+  "anal_fingering",
+  "fisting_anal",
+  "fisting_vaginal",
+  "deep_throat",
+  "rimmen",
+  "footjob",
+  "spanking_hand",
+  "spanking_implement",
+  "flogging",
+  "rope_bondage",
+  "shibari",
+  "handcuffs",
+  "leather_cuffs",
+  "gag_ball",
+  "gag_bit",
+  "blindfold",
+] as const;
+
+const RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS = [
+  "caning", "cropping", "paddling", "whipping", "belt", "slapping_face", "punching", "trampling",
+] as const;
+
+const RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS = [
+  "spreader_bar", "hogtie", "mummification", "straitjacket", "gag_tape", "hood",
+] as const;
+
+const RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS = [
+  "gag_opblaasbaar", "gag_penisvorm", "gag_rubber",
+  "suspension_rechtop", "suspension_ondersteboven", "suspension_horizontaal",
+  "opsluiting_kooi", "opsluiting_donker", "opsluiting_kleine_ruimte",
+] as const;
+
+const RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS = [
+  "body_worship", "vagina_aanbidding", "cock_worship", "ass_worship", "laarzen_aanbidding",
+] as const;
+
+const RETIRED_RELEASE_A_DIRECTIONAL_IDS = [
+  "erotic_massage", "prostate_massage", "pet_training", "pet_grooming", "diaper_changing",
+] as const;
+
+const RETIRED_POST_V2_DIRECTIONAL_IDS = [
+  "sound_deprivation",
+  ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
+  ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
+  ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
+  ...RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS,
+  ...RETIRED_RELEASE_A_DIRECTIONAL_IDS,
+] as const;
 
 describe("kink database integrity", () => {
   it("every kink has a unique id", () => {
@@ -22,6 +165,109 @@ describe("kink database integrity", () => {
     const catSet = new Set(CATEGORIES);
     const bad = KINKS.filter((k) => !catSet.has(k.category));
     expect(bad).toHaveLength(0);
+  });
+
+  it("keeps canonical names unique after normalization", () => {
+    const normalizedNames = KINKS.map((kink) => kink.name
+      .normalize("NFKD")
+      .replace(/\p{Diacritic}/gu, "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ""));
+    expect(new Set(normalizedNames).size).toBe(normalizedNames.length);
+  });
+
+  it("gives every active kink an explanation", () => {
+    expect(KINKS.filter((kink) => !kink.description?.trim())).toHaveLength(0);
+  });
+
+  it("keeps every user-facing category populated", () => {
+    expect(CATEGORIES.filter((category) => getKinksByCategory(category).length === 0)).toEqual([]);
+  });
+
+  it("keeps stable category ids separate from unique display labels", () => {
+    expect(KINK_CATEGORY_DEFINITIONS.map(({ id }) => id)).toEqual(CATEGORIES);
+    expect(new Set(CATEGORIES).size).toBe(CATEGORIES.length);
+    expect(new Set(KINK_CATEGORY_DEFINITIONS.map(({ label }) => label)).size)
+      .toBe(KINK_CATEGORY_DEFINITIONS.length);
+    expect(CATEGORIES.every((category) => kinkCategoryLabel(category).length > 0)).toBe(true);
+    expect(KINK_CATEGORY_DEFINITIONS.every(({ aliases }) => aliases.length > 0)).toBe(true);
+    expect(kinkCategorySearchTerms("aftercare")).toContain("Nazorg");
+  });
+
+  it("keeps aliases non-empty and distinct from their canonical name", () => {
+    for (const kink of KINKS) {
+      const aliases = kink.aliases ?? [];
+      expect(aliases.every((alias) => alias.trim().length > 0)).toBe(true);
+      const normalized = [kink.name, ...aliases].map((value) => value.trim().toLowerCase());
+      expect(new Set(normalized).size).toBe(normalized.length);
+    }
+  });
+
+  it("lands Release A plus explicit pegging directionality without deciding auto-masturbation", () => {
+    const ids = new Set(KINKS.map((kink) => kink.id));
+    expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
+    expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
+    expect(KINKS).toHaveLength(344);
+
+    expect(ids.has("pegging")).toBe(false);
+    expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
+  });
+
+  it("retires composite or duplicate questions instead of copying their answer meaning", () => {
+    const ids = new Set(KINKS.map((kink) => kink.id));
+    expect(RETIRED_COMPOSITE_OR_DUPLICATE_IDS.filter((id) => ids.has(id))).toEqual([]);
+    expect(RETIRED_POST_V2_DIRECTIONAL_IDS.filter((id) => ids.has(id))).toEqual([]);
+    expect(ids.has("breeding_fantasy")).toBe(true);
+    expect(ids.has("creampie")).toBe(true);
+    expect(ids.has("diaper_wetting")).toBe(true);
+    expect(ids.has("diaper_messing")).toBe(true);
+    expect(ids.has("diaper_changing")).toBe(false);
+    expect(ids.has("diaper_changing_give")).toBe(true);
+    expect(ids.has("diaper_changing_receive")).toBe(true);
+  });
+
+  it("changes the historical catalog only through the reviewed retire/add sets", () => {
+    const activeIds = new Set(KINKS.map((kink) => kink.id));
+    const historicalIds = new Set<string>(LEGACY_COMPACT_KINK_IDS_V2);
+    const retired = [...historicalIds].filter((id) => !activeIds.has(id)).sort();
+    const added = [...activeIds].filter((id) => !historicalIds.has(id)).sort();
+
+    expect(retired).toEqual([
+      ...RETIRED_COMPOSITE_OR_DUPLICATE_IDS,
+      ...RETIRED_HISTORICAL_IMPACT_DIRECTIONAL_IDS,
+      ...RETIRED_HISTORICAL_BONDAGE_DIRECTIONAL_IDS,
+      ...RETIRED_HISTORICAL_BONDAGE_COMPLETION_IDS,
+      ...RETIRED_HISTORICAL_ROLE_NEUTRAL_IDS,
+    ].sort());
+    expect(added).toEqual([...RELEASE_A_IDS, ...DIRECTIONAL_RELEASE_IDS, "diaper_partner_wearing"].sort());
+  });
+
+  it("separates definitions from a conservative safety note where reviewed", () => {
+    const safetyReviewedIds = [
+      "bullwhip",
+      "gag_opblaasbaar_give", "gag_opblaasbaar_receive", "gag_rubber_give", "gag_rubber_receive",
+      "borsten_afbinden", "gasmasker",
+      "suspension_rechtop_give", "suspension_rechtop_receive",
+      "suspension_ondersteboven_give", "suspension_ondersteboven_receive",
+      "suspension_horizontaal_give", "suspension_horizontaal_receive",
+      "opsluiting_kooi_give", "opsluiting_kooi_receive",
+      "opsluiting_donker_give", "opsluiting_donker_receive",
+      "opsluiting_kleine_ruimte_give", "opsluiting_kleine_ruimte_receive", "vacuumbed",
+      "forced_orgasm", "facesitting", "badkamer_controle", "dienen_asbak", "lifestyle_247",
+      "free_use", "erotische_hypnose", "toestemmingsprotocol", "punishment",
+      "strafoefeningen", "mondzeep", "somnofilie", "choking", "scarification",
+      "naaldjes_borst_buik", "naaldjes_intiem", "artistiek_snijden", "powerbox_basis",
+      "powerbox_intiem", "dogging", "recording", "webcam", "remote_toy_publiek",
+      "petplay_kooi", "urine_intiem", "plas_desperation", "bloed_play",
+      "katheters_urethral", "klysma_reiniging", "klysma_straf", "penisring_cockring",
+      "rubber_latex_kleding", "korset_middelafname", "luiers_dragen", "adult_content_creation",
+      "crying_tears", "sound_deprivation_give", "sound_deprivation_receive",
+      "prostate_massage_give", "prostate_massage_receive", "sex_machine",
+      "play_party", "diaper_messing", "breeding_fantasy", "creampie",
+    ];
+    const byId = new Map(KINKS.map((kink) => [kink.id, kink]));
+    expect(safetyReviewedIds.filter((id) => !byId.get(id)?.safetyNote?.trim())).toEqual([]);
   });
 });
 
@@ -64,7 +310,7 @@ describe("intensity ordering (juli 2026 uitbreiding)", () => {
   it("the new temptations joined the catalogue", () => {
     const ids = new Set(KINKS.map((k) => k.id));
     for (const id of [
-      "rimmen", "dirty_talk", "free_use", "keyholding", "predicament_bondage",
+      "rimming_give", "rimming_receive", "dirty_talk", "free_use", "keyholding", "predicament_bondage",
       "primal_play", "glory_hole", "figging", "body_slapping", "trio_groepsseks",
     ]) {
       expect(ids.has(id), `missing kink: ${id}`).toBe(true);
@@ -73,13 +319,15 @@ describe("intensity ordering (juli 2026 uitbreiding)", () => {
   });
 
   it("straf corrigeert, rituelen trainen — the two new houses stand", () => {
-    expect(CATEGORIES).toContain("Straf & Correctie");
-    expect(CATEGORIES).toContain("Rituelen & Training");
+    expect(CATEGORIES).toContain("discipline");
+    expect(CATEGORIES).toContain("rituals");
+    expect(kinkCategoryLabel("discipline")).toBe("Discipline & Correction");
+    expect(kinkCategoryLabel("rituals")).toBe("Rituals & Protocols");
     // the umbrella entries moved into their new homes, ids intact
-    expect(KINKS.find((k) => k.id === "punishment")?.category).toBe("Straf & Correctie");
-    expect(KINKS.find((k) => k.id === "collaring")?.category).toBe("Rituelen & Training");
-    expect(getKinksByCategoryAndLevel("Straf & Correctie", 4).length).toBeGreaterThanOrEqual(15);
-    expect(getKinksByCategoryAndLevel("Rituelen & Training", 4).length).toBeGreaterThanOrEqual(16);
+    expect(KINKS.find((k) => k.id === "punishment")?.category).toBe("discipline");
+    expect(KINKS.find((k) => k.id === "collaring")?.category).toBe("rituals");
+    expect(getKinksByCategoryAndLevel("discipline", 4).length).toBeGreaterThanOrEqual(15);
+    expect(getKinksByCategoryAndLevel("rituals", 4).length).toBeGreaterThanOrEqual(16);
   });
 });
 

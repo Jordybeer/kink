@@ -10,6 +10,106 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 **Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
+### Launch-readiness audit 2026-08-17 [L-01 SHIPPED — full verdict in docs/launch-readiness-audit-2026-08-17.md]
+
+Second pass over the 365 commits that landed after the 2026-08-08 close-out.
+**L-01 was a real launch blocker and is fixed:** `app/sw.ts` handed an ungranted
+`showNotification()` to install's `waitUntil()`, so every update after the first
+install failed silently — nobody without notification consent ever got a new
+build. Gated behind `lib/swUpdateNotice.ts` + 5 regression tests. Gates on this
+baseline: 583 unit green, build green, lint 0 errors, `npm audit` 0 vulns,
+344 kinks / 344 unique ids.
+
+Still open, in the order they deserve attention:
+
+- **L-02 quota safeword (HIGH)** — zustand persist calls `setItem` bare; a full
+  localStorage throws through the store action and the answer is lost with no
+  toast, no retry. The only open finding that can *lose data*. Needs a design pass.
+- **L-04 indexing policy (product decision)** — no `robots.ts` anywhere, so the
+  explicit catalog is fully indexable. Discoverability vs. discretion is the
+  owner's call, not a default.
+- **L-03 error boundary** — no `error.tsx` / `global-error.tsx`; needs copy in the
+  house voice.
+- **L-05 manifest** (`id`, `scope`, maskable icon) · **L-06 README** (still says
+  "100+ across 11", live is 344 across 19; still calls itself KinkList) ·
+  **L-07 hygiene** (starter `.svg` litter, 2.1 MB 404 source art, eslint should
+  ignore the generated `public/sw.js`). One tidy-up pass.
+
+Not claimed: the e2e suites could not run in the audit container (Playwright pins
+browser 1223, only 1194 installed) — CI stays the authority, and its last green
+numbers predate all 365 commits. The physical-device gate from §14.5 is still open,
+and L-01 makes "prove a real SW update lands on hardware" mandatory.
+
+### PR #299 — Dynamic questionnaire v2 [SHIPPED 2026-08-09]
+
+Only Dynamic replaces fixed budgets for newly created profiles; Quick, Balanced,
+and Full retain their existing depth and question limits. Deep Dive remains the
+explicit route to every catalog item. Coverage is a fixed, monotonic set of
+explicit questions; local expansion is stateless and sparse: `yes`/`willing`
+may open one pinned canonical follow-up, `no` (Voor hen) and `maybe` are neutral,
+and only two or more `hard_no` answers whose explicit follow-up edges converge
+on the same target may delay that target. Broad clusters exist only for
+diversity; topic metadata only spaces the conversation.
+No metadata means zero propagation. Existing v1 quick/balanced/full setups stay
+editable and unmigrated until the user explicitly switches flow. Changing an
+existing canonical source → target mapping is a semantic data migration, not a
+metadata tidy-up.
+
+### Catalogus v2 + funnel completion [ACTIVE — contract audited 2026-08-09]
+
+Plan of record: `docs/catalog-v2-contract.md`; runtime invariants:
+`engine.md`.
+
+The audit covered the historical 266 IDs and found why the funnel felt abrupt:
+Dynamic had 20 fixed anchors and Discover was a one-per-broad-cluster
+micro-wave. The active stacked work now has 291 catalog IDs, a 44-anchor
+Dynamic plan spanning all 19 user-facing categories, continuous user-exitable
+Discover, exhaustive Deep Dive, and an ephemeral `Meer uit deze categorie`
+intent.
+
+Work is split into independently reviewable slices:
+
+1. thin catalog fields (`aliases`, optional `safetyNote`), explicit category
+   constants, alias search and positional-QR order decoupling;
+2. catalog corrections plus high-confidence additions with zero propagation by
+   default;
+3. continuous Discover, local category intent, honest skip semantics, inline
+   `Lees meer`, and new-profile card focus;
+4. coverage/topic/related audit, followed only then by a separately versioned
+   canonical allowlist.
+
+The catalog-foundation slice is ready as draft PR #302 on
+`feature/catalog-foundation-v2`: stable category keys are separated from their
+display copy, Dutch aliases join full-catalog search, and the retired positional
+v2 QR decoder is pinned to its own immutable historical ID order.
+
+The stacked content slice is ready as draft PR #303 on `feature/catalog-content-v2`. It
+applies all 155 audited change rows except the explicit pegging gate, retires
+five composite/duplicate questions without copying answers, and adds the 30
+reviewed Release-A questions with zero propagation metadata. “Auto
+masturbation” remains absent until its meaning is confirmed.
+
+No catalog generations or permanent v1/v2 dual engine: there is no public
+legacy population to justify that complexity. The pre-launch migration maps v1
+Full to Deep Dive and Quick/Balanced/no-setup to Dynamic while preserving
+interests and entries. Preserve unchanged kink IDs and answers; semantic splits
+start unanswered and never copy one old answer into multiple new meanings.
+
+The questionnaire/UX slice is ready as draft PR #304 on `feature/questionnaire-ux-v2`.
+It replaces the micro-wave with continuous Discover, adds category-local
+exploration and honest `Later`, expands descriptions inline, fixes new-profile
+card focus, and ships store v18 normalization so the runtime has no permanent
+v1 budget branch.
+
+The final metadata slice shipped in PR #305 and its canonical allowlist has now advanced to
+mapping version 3 for the explicit Release B semantic migration. The Golden Shower give→receive
+inference is removed and retired anal source IDs are replaced by explicit same-side directional
+mappings. “Auto masturbation” remains explicitly out of scope.
+
+The original Pegging product gate and Release B role-neutral catalog audit are shipped. Release C proves role-affinity on a deliberately small impact/bondage vertical slice: explicit pairs remain fully independent, while only compact Dynamic coverage may choose the perspective-aligned sibling. The opposite side stays unknown and reachable. The audited Impact extension and two high-confidence bondage slices are shipped. Release F then splits ten role-neutral partner actions (body/vulva/cock/ass/boot worship, erotic/prostate massage, pet training/grooming and diaper changing) with zero role affinity. The ambiguous diaper-use→changing canonical inference is removed in mapping v5. Remote toys and sex machine remain editorial/coverage work; chastity, collar/leash, breast bondage and gas-mask play still require sharper concept semantics.
+
+Question progression is now a separate explicit ordering contract. High-confidence parent → child doors make broad/light cards precede true deepenings when both are queued (for example Golden Shower ontvangen → urine in mond/slikken), without turning catalog `level` into a universal ladder. Progression never copies an answer, never suppresses a child after a neutral/negative answer in exhaustive flows, and never converts related siblings such as impact instruments, gag types or anal acts into inferred escalation. Source of truth: `docs/questionnaire-progression-gates.md`.
+
 ### Phase 31 — Main ↔ dev audit [SHIPPED 2026-07-11 — verdict in docs/phase31-main-dev-audit.md]
 
 Verdict: v5 improves or holds every surface; zero code regressions. Two rot
@@ -32,9 +132,17 @@ Each item needs its own design pass before code.
 - **Dupe matching** — `lib/kinkAliases.ts` of common alternative spellings.
 - **Identity-vs-dynamic split** — `category: "identity"` flag in `lib/kinks.ts`, surface in a separate ProfileHero strip.
 
-### Phase — Role-aware complementary matching (deferred, post direction-kill)
+### Phase — Explicit complementary matching [FOUNDATION SHIPPED; CATALOG AUDIT ONGOING]
 
-Per-kink give/receive direction was killed in `629419b`. The right approach: use `profile.role` at the `profileMatchScore` level to infer give/receive intent for the pair and weight scores accordingly. A Dom + Sub pair scoring "yes + yes" on spanking should resolve role complementarity without either user touching per-kink toggles. **Write a design doc before coding.** Touches `lib/matching.ts` and possibly `lib/roles.ts`.
+The original deferred gate is superseded. Pegging and the reviewed Release B/C
+concepts now use explicit give/receive IDs plus a central complement relation at
+matching time. Dominant/Submissive perspective still never supplies an answer:
+Release C role affinity may only choose the compact Dynamic coverage sibling;
+the opposite side remains unknown and independently answerable. The audited
+Impact instrument extension, both high-confidence bondage slices and Release F
+role-neutral partner actions follow that same contract. Role-neutral pairs carry
+no questionnaireAffinity at all. Remaining directional candidates stay item-by-item
+editorial work and must not be bulk split or inferred from `profile.role`.
 
 ### Phase — Pair-scoped kink overlay (deferred, design doc first)
 
@@ -58,7 +166,7 @@ Unscoped ideas, grouped by theme. Promote to a phase before working on any of th
 
 ### Post-v6 re-rating leftovers (added 2026-07-12 late night — the ~8.7 → 9+ shortlist)
 In order of expected win, per the evening's re-rating against the July 11 audit:
-1. **Re-enable CI** — the `safe-word check` workflow is still manually disabled on GitHub (since ~06-21); one click by the owner, repo → Actions → Enable workflow. Everything else on this list is worth less while the watchdog sleeps.
+1. ~~**Re-enable CI**~~ → **SHIPPED** — `safe-word check` draait weer; PR #296 promoveerde core, browser/device én productie-PWA naar harde launch-gates.
 2. **Motion consolidation** — 15 inline `transition:` styles remain (Onboarding ×6, AppLock ×3, compare ×2, 4 strays); fold them into the shared motion vocabulary.
 3. **Compare-page extraction** — compare (937), session (890) and scene (828) are now the fattest pages; same copy-move `lib/` treatment that slimmed Contract 1372→754 and Profile 1133→784.
 4. **Last 3 bare radii** — the design-system sweep left three bare `rounded` classes standing.
@@ -68,7 +176,7 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 - **e2e fixture rot guard**: `buildStore` still seeds persist `version: 8` — the migration wipes any seeded `scenes` (pre-v10 payloads get `scenes = []`). Bit the Phase 9 proof shots. Bump the fixture to v15 and teach `buildStore` extras to carry `scenes`/`contracts` so future specs don't rediscover this.
 - **TRAFFIC map deduped**: the green/amber/red label+colour map lives twice (`app/scenes/page.tsx` and `app/scenes/[id]/page.tsx`). One home in `lib/` next to the status vocabulary.
 - **ProfileSelect accent prop**: the old timeline selects wore their line colours on the border; the house dropdown lost that. An optional `accent` prop would restore the A/B colour echo without forking the component.
-- **CI e2e graduation**: the advisory job gets its first real runs on PR #248 — if it stays green there, flip `continue-on-error` off in a one-line follow-up.
+- ~~**CI e2e graduation**~~ → **SHIPPED in PR #296**: browser/device rehearsal en productie-PWA zijn enforcing; geen `continue-on-error` meer op de launch-gates.
 - **Rare-state e2e for the unswept two**: session "connected" and AppLock never appear in screenshot sweeps (need a live peer / PIN hash). A mocked-signaling fixture would close the last visual blind spots.
 
 ### Navigation polish (TopNav)
@@ -101,7 +209,7 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 - **Overview card tap-to-edit**: tap a read-only Overzicht card to open `KinkEditSheet` directly (own profiles only — the accordion flow this originally targeted is gone).
 
 ### Performance / Technical
-- **Playwright CI integration**: run the visual audit in CI.
+- ~~**Playwright CI integration**~~ → **SHIPPED in PR #296**: 222-test browserrehearsal + 5 launch-device smokes; 25 screenshots worden als CI-artifact bewaard.
 - **Bundle size audit**: `@next/bundle-analyzer` pass.
 - **Custom kink persistence race**: rapid add-then-navigate may drop the write in the persist debounce.
 - ~~**Offline support**: PWA manifest exists but no service-worker caching strategy.~~ → shipped via PR #263 and completed for newly created local profile/scene routes in PR #266 (see ledger).
@@ -131,6 +239,30 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 ---
 
 ## Shipped — historical ledger (full detail preserved in git log)
+
+### Vragenlijst- en navigatiepolish (dev, 2026-08-13)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Questions keeps the active mode in the contextual TopNav, removes the permanent mode row, reuses the viewport-bounded `ClampText` overlay for descriptions, keeps answer actions visible after rating, and makes the notes toggle explicit; Home drops duplicate chrome, TopNav icons are clearer, and profile-share copy stays local-only while linking to the trust explanation; validated after integrating the latest `dev` with full browser/device, production PWA/offline and iPhone screenshot review | `8ae3380` / PR #350 |
+
+### Trustpagina en privacygrenzen (dev, 2026-08-13)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | `/about` rebuilt as an editorial trust page with explicit local-first, no-answer-inference and consent boundaries; private profile transfer stays public-only while text/PDF private-answer export remains an explicit opt-in; app-lock is not presented as storage encryption; iOS browser versus Home Screen storage durability is called out; `/about` joins the five-device launch screenshot matrix and shipped only after lint/unit/build, full browser/device rehearsal and production PWA/offline were green on the same head | `5da8980` / PR #345 |
+
+### Vragenlijstviewport en contractrecovery (dev, 2026-08-12)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Questions uses the contextual TopNav for its flow modes and the shared full-detail edit sheet; visual-viewport sizing keeps long sheets internally scrollable; contract creation is pair-first from Compare; imported profiles link only to their latest signed local contract; hydration-aware legacy migration and decoded local IDs restore cold historical routes without mutating consent history or exposing profile data | `b7a2ca6` / PR #343 |
+
+### iOS-browserhoogte en lange profielselecties (dev, 2026-08-12)
+
+| — | What landed | Commit |
+|---|-------------|--------|
+| — | Home separates own and explicitly shared profiles into independent disclosures with boolean-only session state; Settings, profile editing and Compare use bounded visual-viewport scroll regions with fixed context and visible close actions; the long Compare picker adds transient in-memory search; five launch-device profiles exercise dynamic toolbar height, long selectors, QR, focus restoration and synthetic-only screenshot evidence | `310e10d` / PR #341 |
 
 ### Local-first offline rooms (dev, 2026-07-28)
 
@@ -248,6 +380,7 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 - 2026-07-09: dead Unix socket named `cloud` in the repo root crashes Turbopack's CSS scan ("No such device or address", os error 6) — check `ss -xl` for listeners, then `rm` it. A stale 7-day dev server holding :3000 with HTTP 500 blocks Playwright's `reuseExistingServer` — kill and let it respawn.
 - 2026-07-11: session handoff, clean state — dev tree clean at `6e0b903`, 227 tests + build green. The contract-PDF arc (signature spacing, unified four-section table, choice-ladder ordering, comment bullets, column discipline + comment breathing room) is **complete**; a fresh session should not re-touch `app/contract/page.tsx` PDF code and should start at Phase 31. Visual PDF checks use the standalone jsPDF-repro + `pdftoppm` pattern (import `jspdf/dist/jspdf.node.min.js` by absolute path in a scratchpad `.mjs`).
 - 2026-07-09: ephemeral screenshot pattern — drop a throwaway spec in `e2e/` using `seedAndGo` + `pinnedProfileId`, run `--project=desktop`, delete the spec; keeps visual proof without polluting the suite.
+- 2026-08-13: `safe-word check` uses one concurrency group per workflow/ref with `cancel-in-progress: true`; rerunning an older attempt on the same PR ref can cancel a newer attempt. Inspect active runs before rerunning, let one attempt own the ref, and treat setup/lint cancellation as orchestration unless its logs show a real code failure.
 
 ### Signed consent ledger (dev, 2026-07-30)
 

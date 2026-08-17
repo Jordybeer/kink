@@ -16,7 +16,7 @@ interface PersistenceWaitOptions {
   pollIntervalMs?: number;
 }
 
-function safeDecode(segment: string): string {
+export function decodeLocalRouteId(segment: string): string {
   try {
     return decodeURIComponent(segment);
   } catch {
@@ -39,8 +39,8 @@ export function profileIdFromLocation(
   const queryId = searchParams.get("id");
   if (queryId) return queryId;
 
-  const legacyMatch = /^\/profile\/([^/]+)$/.exec(pathname);
-  return legacyMatch ? safeDecode(legacyMatch[1]) : "";
+  const legacyMatch = /^\/profile\/([^/]+)(?:\/questions)?$/.exec(pathname);
+  return legacyMatch ? decodeLocalRouteId(legacyMatch[1]) : "";
 }
 
 export function sceneIdFromLocation(
@@ -52,7 +52,7 @@ export function sceneIdFromLocation(
 
   const legacyMatch = /^\/scenes\/([^/]+)$/.exec(pathname);
   return legacyMatch && legacyMatch[1] !== "view"
-    ? safeDecode(legacyMatch[1])
+    ? decodeLocalRouteId(legacyMatch[1])
     : "";
 }
 
@@ -62,14 +62,14 @@ export function canonicalizeLocalUrl(input: URL): URL {
 
   if (profileMatch) {
     url.pathname = PROFILE_SHELL_ROUTE;
-    url.searchParams.set("id", safeDecode(profileMatch[1]));
+    url.searchParams.set("id", decodeLocalRouteId(profileMatch[1]));
     return url;
   }
 
   const sceneMatch = /^\/scenes\/([^/]+)$/.exec(url.pathname);
   if (sceneMatch && sceneMatch[1] !== "view") {
     url.pathname = SCENE_DETAIL_SHELL_ROUTE;
-    url.searchParams.set("id", safeDecode(sceneMatch[1]));
+    url.searchParams.set("id", decodeLocalRouteId(sceneMatch[1]));
   }
 
   return url;

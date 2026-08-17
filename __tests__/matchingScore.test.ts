@@ -109,7 +109,8 @@ describe("kinkMatchScore — symmetric voor-hen cases (PR v5 rubric)", () => {
 });
 
 describe("profileMatchScore", () => {
-  const [k0, k1, k2, k3] = KINKS;
+  const [k0, k1, k2, k3] = ["latex_rubber", "lingerie", "uniforms", "feet"]
+    .map((id) => KINKS.find((kink) => kink.id === id)!);
 
   it("one perfect + one limit → correct counts", () => {
     const a = makeProfile({ [k0.id]: { status: "yes" }, [k1.id]: { status: "hard_no" } });

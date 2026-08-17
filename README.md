@@ -1,8 +1,8 @@
-# KinkList 🖤
+# KinkSync 🖤
 
 > *You've been a very disorganised dominant. Let's fix that.*
 
-Tired of negotiating your next scene over a Google Sheet like some kind of vanilla HR department? Same. KinkList is a private, browser-based tool for building honest kink profiles and comparing them side-by-side — so you know exactly what your partner is begging for before anyone's tied to anything.
+Tired of negotiating your next scene over a Google Sheet like some kind of vanilla HR department? Same. KinkSync is a private, browser-based tool for building honest kink profiles, comparing them side-by-side, planning the scene, and signing the contract — so everyone knows exactly what they're begging for before anyone's tied to anything.
 
 No accounts. No servers. No judgment. Just the truth, laid bare.
 
@@ -10,19 +10,21 @@ No accounts. No servers. No judgment. Just the truth, laid bare.
 
 ## What's on the menu
 
-- **100+ activities** spread across 11 sinful categories — Impact Play, Bondage, Power Exchange, Sensation Play, Role Play, and more dirty little corners
+- **340+ activities across 19 sinful categories** — Impact Play, Bondage, Power Exchange, Rituals & Protocols, Discipline & Correction, Pet Play, Adult Ageplay, and every other dirty little corner
 - **Five-point consent scale** — *Yes* / *Willing to try* / *Maybe* / *No* / *Hard no* — because "I guess" is not a safeword
 - **Star scores 1–5** per activity, because not all yeses are equally enthusiastic
-- **Per-item notes** — add conditions, limits, or that one specific request you've been too shy to say out loud
+- **Per-item notes and tags** — conditions, limits, safety flags, or that one specific request you've been too shy to say out loud
 - **Side-by-side compare view** — see where your appetites overlap, where they clash, and what needs a conversation over dinner first
-- **Smart filters** — show only mutual interests, conflicts, or hard limits so you're not scrolling past 80 things you both said no to
-- **One-click export** — your profile as `.txt`, or a full negotiation contract for two profiles, ready to sign, frame, or tuck under the mattress
+- **Scene planning with aftercare** — turn a compare session into an actual plan, then close it out with the check-in that comes after
+- **Digitally signed contracts** — two devices, two signatures, one cryptographically bound agreement, exportable as a proper PDF
+- **QR profile sharing** — hand your partner a code instead of your unlocked phone
+- **PIN / biometric app lock** and an **installable, offline-capable PWA** — because this stays on your device, not in a tab you forgot to close
 
 ---
 
 ## Privacy, and we mean it
 
-Everything stays in your browser's `localStorage`. Nothing phones home. No cloud, no accounts, no receipts. Your deepest curiosities are between you, your partner, and your browser history — and you know how to clear that.
+Everything stays in your browser's `localStorage`. Nothing phones home — no backend, no accounts, no cloud sync, no receipts. Your deepest curiosities are between you, your partner, and your browser history — and you know how to clear that.
 
 ---
 
@@ -35,10 +37,11 @@ npm run dev
 
 Head to [http://localhost:3000](http://localhost:3000) and introduce yourself.
 
-1. **Create a profile** — pick a name, pick a role, own it
-2. **Work the list** — go category by category, be honest with yourself
-3. **Compare** — when both profiles exist, the compare page shows you exactly where things get interesting
-4. **Export** — download the negotiation contract as `.txt` and make it official
+1. **Confirm you're an adult** — this door only opens one way
+2. **Create a profile** — pick a name, pick a role, own it
+3. **Work the list** — go category by category, be honest with yourself
+4. **Compare** — when both profiles exist, the compare page shows you exactly where things get interesting
+5. **Plan, sign, play** — turn a match into a scene or a signed contract, then wind down with aftercare
 
 ---
 
@@ -48,6 +51,7 @@ Head to [http://localhost:3000](http://localhost:3000) and introduce yourself.
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS v4](https://tailwindcss.com/)
 - [Zustand](https://zustand-demo.pmnd.rs/) with localStorage persistence
+- [Serwist](https://serwist.pages.dev/) for the installable, offline-first service worker
 
 ---
 

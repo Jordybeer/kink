@@ -58,16 +58,42 @@ describe("backup ownership restoration", () => {
     expect(useStore.getState().profiles[0].name).toBe("Bewerkbaar");
   });
 
-  it("keeps supporting unsigned legacy owner backups", () => {
+  it("keeps unsigned legacy backup data without granting editability", () => {
     const legacy = ownProfile({ id: "legacy-owner", consentProof: undefined });
 
     const result = useStore.getState().restoreBackupProfiles([legacy], []);
 
     expect(result.added).toBe(1);
     expect(result.conflicts).toBe(0);
-    expect(useStore.getState().profiles[0].origin).toBe("own");
+    expect(useStore.getState().profiles[0].origin).toBe("shared");
     useStore.getState().renameProfile(legacy.id, "Legacy bewerkbaar", legacy.role, legacy.experienceLevel);
-    expect(useStore.getState().profiles[0].name).toBe("Legacy bewerkbaar");
+    expect(useStore.getState().profiles[0].name).toBe("Owner");
+  });
+
+  it("never promotes an unsigned shared profile to editable ownership from legacy backup metadata", () => {
+    const imported = ownProfile({
+      id: "legacy-shared",
+      origin: "shared",
+      isImported: true,
+      lockedAt: 12,
+      consentProof: undefined,
+    });
+    const claimedOwner = ownProfile({
+      id: imported.id,
+      origin: "own",
+      isImported: false,
+      consentProof: undefined,
+    });
+    useStore.setState({ profiles: [imported], profileOwnerKeys: [] });
+
+    useStore.getState().restoreBackupProfiles([claimedOwner], []);
+    const restored = useStore.getState().profiles[0];
+
+    expect(restored.origin).toBe("shared");
+    expect(restored.isImported).toBe(true);
+    expect(restored.lockedAt).toBe(12);
+    useStore.getState().renameProfile(restored.id, "Mag niet bewerkbaar", restored.role, restored.experienceLevel);
+    expect(useStore.getState().profiles[0].name).toBe("Owner");
   });
 
   it("rejects a signed owner backup when the supplied private key belongs to another source", async () => {

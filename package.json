@@ -4,13 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run icons:check",
     "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:launch": "playwright test -c playwright.launch.config.ts",
     "test:e2e:offline": "playwright test -c playwright.offline.config.ts",
-    "lint": "eslint ."
+    "icons:check": "node scripts/check-icons.mjs",
+    "lint": "npm run icons:check && eslint ."
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -19,10 +22,9 @@
     "chart.js": "^4.5.1",
     "framer-motion": "^12.40.0",
     "html2canvas": "^1.4.1",
-    "ioredis": "^5.11.0",
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",
-    "next": "16.2.6",
+    "next": "16.3.0",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-chartjs-2": "^5.3.1",
@@ -42,7 +44,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.6",
+    "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.7"

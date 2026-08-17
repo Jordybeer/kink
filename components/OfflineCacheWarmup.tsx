@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { useHasHydrated, useStore } from "@/lib/store";
+import { useEffect, useMemo } from "react";
+import { useHasHydrated } from "@/lib/store";
 import {
   buildOfflineWarmupRoutes,
   warmOfflineRoutes,
 } from "@/lib/offlineRoutes";
 import {
   canonicalizeLocalUrl,
-  findSingleAddedId,
-  profileHref,
-  waitForPersistedProfile,
 } from "@/lib/localRoutes";
-
-function idsFromKey(key: string): string[] {
-  return key ? key.split("\u001f") : [];
-}
 
 function isPlainLeftClick(event: MouseEvent): boolean {
   return (
@@ -29,25 +22,11 @@ function isPlainLeftClick(event: MouseEvent): boolean {
 
 export default function OfflineCacheWarmup() {
   const hydrated = useHasHydrated();
-  const profileIdsKey = useStore((state) =>
-    state.profiles.map((profile) => profile.id).join("\u001f"),
-  );
-  const sceneIdsKey = useStore((state) =>
-    state.scenes.map((scene) => scene.id).join("\u001f"),
-  );
-  const profileIds = useMemo(() => idsFromKey(profileIdsKey), [profileIdsKey]);
-  const latestProfileIds = useRef(profileIds);
-  const profileCreateBaseline = useRef<string[] | null>(null);
-  latestProfileIds.current = profileIds;
 
-  const routes = useMemo(
-    () =>
-      buildOfflineWarmupRoutes(
-        profileIds,
-        idsFromKey(sceneIdsKey),
-      ),
-    [profileIds, sceneIdsKey],
-  );
+  // Background warming must never turn local record identifiers into origin
+  // requests. Dynamic profile/scene routes use fixed offline shells; contract
+  // details remain available offline after an explicit visit/runtime cache.
+  const routes = useMemo(() => buildOfflineWarmupRoutes(), []);
 
   useEffect(() => {
     if (!hydrated || typeof navigator === "undefined") return;
@@ -79,37 +58,8 @@ export default function OfflineCacheWarmup() {
     };
   }, [hydrated, routes]);
 
-  // The create form still calls router.push(`/profile/${id}`). While offline,
-  // remember the ids that existed at submit time. Zustand updates React state
-  // before its persist middleware is guaranteed to have finished localStorage;
-  // a hard document navigation before that write completes hydrates an empty
-  // shell. Wait until the exact newborn id is visibly persisted first.
-  useLayoutEffect(() => {
-    const baseline = profileCreateBaseline.current;
-    if (!hydrated || !baseline || navigator.onLine) return;
-
-    const addedId = findSingleAddedId(baseline, profileIds);
-    if (!addedId) return;
-
-    profileCreateBaseline.current = null;
-    void waitForPersistedProfile(addedId).then((persisted) => {
-      if (!persisted || navigator.onLine) return;
-      window.location.assign(profileHref(addedId));
-    });
-  }, [hydrated, profileIds]);
-
   useEffect(() => {
     if (typeof document === "undefined") return;
-
-    const markOfflineProfileCreate = (event: SubmitEvent) => {
-      if (navigator.onLine || window.location.pathname !== "/") return;
-      const form = event.target;
-      if (!(form instanceof HTMLFormElement)) return;
-
-      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-      if (!submit?.textContent?.includes("Sla jezelf vast")) return;
-      profileCreateBaseline.current = [...latestProfileIds.current];
-    };
 
     const navigateFromCache = (event: MouseEvent) => {
       if (navigator.onLine || event.defaultPrevented || !isPlainLeftClick(event)) return;
@@ -138,12 +88,8 @@ export default function OfflineCacheWarmup() {
       window.location.assign(url.href);
     };
 
-    document.addEventListener("submit", markOfflineProfileCreate, true);
     document.addEventListener("click", navigateFromCache, true);
-    return () => {
-      document.removeEventListener("submit", markOfflineProfileCreate, true);
-      document.removeEventListener("click", navigateFromCache, true);
-    };
+    return () => document.removeEventListener("click", navigateFromCache, true);
   }, []);
 
   return null;

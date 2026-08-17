@@ -5,33 +5,26 @@ import { useMotionSafe } from "@/lib/motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { useContractStore } from "@/lib/contractStore";
 import { KINKS } from "@/lib/kinks";
-import type { Profile, SceneItem, SceneRecord, ContractSnapshot } from "@/types";
+import type { Profile, SceneItem, SceneRecord } from "@/types";
+import {
+  activeSignedContractForPair,
+  contractVersionById,
+  type ContractSeries,
+} from "@/lib/contractLifecycle";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
-import { CaretUp, CaretDown } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
+import { comparableEntry, visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
+import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
 
 function uid() {
   return crypto.randomUUID();
-}
-
-// ─── Contract helpers ────────────────────────────────────────────────────────
-
-function contractForPair(
-  contracts: ContractSnapshot[],
-  aId: string,
-  bId: string
-): ContractSnapshot | undefined {
-  if (!aId || !bId) return undefined;
-  return contracts.find(
-    (c) =>
-      (c.profileAId === aId && c.profileBId === bId) ||
-      (c.profileAId === bId && c.profileBId === aId)
-  );
 }
 
 // ─── Contract gate ────────────────────────────────────────────────────────────
@@ -40,12 +33,12 @@ function ContractGate({
   profiles,
   initialA,
   initialB,
-  contracts,
+  contractSeries,
 }: {
   profiles: Profile[];
   initialA: string;
   initialB: string;
-  contracts: ContractSnapshot[];
+  contractSeries: ContractSeries[];
 }) {
   const router = useRouter();
   const t = useMotionSafe();
@@ -53,7 +46,9 @@ function ContractGate({
   const [selectedB, setSelectedB] = useState(initialB);
 
   const canProceed = selectedA && selectedB && selectedA !== selectedB;
-  const existingContract = canProceed ? contractForPair(contracts, selectedA, selectedB) : undefined;
+  const existingContract = canProceed
+    ? activeSignedContractForPair(contractSeries, selectedA, selectedB)
+    : undefined;
   const contractHref = canProceed
     ? `/contract?a=${selectedA}&b=${selectedB}`
     : "/contract";
@@ -100,11 +95,7 @@ function ContractGate({
               justifyContent: "center",
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="4" y="11" width="16" height="11" rx="2" stroke="var(--accent)" strokeWidth="1.8"/>
-              <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
-              <circle cx="12" cy="16" r="1.5" fill="var(--accent)"/>
-            </svg>
+            <LockKey size={22} weight="duotone" aria-hidden="true" style={{ color: "var(--accent)" }} />
           </div>
         </div>
 
@@ -120,7 +111,7 @@ function ContractGate({
           style={{ color: "var(--text2)", lineHeight: 1.65 }}
         >
           Elke scène begint met toestemming. Een verbond legt jullie grenzen,
-          verlangens en safewords vast — zodat wat je speelt bewust en veilig is
+          verlangens en safewords vast, zodat wat je speelt bewust en veilig is
           voor beiden.
         </p>
         <p
@@ -128,7 +119,7 @@ function ContractGate({
           style={{ color: "var(--text2)", lineHeight: 1.65 }}
         >
           Spelen zonder afspraken is spelen in het donker. Het verbond is geen
-          formaliteit — het is de fundering waarop vertrouwen en overgave kunnen
+          formaliteit. Het is de fundering waarop vertrouwen en overgave kunnen
           bestaan. Kies hieronder twee profielen en maak eerst een verbond aan.
         </p>
 
@@ -151,17 +142,17 @@ function ContractGate({
         {existingContract ? (
           <button
             onClick={() => router.push(`/scene?a=${selectedA}&b=${selectedB}`)}
-            className="w-full py-3 rounded-xl text-sm font-bold focus-ring mb-3"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            className="w-full py-3 rounded-xl text-sm font-semibold focus-ring mb-3 inline-flex items-center justify-center gap-1.5"
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
-            Ga naar scène →
+            Ga naar scène <ArrowRight size={15} aria-hidden="true" />
           </button>
         ) : (
           <button
             onClick={() => router.push(contractHref)}
             disabled={!canProceed}
-            className="w-full py-3 rounded-xl text-sm font-bold focus-ring disabled:opacity-40 mb-3"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            className="w-full py-3 rounded-xl text-sm font-semibold focus-ring disabled:opacity-40 mb-3"
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Contract opstellen
           </button>
@@ -304,9 +295,7 @@ function SceneItemRow({
               className="focus-ring rounded-lg flex-none disabled:opacity-30"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -388,9 +377,7 @@ function KinkChip({
       }}
     >
       {!added && (
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-          <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
+        <Plus size={12} aria-hidden="true" />
       )}
       {name}
     </button>
@@ -402,7 +389,8 @@ function KinkChip({
 function ScenePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { profiles, scenes, contracts, saveScene, lockSceneConsent } = useStore();
+  const { profiles, scenes, saveScene, lockSceneConsent } = useStore();
+  const contractSeries = useContractStore((state) => state.series);
   const _hasHydrated = useHasHydrated();
 
   const sceneIdParam = searchParams.get("id");
@@ -449,11 +437,12 @@ function ScenePage() {
   // Autofill safeword from contract when profiles are known
   useEffect(() => {
     if (!_hasHydrated || !resolvedAId || !resolvedBId) return;
-    const contract = contractForPair(contracts, resolvedAId, resolvedBId);
-    if (contract?.safeword) {
-      setSafeword((prev) => prev || contract.safeword!);
+    const contract = activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
+    const version = contract ? contractVersionById(contract, contract.currentVersionId) : undefined;
+    if (version?.summary.safeword) {
+      setSafeword((prev) => prev || version.summary.safeword!);
     }
-  }, [_hasHydrated, resolvedAId, resolvedBId, contracts]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [_hasHydrated, resolvedAId, resolvedBId, contractSeries]);
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     if (isConsentLocked) return;
@@ -481,7 +470,10 @@ function ScenePage() {
 
   function addFromKink(kinkName: string, kinkId: string) {
     if (isConsentLocked) return;
-    const tags = [...new Set([...(profileA?.entries[kinkId]?.tags ?? []), ...(profileB?.entries[kinkId]?.tags ?? [])])];
+    const pair = directionalComparisonEntries(profileA?.entries, profileB?.entries, kinkId);
+    const sourceEntry = comparableEntry(pair.sourceEntry);
+    const partnerEntry = comparableEntry(pair.partnerEntry);
+    const tags = [...new Set([...(sourceEntry.tags ?? []), ...(partnerEntry.tags ?? [])])];
     setItems((prev) => [...prev, { id: uid(), name: kinkName, kinkId, intensity: "midden", duration: "", note: "", fromKink: true, tags }]);
     setSaved(false); setSavedStatus(null);
   }
@@ -559,23 +551,31 @@ function ScenePage() {
   const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
+  const comparisonEntries = (kinkId: string) =>
+    directionalComparisonEntries(profileA?.entries, profileB?.entries, kinkId);
+
   const topKinks = profileA
-    ? KINKS.filter((k) => (profileA.entries[k.id]?.usedInScene ?? 0) > 0)
-        .sort((a, b) =>
-          ((profileB?.entries[b.id]?.usedInScene ?? 0) + (profileA.entries[b.id]?.usedInScene ?? 0)) -
-          ((profileB?.entries[a.id]?.usedInScene ?? 0) + (profileA.entries[a.id]?.usedInScene ?? 0)))
+    ? KINKS.filter((k) => visibleUsedInScene(comparisonEntries(k.id).sourceEntry) > 0)
+        .sort((a, b) => {
+          const pairA = comparisonEntries(a.id);
+          const pairB = comparisonEntries(b.id);
+          return (visibleUsedInScene(pairB.partnerEntry) + visibleUsedInScene(pairB.sourceEntry)) -
+            (visibleUsedInScene(pairA.partnerEntry) + visibleUsedInScene(pairA.sourceEntry));
+        })
         .slice(0, 5)
     : [];
 
   const mutualKinks = KINKS.filter((k) => {
-    const a = profileA?.entries[k.id]?.status ?? null;
-    const b = profileB?.entries[k.id]?.status ?? null;
+    const pair = comparisonEntries(k.id);
+    const a = visibleStatus(pair.sourceEntry);
+    const b = visibleStatus(pair.partnerEntry);
     return !!a && !!b && (a === "yes" || a === "willing") && (b === "yes" || b === "willing");
   });
 
   const spanningKinks = KINKS.filter((k) => {
-    const a = profileA?.entries[k.id]?.status ?? null;
-    const b = profileB?.entries[k.id]?.status ?? null;
+    const pair = comparisonEntries(k.id);
+    const a = visibleStatus(pair.sourceEntry);
+    const b = visibleStatus(pair.partnerEntry);
     if (!a || !b || a === "hard_no" || b === "hard_no" || a === "no" || b === "no") return false;
     return !((a === "yes" || a === "willing") && (b === "yes" || b === "willing")) && (a === "maybe" || b === "maybe");
   });
@@ -583,7 +583,7 @@ function ScenePage() {
   const hasKinks = mutualKinks.length > 0 || spanningKinks.length > 0 || topKinks.length > 0;
 
   // Gate: new scene with no signed contract for the pair
-  const gated = !sceneIdParam && !contractForPair(contracts, resolvedAId, resolvedBId);
+  const gated = !sceneIdParam && !activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
 
   return (
     <>
@@ -595,10 +595,12 @@ function ScenePage() {
         <div className="flex items-center gap-2 mb-3">
           <Link
             href={backHref}
+            prefetch={false}
+            aria-label="Terug"
             className="focus-ring rounded-lg flex-none"
             style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", color: "var(--text2)", fontSize: 13 }}
           >
-            ←
+            <ArrowRight size={16} className="rotate-180" aria-hidden="true" />
           </Link>
           <div className="flex-1 min-w-0">
             <input
@@ -639,8 +641,8 @@ function ScenePage() {
         {/* Profile hint */}
         {!profileA && !profileB && !sceneIdParam && (
           <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-            <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties — of voeg items handmatig toe.</p>
-            <Link href="/compare" style={{ color: "var(--accent)" }}>→ Profielen kiezen via Vergelijk</Link>
+            <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties, of voeg items handmatig toe.</p>
+            <Link href="/compare" className="inline-flex items-center gap-1" style={{ color: "var(--accent)" }}><ArrowRight size={13} aria-hidden="true" />Profielen kiezen via Vergelijk</Link>
           </div>
         )}
 
@@ -674,12 +676,11 @@ function ScenePage() {
               border: "1px solid var(--border-accent)",
             }}
           >
-            <span className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
-              + Kinks toevoegen
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--accent)" }}>
+              <Plus size={15} aria-hidden="true" />
+              Kinks toevoegen
             </span>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ color: "var(--accent)", opacity: 0.7 }}>
-              <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <CaretRight size={14} aria-hidden="true" style={{ color: "var(--accent)", opacity: 0.7 }} />
           </button>
         )}
 
@@ -693,13 +694,7 @@ function ScenePage() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center py-16 select-none ks-fade-in">
               <div className="mb-4" style={{ opacity: 0.35 }}>
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                  <rect x="8" y="12" width="32" height="4" rx="2" fill="var(--text2)"/>
-                  <rect x="8" y="22" width="24" height="4" rx="2" fill="var(--text2)"/>
-                  <rect x="8" y="32" width="20" height="4" rx="2" fill="var(--text2)"/>
-                  <circle cx="38" cy="34" r="8" fill="var(--accent)" opacity="0.7"/>
-                  <path d="M35 34h6M38 31v6" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                <ListPlus size={48} weight="duotone" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Lege setlist</p>
               <p className="text-sm" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
@@ -758,7 +753,7 @@ function ScenePage() {
                 className="rounded-xl font-bold focus-ring flex-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 44, height: 44, fontSize: 20 }}
               >
-                +
+                <Plus size={20} aria-hidden="true" />
               </button>
             </div>
           )}
@@ -779,18 +774,18 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none inline-flex items-center justify-center gap-1"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                {savedStatus === "draft" ? "Concept ✓" : "Opslaan"}
+                {savedStatus === "draft" ? <><Check size={13} aria-hidden="true" /> Concept</> : "Opslaan"}
               </button>
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
+                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none inline-flex items-center justify-center gap-1"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
               >
-                {savedStatus === "planned" ? "Gepland ✓" : "Plannen"}
+                {savedStatus === "planned" ? <><Check size={13} aria-hidden="true" /> Gepland</> : "Plannen"}
               </button>
             </>
           )}
@@ -804,7 +799,7 @@ function ScenePage() {
           profiles={profiles}
           initialA={aId}
           initialB={bId}
-          contracts={contracts}
+          contractSeries={contractSeries}
         />
       )}
 
@@ -821,9 +816,7 @@ function ScenePage() {
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
               aria-label="Sluiten"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
 
@@ -832,7 +825,7 @@ function ScenePage() {
               <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent2)" }}>Meest gebruikt</p>
               <div className="flex flex-wrap gap-2">
                 {topKinks.map((k) => (
-                  <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(k.name, k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </div>
@@ -843,7 +836,7 @@ function ScenePage() {
               <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--yes)" }}>Wederzijds</p>
               <div className="flex flex-wrap gap-2">
                 {mutualKinks.map((k) => (
-                  <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(k.name, k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </div>
@@ -854,7 +847,7 @@ function ScenePage() {
               <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--no)" }}>Spanning</p>
               <div className="flex flex-wrap gap-2">
                 {spanningKinks.map((k) => (
-                  <KinkChip key={k.id} name={k.name} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(k.name, k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </div>

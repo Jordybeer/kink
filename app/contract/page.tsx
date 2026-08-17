@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
-import { X, TrendUp, Trash } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretUp, Heart, Trash, TrendUp, X } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -9,6 +9,8 @@ import type { KinkStatus, KinkEntry } from "@/types";
 import { isKinkMatch, isHardLimit, kinkMatchScore } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import ContractSection from "@/components/contract/ContractSection";
+import ContractSigningSheet from "@/components/contract/ContractSigningSheet";
+import { contractParticipantFromProfile, type ContractVersionContent } from "@/lib/contractLifecycle";
 import SignaturePad from "@/components/contract/SignaturePad";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +19,8 @@ import { canvasHasInk } from "@/lib/canvasUtils";
 import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
 import { buildContractPdf, isKinkDetail, DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
 import type { ContractItem, KinkDetailItem, Signals } from "@/lib/contractPdf";
+import { comparableEntry } from "@/lib/privateResponses";
+import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 
@@ -30,6 +34,7 @@ function ContractPage() {
   const [generating, setGenerating] = useState(false);
   const [ceremony, setCeremony] = useState(false);
   const [preambleOpen, setPreambleOpen] = useState(false);
+  const [signingOpen, setSigningOpen] = useState(false);
   const { showToast } = useToast();
 
   // Safeword & aftercare state
@@ -90,13 +95,14 @@ function ContractPage() {
   const EMPTY: KinkEntry = { status: null, comment: "" };
 
   for (const kink of KINKS) {
-    const entryA = profileA.entries[kink.id] ?? EMPTY;
-    const entryB = profileB.entries[kink.id] ?? EMPTY;
+    const pair = directionalComparisonEntries(profileA.entries, profileB.entries, kink.id);
+    const entryA = comparableEntry(pair.sourceEntry);
+    const entryB = comparableEntry(pair.partnerEntry);
     const hasA = entryA.status;
     const hasB = entryB.status;
     if (!hasA && !hasB) continue;
     const detail: KinkDetail = {
-      name: kink.name,
+      name: directionalCompareLabel(kink.id, kink.name),
       statusA: entryA.status, statusB: entryB.status,
       commentA: entryA.comment || undefined,
       commentB: entryB.comment || undefined,
@@ -107,7 +113,7 @@ function ContractPage() {
       const aHard = entryA.status === "hard_no";
       const bHard = entryB.status === "hard_no";
       const who = aHard && bHard ? "beiden" : aHard ? profileA.name : profileB.name;
-      hardLimits.push({ name: kink.name, who });
+      hardLimits.push({ name: detail.name, who });
       hardLimitDetails.push(detail);
     } else if (isKinkMatch(entryA, entryB)) {
       shared.push(detail);
@@ -131,8 +137,8 @@ function ContractPage() {
     customMerged.set(key, ck.side === "a" ? { ...ex, aId: ck.id } : { ...ex, bId: ck.id });
   }
   for (const item of customMerged.values()) {
-    const entryA = item.aId ? (profileA.entries[item.aId] ?? EMPTY) : EMPTY;
-    const entryB = item.bId ? (profileB.entries[item.bId] ?? EMPTY) : EMPTY;
+    const entryA = item.aId ? comparableEntry(profileA.entries[item.aId]) : EMPTY;
+    const entryB = item.bId ? comparableEntry(profileB.entries[item.bId]) : EMPTY;
     const hasA = entryA.status;
     const hasB = entryB.status;
     const detail: KinkDetail = {
@@ -178,28 +184,11 @@ function ContractPage() {
   });
 
   function handleConfirm() {
-    if (!profileA || !profileB) return;
-    if (!signedA || !signedB) {
-      showToast({ message: "Beide partijen moeten tekenen voordat dit verbond gebonden is." });
-      return;
-    }
     if ((trimmedRealNameA.length > 0) !== (trimmedRealNameB.length > 0)) {
       showToast({ message: "Vul de echte naam van beide partijen in, of laat ze beide leeg." });
       return;
     }
-    saveContract({
-      date: Date.now(),
-      profileAId: aId,
-      profileBId: bId,
-      profileAName: profileA.name,
-      profileBName: profileB.name,
-      matchCount: shared.length + customShared.length,
-      hardLimitCount: hardLimits.length,
-      softLimitCount: softLimits.length,
-      discussCount: discuss.length,
-      safeword: signalsA.black || signalsB.black || undefined,
-    });
-    showToast({ message: "Contract bevestigd — dit verbond is aangegaan!", variant: "success" });
+    setSigningOpen(true);
   }
 
   async function handleGeneratePDF() {
@@ -273,13 +262,32 @@ function ContractPage() {
     );
   }
 
+  const contractVersionContent: ContractVersionContent = {
+    schema: 1,
+    profileA: contractParticipantFromProfile(profileA),
+    profileB: contractParticipantFromProfile(profileB),
+    preamble,
+    createdAt: Date.now(),
+    ...(useRealNames ? { realNameA: trimmedRealNameA, realNameB: trimmedRealNameB } : {}),
+    signalsA: { green: signalsA.green, amber: signalsA.yellow, red: signalsA.red, black: signalsA.black },
+    signalsB: { green: signalsB.green, amber: signalsB.yellow, red: signalsB.red, black: signalsB.black },
+    aftercareA: [...aftercareA],
+    aftercareB: [...aftercareB],
+    shared: sharedAll.map((item) => ({ ...item })),
+    softLimits: softLimits.map((item) => ({ ...item })),
+    hardLimits: hardLimits.map((item) => ({ ...item })),
+    hardLimitDetails: hardLimitDetails.map((item) => ({ ...item })),
+    discuss: discuss.map((item) => ({ ...item })),
+  };
+
   return (
     <>
     <PageShell width="3xl" className="contract-print">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
-        <Link href={`/compare?a=${aId}&b=${bId}`} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-          ← Terug
+        <Link href={`/compare?a=${aId}&b=${bId}`} prefetch={false} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
+          <ArrowRight size={16} className="mr-1 rotate-180" aria-hidden="true" />
+          Terug
         </Link>
         <h1 className="text-xl font-bold flex-1">Teken het contract</h1>
       </div>
@@ -315,10 +323,10 @@ function ContractPage() {
           </p>
           <button
             onClick={() => setPreambleOpen((v) => !v)}
-            className="focus-ring text-xs mt-2 transition-colors py-2 px-3 inline-block"
+            className="focus-ring text-xs mt-2 transition-colors py-2 px-3 inline-flex items-center gap-1"
             style={{ color: "var(--accent)" }}
           >
-            {preambleOpen ? "Minder ↑" : "Lees meer ↓"}
+            {preambleOpen ? (<>Minder <CaretUp size={13} aria-hidden="true" /></>) : (<>Lees meer <CaretDown size={13} aria-hidden="true" /></>)}
           </button>
         </div>
 
@@ -431,7 +439,7 @@ function ContractPage() {
             Algemene afspraken
           </h3>
           <ul className="space-y-1.5 text-sm" style={{ color: "var(--text2)" }}>
-            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--hard-no)" }} />Safeword stopt alles — altijd en zonder uitleg.</li>
+            <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--hard-no)" }} />Safeword stopt alles, altijd en zonder uitleg.</li>
             <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }} />Aftercare is geen optie, maar een afspraak.</li>
             <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--willing)" }} />Dit contract kan op elk moment door beiden worden herzien.</li>
             <li><span className="inline-block w-3 h-3 rounded-full align-middle mr-2 flex-none" style={{ background: "var(--maybe)" }} />Grenzen die hier niet staan, worden voor elke scène besproken.</li>
@@ -485,7 +493,7 @@ function ContractPage() {
           className="focus-ring text-xs mt-3 inline-flex items-center gap-1 transition-colors min-h-[36px]"
           style={{ color: "var(--accent)" }}
         >
-          Waarom een echte naam toevoegen? →
+          Waarom een echte naam toevoegen? <ArrowRight size={13} aria-hidden="true" />
         </button>
       </div>
 
@@ -495,7 +503,7 @@ function ContractPage() {
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
-          Handtekeningen
+          Handgeschreven handtekeningen (optioneel voor PDF)
         </h2>
         <div className="flex gap-4 flex-wrap">
           <SignaturePad label={profileA.name} colour={COLOUR_A} canvasRef={canvasARef} onSignedChange={setSignedA} />
@@ -508,8 +516,8 @@ function ContractPage() {
         <button
           onClick={handleGeneratePDF}
           disabled={generating || ceremony}
-          className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+          className="focus-ring flex-1 py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           {generating ? "Genereren…" : "Opslaan als PDF"}
         </button>
@@ -519,7 +527,7 @@ function ContractPage() {
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent2)", color: "var(--on-accent)" }}
         >
-          Contract bevestigen
+          Contract bewaren of tekenen
         </button>
       </div>
 
@@ -532,6 +540,7 @@ function ContractPage() {
             </h2>
             <Link
               href={`/timeline?a=${aId}&b=${bId}`}
+              prefetch={false}
               className="focus-ring text-xs transition-colors inline-flex items-center gap-1"
               style={{ color: "var(--text2)" }}
             >
@@ -576,6 +585,7 @@ function ContractPage() {
                     {c.profileAId && c.profileBId && (
                       <Link
                         href={`/contract?a=${c.profileAId}&b=${c.profileBId}`}
+                        prefetch={false}
                         className="focus-ring text-xs px-3 py-1.5 rounded-lg transition-colors"
                         style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
                       >
@@ -598,6 +608,13 @@ function ContractPage() {
         </div>
       )}
     </PageShell>
+    <ContractSigningSheet
+      open={signingOpen}
+      onClose={() => setSigningOpen(false)}
+      profileA={profileA}
+      profileB={profileB}
+      content={contractVersionContent}
+    />
     <AnimatePresence>
       {whyOpen && (
         <motion.div
@@ -644,7 +661,7 @@ function ContractPage() {
                 style={{ color: "var(--text2)" }}
                 aria-label="Sluiten"
               >
-                <X size={18} />
+                <X aria-hidden="true" size={18} />
               </button>
             </div>
             <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text)" }}>
@@ -712,7 +729,7 @@ function ContractPage() {
                   fontSize: "1.875rem",
                 }}
               >
-                🖤
+                <Heart size={30} weight="fill" aria-hidden="true" style={{ color: "var(--accent)" }} />
               </div>
               <p
                 style={{

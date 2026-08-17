@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalizeLocalUrl,
+  decodeLocalRouteId,
   findSingleAddedId,
   hasPersistedProfile,
   profileHref,
@@ -18,6 +19,11 @@ describe("local-first routes", () => {
     );
   });
 
+  it("decodes local dynamic ids without throwing on malformed input", () => {
+    expect(decodeLocalRouteId("legacy-series%3Asnapshot-1")).toBe("legacy-series:snapshot-1");
+    expect(decodeLocalRouteId("legacy-series%ZZsnapshot")).toBe("legacy-series%ZZsnapshot");
+  });
+
   it("reads ids from both fixed query shells and legacy path doors", () => {
     expect(
       profileIdFromLocation(
@@ -31,6 +37,12 @@ describe("local-first routes", () => {
         new URLSearchParams(),
       ),
     ).toBe("profile legacy");
+    expect(
+      profileIdFromLocation(
+        "/profile/profile%20questions/questions",
+        new URLSearchParams(),
+      ),
+    ).toBe("profile questions");
 
     expect(
       sceneIdFromLocation(

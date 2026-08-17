@@ -2,6 +2,60 @@ export type KinkStatus = "yes" | "willing" | "maybe" | "no" | "hard_no" | null;
 
 export type ExperienceLevel = "beginner" | "gevorderd" | "ervaren" | "diepgaand";
 
+export type ProfilePerspective = "dominant" | "submissive";
+
+export interface SwitchShareMemberProof {
+  profileId: string;
+  keyId: string;
+}
+
+export interface SwitchShareProof {
+  schema: 1;
+  algorithm: "ECDSA-P256-SHA256";
+  name: string;
+  dominant: SwitchShareMemberProof;
+  submissive: SwitchShareMemberProof;
+  dominantSignature: string;
+  submissiveSignature: string;
+}
+export type QuestionnaireMode = "dynamic" | "deepDive";
+export type QuestionnaireInterest =
+  | "power"
+  | "impact"
+  | "bondage"
+  | "sensation"
+  | "humiliation"
+  | "sexual_social";
+
+export type KinkCategoryId =
+  | "impact"
+  | "bondage"
+  | "power"
+  | "rituals"
+  | "discipline"
+  | "roleplay"
+  | "sensation"
+  | "exhibition"
+  | "media"
+  | "group_partner"
+  | "body_focus"
+  | "materials_scent"
+  | "pet_play"
+  | "fluids"
+  | "toys"
+  | "penetration"
+  | "aftercare"
+  | "appearance"
+  | "adult_ageplay";
+
+export type KinkCategory = KinkCategoryId | "custom";
+
+export interface QuestionnaireSetup {
+  mode: QuestionnaireMode;
+  interests: QuestionnaireInterest[];
+  version: 2;
+}
+
 export interface CustomKink {
   id: string;
   name: string;
@@ -10,9 +64,15 @@ export interface CustomKink {
 export interface Kink {
   id: string;
   name: string;
-  category: string;
+  aliases?: readonly string[];
+  category: KinkCategory;
   level: 1 | 2 | 3 | 4;
   description?: string;
+  safetyNote?: string;
+}
+
+export interface CatalogKink extends Kink {
+  category: KinkCategoryId;
 }
 
 export interface KinkEntry {
@@ -199,6 +259,16 @@ export interface Profile {
   consentProof?: ProfileConsentProof;
   name: string;
   role: string;
+  /** Specialist role that existed before a primary perspective was chosen. */
+  legacyRole?: string;
+  /** Local grouping for two perspectives belonging to the same person. */
+  personGroupId?: string;
+  /** Primary perspective represented by this answer set. */
+  perspective?: ProfilePerspective;
+  /** Verified proof that two shared perspective records belong to one Switch identity. */
+  switchShareProof?: SwitchShareProof;
+  /** Local questionnaire selection. Missing pre-launch data defaults to Dynamic. */
+  questionnaireSetup?: QuestionnaireSetup;
   relationshipStatus?: string;
   fetLifeUsername?: string;
   bdsmtestUrl?: string;

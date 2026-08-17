@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
       'react-hooks/refs': 'off',
     },
   },
+  {
+    files: ['app/contract/page.tsx', 'app/scene/page.tsx'],
+    rules: {
+      // These timestamps are created only inside explicit user-triggered save/export handlers,
+      // never while rendering. The compiler rule currently treats the nested handlers as render code.
+      'react-hooks/purity': 'off',
+    },
+  },
   globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
 ])
 

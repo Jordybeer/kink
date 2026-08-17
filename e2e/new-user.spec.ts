@@ -9,119 +9,118 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
   });
 
   test("onboarding zichtbaar na fresh start", async ({ page }) => {
-    await expect(page.getByText("KinkSync")).toBeVisible();
-    await expect(page.getByRole("button", { name: /begin/i })).toBeVisible();
+    await expect(page.getByText("KinkSync").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
   });
 
-  test("doorloopt alle stappen en landt op home", async ({ page }) => {
-    // Step 0 — welkom
-    await page.getByRole("button", { name: /begin/i }).click();
-    await page.waitForTimeout(300);
+  test("directe app-deeplink kan onboarding niet overslaan", async ({ page }) => {
+    await page.goto("/compare?a=e2bfd216-5f11-4af2-8f9e-c6f86e1c858b&b=db601c62-083c-406c-b4e9-f35fc36847a2");
 
-    // Step 1 — de deur: leeftijdscheck staat aan het begin, niet aan het eind
-    await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toHaveCount(0);
+  });
+
+  test("onbekende deeplink kan onboarding niet overslaan", async ({ page }) => {
+    await page.goto("/this-route-is-not-collared");
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /hier is niets te vinden/i })).toHaveCount(0);
+  });
+
+  test("offline fallback blijft publiek, quarantine niet", async ({ page }) => {
+    await page.goto("/offline");
+    await expect(page.getByRole("heading", { name: "Je bent offline" })).toBeVisible();
+
+    await page.goto("/quarantine");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
+  });
+
+  test("doorloopt de rondleiding en landt rustig op home", async ({ page }) => {
+    await page.getByRole("button", { name: /^begin$/i }).click();
+    await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
-    await page.waitForTimeout(300);
 
-    // Step 2 — data: privacy + live + back-up in één stap
-    await expect(page.getByText(/verlaat dit apparaat nooit/i)).toBeVisible();
-    await expect(page.getByText(/back-up/i).first()).toBeVisible();
-    await page.getByRole("button", { name: /volgende/i }).click();
-    await page.waitForTimeout(300);
+    await expect(page.getByRole("heading", { name: /hoe klinkt dit voor jou/i })).toBeVisible();
+    await expect(page.getByText("Heel graag")).toBeVisible();
+    await page.getByRole("button", { name: /kom maar door/i }).click();
 
-    // Step 3 — consent
-    await expect(page.getByText(/consent, altijd/i)).toBeVisible();
-    await expect(page.getByText(/safewords zijn heilig/i)).toBeVisible();
-    await page.getByRole("button", { name: /ga door/i }).click();
-    await page.waitForTimeout(300);
+    await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
+    await expect(page.getByText(/een match is nooit automatisch consent/i)).toBeVisible();
+    await page.getByRole("button", { name: /^verder/i }).click();
 
-    // Step 4 — app lock (optioneel, hier overslaan)
-    await expect(page.getByRole("heading", { name: /vergrendel de app/i })).toBeVisible();
-    await page.getByRole("button", { name: "Sla over" }).click();
-    await page.waitForTimeout(300);
+    await expect(page.getByRole("heading", { name: /niet voor iedere pottenkijker/i })).toBeVisible();
+    await expect(page.getByText(/privacy voorop/i)).toBeVisible();
+    await page.getByRole("button", { name: "Niet nu" }).click();
 
-    // Step 5 — finale: de handdruk het speelveld op
-    await expect(page.getByRole("heading", { name: /het speelveld is van jou/i })).toBeVisible();
-    await page.getByRole("button", { name: /maak je eerste profiel/i }).click();
-    await page.waitForTimeout(400);
+    await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
+    await page.getByRole("button", { name: /naar kinksync/i }).press("Enter");
 
-    // Should be on home — onboarding gone, create form ready
-    await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
+    // Onboarding rondt af op home. Profielaanmaak blijft een bewuste volgende tik.
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /nieuw profiel maken/i })).not.toBeVisible();
     await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
   test("pin instellen gooit de wizard niet terug naar slide één", async ({ page }) => {
-    // Regression guard (corrections.md 2026-07-11): setAppLockPin mid-wizard
-    // flipped appLockEnabled, HomeContent swapped Onboarding for the lock
-    // screen, and the wizard woke up amnesiac on the welcome slide.
-    await page.getByRole("button", { name: /begin/i }).click();
-    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /^begin$/i }).click();
     await page.getByRole("button", { name: /18\+/i }).click();
-    await page.waitForTimeout(300);
-    await page.getByRole("button", { name: /volgende/i }).click();
-    await page.waitForTimeout(300);
-    await page.getByRole("button", { name: /ga door/i }).click();
-    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /kom maar door/i }).click();
+    await page.getByRole("button", { name: /^verder/i }).click();
 
-    // Step 4 — choose the PIN path instead of skipping
     await page.getByRole("button", { name: /pin instellen/i }).click();
-    await page.waitForTimeout(300);
     const tapPin = async () => {
-      for (const d of ["1", "2", "3", "4"]) {
-        await page.getByRole("button", { name: d, exact: true }).click();
+      for (const digit of ["1", "2", "3", "4"]) {
+        await page.getByRole("button", { name: digit, exact: true }).click();
       }
     };
-    await expect(page.getByRole("heading", { name: /kies een pin/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /hou nieuwsgierige vingers buiten/i })).toBeVisible();
     await tapPin();
-    await expect(page.getByRole("heading", { name: /bevestig je pin/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /nog één keer/i })).toBeVisible();
     await tapPin();
-    await page.waitForTimeout(400);
 
-    // The wizard must march on (biometric offer or finale) — never the
-    // lock screen, never back to the welcome slide.
-    await expect(
-      page.getByRole("heading", { name: /pin ingesteld|het speelveld is van jou/i })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /liever met één blik|genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /^begin$/i })).not.toBeVisible();
   });
 
-  test("sla over springt naar de leeftijdscheck — nooit eromheen", async ({ page }) => {
+  test("sla intro over springt naar de leeftijdscheck — nooit eromheen", async ({ page }) => {
     await page.getByRole("button", { name: /sla de introductie over/i }).click();
-    await page.waitForTimeout(400);
-    // The gate is not skippable (L-01): skip lands on the age check, not home
-    await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
     await page.getByRole("button", { name: /18\+/i }).click();
-    await page.waitForTimeout(400);
-    // Skip trims the tour, never the vows — consent still stands between door and app
-    await expect(page.getByRole("heading", { name: /consent, altijd/i })).toBeVisible();
-    await page.getByRole("button", { name: /ga door/i }).click();
-    await page.waitForTimeout(400);
-    await expect(page.getByText(/nieuw profiel/i)).toBeVisible();
+
+    // Skip trims the tour, nooit de consent-boodschap.
+    await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
+    await expect(page.getByText(/een match is nooit automatisch consent/i)).toBeVisible();
+    await page.getByRole("button", { name: /naar kinksync/i }).click();
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
   });
 
   test("lockout bij 'ik ben jonger'", async ({ page }) => {
-    await page.getByRole("button", { name: /begin/i }).click();
-    await page.waitForTimeout(300);
-    await expect(page.getByRole("heading", { name: /voor volwassenen/i })).toBeVisible();
+    await page.getByRole("button", { name: /^begin$/i }).click();
+    await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();
     await page.getByRole("button", { name: /jonger/i }).click();
-    await page.waitForTimeout(200);
     await expect(page.getByText(/kom terug als je 18 bent/i)).toBeVisible();
   });
 
-  test("nieuw profiel aanmaken direct na onboarding", async ({ page }) => {
-    // Fast-path via skip → age gate → consent → home
-    await page.getByRole("button", { name: /sla de introductie over/i }).click();
-    await page.waitForTimeout(400);
+  test("nieuw profiel aanmaken na onboarding blijft een expliciete keuze", async ({ page }) => {
+    await page.getByRole("button", { name: /^begin$/i }).click();
     await page.getByRole("button", { name: /18\+/i }).click();
-    await page.waitForTimeout(400);
-    await page.getByRole("button", { name: /ga door/i }).click();
-    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: /kom maar door/i }).click();
+    await page.getByRole("button", { name: /^verder/i }).click();
+    await page.getByRole("button", { name: "Niet nu" }).click();
+    await page.getByRole("button", { name: /naar kinksync/i }).press("Enter");
 
-    await page.getByPlaceholder(/naam of alias/i).fill("Testmeester");
-    await page.getByRole("button", { name: /sla jezelf vast/i }).click();
+    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
+    await page.getByLabel("Naam of alias").fill("Testmeester");
+    await page.getByRole("button", { name: /^Dominant/ }).click();
+    await page.getByRole("button", { name: "Verder" }).click();
+    await page.getByRole("button", { name: "Start vragen" }).click();
     await page.waitForLoadState("networkidle");
 
-    // Should have navigated to the profile page
-    await expect(page.getByText("Testmeester")).toBeVisible();
+    await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/);
+    await expect(page.getByTestId("questions-screen")).toBeVisible();
+    await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
   });
 });

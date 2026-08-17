@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resizeImage } from "@/lib/imageUtils";
+import { prepareAvatarForShare, resizeImage } from "@/lib/imageUtils";
 
 // ---------------------------------------------------------------------------
 // resizeImage — crop math and output invariants
@@ -51,6 +51,7 @@ function setupMocks(imgW: number, imgH: number) {
 describe("resizeImage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockToDataURL.mockReturnValue("data:image/jpeg;base64,result");
     mockCanvas.width = 0;
     mockCanvas.height = 0;
   });
@@ -100,5 +101,26 @@ describe("resizeImage", () => {
     const result = await resizeImage(makeFile());
     expect(mockToDataURL).toHaveBeenCalledWith("image/jpeg", 0.7);
     expect(result).toBe("data:image/jpeg;base64,result");
+  });
+
+  it("creates a smaller QR-specific avatar without changing the stored image", async () => {
+    setupMocks(512, 512);
+    const result = await prepareAvatarForShare("data:image/jpeg;base64,raw");
+    expect(mockCanvas.width).toBe(160);
+    expect(mockCanvas.height).toBe(160);
+    expect(mockToDataURL).toHaveBeenCalledWith("image/jpeg", 0.62);
+    expect(result).toBe("data:image/jpeg;base64,result");
+  });
+
+  it("reduces size and quality again when the first QR avatar is too large", async () => {
+    setupMocks(512, 512);
+    mockToDataURL
+      .mockReturnValueOnce(`data:image/jpeg;base64,${"A".repeat(21_000)}`)
+      .mockReturnValueOnce("data:image/jpeg;base64,small");
+    const result = await prepareAvatarForShare("data:image/jpeg;base64,raw");
+    expect(mockToDataURL).toHaveBeenNthCalledWith(1, "image/jpeg", 0.62);
+    expect(mockToDataURL).toHaveBeenNthCalledWith(2, "image/jpeg", 0.52);
+    expect(mockCanvas.width).toBe(144);
+    expect(result).toBe("data:image/jpeg;base64,small");
   });
 });

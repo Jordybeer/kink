@@ -1,8 +1,8 @@
 "use client";
 import { useState, type ReactNode } from "react";
+import { Plus } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.25 } as const;
+import { useMotionSafe } from "@/lib/motion";
 
 export interface FABItem {
   label: string;
@@ -12,40 +12,34 @@ export interface FABItem {
 
 interface Props {
   items: FABItem[];
-  /** Icon shown in the main button when closed (defaults to a + cross) */
+  /** Icon shown in the main button when closed (defaults to Plus). */
   icon?: ReactNode;
   "aria-label"?: string;
 }
 
-const PlusIcon = () => (
-  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actions" }: Props) {
+export default function FAB({ items, icon, "aria-label": ariaLabel = "Acties openen" }: Props) {
   const [open, setOpen] = useState(false);
+  const t = useMotionSafe();
 
   return (
     <div className="relative flex flex-col items-end">
       {/* Speed-dial menu */}
-      <div className="flex flex-col gap-3 items-end mb-3" aria-hidden={!open}>
+      <div className="mb-3 flex flex-col items-end gap-3" aria-hidden={!open}>
         <AnimatePresence>
           {open && items.map((item, i) => {
-            /* Stagger reversed so the bottom item enters first */
-            const delay = (items.length - 1 - i) * 0.05;
+            // Stagger is decorative only; reduced-motion users get the final state immediately.
+            const delay = t.reduced ? 0 : (items.length - 1 - i) * 0.05;
             return (
               <motion.div
                 key={item.label}
                 className="flex items-center gap-3"
-                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                initial={t.reduced ? false : { opacity: 0, y: 10, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                transition={{ ...SPRING, delay }}
+                exit={t.reduced ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.9 }}
+                transition={{ ...t.fast, delay }}
               >
                 <span
-                  className="px-3 py-[6px] rounded-[8px] text-sm font-medium"
+                  className="rounded-[8px] px-3 py-[6px] text-sm font-medium"
                   style={{
                     background: "var(--surface2)",
                     border: "1px solid var(--border)",
@@ -55,9 +49,12 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
                 >
                   {item.label}
                 </span>
-                <button
+                <motion.button
+                  type="button"
+                  whileTap={t.tap}
+                  transition={t.fast}
                   onClick={() => { item.onClick?.(); setOpen(false); }}
-                  className="w-11 h-11 rounded-full flex items-center justify-center active:scale-[0.97] transition-transform duration-150"
+                  className="flex h-11 w-11 items-center justify-center rounded-full"
                   style={{
                     background: "var(--surface2)",
                     border: "1px solid var(--border)",
@@ -67,7 +64,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
                   aria-label={item.label}
                 >
                   {item.icon}
-                </button>
+                </motion.button>
               </motion.div>
             );
           })}
@@ -76,12 +73,14 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
 
       {/* Main FAB button */}
       <motion.button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         animate={{ rotate: open ? 45 : 0 }}
-        transition={SPRING}
+        whileTap={t.tap}
+        transition={t.fast}
         aria-label={ariaLabel}
         aria-expanded={open}
-        className="w-14 h-14 rounded-full flex items-center justify-center active:scale-[0.97] transition-[background,box-shadow] duration-300 z-10 relative"
+        className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full transition-[background,box-shadow] duration-300 motion-reduce:transition-none"
         style={
           open
             ? {
@@ -98,7 +97,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Open actio
               }
         }
       >
-        {icon ?? <PlusIcon />}
+        {icon ?? <Plus size={24} aria-hidden="true" />}
       </motion.button>
     </div>
   );

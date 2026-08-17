@@ -118,6 +118,27 @@ describe("lossless profile share v3", () => {
     expect(decoded.fetLifeUsername).toBeUndefined();
   });
 
+  it("round-trips retired split answers by id without inventing replacement answers", async () => {
+    const beforeSplit: Profile = {
+      ...profile,
+      id: "pre-split-profile",
+      customKinks: [],
+      entries: {
+        breeding_creampie: { status: "yes", comment: "oud gecombineerd antwoord" },
+        luiers_gebruik: { status: "hard_no", comment: "oude samengestelde grens" },
+      },
+    };
+    const decoded = await decodeSharedProfile(await encodeProfileV3(beforeSplit));
+
+    expect(decoded.entries.breeding_creampie?.status).toBe("yes");
+    expect(decoded.entries.luiers_gebruik?.status).toBe("hard_no");
+    for (const inferredId of [
+      "breeding_fantasy", "creampie", "diaper_wetting", "diaper_messing", "diaper_changing",
+    ]) {
+      expect(decoded.entries[inferredId]).toBeUndefined();
+    }
+  });
+
   it("rejects a compressed profile before inflation exceeds the mobile memory boundary", async () => {
     const encoded = await compressRawJson(JSON.stringify({
       v: 3,

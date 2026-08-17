@@ -9,10 +9,6 @@ import { decodeAny, encodeProfile } from "@/lib/shareProfile";
 import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 import type { Profile } from "@/types";
 
-// The bouncer's job description: strangers' JSON (share-URLs, backups,
-// pastes) never reaches the store unfrisked, and honest guests are never
-// turned away. Round-trips prove the second half.
-
 const HONEST_PROFILE: Profile = {
   id: "prof-1",
   name: "Val",
@@ -23,8 +19,8 @@ const HONEST_PROFILE: Profile = {
   createdAt: 1716000000000,
   updatedAt: 1716000000001,
   entries: {
-    spanking_hand: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true },
-    flogging: { status: "maybe", desire: 3, comment: "" },
+    latex_rubber: { status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true },
+    lingerie: { status: "maybe", desire: 3, comment: "" },
     custom_1: { status: "willing", comment: "" },
   },
   bdsmtestScores: [{ role: "Dominant", pct: 97 }],
@@ -38,7 +34,7 @@ describe("sanitizeProfileFull", () => {
     expect(clean!.role).toBe("Domme");
     expect(clean!.experienceLevel).toBe("ervaren");
     expect(clean!.relationshipStatus).toBe("Gecollared");
-    expect(clean!.entries.spanking_hand).toEqual({
+    expect(clean!.entries.latex_rubber).toEqual({
       status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true,
     });
     expect(clean!.customKinks).toEqual([{ id: "custom_1", name: "Eigen ding" }]);
@@ -57,6 +53,25 @@ describe("sanitizeProfileFull", () => {
       comment: "",
       privateResponse: true,
     });
+  });
+
+  it("preserves retired raw answers without inferring statuses for their split replacements", () => {
+    const clean = sanitizeProfileFull({
+      id: "pre-split",
+      name: "Pre-split",
+      entries: {
+        breeding_creampie: { status: "yes", comment: "mijn oude antwoord" },
+        luiers_gebruik: { status: "hard_no", comment: "oude samengestelde grens" },
+      },
+    });
+
+    expect(clean?.entries.breeding_creampie?.status).toBe("yes");
+    expect(clean?.entries.luiers_gebruik?.status).toBe("hard_no");
+    for (const inferredId of [
+      "breeding_fantasy", "creampie", "diaper_wetting", "diaper_messing", "diaper_changing",
+    ]) {
+      expect(clean?.entries[inferredId]).toBeUndefined();
+    }
   });
 
   it("rejects payloads without id or name", () => {
@@ -93,7 +108,6 @@ describe("sanitizeProfileFull", () => {
       },
     });
     expect(clean!.entries.good.status).toBe("willing");
-    // invalid status collapses to null, and a nothing-entry is dropped whole
     expect(clean!.entries.badStatus).toBeUndefined();
     expect(clean!.entries.notAnObject).toBeUndefined();
     expect(clean!.entries.empty).toBeUndefined();
@@ -132,6 +146,49 @@ describe("sanitizeProfileFull", () => {
     expect(ok!.avatarDataUrl).toBe("data:image/png;base64,QUJD");
     const evil = sanitizeProfileFull({ id: "x", name: "x", avatarDataUrl: "javascript:alert(1)" });
     expect(evil!.avatarDataUrl).toBeUndefined();
+  });
+
+  it("normalizes pre-launch questionnaire settings while preserving local identity metadata", () => {
+    const clean = sanitizeProfileFull({
+      id: "own-1",
+      name: "Nova",
+      role: "Dominant",
+      legacyRole: "Rigger",
+      origin: "own",
+      personGroupId: "person-1",
+      perspective: "dominant",
+      questionnaireSetup: { preset: "quick", interests: ["bondage"], version: 1 },
+      experienceLevel: "ervaren",
+      customKinks: [],
+      entries: {},
+    });
+
+    expect(clean?.legacyRole).toBe("Rigger");
+    expect(clean?.personGroupId).toBe("person-1");
+    expect(clean?.perspective).toBe("dominant");
+    expect(clean?.questionnaireSetup).toEqual({ mode: "dynamic", interests: ["bondage"], version: 2 });
+  });
+
+  it("drops local grouping metadata from shared or imported payloads", () => {
+    const clean = sanitizeProfileFull({
+      id: "shared-1",
+      name: "Nova",
+      role: "Dominant",
+      legacyRole: "Rigger",
+      origin: "shared",
+      isImported: true,
+      personGroupId: "forged-group",
+      perspective: "dominant",
+      questionnaireSetup: { preset: "full", interests: ["power"], version: 1 },
+      experienceLevel: "ervaren",
+      customKinks: [],
+      entries: {},
+    });
+
+    expect(clean?.legacyRole).toBeUndefined();
+    expect(clean?.personGroupId).toBeUndefined();
+    expect(clean?.perspective).toBeUndefined();
+    expect(clean?.questionnaireSetup).toBeUndefined();
   });
 });
 
@@ -182,10 +239,10 @@ describe("decodeAny — v1 door now frisked", () => {
     expect(decoded.name).toBe("Val");
     expect(decoded.role).toBe("Domme");
     expect(decoded.relationshipStatus).toBe("Gecollared");
-    expect(decoded.entries.spanking_hand).toEqual({
+    expect(decoded.entries.latex_rubber).toEqual({
       status: "yes", desire: 5, experienced: true, comment: "fijn", tags: ["vraag eerst"], privateResponse: true,
     });
-    expect(decoded.entries.flogging).toEqual({ status: "maybe", desire: 3, comment: "" });
+    expect(decoded.entries.lingerie).toEqual({ status: "maybe", desire: 3, comment: "" });
     expect(decoded.customKinks).toEqual([{ id: "custom_1", name: "Eigen ding" }]);
     expect(decoded.bdsmtestScores).toEqual([{ role: "Dominant", pct: 97 }]);
     expect(decoded.isImported).toBe(true);
@@ -204,7 +261,7 @@ describe("decodeAny — v1 door now frisked", () => {
     const decoded = decodeAny(encoded);
     expect(decoded.experienceLevel).toBe("beginner");
     expect(decoded.entries.a?.status ?? null).toBeNull();
-    expect((decoded as Record<string, unknown>).extraField).toBeUndefined();
+    expect((decoded as unknown as Record<string, unknown>).extraField).toBeUndefined();
     expect(decoded.customKinks.length).toBe(100);
   });
 

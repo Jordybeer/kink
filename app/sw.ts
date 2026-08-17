@@ -6,6 +6,7 @@ import {
   SCENE_DETAIL_SHELL_ROUTE,
 } from "../lib/localRoutes";
 import { STATIC_OFFLINE_ROUTES } from "../lib/offlineRoutes";
+import { shouldAnnounceUpdate } from "../lib/swUpdateNotice";
 
 declare const self: ServiceWorkerGlobalScope & {
   __SW_MANIFEST: (string | { url: string; revision: string | null })[];
@@ -49,7 +50,7 @@ const dynamicShellFallbacks = [
     matcher({ request }: { request: Request }) {
       return (
         isDocumentRequest(request) &&
-        /^\/profile\/[^/]+$/.test(new URL(request.url).pathname)
+        /^\/profile\/[^/]+(?:\/questions)?$/.test(new URL(request.url).pathname)
       );
     },
   },
@@ -102,16 +103,23 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(caches.delete("kinksync-rsc"));
 });
 
-// Notify existing clients that a new version has installed.
+// Notify existing clients that a new version has installed. Skipped on the very
+// first install (no existing clients) and whenever notification consent is not
+// already granted — an ungranted showNotification() rejects, and a rejected
+// waitUntil() fails the install, which would strand every user on their first
+// build. See lib/swUpdateNotice.
 self.addEventListener("install", (event) => {
-  // Skip on the very first install — no existing clients to notify.
-  if (!self.registration.active) return;
+  const permission = typeof Notification === "undefined" ? undefined : Notification.permission;
+  if (!shouldAnnounceUpdate(Boolean(self.registration.active), permission)) return;
 
   event.waitUntil(
-    self.registration.showNotification("KinkSync bijgewerkt", {
-      body: "Een nieuwe versie is klaar. Herlaad de app om bij te werken.",
-      icon: "/icon-192.png",
-      tag: "sw-update",
-    })
+    self.registration
+      .showNotification("KinkSync bijgewerkt", {
+        body: "Een nieuwe versie is klaar. Herlaad de app om bij te werken.",
+        icon: "/icon-192.png",
+        tag: "sw-update",
+      })
+      // Belt and braces: a late permission revocation must not fail the install.
+      .catch(() => {})
   );
 });

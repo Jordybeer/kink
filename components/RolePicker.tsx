@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Drawer } from "vaul";
 import { CaretUpDown, Check } from "@phosphor-icons/react";
+import { SHEET_BACKDROP_STYLE } from "@/components/SheetBackdrop";
 import { ROLE_GROUPS } from "@/lib/roles";
 
 interface Props {
@@ -37,7 +38,7 @@ export default function RolePicker({ value, onChange }: Props) {
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[150]" style={{ background: "rgba(0,0,0,0.55)" }} />
+        <Drawer.Overlay className="fixed inset-0 z-[150]" style={SHEET_BACKDROP_STYLE} />
         <Drawer.Content
           className="fixed bottom-0 left-0 right-0 z-[151] flex flex-col rounded-t-2xl outline-none"
           style={{

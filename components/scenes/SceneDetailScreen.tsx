@@ -195,7 +195,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm" style={{ color: "var(--text2)" }}>
-                    Wat werkte goed — <em>niet ingevuld</em>
+                    Wat werkte goed: <em>niet ingevuld</em>
                   </p>
                 </div>
               )}
@@ -218,7 +218,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm" style={{ color: "var(--text2)" }}>
-                    Onthouden voor volgende keer — <em>niet ingevuld</em>
+                    Onthouden voor volgende keer: <em>niet ingevuld</em>
                   </p>
                 </div>
               )}
@@ -289,7 +289,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                 className="text-xs italic mb-3"
                 style={{ color: "var(--text2)" }}
               >
-                {parts.join(" · ")} — {total} in totaal
+                {parts.join(" · ")}, {total} in totaal
               </p>
             );
           })()}
@@ -357,6 +357,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         {scene.status !== "completed" && (
           <Link
             href={`/scene?id=${scene.id}`}
+            prefetch={false}
             className="btn-accent focus-ring w-full text-center inline-flex items-center justify-center gap-1.5"
           >
             <Play size={13} weight="fill" aria-hidden="true" /> Spelen
@@ -377,6 +378,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
           )}
           <Link
             href={`/scene?id=${scene.id}`}
+            prefetch={false}
             className="focus-ring rounded-lg px-2 py-1"
             style={{ color: "var(--accent)" }}
           >

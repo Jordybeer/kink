@@ -8,22 +8,16 @@ export const STATIC_OFFLINE_ROUTES = [
   PROFILE_SHELL_ROUTE,
   "/compare",
   "/contract",
+  "/contracts",
   "/scene",
   "/scenes",
   SCENE_DETAIL_SHELL_ROUTE,
-  "/session",
+  "/about",
   "/timeline",
 ] as const;
 
-export function buildOfflineWarmupRoutes(
-  profileIds: readonly string[],
-  sceneIds: readonly string[],
-): string[] {
-  return [
-    ...STATIC_OFFLINE_ROUTES,
-    ...profileIds.map((id) => `/profile/${encodeURIComponent(id)}`),
-    ...sceneIds.map((id) => `/scenes/${encodeURIComponent(id)}`),
-  ].filter((route, index, routes) => routes.indexOf(route) === index);
+export function buildOfflineWarmupRoutes(): string[] {
+  return [...STATIC_OFFLINE_ROUTES];
 }
 
 export async function warmOfflineRoutes(routes: readonly string[]): Promise<boolean> {
@@ -50,9 +44,6 @@ export async function warmOfflineRoutes(routes: readonly string[]): Promise<bool
   const uniqueRoutes = [...new Set(routes)];
   if (uniqueRoutes.length === 0) return true;
 
-  // Warm real HTML documents only. Next RSC payloads depend on router-state and
-  // query headers; fabricating them creates cache entries that look valid but
-  // cannot complete a real navigation.
   const urlsToCache = uniqueRoutes.map((url) => [
     url,
     { headers: { Accept: "text/html" } },
