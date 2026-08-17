@@ -5,7 +5,7 @@ import {
   PROFILE_SHELL_ROUTE,
   SCENE_DETAIL_SHELL_ROUTE,
 } from "../lib/localRoutes";
-import { STATIC_OFFLINE_ROUTES } from "../lib/offlineRoutes";
+import { RUNTIME_PAGE_CACHE, STATIC_OFFLINE_ROUTES } from "../lib/offlineRoutes";
 import { shouldAnnounceUpdate } from "../lib/swUpdateNotice";
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -31,7 +31,7 @@ const offlineRuntimeCaching = [
       );
     },
     handler: new NetworkFirst({
-      cacheName: "kinksync-pages",
+      cacheName: RUNTIME_PAGE_CACHE,
       matchOptions: { ignoreSearch: true },
       plugins: [
         new ExpirationPlugin({

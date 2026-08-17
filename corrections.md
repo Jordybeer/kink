@@ -241,3 +241,28 @@ doctrine erbij is ongedekt advies.
 **What went wrong:** Na het afronden van de Questions-viewportfix werd een eerder opgehaalde `dev`-head gebruikt om het volgende directionalitywerk te kiezen. Intussen waren parallel PR #321, #322 en #323 geland. Daardoor leek de al uitgevoerde Impact-split opnieuw open werk en stopte de uitvoering onnodig midden in de audit.
 
 **Rule:** In deze parallelle repository is een branchstatus alleen geldig op het moment van lezen. Vlak vóór elke nieuwe fase altijd in één verse check actuele `dev`, recente PR's en de bedoelde featurebranch ophalen; een eerder in dezelfde sessie gelezen SHA is geen startbewijs.
+
+---
+
+## 2026-08-17 — Severity uitgeroepen zonder de sleutel te controleren
+
+**What went wrong:** In de release-audit merkte ik dat `bdsmtestUrl` de
+protocolvalidatie omzeilt op de importgrens en ongefilterd in een `href` landt.
+Ik stempelde dat af als **High, launch blocker, mogelijke stored XSS** en zette
+het bovenaan het rapport. Pas daarna installeerde ik de dependencies en keek ik
+in `node_modules/react-dom`. Daar stond het antwoord letterlijk:
+
+```
+"javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
+```
+
+React 19.2.4 blokkeert die URL's zelf. Het gat was echt, maar het was een
+phishing-sink, geen XSS. Medium, geen blocker. Ik heb een blocker uitgeroepen op
+een aanname over een framework in plaats van op bewijs, en dat is precies het
+soort bevinding waarop iemand een release tegenhoudt.
+
+**Rule:** Een severity die afhangt van framework- of browsergedrag is geen
+bevinding tot dat gedrag is gecontroleerd in de versie die in `package.json`
+staat. `node_modules` is bewijsmateriaal, geen bijzaak. Installeer eerst, grep
+dan in de echte runtime, en schrijf de severity pas daarna op. Bij twijfel: noem
+de ondergrens en zeg erbij wat nog geverifieerd moet worden.

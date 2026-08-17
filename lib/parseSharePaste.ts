@@ -38,8 +38,15 @@ export function parseSharePaste(raw: string): ParsedShare {
 
   try {
     const url = new URL(input);
-    const p = url.searchParams.get("p");
-    if (p) return { kind: "profile", encoded: p };
+    // Alleen het fragment, nooit de querystring.
+    //
+    // Een profiel in `?p=` wordt door de browser meegestuurd naar de server: het
+    // staat in de accesslogs, in de cachesleutel van de service worker en in
+    // elke Referer die daarna vertrekt. Precies wat het fragment-ontwerp moest
+    // voorkomen, en wat app/robots.ts als eigenschap van de app opschrijft.
+    // KinkSync heeft deze vorm nooit zelf gemaakt, dus hier valt niets te
+    // bewaren. Wie nog een oude link heeft, plakt de code zelf: de losse payload
+    // wordt verderop gewoon herkend.
     const fromHash = parseHash(url.hash);
     if (fromHash) return fromHash;
   } catch {

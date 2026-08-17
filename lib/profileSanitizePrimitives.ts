@@ -17,8 +17,28 @@ export const MAX_KINK_NAME_LEN = 80;
 const MAX_AVATAR_LEN = 20_000;
 const AVATAR_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
+/**
+ * Waar een BDSMTest-link vandaan mag komen.
+ *
+ * De edit-sheet hield deze regel al aan, maar die bewaakt alleen wat de eigenaar
+ * zelf intikt. Een geimporteerd profiel komt langs een andere deur: het veld
+ * reist mee in de v3-payload en zit in de ondertekende consentprojectie, dus een
+ * vreemde URL passeert de handtekeningcontrole zonder een kik en landt daarna in
+ * een `href`. Dezelfde regel hoort dus op de vertrouwensgrens te staan, niet
+ * alleen in het formulier.
+ */
+const BDSMTEST_URL_RE = /^https?:\/\/(www\.)?bdsmtest\.org\//i;
+
+export const MAX_BDSMTEST_URL_LEN = 200;
+
 export function clamp(value: string, max: number): string {
   return value.trim().slice(0, max);
+}
+
+export function sanitizeBdsmtestUrl(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const value = clamp(raw, MAX_BDSMTEST_URL_LEN);
+  return BDSMTEST_URL_RE.test(value) ? value : undefined;
 }
 
 export function sanitizeAvatar(raw: unknown): string | undefined {
