@@ -24,6 +24,7 @@ export default function StorageFullNotice() {
       announced.current = true;
 
       showToast({
+        variant: "attention",
         message: "De opslag zit vol. Je laatste wijziging is niet bewaard.",
         action: {
           label: "Maak een back-up",

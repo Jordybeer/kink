@@ -309,7 +309,7 @@ function HomeContent() {
               <button
                 type="button"
                 onClick={() => setFormOpen(true)}
-                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-bold transition-opacity hover:opacity-90"
+                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Begin met jouw profiel
@@ -526,7 +526,7 @@ function HomeContent() {
                 setImportTransfer(null);
                 router.push(`/profile/${importIdentity.profile.id}`);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               Open bestaand profiel
@@ -550,7 +550,7 @@ function HomeContent() {
                   setImportDone(false);
                 }, 1500);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {isSwitchImport

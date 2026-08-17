@@ -80,7 +80,7 @@ function TimelinePage() {
           <Link
             href={`/contract?a=${aId}&b=${bId}`}
             prefetch={false}
-            className="focus-ring mt-1 inline-block rounded-xl px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
+            className="focus-ring mt-1 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Maak contract

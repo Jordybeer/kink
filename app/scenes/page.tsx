@@ -100,7 +100,7 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring inline-flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90 focus-ring inline-flex items-center justify-center gap-1.5"
                 style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 <Play size={12} weight="fill" aria-hidden="true" /> Spelen

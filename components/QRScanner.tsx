@@ -316,7 +316,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             <button
               onClick={handlePasteSubmit}
               disabled={!pasteInput.trim()}
-              className="focus-ring w-full py-2.5 rounded-xl text-sm font-bold mb-2 disabled:opacity-40 transition-opacity"
+              className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold mb-2 disabled:opacity-40 transition-opacity"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {assembly || bundleProgress ? "Voeg QR-deel toe" : "Importeer"}

@@ -1,11 +1,19 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "@phosphor-icons/react";
+import { Warning, X } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 
 type ToastAction = { label: string; onClick: () => void };
-type ToastPayload = { message: string; action?: ToastAction; variant?: "default" | "success" };
+/**
+ * `attention` is voor berichten die om actie vragen, zoals een volle kluis.
+ * Bewust geen alarmkleur en geen afwijkende vulling: Serious is niet scary
+ * (UI-principles #10). Het onderscheid zit in een warmere rand en een klein
+ * icoon, niet in geschreeuw. De statustokens (--curious, --maybe, --hard-no)
+ * blijven erbuiten; die dragen kinkstatus-betekenis die niet naar een
+ * systeemmelding hoort te lekken.
+ */
+type ToastPayload = { message: string; action?: ToastAction; variant?: "default" | "success" | "attention" };
 
 type ToastContextValue = { showToast: (payload: ToastPayload) => void };
 
@@ -49,47 +57,87 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       <AnimatePresence>
-        {toast && (
+        {toast && (() => {
+          const success = toast.variant === "success";
+          const attention = toast.variant === "attention";
+          return (
           <motion.div
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             transition={t.fast}
             role="status"
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg max-w-sm w-[calc(100%-2rem)]"
+            className="fixed left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-1 px-3 py-2 rounded-2xl max-w-sm w-[calc(100%-2rem)]"
             style={{
-              // success wears the house's willing-green with dark ink — the
-              // old white-on-emerald hexes only managed ~2.5:1
-              background: toast.variant === "success" ? "var(--willing)" : "var(--surface2)",
+              // Boven de home-indicator én boven de bottom-nav waar die staat.
+              // De rest van de app rekent hier al mee; de toast deed dat niet.
+              bottom: "calc(env(safe-area-inset-bottom) + var(--toast-lift, 0.75rem))",
+              // Hetzelfde glas als TopNav (components/TopNav.tsx). Dekking blijft
+              // op 86%: --text over een puur accentvlak haalt maar 3,21:1, dus
+              // alleen deze dekking houdt het bericht boven AA.
+              background: success ? "var(--willing)" : "color-mix(in srgb, var(--surface) 86%, transparent)",
+              backgroundImage: success
+                ? undefined
+                : "linear-gradient(color-mix(in srgb, var(--accent) 6%, transparent), transparent)",
+              backdropFilter: success ? undefined : "blur(12px) saturate(140%)",
+              WebkitBackdropFilter: success ? undefined : "blur(12px) saturate(140%)",
+              boxShadow: success ? undefined : "var(--glow-accent)",
               border: "1px solid",
-              borderColor: toast.variant === "success" ? "color-mix(in srgb, var(--willing) 60%, black)" : "color-mix(in srgb, var(--accent) 50%, transparent)",
+              borderColor: success
+                ? "color-mix(in srgb, var(--willing) 60%, black)"
+                : attention
+                  ? "color-mix(in srgb, var(--accent) 55%, var(--border))"
+                  : "color-mix(in srgb, var(--accent) 28%, var(--border))",
             }}
           >
-            <span className="flex-1 text-sm" style={{ color: toast.variant === "success" ? "var(--on-accent)" : "var(--text2)" }}>
-              {toast.message}
-            </span>
+            {/* Bericht en sluiten op één regel, de actie eronder. Naast elkaar
+                perste een knop van 144px de tekst in vier regels op 375px;
+                leesbaarheid weegt zwaarder dan compactheid (prioriteit 2 vs 6). */}
+            <div className="flex items-start gap-2">
+              {attention && (
+                <Warning
+                  size={18}
+                  weight="duotone"
+                  aria-hidden="true"
+                  className="mt-2 flex-none"
+                  style={{ color: "var(--accent)" }}
+                />
+              )}
+              {/* De hoofdtekst draagt de boodschap en verdient dus --text, niet de
+                  dimmere --text2 waar hij eerst in stond (6,71:1 → 15,13:1). */}
+              <span
+                className="flex-1 py-2 text-sm leading-snug"
+                style={{ color: success ? "var(--on-accent)" : "var(--text)" }}
+              >
+                {toast.message}
+              </span>
+              {/* Raakvlak van 44px; het kruisje zelf blijft klein. */}
+              <button
+                type="button"
+                onClick={dismiss}
+                className="focus-ring -mr-1 flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                style={{ color: success ? "var(--on-accent)" : "var(--text2)" }}
+                aria-label="Sluiten"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
             {toast.action && (
               <button
+                type="button"
                 onClick={() => {
                   toast.action!.onClick();
                   dismiss();
                 }}
-                className="focus-ring text-sm font-semibold flex-none px-3 py-1.5 rounded-lg"
-                style={{ background: toast.variant === "success" ? "var(--on-accent)" : "var(--accent)", color: toast.variant === "success" ? "var(--willing)" : "var(--on-accent)" }}
+                className="focus-ring mb-1 min-h-11 w-full rounded-xl px-3 text-sm font-semibold"
+                style={{ background: success ? "var(--on-accent)" : "var(--accent)", color: success ? "var(--willing)" : "var(--on-accent)" }}
               >
                 {toast.action.label}
               </button>
             )}
-            <button
-              onClick={dismiss}
-              className="focus-ring text-xs flex-none"
-              style={{ color: toast.variant === "success" ? "var(--on-accent)" : "var(--text2)" }}
-              aria-label="Sluiten"
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </ToastContext.Provider>
   );

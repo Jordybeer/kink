@@ -24,7 +24,10 @@ function uid() {
   return crypto.randomUUID();
 }
 
-type Theme = "midnight" | "red" | "forest" | "mono" | "ledger";
+// Eén kamer, één licht. De vier oude themaklassen zijn nooit op de DOM gezet
+// en zijn met hun dode CSS meegegaan; dit veld reist alleen nog mee in de
+// opslag van bestaande installaties.
+type Theme = "midnight";
 
 interface State {
   profiles: Profile[];
@@ -70,7 +73,6 @@ interface State {
   lockSceneConsent: (sceneId: string) => Promise<{ ok: boolean; message: string }>;
   appendSceneConsentEvent: (sceneId: string, profileId: string, type: Exclude<ConsentLedgerEventType, "locked">, note?: string) => Promise<{ ok: boolean; message: string }>;
   dismissInstallPrompt: () => void;
-  setTheme: (t: Theme) => void;
   appLockEnabled: boolean;
   appLockPin: string | null;
   biometricEnabled: boolean;
@@ -570,10 +572,6 @@ export const useStore = create<State>()(
 
       setNotificationPermissionAsked() {
         set({ notificationPermissionAsked: true });
-      },
-
-      setTheme(t) {
-        set({ theme: t });
       },
 
       setAppLockPin(hash) {

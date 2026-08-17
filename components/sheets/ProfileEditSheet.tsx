@@ -485,7 +485,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <button
               type="button"
               onClick={save}
-              className="focus-ring min-h-12 rounded-xl text-sm font-bold"
+              className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               Opslaan

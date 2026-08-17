@@ -72,10 +72,13 @@ export default function TopNav() {
     return (
       <header className="sticky top-0 z-40 transition-colors" style={shell}>
         <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
+          {/* Hulp en instellingen zijn allebei tertiair. Deze droeg als enige
+              font-semibold en werd daarmee het luidste element in een balk
+              zonder titel; nu dragen ze hetzelfde gewicht (UI-principles #2, #4). */}
           <Link
             href="/about"
             aria-label="Ontdek hoe KinkSync werkt"
-            className="focus-ring -ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold"
+            className="focus-ring -ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm"
             style={{ color: "var(--text2)" }}
           >
             <Info size={20} aria-hidden="true" />
