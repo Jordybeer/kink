@@ -119,28 +119,70 @@ privacy), so this may not be resolved silently and may not be tucked into an
 overflow — *Quiet is good. Invisible is not.* (#12). The copy is **human before
 clinical** (#9) and names the consequence plainly.
 
-### L-03 — No error boundary · MEDIUM
+### L-03 — No error boundary · FIXED
 
 No `app/error.tsx` and no `app/global-error.tsx`. `app/not-found.tsx` exists and
 is lovely; the crash path has nothing. Any uncaught render error — including the
 quota throw in L-02 — drops the user on Next's default error page, in an app
 whose whole promise is "your data is safe here".
 
-Cheap to add, but it needs copy and a design pass, so it's a decision not a
-drive-by. `UI-principles.md` sets the brief: **Serious ≠ scary** (#10) — no
-alarm-red crash screen, no dramatic motion — and **human before clinical** (#9).
-It should do what `app/not-found.tsx` already does well: reassure that local data
-survived ("Je lokale profielen en antwoorden zijn niet weg").
+`UI-principles.md` set the brief: **Serious ≠ scary** (#10) — no alarm-red crash
+screen, no dramatic motion — and **human before clinical** (#9), doing what
+`app/not-found.tsx` already does well: reassure that local data survived.
 
-### L-04 — No `robots.ts` / no indexing policy · MEDIUM, product decision
+**Shipped:** `app/error.tsx` + `app/error.module.css` (sibling of the 404 room,
+minus the hero — a crash is no place for illustration) and
+`app/global-error.tsx` (self-contained: it replaces the root layout, so no
+`globals.css`, no fonts, no ThemeProvider — inline styles only).
+
+Proven, not assumed. A temporary throwing route was built and driven in real
+Chromium at 375px:
+
+```
+title              "Deze pagina liep vast."
+reassurance block  present
+retry / home       48px tall, equal width, home → "/"
+horizontalOverflow false
+```
+
+Two things that surfaced while proving it, both worth knowing:
+- The boundary is a **client** component, so a server-side throw shows nothing in
+  the raw HTML — it renders after hydration. Verifying this with `curl` gives a
+  false negative.
+- On a gated route, `OnboardingRouteGate` redirects to `/` *before* a crash can
+  reach the boundary. Correct behaviour, but it means the boundary only guards
+  users who have completed onboarding.
+
+No unit test: `CLAUDE.md` says *"Don't test React rendering."*
+
+### L-04 — No `robots.ts` / no indexing policy · FIXED (owner decided)
 
 No `app/robots.ts`, no `public/robots.txt`, no `robots` metadata. The layout
 advertises `kinksync.be` in its description, so this is a real choice, not an
 oversight to auto-fix: **explicit adult content is currently fully indexable.**
 
-Either is defensible — discoverability vs. discretion — but it should be a
-decision on the record before launch, not a default. If discretion wins,
-`app/robots.ts` with a `noindex` policy takes about four lines.
+**Owner's decision (2026-08-17): index the public surface only.**
+
+Shipped as `app/robots.ts` — `Allow: /` and `/about`, `Disallow:` every app route
+(`/profile`, `/compare`, `/contract(s)`, `/scene(s)`, `/timeline`, `/quarantine`,
+`/offline`). Guarded by `__tests__/robots.test.ts` so a future route carrying
+local data can't quietly join the allowlist. Verified on a running production
+server: `curl localhost:3100/robots.txt` returns exactly that policy.
+
+Safe because a crawler cannot reach user data by construction: there is no
+backend, and shared profiles ride in the **URL fragment**
+(`origin/#p3=…`, `lib/profileQr.ts:75`), which never reaches a server and is
+never crawled. The `?p=` form is only accepted when *parsing* a pasted link
+(`lib/parseSharePaste.ts:41`), never generated.
+
+The app routes are excluded because they are client shells that render empty
+without local data — indexing them gains nothing and dilutes the two real pages
+with thin, near-duplicate results.
+
+Known limit: `robots.txt` governs crawling, not indexing. A disallowed URL can
+still appear as a bare link if something external points at it. Hard exclusion
+would need per-route `metadata.robots.index = false`; deliberately out of scope,
+since nothing links to those shells.
 
 ### L-05 — PWA manifest is thin · LOW
 
