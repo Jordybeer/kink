@@ -27,7 +27,9 @@ async function assertNotFoundFits(page: Page) {
   const reassurance = page.getByTestId("not-found-reassurance");
   await expect(reassurance).toContainText(/lokale profielen en antwoorden zijn niet weg/i);
   await expect(reassurance).toContainText(/alleen deze pagina ontbreekt/i);
-  await expect(reassurance.locator("br")).toHaveCount(1);
+  // De twee zinnen lopen bewust in één adem door; een harde regelbreuk hakte
+  // die gedachte in tweeën. Dit pint dus de afwezigheid, niet de aanwezigheid.
+  await expect(reassurance.locator("br")).toHaveCount(0);
 
   const hero = page.getByTestId("not-found-hero");
   await expect(hero).toBeVisible();

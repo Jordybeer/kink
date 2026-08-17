@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
 import { ToastProvider } from "@/components/Toast";
 import NotificationPrompt from "@/components/NotificationPrompt";
+import StorageFullNotice from "@/components/StorageFullNotice";
 import AmbientGlow from "@/components/ui/AmbientGlow";
 import OfflineCacheWarmup from "@/components/OfflineCacheWarmup";
 import ImportedProfileIntegrityGate from "@/components/ImportedProfileIntegrityGate";
@@ -30,7 +31,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "KinkSync — BDSM contract builder",
+  title: "KinkSync: BDSM contract builder",
   description: "Verken grenzen samen. Kink negotiation en contracten voor volwassenen. kinksync.be",
   icons: {
     icon: "/favicon.ico",
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     {children}
                     <UpdateBanner />
                     <NotificationPrompt />
+                    <StorageFullNotice />
                   </ImportedProfileIntegrityGate>
                 </ToastProvider>
               </TopNavProvider>

@@ -173,7 +173,7 @@ export default function ContractQrScannerSheet({
                 if (!done) setPasteValue("");
               }}
               className="focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-semibold disabled:opacity-40"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Code verwerken
             </button>

@@ -11,7 +11,7 @@ export default function OfflinePage() {
       </h1>
       <p className="max-w-xs text-sm" style={{ color: "var(--text2)" }}>
         Geen verbinding op dit moment. Je opgeslagen profielen en contracten
-        blijven veilig in dit toestel — zodra je weer online bent, gaat alles
+        blijven veilig in dit toestel. Zodra je weer online bent, gaat alles
         gewoon door.
       </p>
     </main>

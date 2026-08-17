@@ -127,11 +127,11 @@ function decodeProfileCompactFromParsed(p: Record<string, any>): Profile {
   // The v2 wire fields get the same frisking as every other door — strings
   // clamped, enums enforced, scores capped. A QR code is still a stranger.
   if (typeof p.id !== "string" || typeof p.n !== "string") {
-    throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+    throw new Error("Ongeldig profiel: verwacht veld ontbreekt");
   }
   const id = clamp(p.id, MAX_ID_LEN);
   const name = clamp(p.n, MAX_NAME_LEN);
-  if (!id || !name) throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+  if (!id || !name) throw new Error("Ongeldig profiel: verwacht veld ontbreekt");
   const bdsmtestScores = sanitizeBdsmtestScores(p.bs);
 
   return {
@@ -165,7 +165,7 @@ export function decodeAny(encoded: string): Profile {
   // bouncer checks every field before the URL's word becomes store truth.
   const clean = sanitizeProfileFull(parsed);
   if (!clean) {
-    throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+    throw new Error("Ongeldig profiel: verwacht veld ontbreekt");
   }
   return { ...clean, isImported: true };
 }

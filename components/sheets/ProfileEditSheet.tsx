@@ -328,7 +328,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     aria-pressed={active}
                     className="focus-ring min-h-10 rounded-full px-3 text-xs font-semibold"
                     style={active
-                      ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
+                      ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                       : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
                   >
                     {interest.label}
@@ -366,7 +366,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     aria-pressed={active}
                     className="focus-ring min-h-10 rounded-full px-3 text-xs font-semibold"
                     style={active
-                      ? { background: "var(--accent)", color: "var(--on-accent)", border: "1px solid var(--accent)" }
+                      ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                       : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
                   >
                     {status}
@@ -485,8 +485,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <button
               type="button"
               onClick={save}
-              className="focus-ring min-h-12 rounded-xl text-sm font-bold"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Opslaan
             </button>

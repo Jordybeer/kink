@@ -10,6 +10,36 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 **Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
+### Launch-readiness audit 2026-08-17 [L-01 SHIPPED — full verdict in docs/launch-readiness-audit-2026-08-17.md]
+
+Second pass over the 365 commits that landed after the 2026-08-08 close-out.
+**L-01 was a real launch blocker and is fixed:** `app/sw.ts` handed an ungranted
+`showNotification()` to install's `waitUntil()`, so every update after the first
+install failed silently — nobody without notification consent ever got a new
+build. Gated behind `lib/swUpdateNotice.ts` + 5 regression tests. Gates on this
+baseline: 583 unit green, build green, lint 0 errors, `npm audit` 0 vulns,
+344 kinks / 344 unique ids.
+
+Still open, in the order they deserve attention:
+
+- **L-02 quota safeword (HIGH)** — zustand persist calls `setItem` bare; a full
+  localStorage throws through the store action and the answer is lost with no
+  toast, no retry. The only open finding that can *lose data*. Needs a design pass.
+- **L-04 indexing policy (product decision)** — no `robots.ts` anywhere, so the
+  explicit catalog is fully indexable. Discoverability vs. discretion is the
+  owner's call, not a default.
+- **L-03 error boundary** — no `error.tsx` / `global-error.tsx`; needs copy in the
+  house voice.
+- **L-05 manifest** (`id`, `scope`, maskable icon) · **L-06 README** (still says
+  "100+ across 11", live is 344 across 19; still calls itself KinkList) ·
+  **L-07 hygiene** (starter `.svg` litter, 2.1 MB 404 source art, eslint should
+  ignore the generated `public/sw.js`). One tidy-up pass.
+
+Not claimed: the e2e suites could not run in the audit container (Playwright pins
+browser 1223, only 1194 installed) — CI stays the authority, and its last green
+numbers predate all 365 commits. The physical-device gate from §14.5 is still open,
+and L-01 makes "prove a real SW update lands on hardware" mandatory.
+
 ### PR #299 — Dynamic questionnaire v2 [SHIPPED 2026-08-09]
 
 Only Dynamic replaces fixed budgets for newly created profiles; Quick, Balanced,

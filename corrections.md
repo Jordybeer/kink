@@ -6,6 +6,56 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-17 — Zichtbaars veranderd zonder te kijken wie het vastpinde
+
+**What went wrong:** Twee keer in één sessie dezelfde fout, allebei pas gevangen
+door de browserrepetitie in CI.
+
+1. **De dash-sweep.** `KinkListRow` kreeg een komma in plaats van een streepje in
+   zijn `aria-label`. Ik zocht met `grep -rn "bewerken" e2e | head -6`, zag één
+   spec, trok die mee en dacht klaar te zijn. **Mijn eigen `head -6` kapte de
+   treffers af**: vier asserties in `e2e/profile.spec.ts` bleven op `— bewerken`
+   staan en vielen om.
+2. **De regelbreuk.** `app/not-found.tsx` verloor zijn `<br />` zodat de twee
+   zinnen doorlopen. `e2e/not-found.spec.ts` pinde `locator("br")` op precies
+   één. Ik had na die wijziging wel op *tekst* gezocht, niet op *structuur*.
+   Veertien rode tests over twee projecten en zes viewports, allemaal via die ene
+   regel.
+
+Verzwarend: ik duwde drie keer een nieuwe commit bovenop een lopende
+devicerepetitie, waardoor die telkens `cancelled` raakte. Lint, test en build
+bleven al die tijd groen, dus het leek in orde terwijl juist de laag die layout
+en raakvlakken toetst nooit afliep. De tweede fout had drie runs eerder zichtbaar
+kunnen zijn.
+
+**Rule:** verander je iets dat een gebruiker ziet — copy, `aria-label`, markup,
+een `<br>`, een class die een test selecteert — grep dan **`e2e/` én `__tests__/`
+volledig, zonder `head`**, op zowel de oude tekst als de structuur eromheen. Een
+afgekapte grep is geen bewijs. En zolang een devicerepetitie loopt: niet pushen.
+Een `cancelled` run is geen groene run, en lint/test/build dekken layout en
+touch-geometrie niet af.
+
+## 2026-08-17 — "Geen UI" was een aanname, geen toets
+
+**What went wrong:** Tijdens de launch-readiness audit werd `UI-principles.md` niet
+gelezen bij sessiestart. De redenering was dat de wijziging geen UI raakte:
+`app/sw.ts`, een pure functie in `lib/`, tests en documentatie — geen component,
+geen layout, geen copy. Die redenering ging over de *diff*, terwijl de fix in
+gebruikerstermen precies een UI-vraag beantwoordde: of `UpdateBanner` ooit
+verschijnt en of een systeemmelding zonder toestemming wordt geprobeerd. Dat
+raakt principe 12 (*Quiet is good. Invisible is not.*) en prioriteit 1 (consent).
+Het werk bleek achteraf in lijn, maar dat was geluk, geen controle. Twee
+UI-aanbevelingen in de audit (error boundary, quota-toast) waren bovendien
+geformuleerd zonder de doctrine en misten daardoor hun scherpste eis: *Serious ≠
+scary* en "essentiële veiligheidscontext mag niet stil worden opgelost".
+
+**Rule:** `UI-principles.md` wordt gelezen bij sessiestart, punt — niet pas
+wanneer een diff er "UI genoeg" uitziet. De toets is niet *welke bestanden raak
+ik*, maar *verandert dit wat de gebruiker ziet, kan of moet beslissen*. Een
+service worker, een store-guard of een route-gate telt mee zodra het antwoord ja
+is. Dat geldt ook voor aanbevelingen in een auditdocument: UI-advies zonder de
+doctrine erbij is ongedekt advies.
+
 ## 2026-08-11 — De voortgang at de onderkant van de vraagkaart op
 
 **What went wrong:** De dedicated Questions-route kreeg boven de triagekaart een volledige voortgangsheader met label, infoknop, balk en percentage. Op iPhone Safari bleef daardoor te weinig verticale ruimte over: de statuskeuzes waren zichtbaar, maar `Eerst vragen`, `Eerste keer` en `Later` vielen onder de fold. De kaart zelf was niet te groot; dubbele chrome stal de viewport.

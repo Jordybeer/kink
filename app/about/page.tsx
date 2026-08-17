@@ -26,7 +26,7 @@ const rules = [
   {
     number: "02",
     title: "Lokaal als uitgangspunt",
-    text: "Profielen, antwoorden, vergelijkingen, scènes en contracten leven in de browseropslag van dit toestel — niet in een KinkSync-account.",
+    text: "Profielen, antwoorden, vergelijkingen, scènes en contracten leven in de browseropslag van dit toestel, niet in een KinkSync-account.",
   },
   {
     number: "03",
@@ -340,7 +340,7 @@ export default function AboutPage() {
           </div>
           <div>
             <Limit title="Een handtekening is geen identiteitsbewijs">
-              Ze bewijst controle over een lokale sleutel en een exacte inhoud — niet iemands wettelijke identiteit, begrip of afwezigheid van druk.
+              Ze bewijst controle over een lokale sleutel en een exacte inhoud, niet iemands wettelijke identiteit, begrip of afwezigheid van druk.
             </Limit>
             <Limit title="De appvergrendeling is geen encryptie van browseropslag">
               De pincode helpt tegen meekijken in de app. Ze beschermt niet tegen iemand die het ontgrendelde toestel, de browseropslag of het besturingssysteem controleert.
@@ -375,7 +375,7 @@ export default function AboutPage() {
       <Link
         href="/"
         className="focus-ring mt-8 flex min-h-14 items-center rounded-2xl px-5 text-sm font-semibold"
-        style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+        style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
       >
         Terug naar KinkSync
         <ArrowRight size={17} weight="bold" aria-hidden="true" className="ml-auto" />

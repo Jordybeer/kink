@@ -130,14 +130,14 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
             >
               <h2 className="text-base font-bold">Backup versleutelen</h2>
               <div className="rounded-xl p-4 text-sm flex flex-col gap-3" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
-                <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen — informatie die niemand anders mag zien.</p>
+                <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen: informatie die niemand anders mag zien.</p>
                 <p>De versleutelde backup bevat ook de private eigendomssleutels van je profielen. Wie zowel dit bestand als het wachtwoord bezit, kan nieuwe profielversies ondertekenen alsof die van jouw lokale profielbron komen.</p>
                 <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="font-semibold flex items-start gap-1.5" style={{ color: "var(--hard-no)" }}><Warning size={16} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" /><span>Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</span></p>
               </div>
               <button onClick={() => setStep(1)}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 Doorgaan
               </button>
               <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
@@ -188,7 +188,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               {pwError && <p className="text-xs" role="alert" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
               <button onClick={() => void handlePrepareExport()} disabled={loading}
                 className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-60"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 {loading ? "Versleutelen…" : "Versleutelen"}
               </button>
               <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
@@ -208,7 +208,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               {saveError && <p className="text-xs" role="alert" style={{ color: "var(--hard-no)" }}>{saveError}</p>}
               <button onClick={() => void handleSaveExport()} disabled={saving || !preparedExport}
                 className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-60"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 {saving ? "Openen…" : <span className="inline-flex items-center justify-center gap-1.5"><DownloadSimple size={15} aria-hidden="true" />Back-up bewaren</span>}
               </button>
               <button onClick={() => { setPreparedExport(null); setSaveError(null); setStep(1); }} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
@@ -263,7 +263,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
 
       if (!Array.isArray(parsed.profiles)) {
         handleClose();
-        onError("Ongeldig backupbestand — geen profielen gevonden.");
+        onError("Ongeldig backupbestand: geen profielen gevonden.");
         return;
       }
 
@@ -354,7 +354,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
           {pwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
           <button onClick={handleDecrypt} disabled={loading}
             className="w-full py-3 rounded-xl text-sm font-semibold"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
             {loading ? "Ontsleutelen…" : "Backup herstellen"}
           </button>
           <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>

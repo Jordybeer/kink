@@ -195,7 +195,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm" style={{ color: "var(--text2)" }}>
-                    Wat werkte goed — <em>niet ingevuld</em>
+                    Wat werkte goed: <em>niet ingevuld</em>
                   </p>
                 </div>
               )}
@@ -218,7 +218,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm" style={{ color: "var(--text2)" }}>
-                    Onthouden voor volgende keer — <em>niet ingevuld</em>
+                    Onthouden voor volgende keer: <em>niet ingevuld</em>
                   </p>
                 </div>
               )}
@@ -289,7 +289,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                 className="text-xs italic mb-3"
                 style={{ color: "var(--text2)" }}
               >
-                {parts.join(" · ")} — {total} in totaal
+                {parts.join(" · ")}, {total} in totaal
               </p>
             );
           })()}

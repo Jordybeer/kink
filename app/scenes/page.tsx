@@ -100,8 +100,8 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring inline-flex items-center justify-center gap-1.5"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90 focus-ring inline-flex items-center justify-center gap-1.5"
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 <Play size={12} weight="fill" aria-hidden="true" /> Spelen
               </button>
@@ -129,9 +129,9 @@ function SceneCard({
 }
 
 const SECTION_INVITES: Record<string, string> = {
-  planned:   "Niets gepland — kies een moment en zet het vast.",
-  drafts:    "Geen concepten — half afgemaakte ideeën wachten hier.",
-  completed: "Nog niets afgerond — na het spelen leeft de scène hier verder.",
+  planned:   "Niets gepland. Kies een moment en zet het vast.",
+  drafts:    "Geen concepten. Half afgemaakte ideeën wachten hier.",
+  completed: "Nog niets afgerond. Na het spelen leeft de scène hier verder.",
 };
 
 function EmptySection({ invite }: { invite: string }) {

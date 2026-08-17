@@ -44,7 +44,7 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
               <p className="text-sm leading-snug" style={{ color: "var(--text2)" }}>
-                Los van je oordeel: markeer met de ster wat je wil verkennen. Kan naast elke keuze bestaan — een ster is geen ja.
+                Los van je oordeel: markeer met de ster wat je wil verkennen. Kan naast elke keuze bestaan. Een ster is geen ja.
               </p>
             </div>
           </li>

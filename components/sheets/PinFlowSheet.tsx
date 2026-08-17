@@ -74,7 +74,7 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
               </p>
               <button onClick={() => setStep(1)}
                 className="w-full py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 PIN instellen <ArrowRight size={14} aria-hidden="true" />
               </button>
               <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
@@ -108,7 +108,7 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
               {pinError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
               <button onClick={handleSavePin}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 PIN opslaan
               </button>
               <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>

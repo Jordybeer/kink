@@ -385,8 +385,8 @@ export default function PwaInstallGuide({ isIos, onInstall, onDismiss, manual = 
                       type="button"
                       whileTap={t.tap}
                       onClick={() => { void install(); }}
-                      className="focus-ring inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
-                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                      className="focus-ring inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold"
+                      style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                     >
                       <DownloadSimple size={18} weight="bold" aria-hidden="true" />
                       <span>Installeer KinkSync</span>

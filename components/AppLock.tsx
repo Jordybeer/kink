@@ -131,7 +131,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
             </motion.button>
             {bioError && (
               <p style={{ fontSize: "0.75rem", color: "var(--text2)", marginTop: "0.375rem" }}>
-                Niet herkend — gebruik je PIN
+                Niet herkend. Gebruik je PIN
               </p>
             )}
             {storedHash && (

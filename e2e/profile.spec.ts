@@ -170,7 +170,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await page.locator('button[aria-controls="category-impact-content"]').click();
     await expect(content).toHaveAttribute("aria-hidden", "false");
     await expect.poll(() => content.evaluate((element) => (element as HTMLElement).inert)).toBe(false);
-    await expect(content.locator('button[aria-label*="— bewerken"]').first()).toBeVisible();
+    await expect(content.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
 
   test("tabblad 'Bewerken' is een cataloguseditor zonder ingebouwde vragenkaart", async ({ page }) => {
@@ -200,7 +200,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
     await page.getByRole("button", { name: "Filter Bondage wissen" }).click();
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveValue("spanking");
-    await expect(page.locator('button[aria-label*="— bewerken"]').first()).toBeVisible();
+    await expect(page.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
 
   test("kink-status instellen via de cataloguseditor", async ({ page }) => {
@@ -213,7 +213,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
     await search.fill("spanking");
 
-    const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*="— bewerken"]').first();
+    const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*=", bewerken"]').first();
     await expect(result).toBeVisible();
     await result.click();
 
@@ -222,7 +222,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await statusGroup.getByRole("button", { name: /Heel graag/ }).click();
     await page.getByRole("button", { name: "Klaar" }).click();
 
-    await expect(page.locator('button[aria-label*=", Heel graag — bewerken"]').first()).toBeVisible();
+    await expect(page.locator('button[aria-label*=", Heel graag, bewerken"]').first()).toBeVisible();
   });
 });
 

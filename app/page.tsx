@@ -158,7 +158,7 @@ function HomeContent() {
       const { prepareBackupRestore } = await import("@/lib/backupRestore");
       const prepared = await prepareBackupRestore(parsed);
       if (!prepared.profiles.length && !prepared.contracts.length) {
-        setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+        setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
         return;
       }
       if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
@@ -168,7 +168,7 @@ function HomeContent() {
         `${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`,
       );
     } catch {
-      setImportError("Ongeldig bestand — geen geldige profielen gevonden.");
+      setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
     }
   }
 
@@ -309,8 +309,8 @@ function HomeContent() {
               <button
                 type="button"
                 onClick={() => setFormOpen(true)}
-                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-bold transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Begin met jouw profiel
                 <ArrowRight size={16} weight="bold" aria-hidden="true" />
@@ -526,8 +526,8 @@ function HomeContent() {
                 setImportTransfer(null);
                 router.push(`/profile/${importIdentity.profile.id}`);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Open bestaand profiel
             </button>
@@ -550,7 +550,7 @@ function HomeContent() {
                   setImportDone(false);
                 }, 1500);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {isSwitchImport

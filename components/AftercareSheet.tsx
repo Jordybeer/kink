@@ -99,8 +99,8 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
             type="button"
             onClick={handleSave}
             disabled={!light}
-            className="focus-ring min-h-12 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            className="focus-ring min-h-12 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40"
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             {existing ? "Bijwerken" : "Opslaan"}
           </button>

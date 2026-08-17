@@ -202,7 +202,7 @@ function expandProfile(payload: unknown): Profile {
   };
 
   const clean = sanitizeProfileFull(raw);
-  if (!clean) throw new Error("Ongeldig profiel — verwacht veld ontbreekt");
+  if (!clean) throw new Error("Ongeldig profiel: verwacht veld ontbreekt");
   return { ...clean, isImported: true, origin: "shared", lockedAt: Date.now() };
 }
 

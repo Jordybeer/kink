@@ -34,9 +34,7 @@ export default function NotFound() {
           </Link>
 
           <p className={styles.reassurance} data-testid="not-found-reassurance">
-            Je lokale profielen en antwoorden zijn niet weg.
-            <br />
-            Alleen deze pagina ontbreekt.
+            Je lokale profielen en antwoorden zijn niet weg. Alleen deze pagina ontbreekt.
           </p>
         </div>
       </section>

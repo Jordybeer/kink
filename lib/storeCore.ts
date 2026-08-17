@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createQuotaSafeStorage } from "@/lib/persistStorage";
 import { useState, useEffect } from "react";
 import type { Profile, KinkEntry, ExperienceLevel, CustomKink, ContractSnapshot, ProfileSnapshot, SceneRecord, AftercareEntry, ProfileOwnerKey, ConsentLedgerEventType } from "@/types";
 import { deriveCounts } from "@/lib/profileSnapshot";
@@ -23,7 +24,10 @@ function uid() {
   return crypto.randomUUID();
 }
 
-type Theme = "midnight" | "red" | "forest" | "mono" | "ledger";
+// Eén kamer, één licht. De vier oude themaklassen zijn nooit op de DOM gezet
+// en zijn met hun dode CSS meegegaan; dit veld reist alleen nog mee in de
+// opslag van bestaande installaties.
+type Theme = "midnight";
 
 interface State {
   profiles: Profile[];
@@ -69,7 +73,6 @@ interface State {
   lockSceneConsent: (sceneId: string) => Promise<{ ok: boolean; message: string }>;
   appendSceneConsentEvent: (sceneId: string, profileId: string, type: Exclude<ConsentLedgerEventType, "locked">, note?: string) => Promise<{ ok: boolean; message: string }>;
   dismissInstallPrompt: () => void;
-  setTheme: (t: Theme) => void;
   appLockEnabled: boolean;
   appLockPin: string | null;
   biometricEnabled: boolean;
@@ -81,6 +84,9 @@ interface State {
 }
 
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
+
+/** Eén kluisdeur voor de hele store; zie lib/persistStorage. */
+const quotaSafeStorage = createQuotaSafeStorage();
 
 // One auto-moment per profile per day, and only when something actually
 // changed — Verloop feeds itself without the owner performing rituals,
@@ -568,10 +574,6 @@ export const useStore = create<State>()(
         set({ notificationPermissionAsked: true });
       },
 
-      setTheme(t) {
-        set({ theme: t });
-      },
-
       setAppLockPin(hash) {
         set({ appLockEnabled: true, appLockPin: hash });
       },
@@ -591,6 +593,9 @@ export const useStore = create<State>()(
     },
     {
       name: "kink-profiles",
+      // Zonder deze wrapper gooit een volle localStorage dwars door elke
+      // store-actie heen en verdwijnt het laatste antwoord zonder een woord.
+      storage: createJSONStorage(() => quotaSafeStorage),
       partialize: (state) => ({
         profiles: state.profiles,
         contracts: state.contracts,

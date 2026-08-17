@@ -250,9 +250,9 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           {bundleProgress
             ? bundleProgress.profileComplete
               ? "Profiel ontvangen"
-              : `Profiel scannen — ${bundleProgress.profileReceived} van ${bundleProgress.profileTotal || "…"}`
+              : `Profiel scannen: ${bundleProgress.profileReceived} van ${bundleProgress.profileTotal || "…"}`
             : assembly
-              ? `Scan verder — ${received} van ${assembly.total}`
+              ? `Scan verder: ${received} van ${assembly.total}`
               : showPaste ? "Plak link of code" : "Scan QR-code"}
         </h2>
 
@@ -316,8 +316,8 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             <button
               onClick={handlePasteSubmit}
               disabled={!pasteInput.trim()}
-              className="focus-ring w-full py-2.5 rounded-xl text-sm font-bold mb-2 disabled:opacity-40 transition-opacity"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold mb-2 disabled:opacity-40 transition-opacity"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {assembly || bundleProgress ? "Voeg QR-deel toe" : "Importeer"}
             </button>
