@@ -33,9 +33,11 @@ const withSerwist = withSerwistInit({
   ],
 });
 
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
 // `next dev` draait zijn HMR door `eval()`. Dat mag daar, en alleen daar: de
 // productiebundel heeft het niet nodig, dus de strenge regel geldt waar hij telt.
-const DEV_SCRIPT_SRC = process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'";
+const DEV_SCRIPT_SRC = IS_PRODUCTION ? "" : " 'unsafe-eval'";
 
 /**
  * De huisregels, aan de deur voorgelezen.
@@ -73,7 +75,12 @@ const SECURITY_HEADERS = [
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests",
+      // Alleen in productie. `next dev` serveert over http://localhost, en waar
+      // Chromium localhost met rust laat, tilt WebKit die requests wél naar
+      // https en loopt de pagina vast voordat ze hydrateert. De hele
+      // iPhone/iPad-launchmatrix viel erop om terwijl de Chromium-tegel groen
+      // bleef. In productie is alles al https, dus daar kost de regel niets.
+      ...(IS_PRODUCTION ? ["upgrade-insecure-requests"] : []),
     ].join("; "),
   },
   { key: "X-Frame-Options", value: "DENY" },
