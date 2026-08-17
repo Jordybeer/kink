@@ -6,6 +6,27 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-08-17 — "Geen UI" was een aanname, geen toets
+
+**What went wrong:** Tijdens de launch-readiness audit werd `UI-principles.md` niet
+gelezen bij sessiestart. De redenering was dat de wijziging geen UI raakte:
+`app/sw.ts`, een pure functie in `lib/`, tests en documentatie — geen component,
+geen layout, geen copy. Die redenering ging over de *diff*, terwijl de fix in
+gebruikerstermen precies een UI-vraag beantwoordde: of `UpdateBanner` ooit
+verschijnt en of een systeemmelding zonder toestemming wordt geprobeerd. Dat
+raakt principe 12 (*Quiet is good. Invisible is not.*) en prioriteit 1 (consent).
+Het werk bleek achteraf in lijn, maar dat was geluk, geen controle. Twee
+UI-aanbevelingen in de audit (error boundary, quota-toast) waren bovendien
+geformuleerd zonder de doctrine en misten daardoor hun scherpste eis: *Serious ≠
+scary* en "essentiële veiligheidscontext mag niet stil worden opgelost".
+
+**Rule:** `UI-principles.md` wordt gelezen bij sessiestart, punt — niet pas
+wanneer een diff er "UI genoeg" uitziet. De toets is niet *welke bestanden raak
+ik*, maar *verandert dit wat de gebruiker ziet, kan of moet beslissen*. Een
+service worker, een store-guard of een route-gate telt mee zodra het antwoord ja
+is. Dat geldt ook voor aanbevelingen in een auditdocument: UI-advies zonder de
+doctrine erbij is ongedekt advies.
+
 ## 2026-08-11 — De voortgang at de onderkant van de vraagkaart op
 
 **What went wrong:** De dedicated Questions-route kreeg boven de triagekaart een volledige voortgangsheader met label, infoknop, balk en percentage. Op iPhone Safari bleef daardoor te weinig verticale ruimte over: de statuskeuzes waren zichtbaar, maar `Eerst vragen`, `Eerste keer` en `Later` vielen onder de fold. De kaart zelf was niet te groot; dubbele chrome stal de viewport.

@@ -114,6 +114,11 @@ quota error, keeps the in-memory state authoritative, and raises a toast
 ("je kluis zit vol") plus a pointer at the backup export. Needs design; that's
 why I didn't ship it blind.
 
+Per `UI-principles.md`: data loss sits at **priority 1** (consent, veiligheid,
+privacy), so this may not be resolved silently and may not be tucked into an
+overflow — *Quiet is good. Invisible is not.* (#12). The copy is **human before
+clinical** (#9) and names the consequence plainly.
+
 ### L-03 — No error boundary · MEDIUM
 
 No `app/error.tsx` and no `app/global-error.tsx`. `app/not-found.tsx` exists and
@@ -121,8 +126,11 @@ is lovely; the crash path has nothing. Any uncaught render error — including t
 quota throw in L-02 — drops the user on Next's default error page, in an app
 whose whole promise is "your data is safe here".
 
-Cheap to add, but it needs copy and a design pass in the house voice, so it's
-a decision not a drive-by.
+Cheap to add, but it needs copy and a design pass, so it's a decision not a
+drive-by. `UI-principles.md` sets the brief: **Serious ≠ scary** (#10) — no
+alarm-red crash screen, no dramatic motion — and **human before clinical** (#9).
+It should do what `app/not-found.tsx` already does well: reassure that local data
+survived ("Je lokale profielen en antwoorden zijn niet weg").
 
 ### L-04 — No `robots.ts` / no indexing policy · MEDIUM, product decision
 
