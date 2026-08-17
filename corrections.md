@@ -266,3 +266,37 @@ bevinding tot dat gedrag is gecontroleerd in de versie die in `package.json`
 staat. `node_modules` is bewijsmateriaal, geen bijzaak. Installeer eerst, grep
 dan in de echte runtime, en schrijf de severity pas daarna op. Bij twijfel: noem
 de ondergrens en zeg erbij wat nog geverifieerd moet worden.
+
+---
+
+## 2026-08-17 — Twee schermen die hetzelfde getal apart bijhielden
+
+**What went wrong:** Mijn securityrapport meldde "geen blockers". Een
+onafhankelijke tegen-audit vond er wel een, en het was een ernstige.
+`PinFlowSheet` liet vier tot acht cijfers instellen ("Minimaal 4 cijfers",
+`maxLength={8}`), terwijl `AppLock` er `PIN_LENGTH = 4` op nahield: vier
+bolletjes, het vijfde cijfer geweigerd, verificatie zodra er vier stonden. Wie
+vijf koos, kwam er nooit meer in. Geen vergeten-PIN-pad, biometrie optioneel, en
+wissen kostte ook de eigendomssleutels die niet opnieuw te maken zijn.
+
+Ik had `lib/crypto.ts` grondig doorgelicht: PBKDF2, iteraties, constante-tijd
+vergelijking, het legacy-pad. Allemaal correct bevonden, en dat klopte ook. Maar
+ik heb nooit gekeken of de twee schermen die die crypto gebruiken het over
+dezelfde PIN hadden. Dezelfde blindheid bij de destroy-flow: ik controleerde of
+`kinksync-pages` werd opgeruimd en niet of dat de enige cache was. Serwist zette
+er vijftien naast.
+
+**Rule:** Een invariantenlijst vertelt je waar je moet kijken, niet waar het
+misgaat. Twee soorten controles horen er standaard bij en stonden niet in mijn
+methode:
+
+1. **Producent en consument naast elkaar.** Waar één component data schrijft die
+   een ander leest (een lengte, een cachenaam, een sleutelformaat), controleer je
+   beide kanten in dezelfde beweging. Een constante die op twee plekken staat is
+   een bug die wacht op een release.
+2. **Negatief pad.** Niet alleen "doet de fix wat hij belooft" maar "wat blijft er
+   staan dat de belofte tegenspreekt". Voor elke opruimactie: is dit alles? Voor
+   elke validatie: geldt die ook voor wat er al lag?
+
+Punt 2 tweede helft was ook al fout bij `sanitizeBdsmtestUrl`: de importdeur ging
+dicht, de la met oude import bleef open tot de tegen-audit erop wees.

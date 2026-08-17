@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { SHEET_BACKDROP_STYLE } from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
+import { APP_LOCK_PIN_LENGTH, isValidAppLockPin } from "@/lib/appLockPin";
 
 interface PinFlowSheetProps {
   open: boolean;
@@ -41,7 +42,7 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
   }
 
   async function handleSavePin() {
-    if (pinInput.length < 4) { setPinError("PIN moet minimaal 4 cijfers zijn."); return; }
+    if (!isValidAppLockPin(pinInput)) { setPinError(`PIN moet precies ${APP_LOCK_PIN_LENGTH} cijfers zijn.`); return; }
     if (pinInput !== pinConfirm) { setPinError("PINs komen niet overeen."); return; }
     const { hashPin } = await import("@/lib/crypto");
     const hash = await hashPin(pinInput);
@@ -90,15 +91,15 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
             >
               <h2 className="text-base font-bold">Kies een PIN</h2>
               <input
-                type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8}
-                placeholder="Minimaal 4 cijfers"
+                type="password" inputMode="numeric" pattern="[0-9]*" maxLength={APP_LOCK_PIN_LENGTH}
+                placeholder={`${APP_LOCK_PIN_LENGTH} cijfers`}
                 value={pinInput} onChange={e => { setPinInput(e.target.value.replace(/\D/g, "")); setPinError(null); }}
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)", fontSize: "1.5rem" }}
                 autoFocus
               />
               <input
-                type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8}
+                type="password" inputMode="numeric" pattern="[0-9]*" maxLength={APP_LOCK_PIN_LENGTH}
                 placeholder="Herhaal PIN"
                 value={pinConfirm} onChange={e => { setPinConfirm(e.target.value.replace(/\D/g, "")); setPinError(null); }}
                 onKeyDown={e => { if (e.key === "Enter") handleSavePin(); }}

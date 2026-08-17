@@ -138,11 +138,13 @@ sleutel bewaart.
 **Impact:** Geen antwoorden, geen profielinhoud, geen aantoonbaar disclosure-pad.
 Dit ging om de belofte, niet om de data.
 
-**Fix:** `sessionStorage.clear()` en het verwijderen van de runtime-paginacache.
-De precache van de service worker blijft juist wél staan: wie offline alles wist
-en herlaadt, moet nog steeds een werkende app terugkrijgen in plaats van een wit
-scherm. De cachenaam is naar `lib/offlineRoutes.ts` verhuisd zodat `app/sw.ts` en
-de sheet niet uit elkaar kunnen lopen.
+**Fix:** `sessionStorage.clear()` plus het opruimen van elke runtime-cache. De
+precache van de service worker blijft juist wél staan: wie offline alles wist en
+herlaadt, moet nog steeds een werkende app terugkrijgen in plaats van een wit
+scherm.
+
+**Correctie na tegen-audit:** de eerste fix ruimde alleen `kinksync-pages` op en
+liet de vijftien buckets van Serwists `defaultCache` staan. Zie KS-PRIV-003.
 
 ---
 
@@ -160,11 +162,15 @@ maar over iets anders: dat Safari en de Home Screen-app aparte opslagcontexten
 kunnen zijn. Over eviction staat er niets, en op het moment van beslissen
 evenmin.
 
-**Impact:** WebKit wist script-writable storage na circa zeven dagen zonder
-bezoek voor sites die niet als PWA zijn geïnstalleerd. Voor KinkSync betekent dat
-volledig en onherstelbaar verlies van profielen, contracten en
-eigendomssleutels. Zonder eigendomssleutel is een profiel niet terug te claimen,
-ook niet als een partner nog een gedeelde kopie heeft.
+**Impact:** WebKit kan script-writable storage opruimen bij langdurige
+inactiviteit voor sites die niet als PWA zijn geïnstalleerd. De vaak genoemde
+zeven dagen is een richtlijn, geen garandeerde timer: het werkelijke gedrag hangt
+af van browserversie, installatiestatus en of de gebruiker de site als vertrouwd
+behandelt. Behandel dit dus als een durabiliteitsrisico, niet als een klok die
+afloopt. Wat er bij eviction gebeurt staat wél vast: volledig en onherstelbaar
+verlies van profielen, contracten en eigendomssleutels. Zonder eigendomssleutel
+is een profiel niet terug te claimen, ook niet als een partner nog een gedeelde
+kopie heeft.
 
 **Voorgestelde fix:** `navigator.storage.persist()` aanvragen na het eerste
 profiel, plus een waarschuwing voor iOS-gebruikers die niet in standalone-modus
@@ -228,7 +234,10 @@ zwaarste beloften van het product draagt.
   consentprojectie. `lib/profileSnapshot.ts:62` verzwijgt zelfs de privacy-
   transitie zelf. Invariant 1 houdt stand.
 - **Invariant 7.** `buildOfflineWarmupRoutes()` retourneert uitsluitend statische
-  shells; geen lokaal record-id bereikt de origin. Door een e2e-test afgedekt.
+  shells, dus achtergrondwarming en prefetch dragen geen lokale record-id's naar
+  de origin. Door een e2e-test afgedekt. Let op de reikwijdte: dit gaat over
+  *achtergrondgedrag*. Gewone navigatie naar `/profile/<id>` stuurt die URL
+  uiteraard wel naar de origin, zoals elke navigatie dat doet.
 - **Invariant 8.** De generatieteller in `components/QRScanner.tsx` stopt ook
   laat-resolvende camerastreams.
 - **Invariant 4.** `components/contract/ContractInboxSheet.tsx:85-96` weigert elk
@@ -246,9 +255,98 @@ zwaarste beloften van het product draagt.
 
 ---
 
+## Tweede ronde: bevindingen uit de onafhankelijke tegen-audit
+
+`security-audit-challenge.md` daagde dit rapport uit en vond twee dingen die ik
+had gemist. Beide zijn tegen de code geverifieerd en opgelost.
+
+### KS-SEC-004 — een PIN die je jezelf niet meer kunt vertellen
+
+- **Severity:** **Blocker** *(de tegen-audit classificeerde dit als Medium; zie hieronder waarom dat te laag is)*
+- **Locatie:** `components/sheets/PinFlowSheet.tsx:44,93`, `components/AppLock.tsx:11,60,63`
+- **Status:** **opgelost**
+
+**Bewijs:** `PinFlowSheet` accepteerde 4 tot 8 cijfers (`maxLength={8}`,
+validatie alleen `< 4`, placeholder "Minimaal 4 cijfers"). `AppLock` hield er
+`PIN_LENGTH = 4` op na: het tekent vier bolletjes, weigert een vijfde cijfer
+(`if (digits.length >= PIN_LENGTH) return`) en verifieert zodra er vier staan.
+Twee schermen die hetzelfde getal apart bijhielden.
+
+**Waarom Blocker en niet Medium:** wie de uitnodiging van dat woord "minimaal"
+aannam en vijf tot acht cijfers koos, kon daarna nooit meer naar binnen.
+`verifyPin("1234", hash("12345"))` faalt altijd, en het slot accepteert het
+vijfde cijfer niet. Er is geen vergeten-PIN-pad in `AppLock`, biometrie is
+optioneel en apart, en de enige uitweg is browseropslag wissen. Dat kost ook de
+profielen, de contracten en de ECDSA-eigendomssleutels, en die laatste zijn niet
+opnieuw te genereren: een gedeeld profiel is daarna permanent niet meer te
+claimen. Totaal, onomkeerbaar dataverlies, veroorzaakt door een feature te
+gebruiken zoals de interface hem aanbood, in een app zonder serverzijde om iets
+terug te halen. Dat is geen must-fix maar een reden om niet te launchen.
+
+**Fix:** `lib/appLockPin.ts` met `APP_LOCK_PIN_LENGTH` en `isValidAppLockPin`.
+Beide schermen lezen nu dezelfde constante; `PinFlowSheet` dwingt exacte lengte
+af en `AppLock` tekent er evenveel. 4 tests in `__tests__/appLockPin.test.ts`.
+
+**Restrisico:** een PIN van meer dan vier cijfers die vóór deze fix is opgeslagen
+blijft onbruikbaar, want de lengte is niet uit de PBKDF2-hash af te leiden. De
+app is pre-launch, dus dat raakt hooguit een testtoestel. Wie er een heeft: wis
+de opslag of gebruik biometrie.
+
+### KS-PRIV-003 — "alles wissen" liet vijftien caches staan
+
+- **Severity:** Medium
+- **Locatie:** `app/sw.ts`, `components/sheets/DestroyAllSheet.tsx`
+- **Status:** **opgelost**
+
+**Bewijs:** De destroy-flow verwijderde alleen `kinksync-pages`. Serwists
+`defaultCache` zet er nog vijftien naast: `apis`, `next-data`, `others`,
+`cross-origin`, `next-image`, `static-*` en de google-fonts-buckets. Die houden
+verzoeksleutels vast als `/profile/<id>` en `/scenes/<id>`. Geen antwoorden, wel
+welke profielen en scènes hebben bestaan, en dat overleefde "wis alles".
+
+**Fix:** `runtimeCachesToPurge()` in `lib/offlineRoutes.ts` keert de logica om:
+alles gaat eruit behalve de precache, herkend aan het woord `precache` in
+`serwist-precache-v2-<scope>`. Namen hardcoderen zou betekenen dat een
+Serwist-upgrade er stilletjes eentje bij zet die niemand opruimt. 3 tests in
+`__tests__/offlineRoutes.test.ts`, waaronder één die een verzonnen toekomstige
+bucket opruimt.
+
+### KS-SEC-002 — nu pas volledig gesloten
+
+De tegen-audit merkte terecht op dat `sanitizeBdsmtestUrl` de importdeur sloot
+maar niet de la waar oude import al in lag. `migrate` in `lib/storeCore.ts` deed
+versie-gebonden transformaties en draaide nergens de sanitizer over opgeslagen
+profielen.
+
+**Fix:** `migrateStoredBdsmtestUrlV25`, met `STORE_PERSIST_VERSION` op 25. 5
+tests in `__tests__/bdsmtestUrlMigration.test.ts`.
+
+Terzijde, gevonden tijdens deze fix: de guard van `migrateStoredDirectionalityV24`
+hing aan `STORE_PERSIST_VERSION` in plaats van aan zijn eigen versienummer. Elke
+toekomstige bump zou die migratie stil opnieuw over al gemigreerde data hebben
+laten lopen. Nu gepind op 24.
+
+### Waar de tegen-audit langs dit rapport schiet
+
+Twee punten in de "false positives"-sectie gaan over claims die hier niet
+gemaakt zijn. Er staat nergens iets over `Access-Control-Allow-Origin: *`. En de
+React-versie is hier gebruikt om KS-SEC-002 te **verlagen** van High naar
+Medium, niet om een bevinding op te blazen; dat staat ook zo in `corrections.md`.
+
+Wél terecht overgenomen: de zeven-dagenclaim bij KS-PWA-001 is bijgesteld naar
+een durabiliteitsrisico in plaats van een klok, en de invariant-7-formulering is
+afgebakend tot achtergrondgedrag in plaats van alle URL-verkeer.
+
+---
+
 ## A. Bevestigde blockers en highs
 
-Geen blockers. Eén High (KS-SEC-001), opgelost en geverifieerd.
+Eén blocker en één High, allebei opgelost en geverifieerd:
+
+- **KS-SEC-004 (Blocker)** — de PIN-lengtemismatch die gebruikers permanent
+  buitensloot. Gevonden door de onafhankelijke tegen-audit, niet door mij. Dit
+  rapport had in de eerste ronde geen blockers gemeld en dat was onterecht.
+- **KS-SEC-001 (High)** — geen enkele security header.
 
 De architectuur is op meerdere punten beter dan gebruikelijk: geen backend, geen
 externe requests, echte ECDSA-eigendomsbewijzen, een quarantainelaag voor
@@ -277,7 +375,7 @@ dat is nu dicht.
 - Source maps in productie.
 - Screenreader-ervaring met VoiceOver en TalkBack.
 - Of de app privé en menselijk aanvoelt.
-- Echt iOS-gedrag: installatie, eviction na zeven dagen, safe areas.
+- Echt iOS-gedrag: installatie, storage-eviction bij inactiviteit, safe areas.
 - Camera-hardwaregedrag: permissieprompts, oriëntatie, laag licht, scanafstand.
 - Gedrag van een geïnstalleerde PWA over meerdere deploys.
 - Juridische toereikendheid van de leeftijdsgate en de contract-copy.
@@ -288,11 +386,19 @@ dat is nu dicht.
 
 **GO, onder voorwaarden.**
 
-De vier opgeloste bevindingen zijn geverifieerd met 605 groene unit tests, een
-groene build, een groene productie-PWA/offline-suite en `curl`-bewijs van de
-headers. KS-PWA-001 en KS-SEC-003 blijven open en zijn allebei bewust
-doorgeschoven: de eerste vraagt nieuwe UI die langs de UI decision gate hoort, de
-tweede valt buiten het gedeclareerde threat model.
+Zeven opgeloste bevindingen, geverifieerd met **617 groene unit tests** (was 600
+bij aanvang), een groene build, een groene productie-PWA/offline-suite en
+`curl`-bewijs van de headers. KS-PWA-001 en KS-SEC-003 blijven open en zijn
+allebei bewust doorgeschoven: de eerste vraagt nieuwe UI die langs de UI decision
+gate hoort, de tweede valt buiten het gedeclareerde threat model.
+
+Eén les uit de tweede ronde, die zwaarder weegt dan de fixes zelf: de ernstigste
+bevinding van dit hele traject kwam niet uit dit rapport maar uit een
+onafhankelijke tegen-audit. KS-SEC-004 zat niet in code die ik heb aangeraakt en
+niet in een invariant uit `SECURITY.md`; hij zat in twee schermen die hetzelfde
+getal apart bijhielden. Een audit die alleen langs de gedeclareerde invarianten
+loopt, vindt dat soort dingen niet. Negatieve-padreview hoort daarom een vast
+onderdeel te zijn, niet een tweede mening achteraf.
 
 **Voorwaarden voor de knop:**
 

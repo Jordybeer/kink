@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SHAKE_ANIM, useMotionSafe } from "@/lib/motion";
 import { verifyPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
+import { APP_LOCK_PIN_LENGTH } from "@/lib/appLockPin";
 
 const COOLDOWN_S = 30;
 const MAX_ATTEMPTS = 5;
-const PIN_LENGTH = 4;
+const PIN_LENGTH = APP_LOCK_PIN_LENGTH;
 
 const KEYS = ["1","2","3","4","5","6","7","8","9","","0","backspace"];
 
