@@ -396,7 +396,7 @@ export default function SpotlightTour({
               onClick={advance}
               whileTap={TAP_SPRING}
               className="focus-ring flex-1 rounded-full px-4 py-2 text-[0.8125rem] font-semibold"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {isLast
                 ? finalLabel

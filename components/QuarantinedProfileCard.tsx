@@ -103,7 +103,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
           type="button"
           onClick={() => { setError(null); setScannerOpen(true); }}
           className="focus-ring w-full min-h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+          style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           <Camera size={17} aria-hidden="true" />
           Opnieuw bevestigen via QR

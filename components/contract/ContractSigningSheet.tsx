@@ -164,7 +164,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                   disabled={busy}
                   onClick={() => void startSigning()}
                   className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                  style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                 >
                   <QrCode size={18} aria-hidden="true" />
                   {busy ? "Voorbereiden…" : "Digitaal ondertekenen"}
@@ -199,7 +199,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                 type="button"
                 onClick={onClose}
                 className="focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Gereed
               </button>

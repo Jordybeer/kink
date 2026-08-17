@@ -359,7 +359,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             onClick={step === 0 ? continueFromIdentity : create}
             disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             {step === 1
               ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Start vragen")

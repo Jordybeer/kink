@@ -517,7 +517,7 @@ function ContractPage() {
           onClick={handleGeneratePDF}
           disabled={generating || ceremony}
           className="focus-ring flex-1 py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+          style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           {generating ? "Genereren…" : "Opslaan als PDF"}
         </button>

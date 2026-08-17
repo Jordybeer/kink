@@ -161,7 +161,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                 type="button"
                 onClick={() => setScannerOpen(true)}
                 className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Scanner openen
               </button>
@@ -217,7 +217,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                 disabled={busy}
                 onClick={() => void confirm()}
                 className="focus-ring mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 <Check size={17} aria-hidden="true" />
                 {busy ? "Bevestigen…" : actionButton(request.action)}

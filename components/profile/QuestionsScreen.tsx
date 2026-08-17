@@ -174,7 +174,7 @@ export default function QuestionsScreen({ params }: Props) {
               {runtimeKind === "dynamic" ? "Niets is ingevuld of voorspeld. Je kunt later verder ontdekken of de volledige catalogus doorlopen." : runtimeKind === "discover" ? "Genoeg ontdekt voor nu. Je kunt later verdergaan of bewust de volledige catalogus doorlopen." : "Je hebt de volledige catalogus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
             </p>
 
-            <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+            <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
               Terug naar profiel
             </Link>
 

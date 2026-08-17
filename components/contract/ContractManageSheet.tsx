@@ -299,7 +299,11 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 disabled={busy}
                 onClick={() => void startRequest()}
                 className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: action === "stop" ? "var(--hard-no)" : "var(--accent)", color: "var(--on-accent)" }}
+                // De stopvariant houdt donkere inkt: wit op --hard-no haalt maar
+                // 3,76:1, de plumzwarte inkt 5,15:1.
+                style={action === "stop"
+                  ? { background: "var(--hard-no)", color: "var(--on-accent)" }
+                  : { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 {busy ? "Bevestigen…" : actionLabel(action)}
               </button>
@@ -326,7 +330,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 type="button"
                 onClick={onClose}
                 className="focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Gereed
               </button>
@@ -343,7 +347,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 type="button"
                 onClick={onClose}
                 className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Gereed
               </button>

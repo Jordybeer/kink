@@ -310,7 +310,7 @@ function HomeContent() {
                 type="button"
                 onClick={() => setFormOpen(true)}
                 className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Begin met jouw profiel
                 <ArrowRight size={16} weight="bold" aria-hidden="true" />
@@ -527,7 +527,7 @@ function HomeContent() {
                 router.push(`/profile/${importIdentity.profile.id}`);
               }}
               className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Open bestaand profiel
             </button>

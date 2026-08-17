@@ -143,7 +143,7 @@ function ContractGate({
           <button
             onClick={() => router.push(`/scene?a=${selectedA}&b=${selectedB}`)}
             className="w-full py-3 rounded-xl text-sm font-semibold focus-ring mb-3 inline-flex items-center justify-center gap-1.5"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Ga naar scène <ArrowRight size={15} aria-hidden="true" />
           </button>
@@ -152,7 +152,7 @@ function ContractGate({
             onClick={() => router.push(contractHref)}
             disabled={!canProceed}
             className="w-full py-3 rounded-xl text-sm font-semibold focus-ring disabled:opacity-40 mb-3"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Contract opstellen
           </button>

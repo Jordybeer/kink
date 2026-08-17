@@ -101,4 +101,11 @@ describe("tokenContrast — the fixed dark room holds its ratios", () => {
     assertPair("--on-accent", "--accent", 4.5);
     assertPair("--on-accent", "--accent2", 4.5);
   });
+
+  // Gevulde knoppen dragen een diepere vulling zodat er wit op kan. Zou iemand
+  // --accent-fill later oplichten richting --accent, dan zakt wit door AA en
+  // valt deze test om — precies de fout die corrections.md al een keer ving.
+  it("witte knoptekst houdt stand op de diepere knopvulling", () => {
+    assertPair("--on-accent-fill", "--accent-fill", 4.5);
+  });
 });

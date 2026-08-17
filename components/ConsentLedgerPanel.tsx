@@ -87,7 +87,7 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
             <p className="text-sm mb-3" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
               Leg vast welke profielversies, activiteiten, intensiteiten, notities en welk safeword nu gelden. Latere wijzigingen worden toegevoegd en overschrijven deze versie niet.
             </p>
-            <button onClick={lockNow} disabled={busy} className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+            <button onClick={lockNow} disabled={busy} className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
               {busy ? "Vastzetten…" : "Afspraken nu vastzetten"}
             </button>
           </>

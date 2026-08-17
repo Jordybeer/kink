@@ -53,7 +53,7 @@ export default function UpdateBanner() {
             onClick={applyUpdate}
             whileTap={t.tap}
             className="focus-ring text-sm font-semibold flex-none px-3 py-1.5 rounded-lg"
-            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Herladen
           </motion.button>

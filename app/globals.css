@@ -20,8 +20,15 @@
   --accent-glow: rgba(217, 70, 175, 0.18);
   /* Plumzwart in plaats van blauwzwart: deelt de hue van het accent, zodat vette
      letters er niet meer tegenaan trillen. 5,02:1 op --accent en 4,89:1 op
-     --accent2, beide ruim boven AA. Wit zou hier op 3,86:1 zakken. */
+     --accent2, beide ruim boven AA. Wit zou hier op 3,86:1 zakken.
+     Nog in gebruik voor kleine accentvlakken: avatarinitialen, badges. */
   --on-accent: #1A0714;
+
+  /* Gevulde knoppen dragen niet --accent maar deze diepere variant, zodat er
+     witte tekst op kan (6,04:1; op --accent zelf zou wit op 3,86:1 zakken).
+     --accent blijft #D946AF voor randen, gloed, iconen en tekst. */
+  --accent-fill: #a93187;
+  --on-accent-fill: #ffffff;
   --yes: #f97316;
   --willing: #10b981;
   --curious: #eab308;

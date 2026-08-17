@@ -375,7 +375,7 @@ export default function AboutPage() {
       <Link
         href="/"
         className="focus-ring mt-8 flex min-h-14 items-center rounded-2xl px-5 text-sm font-semibold"
-        style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+        style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
       >
         Terug naar KinkSync
         <ArrowRight size={17} weight="bold" aria-hidden="true" className="ml-auto" />

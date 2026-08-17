@@ -129,8 +129,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   toast.action!.onClick();
                   dismiss();
                 }}
+                // Secundair: een toast is al een onderbreking, dus de actie
+                // hoeft geen vol accentvlak te zijn. Getinte vulling met
+                // --accent-text (5,24:1) in plaats van donkere inkt op fel roze.
                 className="focus-ring mb-1 min-h-11 w-full rounded-xl px-3 text-sm font-semibold"
-                style={{ background: success ? "var(--on-accent)" : "var(--accent)", color: success ? "var(--willing)" : "var(--on-accent)" }}
+                style={success
+                  ? { background: "var(--on-accent)", color: "var(--willing)" }
+                  : {
+                      background: "color-mix(in srgb, var(--accent) 16%, transparent)",
+                      border: "1px solid color-mix(in srgb, var(--accent) 45%, transparent)",
+                      color: "var(--accent-text)",
+                    }}
               >
                 {toast.action.label}
               </button>

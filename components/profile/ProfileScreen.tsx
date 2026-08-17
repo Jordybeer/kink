@@ -445,7 +445,7 @@ export default function ProfilePage({ params }: Props) {
                         <button
                           type="submit"
                           className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
-                          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                          style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                         >
                           Toevoegen
                         </button>
@@ -499,7 +499,7 @@ export default function ProfilePage({ params }: Props) {
                     <Link
                       href={`/profile/${currentProfile.id}/questions`}
                       className="focus-ring inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
-                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                      style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                     >
                       Start met vragen
                     </Link>
@@ -634,7 +634,7 @@ export default function ProfilePage({ params }: Props) {
                       type="button"
                       onClick={downloadPdf}
                       className="focus-ring min-h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
-                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                      style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                     >
                       <FileArrowDown aria-hidden="true" size={16} /> PDF
                     </button>
