@@ -30,7 +30,24 @@ export function useToast() {
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const t = useMotionSafe();
   const [toast, setToast] = useState<ToastPayload | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Bottom sheets (install-sheet, PIN-flow, elke Sheet-primitive) anker aan de
+  // onderrand, precies waar de toast ook stond — vandaar dat hij eerder over de
+  // "Installeer KinkSync"-knop viel. Zolang een echte modal-dialoog open staat,
+  // verhuist de toast naar boven, onder TopNav, zodat hij nooit een primaire
+  // actie bedekt maar wel zichtbaar en aanklikbaar blijft (nooit stil, #12).
+  // Zelfde detectiepatroon als PwaInstallGuide's profileCreateOpen-observer.
+  useEffect(() => {
+    const syncModalState = () => {
+      setModalOpen(Boolean(document.querySelector('[role="dialog"][aria-modal="true"]')));
+    };
+    syncModalState();
+    const observer = new MutationObserver(syncModalState);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   const clear = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -62,16 +79,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           const attention = toast.variant === "attention";
           return (
           <motion.div
-            initial={{ y: 40, opacity: 0 }}
+            initial={{ y: modalOpen ? -40 : 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 40, opacity: 0 }}
+            exit={{ y: modalOpen ? -40 : 40, opacity: 0 }}
             transition={t.fast}
             role="status"
             className="fixed left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-1 px-3 py-2 rounded-2xl max-w-sm w-[calc(100%-2rem)]"
             style={{
-              // Boven de home-indicator én boven de bottom-nav waar die staat.
-              // De rest van de app rekent hier al mee; de toast deed dat niet.
-              bottom: "calc(env(safe-area-inset-bottom) + var(--toast-lift, 0.75rem))",
+              // Standaard boven de home-indicator én de bottom-nav (de rest van
+              // de app rekent daar al mee, de toast deed dat niet). Staat er een
+              // modal-dialoog open — die anker altijd onderaan, precies hier —
+              // dan verhuist de toast naar boven, onder TopNav, in plaats van
+              // over de primaire knop van de sheet heen te vallen.
+              top: modalOpen ? "calc(var(--nav-h, 3.5rem) + 0.75rem)" : undefined,
+              bottom: modalOpen ? undefined : "calc(env(safe-area-inset-bottom) + var(--toast-lift, 0.75rem))",
               // Hetzelfde glas als TopNav (components/TopNav.tsx). Dekking blijft
               // op 86%: --text over een puur accentvlak haalt maar 3,21:1, dus
               // alleen deze dekking houdt het bericht boven AA.
