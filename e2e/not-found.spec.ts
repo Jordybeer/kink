@@ -1,4 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
+import { STORE_PERSIST_VERSION } from "../lib/storePersistVersion";
+
+test.beforeEach(async ({ page }) => {
+  // The focused 404 is an app-shell experience for established users. Fresh
+  // installs intentionally hit the onboarding gate before protected/unknown
+  // routes can mount; that behavior is covered in new-user.spec.ts.
+  await page.addInitScript((version) => {
+    localStorage.setItem(
+      "kink-profiles",
+      JSON.stringify({ state: { onboardingComplete: true }, version }),
+    );
+  }, STORE_PERSIST_VERSION);
+});
 
 async function assertNotFoundFits(page: Page) {
   await expect(page.getByRole("heading", { name: /hier is niets te vinden/i })).toBeVisible();

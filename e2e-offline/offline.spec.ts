@@ -112,6 +112,10 @@ test("background work never sends local record ids to the origin", async ({ page
 });
 
 test("every fixed room works offline without visiting it first", async ({ page, context }) => {
+  // Fixed app rooms are an onboarded-user contract. A fresh user must still be
+  // routed through onboarding instead of using an offline shell as a bypass.
+  await seedStore(page);
+
   // Only the home page is visited online. The install + automatic warmup must
   // prepare every other fixed route without a manual page-by-page ritual.
   await page.goto("/", { waitUntil: "networkidle" });
@@ -249,6 +253,9 @@ test("an ordinary browser tab can open cached pages after going offline", async 
 });
 
 test("unknown routes choose the right safe offline fallback", async ({ page, context }) => {
+  // Verify service-worker fallback behavior for a real app user; fresh users are
+  // intentionally stopped by the onboarding gate before protected routes mount.
+  await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
 
