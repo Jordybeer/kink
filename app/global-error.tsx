@@ -75,9 +75,7 @@ export default function GlobalError({
           </button>
 
           <p style={{ marginTop: "1.25rem", fontSize: "0.75rem", lineHeight: 1.6, color: "#b9adc4" }}>
-            Je profielen, antwoorden en contracten staan nog op dit toestel.
-            <br />
-            Er is niets verloren gegaan.
+            Je profielen, antwoorden en contracten staan nog op dit toestel. Er is niets verloren gegaan.
           </p>
         </main>
       </body>

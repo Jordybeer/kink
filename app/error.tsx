@@ -50,9 +50,7 @@ export default function Error({
           </div>
 
           <p className={styles.reassurance} data-testid="error-reassurance">
-            Je profielen, antwoorden en contracten staan nog op dit toestel.
-            <br />
-            Er is niets verloren gegaan.
+            Je profielen, antwoorden en contracten staan nog op dit toestel. Er is niets verloren gegaan.
           </p>
         </div>
       </section>
