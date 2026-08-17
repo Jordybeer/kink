@@ -213,18 +213,50 @@ still appear as a bare link if something external points at it. Hard exclusion
 would need per-route `metadata.robots.index = false`; deliberately out of scope,
 since nothing links to those shells.
 
-### L-05 — PWA manifest is thin · LOW
+### L-05 — PWA manifest is thin · FIXED (and the icon was worse than "thin")
 
-`app/manifest.ts` has no `id`, no `scope`, and no `purpose: "maskable"` icon.
+The manifest lacked `id`, `scope` and any maskable icon. All three are in now.
 
-- No `id` — the install identity is derived from `start_url`; changing that
-  later orphans existing installs.
-- No maskable icon — Android adaptive-icon launchers letterbox the icon into a
-  white circle instead of filling the shape.
+**The bigger find, surfaced by the owner:** the installed PWA was not wearing the
+brand at all. `public/` held **three different marks**:
 
-The installed PWA is a primary surface per CLAUDE.md, so this is worth ten
-minutes. *(Checked and cleared: Next **does** auto-inject
-`<link rel="manifest">` — confirmed in the prerendered HTML. No bug there.)*
+| slot | artwork | audience |
+| --- | --- | --- |
+| `icon-192/512.png` | violet gradient, black sans-serif **K** | the installed PWA, Android, the non-iOS install sheet |
+| `apple-touch-icon.png` | black with three interlocking gold rings | iOS home screen and install sheet |
+| `favicon.ico` | a third file — and there are two of them | browser tab |
+
+So iOS installed one brand and Android another, and neither matched the pink
+serif wordmark on the site. `components/PwaInstallGuide.tsx:328` even picks
+between them explicitly (`isIos ? apple-touch-icon : icon-192`).
+
+Owner's call: the gold rings are the mark. `icon-192.png` and `icon-512.png` are
+now generated from `apple-touch-icon.png`, plus a dedicated
+`icon-maskable-512.png`.
+
+Two traps met on the way, both measured rather than assumed:
+- The source has **opaque white corners**, not transparency. iOS masks those away;
+  Android would have shown them. The artwork is rounded-masked and flattened onto
+  `#0a0a0f` first.
+- A maskable icon gets cropped to roughly 80%, so the rings would have been
+  clipped. The maskable variant carries the mark at 68% with padding, on its own
+  file, while the plain icons keep `purpose: "any"`.
+
+Quantised to a 256-colour palette: 512 lands at 55 KB instead of 163 KB with no
+visible loss on the gold gradient.
+
+**Known limit:** the only source is 180×180, so the 512 is an upscale and is soft
+under close inspection. A higher-resolution master would fix that; nothing else
+will.
+
+**Still open, deliberately untouched:** `app/favicon.ico` (26 KB) and
+`public/favicon.ico` (5 KB) both claim `/favicon.ico`. Measured against a running
+production server, **`public/` wins** and `app/favicon.ico` is dead weight — the
+opposite of what the Next file convention suggests, which is exactly why it was
+measured. Left alone because the tab icon is visible and this was not the task.
+
+*(Checked and cleared: Next **does** auto-inject `<link rel="manifest">` —
+confirmed in the prerendered HTML. No bug there.)*
 
 ### L-06 — README oversells and undercounts · LOW, but it's the front door
 
