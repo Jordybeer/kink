@@ -13,6 +13,31 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
   });
 
+  test("directe app-deeplink kan onboarding niet overslaan", async ({ page }) => {
+    await page.goto("/compare?a=e2bfd216-5f11-4af2-8f9e-c6f86e1c858b&b=db601c62-083c-406c-b4e9-f35fc36847a2");
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toHaveCount(0);
+  });
+
+  test("onbekende deeplink kan onboarding niet overslaan", async ({ page }) => {
+    await page.goto("/this-route-is-not-collared");
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /hier is niets te vinden/i })).toHaveCount(0);
+  });
+
+  test("offline fallback blijft publiek, quarantine niet", async ({ page }) => {
+    await page.goto("/offline");
+    await expect(page.getByRole("heading", { name: "Je bent offline" })).toBeVisible();
+
+    await page.goto("/quarantine");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("button", { name: /^begin$/i })).toBeVisible();
+  });
+
   test("doorloopt de rondleiding en landt rustig op home", async ({ page }) => {
     await page.getByRole("button", { name: /^begin$/i }).click();
     await expect(page.getByRole("heading", { name: "18+?" })).toBeVisible();

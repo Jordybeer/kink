@@ -1,4 +1,16 @@
 import { expect, test } from "@playwright/test";
+import { STORE_PERSIST_VERSION } from "../lib/storePersistVersion";
+
+test.beforeEach(async ({ page }) => {
+  // Launch-matrix 404 coverage is an established-user UI contract. Fresh users
+  // intentionally hit onboarding first; new-user.spec.ts guards that behavior.
+  await page.addInitScript((version) => {
+    localStorage.setItem(
+      "kink-profiles",
+      JSON.stringify({ state: { onboardingComplete: true }, version }),
+    );
+  }, STORE_PERSIST_VERSION);
+});
 
 test("404 stays usable on the launch device matrix", async ({ page }) => {
   await page.goto("/this-route-is-not-collared");
