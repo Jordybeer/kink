@@ -48,7 +48,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect(page.getByRole("heading", { name: "Jouw voorkeuren. Jouw toestel. Jouw woorden." })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Drie regels sturen het hele product" })).toBeVisible();
       await expect(page.getByText("Geen KinkSync-account", { exact: true })).toBeVisible();
-      await expect(page.getByText(/op iOS kunnen Safari en de geïnstalleerde Home Screen-app aparte opslagcontexten zijn/i)).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Privacy begint lokaal" })).toBeVisible();
       break;
     case "profile":
       await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("about maakt lokale kinkplekken zichtbaar zonder profieldata in de link", async ({ page }) => {
   await page.goto("/about");
 
-  const community = page.getByRole("region", { name: "Kink gebeurt ook buiten je scherm." });
+  const community = page.getByRole("region", { name: "Kink gebeurt ook buiten je scherm" });
   await expect(community).toBeVisible();
 
   const placeDeNous = community.getByRole("link", { name: "Place de Nous in Diest openen in Google Maps" });

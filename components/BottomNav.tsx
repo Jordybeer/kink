@@ -9,9 +9,10 @@ export default function BottomNav() {
   const { profiles } = useStore();
   const _hasHydrated = useHasHydrated();
 
-  // Hide on focused routes
+  // Hide on focused routes and long-form information pages.
   if (path.startsWith("/profile/") && path.split("/").length > 2) return null;
   if (path === "/scene" || path.startsWith("/scenes/")) return null;
+  if (path === "/about" || path === "/security") return null;
   const firstProfileId = _hasHydrated ? profiles[0]?.id : undefined;
   const profileHref = firstProfileId ? `/profile/${firstProfileId}` : "/";
 
