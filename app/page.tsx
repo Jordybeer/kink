@@ -355,7 +355,7 @@ function HomeContent() {
               href="https://fetlife.com/zwoelebeer"
               target="_blank"
               rel="noopener noreferrer"
-              className="focus-ring rounded-md px-1.5 py-1"
+              className="focus-ring inline-flex min-h-11 items-center rounded-md px-2.5"
               style={{ color: "var(--accent-text)" }}
             >
               FetLife
@@ -363,7 +363,7 @@ function HomeContent() {
             <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
             <a
               href="mailto:info@jordy.beer"
-              className="focus-ring rounded-md px-1.5 py-1"
+              className="focus-ring inline-flex min-h-11 items-center rounded-md px-2.5"
               style={{ color: "var(--accent-text)" }}
             >
               E-mail
