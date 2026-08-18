@@ -176,6 +176,7 @@ export default function TopNav() {
   const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
     ? contextualTitle.split(" · ", 2)
     : null;
+  const wideInfoRoute = path === "/about" || path === "/security";
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -186,7 +187,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
+      <nav className={`relative ${wideInfoRoute ? "max-w-4xl" : "max-w-2xl"} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
         <MotionLink
           href={back}
           whileTap={t.tap}
@@ -333,6 +334,7 @@ function focusedRoute(
   if (path === "/compare") return { title: "Vergelijk", back: "/" };
   if (path === "/timeline") return { title: "Verloop", back: "/" };
   if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
+  if (path === "/security") return { title: "Security & privacy", back: "/about" };
   if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
   if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
   if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
