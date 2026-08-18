@@ -335,10 +335,41 @@ function HomeContent() {
         )}
 
         {profiles.length === 0 && (
-          <p className="text-xs text-center px-4 mb-8" style={{ color: "var(--text2)" }}>
+          <p className="text-xs text-center px-4" style={{ color: "var(--text2)" }}>
             Je kunt later altijd een extra perspectief of partnerprofiel toevoegen.
           </p>
         )}
+
+        <footer
+          className="mx-auto mt-9 max-w-sm border-t px-4 pt-7 text-center"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <p className="text-sm font-semibold tracking-[0.04em]" style={{ color: "var(--text)" }}>
+            For adults. By adults.
+          </p>
+          <p className="mt-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+            Vragen of suggesties?
+          </p>
+          <div className="mt-1.5 flex items-center justify-center gap-2 text-xs font-semibold">
+            <a
+              href="https://fetlife.com/zwoelebeer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="focus-ring rounded-md px-1.5 py-1"
+              style={{ color: "var(--accent-text)" }}
+            >
+              FetLife
+            </a>
+            <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
+            <a
+              href="mailto:info@jordy.beer"
+              className="focus-ring rounded-md px-1.5 py-1"
+              style={{ color: "var(--accent-text)" }}
+            >
+              E-mail
+            </a>
+          </div>
+        </footer>
       </PageShell>
 
       <ProfileCreateSheet

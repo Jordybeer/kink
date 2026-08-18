@@ -16,7 +16,7 @@ async function reachVault(page: Page) {
   await expect(page.getByTestId("onboarding-turn-dial")).toBeVisible();
 }
 
-async function deliberateQuarterTurn(page: Page, finish: "up" | "cancel" = "up") {
+async function deliberateGrip(page: Page) {
   const dial = page.getByTestId("onboarding-turn-dial");
   const box = await dial.boundingBox();
   expect(box).not.toBeNull();
@@ -24,7 +24,7 @@ async function deliberateQuarterTurn(page: Page, finish: "up" | "cancel" = "up")
   const centerX = box!.x + box!.width / 2;
   const centerY = box!.y + box!.height / 2;
   const radius = Math.min(box!.width, box!.height) * 0.34;
-  const angles = [-90, -75, -60, -45, -30, -15, 0, 15];
+  const angles = Array.from({ length: 13 }, (_, index) => -90 + index * 10);
   const point = (angle: number) => {
     const radians = angle * Math.PI / 180;
     return {
@@ -37,28 +37,17 @@ async function deliberateQuarterTurn(page: Page, finish: "up" | "cancel" = "up")
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
 
-  let last = start;
   for (const angle of angles.slice(1)) {
-    last = point(angle);
-    await page.mouse.move(last.x, last.y);
-    await page.waitForTimeout(55);
-  }
-
-  if (finish === "cancel") {
-    await dial.dispatchEvent("pointercancel", {
-      pointerId: 1,
-      clientX: last.x,
-      clientY: last.y,
-    });
-    await page.mouse.up();
-    return;
+    const next = point(angle);
+    await page.mouse.move(next.x, next.y);
+    await page.waitForTimeout(35);
   }
 
   await page.mouse.up();
 }
 
 test.describe("Onboarding vault", () => {
-  test("a tap never opens it, a deliberate quarter-turn gets a visible unlock payoff before Home", async ({ page }) => {
+  test("a tap never opens it and the 236° vault turn can be finished across two comfortable grips", async ({ page }) => {
     await reachVault(page);
     const dial = page.getByTestId("onboarding-turn-dial");
 
@@ -66,22 +55,31 @@ test.describe("Onboarding vault", () => {
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
 
-    await deliberateQuarterTurn(page);
+    await deliberateGrip(page);
+    await expect(page.getByText("Blijf draaien…", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
+
+    await deliberateGrip(page);
     await expect(page.getByText("Open.", { exact: true })).toBeVisible();
     await page.waitForTimeout(220);
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible({ timeout: 100 });
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible({ timeout: 2500 });
+
+    const footer = page.getByRole("contentinfo");
+    await expect(footer.getByText("For adults. By adults.", { exact: true })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "FetLife" })).toHaveAttribute("href", "https://fetlife.com/zwoelebeer");
+    await expect(footer.getByRole("link", { name: "E-mail" })).toHaveAttribute("href", "mailto:info@jordy.beer");
   });
 
-  test("an interrupted quarter-turn always resets closed", async ({ page }) => {
+  test("a partial grip stays closed without throwing away the user's progress", async ({ page }) => {
     await reachVault(page);
 
-    await deliberateQuarterTurn(page, "cancel");
+    await deliberateGrip(page);
 
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
-    await expect(page.getByText("Draai met de klok mee", { exact: true })).toBeVisible();
+    await expect(page.getByText("Blijf draaien…", { exact: true })).toBeVisible();
   });
 
   test("the vault stays fully visible on the compact iPhone viewport", async ({ page }) => {
@@ -100,7 +98,6 @@ test.describe("Onboarding vault", () => {
 
     const horizontalOverflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
     expect(horizontalOverflow).toBe(false);
-    await expect(page.getByText("Draai met de klok mee", { exact: true })).toBeVisible();
-    await expect(page.getByText(/kwartslag/i)).not.toBeVisible();
+    await expect(page.getByText("Draai de kluisschijf naar rechts", { exact: true })).toBeVisible();
   });
 });
