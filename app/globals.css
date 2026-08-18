@@ -35,6 +35,16 @@
   --maybe: #38bdf8;
   --no: #818cf8;
   --hard-no: #ef4444;
+  /* De harde grens als tekst op zijn eigen getinte achtergrond.
+     --hard-no zelf haalt daar 4,04:1 en zakt dus onder AA, juist bij de status
+     die het zwaarst weegt. Dat kwam ergens vandaan: de danger-variant krijgt
+     minder kleurmenging (17% waar de rest 19% krijgt) en #ef4444 heeft van de
+     zes de laagste luminantie. Meer mengen maakt het erger, want dan kruipt de
+     achtergrond naar de tekst toe. Oplichten is de enige richting die werkt.
+     Deze tint haalt 4,9:1 en oogt zachter, niet alarmerender. Overal waar
+     --hard-no al ruim boven AA zat (safeword, intrekken, fouttekst) blijft hij
+     ongemoeid. */
+  --hard-no-text: #f26d6d;
   --conflict: #f59e0b;
   /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */
   --nav-h: calc(env(safe-area-inset-top) + 3.5rem);

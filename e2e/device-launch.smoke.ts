@@ -61,7 +61,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       const statusGroup = page.getByRole("group", { name: "Status kiezen" });
       await expect(statusGroup).toBeVisible();
       await expect(statusGroup.getByRole("button")).toHaveCount(5);
-      await expect(page.locator('[data-tour="kink-card"] h3')).toHaveCount(1);
+      await expect(page.locator('[data-tour="kink-card"] h2')).toHaveCount(1);
       break;
     }
     case "compare":

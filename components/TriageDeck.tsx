@@ -158,7 +158,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
                 </div>
               </div>
 
-              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h3 data-testid="question-title" className="max-h-14 overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h3></div>
+              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="max-h-14 overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
               <p data-testid="question-essence" className="h-12 self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
