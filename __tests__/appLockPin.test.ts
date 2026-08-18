@@ -1,26 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { APP_LOCK_PIN_LENGTH, isValidAppLockPin } from "@/lib/appLockPin";
+import {
+  APP_LOCK_PIN_LENGTH,
+  LEGACY_APP_LOCK_PIN_MAX_LENGTH,
+  isValidAppLockPin,
+  normalizeAppLockPinInput,
+} from "@/lib/appLockPin";
 
 /**
- * De PIN die je jezelf niet meer kon vertellen.
- *
- * PinFlowSheet liet 4 tot 8 cijfers instellen, AppLock tekende er vier en
- * weigerde het vijfde. Wie zes koos, kwam er nooit meer in: geen vergeten-PIN,
- * biometrie optioneel, en wissen kostte ook de eigendomssleutels. Deze tests
- * bewaken dat de twee kanten hetzelfde getal blijven lezen.
+ * Nieuwe PINs zijn precies vier cijfers; oudere 5–8-cijferige hashes moeten via
+ * het lockscreen wel bereikbaar blijven zodat de oude setupfout niemand opsluit.
  */
-describe("app-lock PIN lengte", () => {
-  it("accepteert precies de lengte die het slot ook tekent", () => {
+describe("app-lock PIN contract", () => {
+  it("accepteert precies het formaat voor nieuwe PINs", () => {
     expect(isValidAppLockPin("1".repeat(APP_LOCK_PIN_LENGTH))).toBe(true);
   });
 
-  it("weigert een PIN die langer is dan het slot kan aannemen", () => {
-    for (let extra = 1; extra <= 4; extra++) {
+  it("weigert een nieuwe PIN die langer is", () => {
+    for (let extra = 1; extra <= LEGACY_APP_LOCK_PIN_MAX_LENGTH - APP_LOCK_PIN_LENGTH; extra++) {
       expect(isValidAppLockPin("1".repeat(APP_LOCK_PIN_LENGTH + extra))).toBe(false);
     }
   });
 
-  it("weigert een PIN die korter is", () => {
+  it("weigert een nieuwe PIN die korter is", () => {
     for (let missing = 1; missing < APP_LOCK_PIN_LENGTH; missing++) {
       expect(isValidAppLockPin("1".repeat(APP_LOCK_PIN_LENGTH - missing))).toBe(false);
     }
@@ -30,5 +31,11 @@ describe("app-lock PIN lengte", () => {
     expect(isValidAppLockPin("12a4")).toBe(false);
     expect(isValidAppLockPin("12 4")).toBe(false);
     expect(isValidAppLockPin("")).toBe(false);
+  });
+
+  it("verwijdert eerst opmaak en begrenst daarna een geplakte PIN", () => {
+    expect(normalizeAppLockPinInput("12-34")).toBe("1234");
+    expect(normalizeAppLockPinInput("1 2 3 4 5")).toBe("1234");
+    expect(normalizeAppLockPinInput("abcd1234")).toBe("1234");
   });
 });
