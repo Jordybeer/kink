@@ -103,11 +103,9 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
     if (cooldownLeft > 0 || pinLoading || shake) return;
 
     if (k === "backspace") {
-      setDigits((current) => {
-        const next = current.slice(0, -1);
-        if (next.length < PIN_LENGTH) setLegacyPinMode(false);
-        return next;
-      });
+      const next = digits.slice(0, -1);
+      setDigits(next);
+      if (next.length < PIN_LENGTH) setLegacyPinMode(false);
       return;
     }
 
@@ -244,11 +242,20 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                 const keyEnabled = k === "submit" ? submitEnabled : !!k;
                 const disabled = !keyEnabled || cooldownLeft > 0 || pinLoading || shake;
                 const visible = k !== "submit" || submitEnabled;
+                const ariaLabel = !visible
+                  ? undefined
+                  : k === "backspace"
+                    ? "Laatste cijfer wissen"
+                    : k === "submit"
+                      ? "Oudere PIN bevestigen"
+                      : k || undefined;
 
                 return (
                   <motion.button
                     key={i}
-                    aria-label={k === "backspace" ? "Laatste cijfer wissen" : k === "submit" ? "Oudere PIN bevestigen" : k || undefined}
+                    aria-label={ariaLabel}
+                    aria-hidden={!visible ? true : undefined}
+                    tabIndex={visible ? undefined : -1}
                     onClick={() => keyEnabled && handleKey(k)}
                     disabled={disabled}
                     whileTap={!disabled ? t.tap : undefined}
