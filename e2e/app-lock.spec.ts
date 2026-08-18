@@ -1,5 +1,5 @@
 import { pbkdf2Sync } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { buildStore, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const STORE_KEY = "kink-profiles";
@@ -23,7 +23,7 @@ function lockedStore(pinHash: string): string {
   });
 }
 
-async function installLockedStore(page: Parameters<typeof test>[0] extends never ? never : any, pinHash: string) {
+async function installLockedStore(page: Page, pinHash: string) {
   await page.addInitScript(
     ({ key, value }: { key: string; value: string }) => window.localStorage.setItem(key, value),
     { key: STORE_KEY, value: lockedStore(pinHash) },
