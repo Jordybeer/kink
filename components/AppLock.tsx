@@ -30,7 +30,6 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
   const [legacyPinMode, setLegacyPinMode] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
 
-  // Auto-trigger biometric on mount if available
   useEffect(() => {
     if (biometricCredentialId) tryBiometric();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,18 +120,11 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
     const next = [...digits, k];
     setDigits(next);
 
-    // Nieuwe PINs zijn vier cijfers en blijven dus zonder extra bevestiging
-    // ontgrendelen. Een mislukte viercijferpoging telt wél voor de rate limit,
-    // maar blijft kort staan zodat een vóór deze fix ingestelde 5–8-cijferige
-    // PIN verder kan worden ingevoerd. Zo herstellen we toegang zonder een
-    // onbeperkte viercijfer-oracle te maken.
     if (next.length === PIN_LENGTH && !legacyPinMode) {
       await verifyEnteredPin(next.join(""), true);
       return;
     }
 
-    // Acht was de oude bovengrens. Daar is geen mogelijke volgende digit meer,
-    // dus verifieer automatisch; bij vijf tot zeven verschijnt de checkknop.
     if (legacyPinMode && next.length === LEGACY_APP_LOCK_PIN_MAX_LENGTH) {
       await verifyEnteredPin(next.join(""), false);
     }
@@ -160,11 +152,10 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
           boxShadow: "0 8px 32px var(--scrim)",
         }}
       >
-        <h2 style={{ margin: "0 0 0.25rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
+        <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
           KinkSync ontgrendelen
         </h2>
 
-        {/* Biometric button */}
         {biometricCredentialId && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.25rem", marginTop: "0.5rem" }}>
             <motion.button
@@ -203,10 +194,8 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
           </div>
         )}
 
-        {/* PIN pad — only shown when PIN is set */}
         {storedHash && (
           <>
-            {/* Dot indicators */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={shake ? "shake" : "normal"}
@@ -268,6 +257,10 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                       fontSize: "1.375rem",
                       opacity: visible ? (disabled ? 0.4 : 1) : 0,
                       transition: "opacity 150ms ease, background 150ms ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
                     }}
                   >
                     {k === "backspace"
