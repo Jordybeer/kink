@@ -338,11 +338,11 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Title({ children, compact = false }: { children: React.ReactNode; compact?: boolean }) {
+function Title({ children, compact = false, stableTwoLines = false }: { children: React.ReactNode; compact?: boolean; stableTwoLines?: boolean }) {
   return (
-    <motion.div variants={childV}>
+    <motion.div variants={childV} className={stableTwoLines ? 'min-h-[5.75rem]' : undefined}>
       <h2
-        className={`serif-safe leading-[1.05] ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
+        className={`serif-safe ${stableTwoLines ? 'leading-[1.12]' : 'leading-[1.05]'} ${compact ? 'text-[clamp(2rem,8.4vw,2.15rem)]' : 'text-[clamp(2.05rem,9vw,2.25rem)]'}`}
         style={{
           marginTop: 'clamp(0.875rem, 2.2dvh, 1.25rem)',
           fontFamily: "var(--font-display, Georgia, serif)",
@@ -461,12 +461,19 @@ function Pin({ sub, digits, shake, onKey }: { sub: 'pin1' | 'pin2'; digits: stri
 
   return (
     <div className="mx-auto max-w-[19rem] pt-[clamp(0.75rem,2dvh,1rem)] text-center">
-      <Title compact>{sub === 'pin1' ? 'Hou nieuwsgierige vingers buiten.' : 'Nog één keer.'}</Title>
-      <motion.p variants={childV} className="mt-6 text-base leading-7" style={{ color: 'var(--text2)' }}>{sub === 'pin1' ? <>Vier cijfers.<br />Hou ze voor jezelf.</> : 'Dezelfde vier cijfers.'}</motion.p>
-      <motion.div variants={childV} animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake && !t.reduced ? SHAKE_ANIM : t.fast} className="my-[clamp(1.5rem,4dvh,2rem)] flex justify-center gap-4">
+      <Title compact stableTwoLines>{sub === 'pin1' ? 'Hou nieuwsgierige vingers buiten.' : 'Nog één keer.'}</Title>
+      <motion.p
+        variants={childV}
+        data-testid="onboarding-pin-copy"
+        className="mt-4 flex min-h-14 items-start justify-center px-1 text-base leading-7"
+        style={{ color: 'var(--text2)' }}
+      >
+        {sub === 'pin1' ? <>Vier cijfers.<br />Hou ze voor jezelf.</> : 'Dezelfde vier cijfers.'}
+      </motion.p>
+      <motion.div variants={childV} animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : undefined} transition={shake && !t.reduced ? SHAKE_ANIM : t.fast} className="my-[clamp(1.25rem,3dvh,1.5rem)] flex justify-center gap-4">
         {Array.from({ length: PIN_LENGTH }, (_, index) => <div key={index} className="h-3.5 w-3.5 rounded-full" style={{ background: index < digits.length ? 'var(--accent)' : 'var(--border)' }} />)}
       </motion.div>
-      <motion.div variants={childV} className="grid grid-cols-3 gap-2.5">
+      <motion.div variants={childV} data-testid="onboarding-pin-pad" className="grid grid-cols-3 gap-2.5">
         {PIN_KEYS.map((key, index) => <button key={index} type="button" onClick={() => key && onKey(key)} disabled={!key} className="focus-ring h-13 rounded-xl border text-xl font-semibold disabled:opacity-0" style={{ background: key ? 'var(--surface2)' : 'transparent', borderColor: key ? 'var(--border)' : 'transparent', color: key === '⌫' ? 'var(--text2)' : 'var(--text)' }}>{key}</button>)}
       </motion.div>
     </div>
