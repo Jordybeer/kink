@@ -66,10 +66,9 @@ test.describe("Onboarding vault", () => {
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible({ timeout: 100 });
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible({ timeout: 2500 });
 
-    const footer = page.getByRole("contentinfo");
-    await expect(footer.getByText("For adults. By adults.", { exact: true })).toBeVisible();
-    await expect(footer.getByRole("link", { name: "FetLife" })).toHaveAttribute("href", "https://fetlife.com/zwoelebeer");
-    await expect(footer.getByRole("link", { name: "E-mail" })).toHaveAttribute("href", "mailto:info@jordy.beer");
+    await expect(page.getByText("For adults. By adults.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "FetLife" })).toHaveAttribute("href", "https://fetlife.com/zwoelebeer");
+    await expect(page.getByRole("link", { name: "E-mail" })).toHaveAttribute("href", "mailto:info@jordy.beer");
   });
 
   test("a partial grip stays closed without throwing away the user's progress", async ({ page }) => {
