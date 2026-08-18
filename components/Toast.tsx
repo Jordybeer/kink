@@ -13,7 +13,19 @@ type ToastAction = { label: string; onClick: () => void };
  * blijven erbuiten; die dragen kinkstatus-betekenis die niet naar een
  * systeemmelding hoort te lekken.
  */
-type ToastPayload = { message: string; action?: ToastAction; variant?: "default" | "success" | "attention" };
+/**
+ * `persistent` laat de toast staan tot iemand hem wegklikt of de actie kiest.
+ *
+ * Dat is er voor de volle-kluismelding. Die zei "je laatste wijziging is niet
+ * bewaard", verdween na zes seconden en kwam nooit meer terug, want
+ * StorageFullNotice roept maar één keer per sessie. Wie die zes seconden miste,
+ * bleef de rest van de sessie antwoorden aan een opslag die niets bewaarde. Voor
+ * wie luistert was de kans het grootst dat het misging: role="status" onderbreekt
+ * niet, dus de melding kan in de wachtrij staan terwijl de timer doortikt.
+ * persistStorage.ts is expliciet gebouwd om stil dataverlies te voorkomen; een
+ * melding die zichzelf opruimt maakte die vangst weer ongedaan.
+ */
+type ToastPayload = { message: string; action?: ToastAction; variant?: "default" | "success" | "attention"; persistent?: boolean };
 
 type ToastContextValue = { showToast: (payload: ToastPayload) => void };
 
@@ -63,7 +75,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     (payload: ToastPayload) => {
       clear();
       setToast(payload);
-      timer.current = setTimeout(() => setToast(null), DISMISS_MS);
+      if (!payload.persistent) {
+        timer.current = setTimeout(() => setToast(null), DISMISS_MS);
+      }
     },
     [clear]
   );

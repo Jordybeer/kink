@@ -439,7 +439,7 @@ function Privacy({ bioAvailable }: { bioAvailable: boolean }) {
     <div className="pt-[clamp(0.25rem,1dvh,0.75rem)]">
       <Eyebrow>Privé</Eyebrow>
       <Title compact>Niet voor iedere pottenkijker.</Title>
-      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]">Al jouw data blijft standaard op jouw toestel.<span className="mt-2 block font-semibold" style={{ color: 'var(--accent)' }}>Volledig offline. Privacy voorop.</span></motion.p>
+      <motion.p variants={childV} className="mt-5 text-base leading-[1.65]">Al jouw data blijft standaard op jouw toestel.<span className="mt-2 block font-semibold" style={{ color: 'var(--accent)' }}>Werkt offline. Jouw antwoorden vertrekken niet.</span></motion.p>
       <motion.div variants={childV} className="mt-5 rounded-2xl border px-4 py-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <div className="flex items-start gap-3.5">
           <FeatureIcon><Lock size={18} weight="duotone" aria-hidden="true" /></FeatureIcon>

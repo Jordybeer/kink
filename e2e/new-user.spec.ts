@@ -52,7 +52,11 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /^verder/i }).click();
 
     await expect(page.getByRole("heading", { name: /niet voor iedere pottenkijker/i })).toBeVisible();
-    await expect(page.getByText(/privacy voorop/i)).toBeVisible();
+    // Was /privacy voorop/. Die claim luidde "Volledig offline" en beloofde meer
+    // dan de architectuur waarmaakt: /about zegt zelf dat de hosting appcode en
+    // updates serveert. De belofte die hier telt is dat de antwoorden niet
+    // vertrekken, en die staat er nog steeds.
+    await expect(page.getByText(/antwoorden vertrekken niet/i)).toBeVisible();
     await page.getByRole("button", { name: "Niet nu" }).click();
 
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();

@@ -25,6 +25,12 @@ export default function StorageFullNotice() {
 
       showToast({
         variant: "attention",
+        // Blijft staan tot iemand hem wegklikt of de back-up kiest. Hij komt
+        // maar één keer per sessie (zie `announced`), dus wie hem miste bleef
+        // anders de rest van de sessie schrijven naar een kluis die niets
+        // bewaart. Dataverlies staat op prioriteit 1; zes seconden is geen
+        // waarschuwing maar een flits.
+        persistent: true,
         message: "De opslag zit vol. Je laatste wijziging is niet bewaard.",
         action: {
           label: "Maak een back-up",
