@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useHasHydrated, useStore } from "@/lib/store";
 
-const PUBLIC_ROUTES = ["/", "/about", "/offline"] as const;
+const PUBLIC_ROUTES = ["/", "/about", "/security", "/offline"] as const;
 
 function isPublicRoute(pathname: string) {
   return PUBLIC_ROUTES.some((route) =>
