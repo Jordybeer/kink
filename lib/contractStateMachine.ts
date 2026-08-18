@@ -5,6 +5,7 @@ import {
   type ContractPendingRequest,
   type ContractSeries,
   type ContractSeriesStatus,
+  type ContractVersion,
 } from "@/lib/contractLifecycle";
 
 export const CONTRACT_REQUEST_TTL_MS = 15 * 60 * 1000;
@@ -57,6 +58,18 @@ function exactParticipants(
     && series.pairKey === contractPairKey(actorProfileId, counterpartyProfileId);
 }
 
+function versionParticipantsMatchSeries(
+  series: ContractSeries,
+  version: ContractVersion | undefined,
+): boolean {
+  const left = version?.content?.profileA?.profileId;
+  const right = version?.content?.profileB?.profileId;
+  if (!left || !right || left === right) return false;
+  if (contractPairKey(left, right) !== series.pairKey) return false;
+  const seriesIds = new Set(series.participants.map((participant) => participant.profileId));
+  return seriesIds.size === 2 && seriesIds.has(left) && seriesIds.has(right);
+}
+
 function hasModernCurrentVersion(series: ContractSeries): boolean {
   const version = contractVersionById(series, series.currentVersionId);
   return !!version
@@ -89,7 +102,7 @@ function requestVersionMatchesTransport(series: ContractSeries, request: Contrac
   if (request.action === "activate") {
     return series.draftVersionId === request.versionId
       && version.state === "pending_signature"
-      && !!version.content;
+      && versionParticipantsMatchSeries(series, version);
   }
   return series.currentVersionId === request.versionId;
 }
@@ -175,7 +188,10 @@ export function authorizeContractRequestCreation(input: {
 
   if (action === "activate") {
     const version = contractVersionById(series, series.draftVersionId);
-    if (!version?.content || !series.draftVersionId || series.draftVersionId === series.currentVersionId) {
+    if (!version?.content
+      || !series.draftVersionId
+      || series.draftVersionId === series.currentVersionId
+      || !versionParticipantsMatchSeries(series, version)) {
       return fail("invalid_version");
     }
     return { ok: true };
@@ -256,7 +272,10 @@ export function authorizeContractResponse(input: {
   if (request.action === "activate") {
     if (currentSeries.draftVersionId !== request.versionId) return fail("invalid_version");
     const version = contractVersionById(currentSeries, request.versionId);
-    if (!version?.content || version.contentHash !== request.contentHash || version.state !== "pending_signature") {
+    if (!version?.content
+      || version.contentHash !== request.contentHash
+      || version.state !== "pending_signature"
+      || !versionParticipantsMatchSeries(currentSeries, version)) {
       return fail("invalid_version");
     }
     if (!currentSeries.currentVersionId && currentSeries.status !== "pending_signature") {
