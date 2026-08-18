@@ -48,7 +48,7 @@ export default function DestroyAllSheet({ open, onClose }: DestroyAllSheetProps)
 
   return (
     <Sheet open={open} onClose={handleClose} title="Vernietig alle data" aria-label="Alle data verwijderen">
-      <p className="text-center text-sm mb-4" style={{ color: "var(--text2)" }}>
+      <p id="destroy-all-instruction" className="text-center text-sm mb-4" style={{ color: "var(--text2)" }}>
         Dit verwijdert alle profielen, contracten en instellingen permanent.{" "}
         Typ <strong style={{ color: "var(--text)" }}>wis alles</strong> om te bevestigen.
       </p>
@@ -56,6 +56,8 @@ export default function DestroyAllSheet({ open, onClose }: DestroyAllSheetProps)
         value={phrase}
         onChange={(e) => setPhrase(e.target.value)}
         placeholder="wis alles"
+        aria-label={`Typ ${DESTROY_PHRASE} om te bevestigen`}
+        aria-describedby="destroy-all-instruction"
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}

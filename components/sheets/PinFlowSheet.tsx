@@ -93,20 +93,22 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
               <input
                 type="password" inputMode="numeric" pattern="[0-9]*"
                 placeholder={`${APP_LOCK_PIN_LENGTH} cijfers`}
+                aria-label={`Nieuwe PIN, ${APP_LOCK_PIN_LENGTH} cijfers`}
                 value={pinInput} onChange={e => { setPinInput(normalizeAppLockPinInput(e.target.value)); setPinError(null); }}
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
+                className="focus-ring w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)", fontSize: "1.5rem" }}
                 autoFocus
               />
               <input
                 type="password" inputMode="numeric" pattern="[0-9]*"
                 placeholder="Herhaal PIN"
+                aria-label="Herhaal de nieuwe PIN"
                 value={pinConfirm} onChange={e => { setPinConfirm(normalizeAppLockPinInput(e.target.value)); setPinError(null); }}
                 onKeyDown={e => { if (e.key === "Enter") handleSavePin(); }}
-                className="w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
+                className="focus-ring w-full rounded-xl px-4 py-3 text-sm outline-none tracking-widest text-center"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)", fontSize: "1.5rem" }}
               />
-              {pinError && <p className="text-xs text-center" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
+              {pinError && <p className="text-xs text-center" role="alert" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
               <button onClick={handleSavePin}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
