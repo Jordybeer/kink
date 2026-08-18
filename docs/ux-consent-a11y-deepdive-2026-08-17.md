@@ -10,12 +10,6 @@ bevindingen daaruit staan hier gededupliceerd, en de bevindingen uit de diepere
 pass zijn als *(nieuw in deze ronde)* gemarkeerd. De securitykant leeft apart in
 `docs/release-candidate-audit-2026-08-17.md` en overlapt hier nergens mee.
 
-**Stand van zaken (bijgewerkt 2026-08-18).** Van de zestien bevindingen zijn er
-vier opgelost in PR #383 (KS-UX-003, 004, 010, 014) en is er één na expliciete
-beoordeling aanvaard als risico (KS-UX-001). De overige elf staan open; zie de
-fixlijst in sectie E. De audit zelf was read-only; de fixes zijn daarna apart
-gedaan.
-
 `UI-principles.md` is bindend, met de conflictvolgorde: consent en veiligheid en
 privacy (1) → begrijpelijkheid en leesbaarheid (2) → stabiele interactiegeometrie
 (3) → hiërarchie en rust (4) → expressiviteit en decoratie (5) → dichtheid en
@@ -53,22 +47,7 @@ De vijf antwoordknoppen staan direct onder die dichte knop, in dezelfde grid. Er
 **Kleinste veilige verbetering:** Splits `safetyNote` in één inline zin plus de volledige tekst. De detail-slot rij is al 48px en staat er al; toon daar bij een safetyNote die ene zin in plaats van alleen het woord "Veiligheid". Geen nieuwe rij, geen verschuiving, geen alarmkleur.
 **Acceptatiecriteria:** Voor elke kink met `safetyNote` is minstens één zin veiligheidscontext zichtbaar zonder interactie, op 320px en 375px, boven de antwoordknoppen. De grid-rijhoogtes blijven ongewijzigd. E2e-test op drie hoog-risico kinks.
 **Vereist echte-device of screen-reader verificatie:** nee voor het bestaan, ja voor de leesbaarheid van de inline zin op 320px
-**Launch-impact:** **bewust aanvaard risico.** De eigenaar heeft deze bevinding
-op 2026-08-18 expliciet beoordeeld en besloten hem niet te fixen: de knop met
-schildicoon is zichtbaar en één tap wordt als voldoende frictie beschouwd. De
-questionnaire blijft ongewijzigd.
-
-Wat daarmee aanvaard is, voor de volledigheid van het dossier: een gebruiker kan
-"Ja" antwoorden op elk van de 96 kinks met een `safetyNote` zonder die notitie te
-hebben geopend, inclusief de notities die stellen dat er geen veilige methode
-bestaat of dat de handeling onomkeerbaar is. Dat antwoord reist door naar compare,
-scene planning en een ondertekend contract.
-
-Deze beoordeling geldt voor de huidige release candidate. Verandert de doelgroep,
-de wetgeving of de zichtbaarheid van de app, dan hoort de afweging opnieuw
-gemaakt te worden. Het advies uit deze audit blijft ongewijzigd staan hierboven,
-zodat een volgende lezer ziet wat er is afgewogen en niet alleen wat er is
-besloten.
+**Launch-impact:** must fix. Voor notities over onomkeerbaar of levensbedreigend letsel argumenteerbaar blocker.
 
 ---
 
@@ -392,9 +371,7 @@ Technisch is de app inderdaad vrij van uitgaande requests, dat is in fase 2 geve
 
 **Geen bevestigde blockers.**
 
-Eén kandidaat was **KS-UX-001**. Voor de deelverzameling veiligheidsnotities die onomkeerbaar of levensbedreigend letsel beschrijven (wurgen, snijden, naalden, permanente markering) is argumenteerbaar dat "Ja" kunnen antwoorden zonder de waarschuwing gezien te hebben een launch tegenhoudt. Ik markeerde hem bewust niet als blocker: de informatie is aanwezig, gelabeld en één tap weg, niet afwezig. Of dat genoeg is, is een menselijke beslissing en geen auditorsoordeel, dus die vraag is expliciet neergelegd in plaats van impliciet gelaten.
-
-**Beslist op 2026-08-18: aanvaard risico, niet gefixt.** Zie de launch-impact bij KS-UX-001 voor wat daarmee precies aanvaard is en wanneer de afweging opnieuw hoort te gebeuren. Daarmee staan er geen open blockers meer.
+Eén kandidaat: **KS-UX-001**. Voor de deelverzameling veiligheidsnotities die onomkeerbaar of levensbedreigend letsel beschrijven (wurgen, snijden, naalden, permanente markering) is argumenteerbaar dat "Ja" kunnen antwoorden zonder de waarschuwing gezien te hebben een launch tegenhoudt. Ik markeer hem bewust niet als blocker: de informatie is aanwezig, gelabeld en één tap weg, niet afwezig. Of dat genoeg is, is een menselijke beslissing en geen auditorsoordeel. **Leg die vraag expliciet neer voor de launch in plaats van hem impliciet te laten.**
 
 Alles onder A dat "must fix" heet, is must fix en geen blocker.
 
@@ -432,17 +409,17 @@ Vijftien punten, in de volgorde waarin ik ze zou aanpakken. De eerste vier zijn 
 
 | # | ID | Wat | Inspanning |
 |---|---|---|---|
-| ~~1~~ | KS-UX-004 | ✅ **Gedaan** in PR #383: `aria-label` op zes gevoelige invoervelden plus `role="alert"` op `pinError` | triviaal |
-| ~~2~~ | KS-UX-003 | ✅ **Gedaan** in PR #383: `focus-ring` op de vijf velden met kale `outline-none` | triviaal |
-| ~~3~~ | KS-UX-010 | ✅ **Gedaan** in PR #383: `aria-pressed` op `SheetOptionItem` | triviaal |
+| 1 | KS-UX-004 | `aria-label` op zes gevoelige invoervelden plus `role="alert"` op `pinError` | triviaal |
+| 2 | KS-UX-003 | `focus-ring` op de vijf velden met kale `outline-none` | triviaal |
+| 3 | KS-UX-010 | `aria-pressed` op `SheetOptionItem` | triviaal |
 | 4 | KS-UX-002 | `danger`-menging naar 19% of `--hard-no` één tint op, plus tokentest | klein |
 | 5 | KS-UX-012 | "Volledig offline" herformuleren naar wat de architectuur waarmaakt | klein |
 | 6 | KS-UX-013 | `aria-label` en `aria-describedby` op het destroy-veld | triviaal |
 | 7 | KS-UX-009 | Verborgen `<h1>` op `QuestionsScreen`, vraagtitel naar `<h2>` | klein |
 | 8 | KS-UX-006 | Volle-opslagmelding persistent maken | klein |
-| ~~9~~ | KS-UX-014 | ✅ **Gedaan** in PR #383: toon/verberg-knoppen naar 44px | triviaal |
+| 9 | KS-UX-014 | Toon/verberg-knoppen naar minstens 24px | triviaal |
 | 10 | KS-UX-008 | 32 te lange essences inkorten, nuance naar `details`, plus lengtetest | middel, redactioneel |
-| ~~11~~ | KS-UX-001 | ⛔ **Vervallen.** Beoordeeld op 2026-08-18 en aanvaard als risico; de questionnaire blijft ongewijzigd | n.v.t. |
+| 11 | KS-UX-001 | Inline veiligheidszin in de bestaande detail-slot rij | middel, vraagt ontwerpbeslissing |
 | 12 | KS-UX-007 | `offsetTop` publiceren en sheets compenseren | middel, vraagt device-validatie |
 | 13 | KS-UX-005 | Getypt handtekeningalternatief naast het tekenveld | middel, vraagt ontwerpbeslissing |
 | 14 | KS-UX-011 | Scroll-lock loslaten onder een zoomdrempel | middel, vraagt device-validatie |
