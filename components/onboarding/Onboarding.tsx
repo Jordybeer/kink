@@ -366,7 +366,7 @@ function Welcome() {
         Wat je misschien eens wilt proberen.<br />
         Wat vooral leuk is voor de ander.
       </motion.p>
-      <motion.p variants={childV} className="relative mx-auto mt-5 max-w-xs text-base font-medium leading-7">En waar je absoluut niet aan begint.</motion.p>
+      <motion.p variants={childV} className="relative mx-auto mt-5 max-w-xs text-base font-medium leading-7">En waar jouw grens ligt.</motion.p>
     </div>
   );
 }
