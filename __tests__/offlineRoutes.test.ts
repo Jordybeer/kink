@@ -11,6 +11,7 @@ describe("offline route warming", () => {
     expect(buildOfflineWarmupRoutes()).toEqual(STATIC_OFFLINE_ROUTES);
     expect(STATIC_OFFLINE_ROUTES).toContain("/contracts");
     expect(STATIC_OFFLINE_ROUTES).toContain("/about");
+    expect(STATIC_OFFLINE_ROUTES).toContain("/security");
     expect(STATIC_OFFLINE_ROUTES).not.toContain("/session");
   });
 
