@@ -16,6 +16,7 @@ const STATIC_ROUTES = [
   { url: "/contracts" },
   { url: "/timeline" },
   { url: "/about" },
+  { url: "/security" },
 ];
 
 async function waitForOfflineCache(page: import("@playwright/test").Page) {

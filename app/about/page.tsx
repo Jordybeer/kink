@@ -369,6 +369,12 @@ export default function AboutPage() {
             Gedeelde payloads worden vóór import gevalideerd. Private eigendomssleutels reizen niet mee in profiel-QR-codes of gedeelde links;
             ze horen alleen in de versleutelde back-up. De hosting serveert wel de appcode en updates, maar bewaart geen KinkSync-profielaccount.
           </p>
+          <p className="mt-3">
+            Meer over lokale opslag, back-ups en verantwoord security melden:{" "}
+            <Link href="/security" className="focus-ring rounded-sm font-semibold underline underline-offset-4" style={{ color: "var(--accent)" }}>
+              Security &amp; privacy
+            </Link>
+          </p>
         </div>
       </details>
 

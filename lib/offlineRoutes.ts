@@ -40,6 +40,7 @@ export const STATIC_OFFLINE_ROUTES = [
   "/scenes",
   SCENE_DETAIL_SHELL_ROUTE,
   "/about",
+  "/security",
   "/timeline",
 ] as const;
 
