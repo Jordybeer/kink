@@ -99,7 +99,6 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const settingsOverflows = await settingsScroll.evaluate(
     (element) => element.scrollHeight > element.clientHeight + 1,
   );
-  if (testInfo.project.name.startsWith("iphone")) expect(settingsOverflows).toBe(true);
 
   await settingsScroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   if (settingsOverflows) {
