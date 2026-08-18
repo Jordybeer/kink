@@ -68,7 +68,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
-  test("pin instellen gooit de wizard niet terug naar slide één", async ({ page }) => {
+  test("PIN-bevestiging houdt de numpad op exact dezelfde plek", async ({ page }) => {
     await page.getByRole("button", { name: /^begin$/i }).click();
     await page.getByRole("button", { name: /18\+/i }).click();
     await page.getByRole("button", { name: /kom maar door/i }).click();
@@ -80,11 +80,31 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
         await page.getByRole("button", { name: digit, exact: true }).click();
       }
     };
+    const pinPad = page.getByTestId("onboarding-pin-pad");
+    const pinCopy = page.getByTestId("onboarding-pin-copy");
+    const waitForPinPadAtRest = async () => {
+      await expect.poll(
+        () => pinPad.evaluate((element) => getComputedStyle(element).transform),
+      ).toBe("none");
+    };
+
     await expect(page.getByRole("heading", { name: /hou nieuwsgierige vingers buiten/i })).toBeVisible();
+    await expect(pinCopy).toContainText("Hou ze voor jezelf.");
+    expect(await pinCopy.evaluate((element) => element.scrollHeight > element.clientHeight + 1)).toBe(false);
+    await waitForPinPadAtRest();
+    const firstPadBox = await pinPad.boundingBox();
+    expect(firstPadBox).not.toBeNull();
+
     await tapPin();
     await expect(page.getByRole("heading", { name: /nog één keer/i })).toBeVisible();
-    await tapPin();
+    await expect(pinCopy).toContainText("Dezelfde vier cijfers.");
+    expect(await pinCopy.evaluate((element) => element.scrollHeight > element.clientHeight + 1)).toBe(false);
+    await waitForPinPadAtRest();
+    const secondPadBox = await pinPad.boundingBox();
+    expect(secondPadBox).not.toBeNull();
+    expect(Math.abs(secondPadBox!.y - firstPadBox!.y)).toBeLessThanOrEqual(1);
 
+    await tapPin();
     await expect(page.getByRole("heading", { name: /liever met één blik|genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /^begin$/i })).not.toBeVisible();
   });

@@ -3,11 +3,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import ContextMenu from "@/components/ui/ContextMenu";
+import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
+import {
+  clearInstallPrompt,
+  detectIosInstallBrowser,
+  getInstallPrompt,
+  INSTALL_PROMPT_CHANGE_EVENT,
+} from "@/lib/installPrompt";
 
 const MotionLink = motion.create(Link);
 
@@ -21,6 +28,9 @@ export default function TopNav() {
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const [installAvailable, setInstallAvailable] = useState(false);
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
+  const [iosInstall, setIosInstall] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -57,6 +67,45 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
+  useEffect(() => {
+    if (path !== "/") {
+      setInstallAvailable(false);
+      setInstallGuideOpen(false);
+      return;
+    }
+
+    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
+    const ios = detectIosInstallBrowser(
+      navigator.userAgent,
+      navigator.platform,
+      navigator.maxTouchPoints,
+    ) !== null;
+    setIosInstall(ios);
+
+    const refreshInstallAvailability = () => {
+      const standalone = window.matchMedia("(display-mode: standalone)").matches
+        || navigatorWithStandalone.standalone === true;
+      const available = !standalone && (ios || getInstallPrompt() !== null);
+      setInstallAvailable(available);
+      if (!available) setInstallGuideOpen(false);
+    };
+    const handleAppInstalled = () => {
+      clearInstallPrompt();
+      setInstallAvailable(false);
+      setInstallGuideOpen(false);
+    };
+
+    refreshInstallAvailability();
+    window.addEventListener("beforeinstallprompt", refreshInstallAvailability);
+    window.addEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", refreshInstallAvailability);
+      window.removeEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, [path]);
+
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
@@ -70,34 +119,52 @@ export default function TopNav() {
 
   if (path === "/") {
     return (
-      <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
-          {/* Hulp en instellingen zijn allebei tertiair. Deze droeg als enige
-              font-semibold en werd daarmee het luidste element in een balk
-              zonder titel; nu dragen ze hetzelfde gewicht (UI-principles #2, #4). */}
-          <Link
-            href="/about"
-            aria-label="Ontdek hoe KinkSync werkt"
-            className="focus-ring -ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm"
-            style={{ color: "var(--text2)" }}
-          >
-            <Info size={20} aria-hidden="true" />
-            <span>Hoe het werkt</span>
-          </Link>
-          <div className="ml-auto flex items-center justify-end gap-1">
-            <OfflineStatus />
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-              aria-label="Instellingen openen"
-              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
+      <>
+        <header className="sticky top-0 z-40 transition-colors" style={shell}>
+          <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
+            <Link
+              href="/about"
+              aria-label="Ontdek hoe KinkSync werkt"
+              className="focus-ring -ml-2 inline-flex min-h-11 min-w-11 flex-none items-center gap-1.5 rounded-full px-2 text-sm"
               style={{ color: "var(--text2)" }}
             >
-              <GearSix size={20} aria-hidden="true" />
-            </button>
-          </div>
-        </nav>
-      </header>
+              <Info size={20} aria-hidden="true" />
+              <span className="hidden min-[360px]:inline">Hoe het werkt</span>
+            </Link>
+            <div className="ml-auto flex min-w-0 items-center justify-end gap-1">
+              {installAvailable && (
+                <button
+                  type="button"
+                  onClick={() => setInstallGuideOpen(true)}
+                  aria-label="KinkSync installeren"
+                  title="KinkSync installeren"
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <DownloadSimple size={20} aria-hidden="true" />
+                </button>
+              )}
+              <OfflineStatus />
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+                aria-label="Instellingen openen"
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                style={{ color: "var(--text2)" }}
+              >
+                <GearSix size={20} aria-hidden="true" />
+              </button>
+            </div>
+          </nav>
+        </header>
+        {installGuideOpen && (
+          <PwaInstallGuide
+            isIos={iosInstall}
+            manual
+            onDismiss={() => setInstallGuideOpen(false)}
+          />
+        )}
+      </>
     );
   }
 
@@ -243,11 +310,11 @@ function OfflineStatus() {
       role="status"
       aria-live="polite"
       aria-label="Offline"
-      className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
+      className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
       <WifiSlash size={15} aria-hidden="true" />
-      <span className="hidden min-[360px]:inline">Offline</span>
+      <span className="hidden min-[400px]:inline">Offline</span>
     </span>
   );
 }
