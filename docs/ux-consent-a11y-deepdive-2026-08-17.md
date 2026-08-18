@@ -10,6 +10,11 @@ bevindingen daaruit staan hier gededupliceerd, en de bevindingen uit de diepere
 pass zijn als *(nieuw in deze ronde)* gemarkeerd. De securitykant leeft apart in
 `docs/release-candidate-audit-2026-08-17.md` en overlapt hier nergens mee.
 
+**Stand van zaken (bijgewerkt 2026-08-18).** Vier van de zestien bevindingen zijn
+opgelost in PR #383 (KS-UX-003, 004, 010, 014). De overige twaalf staan open; zie
+de fixlijst in sectie E. De audit zelf was read-only; de fixes zijn daarna apart
+gedaan.
+
 `UI-principles.md` is bindend, met de conflictvolgorde: consent en veiligheid en
 privacy (1) → begrijpelijkheid en leesbaarheid (2) → stabiele interactiegeometrie
 (3) → hiërarchie en rust (4) → expressiviteit en decoratie (5) → dichtheid en
@@ -44,8 +49,19 @@ De vijf antwoordknoppen staan direct onder die dichte knop, in dezelfde grid. Er
 **Geschonden UI-principe:** #8, letterlijk: *"Essentiële context die nodig is om een bewuste keuze te maken, wordt niet verborgen achter een disclosure. Een concise essence moet op zichzelf voldoende zijn voor een eerste, veilige en betekenisvolle keuze."*
 **Gebruikersconsequentie:** Iemand kan "Ja" antwoorden op wurgen zonder ooit te lezen dat er geen veilige methode bestaat. Dat antwoord reist door naar compare, scene planning en een cryptografisch ondertekend contract, waar het als geïnformeerde instemming leest en als zodanig bewaard blijft.
 **Conflictprioriteit:** De notitie zit achter een tap om de vaste zeven-rijen grid heel te houden. Stabiele geometrie (3) wint hier van veiligheid (1). Precies de ruil die de doctrine verbiedt.
-**Kleinste veilige verbetering:** Splits `safetyNote` in één inline zin plus de volledige tekst. De detail-slot rij is al 48px en staat er al; toon daar bij een safetyNote die ene zin in plaats van alleen het woord "Veiligheid". Geen nieuwe rij, geen verschuiving, geen alarmkleur.
-**Acceptatiecriteria:** Voor elke kink met `safetyNote` is minstens één zin veiligheidscontext zichtbaar zonder interactie, op 320px en 375px, boven de antwoordknoppen. De grid-rijhoogtes blijven ongewijzigd. E2e-test op drie hoog-risico kinks.
+**Kleinste veilige verbetering:** ~~Splits `safetyNote` in één inline zin plus de volledige tekst. De detail-slot rij is al 48px en staat er al.~~
+
+> **Correctie 2026-08-18.** Dat voorstel was te optimistisch en is nagemeten onjuist. De detail-slot rij van 48px bevat al twee knoppen naast elkaar ("Info & uitleg" op `minmax(0,1fr)`, "Veiligheid" op `auto`); er past geen leesbare zin bij. En de eerste zin van de 96 notities is mediaan 82 tekens en maximaal 156. Zelfs over de volle breedte passen op 375px **24 van de 96** niet in twee regels, op 320px **41 van de 96**. Een mechanische "toon de eerste zin" zou dus precies de afkapping produceren die KS-UX-008 al aanklaagt.
+>
+> Er zijn twee echte paden, en beide kosten meer dan één regel code:
+>
+> **A. Redactioneel.** Geef elke `safetyNote` een aparte korte `safetyEssence` van hooguit ~90 tekens, los van de volledige tekst. Dan past hij overal. Kosten: 96 korte zinnen schrijven die kloppen over risico. Dat is veiligheidscopy, geen layoutwerk, en hoort door een mens geschreven te worden: een subtiel verkeerde samenvatting van een risico is erger dan een verborgen notitie.
+>
+> **B. Structureel.** Reserveer een vaste veiligheidsrij in de grid voor *elke* kaart, ook zonder notitie. Zo blijft de geometrie constant (principe 5 blijft heel) en krijgt de tekst drie regels. Bij 375px dekt dat alle 96; bij 320px klappen er nog 5 om. Kosten: ongeveer 48px minder hoogte voor de antwoordrij, op precies het scherm waar KS-UX-011 al meldt dat de pagina niet kan scrollen.
+>
+> A en B zijn combineerbaar en dan sluitend. Los van elkaar dekt A alles en B bijna alles.
+
+**Acceptatiecriteria:** Voor elke kink met `safetyNote` is minstens één zin veiligheidscontext zichtbaar zonder interactie, op 320px en 375px, boven de antwoordknoppen. De grid-rijhoogtes blijven per kaart identiek, ook tussen kinks mét en zónder notitie. E2e-test op drie hoog-risico kinks, plus een lengtetest over de catalogus zoals bij KS-UX-008.
 **Vereist echte-device of screen-reader verificatie:** nee voor het bestaan, ja voor de leesbaarheid van de inline zin op 320px
 **Launch-impact:** must fix. Voor notities over onomkeerbaar of levensbedreigend letsel argumenteerbaar blocker.
 
@@ -409,17 +425,17 @@ Vijftien punten, in de volgorde waarin ik ze zou aanpakken. De eerste vier zijn 
 
 | # | ID | Wat | Inspanning |
 |---|---|---|---|
-| 1 | KS-UX-004 | `aria-label` op zes gevoelige invoervelden plus `role="alert"` op `pinError` | triviaal |
-| 2 | KS-UX-003 | `focus-ring` op de vijf velden met kale `outline-none` | triviaal |
-| 3 | KS-UX-010 | `aria-pressed` op `SheetOptionItem` | triviaal |
+| ~~1~~ | KS-UX-004 | ✅ **Gedaan** in PR #383. `aria-label` op zes gevoelige invoervelden plus `role="alert"` op `pinError` | triviaal |
+| ~~2~~ | KS-UX-003 | ✅ **Gedaan** in PR #383. `focus-ring` op de vijf velden met kale `outline-none` | triviaal |
+| ~~3~~ | KS-UX-010 | ✅ **Gedaan** in PR #383. `aria-pressed` op `SheetOptionItem` | triviaal |
 | 4 | KS-UX-002 | `danger`-menging naar 19% of `--hard-no` één tint op, plus tokentest | klein |
 | 5 | KS-UX-012 | "Volledig offline" herformuleren naar wat de architectuur waarmaakt | klein |
 | 6 | KS-UX-013 | `aria-label` en `aria-describedby` op het destroy-veld | triviaal |
 | 7 | KS-UX-009 | Verborgen `<h1>` op `QuestionsScreen`, vraagtitel naar `<h2>` | klein |
 | 8 | KS-UX-006 | Volle-opslagmelding persistent maken | klein |
-| 9 | KS-UX-014 | Toon/verberg-knoppen naar minstens 24px | triviaal |
+| ~~9~~ | KS-UX-014 | ✅ **Gedaan** in PR #383. Toon/verberg-knoppen naar minstens 24px | triviaal |
 | 10 | KS-UX-008 | 32 te lange essences inkorten, nuance naar `details`, plus lengtetest | middel, redactioneel |
-| 11 | KS-UX-001 | Inline veiligheidszin in de bestaande detail-slot rij | middel, vraagt ontwerpbeslissing |
+| 11 | KS-UX-001 | Veiligheidszin zichtbaar krijgen. **Niet triviaal**, zie de correctie bij de bevinding: 96 korte notities schrijven (A), of een vaste veiligheidsrij in de grid (B) | groot, vraagt redactie of ontwerpbeslissing |
 | 12 | KS-UX-007 | `offsetTop` publiceren en sheets compenseren | middel, vraagt device-validatie |
 | 13 | KS-UX-005 | Getypt handtekeningalternatief naast het tekenveld | middel, vraagt ontwerpbeslissing |
 | 14 | KS-UX-011 | Scroll-lock loslaten onder een zoomdrempel | middel, vraagt device-validatie |
