@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import ContextMenu from "@/components/ui/ContextMenu";
@@ -20,6 +20,7 @@ const MotionLink = motion.create(Link);
 
 export default function TopNav() {
   const path = usePathname();
+  const router = useRouter();
   const hydrated = useHasHydrated();
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
@@ -121,40 +122,56 @@ export default function TopNav() {
     return (
       <>
         <header className="sticky top-0 z-40 transition-colors" style={shell}>
-          <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
-            <Link
-              href="/about"
-              aria-label="Ontdek hoe KinkSync werkt"
-              className="focus-ring -ml-2 inline-flex min-h-11 min-w-11 flex-none items-center gap-1.5 rounded-full px-2 text-sm"
-              style={{ color: "var(--text2)" }}
-            >
-              <Info size={20} aria-hidden="true" />
-              <span className="hidden min-[360px]:inline">Hoe het werkt</span>
-            </Link>
-            <div className="ml-auto flex min-w-0 items-center justify-end gap-1">
-              {installAvailable && (
-                <button
-                  type="button"
-                  onClick={() => setInstallGuideOpen(true)}
-                  aria-label="KinkSync installeren"
-                  title="KinkSync installeren"
-                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                  style={{ color: "var(--text2)" }}
-                >
-                  <DownloadSimple size={20} aria-hidden="true" />
-                </button>
-              )}
-              <OfflineStatus />
+          <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-end gap-1" aria-label="Hoofdnavigatie">
+            <OfflineStatus />
+            {installAvailable && (
               <button
                 type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-                aria-label="Instellingen openen"
+                onClick={() => setInstallGuideOpen(true)}
+                aria-label="KinkSync installeren"
+                title="KinkSync installeren"
                 className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
                 style={{ color: "var(--text2)" }}
               >
-                <GearSix size={20} aria-hidden="true" />
+                <DownloadSimple size={20} aria-hidden="true" />
               </button>
-            </div>
+            )}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+              aria-label="Instellingen openen"
+              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
+            >
+              <GearSix size={20} aria-hidden="true" />
+            </button>
+            <ContextMenu
+              open={overflowOpen}
+              onClose={() => setOverflowOpen(false)}
+              items={[
+                {
+                  label: "Over KinkSync",
+                  icon: <Info size={17} aria-hidden="true" />,
+                  onClick: () => router.push("/about"),
+                },
+                {
+                  label: "Security & privacy",
+                  icon: <ShieldCheck size={17} aria-hidden="true" />,
+                  onClick: () => router.push("/security"),
+                },
+              ]}
+            >
+              <button
+                type="button"
+                onClick={() => setOverflowOpen((open) => !open)}
+                aria-label="Meer over KinkSync"
+                aria-expanded={overflowOpen}
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                style={{ color: "var(--text2)" }}
+              >
+                <DotsThree size={22} weight="bold" aria-hidden="true" />
+              </button>
+            </ContextMenu>
           </nav>
         </header>
         {installGuideOpen && (
