@@ -155,15 +155,16 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 <input
                   type={pwShow ? "text" : "password"}
                   placeholder="Wachtwoord (min. 8 tekens)"
+                  aria-label="Back-upwachtwoord, minimaal 8 tekens"
                   value={pw}
                   onChange={(e) => setPw(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                  className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
                   style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
                   autoFocus
                 />
                 <button type="button" onClick={() => setPwShow(v => !v)}
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 focus-ring inline-flex h-11 w-11 items-center justify-center rounded-lg"
                   style={{ color: "var(--text2)" }}>
                   {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
                 </button>
@@ -172,15 +173,16 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                 <input
                   type={pwShow ? "text" : "password"}
                   placeholder="Herhaal wachtwoord"
+                  aria-label="Herhaal het back-upwachtwoord"
                   value={pwConfirm}
                   onChange={(e) => setPwConfirm(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") void handlePrepareExport(); }}
-                  className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                  className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
                   style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
                 <button type="button" onClick={() => setPwShow(v => !v)}
                   aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 focus-ring inline-flex h-11 w-11 items-center justify-center rounded-lg"
                   style={{ color: "var(--text2)" }}>
                   {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
                 </button>
@@ -337,16 +339,17 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
             <input
               type={pwShow ? "text" : "password"}
               placeholder="Wachtwoord"
+              aria-label="Wachtwoord van deze versleutelde back-up"
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleDecrypt(); }}
-              className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+              className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
               style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
               autoFocus
             />
             <button type="button" onClick={() => setPwShow(v => !v)}
               aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 focus-ring rounded-lg p-0.5"
+              className="absolute right-0 top-1/2 -translate-y-1/2 focus-ring inline-flex h-11 w-11 items-center justify-center rounded-lg"
               style={{ color: "var(--text2)" }}>
               {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
             </button>

@@ -132,6 +132,11 @@ export function SheetOptionItem({ label, description, icon, active, onClick }: S
   return (
     <button
       onClick={onClick}
+      // De keuze zat alleen in kleur: accentlabel, accenticoon en een bolletje
+      // van 2,5px. Wie niet ziet, hoorde een rij identieke knoppen en wist niet
+      // welke al gekozen was. Bij een profiel- of perspectiefkeuze betekent dat
+      // antwoorden zonder te weten namens wie.
+      aria-pressed={active}
       className="w-full flex items-center gap-4 p-[14px] rounded-[18px] mb-2 text-left transition-[background,border-color] duration-150 active:scale-[0.97]"
       style={{
         background: active ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "transparent",

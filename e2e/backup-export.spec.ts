@@ -11,9 +11,12 @@ test("encrypted backup export stays inside an explicit save gesture", async ({ p
   await expect(page.getByRole("heading", { name: "Backup versleutelen" })).toBeVisible();
   await page.getByRole("button", { name: "Doorgaan" }).click();
 
-  const passwordInputs = page.locator('input[type="password"]');
-  await passwordInputs.nth(0).fill("test-pass-123");
-  await passwordInputs.nth(1).fill("test-pass-123");
+  // Deze twee velden leunden op hun placeholder. Die is geen toegankelijke naam
+  // en verdwijnt zodra je typt, dus wie ze met VoiceOver opende hoorde twee
+  // naamloze gemaskeerde velden. Het gaat om een wachtwoord dat KinkSync niet
+  // kan herstellen. getByLabel vindt ze alleen als die naam er echt staat.
+  await page.getByLabel("Back-upwachtwoord, minimaal 8 tekens").fill("test-pass-123");
+  await page.getByLabel("Herhaal het back-upwachtwoord").fill("test-pass-123");
   await page.getByRole("button", { name: "Versleutelen" }).click();
 
   await expect(page.getByRole("heading", { name: "Back-up klaar" })).toBeVisible({ timeout: 15_000 });
