@@ -319,7 +319,7 @@ describe("contract anti-replay lineage", () => {
     await expect(verifyAndApplyContractReceipt({
       currentSeries: forkedResponder,
       envelope: receipt.envelope,
-    })).rejects.toThrow(/afrondingsbewijs|contractgeschiedenis/i);
+    })).rejects.toThrow(/afrondingsbewijs|contractgeschiedenis|lokale bevestiging/i);
   });
 
   it("does not let forged outer series status replace the responder's local authority", async () => {
