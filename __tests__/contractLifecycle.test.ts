@@ -216,10 +216,10 @@ describe("contract lifecycle", () => {
       trustedActor,
       responder,
       ownerKey: responderKey,
-    })).rejects.toThrow("ongeldig of verlopen");
+    })).rejects.toThrow(/ongeldig|profielidentiteit|contractgeschiedenis/i);
   });
 
-  it("completes activation, pause acknowledgement and mutual resume through two-device proofs", async () => {
+  it("completes activation, pause acknowledgement and mutual resume with one convergent tail on both devices", async () => {
     const a = profile("a-dom", "A");
     const b = profile("b-sub", "B");
     const keyA = await generateProfileOwnerKey(a.id);
@@ -231,12 +231,13 @@ describe("contract lifecycle", () => {
     expect(await verifyContractRequest(signing.envelope)).toBe(true);
     const signed = await createContractResponse({ envelope: signing.envelope, trustedActor: a, responder: b, ownerKey: keyB });
     const responderSeries = structuredClone(signed.series);
-    signed.envelope.series!.status = "stopped";
-    signed.envelope.series!.events = [];
-    signed.envelope.series!.versions[0].summary.matchCount = 999;
-    const active = await verifyAndApplyContractResponse({ currentSeries: signing.series, envelope: signed.envelope });
+    const tamperedResponse = structuredClone(signed.envelope);
+    tamperedResponse.series!.status = "stopped";
+    tamperedResponse.series!.versions[0].summary.matchCount = 999;
+    const active = await verifyAndApplyContractResponse({ currentSeries: signing.series, envelope: tamperedResponse });
     expect(active.status).toBe("active");
     expect(active.events).toHaveLength(2);
+    expect(active.events.at(-1)?.eventHash).toBe(responderSeries.events.at(-1)?.eventHash);
     expect(active.versions[0].summary.matchCount).toBe(1);
     expect(active.versions[0].signatures).toHaveLength(2);
 
@@ -253,9 +254,10 @@ describe("contract lifecycle", () => {
     });
     expect(receipt.series.events.at(-1)?.type).toBe("receipt_confirmed");
     expect(finalizedResponder.events.at(-1)?.type).toBe("receipt_confirmed");
+    expect(finalizedResponder.events.at(-1)?.eventHash).toBe(receipt.series.events.at(-1)?.eventHash);
 
     const pausing = await createContractRequest({
-      series: active,
+      series: receipt.series,
       action: "pause",
       actor: a,
       counterparty: b,
@@ -264,17 +266,43 @@ describe("contract lifecycle", () => {
       note: "Eerst opnieuw bespreken.",
     });
     expect(pausing.series.status).toBe("paused");
-    const pauseAck = await createContractResponse({ envelope: pausing.envelope, trustedActor: a, responder: b, ownerKey: keyB });
+    const pauseAck = await createContractResponse({
+      envelope: pausing.envelope,
+      trustedActor: a,
+      responder: b,
+      ownerKey: keyB,
+      currentSeries: finalizedResponder,
+    });
     const paused = await verifyAndApplyContractResponse({ currentSeries: pausing.series, envelope: pauseAck.envelope });
     expect(paused.status).toBe("paused");
-    expect(paused.events.some((event) => event.type === "pause_acknowledged")).toBe(true);
+    expect(paused.events.at(-1)?.eventHash).toBe(pauseAck.series.events.at(-1)?.eventHash);
 
-    const resuming = await createContractRequest({ series: paused, action: "resume", actor: a, counterparty: b, ownerKey: keyA });
+    const pauseReceipt = await createContractReceipt({
+      series: paused,
+      request: pausing.series.pendingRequest!,
+      responseProof: pauseAck.envelope.responderProof!,
+      actor: a,
+      ownerKey: keyA,
+    });
+    const responderPaused = await verifyAndApplyContractReceipt({
+      currentSeries: pauseAck.series,
+      envelope: pauseReceipt.envelope,
+    });
+    expect(responderPaused.events.at(-1)?.eventHash).toBe(pauseReceipt.series.events.at(-1)?.eventHash);
+
+    const resuming = await createContractRequest({ series: pauseReceipt.series, action: "resume", actor: a, counterparty: b, ownerKey: keyA });
     expect(resuming.series.status).toBe("resume_pending");
-    const resumeAck = await createContractResponse({ envelope: resuming.envelope, trustedActor: a, responder: b, ownerKey: keyB });
+    const resumeAck = await createContractResponse({
+      envelope: resuming.envelope,
+      trustedActor: a,
+      responder: b,
+      ownerKey: keyB,
+      currentSeries: responderPaused,
+    });
     const resumed = await verifyAndApplyContractResponse({ currentSeries: resuming.series, envelope: resumeAck.envelope });
     expect(resumed.status).toBe("active");
     expect(resumed.events.at(-1)?.type).toBe("resumed");
+    expect(resumed.events.at(-1)?.eventHash).toBe(resumeAck.series.events.at(-1)?.eventHash);
   });
 
   it("rejects a receipt that points at a different response proof", async () => {
@@ -320,6 +348,7 @@ describe("contract lifecycle", () => {
       trustedActor: a,
       responder: b,
       ownerKey: rogueKeyB,
+      currentSeries: signed.series,
     })).rejects.toThrow("eerder bevestigde contractpartij");
   });
 

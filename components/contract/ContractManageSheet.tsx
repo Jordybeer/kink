@@ -11,9 +11,9 @@ import {
   contractBucket,
   currentContractVersion,
   type ContractAction,
-  type ContractExchangeEnvelope,
   type ContractSeries,
 } from "@/lib/contractLifecycle";
+import type { ContractLineageEnvelope } from "@/lib/contractLineage";
 import {
   createContractReceipt,
   createContractRequest,
@@ -177,15 +177,26 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
   }
 
   function showPendingRequest() {
-    if (!workingSeries.pendingRequest) return;
-    const envelope: ContractExchangeEnvelope = {
+    const request = workingSeries.pendingRequest;
+    if (!request) return;
+    const event = workingSeries.events.at(-1);
+    if (!event
+      || event.requestId !== request.requestId
+      || event.actorProfileId !== request.actorProfileId
+      || event.counterpartyProfileId !== request.counterpartyProfileId
+      || (event.previousEventHash ?? null) !== (request.previousEventHash ?? null)) {
+      setError("De lokale contractgeschiedenis voor dit openstaande verzoek ontbreekt of is verouderd.");
+      return;
+    }
+    const envelope: ContractLineageEnvelope = {
       schema: 1,
       kind: "request",
-      request: workingSeries.pendingRequest,
+      request,
       series: workingSeries,
+      event,
     };
     setEncoded(encodeContractEnvelope(envelope));
-    setAction(workingSeries.pendingRequest.action);
+    setAction(request.action);
     setView("qr");
   }
 

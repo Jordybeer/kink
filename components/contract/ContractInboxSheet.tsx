@@ -10,6 +10,7 @@ import {
   contractVersionById,
   formatContractTimestamp,
   type ContractExchangeEnvelope,
+  type ContractSeries,
 } from "@/lib/contractLifecycle";
 import {
   createContractResponse,
@@ -40,6 +41,15 @@ function actionButton(action: ContractExchangeEnvelope["request"]["action"]): st
   if (action === "pause" || action === "stop") return "Ontvangst bevestigen";
   if (action === "resume") return "Hervatting bevestigen";
   return "Heractivering bevestigen";
+}
+
+function authoritativeLocalSeries(envelope: ContractExchangeEnvelope): ContractSeries | null {
+  const transportSeries = envelope.series;
+  if (!transportSeries) return null;
+  const local = useContractStore.getState().series;
+  return local.find((series) => series.id === envelope.request.seriesId)
+    ?? local.find((series) => series.pairKey === transportSeries.pairKey)
+    ?? null;
 }
 
 export default function ContractInboxSheet({ open, onClose }: Props) {
@@ -86,8 +96,9 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       if (!trustedActor) {
         throw new Error("Importeer eerst het geverifieerde profiel van de andere contractpartij.");
       }
-      if (!await verifyContractRequest(envelope, trustedActor)) {
-        throw new Error("De contractcode hoort niet bij de lokaal geverifieerde profielidentiteit.");
+      const currentSeries = authoritativeLocalSeries(envelope);
+      if (!await verifyContractRequest(envelope, trustedActor, currentSeries)) {
+        throw new Error("Dit verzoek is verouderd, hoort niet bij de actuele contractgeschiedenis of gebruikt een andere profielidentiteit.");
       }
       const responder = profiles.find((profile) => profile.id === envelope.request.counterpartyProfileId);
       if (!responder) throw new Error("Het profiel waarvoor dit verzoek bestemd is staat niet op dit toestel.");
@@ -115,11 +126,13 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       if (!ownerKey) throw new Error("De eigendomssleutel ontbreekt.");
       const trustedActor = profiles.find((profile) => profile.id === requestEnvelope.request.actorProfileId);
       if (!trustedActor) throw new Error("Het geverifieerde profiel van de andere contractpartij ontbreekt.");
+      const currentSeries = authoritativeLocalSeries(requestEnvelope);
       const result = await createContractResponse({
         envelope: requestEnvelope,
         trustedActor,
         responder: sealed,
         ownerKey,
+        currentSeries,
       });
       upsertSeries(result.series);
       setResponseEncoded(encodeContractEnvelope(result.envelope));
@@ -210,7 +223,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
               </div>
 
               <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                De profielidentiteit en contracthash zijn cryptografisch gecontroleerd. Controleer ook zelf of namen, rollen en afspraken kloppen voordat je bevestigt.
+                De profielidentiteit, contracthash en aansluiting op de lokale contractgeschiedenis zijn gecontroleerd. Controleer ook zelf of namen, rollen en afspraken kloppen voordat je bevestigt.
               </p>
               <button
                 type="button"
