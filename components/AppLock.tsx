@@ -99,7 +99,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
           boxShadow: "0 8px 32px var(--scrim)",
         }}
       >
-        <h2 style={{ margin: "0 0 0.25rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
+        <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
           KinkSync ontgrendelen
         </h2>
 
@@ -186,6 +186,10 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                     fontSize: "1.375rem",
                     opacity: (!k || cooldownLeft > 0) ? (k ? 0.4 : 0) : 1,
                     transition: "opacity 150ms ease, background 150ms ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
                   }}
                 >
                   {k === "backspace" ? <Backspace size={20} aria-hidden="true" /> : k}
