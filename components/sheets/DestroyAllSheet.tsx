@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Sheet from "@/components/ui/Sheet";
+import { runtimeCachesToPurge } from "@/lib/offlineRoutes";
 
 const DESTROY_PHRASE = "wis alles";
 
@@ -12,8 +13,31 @@ interface DestroyAllSheetProps {
 export default function DestroyAllSheet({ open, onClose }: DestroyAllSheetProps) {
   const [phrase, setPhrase] = useState("");
 
-  function handleDestroy() {
-    localStorage.clear();
+  /**
+   * "Alles" moet ook echt alles zijn.
+   *
+   * localStorage was maar één van de laden. sessionStorage houdt de unlock-vlag
+   * en de open/dicht-stand van de profiellijst vast, en de runtime-caches
+   * bewaren bezochte URL's als sleutel. Geen ervan bevat antwoorden, maar de knop
+   * belooft "permanent" en "alle", en dat woord hoort te kloppen.
+   *
+   * Eerst ruimde dit alleen `kinksync-pages` op. Te weinig: Serwist zet er via
+   * `defaultCache` nog een stuk of vijftien naast. Nu gaat elke runtime-bucket
+   * eruit, zie `runtimeCachesToPurge`.
+   *
+   * De precache blijft juist wél staan. Daar zit de app zelf in. Wie offline
+   * alles wist en daarna herlaadt, moet nog steeds een werkende app terugkrijgen
+   * in plaats van een wit scherm.
+   */
+  async function handleDestroy() {
+    try { localStorage.clear(); } catch { /* een kluis die niet opengaat, blijft dicht */ }
+    try { sessionStorage.clear(); } catch { /* idem */ }
+    try {
+      if (typeof caches !== "undefined") {
+        const names = await caches.keys();
+        await Promise.all(runtimeCachesToPurge(names).map((name) => caches.delete(name)));
+      }
+    } catch { /* de cache opruimen mag het wissen nooit tegenhouden */ }
     window.location.reload();
   }
 

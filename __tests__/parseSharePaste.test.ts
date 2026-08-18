@@ -4,9 +4,16 @@ import { buildProfileQrSet } from "@/lib/profileQr";
 import { PROFILE_SHARE_INPUT_MAX_CHARS } from "@/lib/importLimits";
 
 describe("parseSharePaste", () => {
-  it("extracts a legacy profile payload from a share URL", () => {
+  it("weigert een profiel dat in de querystring wil reizen", () => {
+    // ?p= gaat wel degelijk naar de server. Het fragment niet. Alleen de tweede
+    // vorm heeft KinkSync ooit gemaakt, dus alleen die komt binnen.
     expect(parseSharePaste("https://kink.example/?p=eyJ2IjoyfQ"))
-      .toEqual({ kind: "profile", encoded: "eyJ2IjoyfQ" });
+      .toEqual({ kind: "invalid" });
+  });
+
+  it("laat de losse code van zo'n oude link wel gewoon toe", () => {
+    expect(parseSharePaste("eyJ2IjoyfQeyJ2IjoyfQeyJ2IjoyfQ"))
+      .toEqual({ kind: "profile", encoded: "eyJ2IjoyfQeyJ2IjoyfQeyJ2IjoyfQ" });
   });
 
   it("extracts lossless v3 from the URL fragment", () => {

@@ -16,6 +16,7 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import { useStore } from "@/lib/store";
 import { RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
+import { sanitizeBdsmtestUrl } from "@/lib/profileSanitizePrimitives";
 import {
   QUESTIONNAIRE_INTERESTS,
   QUESTIONNAIRE_MODES,
@@ -107,8 +108,10 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
       return;
     }
 
+    // Eén regel, één plek: de sanitizer op de vertrouwensgrens beslist ook hier,
+    // zodat het formulier en de importdeur nooit uit elkaar kunnen lopen.
     const cleanBdsmtestUrl = bdsmtestUrl.trim();
-    if (cleanBdsmtestUrl && !/^https?:\/\/(www\.)?bdsmtest\.org\//i.test(cleanBdsmtestUrl)) {
+    if (cleanBdsmtestUrl && !sanitizeBdsmtestUrl(cleanBdsmtestUrl)) {
       setError("De BDSMTest-link moet beginnen met https://bdsmtest.org/.");
       return;
     }
