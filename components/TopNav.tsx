@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { routeChromeSemantics } from "@/lib/routeSemantics";
 import ContextMenu from "@/components/ui/ContextMenu";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
@@ -186,10 +187,10 @@ export default function TopNav() {
   }
 
   const sceneMatch = path.match(/^\/scenes\/([^/]+)/);
-  const { title: routeTitle, back } = focusedRoute(path, {
+  const route = routeChromeSemantics(path, {
     sceneTitle: sceneMatch ? scenes.find((scene) => scene.id === sceneMatch[1])?.title : undefined,
   });
-  const title = contextualTitle ?? routeTitle;
+  const title = contextualTitle ?? route.title;
   const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
     ? contextualTitle.split(" · ", 2)
     : null;
@@ -206,7 +207,7 @@ export default function TopNav() {
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
       <nav className={`relative ${navWidth} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
         <MotionLink
-          href={back}
+          href={route.back}
           whileTap={t.tap}
           className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
           style={{ color: "var(--text2)" }}
@@ -346,27 +347,4 @@ function navWidthForRoute(path: string): string {
     return "max-w-3xl";
   }
   return "max-w-2xl";
-}
-
-function focusedRoute(
-  path: string,
-  dyn: { sceneTitle?: string },
-): { title: string; back: string } {
-  if (path === "/profile") return { title: "Profiel", back: "/" };
-  if (/^\/profile\/[^/]+\/questions$/.test(path)) {
-    return { title: "Vragenlijst", back: path.replace(/\/questions$/, "") };
-  }
-  if (path.startsWith("/profile/")) return { title: "Profiel", back: "/" };
-  if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
-  if (path === "/scenes") return { title: "Scènes", back: "/" };
-  if (path === "/compare") return { title: "Vergelijk", back: "/" };
-  if (path === "/timeline") return { title: "Verloop", back: "/" };
-  if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
-  if (path === "/security") return { title: "Security & privacy", back: "/about" };
-  if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
-  if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
-  if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
-  if (path === "/contracts") return { title: "Contracten", back: "/" };
-  if (path === "/contract") return { title: "Contract opstellen", back: "/compare" };
-  return { title: "KinkSync", back: "/" };
 }
