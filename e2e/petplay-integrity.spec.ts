@@ -53,6 +53,20 @@ test.describe("Alle lokale data verwijderen", () => {
       },
     };
 
+    // Keep this deliberately locked persisted store accessible to the test only
+    // while it still exists. After destroyAllLocalData clears the store, the
+    // reload must not recreate the session unlock marker.
+    await page.addInitScript(() => {
+      try {
+        const raw = localStorage.getItem("kink-profiles");
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as { state?: { appLockEnabled?: boolean } };
+        if (parsed.state?.appLockEnabled === true) sessionStorage.setItem("app_unlocked", "1");
+      } catch {
+        // A malformed store should not make the test bootstrap mutate storage.
+      }
+    });
+
     await page.goto("/");
     await page.evaluate(async (store) => {
       localStorage.setItem("kink-profiles", JSON.stringify(store));
