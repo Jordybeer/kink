@@ -19,7 +19,7 @@ test("home opens a compact human-first KinkSync story", async ({ page }) => {
   const [eyebrowBox, headingBox] = await Promise.all([eyebrow.boundingBox(), heading.boundingBox()]);
   expect(eyebrowBox).not.toBeNull();
   expect(headingBox).not.toBeNull();
-  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(8);
+  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(12);
 
   const promiseBoxes = await page.getByTestId("about-promises").locator(":scope > div").evaluateAll((nodes) =>
     nodes.map((node) => {

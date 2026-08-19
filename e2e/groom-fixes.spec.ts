@@ -1,27 +1,84 @@
 import { test, expect } from "@playwright/test";
-import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
+import {
+  CONTRACT_SERIES_ALEX_SAM,
+  PROFILE_ALEX,
+  PROFILE_SAM,
+  seedAndGo,
+} from "./fixtures";
 
 test.describe("Phase groom — review fixes (mobile)", () => {
-  test("ProfileSnapshotPanel: save CTA → confirmation → CTA returns", async ({ page }) => {
+  test("ProfileSnapshotPanel: only meaningful automatic status changes surface", async ({ page }) => {
     await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
 
-    const saveBtn = page.getByRole("button", { name: "Sla dit moment op" });
-    await expect(saveBtn).toBeVisible();
-    await saveBtn.scrollIntoViewIfNeeded();
-    await saveBtn.dispatchEvent("click");
+    await expect(page.getByRole("button", { name: "Sla dit moment op" })).toHaveCount(0);
+    await expect(page.getByTestId("profile-history-panel")).toHaveCount(0);
 
-    await expect(page.getByText("✓ Moment opgeslagen")).toBeVisible();
-
-    // Confirmation lives for ~1.6s, then the CTA should return
-    await expect(saveBtn).toBeVisible({ timeout: 3000 });
-
-    const snapshots = await page.evaluate(() => {
+    await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as { state?: { profileSnapshots?: unknown[] } };
-      return parsed.state?.profileSnapshots ?? [];
+      if (!raw) throw new Error("KinkSync store ontbreekt");
+      const parsed = JSON.parse(raw) as {
+        state: {
+          profiles: Array<{
+            id: string;
+            entries: Record<string, { status?: string | null; [key: string]: unknown }>;
+            customKinks?: Array<{ id: string; name: string }>;
+          }>;
+          profileSnapshots: unknown[];
+        };
+      };
+      const profile = parsed.state.profiles.find((candidate) => candidate.id === "pw-alex-001");
+      if (!profile) throw new Error("Testprofiel ontbreekt");
+
+      const latestEntries = structuredClone(profile.entries);
+      const olderEntries = structuredClone(profile.entries);
+      olderEntries.spanking_hand_give = {
+        ...olderEntries.spanking_hand_give,
+        status: "maybe",
+      };
+      const counts = { yes: 0, willing: 0, maybe: 0, no: 0, hard_no: 0 };
+      parsed.state.profileSnapshots = [
+        {
+          id: "profile-moment-older",
+          profileId: profile.id,
+          date: 1700000000000,
+          entries: olderEntries,
+          customKinks: profile.customKinks ?? [],
+          counts,
+        },
+        {
+          id: "profile-moment-latest",
+          profileId: profile.id,
+          date: 1700086400000,
+          entries: latestEntries,
+          customKinks: profile.customKinks ?? [],
+          counts,
+        },
+      ];
+      localStorage.setItem("kink-profiles", JSON.stringify(parsed));
     });
-    expect(snapshots.length).toBe(1);
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    const history = page.getByTestId("profile-history-panel");
+    await expect(history).toBeVisible();
+    await expect(history).toContainText("Spanking");
+    await expect(history).toContainText("Misschien");
+    await expect(history).toContainText("Heel graag");
+    await expect(page.getByRole("button", { name: "Sla dit moment op" })).toHaveCount(0);
+  });
+
+  test("legacy timeline pair opens the current contract history", async ({ page }) => {
+    await seedAndGo(
+      page,
+      "/timeline?a=pw-alex-001&b=pw-sam-002",
+      [PROFILE_ALEX, PROFILE_SAM],
+      { contractSeries: [CONTRACT_SERIES_ALEX_SAM] },
+    );
+
+    await expect(page).toHaveURL(/\/contracts\/pw-contract-series-alex-sam\/history$/);
+    await expect(page.getByRole("tab", { name: "Gebeurtenissen" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Getekende versies" })).toBeVisible();
   });
 
   test("DiscussedToggle: hidden until a kink is marked besproken", async ({ page }) => {
