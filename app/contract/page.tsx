@@ -16,8 +16,8 @@ import SignaturePad from "@/components/contract/SignaturePad";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildPreamble } from "@/lib/contractPreamble";
-import { STATUS_LABEL as STATUS_NL, statusPairRank } from "@/lib/statusLabels";
-import { isKinkDetail, DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
+import { statusPairRank } from "@/lib/statusLabels";
+import { DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
 import type { Signals } from "@/lib/contractPdf";
 import { comparableEntry } from "@/lib/privateResponses";
 import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
@@ -76,6 +76,9 @@ function ContractPage() {
       </PageShell>
     );
   }
+
+  const selectedProfileA = profileA;
+  const selectedProfileB = profileB;
 
   type KinkDetail = {
     name: string;
@@ -179,8 +182,8 @@ function ContractPage() {
   function baseContractContent(): ContractVersionContent {
     return {
       schema: 1,
-      profileA: contractParticipantFromProfile(profileA),
-      profileB: contractParticipantFromProfile(profileB),
+      profileA: contractParticipantFromProfile(selectedProfileA),
+      profileB: contractParticipantFromProfile(selectedProfileB),
       preamble,
       createdAt: Date.now(),
       ...(useRealNames ? { realNameA: trimmedRealNameA, realNameB: trimmedRealNameB } : {}),
