@@ -129,8 +129,11 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
         actor,
         ownerKey,
       });
-      upsertSeries(receipt.series);
+      // A newly active version must never be persisted without its definitive
+      // human-readable artifact. If PDF capture fails, the pending request
+      // remains available for a safe retry instead of recording half a result.
       await ensureContractPdfArtifact(receipt.series, request.versionId);
+      upsertSeries(receipt.series);
       setCurrentSeries(receipt.series);
       setEncoded(encodeContractEnvelope(receipt.envelope));
       setPhase("receipt");
