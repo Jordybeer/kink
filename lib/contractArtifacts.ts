@@ -63,16 +63,57 @@ function openDb(): Promise<IDBDatabase> {
 
 async function transact<T>(
   mode: IDBTransactionMode,
-  run: (store: IDBObjectStore, resolve: (value: T) => void, reject: (reason?: unknown) => void) => void,
+  run: (
+    store: IDBObjectStore,
+    succeed: (value: T) => void,
+    fail: (reason?: unknown) => void,
+  ) => void,
 ): Promise<T> {
   const db = await openDb();
   return new Promise<T>((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, mode);
     const store = transaction.objectStore(STORE_NAME);
-    transaction.oncomplete = () => db.close();
-    transaction.onerror = () => { db.close(); reject(transaction.error); };
-    transaction.onabort = () => { db.close(); reject(transaction.error); };
-    run(store, resolve, reject);
+    let hasResult = false;
+    let result!: T;
+    let requestError: unknown = null;
+
+    const succeed = (value: T) => {
+      result = value;
+      hasResult = true;
+    };
+    const fail = (reason?: unknown) => {
+      requestError = reason ?? new Error("Lokale documentopslag kon de bewerking niet afronden");
+      try { transaction.abort(); } catch { /* transaction may already be aborting */ }
+    };
+
+    transaction.oncomplete = () => {
+      db.close();
+      if (requestError) {
+        reject(requestError);
+        return;
+      }
+      if (!hasResult) {
+        reject(new Error("Lokale documentopslag gaf geen resultaat"));
+        return;
+      }
+      resolve(result);
+    };
+    transaction.onerror = () => {
+      const error = requestError ?? transaction.error ?? new Error("Lokale documentopslag is mislukt");
+      db.close();
+      reject(error);
+    };
+    transaction.onabort = () => {
+      const error = requestError ?? transaction.error ?? new Error("Lokale documentopslag is afgebroken");
+      db.close();
+      reject(error);
+    };
+
+    try {
+      run(store, succeed, fail);
+    } catch (error) {
+      fail(error);
+    }
   });
 }
 
@@ -95,10 +136,10 @@ export async function putContractPdfArtifact(input: {
     createdAt: input.createdAt ?? Date.now(),
     bytes,
   };
-  await transact<void>("readwrite", (store, resolve, reject) => {
+  await transact<void>("readwrite", (store, succeed, fail) => {
     const request = store.put(artifact);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => succeed();
+    request.onerror = () => fail(request.error);
   });
   return artifact;
 }
@@ -107,10 +148,10 @@ export async function getContractPdfArtifact(
   seriesId: string,
   versionId: string,
 ): Promise<ContractPdfArtifact | null> {
-  const artifact = await transact<ContractPdfArtifact | null>("readonly", (store, resolve, reject) => {
+  const artifact = await transact<ContractPdfArtifact | null>("readonly", (store, succeed, fail) => {
     const request = store.get(artifactKey(seriesId, versionId));
-    request.onsuccess = () => resolve((request.result as ContractPdfArtifact | undefined) ?? null);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => succeed((request.result as ContractPdfArtifact | undefined) ?? null);
+    request.onerror = () => fail(request.error);
   });
   if (!artifact) return null;
   if (artifact.pdfHash !== await sha256Base64Url(artifact.bytes)) return null;
@@ -126,13 +167,14 @@ export async function deleteAllContractArtifacts(): Promise<void> {
       transaction.objectStore(STORE_NAME).clear();
       transaction.oncomplete = () => { db.close(); resolve(); };
       transaction.onerror = () => { db.close(); reject(transaction.error); };
+      transaction.onabort = () => { db.close(); reject(transaction.error); };
     });
   } catch {
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       const request = indexedDB.deleteDatabase(DB_NAME);
       request.onsuccess = () => resolve();
-      request.onerror = () => resolve();
-      request.onblocked = () => resolve();
+      request.onerror = () => reject(request.error ?? new Error("Getekende contractdocumenten konden niet worden verwijderd"));
+      request.onblocked = () => reject(new Error("Getekende contractdocumenten zijn nog open in een ander tabblad"));
     });
   }
 }
@@ -141,10 +183,10 @@ export async function exportContractPdfArtifacts(): Promise<SerializedContractPd
   if (typeof indexedDB === "undefined") return [];
   let artifacts: ContractPdfArtifact[];
   try {
-    artifacts = await transact<ContractPdfArtifact[]>("readonly", (store, resolve, reject) => {
+    artifacts = await transact<ContractPdfArtifact[]>("readonly", (store, succeed, fail) => {
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result as ContractPdfArtifact[]);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => succeed(request.result as ContractPdfArtifact[]);
+      request.onerror = () => fail(request.error);
     });
   } catch {
     return [];
