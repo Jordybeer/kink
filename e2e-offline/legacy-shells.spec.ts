@@ -87,7 +87,7 @@ test("legacy profile, timeline and scene urls keep useful fixed-shell fallbacks 
     waitUntil: "domcontentloaded",
   });
   await expect(page).toHaveURL(/\/contracts$/);
-  await expect(page.getByRole("heading", { name: "Contracten" })).toBeAttached();
+  await expect(page.getByRole("heading", { name: "Contracten", exact: true })).toBeAttached();
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
 
   await page.goto("/scenes/scene-born-offline", {
