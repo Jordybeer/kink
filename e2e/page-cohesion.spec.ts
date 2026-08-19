@@ -74,6 +74,24 @@ test.describe("Page cohesion contracts", () => {
     expect(Math.max(...boxes.map((box) => box!.y)) - Math.min(...boxes.map((box) => box!.y))).toBeLessThan(2);
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
+
+  test("contracteditor gebruikt TopNav als enige routeheader en schaalt acties mobiel", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedAndGo(page, "/contract?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+
+    await expect(page.getByRole("link", { name: "Terug" })).toHaveCount(1);
+    await expect(page.getByText("Teken het contract", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Alex × Sam" })).toBeVisible();
+    await expect(page.getByText("Stel de afspraken samen; het ondertekende document blijft de formele weergave.", { exact: true })).toBeVisible();
+
+    const pdf = page.getByRole("button", { name: /Opslaan als PDF/ });
+    const sign = page.getByRole("button", { name: "Contract bewaren of tekenen" });
+    const [pdfBox, signBox] = await Promise.all([pdf.boundingBox(), sign.boundingBox()]);
+    expect(pdfBox).not.toBeNull();
+    expect(signBox).not.toBeNull();
+    expect(signBox!.y).toBeGreaterThan(pdfBox!.y);
+    expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
+  });
 });
 
 test.describe("Page cohesion scenes", () => {
@@ -100,5 +118,44 @@ test.describe("Page cohesion scenes", () => {
     expect(secondBox).not.toBeNull();
     expect(Math.abs(firstBox!.y - secondBox!.y)).toBeLessThan(4);
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
+  });
+
+  test("contractgate houdt de kern zichtbaar en zet verdieping in disclosure", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 667 });
+    await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+
+    await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
+    await expect(page.getByText("Voor een scène is een actief bevestigd contract nodig. Kies twee profielen om verder te gaan.", { exact: true })).toBeVisible();
+    const why = page.getByRole("button", { name: "Waarom is dit nodig?" });
+    await expect(why).toHaveAttribute("aria-expanded", "false");
+    await why.click();
+    await expect(why).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByText(/grenzen, verlangens en safewords/i)).toBeVisible();
+  });
+
+  test("scene-item beheer verschijnt pas bij details en blijft toegankelijk", async ({ page }) => {
+    await seedAndGo(page, "/scenes", [PROFILE_ALEX, PROFILE_SAM]);
+    await seedScenes(page);
+    await page.goto("/scene?id=cohesion-scene-1");
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByRole("button", { name: "Naar boven verplaatsen" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Spanking (hand) verwijderen" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Duur, notitie en beheer" }).click();
+    await expect(page.getByRole("button", { name: "Naar boven verplaatsen" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Naar beneden verplaatsen" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Spanking (hand) verwijderen" })).toBeVisible();
+  });
+});
+
+test.describe("Page cohesion profile", () => {
+  test("query- en legacy-profielroute delen dezelfde actieve profieltab", async ({ page }) => {
+    await seedAndGo(page, "/profile?id=pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
+    await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Profiel" })).toHaveAttribute("aria-current", "page");
+
+    await page.goto("/profile/pw-alex-001");
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Profiel" })).toHaveAttribute("aria-current", "page");
   });
 });
