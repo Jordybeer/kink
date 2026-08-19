@@ -7,7 +7,10 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
-import type { ContractSeries, ContractVersionContent } from "@/lib/contractLifecycle";
+import type { ContractSeries } from "@/lib/contractLifecycle";
+import type { ContractContentWithHandwriting } from "@/lib/contractHandwriting";
+import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
+import { ensureContractPdfArtifact } from "@/lib/contractDocument";
 import {
   createContractReceipt,
   createContractRequest,
@@ -23,7 +26,7 @@ interface Props {
   onClose: () => void;
   profileA: Profile;
   profileB: Profile;
-  content: ContractVersionContent;
+  content: ContractContentWithHandwriting;
 }
 
 type Phase = "intro" | "request" | "receipt";
@@ -54,10 +57,17 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
     setError(null);
   }, [open]);
 
+  function assertHandwrittenSignatures() {
+    if (!hasRequiredHandwrittenSignatures(content)) {
+      throw new Error("Beide handgeschreven handtekeningen zijn verplicht voordat dit contract kan worden bewaard of digitaal bevestigd.");
+    }
+  }
+
   async function persistDraft(closeAfter: boolean) {
+    assertHandwrittenSignatures();
     const result = await saveDraft({ profileA, profileB, content });
     if (closeAfter) {
-      showToast({ message: "Concept opgeslagen. Je kunt het later verder bespreken.", variant: "success" });
+      showToast({ message: "Concept met beide handgeschreven handtekeningen opgeslagen.", variant: "success" });
       onClose();
     }
     return result.series;
@@ -67,6 +77,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
     setBusy(true);
     setError(null);
     try {
+      assertHandwrittenSignatures();
       const owned = [profileA, profileB].filter(isOwned);
       if (owned.length !== 1) {
         throw new Error("Open dit contract op het eigen toestel van één deelnemer. De andere deelnemer bevestigt daarna op diens eigen toestel via QR.");
@@ -119,10 +130,14 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
         ownerKey,
       });
       upsertSeries(receipt.series);
+      await ensureContractPdfArtifact(receipt.series, request.versionId);
       setCurrentSeries(receipt.series);
       setEncoded(encodeContractEnvelope(receipt.envelope));
       setPhase("receipt");
-      showToast({ message: "Contract actief. Laat de tweede partij nog het korte afrondingsbewijs scannen.", variant: "success" });
+      showToast({
+        message: "Contract actief. De getekende PDF staat vast in de contractgeschiedenis.",
+        variant: "success",
+      });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Het antwoord kon niet worden gecontroleerd.");
     } finally {
@@ -147,13 +162,13 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               </div>
               <h2 className="mt-3 text-center text-lg font-semibold">Contract bewaren</h2>
               <p className="mt-2 text-center text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Bewaar dit eerst als concept, of start de digitale ondertekening. Activeren vereist twee eigen toestellen en twee profielgebonden handtekeningen.
+                Beide handgeschreven handtekeningen zijn al onderdeel van exact deze versie. Je kunt haar als concept bewaren of de profielgebonden QR-bevestiging starten.
               </p>
               <div className="mt-5 flex flex-col gap-2">
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => void persistDraft(true)}
+                  onClick={() => void persistDraft(true).catch((caught) => setError(caught instanceof Error ? caught.message : "Opslaan mislukt."))}
                   className="focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 >
@@ -167,7 +182,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                   style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                 >
                   <QrCode size={18} aria-hidden="true" />
-                  {busy ? "Voorbereiden…" : "Digitaal ondertekenen"}
+                  {busy ? "Voorbereiden…" : "Digitaal bevestigen via QR"}
                 </button>
               </div>
             </div>
@@ -176,7 +191,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
           {phase === "request" && encoded && currentSeries?.pendingRequest && (
             <ContractQrDisplay
               encoded={encoded}
-              title="Tweede handtekening"
+              title="Tweede digitale bevestiging"
               instruction={requestInstruction(currentSeries.pendingRequest.action)}
               onScanResponse={() => setScannerOpen(true)}
             />
@@ -192,7 +207,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               <div className="mt-4 flex items-start gap-2 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 <CheckCircle size={18} weight="fill" aria-hidden="true" className="mt-0.5 flex-none" style={{ color: "var(--yes)" }} />
                 <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                  Het contract is al actief. Deze laatste scan synchroniseert alleen het cryptografische ontvangstbewijs op het tweede toestel.
+                  Deze contractversie bevat beide handgeschreven én beide cryptografische handtekeningen. De definitieve PDF is lokaal aan precies deze versie gekoppeld.
                 </p>
               </div>
               <button
