@@ -7,8 +7,6 @@ import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import type { EncryptedBackup } from "@/lib/crypto";
-import type { SerializedContractPdfArtifact } from "@/lib/contractArtifacts";
-import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
 
 interface ExportSheetProps {
   open: boolean;
@@ -18,10 +16,6 @@ interface ExportSheetProps {
 interface PreparedExport {
   json: string;
   filename: string;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
@@ -59,8 +53,6 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
     setLoading(true);
     setPwError(null);
     try {
-      const { exportContractPdfArtifacts } = await import("@/lib/contractArtifacts");
-      const contractArtifacts = await exportContractPdfArtifacts();
       const plain = JSON.stringify({
         version: 4,
         source: "backup",
@@ -68,7 +60,6 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
         contracts,
         contractSeries,
         profileOwnerKeys,
-        contractArtifacts,
       });
       const { encryptBackup } = await import("@/lib/crypto");
       const encrypted = await encryptBackup(plain, pw);
@@ -140,7 +131,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               <h2 className="text-base font-bold">Backup versleutelen</h2>
               <div className="flex flex-col gap-3 rounded-xl p-4 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen.</p>
-                <p>De versleutelde backup bevat ook private eigendomssleutels en, wanneer aanwezig, de lokaal bewaarde getekende contract-PDF&apos;s.</p>
+                <p>De versleutelde backup bevat ook private eigendomssleutels en de geverifieerde contractinhoud, inclusief handgeschreven handtekeningen. PDF-bestanden zelf worden niet als vertrouwde backupdata meegenomen; KinkSync maakt ze na herstel opnieuw uit de getekende contractversie.</p>
                 <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="flex items-start gap-1.5 font-semibold" style={{ color: "var(--hard-no)" }}><Warning size={16} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" /><span>Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</span></p>
               </div>
@@ -269,34 +260,16 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         if (prepared.contracts.length) restoreContracts(prepared.contracts);
         const seriesResult = restoreContractSeries(prepared.contractSeries);
 
-        const allowedArtifacts = new Set(
-          prepared.contractSeries.flatMap((series) => series.versions
-            .filter((version) => !version.legacySnapshotId
-              && version.state === "signed"
-              && version.signatures.length === 2
-              && !!version.content
-              && hasRequiredHandwrittenSignatures(version.content))
-            .map((version) => `${series.id}:${version.id}:${version.contentHash}`)),
-        );
-        const contractArtifacts = (Array.isArray(parsed.contractArtifacts) ? parsed.contractArtifacts : [])
-          .filter((candidate): candidate is SerializedContractPdfArtifact => {
-            if (!isRecord(candidate)) return false;
-            if (typeof candidate.seriesId !== "string" || typeof candidate.versionId !== "string" || typeof candidate.contentHash !== "string") return false;
-            return allowedArtifacts.has(`${candidate.seriesId}:${candidate.versionId}:${candidate.contentHash}`);
-          });
-        const { restoreContractPdfArtifacts } = await import("@/lib/contractArtifacts");
-        const artifactChanges = await restoreContractPdfArtifacts(contractArtifacts);
-
         const profileChanges = result.added + result.updated;
         const keyChanges = result.ownerKeysAdded + result.ownerKeysUpdated;
         const seriesChanges = seriesResult.added + seriesResult.updated;
 
-        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0 && seriesChanges === 0 && artifactChanges === 0) {
+        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0 && seriesChanges === 0) {
           message = result.conflicts > 0
             ? `Backup gecontroleerd: niets overschreven; ${result.conflicts} bronconflict(en) veilig overgeslagen.`
             : "Backup gecontroleerd: de bestaande gegevens waren al even nieuw of nieuwer.";
         } else {
-          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s), ${contractsAdded} oud(e) contract(en), ${seriesChanges} contractreeks(en) en ${artifactChanges} getekend(e) PDF-document(en) hersteld.`;
+          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s), ${contractsAdded} oud(e) contract(en) en ${seriesChanges} contractreeks(en) toegevoegd of bijgewerkt. Getekende PDF-documenten worden lokaal opnieuw opgebouwd uit de geverifieerde contractversie wanneer je ze opent.`;
         }
       } else {
         importProfiles(prepared.profiles);
