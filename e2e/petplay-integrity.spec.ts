@@ -41,11 +41,17 @@ test.describe("Contractintegriteit", () => {
 
 test.describe("Alle lokale data verwijderen", () => {
   test("wist ook actieve PIN-state, contractstore, sessie en PDF-artifacts", async ({ page }) => {
-    const seeded = buildStore([PROFILE_ALEX]);
-    seeded.state.appLockEnabled = true;
-    seeded.state.appLockPin = "e2e-pin-hash";
-    seeded.state.biometricEnabled = true;
-    seeded.state.biometricCredentialId = "e2e-credential";
+    const baseStore = buildStore([PROFILE_ALEX]);
+    const seeded = {
+      ...baseStore,
+      state: {
+        ...baseStore.state,
+        appLockEnabled: true,
+        appLockPin: "e2e-pin-hash",
+        biometricEnabled: true,
+        biometricCredentialId: "e2e-credential",
+      },
+    };
 
     await page.goto("/");
     await page.evaluate(async (store) => {
