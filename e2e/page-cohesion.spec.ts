@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import {
   seedAndGo,
   PROFILE_ALEX,
@@ -6,7 +6,7 @@ import {
   CONTRACT_SERIES_ALEX_SAM,
 } from "./fixtures";
 
-async function seedScenes(page: Parameters<typeof test>[0] extends never ? never : any, count = 1) {
+async function seedScenes(page: Page, count = 1) {
   await page.evaluate((sceneCount: number) => {
     const raw = localStorage.getItem("kink-profiles");
     if (!raw) throw new Error("E2E store ontbreekt");
