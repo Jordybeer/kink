@@ -13,8 +13,6 @@ interface EditorialHeadingProps {
   description?: ReactNode;
   testId?: string;
   titleAriaLabel?: string;
-  className?: string;
-  descriptionClassName?: string;
 }
 
 const TITLE_GAP = "clamp(0.875rem, 2.2dvh, 1.25rem)";
@@ -34,8 +32,6 @@ export default function EditorialHeading({
   description,
   testId,
   titleAriaLabel,
-  className = "",
-  descriptionClassName = "",
 }: EditorialHeadingProps) {
   const Heading = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
   const titleClassName = size === "hero"
@@ -43,7 +39,7 @@ export default function EditorialHeading({
     : "text-3xl leading-tight";
 
   return (
-    <div className={`max-w-2xl ${className}`.trim()}>
+    <div className="max-w-2xl">
       <p
         data-testid={testId}
         className="flex min-h-5 w-fit items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
@@ -65,10 +61,7 @@ export default function EditorialHeading({
         {title}
       </Heading>
       {description && (
-        <p
-          className={`mt-4 text-base leading-7 ${descriptionClassName}`.trim()}
-          style={{ color: "var(--text2)" }}
-        >
+        <p className="mt-4 text-base leading-7" style={{ color: "var(--text2)" }}>
           {description}
         </p>
       )}
