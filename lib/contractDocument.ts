@@ -84,12 +84,15 @@ export async function artifactForContractVersion(
   series: ContractSeries,
   versionId: string,
 ): Promise<ContractPdfArtifact | null> {
-  const version = contractVersionById(series, versionId);
-  if (!version) return null;
+  let version: ContractVersion;
+  try {
+    version = signedVersionForDocument(series, versionId);
+  } catch {
+    return null;
+  }
+
   const existing = await getContractPdfArtifact(series.id, versionId);
   if (existing?.contentHash === version.contentHash) return existing;
-  if (!version.content || version.state !== "signed" || version.legacySnapshotId
-    || version.signatures.length !== 2 || !handwrittenSignaturesFromContent(version.content)) return null;
   try {
     return await ensureContractPdfArtifact(series, versionId);
   } catch {
