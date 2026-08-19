@@ -5,9 +5,14 @@ test("home opens a compact human-first KinkSync story", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
 
-  const link = page.getByRole("link", { name: "Ontdek hoe KinkSync werkt" });
-  await expect(link).toHaveAttribute("href", "/about");
-  await link.click();
+  const nav = page.getByLabel("Hoofdnavigatie");
+  const more = nav.getByRole("button", { name: "Meer over KinkSync" });
+  await expect(more).toBeVisible();
+  await more.click();
+
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await menu.getByRole("menuitem", { name: "Over KinkSync" }).click();
 
   await expect(page).toHaveURL(/\/about$/);
   const heading = page.getByRole("heading", { name: "Jouw voorkeuren. Jouw toestel. Jouw woorden." });
