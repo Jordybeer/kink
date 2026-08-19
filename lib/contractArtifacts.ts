@@ -158,6 +158,27 @@ export async function getContractPdfArtifact(
   return artifact;
 }
 
+export async function deleteContractArtifactsForSeries(seriesId: string): Promise<void> {
+  if (typeof indexedDB === "undefined") return;
+  await transact<void>("readwrite", (store, succeed, fail) => {
+    const request = store.openCursor();
+    request.onerror = () => fail(request.error);
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) {
+        succeed();
+        return;
+      }
+      const artifact = cursor.value as ContractPdfArtifact;
+      if (artifact.seriesId === seriesId) {
+        const deletion = cursor.delete();
+        deletion.onerror = () => fail(deletion.error);
+      }
+      cursor.continue();
+    };
+  });
+}
+
 export async function deleteAllContractArtifacts(): Promise<void> {
   if (typeof indexedDB === "undefined") return;
   try {
