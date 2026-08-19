@@ -13,6 +13,7 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
+import EditorialHeading from "@/components/ui/EditorialHeading";
 
 const rules = [
   {
@@ -95,27 +96,16 @@ export default function AboutPage() {
           style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)" }}
         />
         <div className="relative z-10 max-w-3xl">
-          <p
-            data-testid="about-eyebrow"
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
-            style={{ color: "var(--accent)" }}
-          >
-            <ShieldCheck size={16} weight="fill" aria-hidden="true" />
-            Privacy door ontwerp
-          </p>
-          <div className="mt-3">
-            <h1
-              aria-label="Jouw voorkeuren. Jouw toestel. Jouw woorden."
-              className="serif-safe max-w-2xl text-4xl leading-[1.02] sm:text-5xl"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-            >
-              Jouw voorkeuren.<br />
-              Jouw toestel. Jouw woorden.
-            </h1>
-          </div>
-          <p className="mt-4 max-w-2xl text-base leading-7" style={{ color: "var(--text2)" }}>
-            KinkSync helpt mensen praten over voorkeuren, grenzen en afspraken. Je krijgt structuur voor het gesprek zonder dat de app voor jou beslist.
-          </p>
+          <EditorialHeading
+            level={1}
+            size="hero"
+            eyebrow="Privacy door ontwerp"
+            icon={<ShieldCheck size={16} weight="fill" aria-hidden="true" />}
+            title={<><span>Jouw voorkeuren.</span><br />Jouw toestel. Jouw woorden.</>}
+            titleAriaLabel="Jouw voorkeuren. Jouw toestel. Jouw woorden."
+            description="KinkSync helpt mensen praten over voorkeuren, grenzen en afspraken. Je krijgt structuur voor het gesprek zonder dat de app voor jou beslist."
+            testId="about-eyebrow"
+          />
 
           <div
             data-testid="about-promises"
@@ -248,22 +238,15 @@ export default function AboutPage() {
         aria-labelledby="community-title"
       >
         <div className="relative z-10">
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
-            <MapPin size={16} weight="fill" aria-hidden="true" />
-            Community in België
-          </p>
-          <div className="mt-3">
-            <h2
-              id="community-title"
-              className="serif-safe max-w-xl text-3xl leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-            >
-              Kink gebeurt ook buiten je scherm
-            </h2>
-          </div>
-          <p className="mt-3 max-w-2xl text-[15px] leading-6" style={{ color: "var(--text2)" }}>
-            KinkSync kan het gesprek openen. Wil je daarna tussen echte mensen staan, dan zijn dit twee Belgische plekken om zelf verder te ontdekken.
-          </p>
+          <EditorialHeading
+            level={2}
+            size="section"
+            eyebrow="Community in België"
+            icon={<MapPin size={16} weight="fill" aria-hidden="true" />}
+            title="Kink gebeurt ook buiten je scherm"
+            id="community-title"
+            description="KinkSync kan het gesprek openen. Wil je daarna tussen echte mensen staan, dan zijn dit twee Belgische plekken om zelf verder te ontdekken."
+          />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {communityPlaces.map((place) => (
@@ -321,20 +304,7 @@ export default function AboutPage() {
 }
 
 function SectionHeading({ eyebrow, title, id }: { eyebrow: string; title: string; id: string }) {
-  return (
-    <div className="max-w-2xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>{eyebrow}</p>
-      <div className="mt-3">
-        <h2
-          id={id}
-          className="serif-safe text-3xl leading-tight"
-          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-        >
-          {title}
-        </h2>
-      </div>
-    </div>
-  );
+  return <EditorialHeading level={2} size="section" eyebrow={eyebrow} title={title} id={id} />;
 }
 
 function CheckRow({ children, muted = false }: { children: React.ReactNode; muted?: boolean }) {
