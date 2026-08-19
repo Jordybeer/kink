@@ -13,9 +13,9 @@ import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavCont
 import type { SceneRecord } from "@/types";
 
 const TRAFFIC = {
-  green: { label: "Geweldig",    color: "var(--yes)"     },
-  amber: { label: "Goed, maar…", color: "var(--maybe)"   },
-  red:   { label: "Zwaar",        color: "var(--hard-no)" },
+  green: { label: "Geweldig", color: "var(--yes)" },
+  amber: { label: "Goed, maar…", color: "var(--maybe)" },
+  red: { label: "Zwaar", color: "var(--hard-no)" },
 };
 
 function intensityCounts(items: SceneRecord["items"]) {
@@ -46,10 +46,10 @@ function SceneCard({
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <article className="overflow-hidden rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <article className="rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
       {traffic && (
         <div
-          className="flex items-center gap-2.5 px-4 py-2.5"
+          className="flex items-center gap-2.5 rounded-t-[15px] px-4 py-2.5"
           style={{ background: `color-mix(in srgb, ${traffic.color} 8%, transparent)`, borderBottom: "1px solid var(--border)" }}
         >
           <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: traffic.color }} aria-hidden="true" />
@@ -152,8 +152,8 @@ function SceneCard({
 }
 
 const SECTION_INVITES: Record<string, string> = {
-  planned:   "Niets gepland. Kies een moment en zet het vast.",
-  drafts:    "Geen concepten. Half afgemaakte ideeën wachten hier.",
+  planned: "Niets gepland. Kies een moment en zet het vast.",
+  drafts: "Geen concepten. Half afgemaakte ideeën wachten hier.",
   completed: "Nog niets afgerond. Na het spelen leeft de scène hier verder.",
 };
 
