@@ -3,13 +3,17 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("Home keeps one brand statement and moves product explanation into the TopNav", async ({ page }) => {
+test("Home keeps one brand statement and moves product explanation into the shared context menu", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
 
   await expect(page.getByText("Verken grenzen. Samen.", { exact: true })).toBeVisible();
   await expect(page.getByText("Twee profielen. Eén gesprek.", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Alle stemmen aan tafel. Eén gesprek.", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Ontdek hoe KinkSync werkt" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ontdek hoe KinkSync werkt" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Meer over KinkSync" }).click();
+  await expect(page.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
 });
 
 test("profile notes toggle says what it will do", async ({ page }) => {
