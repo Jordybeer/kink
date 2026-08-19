@@ -36,7 +36,13 @@ function makeProfile(overrides: Partial<Profile> = {}): Profile {
 }
 
 function anchorFor(profile: Profile): ProfileIdentityAnchor {
-  return createProfileIdentityAnchor(profile, "word-one word-two word-three word-four", "in-person", 1234);
+  if (!profile.consentProof) throw new Error("Test profile requires a consent proof");
+  return createProfileIdentityAnchor(
+    profile,
+    profile.consentProof,
+    1234,
+    "source-device-fingerprint",
+  );
 }
 
 describe("anchor-aware profile import classification", () => {
