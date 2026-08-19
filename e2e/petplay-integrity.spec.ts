@@ -10,6 +10,7 @@ import {
 
 const CONTRACT_URL = "/contract?a=pw-alex-001&b=pw-sam-002";
 const PIN_ITERATIONS = 310_000;
+const DESTROY_SEED_QUERY = "e2eDestroySeed=1";
 
 function storedPinHash(pin: string): string {
   const salt = Buffer.from("kinksync-petplay-wipe-pin");
@@ -63,18 +64,19 @@ test.describe("Alle lokale data verwijderen", () => {
       version: 1,
     });
 
-    // Seed before the first application script runs, just like the dedicated
-    // app-lock E2E. Writing a persist store after hydration lets the already
-    // mounted Zustand state win a race on reload and can reopen onboarding.
+    // Seed before the first application script runs, but only for the initial
+    // test URL. DestroyAll reloads the document; by removing this query flag
+    // before destruction, the init script cannot repopulate the cleared stores.
     await page.addInitScript(
-      ({ core, contracts }: { core: string; contracts: string }) => {
+      ({ core, contracts, seedQuery }: { core: string; contracts: string; seedQuery: string }) => {
+        if (!location.search.includes(seedQuery)) return;
         localStorage.setItem("kink-profiles", core);
         localStorage.setItem("kink-contract-series", contracts);
       },
-      { core: coreStore, contracts: contractStore },
+      { core: coreStore, contracts: contractStore, seedQuery: DESTROY_SEED_QUERY },
     );
 
-    await page.goto("/");
+    await page.goto(`/?${DESTROY_SEED_QUERY}`);
     await expect(page.getByRole("heading", { name: "KinkSync ontgrendelen" })).toBeVisible();
     for (const digit of ["1", "2", "3", "4"]) {
       await page.getByRole("button", { name: digit, exact: true }).click();
@@ -111,13 +113,19 @@ test.describe("Alle lokale data verwijderen", () => {
       });
     });
 
+    // Keep the current document untouched, but make the destroy-triggered
+    // reload land on the ordinary Home URL where the seed script is inert.
+    await page.evaluate(() => history.replaceState(null, "", "/"));
+
     await page.getByRole("button", { name: "Instellingen openen" }).click();
     await page.getByRole("button", { name: /Alle data verwijderen/ }).click();
     await page.getByLabel("Typ wis alles om te bevestigen").fill("wis alles");
-    await Promise.all([
-      page.waitForLoadState("domcontentloaded"),
-      page.getByRole("button", { name: "Vernietig voor altijd" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Vernietig voor altijd" }).click();
+
+    // The product intentionally reloads after a successful wipe. Waiting on
+    // the new onboarding dialog synchronizes with that future navigation rather
+    // than accidentally observing the already-loaded pre-destroy document.
+    await expect(page.getByRole("dialog", { name: "Welkom bij KinkSync" })).toBeVisible();
 
     const remaining = await page.evaluate(async () => {
       const artifactCount = await new Promise<number>((resolve) => {
