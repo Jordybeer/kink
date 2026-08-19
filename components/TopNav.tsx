@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -6,6 +7,7 @@ import { motion } from "framer-motion";
 import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { routeChromeSemantics } from "@/lib/routeSemantics";
 import ContextMenu from "@/components/ui/ContextMenu";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
@@ -122,7 +124,7 @@ export default function TopNav() {
     return (
       <>
         <header className="sticky top-0 z-40 transition-colors" style={shell}>
-          <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-end gap-1" aria-label="Hoofdnavigatie">
+          <nav className="mx-auto flex h-14 max-w-2xl items-center justify-end gap-1 px-4" aria-label="Hoofdnavigatie">
             <OfflineStatus />
             {installAvailable && (
               <button
@@ -186,10 +188,10 @@ export default function TopNav() {
   }
 
   const sceneMatch = path.match(/^\/scenes\/([^/]+)/);
-  const { title: routeTitle, back } = focusedRoute(path, {
+  const route = routeChromeSemantics(path, {
     sceneTitle: sceneMatch ? scenes.find((scene) => scene.id === sceneMatch[1])?.title : undefined,
   });
-  const title = contextualTitle ?? routeTitle;
+  const title = contextualTitle ?? route.title;
   const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
     ? contextualTitle.split(" · ", 2)
     : null;
@@ -204,18 +206,18 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className={`relative ${wideInfoRoute ? "max-w-4xl" : "max-w-2xl"} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
+      <nav className={`relative ${wideInfoRoute ? "max-w-4xl" : "max-w-2xl"} mx-auto flex h-14 items-center gap-1 px-4`} aria-label="Hoofdnavigatie">
         <MotionLink
-          href={back}
+          href={route.back}
           whileTap={t.tap}
-          className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
+          className="focus-ring -ml-2 flex h-10 w-10 flex-none items-center justify-center rounded-full"
           style={{ color: "var(--text2)" }}
           aria-label="Terug"
         >
           <CaretLeft aria-hidden="true" size={20} />
         </MotionLink>
         <span
-          className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
+          className="serif-safe min-w-0 flex-1 truncate text-base italic transition-opacity"
           style={{
             fontFamily: "var(--font-display, Georgia, serif)",
             fontWeight: 500,
@@ -234,7 +236,7 @@ export default function TopNav() {
           <span
             role="status"
             aria-live="polite"
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap transition-opacity"
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-opacity"
             style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
           >
             Opgeslagen ✓
@@ -335,27 +337,4 @@ function OfflineStatus() {
       <span className="hidden min-[400px]:inline">Offline</span>
     </span>
   );
-}
-
-function focusedRoute(
-  path: string,
-  dyn: { sceneTitle?: string },
-): { title: string; back: string } {
-  if (path === "/profile") return { title: "Profiel", back: "/" };
-  if (/^\/profile\/[^/]+\/questions$/.test(path)) {
-    return { title: "Vragenlijst", back: path.replace(/\/questions$/, "") };
-  }
-  if (path.startsWith("/profile/")) return { title: "Profiel", back: "/" };
-  if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
-  if (path === "/scenes") return { title: "Scènes", back: "/" };
-  if (path === "/compare") return { title: "Vergelijk", back: "/" };
-  if (path === "/timeline") return { title: "Verloop", back: "/" };
-  if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
-  if (path === "/security") return { title: "Security & privacy", back: "/about" };
-  if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
-  if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
-  if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
-  if (path === "/contracts") return { title: "Contracten", back: "/" };
-  if (path === "/contract") return { title: "Contract", back: "/compare" };
-  return { title: "KinkSync", back: "/" };
 }
