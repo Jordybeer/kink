@@ -124,8 +124,8 @@ export default function ContractDetailPage() {
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring flex min-h-14 items-center gap-3 px-4 text-sm font-semibold"
-          style={{ color: "var(--text)", borderTop: "1px solid var(--border)" }}
+          className="focus-ring flex min-h-14 items-center gap-3 border-t px-4 text-sm font-semibold sm:border-l sm:border-t-0"
+          style={{ color: "var(--text)", borderColor: "var(--border)" }}
         >
           <TrendUp size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
           Verloop
@@ -134,8 +134,8 @@ export default function ContractDetailPage() {
         <button
           type="button"
           onClick={() => setManageOpen(true)}
-          className="focus-ring flex min-h-14 w-full items-center gap-3 px-4 text-left text-sm font-semibold"
-          style={{ color: "var(--text)", borderTop: "1px solid var(--border)" }}
+          className="focus-ring flex min-h-14 w-full items-center gap-3 border-t px-4 text-left text-sm font-semibold sm:border-l sm:border-t-0"
+          style={{ color: "var(--text)", borderColor: "var(--border)" }}
         >
           <GearSix size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
           Beheren
