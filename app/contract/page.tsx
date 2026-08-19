@@ -283,34 +283,40 @@ function ContractPage() {
   return (
     <>
     <PageShell width="3xl" className="contract-print">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap print:hidden">
-        <Link href={`/compare?a=${aId}&b=${bId}`} prefetch={false} className="focus-ring text-sm transition-colors min-h-[44px] inline-flex items-center pr-2" style={{ color: "var(--text2)" }}>
-          <ArrowRight size={16} className="mr-1 rotate-180" aria-hidden="true" />
-          Terug
-        </Link>
-        <h1 className="text-xl font-bold flex-1">Teken het contract</h1>
-      </div>
+      <section className="mb-5 print:hidden" aria-labelledby="contract-editor-title">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
+          Contract opstellen
+        </p>
+        <h1
+          id="contract-editor-title"
+          className="mt-2 truncate text-3xl italic sm:text-4xl"
+          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+        >
+          <span style={{ color: COLOUR_A }}>{profileA.name}</span>
+          <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
+          <span style={{ color: COLOUR_B }}>{profileB.name}</span>
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
+          Stel de afspraken samen; het ondertekende document blijft de formele weergave.
+        </p>
+      </section>
 
       {/* Contract body */}
       <div
-        className="rounded-2xl p-6 mb-6"
+        className="mb-6 rounded-2xl p-4 sm:p-6"
         style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
       >
-        {/* Title block */}
-        <div className="text-center mb-6">
-          <h2
-            className="text-2xl font-bold mb-1"
-            style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-          >
-            KinkSync Contract
-          </h2>
-          <p className="text-sm" style={{ color: "var(--text2)" }}>
-            <span style={{ color: COLOUR_A }}>{profileA.name}</span>
-            <span className="mx-2" style={{ color: "var(--text2)" }}>&</span>
-            <span style={{ color: COLOUR_B }}>{profileB.name}</span>
-          </p>
-          <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>Opgesteld op {today}</p>
+        {/* Document identity */}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-2 border-b pb-4" style={{ borderColor: "var(--border)" }}>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--text2)" }}>Afspraken</p>
+            <p className="mt-1 text-sm font-medium">
+              <span style={{ color: COLOUR_A }}>{profileA.name}</span>
+              <span className="mx-2" style={{ color: "var(--text2)" }}>&amp;</span>
+              <span style={{ color: COLOUR_B }}>{profileB.name}</span>
+            </p>
+          </div>
+          <p className="text-xs" style={{ color: "var(--text2)" }}>Opgesteld op {today}</p>
         </div>
 
         {/* Preamble */}
@@ -450,7 +456,7 @@ function ContractPage() {
 
       {/* Echte namen (optioneel) */}
       <div
-        className="rounded-2xl p-6 mb-6 print:hidden"
+        className="rounded-2xl p-4 sm:p-6 mb-6 print:hidden"
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <h2 className="text-sm mb-1" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
@@ -499,7 +505,7 @@ function ContractPage() {
 
       {/* Signature section */}
       <div
-        className="rounded-2xl p-6 mb-6"
+        className="rounded-2xl p-4 sm:p-6 mb-6"
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <h2 className="text-sm mb-4" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent)" }}>
@@ -512,11 +518,11 @@ function ContractPage() {
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-4 print:hidden">
+      <div className="flex flex-col gap-2 print:hidden sm:flex-row sm:gap-4">
         <button
           onClick={handleGeneratePDF}
           disabled={generating || ceremony}
-          className="focus-ring flex-1 py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="focus-ring min-h-12 flex-1 rounded-xl px-4 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           {generating ? "Genereren…" : "Opslaan als PDF"}
@@ -524,7 +530,7 @@ function ContractPage() {
         <button
           onClick={handleConfirm}
           disabled={generating || ceremony}
-          className="focus-ring flex-1 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="focus-ring min-h-12 flex-1 rounded-xl px-4 text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--accent2)", color: "var(--on-accent)" }}
         >
           Contract bewaren of tekenen
@@ -545,7 +551,7 @@ function ContractPage() {
               style={{ color: "var(--text2)" }}
             >
               <TrendUp size={12} aria-hidden="true" />
-              Bekijk grafiek
+              Bekijk verloop
             </Link>
           </div>
           <div className="flex flex-col gap-2">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, CaretRight, FileText, GearSix, TrendUp } from "@phosphor-icons/react";
+import { CaretRight, FileText, GearSix, TrendUp } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import ContractManageSheet from "@/components/contract/ContractManageSheet";
 import { useStore } from "@/lib/store";
@@ -30,9 +30,6 @@ export default function ContractDetailPage() {
   if (!series) {
     return (
       <PageShell width="2xl">
-        <Link href="/contracts" className="focus-ring inline-flex min-h-10 items-center gap-1 text-sm" style={{ color: "var(--text2)" }}>
-          <ArrowLeft size={15} aria-hidden="true" /> Contracten
-        </Link>
         <p className="py-16 text-center text-sm" style={{ color: "var(--text2)" }}>Contract niet gevonden.</p>
       </PageShell>
     );
@@ -46,11 +43,7 @@ export default function ContractDetailPage() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-3xl">
-      <Link href="/contracts" className="focus-ring inline-flex min-h-10 items-center gap-1 text-sm" style={{ color: "var(--text2)" }}>
-        <ArrowLeft size={15} aria-hidden="true" /> Contracten
-      </Link>
-
-      <section className="mt-2 rounded-2xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <section className="rounded-2xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full" style={{ background: "var(--surface2)", color: statusColour }}>
             <FileText size={20} aria-hidden="true" />
@@ -112,38 +105,41 @@ export default function ContractDetailPage() {
         )}
       </section>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div
+        className={`mt-4 overflow-hidden rounded-2xl sm:grid ${version ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
         {version && (
           <Link
             href={`/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`}
             prefetch={false}
-            className="focus-ring flex min-h-12 items-center gap-2 rounded-xl px-4 text-sm font-semibold"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            className="focus-ring flex min-h-14 items-center gap-3 px-4 text-sm font-semibold"
+            style={{ color: "var(--text)" }}
           >
-            <FileText size={17} aria-hidden="true" />
+            <FileText size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
             Huidig contract
-            <CaretRight size={13} aria-hidden="true" className="ml-auto" />
+            <CaretRight size={14} aria-hidden="true" className="ml-auto" style={{ color: "var(--text2)" }} />
           </Link>
         )}
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring flex min-h-12 items-center gap-2 rounded-xl px-4 text-sm font-semibold"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          className={`focus-ring flex min-h-14 items-center gap-3 px-4 text-sm font-semibold ${version ? "border-t sm:border-l sm:border-t-0" : ""}`}
+          style={{ color: "var(--text)", borderColor: "var(--border)" }}
         >
-          <TrendUp size={17} aria-hidden="true" />
+          <TrendUp size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
           Verloop
-          <CaretRight size={13} aria-hidden="true" className="ml-auto" />
+          <CaretRight size={14} aria-hidden="true" className="ml-auto" style={{ color: "var(--text2)" }} />
         </Link>
         <button
           type="button"
           onClick={() => setManageOpen(true)}
-          className="focus-ring flex min-h-12 items-center gap-2 rounded-xl px-4 text-left text-sm font-semibold"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          className="focus-ring flex min-h-14 w-full items-center gap-3 border-t px-4 text-left text-sm font-semibold sm:border-l sm:border-t-0"
+          style={{ color: "var(--text)", borderColor: "var(--border)" }}
         >
-          <GearSix size={17} aria-hidden="true" />
+          <GearSix size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
           Beheren
-          <CaretRight size={13} aria-hidden="true" className="ml-auto" />
+          <CaretRight size={14} aria-hidden="true" className="ml-auto" style={{ color: "var(--text2)" }} />
         </button>
       </div>
 

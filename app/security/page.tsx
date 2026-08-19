@@ -14,6 +14,7 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
+import EditorialHeading from "@/components/ui/EditorialHeading";
 
 const reportDetails = [
   "welke pagina, flow of functie betrokken is;",
@@ -59,25 +60,15 @@ export default function SecurityPage() {
           style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)" }}
         />
         <div className="relative z-10 max-w-3xl">
-          <p
-            data-testid="security-eyebrow"
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
-            style={{ color: "var(--accent)" }}
-          >
-            <ShieldCheck size={16} weight="fill" aria-hidden="true" />
-            Technische referentie
-          </p>
-          <div className="mt-3">
-            <h1
-              className="serif-safe max-w-2xl text-4xl leading-[1.02] sm:text-5xl"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-            >
-              Security &amp; privacy
-            </h1>
-          </div>
-          <p className="mt-4 max-w-2xl text-base leading-7" style={{ color: "var(--text2)" }}>
-            Deze pagina beschrijft de technische trust boundaries van KinkSync: wat lokaal wordt opgeslagen, welke cryptografie wordt gebruikt, wat gedeelde payloads bevatten en welke garanties de app bewust niet claimt.
-          </p>
+          <EditorialHeading
+            level={1}
+            size="hero"
+            eyebrow="Technische referentie"
+            icon={<ShieldCheck size={16} weight="fill" aria-hidden="true" />}
+            title="Security & privacy"
+            description="Deze pagina beschrijft de technische trust boundaries van KinkSync: wat lokaal wordt opgeslagen, welke cryptografie wordt gebruikt, wat gedeelde payloads bevatten en welke garanties de app bewust niet claimt."
+            testId="security-eyebrow"
+          />
         </div>
       </header>
 
@@ -279,20 +270,7 @@ export default function SecurityPage() {
 }
 
 function SectionHeading({ eyebrow, title, id }: { eyebrow: string; title: string; id: string }) {
-  return (
-    <div className="max-w-2xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>{eyebrow}</p>
-      <div className="mt-3">
-        <h2
-          id={id}
-          className="serif-safe text-3xl leading-tight"
-          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-        >
-          {title}
-        </h2>
-      </div>
-    </div>
-  );
+  return <EditorialHeading level={2} size="section" eyebrow={eyebrow} title={title} id={id} />;
 }
 
 function TechnicalCard({
