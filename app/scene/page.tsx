@@ -428,7 +428,7 @@ function ScenePage() {
 
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     if (isConsentLocked) return;
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it));
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
     setSaved(false); setSavedStatus(null);
   }, [isConsentLocked]);
 
