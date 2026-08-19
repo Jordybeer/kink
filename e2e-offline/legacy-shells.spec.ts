@@ -76,6 +76,13 @@ test("legacy profile and scene urls use the fixed shells for records born offlin
   await expect(page.getByText("Legacy Nova").first()).toBeVisible();
   await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
 
+  await page.goto("/profile/profile-born-offline/questions", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page).toHaveURL(/\/profile\/profile-born-offline\/questions$/);
+  await expect(page.getByTestId("questions-screen")).toBeVisible();
+  await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
+
   await page.goto("/scenes/scene-born-offline", {
     waitUntil: "domcontentloaded",
   });
