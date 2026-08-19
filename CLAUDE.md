@@ -62,8 +62,14 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - Cover pure logic in `lib/` — store actions, kink helpers, shareProfile encoding.
 - Don't test React rendering. Add one test per new feature.
 - `npm run build` must complete without TypeScript errors or lint violations.
-- Scale coverage to task size: tiny fix → run affected test file only. Feature → full `npm test`. Structural change → `npm test` + `npm run build`. Never run e2e for unit-level changes.
-- Playwright tests are mobile-first (375px viewport). Only add desktop if behaviour genuinely differs.
+- Scale coverage to task size: tiny fix → run affected test file only. Feature → full `npm test`. Structural change → `npm test` + `npm run build`.
+- **Playwright/E2E execution is opt-in only. Never run `test:e2e`, `test:e2e:launch`, `test:e2e:offline`, or any equivalent Playwright command unless the user explicitly asks for or approves that E2E run for the current work.** Do not treat a prior approval from another task as permission.
+- **Before any merge, explicitly ask the user whether the relevant Playwright/E2E gate should be run.** A PR is not merge-ready until that question has been asked. If the user authorizes E2E, do not merge until the requested relevant suites have reached a terminal result and any failure is understood. If the user explicitly chooses to merge without E2E, record that as an explicit override rather than silently skipping the gate.
+- Before changing user-visible behaviour, selectors, copy, `aria-*`, test IDs, routes, or interaction structure, search **all relevant existing tests** in both `__tests__/` and every E2E suite. Never assume the newest test is the only one pinning the behaviour.
+- When existing tests cover the changed behaviour, update stale expectations/selectors deliberately so they still test the intended invariant rather than the old presentation. Do not delete or weaken a meaningful regression assertion just to make a redesign pass.
+- When no relevant test exists for a changed or newly introduced behaviour, add the smallest appropriate regression test at the correct layer. Pure logic belongs in Vitest; browser interaction/layout/navigation belongs in Playwright. A newly added Playwright test may be committed without executing it until the user authorizes the E2E gate.
+- For any visible UI change, grep/search the complete test surface for both the old text/structure and the surrounding interaction contract. Never truncate that search with `head` or an equivalent partial-result shortcut.
+- Playwright tests are mobile-first (375px viewport), but responsive behaviour must also be covered when tablet or desktop genuinely differs. Add breakpoint-specific coverage only for a real behavioural/layout distinction, not merely because a larger viewport exists.
 
 ## Stack
 - Next.js 16 App Router · TypeScript · Tailwind CSS v4 · Zustand persist
