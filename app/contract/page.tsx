@@ -241,36 +241,38 @@ function ContractPage() {
   return (
     <>
       <PageShell width="3xl" className="contract-print">
-        <div className="mb-6 flex flex-wrap items-center gap-3 print:hidden">
-          <Link
-            href={`/compare?a=${aId}&b=${bId}`}
-            prefetch={false}
-            className="focus-ring inline-flex min-h-[44px] items-center pr-2 text-sm transition-colors"
-            style={{ color: "var(--text2)" }}
+        <section className="mb-5 print:hidden" aria-labelledby="contract-editor-title">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
+            Contract opstellen
+          </p>
+          <h1
+            id="contract-editor-title"
+            className="mt-2 truncate text-3xl italic sm:text-4xl"
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
-            <ArrowRight size={16} className="mr-1 rotate-180" aria-hidden="true" />
-            Terug
-          </Link>
-          <h1 className="flex-1 text-xl font-bold">Teken het contract</h1>
-        </div>
+            <span style={{ color: COLOUR_A }}>{profileA.name}</span>
+            <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
+            <span style={{ color: COLOUR_B }}>{profileB.name}</span>
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
+            Stel de afspraken samen; het ondertekende document blijft de formele weergave.
+          </p>
+        </section>
 
         <div
-          className="mb-6 rounded-2xl p-6"
+          className="mb-6 rounded-2xl p-4 sm:p-6"
           style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
         >
-          <div className="mb-6 text-center">
-            <h2
-              className="mb-1 text-2xl font-bold"
-              style={{ background: "linear-gradient(90deg, var(--accent), var(--accent2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-            >
-              KinkSync Contract
-            </h2>
-            <p className="text-sm" style={{ color: "var(--text2)" }}>
-              <span style={{ color: COLOUR_A }}>{profileA.name}</span>
-              <span className="mx-2" style={{ color: "var(--text2)" }}>&</span>
-              <span style={{ color: COLOUR_B }}>{profileB.name}</span>
-            </p>
-            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>Opgesteld op {today}</p>
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-2 border-b pb-4" style={{ borderColor: "var(--border)" }}>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--text2)" }}>Afspraken</p>
+              <p className="mt-1 text-sm font-medium">
+                <span style={{ color: COLOUR_A }}>{profileA.name}</span>
+                <span className="mx-2" style={{ color: "var(--text2)" }}>&amp;</span>
+                <span style={{ color: COLOUR_B }}>{profileB.name}</span>
+              </p>
+            </div>
+            <p className="text-xs" style={{ color: "var(--text2)" }}>Opgesteld op {today}</p>
           </div>
 
           <div className="mb-6 border-l-[3px] pl-4" style={{ borderColor: "var(--border-accent)" }}>
@@ -358,7 +360,7 @@ function ContractPage() {
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl p-6 print:hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="mb-6 rounded-2xl p-4 sm:p-6 print:hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h2 className="mb-1 text-sm italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400, color: "var(--accent)" }}>
             Echte namen <span className="not-italic opacity-60">(optioneel)</span>
           </h2>
@@ -380,7 +382,7 @@ function ContractPage() {
           </button>
         </div>
 
-        <div className="mb-6 rounded-2xl p-6" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="mb-6 rounded-2xl p-4 sm:p-6" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h2 className="text-sm italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400, color: "var(--accent)" }}>
             Handgeschreven handtekeningen
           </h2>
