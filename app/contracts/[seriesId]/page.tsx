@@ -106,7 +106,7 @@ export default function ContractDetailPage() {
       </section>
 
       <div
-        className="mt-4 overflow-hidden rounded-2xl sm:grid sm:grid-cols-3"
+        className={`mt-4 overflow-hidden rounded-2xl sm:grid ${version ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
         {version && (
@@ -124,7 +124,7 @@ export default function ContractDetailPage() {
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring flex min-h-14 items-center gap-3 border-t px-4 text-sm font-semibold sm:border-l sm:border-t-0"
+          className={`focus-ring flex min-h-14 items-center gap-3 px-4 text-sm font-semibold ${version ? "border-t sm:border-l sm:border-t-0" : ""}`}
           style={{ color: "var(--text)", borderColor: "var(--border)" }}
         >
           <TrendUp size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
