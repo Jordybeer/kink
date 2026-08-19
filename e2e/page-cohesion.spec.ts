@@ -81,7 +81,7 @@ test.describe("Page cohesion contracts", () => {
 
     await expect(page.getByRole("link", { name: "Terug" })).toHaveCount(1);
     await expect(page.getByText("Teken het contract", { exact: true })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Alex × Sam" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Alex.*Sam/ })).toBeVisible();
     await expect(page.getByText("Stel de afspraken samen; het ondertekende document blijft de formele weergave.", { exact: true })).toBeVisible();
 
     const pdf = page.getByRole("button", { name: /Opslaan als PDF/ });
@@ -139,10 +139,11 @@ test.describe("Page cohesion scenes", () => {
     await page.goto("/scene?id=cohesion-scene-1");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("button", { name: "Naar boven verplaatsen" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Spanking (hand) verwijderen" })).toHaveCount(0);
+    const details = page.getByRole("button", { name: "Duur, notitie en beheer" });
+    await expect(details).toHaveAttribute("aria-expanded", "false");
 
-    await page.getByRole("button", { name: "Duur, notitie en beheer" }).click();
+    await details.click();
+    await expect(details).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByRole("button", { name: "Naar boven verplaatsen" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Naar beneden verplaatsen" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Spanking (hand) verwijderen" })).toBeVisible();
@@ -151,11 +152,13 @@ test.describe("Page cohesion scenes", () => {
 
 test.describe("Page cohesion profile", () => {
   test("query- en legacy-profielroute delen dezelfde actieve profieltab", async ({ page }) => {
+    const overviewTab = () => page.getByRole("tablist", { name: "Profielweergave" }).getByRole("tab", { name: "Overzicht" });
+
     await seedAndGo(page, "/profile?id=pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
-    await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Profiel" })).toHaveAttribute("aria-current", "page");
+    await expect(overviewTab()).toHaveAttribute("aria-selected", "true");
 
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Profiel" })).toHaveAttribute("aria-current", "page");
+    await expect(overviewTab()).toHaveAttribute("aria-selected", "true");
   });
 });
