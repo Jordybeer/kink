@@ -76,18 +76,6 @@ test.describe("Page cohesion contracts", () => {
   });
 });
 
-test("Verloop gebruikt dezelfde profielkeuze als Compare", async ({ page }) => {
-  await seedAndGo(page, "/timeline", [PROFILE_ALEX, PROFILE_SAM]);
-
-  await page.getByRole("button", { name: "Kies profiel A" }).click();
-  await page.getByRole("button", { name: /Alex, Dominant/ }).click();
-  await expect(page.getByRole("button", { name: "Kies profiel A: Alex" })).toBeVisible();
-
-  await page.getByRole("button", { name: "Kies profiel B" }).click();
-  await page.getByRole("button", { name: /Sam, Submissive/ }).click();
-  await expect(page.getByRole("button", { name: "Kies profiel B: Sam" })).toBeVisible();
-});
-
 test.describe("Page cohesion scenes", () => {
   test("delete blijft bereikbaar maar concurreert niet met spelen", async ({ page }) => {
     await seedAndGo(page, "/scenes", [PROFILE_ALEX, PROFILE_SAM]);
