@@ -251,6 +251,25 @@ export interface BdsmtestScore {
   pct: number;
 }
 
+export type ProfileIdentityAnchorMethod =
+  | "source-device-fingerprint"
+  | "independent-channel-fingerprint";
+
+/**
+ * Local-only binding between a known human contact and one exact profile signing
+ * identity. It is deliberately separate from Profile so it cannot travel in a
+ * normal profile share payload.
+ */
+export interface ProfileIdentityAnchor {
+  schema: 1;
+  profileId: string;
+  verificationCode: string;
+  keyId: string;
+  fingerprint: string;
+  anchoredAt: number;
+  method: ProfileIdentityAnchorMethod;
+}
+
 export interface Profile {
   id: string;
   /** Immutable technical lineage marker shared with the profile. */
