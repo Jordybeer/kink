@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import type { EncryptedBackup } from "@/lib/crypto";
 import type { SerializedContractPdfArtifact } from "@/lib/contractArtifacts";
+import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
 
 interface ExportSheetProps {
   open: boolean;
@@ -269,7 +270,13 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         const seriesResult = restoreContractSeries(prepared.contractSeries);
 
         const allowedArtifacts = new Set(
-          prepared.contractSeries.flatMap((series) => series.versions.map((version) => `${series.id}:${version.id}:${version.contentHash}`)),
+          prepared.contractSeries.flatMap((series) => series.versions
+            .filter((version) => !version.legacySnapshotId
+              && version.state === "signed"
+              && version.signatures.length === 2
+              && !!version.content
+              && hasRequiredHandwrittenSignatures(version.content))
+            .map((version) => `${series.id}:${version.id}:${version.contentHash}`)),
         );
         const contractArtifacts = (Array.isArray(parsed.contractArtifacts) ? parsed.contractArtifacts : [])
           .filter((candidate): candidate is SerializedContractPdfArtifact => {
