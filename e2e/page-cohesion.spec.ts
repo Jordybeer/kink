@@ -48,7 +48,8 @@ test.describe("Page cohesion contracts", () => {
       { contractSeries: [CONTRACT_SERIES_ALEX_SAM] },
     );
 
-    await expect(page.getByRole("link", { name: "Contracten", exact: true })).toHaveCount(1);
+    await expect(page.getByRole("link", { name: "Terug" })).toHaveCount(1);
+    await expect(page.getByRole("link", { name: "Contracten", exact: true })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Huidig contract" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Verloop" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Beheren" })).toBeVisible();
