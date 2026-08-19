@@ -21,7 +21,6 @@ import { useContractStore } from "@/lib/contractStore";
 import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
 import {
   contractBucket,
-  contractPersonIdentity,
   contractStatusLabel,
   currentContractVersion,
   formatContractTimestamp,
@@ -88,7 +87,16 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
             <p className="mt-4 text-xs" style={{ color: "var(--text2)" }}>
               {formatContractTimestamp(version.updatedAt)} · versie {version.number}
             </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <p className="mt-2 text-xs leading-5 sm:hidden" style={{ color: "var(--text2)" }}>
+              <span style={{ color: "var(--yes)" }}>{version.summary.matchCount} matches</span>
+              <span aria-hidden="true"> · </span>
+              <span style={{ color: "var(--maybe)" }}>{version.summary.softLimitCount} zacht</span>
+              <span aria-hidden="true"> · </span>
+              <span style={{ color: "var(--willing)" }}>{version.summary.discussCount} bespreken</span>
+              <span aria-hidden="true"> · </span>
+              <span style={{ color: "var(--hard-no)" }}>{version.summary.hardLimitCount} hard</span>
+            </p>
+            <div className="mt-3 hidden grid-cols-4 gap-2 sm:grid">
               {[
                 ["matches", version.summary.matchCount, "var(--yes)"],
                 ["zachte grenzen", version.summary.softLimitCount, "var(--maybe)"],
@@ -184,7 +192,7 @@ function ContractsContent() {
       )}
 
       {concepts.length > 0 && (
-        <div className="mt-5 overflow-hidden rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="mt-5 overflow-hidden rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <button
             type="button"
             onClick={() => setConceptsOpen((current) => !current)}
@@ -192,7 +200,7 @@ function ContractsContent() {
           >
             <FileText size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
             <span className="text-sm font-medium">{concepts.length} {concepts.length === 1 ? "open concept" : "open concepten"}</span>
-            <span className="ml-auto text-xs" style={{ color: "var(--text2)" }}>Verder bespreken</span>
+            <span className="ml-auto hidden text-xs sm:inline" style={{ color: "var(--text2)" }}>Verder bespreken</span>
             <CaretDown size={14} aria-hidden="true" className={conceptsOpen ? "rotate-180" : ""} />
           </button>
           {conceptsOpen && (
