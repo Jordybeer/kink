@@ -103,7 +103,7 @@ test("questions route locks the document while sheets keep their own scroll", as
   await dialog.getByRole("button", { name: "Sluit" }).click();
 
   await page.getByRole("link", { name: "Terug" }).click();
-  await expect(page).toHaveURL(new RegExp(`/profile/${CUCKOLDING_PROFILE.id}$`));
+  await expect(page).toHaveURL(new RegExp(`/profile\\?id=${CUCKOLDING_PROFILE.id}$`));
   expect(await page.evaluate(() => ({
     rootOverflow: document.documentElement.style.overflow,
     rootHeight: document.documentElement.style.height,
