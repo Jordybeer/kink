@@ -2,20 +2,20 @@ import { describe, expect, it } from "vitest";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 
 describe("route chrome semantics", () => {
-  it("keeps canonical and legacy profile pages in the same tab section", () => {
+  it("houdt canonical en legacy profielroutes in dezelfde profieltab", () => {
     expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
     expect(routeChromeSemantics("/profile/alex").bottomNavSection).toBe("profile");
     expect(routeChromeSemantics("/profile/alex").hideBottomNav).toBe(false);
   });
 
-  it("treats the questionnaire as focused and returns to the offline-safe profile shell", () => {
+  it("behandelt de vragenlijst als focusroute met offline-veilige terugweg", () => {
     const route = routeChromeSemantics("/profile/alex%20one/questions");
     expect(route.hideBottomNav).toBe(true);
     expect(route.title).toBe("Vragenlijst");
     expect(route.back).toBe("/profile?id=alex%20one");
   });
 
-  it("gives contract history and documents one consistent navigation language without hiding existing tabs", () => {
+  it("gebruikt één taal voor contractgeschiedenis en documenten", () => {
     expect(routeChromeSemantics("/contracts/series/history")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts/series",
@@ -30,6 +30,17 @@ describe("route chrome semantics", () => {
       title: "Contractgeschiedenis",
       back: "/contracts",
       hideBottomNav: false,
+    });
+  });
+
+  it("noemt de editor contract opstellen en laat sceneplanner focus-mode", () => {
+    expect(routeChromeSemantics("/contract")).toMatchObject({
+      title: "Contract opstellen",
+      back: "/compare",
+    });
+    expect(routeChromeSemantics("/scene")).toMatchObject({
+      hideBottomNav: true,
+      back: "/scenes",
     });
   });
 });
