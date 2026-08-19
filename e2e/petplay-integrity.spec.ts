@@ -1,3 +1,4 @@
+import { pbkdf2Sync } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import {
   buildStore,
@@ -8,6 +9,13 @@ import {
 } from "./fixtures";
 
 const CONTRACT_URL = "/contract?a=pw-alex-001&b=pw-sam-002";
+const PIN_ITERATIONS = 310_000;
+
+function storedPinHash(pin: string): string {
+  const salt = Buffer.from("kinksync-petplay-wipe-pin");
+  const bits = pbkdf2Sync(pin, salt, PIN_ITERATIONS, 32, "sha256");
+  return `pbkdf2:${salt.toString("base64")}:${bits.toString("base64")}`;
+}
 
 test.describe("Contractintegriteit", () => {
   test.beforeEach(async ({ page }) => {
@@ -42,40 +50,40 @@ test.describe("Contractintegriteit", () => {
 test.describe("Alle lokale data verwijderen", () => {
   test("wist ook actieve PIN-state, contractstore, sessie en PDF-artifacts", async ({ page }) => {
     const baseStore = buildStore([PROFILE_ALEX]);
-    const seeded = {
+    const coreStore = JSON.stringify({
       ...baseStore,
       state: {
         ...baseStore.state,
         appLockEnabled: true,
-        appLockPin: "e2e-pin-hash",
-        biometricEnabled: true,
-        biometricCredentialId: "e2e-credential",
+        appLockPin: storedPinHash("1234"),
       },
-    };
-
-    // Keep this deliberately locked persisted store accessible to the test only
-    // while it still exists. After destroyAllLocalData clears the store, the
-    // reload must not recreate the session unlock marker.
-    await page.addInitScript(() => {
-      try {
-        const raw = localStorage.getItem("kink-profiles");
-        if (!raw) return;
-        const parsed = JSON.parse(raw) as { state?: { appLockEnabled?: boolean } };
-        if (parsed.state?.appLockEnabled === true) sessionStorage.setItem("app_unlocked", "1");
-      } catch {
-        // A malformed store should not make the test bootstrap mutate storage.
-      }
+    });
+    const contractStore = JSON.stringify({
+      state: { series: [], migratedLegacySnapshotIds: ["legacy"] },
+      version: 1,
     });
 
-    await page.goto("/");
-    await page.evaluate(async (store) => {
-      localStorage.setItem("kink-profiles", JSON.stringify(store));
-      localStorage.setItem("kink-contract-series", JSON.stringify({
-        state: { series: [], migratedLegacySnapshotIds: ["legacy"] },
-        version: 1,
-      }));
-      sessionStorage.setItem("app_unlocked", "1");
+    // Seed before the first application script runs, just like the dedicated
+    // app-lock E2E. Writing a persist store after hydration lets the already
+    // mounted Zustand state win a race on reload and can reopen onboarding.
+    await page.addInitScript(
+      ({ core, contracts }: { core: string; contracts: string }) => {
+        localStorage.setItem("kink-profiles", core);
+        localStorage.setItem("kink-contract-series", contracts);
+      },
+      { core: coreStore, contracts: contractStore },
+    );
 
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "KinkSync ontgrendelen" })).toBeVisible();
+    for (const digit of ["1", "2", "3", "4"]) {
+      await page.getByRole("button", { name: digit, exact: true }).click();
+    }
+    await expect(page.getByRole("heading", { name: "KinkSync ontgrendelen" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Instellingen openen" })).toBeVisible();
+    expect(await page.evaluate(() => sessionStorage.getItem("app_unlocked"))).toBe("1");
+
+    await page.evaluate(async () => {
       await new Promise<void>((resolve, reject) => {
         const request = indexedDB.open("kinksync-contract-artifacts", 1);
         request.onupgradeneeded = () => {
@@ -101,9 +109,7 @@ test.describe("Alle lokale data verwijderen", () => {
           transaction.onerror = () => { db.close(); reject(transaction.error); };
         };
       });
-    }, seeded);
-    await page.reload();
-    await page.waitForLoadState("networkidle");
+    });
 
     await page.getByRole("button", { name: "Instellingen openen" }).click();
     await page.getByRole("button", { name: /Alle data verwijderen/ }).click();
