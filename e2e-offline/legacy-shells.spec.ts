@@ -8,7 +8,7 @@ async function waitForOfflineCache(page: import("@playwright/test").Page) {
   ).toBe("ready");
 }
 
-test("legacy profile and scene urls use the fixed shells for records born offline", async ({ page, context }) => {
+test("legacy profile, timeline and scene urls keep useful fixed-shell fallbacks offline", async ({ page, context }) => {
   await page.addInitScript(() => {
     if (localStorage.getItem("kink-profiles")) return;
     localStorage.setItem("kink-profiles", JSON.stringify({
@@ -82,6 +82,13 @@ test("legacy profile and scene urls use the fixed shells for records born offlin
   await expect(page).toHaveURL(/\/profile\/profile-born-offline\/questions$/);
   await expect(page.getByTestId("questions-screen")).toBeVisible();
   await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
+
+  await page.goto("/timeline?a=profile-born-offline&b=partner", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page).toHaveURL(/\/contracts$/);
+  await expect(page.getByRole("heading", { name: "Contracten" })).toBeAttached();
+  await expect(page.getByText("Je bent offline")).toHaveCount(0);
 
   await page.goto("/scenes/scene-born-offline", {
     waitUntil: "domcontentloaded",
