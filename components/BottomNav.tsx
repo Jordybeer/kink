@@ -1,43 +1,27 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Lightning, FilmSlate, User } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { profileHref } from "@/lib/localRoutes";
+import { routeChromeSemantics } from "@/lib/routeSemantics";
 
 export default function BottomNav() {
   const path = usePathname();
   const { profiles } = useStore();
-  const _hasHydrated = useHasHydrated();
+  const hydrated = useHasHydrated();
+  const route = routeChromeSemantics(path);
 
-  // Keep the main profile surface tab-like. Only the questionnaire is a focused
-  // subflow that should temporarily take over the screen.
-  if (/^\/profile\/[^/]+\/questions$/.test(path)) return null;
-  if (path === "/scene" || path.startsWith("/scenes/")) return null;
-  if (path === "/about" || path === "/security") return null;
-  const firstProfileId = _hasHydrated ? profiles[0]?.id : undefined;
+  if (route.hideBottomNav) return null;
+
+  const firstProfileId = hydrated ? profiles[0]?.id : undefined;
   const firstProfileHref = firstProfileId ? profileHref(firstProfileId) : "/";
-
   const items = [
-    {
-      href: "/compare",
-      label: "Vergelijk",
-      icon: Lightning,
-      active: path === "/compare" || path.startsWith("/compare/"),
-    },
-    {
-      href: "/scenes",
-      label: "Scènes",
-      icon: FilmSlate,
-      active: path === "/scenes" || path.startsWith("/scenes/"),
-    },
-    {
-      href: firstProfileHref,
-      label: "Profiel",
-      icon: User,
-      active: path === "/profile" || /^\/profile\/[^/]+$/.test(path),
-    },
-  ] as const;
+    { href: "/compare", label: "Vergelijk", icon: Lightning, section: "compare" as const },
+    { href: "/scenes", label: "Scènes", icon: FilmSlate, section: "scenes" as const },
+    { href: firstProfileHref, label: "Profiel", icon: User, section: "profile" as const },
+  ];
 
   return (
     <nav
@@ -50,29 +34,32 @@ export default function BottomNav() {
       }}
       aria-label="Tabbladen"
     >
-      {items.map(({ href, label, icon: Icon, active }) => (
-        <Link
-          key={label}
-          href={href}
-          className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
-          style={{
-            color: active ? "var(--text)" : "var(--text2)",
-            fontWeight: active ? 700 : 500,
-            minWidth: 44,
-            minHeight: 44,
-            justifyContent: "center",
-          }}
-          aria-current={active ? "page" : undefined}
-        >
-          <Icon
-            size={20}
-            weight={active ? "fill" : "regular"}
-            aria-hidden="true"
-            className={`transition-transform duration-200 motion-reduce:transform-none motion-reduce:transition-none ${active ? "-translate-y-0.5 scale-[1.06]" : ""}`}
-          />
-          <span style={{ fontSize: 12, letterSpacing: "0.01em" }}>{label}</span>
-        </Link>
-      ))}
+      {items.map(({ href, label, icon: Icon, section }) => {
+        const active = route.bottomNavSection === section;
+        return (
+          <Link
+            key={label}
+            href={href}
+            className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
+            style={{
+              color: active ? "var(--text)" : "var(--text2)",
+              fontWeight: active ? 700 : 500,
+              minWidth: 44,
+              minHeight: 44,
+              justifyContent: "center",
+            }}
+            aria-current={active ? "page" : undefined}
+          >
+            <Icon
+              size={20}
+              weight={active ? "fill" : "regular"}
+              aria-hidden="true"
+              className={`transition-transform duration-200 motion-reduce:transform-none motion-reduce:transition-none ${active ? "-translate-y-0.5 scale-[1.06]" : ""}`}
+            />
+            <span className="text-xs tracking-[0.01em]">{label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }
