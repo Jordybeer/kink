@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -124,7 +123,7 @@ export default function TopNav() {
     return (
       <>
         <header className="sticky top-0 z-40 transition-colors" style={shell}>
-          <nav className="mx-auto flex h-14 max-w-2xl items-center justify-end gap-1 px-4" aria-label="Hoofdnavigatie">
+          <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-end gap-1" aria-label="Hoofdnavigatie">
             <OfflineStatus />
             {installAvailable && (
               <button
@@ -195,7 +194,7 @@ export default function TopNav() {
   const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
     ? contextualTitle.split(" · ", 2)
     : null;
-  const wideInfoRoute = path === "/about" || path === "/security";
+  const navWidth = navWidthForRoute(path);
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -206,18 +205,18 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className={`relative ${wideInfoRoute ? "max-w-4xl" : "max-w-2xl"} mx-auto flex h-14 items-center gap-1 px-4`} aria-label="Hoofdnavigatie">
+      <nav className={`relative ${navWidth} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
         <MotionLink
           href={route.back}
           whileTap={t.tap}
-          className="focus-ring -ml-2 flex h-10 w-10 flex-none items-center justify-center rounded-full"
+          className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
           style={{ color: "var(--text2)" }}
           aria-label="Terug"
         >
           <CaretLeft aria-hidden="true" size={20} />
         </MotionLink>
         <span
-          className="serif-safe min-w-0 flex-1 truncate text-base italic transition-opacity"
+          className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
           style={{
             fontFamily: "var(--font-display, Georgia, serif)",
             fontWeight: 500,
@@ -236,7 +235,7 @@ export default function TopNav() {
           <span
             role="status"
             aria-live="polite"
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-opacity"
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap transition-opacity"
             style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
           >
             Opgeslagen ✓
@@ -337,4 +336,15 @@ function OfflineStatus() {
       <span className="hidden min-[400px]:inline">Offline</span>
     </span>
   );
+}
+
+function navWidthForRoute(path: string): string {
+  if (path === "/compare") return "max-w-5xl";
+  if (path === "/about" || path === "/security" || path === "/contracts" || path === "/scenes" || path === "/timeline") {
+    return "max-w-4xl";
+  }
+  if (path === "/contract" || path.startsWith("/contracts/") || path === "/profile" || path.startsWith("/profile/")) {
+    return "max-w-3xl";
+  }
+  return "max-w-2xl";
 }
