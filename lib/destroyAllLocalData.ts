@@ -20,7 +20,6 @@ export async function destroyAllLocalData(): Promise<void> {
     profileTourComplete: false,
     installPromptDismissed: false,
     notificationPermissionAsked: false,
-    theme: "midnight",
     pinnedProfileId: null,
     appLockEnabled: false,
     appLockPin: null,
