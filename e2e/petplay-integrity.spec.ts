@@ -144,16 +144,54 @@ test.describe("Alle lokale data verwijderen", () => {
           count.onerror = () => { db.close(); resolve(-1); };
         };
       });
+
+      const coreRaw = localStorage.getItem("kink-profiles");
+      const contractsRaw = localStorage.getItem("kink-contract-series");
+
+      let coreIsWiped = coreRaw === null;
+      if (coreRaw !== null) {
+        try {
+          const state = JSON.parse(coreRaw)?.state ?? {};
+          coreIsWiped =
+            Array.isArray(state.profiles) && state.profiles.length === 0 &&
+            Array.isArray(state.contracts) && state.contracts.length === 0 &&
+            Array.isArray(state.profileSnapshots) && state.profileSnapshots.length === 0 &&
+            Array.isArray(state.scenes) && state.scenes.length === 0 &&
+            Array.isArray(state.profileOwnerKeys) && state.profileOwnerKeys.length === 0 &&
+            state.onboardingComplete === false &&
+            state.pinnedProfileId == null &&
+            state.appLockEnabled === false &&
+            state.appLockPin == null &&
+            state.biometricEnabled === false &&
+            state.biometricCredentialId == null;
+        } catch {
+          coreIsWiped = false;
+        }
+      }
+
+      let contractsAreWiped = contractsRaw === null;
+      if (contractsRaw !== null) {
+        try {
+          const state = JSON.parse(contractsRaw)?.state ?? {};
+          contractsAreWiped = Array.isArray(state.series) && state.series.length === 0;
+        } catch {
+          contractsAreWiped = false;
+        }
+      }
+
       return {
-        core: localStorage.getItem("kink-profiles"),
-        contracts: localStorage.getItem("kink-contract-series"),
+        coreIsWiped,
+        contractsAreWiped,
         unlocked: sessionStorage.getItem("app_unlocked"),
         artifactCount,
       };
     });
 
-    expect(remaining.core).toBeNull();
-    expect(remaining.contracts).toBeNull();
+    // Zustand may immediately persist its freshly reset default state after the
+    // reload. The security invariant is that no user/PIN/key/contract data
+    // survives, not that the persistence key must remain physically absent.
+    expect(remaining.coreIsWiped).toBe(true);
+    expect(remaining.contractsAreWiped).toBe(true);
     expect(remaining.unlocked).toBeNull();
     expect(remaining.artifactCount).toBe(0);
   });
