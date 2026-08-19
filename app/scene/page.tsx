@@ -18,7 +18,7 @@ import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
-import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, X } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, Trash, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 import { comparableEntry, visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
 import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
@@ -44,6 +44,7 @@ function ContractGate({
   const t = useMotionSafe();
   const [selectedA, setSelectedA] = useState(initialA);
   const [selectedB, setSelectedB] = useState(initialB);
+  const [whyOpen, setWhyOpen] = useState(false);
 
   const canProceed = selectedA && selectedB && selectedA !== selectedB;
   const existingContract = canProceed
@@ -62,7 +63,7 @@ function ContractGate({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "24px 16px",
+        padding: "max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))",
         background: "rgba(0,0,0,0.45)",
         backdropFilter: "blur(20px) saturate(0.6)",
         WebkitBackdropFilter: "blur(20px) saturate(0.6)",
@@ -76,13 +77,14 @@ function ContractGate({
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: 20,
-          maxWidth: 440,
+          maxWidth: 460,
           width: "100%",
-          padding: "28px 24px 24px",
+          maxHeight: "min(680px, calc(var(--visual-viewport-height, 100dvh) - 32px))",
+          overflowY: "auto",
+          padding: "24px 20px 20px",
         }}
       >
-        {/* Lock icon */}
-        <div className="flex items-center justify-center mb-5">
+        <div className="mb-4 flex items-center justify-center">
           <div
             style={{
               width: 52,
@@ -99,32 +101,32 @@ function ContractGate({
           </div>
         </div>
 
-        <h2
-          className="text-base font-bold text-center mb-3"
-          style={{ color: "var(--text)" }}
-        >
+        <h2 className="mb-2 text-center text-lg font-semibold" style={{ color: "var(--text)" }}>
           Verbond vereist
         </h2>
 
-        <p
-          className="text-sm text-center mb-2"
-          style={{ color: "var(--text2)", lineHeight: 1.65 }}
-        >
-          Elke scène begint met toestemming. Een verbond legt jullie grenzen,
-          verlangens en safewords vast, zodat wat je speelt bewust en veilig is
-          voor beiden.
-        </p>
-        <p
-          className="text-sm text-center mb-6"
-          style={{ color: "var(--text2)", lineHeight: 1.65 }}
-        >
-          Spelen zonder afspraken is spelen in het donker. Het verbond is geen
-          formaliteit. Het is de fundering waarop vertrouwen en overgave kunnen
-          bestaan. Kies hieronder twee profielen en maak eerst een verbond aan.
+        <p className="mx-auto mb-4 max-w-sm text-center text-sm leading-6" style={{ color: "var(--text2)" }}>
+          Voor een scène is een actief bevestigd contract nodig. Kies twee profielen om verder te gaan.
         </p>
 
-        {/* Profile selectors — 1 row, 2 columns */}
-        <div className="flex gap-3 mb-5">
+        <button
+          type="button"
+          onClick={() => setWhyOpen((open) => !open)}
+          aria-expanded={whyOpen}
+          className="focus-ring mx-auto mb-4 flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-medium"
+          style={{ color: "var(--accent)" }}
+        >
+          Waarom is dit nodig?
+          <CaretDown size={13} aria-hidden="true" className={whyOpen ? "rotate-180" : ""} />
+        </button>
+
+        {whyOpen && (
+          <div className="mb-5 rounded-xl p-3 text-sm leading-6" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
+            Een verbond legt grenzen, verlangens en safewords vast voordat de setlist wordt gepland. Zo blijven toestemming en afspraken het uitgangspunt van de scène.
+          </div>
+        )}
+
+        <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <ProfileSelect
             profiles={profiles}
             value={selectedA}
@@ -142,7 +144,7 @@ function ContractGate({
         {existingContract ? (
           <button
             onClick={() => router.push(`/scene?a=${selectedA}&b=${selectedB}`)}
-            className="w-full py-3 rounded-xl text-sm font-semibold focus-ring mb-3 inline-flex items-center justify-center gap-1.5"
+            className="focus-ring mb-2 inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Ga naar scène <ArrowRight size={15} aria-hidden="true" />
@@ -151,7 +153,7 @@ function ContractGate({
           <button
             onClick={() => router.push(contractHref)}
             disabled={!canProceed}
-            className="w-full py-3 rounded-xl text-sm font-semibold focus-ring disabled:opacity-40 mb-3"
+            className="focus-ring mb-2 min-h-12 w-full rounded-xl px-4 text-sm font-semibold disabled:opacity-40"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             Contract opstellen
@@ -160,12 +162,8 @@ function ContractGate({
 
         <button
           onClick={() => router.back()}
-          className="w-full py-3 rounded-xl text-sm focus-ring"
-          style={{
-            background: "transparent",
-            border: "1px solid var(--border)",
-            color: "var(--text2)",
-          }}
+          className="focus-ring min-h-11 w-full rounded-xl px-4 text-sm"
+          style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
         >
           Terug
         </button>
@@ -205,13 +203,9 @@ function SceneArcBar({ items }: { items: SceneItem[] }) {
   );
 }
 
-// ─── Intensity color ─────────────────────────────────────────────────────────
-
 function intensityColor(v: SceneItem["intensity"]) {
   return v === "zacht" ? "var(--willing)" : v === "midden" ? "var(--maybe)" : "var(--hard-no)";
 }
-
-// ─── Scene item row ──────────────────────────────────────────────────────────
 
 interface SceneItemRowProps {
   item: SceneItem;
@@ -234,7 +228,7 @@ function SceneItemRow({
 
   return (
     <div
-      className="scene-item-reorder flex items-stretch rounded-xl mb-2 overflow-hidden ks-slide-up"
+      className="scene-item-reorder mb-2 flex items-stretch overflow-hidden rounded-2xl ks-slide-up"
       aria-disabled={locked}
       style={{
         background: "var(--surface)",
@@ -242,65 +236,29 @@ function SceneItemRow({
         animationDelay: `${index * 35}ms`,
       }}
     >
-      <div
-        className="transition-colors"
-        style={{ width: 3, background: color, flexShrink: 0 }}
-        aria-hidden="true"
-      />
+      <div className="transition-colors" style={{ width: 3, background: color, flexShrink: 0 }} aria-hidden="true" />
 
-      <div className="flex-1 min-w-0 p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-medium block truncate" style={{ color: "var(--text)" }}>
-              {item.name}
-            </span>
-            {item.tags && item.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {item.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[11px] px-1.5 py-0.5 rounded-full border"
-                    style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-0.5">
-            <button
-              onClick={() => onMoveUp(index)}
-              disabled={locked || index === 0}
-              aria-label="Naar boven verplaatsen"
-              className="focus-ring rounded-lg disabled:opacity-30"
-              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
-            >
-              <CaretUp size={16} aria-hidden="true" />
-            </button>
-            <button
-              onClick={() => onMoveDown(index)}
-              disabled={locked || index === totalItems - 1}
-              aria-label="Naar beneden verplaatsen"
-              className="focus-ring rounded-lg disabled:opacity-30"
-              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
-            >
-              <CaretDown size={16} aria-hidden="true" />
-            </button>
-            <button
-              onClick={() => onDelete(item.id)}
-              disabled={locked}
-              aria-label={`${item.name} verwijderen`}
-              className="focus-ring rounded-lg flex-none disabled:opacity-30"
-              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
-            >
-              <X size={14} aria-hidden="true" />
-            </button>
-          </div>
+      <div className="min-w-0 flex-1 p-3">
+        <div className="mb-2 min-w-0">
+          <span className="block truncate text-sm font-medium" style={{ color: "var(--text)" }}>
+            {item.name}
+          </span>
+          {item.tags && item.tags.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {item.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border px-1.5 py-0.5 text-[11px]"
+                  style={{ borderColor: "var(--border)", color: "var(--text2)" }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+        <div className="mb-1 flex flex-wrap items-center gap-1.5">
           {(["zacht", "midden", "intens"] as const).map((v) => {
             const active = item.intensity === v;
             const c = intensityColor(v);
@@ -310,7 +268,7 @@ function SceneItemRow({
                 onClick={() => onUpdate(item.id, { intensity: v })}
                 disabled={locked}
                 aria-pressed={active}
-                className="text-xs px-3 rounded-full border focus-ring transition-colors disabled:opacity-60"
+                className="focus-ring rounded-full border px-3 text-xs transition-colors disabled:opacity-60"
                 style={{
                   minHeight: 44,
                   background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
@@ -324,19 +282,19 @@ function SceneItemRow({
           })}
           <button
             onClick={() => setDetailsOpen((o) => !o)}
-            aria-label={visibleDetails ? "Details verbergen" : "Duur & notitie"}
+            aria-label={visibleDetails ? "Details verbergen" : "Duur, notitie en beheer"}
             aria-expanded={visibleDetails}
-            className="text-xs ml-auto focus-ring rounded-lg px-2"
-            style={{ minHeight: 44, color: visibleDetails ? "var(--accent)" : "var(--text2)" }}
+            className="focus-ring ml-auto min-h-11 rounded-lg px-2 text-xs"
+            style={{ color: visibleDetails ? "var(--accent)" : "var(--text2)" }}
           >
             {visibleDetails ? "Minder" : "Details"}
           </button>
         </div>
 
         <div className={`accordion-content ${visibleDetails ? "open" : ""}`}>
-          <div className="accordion-inner space-y-2 pt-2">
+          <div className="accordion-inner space-y-3 pt-3">
             <div className="flex items-start gap-2">
-              <label className="text-xs flex-none pt-1" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
+              <label className="flex-none pt-1 text-xs" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
               <DurationStepper
                 value={item.duration}
                 disabled={locked}
@@ -349,17 +307,47 @@ function SceneItemRow({
               readOnly={locked}
               onChange={(e) => onUpdate(item.id, { note: e.target.value })}
               placeholder="Notitie…"
-              className="w-full rounded-lg px-3 py-2 focus:outline-none resize-none focus-ring read-only:opacity-70"
+              className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}
             />
+
+            {!locked && (
+              <div className="flex items-center gap-1 border-t pt-2" style={{ borderColor: "var(--border)" }}>
+                <span className="mr-auto text-xs" style={{ color: "var(--text2)" }}>Volgorde &amp; beheer</span>
+                <button
+                  onClick={() => onMoveUp(index)}
+                  disabled={index === 0}
+                  aria-label="Naar boven verplaatsen"
+                  className="focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <CaretUp size={16} aria-hidden="true" />
+                </button>
+                <button
+                  onClick={() => onMoveDown(index)}
+                  disabled={index === totalItems - 1}
+                  aria-label="Naar beneden verplaatsen"
+                  className="focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <CaretDown size={16} aria-hidden="true" />
+                </button>
+                <button
+                  onClick={() => onDelete(item.id)}
+                  aria-label={`${item.name} verwijderen`}
+                  className="focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
+                  style={{ color: "var(--hard-no)" }}
+                >
+                  <Trash size={16} aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-// ─── Kink chip ───────────────────────────────────────────────────────────────
 
 function KinkChip({
   name, added, color, onAdd,
@@ -376,15 +364,11 @@ function KinkChip({
         minHeight: 44,
       }}
     >
-      {!added && (
-        <Plus size={12} aria-hidden="true" />
-      )}
+      {!added && <Plus size={12} aria-hidden="true" />}
       {name}
     </button>
   );
 }
-
-// ─── Main page ───────────────────────────────────────────────────────────────
 
 function ScenePage() {
   const searchParams = useSearchParams();
@@ -420,7 +404,6 @@ function ScenePage() {
   const profileA: Profile | undefined = profiles.find((p) => p.id === resolvedAId);
   const profileB: Profile | undefined = profiles.find((p) => p.id === resolvedBId);
 
-  // Load existing scene. A sealed agreement is the display source of truth.
   useEffect(() => {
     if (!_hasHydrated || !sceneIdParam) return;
     const scene = scenes.find((s) => s.id === sceneIdParam);
@@ -434,7 +417,6 @@ function ScenePage() {
     setSaved(true);
   }, [_hasHydrated, sceneIdParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Autofill safeword from contract when profiles are known
   useEffect(() => {
     if (!_hasHydrated || !resolvedAId || !resolvedBId) return;
     const contract = activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
@@ -581,54 +563,49 @@ function ScenePage() {
   });
 
   const hasKinks = mutualKinks.length > 0 || spanningKinks.length > 0 || topKinks.length > 0;
-
-  // Gate: new scene with no signed contract for the pair
   const gated = !sceneIdParam && !activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
 
   return (
     <>
       <main
-        className="max-w-2xl mx-auto px-4 w-full flex flex-col"
-        style={{ paddingTop: 20, paddingBottom: 120, minHeight: "100dvh" }}
+        className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-4"
+        style={{ paddingTop: 20, paddingBottom: 120 }}
       >
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="mb-3 flex items-center gap-2">
           <Link
             href={backHref}
             prefetch={false}
             aria-label="Terug"
-            className="focus-ring rounded-lg flex-none"
-            style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", color: "var(--text2)", fontSize: 13 }}
+            className="focus-ring flex h-11 w-11 flex-none items-center rounded-lg"
+            style={{ color: "var(--text2)", fontSize: 13 }}
           >
             <ArrowRight size={16} className="rotate-180" aria-hidden="true" />
           </Link>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <input
               type="text"
               value={sceneTitle}
               onChange={(e) => { if (!isConsentLocked) { setSceneTitle(e.target.value); setSaved(false); } }}
               disabled={isConsentLocked}
               placeholder={profileA && profileB ? `${profileA.name} & ${profileB.name}` : "Scène…"}
-              className="ks-input-lg w-full bg-transparent focus:outline-none focus-ring rounded-lg font-bold"
+              className="ks-input-lg focus-ring w-full rounded-lg bg-transparent font-bold focus:outline-none"
               style={{ color: "var(--text)" }}
             />
             {profileA && profileB && (
-              <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>
+              <p className="mt-0.5 truncate text-xs" style={{ color: "var(--text2)" }}>
                 {profileA.name} &amp; {profileB.name}
               </p>
             )}
           </div>
         </div>
 
-        {/* Date & time — their own row, so the title never gets elbowed
-            into "Val & N…" on a 375px screen */}
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="mb-3 flex items-center gap-1.5">
           <input
             type="date"
             value={sceneDate}
             onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
-            className="focus:outline-none focus-ring rounded-lg px-2 flex-1"
+            className="focus-ring flex-1 rounded-lg px-2 focus:outline-none"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark", maxWidth: 180 }}
           />
           <TimePicker
@@ -638,43 +615,37 @@ function ScenePage() {
           />
         </div>
 
-        {/* Profile hint */}
         {!profileA && !profileB && !sceneIdParam && (
-          <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <div className="mb-3 rounded-xl px-3 py-2.5 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties, of voeg items handmatig toe.</p>
             <Link href="/compare" className="inline-flex items-center gap-1" style={{ color: "var(--accent)" }}><ArrowRight size={13} aria-hidden="true" />Profielen kiezen via Vergelijk</Link>
           </div>
         )}
 
-        {/* Safeword */}
-        <div className="flex items-center gap-2 mb-3">
-          <label className="text-xs flex-none font-semibold" style={{ color: "var(--hard-no)", minWidth: 72 }}>Safeword</label>
+        <div className="mb-3 flex items-center gap-2">
+          <label className="flex-none text-xs font-semibold" style={{ color: "var(--hard-no)", minWidth: 72 }}>Safeword</label>
           <input
             type="text"
             value={safeword}
             onChange={(e) => { if (!isConsentLocked) { setSafeword(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             placeholder="bijv. rood"
-            className="flex-1 rounded-lg px-3 focus:outline-none focus-ring"
+            className="focus-ring flex-1 rounded-lg px-3 focus:outline-none"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14, height: 40 }}
           />
         </div>
 
         {isConsentLocked && (
-          <div className="rounded-xl px-3 py-2.5 mb-4 text-xs" style={{ background: "color-mix(in srgb, var(--yes) 8%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 30%, var(--border))", color: "var(--text2)" }}>
+          <div className="mb-4 rounded-xl px-3 py-2.5 text-xs" style={{ background: "color-mix(in srgb, var(--yes) 8%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 30%, var(--border))", color: "var(--text2)" }}>
             Deze setlist is vastgezet. Activiteiten, intensiteiten en safeword kunnen hier niet meer stilletjes worden aangepast.
           </div>
         )}
 
-        {/* + Kinks trigger (replaces manual input in scroll area) */}
         {hasKinks && !isCompleted && !isConsentLocked && (
           <button
             onClick={() => setDrawerOpen(true)}
-            className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl mb-4 focus-ring"
-            style={{
-              background: "color-mix(in srgb, var(--accent) 6%, transparent)",
-              border: "1px solid var(--border-accent)",
-            }}
+            className="focus-ring mb-4 flex min-h-12 w-full items-center justify-between rounded-xl px-3"
+            style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid var(--border-accent)" }}
           >
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--accent)" }}>
               <Plus size={15} aria-hidden="true" />
@@ -684,19 +655,17 @@ function ScenePage() {
           </button>
         )}
 
-        {/* Arc bar */}
         <div className="mb-4">
           <SceneArcBar items={items} />
         </div>
 
-        {/* Items list */}
         <div className="flex-1">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-16 select-none ks-fade-in">
+            <div className="flex select-none flex-col items-center justify-center py-16 text-center ks-fade-in">
               <div className="mb-4" style={{ opacity: 0.35 }}>
                 <ListPlus size={48} weight="duotone" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </div>
-              <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>Lege setlist</p>
+              <p className="mb-1 text-sm font-medium" style={{ color: "var(--text)" }}>Lege setlist</p>
               <p className="text-sm" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
             </div>
           ) : (
@@ -719,51 +688,43 @@ function ScenePage() {
         </div>
       </main>
 
-      {/* ── Fixed action bar ── */}
       <div
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
       >
         {saveError && (
-          <div className="max-w-2xl mx-auto mb-2">
-            <p role="alert" className="text-xs ks-fade-in" style={{ color: "var(--hard-no)" }}>
-              {saveError}
-            </p>
+          <div className="mx-auto mb-2 max-w-3xl">
+            <p role="alert" className="text-xs ks-fade-in" style={{ color: "var(--hard-no)" }}>{saveError}</p>
           </div>
         )}
-        {/* Five controls never fit one 375px row — the manual-add pair takes
-            its own line on mobile and rejoins the bar from sm up */}
-        <div className="max-w-2xl mx-auto flex flex-wrap gap-2">
-
-          {/* Manual add — hidden when completed */}
+        <div className="mx-auto flex max-w-3xl flex-wrap gap-2">
           {!isCompleted && !isConsentLocked && (
-            <div className="flex gap-2 w-full sm:w-auto sm:flex-1">
+            <div className="flex w-full gap-2 sm:w-auto sm:flex-1">
               <input
                 type="text"
                 value={newItemName}
                 onChange={(e) => setNewItemName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") addManualItem(); }}
                 placeholder="Eigen item…"
-                className="flex-1 min-w-0 rounded-xl px-3 focus:outline-none focus-ring"
+                className="focus-ring min-w-0 flex-1 rounded-xl px-3 focus:outline-none"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14, height: 44 }}
               />
               <button
                 onClick={addManualItem}
                 aria-label="Item toevoegen"
-                className="rounded-xl font-bold focus-ring flex-none"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 44, height: 44, fontSize: 20 }}
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl font-bold"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)" }}
               >
                 <Plus size={20} aria-hidden="true" />
               </button>
             </div>
           )}
 
-          {/* PDF */}
           <button
             onClick={handleExport}
             disabled={items.length === 0}
-            className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 52, height: 44, padding: "0 12px" }}
+            className="focus-ring h-11 flex-1 rounded-xl px-3 text-xs font-bold disabled:opacity-40 sm:flex-none"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 52 }}
             aria-label="Exporteer als PDF"
           >
             PDF
@@ -774,26 +735,24 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none inline-flex items-center justify-center gap-1"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
+                className="focus-ring inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-xl px-3 text-xs font-bold disabled:opacity-40 sm:flex-none"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)" }}
               >
                 {savedStatus === "draft" ? <><Check size={13} aria-hidden="true" /> Concept</> : "Opslaan"}
               </button>
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring rounded-xl text-xs font-bold disabled:opacity-40 flex-1 sm:flex-none inline-flex items-center justify-center gap-1"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)", height: 44, padding: "0 12px" }}
+                className="focus-ring inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-xl px-3 text-xs font-bold disabled:opacity-40 sm:flex-none"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)" }}
               >
                 {savedStatus === "planned" ? <><Check size={13} aria-hidden="true" /> Gepland</> : "Plannen"}
               </button>
             </>
           )}
-
         </div>
       </div>
 
-      {/* Contract gate — only for new scenes without a signed contract */}
       {gated && (
         <ContractGate
           profiles={profiles}
@@ -803,7 +762,6 @@ function ScenePage() {
         />
       )}
 
-      {/* ── Kink drawer (Sheet) ── */}
       <Sheet open={drawerOpen} onClose={() => setDrawerOpen(false)} aria-label="Kinks toevoegen">
         <div className="rounded-t-2xl px-4 pt-5 pb-8" style={{ background: "var(--surface)", maxHeight: "70vh", overflowY: "auto" }}>
           <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} aria-hidden="true" />

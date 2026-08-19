@@ -89,17 +89,15 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     );
 
     await expect(page).toHaveURL(/\/contracts\/pw-contract-series-alex-sam\/history$/);
-    await expect(page.getByText("Contractgeschiedenis", { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole("tablist")).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Gebeurtenissen" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Getekende versies" })).toBeVisible();
   });
 
   test("DiscussedToggle: hidden until a kink is marked besproken", async ({ page }) => {
     await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
 
-    // No kink marked discussed yet → toggle must not render
     await expect(page.getByRole("button", { name: /Verberg besproken|Toon alles/ })).toHaveCount(0);
 
-    // Tap the "als besproken markeren" button on the first kink we see
     const markBtn = page
       .locator("button[aria-label*='als besproken markeren']")
       .first();

@@ -31,18 +31,12 @@ function TimelineBridge() {
 
   useEffect(() => {
     if (!contractsReady) return;
-    // /timeline is precached, dynamic contract-history routes are not. Keep an
-    // old offline bookmark useful instead of redirecting it into an uncached URL.
     router.replace(navigator.onLine ? target : "/contracts");
   }, [contractsReady, router, target]);
 
   return <PageShell loading width="2xl" />;
 }
 
-/**
- * Backwards-compatible doorway for old /timeline links. Contract history now
- * lives with the contract series that owns it instead of in a second dashboard.
- */
 export default function TimelinePage() {
   return (
     <Suspense fallback={<PageShell loading width="2xl" />}>

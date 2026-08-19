@@ -72,7 +72,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect.poll(() => page.locator('section[id^="cat-"]').count()).toBeGreaterThan(0);
       break;
     case "contract":
-      await expect(page.getByRole("heading", { name: "Teken het contract" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Alex.*Sam/ })).toBeVisible();
       await expect(page.getByText("Gedeelde verlangens", { exact: true })).toBeVisible();
       await expect(page.getByText("Zachte grenzen", { exact: true })).toBeVisible();
       await expect(page.getByText("Harde grenzen", { exact: true })).toBeVisible();

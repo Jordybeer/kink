@@ -50,7 +50,6 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
     return result;
   }, [mine]);
 
-  // A history panel that cannot name an actual change is just dashboard noise.
   if (!latest || shifts.length === 0) return null;
 
   const visible = showAll ? shifts : shifts.slice(0, PREVIEW_COUNT);

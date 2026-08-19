@@ -18,11 +18,6 @@ interface ProfileRouteProps {
   id: string;
 }
 
-/**
- * One profile route experience behind both the legacy dynamic URL and the
- * precacheable /profile?id=... shell. Keeping the route wrappers thin prevents
- * offline and online doors from drifting into different product behaviour.
- */
 export default function ProfileRoute({ id }: ProfileRouteProps) {
   const router = useRouter();
   const searchParams = useSearchParams();

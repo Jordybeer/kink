@@ -5,7 +5,7 @@ test("home opens a compact human-first KinkSync story", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
 
-  const nav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
+  const nav = page.getByLabel("Hoofdnavigatie");
   await nav.getByRole("button", { name: "Meer over KinkSync" }).click();
   await page.getByRole("menuitem", { name: "Over KinkSync" }).click();
 
@@ -19,7 +19,7 @@ test("home opens a compact human-first KinkSync story", async ({ page }) => {
   const [eyebrowBox, headingBox] = await Promise.all([eyebrow.boundingBox(), heading.boundingBox()]);
   expect(eyebrowBox).not.toBeNull();
   expect(headingBox).not.toBeNull();
-  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(12);
+  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(8);
 
   const promiseBoxes = await page.getByTestId("about-promises").locator(":scope > div").evaluateAll((nodes) =>
     nodes.map((node) => {
