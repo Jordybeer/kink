@@ -193,7 +193,7 @@ export default function TopNav() {
   const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
     ? contextualTitle.split(" · ", 2)
     : null;
-  const wideInfoRoute = path === "/about" || path === "/security";
+  const navWidth = navWidthForRoute(path);
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -204,7 +204,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className={`relative ${wideInfoRoute ? "max-w-4xl" : "max-w-2xl"} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
+      <nav className={`relative ${navWidth} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
         <MotionLink
           href={back}
           whileTap={t.tap}
@@ -337,6 +337,17 @@ function OfflineStatus() {
   );
 }
 
+function navWidthForRoute(path: string): string {
+  if (path === "/compare") return "max-w-5xl";
+  if (path === "/about" || path === "/security" || path === "/contracts" || path === "/scenes" || path === "/timeline") {
+    return "max-w-4xl";
+  }
+  if (path === "/contract" || path.startsWith("/contracts/") || path === "/profile" || path.startsWith("/profile/")) {
+    return "max-w-3xl";
+  }
+  return "max-w-2xl";
+}
+
 function focusedRoute(
   path: string,
   dyn: { sceneTitle?: string },
@@ -356,6 +367,6 @@ function focusedRoute(
   if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
   if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
   if (path === "/contracts") return { title: "Contracten", back: "/" };
-  if (path === "/contract") return { title: "Contract", back: "/compare" };
+  if (path === "/contract") return { title: "Contract opstellen", back: "/compare" };
   return { title: "KinkSync", back: "/" };
 }
