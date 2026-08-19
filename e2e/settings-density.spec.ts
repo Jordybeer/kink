@@ -19,20 +19,27 @@ test("settings blijft compact en installatie verhuist rustig naar de Home-TopNav
   });
 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
-  const howItWorks = page.getByText("Hoe het werkt", { exact: true });
+  const moreAction = homeNav.getByRole("button", { name: "Meer over KinkSync" });
   const installAction = page.getByRole("button", { name: "KinkSync installeren" });
   const settingsAction = page.getByRole("button", { name: "Instellingen openen" });
-  await expect(howItWorks).toBeVisible();
+  await expect(moreAction).toBeVisible();
   await expect(installAction).toBeVisible();
   await expect(settingsAction).toBeVisible();
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
-  for (const action of [installAction, settingsAction]) {
+  for (const action of [moreAction, installAction, settingsAction]) {
     const box = await action.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);
     expect(box!.height).toBeGreaterThanOrEqual(44);
   }
+
+  await moreAction.click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(menu).not.toBeVisible();
 
   await settingsAction.click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
@@ -75,11 +82,11 @@ test("settings blijft compact en installatie verhuist rustig naar de Home-TopNav
   await expect(installGuide).not.toBeVisible();
 
   await page.setViewportSize({ width: 375, height: 667 });
-  await expect(howItWorks).toBeVisible();
+  await expect(moreAction).toBeVisible();
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
   await page.setViewportSize({ width: 320, height: 568 });
-  await expect(howItWorks).toBeHidden();
+  await expect(moreAction).toBeVisible();
   await expect(installAction).toBeVisible();
   await expect(settingsAction).toBeVisible();
   expect(await overflowsHorizontally(homeNav)).toBe(false);
