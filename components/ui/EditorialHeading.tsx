@@ -19,8 +19,8 @@ const TITLE_GAP = "clamp(0.875rem, 2.2dvh, 1.25rem)";
 
 /**
  * Shared editorial heading rhythm for KinkSync's long-form and onboarding-like
- * surfaces. The relationship between eyebrow, title and supporting copy lives
- * here so individual pages do not slowly invent their own spacing again.
+ * surfaces. Spacing belongs to the structure around the serif title, not to the
+ * title itself, so `.serif-safe` can never collapse the eyebrow relationship.
  */
 export default function EditorialHeading({
   eyebrow,
@@ -40,26 +40,27 @@ export default function EditorialHeading({
 
   return (
     <div className="max-w-2xl">
-      <p
-        data-testid={testId}
-        className="flex min-h-5 w-fit items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
-        style={{ color: "var(--accent)" }}
-      >
-        {icon}
-        <span>{eyebrow}</span>
-      </p>
-      <Heading
-        id={id}
-        aria-label={titleAriaLabel}
-        className={`serif-safe ${titleClassName}`}
-        style={{
-          marginTop: TITLE_GAP,
-          fontFamily: "var(--font-display, Georgia, serif)",
-          fontWeight: 500,
-        }}
-      >
-        {title}
-      </Heading>
+      <div className="grid" style={{ rowGap: TITLE_GAP }}>
+        <p
+          data-testid={testId}
+          className="flex min-h-5 w-fit items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
+          style={{ color: "var(--accent)" }}
+        >
+          {icon}
+          <span>{eyebrow}</span>
+        </p>
+        <Heading
+          id={id}
+          aria-label={titleAriaLabel}
+          className={`serif-safe ${titleClassName}`}
+          style={{
+            fontFamily: "var(--font-display, Georgia, serif)",
+            fontWeight: 500,
+          }}
+        >
+          {title}
+        </Heading>
+      </div>
       {description && (
         <p className="mt-4 text-base leading-7" style={{ color: "var(--text2)" }}>
           {description}
