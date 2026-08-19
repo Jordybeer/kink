@@ -38,7 +38,7 @@ export function routeChromeSemantics(
     return { title: "Vergelijk", back: "/", hideBottomNav: false, bottomNavSection: "compare" };
   }
   if (path === "/timeline") {
-    return { title: "Contractgeschiedenis", back: "/contracts", hideBottomNav: true, bottomNavSection: null };
+    return { title: "Contractgeschiedenis", back: "/contracts", hideBottomNav: false, bottomNavSection: null };
   }
   if (path === "/about") {
     return { title: "Hoe KinkSync werkt", back: "/", hideBottomNav: true, bottomNavSection: null };
@@ -50,7 +50,7 @@ export function routeChromeSemantics(
     return {
       title: "Getekend document",
       back: path.replace(/\/versions\/[^/]+$/, "/history"),
-      hideBottomNav: true,
+      hideBottomNav: false,
       bottomNavSection: null,
     };
   }
@@ -58,18 +58,18 @@ export function routeChromeSemantics(
     return {
       title: "Contractgeschiedenis",
       back: path.replace(/\/history$/, ""),
-      hideBottomNav: true,
+      hideBottomNav: false,
       bottomNavSection: null,
     };
   }
   if (path.startsWith("/contracts/")) {
-    return { title: "Contract", back: "/contracts", hideBottomNav: true, bottomNavSection: null };
+    return { title: "Contract", back: "/contracts", hideBottomNav: false, bottomNavSection: null };
   }
   if (path === "/contracts") {
-    return { title: "Contracten", back: "/", hideBottomNav: true, bottomNavSection: null };
+    return { title: "Contracten", back: "/", hideBottomNav: false, bottomNavSection: null };
   }
   if (path === "/contract") {
-    return { title: "Contract", back: "/compare", hideBottomNav: true, bottomNavSection: null };
+    return { title: "Contract", back: "/compare", hideBottomNav: false, bottomNavSection: null };
   }
   return { title: "KinkSync", back: "/", hideBottomNav: false, bottomNavSection: null };
 }
