@@ -34,8 +34,11 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
     [currentEntries, latest],
   );
   const recordedShifts = useMemo(
-    () => previous && latest ? diffSnapshotEntries(previous.entries, latest.entries) : [],
-    [latest, previous],
+    () => previous && latest
+      ? diffSnapshotEntries(previous.entries, latest.entries)
+        .filter((shift) => currentEntries[shift.kinkId]?.privateResponse !== true)
+      : [],
+    [currentEntries, latest, previous],
   );
   const shifts = liveShifts.length > 0 ? liveShifts : recordedShifts;
 

@@ -7,7 +7,7 @@ import {
 } from "./fixtures";
 
 test.describe("Phase groom — review fixes (mobile)", () => {
-  test("ProfileSnapshotPanel: only meaningful automatic status changes surface", async ({ page }) => {
+  test("ProfileSnapshotPanel: only meaningful public automatic status changes surface", async ({ page }) => {
     await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
 
     await expect(page.getByRole("button", { name: "Sla dit moment op" })).toHaveCount(0);
@@ -20,7 +20,7 @@ test.describe("Phase groom — review fixes (mobile)", () => {
         state: {
           profiles: Array<{
             id: string;
-            entries: Record<string, { status?: string | null; [key: string]: unknown }>;
+            entries: Record<string, { status?: string | null; privateResponse?: boolean; [key: string]: unknown }>;
             customKinks?: Array<{ id: string; name: string }>;
           }>;
           profileSnapshots: unknown[];
@@ -36,6 +36,16 @@ test.describe("Phase groom — review fixes (mobile)", () => {
         ...previousSpanking,
         status: "maybe",
       };
+      const previousChoking = olderEntries.choking ?? {};
+      olderEntries.choking = {
+        ...previousChoking,
+        status: "yes",
+      };
+      profile.entries.choking = {
+        ...(profile.entries.choking ?? {}),
+        privateResponse: true,
+      };
+
       const counts = { yes: 0, willing: 0, maybe: 0, no: 0, hard_no: 0 };
       parsed.state.profileSnapshots = [
         {
@@ -66,6 +76,7 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(history).toContainText("Spanking");
     await expect(history).toContainText("Misschien");
     await expect(history).toContainText("Heel graag");
+    await expect(history).not.toContainText("Choking");
     await expect(page.getByRole("button", { name: "Sla dit moment op" })).toHaveCount(0);
   });
 
