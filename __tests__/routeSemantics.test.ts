@@ -15,21 +15,21 @@ describe("route chrome semantics", () => {
     expect(route.back).toBe("/profile?id=alex%20one");
   });
 
-  it("gives contract history and documents one consistent navigation language", () => {
+  it("gives contract history and documents one consistent navigation language without hiding existing tabs", () => {
     expect(routeChromeSemantics("/contracts/series/history")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts/series",
-      hideBottomNav: true,
+      hideBottomNav: false,
     });
     expect(routeChromeSemantics("/contracts/series/versions/v1")).toMatchObject({
       title: "Getekend document",
       back: "/contracts/series/history",
-      hideBottomNav: true,
+      hideBottomNav: false,
     });
     expect(routeChromeSemantics("/timeline")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts",
-      hideBottomNav: true,
+      hideBottomNav: false,
     });
   });
 });
