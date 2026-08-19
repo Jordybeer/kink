@@ -13,16 +13,6 @@ export interface ContractPdfArtifact {
   bytes: ArrayBuffer;
 }
 
-export interface SerializedContractPdfArtifact {
-  seriesId: string;
-  versionId: string;
-  contentHash: string;
-  pdfHash: string;
-  filename: string;
-  createdAt: number;
-  bytes: string;
-}
-
 function artifactKey(seriesId: string, versionId: string): string {
   return `${seriesId}:${versionId}`;
 }
@@ -33,15 +23,6 @@ function bytesToBase64Url(bytes: Uint8Array): string {
     binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
   }
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
-function base64UrlToBytes(value: string): Uint8Array {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/")
-    + "=".repeat((4 - (value.length % 4)) % 4);
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-  return bytes;
 }
 
 async function sha256Base64Url(bytes: ArrayBuffer): Promise<string> {
@@ -198,64 +179,6 @@ export async function deleteAllContractArtifacts(): Promise<void> {
       request.onblocked = () => reject(new Error("Getekende contractdocumenten zijn nog open in een ander tabblad"));
     });
   }
-}
-
-export async function exportContractPdfArtifacts(): Promise<SerializedContractPdfArtifact[]> {
-  if (typeof indexedDB === "undefined") return [];
-  let artifacts: ContractPdfArtifact[];
-  try {
-    artifacts = await transact<ContractPdfArtifact[]>("readonly", (store, succeed, fail) => {
-      const request = store.getAll();
-      request.onsuccess = () => succeed(request.result as ContractPdfArtifact[]);
-      request.onerror = () => fail(request.error);
-    });
-  } catch {
-    return [];
-  }
-  const result: SerializedContractPdfArtifact[] = [];
-  for (const artifact of artifacts) {
-    if (artifact.pdfHash !== await sha256Base64Url(artifact.bytes)) continue;
-    result.push({
-      seriesId: artifact.seriesId,
-      versionId: artifact.versionId,
-      contentHash: artifact.contentHash,
-      pdfHash: artifact.pdfHash,
-      filename: artifact.filename,
-      createdAt: artifact.createdAt,
-      bytes: bytesToBase64Url(new Uint8Array(artifact.bytes)),
-    });
-  }
-  return result;
-}
-
-export async function restoreContractPdfArtifacts(
-  incoming: readonly SerializedContractPdfArtifact[],
-): Promise<number> {
-  let restored = 0;
-  for (const candidate of incoming) {
-    if (!candidate || typeof candidate !== "object"
-      || typeof candidate.seriesId !== "string" || typeof candidate.versionId !== "string"
-      || typeof candidate.contentHash !== "string" || typeof candidate.pdfHash !== "string"
-      || typeof candidate.filename !== "string" || typeof candidate.bytes !== "string"
-      || typeof candidate.createdAt !== "number" || !Number.isFinite(candidate.createdAt)) continue;
-    try {
-      const decoded = base64UrlToBytes(candidate.bytes);
-      const bytes = decoded.buffer.slice(decoded.byteOffset, decoded.byteOffset + decoded.byteLength) as ArrayBuffer;
-      if (await sha256Base64Url(bytes) !== candidate.pdfHash) continue;
-      await putContractPdfArtifact({
-        seriesId: candidate.seriesId,
-        versionId: candidate.versionId,
-        contentHash: candidate.contentHash,
-        filename: candidate.filename,
-        bytes,
-        createdAt: candidate.createdAt,
-      });
-      restored += 1;
-    } catch {
-      // One damaged binary document must not invalidate the rest of a backup.
-    }
-  }
-  return restored;
 }
 
 export function contractPdfBlob(artifact: ContractPdfArtifact): Blob {
