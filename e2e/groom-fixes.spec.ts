@@ -31,8 +31,9 @@ test.describe("Phase groom — review fixes (mobile)", () => {
 
       const latestEntries = structuredClone(profile.entries);
       const olderEntries = structuredClone(profile.entries);
+      const previousSpanking = olderEntries.spanking_hand_give ?? {};
       olderEntries.spanking_hand_give = {
-        ...olderEntries.spanking_hand_give,
+        ...previousSpanking,
         status: "maybe",
       };
       const counts = { yes: 0, willing: 0, maybe: 0, no: 0, hard_no: 0 };

@@ -85,7 +85,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
           </h3>
           <p className="mt-1.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
             {liveShifts.length > 0
-              ? `Sinds het laatste automatische moment op ${dateLabel}.`
+              ? `Sinds het laatste profielmoment op ${dateLabel}.`
               : `Laatste betekenisvolle wijziging, vastgelegd op ${dateLabel}.`}
           </p>
         </div>
@@ -129,7 +129,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
       )}
 
       <p className="mt-4 text-xs leading-5" style={{ color: "var(--text2)" }}>
-        Momenten worden automatisch en lokaal bijgehouden wanneer je profiel verandert.
+        Nieuwe momenten worden automatisch en lokaal bijgehouden wanneer je profiel verandert.
       </p>
     </section>
   );
