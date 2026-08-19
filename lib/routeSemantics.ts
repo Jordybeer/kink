@@ -69,7 +69,7 @@ export function routeChromeSemantics(
     return { title: "Contracten", back: "/", hideBottomNav: false, bottomNavSection: null };
   }
   if (path === "/contract") {
-    return { title: "Contract", back: "/compare", hideBottomNav: false, bottomNavSection: null };
+    return { title: "Contract opstellen", back: "/compare", hideBottomNav: false, bottomNavSection: null };
   }
   return { title: "KinkSync", back: "/", hideBottomNav: false, bottomNavSection: null };
 }
