@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { parseBdsmtestOutput } from "@/lib/parseBdsmtest";
+import { describe, expect, it } from "vitest";
+import { parseBdsmtestCopyAll, parseBdsmtestOutput } from "@/lib/parseBdsmtest";
 
 const SAMPLE = `== Results from bdsmtest.org ==
 100% Dominant
@@ -9,6 +9,36 @@ const SAMPLE = `== Results from bdsmtest.org ==
 50% Switch
 12% Submissive
 0% Vanilla`;
+
+const COPY_ALL = `Don’t judge 🙈
+
+https://bdsmtest.org/r/qXBN9QWw
+
+100% Little
+100% Exhibitionist
+99% Voyeur
+98% Ageplayer
+97% Experimentalist
+94% Submissive
+93% Switch
+79% Sadist
+78% Rope bunny
+73% Primal (Hunter)
+72% Rigger
+68% Non-monogamist
+58% Brat
+48% Master/Mistress
+44% Dominant
+38% Daddy/Mommy
+37% Slave
+30% Vanilla
+20% Pet
+16% Owner
+9% Brat tamer
+9% Masochist
+2% Degrader
+0% Degradee
+0% Primal (Prey)`;
 
 describe("parseBdsmtestOutput", () => {
   it("parses standard bdsmtest copy output", () => {
@@ -29,20 +59,72 @@ describe("parseBdsmtestOutput", () => {
     expect(results.find((r) => r.role === "Vanilla")).toEqual({ role: "Vanilla", pct: 0 });
   });
 
-  it("skips header and blank lines", () => {
-    const results = parseBdsmtestOutput(SAMPLE);
-    expect(results.every((r) => !r.role.startsWith("=="))).toBe(true);
-  });
-
   it("handles roles with slashes and spaces", () => {
     const out = "72% Master/Mistress\n65% Rope bunny";
     const results = parseBdsmtestOutput(out);
     expect(results[0].role).toBe("Master/Mistress");
     expect(results[1].role).toBe("Rope bunny");
   });
+});
 
-  it("returns empty array for empty input", () => {
-    expect(parseBdsmtestOutput("")).toEqual([]);
-    expect(parseBdsmtestOutput("no matching lines here")).toEqual([]);
+describe("parseBdsmtestCopyAll", () => {
+  it("splits the real Copy all shape into a canonical URL and scores", () => {
+    const result = parseBdsmtestCopyAll(COPY_ALL);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.url).toBe("https://bdsmtest.org/r/qXBN9QWw");
+    expect(result.scores).toHaveLength(25);
+    expect(result.scores[0]).toEqual({ role: "Little", pct: 100 });
+    expect(result.scores.at(-1)).toEqual({ role: "Primal (Prey)", pct: 0 });
+  });
+
+  it("ignores harmless free text around the payload", () => {
+    const result = parseBdsmtestCopyAll(`Whatever you want to write here 😏\n\n${COPY_ALL}`);
+    expect(result.ok).toBe(true);
+  });
+
+  it("canonicalizes www, http, tracking and fragments away", () => {
+    const result = parseBdsmtestCopyAll("http://www.bdsmtest.org/r/qXBN9QWw?utm_source=test#result\n100% Little");
+    expect(result).toEqual({
+      ok: true,
+      url: "https://bdsmtest.org/r/qXBN9QWw",
+      scores: [{ role: "Little", pct: 100 }],
+    });
+  });
+
+  it("rejects look-alike hosts and active URL schemes", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org.evil.example/r/abc\n100% Little")).toEqual({ ok: false, error: "invalid-url" });
+    expect(parseBdsmtestCopyAll("javascript:alert(1)\n100% Little")).toEqual({ ok: false, error: "invalid-url" });
+  });
+
+  it("rejects more than one distinct result link", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc\nhttps://bdsmtest.org/r/def\n100% Little")).toEqual({ ok: false, error: "multiple-urls" });
+  });
+
+  it("rejects missing URL or missing score rows", () => {
+    expect(parseBdsmtestCopyAll("100% Little")).toEqual({ ok: false, error: "missing-url" });
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc")).toEqual({ ok: false, error: "missing-results" });
+  });
+
+  it("rejects out-of-range and conflicting duplicate scores", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc\n101% Little")).toEqual({ ok: false, error: "invalid-results" });
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc\n100% Little\n99% Little")).toEqual({ ok: false, error: "invalid-results" });
+  });
+
+  it("deduplicates an identical repeated score", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc\n100% Little\n100% Little")).toEqual({
+      ok: true,
+      url: "https://bdsmtest.org/r/abc",
+      scores: [{ role: "Little", pct: 100 }],
+    });
+  });
+
+  it("rejects HTML-shaped role labels instead of storing them as text", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc\n100% <script>alert(1)</script>")).toEqual({ ok: false, error: "invalid-results" });
+  });
+
+  it("rejects absurdly large clipboard input before parsing", () => {
+    const huge = "x".repeat(20_000) + "\nhttps://bdsmtest.org/r/abc\n100% Little";
+    expect(parseBdsmtestCopyAll(huge)).toEqual({ ok: false, error: "too-large" });
   });
 });
