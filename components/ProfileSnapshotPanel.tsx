@@ -18,6 +18,13 @@ interface Props {
 
 const PREVIEW_COUNT = 5;
 
+function visibleShift(
+  kinkId: string,
+  ...entrySets: Array<Record<string, KinkEntry> | undefined>
+): boolean {
+  return entrySets.every((entries) => entries?.[kinkId]?.privateResponse !== true);
+}
+
 export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntries }: Props) {
   const [showAll, setShowAll] = useState(false);
   const mine = useMemo(
@@ -30,13 +37,16 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
   const latest = mine[mine.length - 1];
   const previous = mine[mine.length - 2];
   const liveShifts = useMemo(
-    () => latest ? diffSnapshotEntries(latest.entries, currentEntries) : [],
+    () => latest
+      ? diffSnapshotEntries(latest.entries, currentEntries)
+        .filter((shift) => visibleShift(shift.kinkId, latest.entries, currentEntries))
+      : [],
     [currentEntries, latest],
   );
   const recordedShifts = useMemo(
     () => previous && latest
       ? diffSnapshotEntries(previous.entries, latest.entries)
-        .filter((shift) => currentEntries[shift.kinkId]?.privateResponse !== true)
+        .filter((shift) => visibleShift(shift.kinkId, previous.entries, latest.entries, currentEntries))
       : [],
     [currentEntries, latest, previous],
   );
@@ -54,10 +64,15 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
 
   const visible = showAll ? shifts : shifts.slice(0, PREVIEW_COUNT);
   const hiddenCount = shifts.length - visible.length;
-  const dateLabel = new Date(latest.date).toLocaleDateString("nl-NL", {
+  const moment = new Date(latest.date);
+  const dateLabel = moment.toLocaleDateString("nl-NL", {
     day: "numeric",
     month: "short",
     year: "numeric",
+  });
+  const timeLabel = moment.toLocaleTimeString("nl-NL", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   return (
@@ -87,8 +102,15 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
           </h3>
           <p className="mt-1.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
             {liveShifts.length > 0
-              ? `Sinds het laatste profielmoment op ${dateLabel}.`
-              : `Laatste betekenisvolle wijziging, vastgelegd op ${dateLabel}.`}
+              ? "Sinds het laatste profielmoment."
+              : "Laatste betekenisvolle wijziging."}
+          </p>
+          <p
+            className="mt-1 text-[11px] leading-4"
+            style={{ color: "color-mix(in srgb, var(--accent) 44%, var(--text2))" }}
+            aria-label={`Profielmoment ${dateLabel} om ${timeLabel}`}
+          >
+            {dateLabel} · {timeLabel}
           </p>
         </div>
       </div>
@@ -131,7 +153,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
       )}
 
       <p className="mt-4 text-xs leading-5" style={{ color: "var(--text2)" }}>
-        Nieuwe momenten worden automatisch en lokaal bijgehouden wanneer je profiel verandert.
+        Nieuwe momenten worden automatisch en lokaal bijgehouden wanneer je profiel verandert. Privéantwoorden blijven hier verborgen.
       </p>
     </section>
   );
