@@ -40,6 +40,8 @@ https://bdsmtest.org/r/qXBN9QWw
 0% Degradee
 0% Primal (Prey)`;
 
+const IOS_URI_ENCODED_COPY_ALL = "https://bdsmtest.org/r/iosCopyAll%0A%0A100%25%20Little%0A93%25%20Switch%0A78%25%20Rope%20bunny%0A0%25%20Primal%20(Prey)";
+
 describe("parseBdsmtestOutput", () => {
   it("parses standard bdsmtest copy output", () => {
     const results = parseBdsmtestOutput(SAMPLE);
@@ -78,6 +80,20 @@ describe("parseBdsmtestCopyAll", () => {
     expect(result.scores.at(-1)).toEqual({ role: "Primal (Prey)", pct: 0 });
   });
 
+  it("decodes the single-line URI-encoded Copy all shape produced on iOS", () => {
+    const result = parseBdsmtestCopyAll(IOS_URI_ENCODED_COPY_ALL);
+    expect(result).toEqual({
+      ok: true,
+      url: "https://bdsmtest.org/r/iosCopyAll",
+      scores: [
+        { role: "Little", pct: 100 },
+        { role: "Switch", pct: 93 },
+        { role: "Rope bunny", pct: 78 },
+        { role: "Primal (Prey)", pct: 0 },
+      ],
+    });
+  });
+
   it("ignores harmless free text around the payload", () => {
     const result = parseBdsmtestCopyAll(`Whatever you want to write here 😏\n\n${COPY_ALL}`);
     expect(result.ok).toBe(true);
@@ -95,6 +111,20 @@ describe("parseBdsmtestCopyAll", () => {
   it("rejects look-alike hosts and active URL schemes", () => {
     expect(parseBdsmtestCopyAll("https://bdsmtest.org.evil.example/r/abc\n100% Little")).toEqual({ ok: false, error: "invalid-url" });
     expect(parseBdsmtestCopyAll("javascript:alert(1)\n100% Little")).toEqual({ ok: false, error: "invalid-url" });
+  });
+
+  it("keeps strict URL validation after decoding an iOS-shaped paste", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org.evil.example/r/steal%0A100%25%20Little")).toEqual({
+      ok: false,
+      error: "invalid-url",
+    });
+  });
+
+  it("fails closed instead of throwing on malformed URI encoding", () => {
+    expect(parseBdsmtestCopyAll("https://bdsmtest.org/r/abc%0A100%ZZ%20Little")).toEqual({
+      ok: false,
+      error: "invalid-url",
+    });
   });
 
   it("rejects more than one distinct result link", () => {

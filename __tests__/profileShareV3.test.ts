@@ -234,7 +234,7 @@ describe("lossless profile share v3", () => {
     const legacy: Profile = {
       ...profile,
       id: "legacy-profile",
-      verificationCode: "KS-LEGACY-0001",
+      verificationCode: deriveProfileVerificationCode("legacy-profile"),
       customKinks: [],
       entries: {},
       privateNote: undefined,
@@ -309,8 +309,7 @@ describe("lossless profile share v3", () => {
   });
 
   it("still decodes legacy v1 links and deterministically backfills their code", async () => {
-    const { verificationCode: _verificationCode, ...withoutCode } = profile;
-    const legacy = encodeProfile(withoutCode as Profile, { includeFetLife: true });
+    const legacy = encodeProfile({ ...profile, verificationCode: undefined }, { includeFetLife: true });
     const decoded = await decodeSharedProfile(legacy);
     expect(decoded.name).toBe("Alex");
     expect(decoded.entries.rope.status).toBe("yes");

@@ -6,6 +6,7 @@ const MAX_ROWS = 50;
 const MAX_ROLE_LEN = 64;
 const CONTROL_RE = /[\u0000-\u001F\u007F]/;
 const URLISH_RE = /^(?:[a-z][a-z0-9+.-]*:|www\.)/i;
+const ENCODED_LINE_BREAK_RE = /%0[ad]/i;
 const SCORE_RE = /^(\d{1,3})%\s+(.+)$/;
 const SCOREISH_RE = /^-?\d+%/;
 
@@ -25,6 +26,30 @@ function cleanRole(raw: string): string | null {
   const role = raw.trim();
   if (!role || role.length > MAX_ROLE_LEN || CONTROL_RE.test(role) || /[<>]/.test(role)) return null;
   return role;
+}
+
+/**
+ * iOS can receive BDSMTest's `Copy all` payload as one URI-encoded line. Decode
+ * that concrete shape once, then send the resulting lines through the same
+ * strict URL and score validation as ordinary clipboard text.
+ */
+function normalizeCopyAllInput(input: string): string {
+  const normalized = input.replace(/\r\n?/g, "\n");
+  const decoded = normalized
+    .split("\n")
+    .map((rawLine) => {
+      const line = rawLine.trim();
+      if (!URLISH_RE.test(line) || !ENCODED_LINE_BREAK_RE.test(line)) return rawLine;
+
+      try {
+        return decodeURIComponent(line);
+      } catch {
+        return rawLine;
+      }
+    })
+    .join("\n");
+
+  return decoded.replace(/\r\n?/g, "\n");
 }
 
 /**
@@ -59,12 +84,13 @@ export function parseBdsmtestOutput(text: string): BdsmtestScore[] {
 export function parseBdsmtestCopyAll(input: string): BdsmtestCopyAllResult {
   if (input.length > MAX_BDSMTEST_COPY_CHARS) return { ok: false, error: "too-large" };
 
+  const normalizedInput = normalizeCopyAllInput(input);
   const urls = new Set<string>();
   const byRole = new Map<string, number>();
   let invalidUrl = false;
   let invalidScore = false;
 
-  for (const rawLine of input.replace(/\r\n?/g, "\n").split("\n")) {
+  for (const rawLine of normalizedInput.split("\n")) {
     const line = rawLine.trim();
     if (!line) continue;
 
