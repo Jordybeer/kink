@@ -54,10 +54,15 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
 
   const visible = showAll ? shifts : shifts.slice(0, PREVIEW_COUNT);
   const hiddenCount = shifts.length - visible.length;
-  const dateLabel = new Date(latest.date).toLocaleDateString("nl-NL", {
+  const moment = new Date(latest.date);
+  const dateLabel = moment.toLocaleDateString("nl-NL", {
     day: "numeric",
     month: "short",
     year: "numeric",
+  });
+  const timeLabel = moment.toLocaleTimeString("nl-NL", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   return (
@@ -87,8 +92,15 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
           </h3>
           <p className="mt-1.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
             {liveShifts.length > 0
-              ? `Sinds het laatste profielmoment op ${dateLabel}.`
-              : `Laatste betekenisvolle wijziging, vastgelegd op ${dateLabel}.`}
+              ? "Sinds het laatste profielmoment."
+              : "Laatste betekenisvolle wijziging."}
+          </p>
+          <p
+            className="mt-1 text-[11px] leading-4"
+            style={{ color: "color-mix(in srgb, var(--accent) 48%, var(--text2))" }}
+            aria-label={`Profielmoment ${dateLabel} om ${timeLabel}`}
+          >
+            {dateLabel} · {timeLabel}
           </p>
         </div>
       </div>
