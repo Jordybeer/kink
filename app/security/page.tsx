@@ -162,7 +162,7 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="contracts-title">
         <SectionHeading eyebrow="05 · Contractdata" title="Versies, signatures en hash-gekoppelde historiek zijn verschillende lagen" id="contracts-title" />
-        <TechnicalCard icon={Key}>
+        <TechnicalCard icon={Key} quiet>
           <p>
             Contractreeksen bevatten deelnemers, versies, inhoudshashes, signatures en lifecycle-events. Bij back-upimport worden beschikbare contractstructuren gecontroleerd op interne referenties, content hashes, participant-key koppelingen, signatures en eventhash-ketens voordat ze als geldige reeks worden meegenomen.
           </p>
@@ -177,7 +177,7 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="restore-title">
         <SectionHeading eyebrow="06 · Restore boundary" title="Herstel valideert data, maar tijd en context blijven betekenis houden" id="restore-title" />
-        <TechnicalCard icon={ShieldCheck}>
+        <TechnicalCard icon={ShieldCheck} quiet>
           <p>
             Een herstelbestand wordt niet blind teruggeschreven. Profielen worden gesaneerd, eigendomssleutels worden cryptografisch gecontroleerd en contractreeksen moeten hun structurele en cryptografische integriteitschecks doorstaan.
           </p>
@@ -192,7 +192,7 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="browser-title">
         <SectionHeading eyebrow="07 · Browser en PWA" title="De storage boundary volgt de browsercontext" id="browser-title" />
-        <TechnicalCard icon={Database}>
+        <TechnicalCard icon={Database} quiet>
           <p>
             Safari en een geïnstalleerde Home Screen-app kunnen op iOS in verschillende opslagcontexten terechtkomen. Een installatie of toestelwissel is daarom geen synchronisatiehandeling. Maak vóór zo&apos;n wissel een versleutelde back-up wanneer je lokale data wilt behouden.
           </p>
@@ -204,7 +204,7 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="app-lock-title">
         <SectionHeading eyebrow="08 · App lock" title="Een lokale toegangspoort, geen encryptie-at-rest" id="app-lock-title" />
-        <TechnicalCard icon={LockKey}>
+        <TechnicalCard icon={LockKey} quiet>
           <p>
             Een ingestelde PIN wordt niet als platte tekst bewaard. Nieuwe PINs worden met PBKDF2 en SHA-256 over 310.000 iteraties gehasht met een random salt. Verificatie vergelijkt het afgeleide resultaat zonder de PIN terug te halen.
           </p>
@@ -290,25 +290,35 @@ function TechnicalCard({
   icon: Icon,
   children,
   accent = false,
+  quiet = false,
 }: {
   icon: typeof ShieldCheck;
   children: React.ReactNode;
   accent?: boolean;
+  quiet?: boolean;
 }) {
   return (
     <div
-      className="mt-4 rounded-[28px] p-5 sm:p-6"
+      className={quiet
+        ? "mt-4 border-t pt-5 sm:grid sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4"
+        : "mt-4 rounded-[28px] p-5 sm:p-6"}
       style={{
-        background: accent
-          ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface))"
-          : "var(--surface)",
-        border: "1px solid var(--border)",
+        background: quiet
+          ? "transparent"
+          : accent
+            ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface))"
+            : "var(--surface)",
+        borderColor: "var(--border)",
+        ...(!quiet ? { border: "1px solid var(--border)" } : {}),
       }}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-        <Icon size={22} aria-hidden="true" />
+      <div
+        className={`flex items-center justify-center ${quiet ? "h-9 w-9 rounded-xl" : "h-11 w-11 rounded-2xl"}`}
+        style={{ background: "var(--surface2)", color: "var(--accent)" }}
+      >
+        <Icon size={quiet ? 19 : 22} aria-hidden="true" />
       </div>
-      <div className="mt-4 max-w-3xl text-[15px] leading-6" style={{ color: "var(--text2)" }}>
+      <div className={`${quiet ? "mt-3 sm:mt-0" : "mt-4"} max-w-3xl text-[15px] leading-6`} style={{ color: "var(--text2)" }}>
         {children}
       </div>
     </div>
@@ -327,7 +337,7 @@ function CheckRow({ children }: { children: React.ReactNode }) {
 function Spec({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--text2)" }}>{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--text2)" }}>{label}</p>
       <p className="mt-1 font-mono text-sm" style={{ color: "var(--text)" }}>{value}</p>
     </div>
   );
