@@ -29,6 +29,7 @@ interface SwitchShareEnvelope {
 export interface SwitchProfileShareOptions {
   includeFetLife?: boolean;
   includeAvatar?: boolean;
+  includeBdsmtest?: boolean;
   avatarProfileId?: string;
   ownerKeys?: ProfileOwnerKey[];
   linkProof?: SwitchShareProof;
@@ -106,17 +107,23 @@ async function encodeMember(
   options: SwitchProfileShareOptions,
   includeAvatar: boolean,
 ): Promise<{ encoded: string; avatarIncluded: boolean }> {
+  const key = options.ownerKeys?.find((candidate) => candidate.profileId === profile.id);
   if (!includeAvatar) {
     return {
-      encoded: await encodeProfileV3(profile, { includeFetLife: options.includeFetLife }),
+      encoded: await encodeProfileV3(profile, {
+        includeFetLife: options.includeFetLife,
+        includeBdsmtest: options.includeBdsmtest,
+        profileOwnerKey: key,
+      }),
       avatarIncluded: false,
     };
   }
-  const avatarOwnerKey = options.ownerKeys?.find((key) => key.profileId === profile.id);
   const transport = await encodeProfileShareTransport(profile, {
     includeFetLife: options.includeFetLife,
+    includeBdsmtest: options.includeBdsmtest,
     includeAvatar: true,
-    avatarOwnerKey,
+    profileOwnerKey: key,
+    avatarOwnerKey: key,
   });
   return { encoded: transport.encoded, avatarIncluded: !!transport.avatarPayload };
 }

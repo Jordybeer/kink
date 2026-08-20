@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { Profile } from "@/types";
+import type { Profile, ProfileConsentPayload, ProfileConsentProof } from "@/types";
 import { encodeProfile } from "@/lib/shareProfile";
 import { deriveProfileVerificationCode } from "@/lib/profileVerification";
+import {
+  canonicalJson,
+  generateProfileOwnerKey,
+  sha256Base64Url,
+  signProfileConsent,
+  verifyProfileConsent,
+} from "@/lib/consentProof";
 import {
   decodeProfileV3,
   decodeSharedProfile,
@@ -17,7 +24,7 @@ const profile: Profile = {
   role: "Switch",
   relationshipStatus: "Open relatie",
   fetLifeUsername: "alex",
-  bdsmtestUrl: "https://bdsmtest.org/result/example",
+  bdsmtestUrl: "https://bdsmtest.org/r/example",
   bdsmtestScores: [{ role: "Switch", pct: 88 }],
   privateNote: "alleen lokaal",
   avatarDataUrl: "data:image/png;base64,AAAA",
@@ -69,6 +76,15 @@ function bytesToBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+function base64UrlToBytes(value: string): Uint8Array {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/")
+    + "=".repeat((4 - (value.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
 async function compressRawJson(json: string): Promise<string> {
   const bytes = new TextEncoder().encode(json);
   const input = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
@@ -77,8 +93,72 @@ async function compressRawJson(json: string): Promise<string> {
   return "3d." + bytesToBase64Url(compressed);
 }
 
+async function payloadFromV3(encoded: string): Promise<Record<string, unknown>> {
+  const bytes = base64UrlToBytes(encoded.slice(3));
+  if (encoded.startsWith("3r.")) {
+    return JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+  }
+  const input = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const stream = new Blob([input]).stream().pipeThrough(new DecompressionStream("deflate"));
+  return JSON.parse(new TextDecoder().decode(await new Response(stream).arrayBuffer())) as Record<string, unknown>;
+}
+
+function encodeRawPayload(payload: unknown): string {
+  return "3r." + bytesToBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+}
+
+async function sealed(source: Profile) {
+  const key = await generateProfileOwnerKey(source.id);
+  const signed = await signProfileConsent(source, key);
+  return {
+    profile: { ...source, consentProof: signed.proof },
+    key: signed.ownerKey,
+  };
+}
+
+async function legacySealed(source: Profile): Promise<Profile> {
+  const ownerKey = await generateProfileOwnerKey(source.id);
+  const payload: ProfileConsentPayload = {
+    schema: 1,
+    profileId: source.id,
+    verificationCode: source.verificationCode!,
+    name: source.name,
+    role: source.role,
+    experienceLevel: source.experienceLevel,
+    ...(source.relationshipStatus ? { relationshipStatus: source.relationshipStatus } : {}),
+    ...(source.bdsmtestUrl ? { bdsmtestUrl: source.bdsmtestUrl } : {}),
+    ...(source.bdsmtestScores?.length ? { bdsmtestScores: source.bdsmtestScores } : {}),
+    customKinks: [],
+    entries: {},
+  };
+  const unsigned = {
+    schema: 1 as const,
+    algorithm: "ECDSA-P256-SHA256" as const,
+    keyId: ownerKey.keyId,
+    publicKeyJwk: ownerKey.publicKeyJwk,
+    version: 1,
+    signedAt: 123456789,
+    payloadHash: await sha256Base64Url(canonicalJson(payload)),
+  };
+  const privateKey = await crypto.subtle.importKey(
+    "jwk",
+    ownerKey.privateKeyJwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+  const signature = bytesToBase64Url(new Uint8Array(await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    privateKey,
+    new TextEncoder().encode(canonicalJson(unsigned)),
+  )));
+  const proofHash = await sha256Base64Url(canonicalJson({ ...unsigned, signature }));
+  const proof: ProfileConsentProof = { ...unsigned, signature, proofHash };
+  return { ...source, consentProof: proof };
+}
+
 describe("lossless profile share v3", () => {
-  it("round-trips every shareable field and excludes private/local-only data", async () => {
+  it("round-trips core shareable fields while external enrichments stay local by default", async () => {
     const encoded = await encodeProfileV3(profile, { includeFetLife: true });
     expect(isProfileV3(encoded)).toBe(true);
     const decoded = await decodeSharedProfile(encoded);
@@ -88,8 +168,8 @@ describe("lossless profile share v3", () => {
     expect(decoded.role).toBe(profile.role);
     expect(decoded.relationshipStatus).toBe(profile.relationshipStatus);
     expect(decoded.fetLifeUsername).toBe(profile.fetLifeUsername);
-    expect(decoded.bdsmtestUrl).toBe(profile.bdsmtestUrl);
-    expect(decoded.bdsmtestScores).toEqual(profile.bdsmtestScores);
+    expect(decoded.bdsmtestUrl).toBeUndefined();
+    expect(decoded.bdsmtestScores).toBeUndefined();
     expect(decoded.entries.rope).toEqual(profile.entries.rope);
     expect(decoded.entries["custom-public"]).toEqual(profile.entries["custom-public"]);
     expect(decoded.entries.hidden).toBeUndefined();
@@ -98,6 +178,87 @@ describe("lossless profile share v3", () => {
     expect(decoded.privateNote).toBeUndefined();
     expect(decoded.avatarDataUrl).toBeUndefined();
     expect(decoded.isImported).toBe(true);
+  });
+
+  it("redacts BDSMTest from an already sealed profile without invalidating the transported core proof", async () => {
+    const signed = await sealed(profile);
+    const encoded = await encodeProfileV3(signed.profile, { profileOwnerKey: signed.key });
+    const decoded = await decodeSharedProfile(encoded);
+
+    expect(decoded.bdsmtestUrl).toBeUndefined();
+    expect(decoded.bdsmtestScores).toBeUndefined();
+    expect((await verifyProfileConsent(decoded)).status).toBe("valid");
+  });
+
+  it("shares BDSMTest only after explicit opt-in with a separate owner-key disclosure", async () => {
+    const signed = await sealed(profile);
+    const encoded = await encodeProfileV3(signed.profile, {
+      includeBdsmtest: true,
+      profileOwnerKey: signed.key,
+    });
+    const decoded = await decodeSharedProfile(encoded);
+
+    expect(decoded.bdsmtestUrl).toBe("https://bdsmtest.org/r/example");
+    expect(decoded.bdsmtestScores).toEqual([{ role: "Switch", pct: 88 }]);
+    expect((await verifyProfileConsent(decoded)).status).toBe("valid");
+
+    const payload = await payloadFromV3(encoded);
+    expect(payload.bd).toMatchObject({
+      schema: 1,
+      profileId: profile.id,
+      keyId: signed.profile.consentProof!.keyId,
+      profileProofHash: signed.profile.consentProof!.proofHash,
+    });
+  });
+
+  it("refuses explicit BDSMTest sharing when no owner key can sign the disclosure", async () => {
+    await expect(encodeProfileV3(profile, { includeBdsmtest: true }))
+      .rejects.toThrow(/bevestigde optionele openbaarmaking/i);
+  });
+
+  it("fails closed when the signed BDSMTest disclosure is changed", async () => {
+    const signed = await sealed(profile);
+    const encoded = await encodeProfileV3(signed.profile, {
+      includeBdsmtest: true,
+      profileOwnerKey: signed.key,
+    });
+    const payload = await payloadFromV3(encoded);
+    const disclosure = payload.bd as { scores: Array<{ role: string; pct: number }> };
+    disclosure.scores[0].pct = 87;
+
+    await expect(decodeProfileV3(encodeRawPayload(payload)))
+      .rejects.toThrow(/BDSMTest-openbaarmaking/i);
+  });
+
+  it("still accepts a legacy v3 proof that bound BDSMTest directly into the core profile", async () => {
+    const legacy: Profile = {
+      ...profile,
+      id: "legacy-profile",
+      verificationCode: "KS-7E6A-CY22-2345",
+      customKinks: [],
+      entries: {},
+      privateNote: undefined,
+      avatarDataUrl: undefined,
+      fetLifeUsername: undefined,
+    };
+    const signedLegacy = await legacySealed(legacy);
+    const legacyPayload = {
+      v: 3,
+      i: legacy.id,
+      n: legacy.name,
+      r: legacy.role,
+      l: legacy.experienceLevel,
+      c: legacy.createdAt,
+      u: legacy.updatedAt,
+      vc: legacy.verificationCode,
+      rs: legacy.relationshipStatus,
+      bu: legacy.bdsmtestUrl,
+      bs: legacy.bdsmtestScores,
+      cp: signedLegacy.consentProof,
+    };
+    const decoded = await decodeProfileV3(encodeRawPayload(legacyPayload));
+    expect(decoded.bdsmtestScores).toEqual(legacy.bdsmtestScores);
+    expect((await verifyProfileConsent(decoded)).status).toBe("valid");
   });
 
   it("cannot export private answers even when an untyped caller asks for them", async () => {

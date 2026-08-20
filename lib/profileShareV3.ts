@@ -1,4 +1,5 @@
 import type {
+  BdsmtestScore,
   Profile,
   KinkEntry,
   ProfileConsentProof,
@@ -9,17 +10,24 @@ import { decodeAny } from "@/lib/shareProfile";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   canonicalJson,
+  projectProfileConsent,
   sha256Base64Url,
+  signProfileConsent,
+  verifyConsentPayload,
   verifyProfileConsent,
   verifyProfileOwnerKey,
 } from "@/lib/consentProof";
-import { sanitizeAvatar } from "@/lib/profileSanitizePrimitives";
+import { sanitizeAvatar, sanitizeBdsmtestUrl } from "@/lib/profileSanitizePrimitives";
 import { checksumProfilePayload } from "@/lib/profileQr";
 import { prepareAvatarForShare } from "@/lib/imageUtils";
 
 export interface ProfileShareV3Options {
   includeFetLife?: boolean;
   includeAvatar?: boolean;
+  includeBdsmtest?: boolean;
+  /** Owner key for migrating old proofs and signing optional disclosures. */
+  profileOwnerKey?: ProfileOwnerKey;
+  /** Kept for source compatibility with the existing avatar-sharing caller. */
   avatarOwnerKey?: ProfileOwnerKey;
 }
 
@@ -33,6 +41,10 @@ export interface ProfileShareTransport {
 export const MAX_PROFILE_SHARE_INFLATED_BYTES = 4_000_000;
 export const MAX_PROFILE_SHARE_ENCODED_CHARS = 6_000_000;
 
+const MAX_BDSMTEST_DISCLOSURE_SCORES = 50;
+const MAX_BDSMTEST_ROLE_LENGTH = 64;
+const CONTROL_RE = /[\u0000-\u001F\u007F]/;
+
 type EntryRow = [
   id: string,
   status: string | null,
@@ -42,6 +54,18 @@ type EntryRow = [
   tags: string[] | null,
   curious: 1 | null,
 ];
+
+interface BdsmtestDisclosure {
+  schema: 1;
+  algorithm: "ECDSA-P256-SHA256";
+  keyId: string;
+  profileId: string;
+  profileProofHash: string;
+  signedAt: number;
+  url?: string;
+  scores?: BdsmtestScore[];
+  signature: string;
+}
 
 interface ProfilePayloadV3 {
   v: 3;
@@ -54,8 +78,11 @@ interface ProfilePayloadV3 {
   vc?: string;
   rs?: string;
   fl?: string;
+  /** Legacy/core fields. New encodes emit these only after explicit opt-in. */
   bu?: string;
   bs?: Profile["bdsmtestScores"];
+  /** Separate signed disclosure for new optional BDSMTest shares. */
+  bd?: BdsmtestDisclosure;
   k?: [string, string][];
   e?: EntryRow[];
   cp?: ProfileConsentProof;
@@ -105,16 +132,75 @@ const PREFIX_DEFLATE = "3d.";
 const PREFIX_RAW = "3r.";
 const PREFIX_BUNDLE = "4r.";
 const PREFIX_AVATAR = "a1.";
-const AVATAR_ALGORITHM = "ECDSA-P256-SHA256" as const;
+const PROOF_ALGORITHM = "ECDSA-P256-SHA256" as const;
 const CURVE = "P-256";
 const TEXT = new TextEncoder();
 
 function subtle(): SubtleCrypto {
-  if (!globalThis.crypto?.subtle) throw new Error("Deze browser kan de profielfoto niet bevestigen");
+  if (!globalThis.crypto?.subtle) throw new Error("Deze browser kan profielbevestiging niet gebruiken");
   return globalThis.crypto.subtle;
 }
 
-function compactProfile(profile: Profile, opts?: ProfileShareV3Options): ProfilePayloadV3 {
+function ownerKey(opts?: ProfileShareV3Options): ProfileOwnerKey | undefined {
+  return opts?.profileOwnerKey ?? opts?.avatarOwnerKey;
+}
+
+function cleanBdsmtestScores(raw: unknown): BdsmtestScore[] | undefined {
+  if (raw === undefined) return undefined;
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_BDSMTEST_DISCLOSURE_SCORES) return undefined;
+  const byRole = new Map<string, number>();
+  for (const row of raw) {
+    if (!row || typeof row !== "object") return undefined;
+    const role = typeof (row as { role?: unknown }).role === "string"
+      ? (row as { role: string }).role.trim()
+      : "";
+    const pct = (row as { pct?: unknown }).pct;
+    if (!role || role.length > MAX_BDSMTEST_ROLE_LENGTH || CONTROL_RE.test(role) || /[<>]/.test(role)) return undefined;
+    if (typeof pct !== "number" || !Number.isInteger(pct) || pct < 0 || pct > 100) return undefined;
+    const previous = byRole.get(role);
+    if (previous !== undefined && previous !== pct) return undefined;
+    if (previous === undefined) byRole.set(role, pct);
+  }
+  return Array.from(byRole, ([role, pct]) => ({ role, pct }));
+}
+
+function disclosureData(profile: Profile): { url?: string; scores?: BdsmtestScore[] } | null {
+  const url = profile.bdsmtestUrl ? sanitizeBdsmtestUrl(profile.bdsmtestUrl) : undefined;
+  const scores = profile.bdsmtestScores?.length ? cleanBdsmtestScores(profile.bdsmtestScores) : undefined;
+  if (profile.bdsmtestUrl && !url) throw new Error("De opgeslagen BDSMTest-link is ongeldig");
+  if (profile.bdsmtestScores?.length && !scores) throw new Error("De opgeslagen BDSMTest-resultaten zijn ongeldig");
+  return url || scores ? { ...(url ? { url } : {}), ...(scores ? { scores } : {}) } : null;
+}
+
+function withoutBdsmtest(profile: Profile): Profile {
+  const { bdsmtestUrl: _url, bdsmtestScores: _scores, ...rest } = profile;
+  return rest as Profile;
+}
+
+async function prepareProfileForShare(profile: Profile, opts?: ProfileShareV3Options): Promise<Profile> {
+  if (opts?.includeBdsmtest || (!profile.bdsmtestUrl && !profile.bdsmtestScores?.length)) return profile;
+  const redacted = withoutBdsmtest(profile);
+  if (!profile.consentProof) return redacted;
+
+  // Current core proofs intentionally ignore external enrichments, so the same
+  // proof remains valid when BDSMTest is withheld. Only legacy own proofs need
+  // a one-time migration before they can be redacted without forking lineage.
+  const verification = await verifyProfileConsent(redacted);
+  if (verification.status === "valid") return redacted;
+
+  const key = ownerKey(opts);
+  if (!key) {
+    throw new Error("BDSMTest kan niet privé blijven zonder de profielbevestiging te vernieuwen");
+  }
+  const signed = await signProfileConsent(redacted, key);
+  return { ...redacted, consentProof: signed.proof };
+}
+
+function compactProfile(
+  profile: Profile,
+  opts?: ProfileShareV3Options,
+  bdsmDisclosure?: BdsmtestDisclosure,
+): ProfilePayloadV3 {
   const mayShare = (entry: KinkEntry | undefined) => entry?.privateResponse !== true;
 
   const entries: EntryRow[] = [];
@@ -154,15 +240,16 @@ function compactProfile(profile: Profile, opts?: ProfileShareV3Options): Profile
   };
   if (profile.relationshipStatus) payload.rs = profile.relationshipStatus;
   if (opts?.includeFetLife && profile.fetLifeUsername) payload.fl = profile.fetLifeUsername;
-  if (profile.bdsmtestUrl) payload.bu = profile.bdsmtestUrl;
-  if (profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
+  if (opts?.includeBdsmtest && profile.bdsmtestUrl) payload.bu = profile.bdsmtestUrl;
+  if (opts?.includeBdsmtest && profile.bdsmtestScores?.length) payload.bs = profile.bdsmtestScores;
+  if (bdsmDisclosure) payload.bd = bdsmDisclosure;
   if (customKinks.length) payload.k = customKinks;
   if (entries.length) payload.e = entries;
   if (profile.consentProof) payload.cp = profile.consentProof;
   return payload;
 }
 
-function expandProfile(payload: unknown): Profile {
+function expandProfile(payload: unknown): { profile: Profile; disclosure?: BdsmtestDisclosure } {
   if (!payload || typeof payload !== "object" || (payload as { v?: unknown }).v !== 3) {
     throw new Error("Ongeldig v3-profiel");
   }
@@ -203,7 +290,10 @@ function expandProfile(payload: unknown): Profile {
 
   const clean = sanitizeProfileFull(raw);
   if (!clean) throw new Error("Ongeldig profiel: verwacht veld ontbreekt");
-  return { ...clean, isImported: true, origin: "shared", lockedAt: Date.now() };
+  return {
+    profile: { ...clean, isImported: true, origin: "shared", lockedAt: Date.now() },
+    ...(p.bd ? { disclosure: p.bd } : {}),
+  };
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
@@ -223,21 +313,93 @@ function base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-function avatarProofMessage(proof: Omit<ProfileAvatarProof, "signature">): string {
-  return canonicalJson(proof);
+async function signMessage(unsigned: object, key: ProfileOwnerKey): Promise<string> {
+  const privateKey = await subtle().importKey(
+    "jwk", key.privateKeyJwk, { name: "ECDSA", namedCurve: CURVE }, false, ["sign"],
+  );
+  return bytesToBase64Url(new Uint8Array(await subtle().sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    privateKey,
+    TEXT.encode(canonicalJson(unsigned)),
+  )));
+}
+
+async function createBdsmtestDisclosure(profile: Profile, key: ProfileOwnerKey): Promise<BdsmtestDisclosure | undefined> {
+  const data = disclosureData(profile);
+  if (!data) return undefined;
+  const profileProof = profile.consentProof;
+  if (!profileProof || profileProof.keyId !== key.keyId || key.profileId !== profile.id || !await verifyProfileOwnerKey(key)) {
+    throw new Error("BDSMTest kan niet met deze profielbron worden bevestigd");
+  }
+  const unsigned = {
+    schema: 1 as const,
+    algorithm: PROOF_ALGORITHM,
+    keyId: key.keyId,
+    profileId: profile.id,
+    profileProofHash: profileProof.proofHash,
+    signedAt: Date.now(),
+    ...data,
+  };
+  return { ...unsigned, signature: await signMessage(unsigned, key) };
+}
+
+async function verifyBdsmtestDisclosure(profile: Profile, raw: unknown): Promise<void> {
+  if (!raw || typeof raw !== "object") throw new Error("BDSMTest-openbaarmaking is ongeldig");
+  const value = raw as Partial<BdsmtestDisclosure>;
+  const profileProof = profile.consentProof;
+  const url = typeof value.url === "string" ? sanitizeBdsmtestUrl(value.url) : undefined;
+  const scores = value.scores !== undefined ? cleanBdsmtestScores(value.scores) : undefined;
+  if (!profileProof
+    || value.schema !== 1
+    || value.algorithm !== PROOF_ALGORITHM
+    || value.keyId !== profileProof.keyId
+    || value.profileId !== profile.id
+    || value.profileProofHash !== profileProof.proofHash
+    || typeof value.signedAt !== "number"
+    || !Number.isFinite(value.signedAt)
+    || typeof value.signature !== "string"
+    || (value.url !== undefined && (!url || url !== value.url))
+    || (value.scores !== undefined && !scores)
+    || (!url && !scores)) {
+    throw new Error("BDSMTest-openbaarmaking hoort niet bij dit bevestigde profiel");
+  }
+  const unsigned = {
+    schema: 1 as const,
+    algorithm: PROOF_ALGORITHM,
+    keyId: value.keyId,
+    profileId: value.profileId,
+    profileProofHash: value.profileProofHash,
+    signedAt: value.signedAt,
+    ...(url ? { url } : {}),
+    ...(scores ? { scores } : {}),
+  };
+  try {
+    const publicKey = await subtle().importKey(
+      "jwk", profileProof.publicKeyJwk, { name: "ECDSA", namedCurve: CURVE }, false, ["verify"],
+    );
+    const valid = await subtle().verify(
+      { name: "ECDSA", hash: "SHA-256" },
+      publicKey,
+      base64UrlToBytes(value.signature),
+      TEXT.encode(canonicalJson(unsigned)),
+    );
+    if (!valid) throw new Error("invalid signature");
+  } catch {
+    throw new Error("BDSMTest-openbaarmaking hoort niet bij dit bevestigde profiel");
+  }
 }
 
 function sanitizeAvatarProof(raw: unknown): ProfileAvatarProof | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const proof = raw as Record<string, unknown>;
-  if (proof.schema !== 1 || proof.algorithm !== AVATAR_ALGORITHM) return undefined;
+  if (proof.schema !== 1 || proof.algorithm !== PROOF_ALGORITHM) return undefined;
   if (typeof proof.keyId !== "string" || typeof proof.profileId !== "string"
     || typeof proof.profileProofHash !== "string" || typeof proof.avatarHash !== "string"
     || typeof proof.signature !== "string") return undefined;
   if (typeof proof.profileUpdatedAt !== "number" || !Number.isFinite(proof.profileUpdatedAt)) return undefined;
   return {
     schema: 1,
-    algorithm: AVATAR_ALGORITHM,
+    algorithm: PROOF_ALGORITHM,
     keyId: proof.keyId,
     profileId: proof.profileId,
     profileUpdatedAt: proof.profileUpdatedAt,
@@ -250,31 +412,23 @@ function sanitizeAvatarProof(raw: unknown): ProfileAvatarProof | undefined {
 async function createAvatarProof(
   profile: Profile,
   avatarDataUrl: string,
-  ownerKey: ProfileOwnerKey,
+  key: ProfileOwnerKey,
 ): Promise<ProfileAvatarProof> {
   const profileProof = profile.consentProof;
-  if (!profileProof || profileProof.keyId !== ownerKey.keyId
-    || ownerKey.profileId !== profile.id || !await verifyProfileOwnerKey(ownerKey)) {
+  if (!profileProof || profileProof.keyId !== key.keyId
+    || key.profileId !== profile.id || !await verifyProfileOwnerKey(key)) {
     throw new Error("De profielfoto kan niet met deze eigendomssleutel worden bevestigd");
   }
   const unsigned = {
     schema: 1 as const,
-    algorithm: AVATAR_ALGORITHM,
-    keyId: ownerKey.keyId,
+    algorithm: PROOF_ALGORITHM,
+    keyId: key.keyId,
     profileId: profile.id,
     profileUpdatedAt: profile.updatedAt,
     profileProofHash: profileProof.proofHash,
     avatarHash: await sha256Base64Url(avatarDataUrl),
   };
-  const privateKey = await subtle().importKey(
-    "jwk", ownerKey.privateKeyJwk, { name: "ECDSA", namedCurve: CURVE }, false, ["sign"],
-  );
-  const signature = bytesToBase64Url(new Uint8Array(await subtle().sign(
-    { name: "ECDSA", hash: "SHA-256" },
-    privateKey,
-    TEXT.encode(avatarProofMessage(unsigned)),
-  )));
-  return { ...unsigned, signature };
+  return { ...unsigned, signature: await signMessage(unsigned, key) };
 }
 
 function encodeAvatarEnvelope(avatarDataUrl: string, proof: ProfileAvatarProof): string {
@@ -314,7 +468,7 @@ async function verifyAvatarEnvelope(profile: Profile, envelope: ProfileAvatarEnv
       { name: "ECDSA", hash: "SHA-256" },
       publicKey,
       base64UrlToBytes(proof.signature),
-      TEXT.encode(avatarProofMessage(unsigned)),
+      TEXT.encode(canonicalJson(unsigned)),
     );
     if (!valid) throw new Error("invalid signature");
   } catch {
@@ -369,11 +523,12 @@ export function isProfileShareBundle(encoded: string): boolean {
   return encoded.startsWith(PREFIX_BUNDLE);
 }
 
-export async function encodeProfileV3(
+async function encodePreparedProfileV3(
   profile: Profile,
   opts?: ProfileShareV3Options,
+  disclosure?: BdsmtestDisclosure,
 ): Promise<string> {
-  const raw = new TextEncoder().encode(JSON.stringify(compactProfile(profile, opts)));
+  const raw = new TextEncoder().encode(JSON.stringify(compactProfile(profile, opts, disclosure)));
   if (raw.byteLength > MAX_PROFILE_SHARE_INFLATED_BYTES) {
     throw new Error("Profiel is te groot om te delen");
   }
@@ -386,6 +541,21 @@ export async function encodeProfileV3(
     // Raw v3 remains lossless on browsers without CompressionStream.
   }
   return PREFIX_RAW + bytesToBase64Url(raw);
+}
+
+export async function encodeProfileV3(
+  profile: Profile,
+  opts?: ProfileShareV3Options,
+): Promise<string> {
+  const prepared = await prepareProfileForShare(profile, opts);
+  const key = ownerKey(opts);
+  const disclosure = opts?.includeBdsmtest
+    ? (key ? await createBdsmtestDisclosure(prepared, key) : undefined)
+    : undefined;
+  if (opts?.includeBdsmtest && disclosureData(prepared) && !disclosure) {
+    throw new Error("BDSMTest kan alleen als bevestigde optionele openbaarmaking worden gedeeld");
+  }
+  return encodePreparedProfileV3(prepared, opts, disclosure);
 }
 
 export function encodeProfileShareBundle(profilePayload: string, avatarPayload: string): string {
@@ -411,17 +581,26 @@ export async function encodeProfileShareTransport(
   profile: Profile,
   opts?: ProfileShareV3Options,
 ): Promise<ProfileShareTransport> {
-  const profilePayload = await encodeProfileV3(profile, opts);
+  const prepared = await prepareProfileForShare(profile, opts);
+  const key = ownerKey(opts);
+  const disclosure = opts?.includeBdsmtest
+    ? (key ? await createBdsmtestDisclosure(prepared, key) : undefined)
+    : undefined;
+  if (opts?.includeBdsmtest && disclosureData(prepared) && !disclosure) {
+    throw new Error("BDSMTest kan alleen als bevestigde optionele openbaarmaking worden gedeeld");
+  }
+  const profilePayload = await encodePreparedProfileV3(prepared, opts, disclosure);
   let avatarDataUrl: string | undefined;
   if (opts?.includeAvatar && profile.avatarDataUrl) {
     avatarDataUrl = typeof document !== "undefined" && typeof Image !== "undefined"
       ? await prepareAvatarForShare(profile.avatarDataUrl) ?? sanitizeAvatar(profile.avatarDataUrl)
       : sanitizeAvatar(profile.avatarDataUrl);
   }
-  if (!avatarDataUrl || !opts?.avatarOwnerKey || !profile.consentProof) {
+  const avatarKey = opts?.avatarOwnerKey ?? key;
+  if (!avatarDataUrl || !avatarKey || !prepared.consentProof) {
     return { encoded: profilePayload, profilePayload };
   }
-  const avatarProof = await createAvatarProof(profile, avatarDataUrl, opts.avatarOwnerKey);
+  const avatarProof = await createAvatarProof(prepared, avatarDataUrl, avatarKey);
   const avatarPayload = encodeAvatarEnvelope(avatarDataUrl, avatarProof);
   return {
     encoded: encodeProfileShareBundle(profilePayload, avatarPayload),
@@ -442,13 +621,42 @@ export async function decodeProfileV3(encoded: string): Promise<Profile> {
     throw new Error("Profielcode is te groot");
   }
   const decoded = compressed ? await decompressBytesBounded(bytes) : bytes;
-  const profile = expandProfile(JSON.parse(new TextDecoder().decode(decoded)));
+  const expanded = expandProfile(JSON.parse(new TextDecoder().decode(decoded)));
+  let profile = expanded.profile;
+  const hasBdsmtest = Boolean(profile.bdsmtestUrl || profile.bdsmtestScores?.length);
+  let consentMode: "unsigned" | "core" | "legacy" = profile.consentProof ? "core" : "unsigned";
+
   if (profile.consentProof) {
-    const verification = await verifyProfileConsent(profile);
-    if (verification.status !== "valid") {
-      throw new Error(verification.status === "invalid" ? verification.reason : "Profiel mist bronbevestiging");
+    const coreVerification = await verifyConsentPayload(projectProfileConsent(profile), profile.consentProof);
+    if (coreVerification.status !== "valid") {
+      const verification = await verifyProfileConsent(profile);
+      if (verification.status !== "valid") {
+        throw new Error(verification.status === "invalid" ? verification.reason : "Profiel mist bronbevestiging");
+      }
+      consentMode = "legacy";
     }
   }
+
+  if (expanded.disclosure) {
+    if (!profile.consentProof) throw new Error("BDSMTest-openbaarmaking mist profielbevestiging");
+    await verifyBdsmtestDisclosure(profile, expanded.disclosure);
+    const disclosure = expanded.disclosure;
+    if (disclosure.url !== profile.bdsmtestUrl
+      || canonicalJson(disclosure.scores ?? []) !== canonicalJson(profile.bdsmtestScores ?? [])) {
+      throw new Error("BDSMTest-openbaarmaking en profielinhoud komen niet overeen");
+    }
+  } else if (hasBdsmtest && consentMode === "core") {
+    // A core proof intentionally does not authenticate optional BDSMTest data.
+    // Therefore a new-format payload may not carry those fields without the
+    // separate disclosure proof. This blocks an attacker from injecting them
+    // while leaving the otherwise-valid core profile proof untouched.
+    throw new Error("BDSMTest-openbaarmaking ontbreekt");
+  } else if (hasBdsmtest && consentMode === "unsigned") {
+    // Keep old unsigned profile links readable, but never trust their optional
+    // external enrichment. The core profile still imports; BDSMTest stays out.
+    profile = withoutBdsmtest(profile);
+  }
+
   return profile;
 }
 
