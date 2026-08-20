@@ -12,6 +12,12 @@ const PROFILE_STEPS: readonly SpotlightStep[] = [
     body: "Tik de avatar om een foto toe te voegen. De afbeelding wordt lokaal opgeslagen en blijft onder jouw controle.",
     pad: 8,
   },
+  {
+    selector: '[data-tour="profile-enrichment"]',
+    title: "Maak je profiel wat completer",
+    body: "Gebruik je BDSMTest of FetLife? Via Profiel aanvullen kun je ze hier toevoegen.",
+    pad: 8,
+  },
 ];
 
 interface ProfileIntroTourProps {
