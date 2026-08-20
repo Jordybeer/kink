@@ -22,7 +22,7 @@ test.describe("profiel delen — optionele externe data", () => {
     await expect(bdsmtest).not.toBeChecked();
     await expect(dialog.getByText(/BDSMTest blijft op dit toestel/i)).toBeVisible();
 
-    await bdsmtest.check();
+    await dialog.getByText("BDSMTest-resultaten meesturen", { exact: true }).click();
     await expect(bdsmtest).toBeChecked();
     await expect(dialog.getByText(/BDSMTest wordt alleen voor deze deelactie meegestuurd/i)).toBeVisible();
 
