@@ -2,6 +2,11 @@ import type { Profile, ProfileOwnerKey } from "@/types";
 import { canonicalJson, sha256Base64Url, verifyProfileConsent } from "@/lib/consentProof";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import {
+  resolveProfileIdentityTrust,
+  type ProfileIdentityTrust,
+} from "@/lib/profileIdentityTrust";
+import { getPersistedProfileIdentityAnchor } from "@/lib/storeSecurity";
+import {
   cloneSeries,
   contractPairKey,
   contractParticipantFromProfile,
@@ -43,6 +48,32 @@ import {
 
 function uid(): string {
   return crypto.randomUUID();
+}
+
+function isSharedProfile(profile: Pick<Profile, "origin" | "isImported">): boolean {
+  return profile.origin === "shared" || profile.isImported === true;
+}
+
+export async function resolveContractCounterpartyIdentityTrust(
+  profile: Profile,
+): Promise<ProfileIdentityTrust> {
+  const consent = await verifyProfileConsent(profile);
+  const cryptographicStatus = consent.status === "valid"
+    ? "valid"
+    : profile.consentProof
+      ? "invalid"
+      : "unsigned";
+  return resolveProfileIdentityTrust(
+    profile,
+    cryptographicStatus,
+    getPersistedProfileIdentityAnchor(profile.id),
+  );
+}
+
+async function activationCounterpartyIsAnchored(profile: Profile): Promise<boolean> {
+  if (!isSharedProfile(profile)) return true;
+  const trust = await resolveContractCounterpartyIdentityTrust(profile);
+  return trust.status === "identity-anchored";
 }
 
 function stateMachineError(result: ContractStateMachineResult): string {
@@ -293,6 +324,9 @@ export async function createContractRequest(input: {
   note?: string;
 }): Promise<{ envelope: ContractExchangeEnvelope; series: ContractSeries }> {
   const { action, actor, counterparty, ownerKey } = input;
+  if (action === "activate" && !await activationCounterpartyIsAnchored(counterparty)) {
+    throw new Error("Bevestig eerst onafhankelijk de identiteit van de andere contractpartij voordat je het contract activeert.");
+  }
   const createdAt = Date.now();
   const authorization = authorizeContractRequestCreation({
     series: input.series,
@@ -391,6 +425,14 @@ export async function verifyContractRequest(
     const trustedConsent = await verifyProfileConsent(trustedActor);
     if (trustedConsent.status !== "valid") return false;
     if (trustedConsent.proof.keyId !== request.proof.keyId) return false;
+    if (request.action === "activate" && isSharedProfile(trustedActor)) {
+      const trust = resolveProfileIdentityTrust(
+        trustedActor,
+        "valid",
+        getPersistedProfileIdentityAnchor(trustedActor.id),
+      );
+      if (trust.status !== "identity-anchored") return false;
+    }
   }
   if (!await verifyContractProof(requestPayload(request, "request"), request.proof)) return false;
 

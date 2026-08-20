@@ -233,7 +233,10 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
 
     const profileTour = page.getByRole("dialog", { name: "Maak het profiel herkenbaar" });
     await expect(profileTour).toBeVisible({ timeout: 3000 });
-    await profileTour.getByRole("button", { name: "Begrepen" }).click();
+    await profileTour.getByRole("button", { name: "Volgende" }).click();
+    const enrichmentTour = page.getByRole("dialog", { name: "Maak je profiel wat completer" });
+    await expect(enrichmentTour).toBeVisible();
+    await enrichmentTour.getByRole("button", { name: "Begrepen" }).click();
 
     await expect.poll(() => page.evaluate(() => {
       const raw = localStorage.getItem("kinksync-split-tours-v2");
