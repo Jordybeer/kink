@@ -27,6 +27,8 @@ import {
 } from "@/lib/contractHandwriting";
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
+type ContractNoteSide = "a" | "b";
+type ContractNotes = Record<string, { a?: string; b?: string }>;
 
 function ContractPage() {
   const searchParams = useSearchParams();
@@ -43,6 +45,7 @@ function ContractPage() {
   const [signalsB, setSignalsB] = useState<Signals>({ ...DEFAULT_SIGNALS });
   const [aftercareA, setAftercareA] = useState<string[]>([]);
   const [aftercareB, setAftercareB] = useState<string[]>([]);
+  const [contractNotes, setContractNotes] = useState<ContractNotes>({});
 
   const [realNameA, setRealNameA] = useState("");
   const [realNameB, setRealNameB] = useState("");
@@ -52,6 +55,10 @@ function ContractPage() {
 
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    setContractNotes({});
+  }, [aId, bId]);
 
   useEffect(() => {
     if (!whyOpen) return;
@@ -108,8 +115,6 @@ function ContractPage() {
       name: directionalCompareLabel(kink.id, kink.name),
       statusA: entryA.status,
       statusB: entryB.status,
-      commentA: entryA.comment || undefined,
-      commentB: entryB.comment || undefined,
       desireA: entryA.desire ?? null,
       desireB: entryB.desire ?? null,
     };
@@ -146,8 +151,6 @@ function ContractPage() {
       name: item.name,
       statusA: entryA.status,
       statusB: entryB.status,
-      commentA: entryA.comment || undefined,
-      commentB: entryB.comment || undefined,
     };
     if (isKinkMatch(entryA, entryB)) customShared.push(detail);
     else if (entryA.status || entryB.status) discuss.push(detail);
@@ -179,6 +182,49 @@ function ContractPage() {
     realNameB: useRealNames ? trimmedRealNameB : undefined,
   });
 
+  function noteKey(scope: string, itemName: string): string {
+    return `${scope}\u0000${itemName}`;
+  }
+
+  function withNotes(items: KinkDetail[], scope: string): KinkDetail[] {
+    return items.map((item) => {
+      const notes = contractNotes[noteKey(scope, item.name)];
+      const noteA = notes?.a?.trim();
+      const noteB = notes?.b?.trim();
+      return {
+        ...item,
+        ...(noteA ? { commentA: noteA } : {}),
+        ...(noteB ? { commentB: noteB } : {}),
+      };
+    });
+  }
+
+  function editableItems(items: KinkDetail[], scope: string): KinkDetail[] {
+    return items.map((item) => {
+      const notes = contractNotes[noteKey(scope, item.name)];
+      return {
+        ...item,
+        commentA: notes?.a ?? "",
+        commentB: notes?.b ?? "",
+      };
+    });
+  }
+
+  function updateContractNote(scope: string, itemName: string, side: ContractNoteSide, value: string) {
+    setContractNotes((current) => {
+      const key = noteKey(scope, itemName);
+      const previous = current[key] ?? {};
+      const nextValue = value.slice(0, 500);
+      const nextEntry = { ...previous, [side]: nextValue || undefined };
+      if (!nextEntry.a && !nextEntry.b) {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      }
+      return { ...current, [key]: nextEntry };
+    });
+  }
+
   function baseContractContent(): ContractVersionContent {
     return {
       schema: 1,
@@ -191,11 +237,11 @@ function ContractPage() {
       signalsB: { green: signalsB.green, amber: signalsB.yellow, red: signalsB.red, black: signalsB.black },
       aftercareA: [...aftercareA],
       aftercareB: [...aftercareB],
-      shared: sharedAll.map((item) => ({ ...item })),
-      softLimits: softLimits.map((item) => ({ ...item })),
+      shared: withNotes(sharedAll, "shared"),
+      softLimits: withNotes(softLimits, "soft"),
       hardLimits: hardLimits.map((item) => ({ ...item })),
-      hardLimitDetails: hardLimitDetails.map((item) => ({ ...item })),
-      discuss: discuss.map((item) => ({ ...item })),
+      hardLimitDetails: withNotes(hardLimitDetails, "hard"),
+      discuss: withNotes(discuss, "discuss"),
     };
   }
 
@@ -343,10 +389,54 @@ function ContractPage() {
             </div>
           </div>
 
-          <ContractSection title="Gedeelde verlangens" items={sharedAll} colour="var(--yes)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
-          <ContractSection title="Zachte grenzen" items={softLimits} colour="var(--maybe)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
-          <ContractSection title="Harde grenzen" items={hardLimits.map((item) => ({ text: item.name, tag: item.who }))} colour="var(--hard-no)" />
-          <ContractSection title="Bespreking nodig" items={discuss} colour="var(--willing)" nameA={profileA.name} nameB={profileB.name} colourA={COLOUR_A} colourB={COLOUR_B} />
+          <ContractSection
+            title="Gedeelde verlangens"
+            items={editableItems(sharedAll, "shared")}
+            noteScope="shared"
+            editableNotes
+            onNoteChange={updateContractNote}
+            colour="var(--yes)"
+            nameA={profileA.name}
+            nameB={profileB.name}
+            colourA={COLOUR_A}
+            colourB={COLOUR_B}
+          />
+          <ContractSection
+            title="Zachte grenzen"
+            items={editableItems(softLimits, "soft")}
+            noteScope="soft"
+            editableNotes
+            onNoteChange={updateContractNote}
+            colour="var(--maybe)"
+            nameA={profileA.name}
+            nameB={profileB.name}
+            colourA={COLOUR_A}
+            colourB={COLOUR_B}
+          />
+          <ContractSection
+            title="Harde grenzen"
+            items={editableItems(hardLimitDetails, "hard")}
+            noteScope="hard"
+            editableNotes
+            onNoteChange={updateContractNote}
+            colour="var(--hard-no)"
+            nameA={profileA.name}
+            nameB={profileB.name}
+            colourA={COLOUR_A}
+            colourB={COLOUR_B}
+          />
+          <ContractSection
+            title="Bespreking nodig"
+            items={editableItems(discuss, "discuss")}
+            noteScope="discuss"
+            editableNotes
+            onNoteChange={updateContractNote}
+            colour="var(--willing)"
+            nameA={profileA.name}
+            nameB={profileB.name}
+            colourA={COLOUR_A}
+            colourB={COLOUR_B}
+          />
 
           <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border)" }}>
             <h3 className="mb-3 text-sm italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400, color: "var(--accent)" }}>Algemene afspraken</h3>
