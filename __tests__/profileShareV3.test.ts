@@ -234,7 +234,7 @@ describe("lossless profile share v3", () => {
     const legacy: Profile = {
       ...profile,
       id: "legacy-profile",
-      verificationCode: "KS-LEGACY-0001",
+      verificationCode: "KS-7E6A-CY22-2345",
       customKinks: [],
       entries: {},
       privateNote: undefined,
