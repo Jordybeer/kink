@@ -38,6 +38,7 @@ export default function QRModal({ profile, onClose }: Props) {
   const [url, setUrl] = useState("");
   const [includeFetLife, setIncludeFetLife] = useState(false);
   const [includeAvatar, setIncludeAvatar] = useState(false);
+  const [includeBdsmtest, setIncludeBdsmtest] = useState(false);
   const [settledPreferenceKey, setSettledPreferenceKey] = useState<string | null>(null);
   const [avatarSkipped, setAvatarSkipped] = useState(false);
   const [avatarLinkOnly, setAvatarLinkOnly] = useState(false);
@@ -49,6 +50,7 @@ export default function QRModal({ profile, onClose }: Props) {
     && shareMembers.every((member) => member.origin !== "shared" && member.isImported !== true);
   const avatarSource = ownsProfile ? shareMembers.find((member) => !!member.avatarDataUrl) : undefined;
   const canShareAvatar = !!avatarSource;
+  const hasBdsmtest = shareMembers.some((member) => Boolean(member.bdsmtestUrl || member.bdsmtestScores?.length));
   const switchVersionKey = switchPair
     ? switchPair.map((member) => `${member.id}:${member.updatedAt}:${member.avatarDataUrl ? "avatar" : "none"}`).join("|")
     : "single";
@@ -59,6 +61,7 @@ export default function QRModal({ profile, onClose }: Props) {
   useEffect(() => {
     setIncludeFetLife(false);
     setIncludeAvatar(canShareAvatar);
+    setIncludeBdsmtest(false);
     setSettledPreferenceKey(preferenceKey);
   }, [preferenceKey, canShareAvatar]);
 
@@ -121,6 +124,7 @@ export default function QRModal({ profile, onClose }: Props) {
             readySubmissive,
             {
               includeFetLife,
+              includeBdsmtest,
               includeAvatar,
               avatarProfileId: avatarMember?.id,
               ownerKeys: useStore.getState().profileOwnerKeys,
@@ -137,13 +141,13 @@ export default function QRModal({ profile, onClose }: Props) {
             ? profile
             : (await sealProfileConsent(profile.id))!;
           if (!ready) throw new Error("Profiel kon niet worden bevestigd");
-          const avatarOwnerKey = includeAvatar
-            ? useStore.getState().profileOwnerKeys.find((key) => key.profileId === ready.id)
-            : undefined;
+          const key = useStore.getState().profileOwnerKeys.find((candidate) => candidate.profileId === ready.id);
           transport = await encodeProfileShareTransport(ready, {
             includeFetLife,
+            includeBdsmtest,
             includeAvatar,
-            avatarOwnerKey,
+            profileOwnerKey: key,
+            avatarOwnerKey: includeAvatar ? key : undefined,
           });
           sharedAvatar = !!transport.avatarPayload;
         }
@@ -195,6 +199,7 @@ export default function QRModal({ profile, onClose }: Props) {
     profile?.isImported,
     profile?.avatarDataUrl,
     includeFetLife,
+    includeBdsmtest,
     includeAvatar,
     preferenceKey,
     settledPreferenceKey,
@@ -251,6 +256,7 @@ export default function QRModal({ profile, onClose }: Props) {
   const currentFrame = qrFrames[qrIndex] ?? null;
   const avatarIncluded = canShareAvatar && includeAvatar && !avatarSkipped;
   const avatarInQrSequence = avatarIncluded && !avatarLinkOnly;
+  const bdsmtestIncluded = includeBdsmtest && hasBdsmtest;
   const proofConfirmed = Boolean(preparedProfile?.consentProof || switchPair?.some((member) => member.consentProof));
 
   return (
@@ -349,7 +355,7 @@ export default function QRModal({ profile, onClose }: Props) {
         {avatarInQrSequence && <p className="mt-1 text-center text-xs" style={{ color: "var(--yes)" }}>De bevestigde profielfoto reist mee.</p>}
         {avatarLinkOnly && <p className="mt-1 text-center text-xs" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
 
-        {(canShareAvatar || profile?.fetLifeUsername) && (
+        {(canShareAvatar || profile?.fetLifeUsername || hasBdsmtest) && (
           <div className="mt-2 grid gap-1">
             {canShareAvatar && (
               <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm">
@@ -370,6 +376,16 @@ export default function QRModal({ profile, onClose }: Props) {
                 <span style={{ color: "var(--text2)" }}>FetLife-link meesturen</span>
               </label>
             )}
+
+            {hasBdsmtest && (
+              <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm">
+                <span className="flex h-5 w-5 flex-none items-center justify-center rounded border transition-colors" style={includeBdsmtest ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
+                  {includeBdsmtest && <Check size={11} weight="bold" aria-hidden="true" />}
+                </span>
+                <input type="checkbox" className="sr-only" checked={includeBdsmtest} onChange={(event) => setIncludeBdsmtest(event.target.checked)} />
+                <span style={{ color: "var(--text2)" }}>BDSMTest-resultaten meesturen</span>
+              </label>
+            )}
           </div>
         )}
 
@@ -380,9 +396,9 @@ export default function QRModal({ profile, onClose }: Props) {
         </button>
 
         <p className="mt-2 text-center text-xs leading-5" style={{ color: "var(--text2)" }}>
-          {avatarIncluded
-            ? "Verborgen antwoorden en persoonlijke notitie blijven op dit toestel. De profielfoto wordt meegestuurd."
-            : "Verborgen antwoorden, profielfoto en persoonlijke notitie blijven op dit toestel."}
+          Verborgen antwoorden en persoonlijke notitie blijven op dit toestel.
+          {avatarIncluded ? " De profielfoto wordt meegestuurd." : " De profielfoto blijft op dit toestel."}
+          {bdsmtestIncluded ? " BDSMTest wordt alleen voor deze deelactie meegestuurd." : hasBdsmtest ? " BDSMTest blijft op dit toestel." : ""}
         </p>
         <Link
           href="/about#limits-title"
