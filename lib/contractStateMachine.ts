@@ -7,6 +7,7 @@ import {
   type ContractSeriesStatus,
   type ContractVersion,
 } from "@/lib/contractLifecycle";
+import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
 
 export const CONTRACT_REQUEST_TTL_MS = 15 * 60 * 1000;
 export const CONTRACT_REQUEST_CLOCK_SKEW_MS = 60 * 1000;
@@ -70,6 +71,12 @@ function versionParticipantsMatchSeries(
   return seriesIds.size === 2 && seriesIds.has(left) && seriesIds.has(right);
 }
 
+function activatableVersion(series: ContractSeries, version: ContractVersion | undefined): boolean {
+  return !!version?.content
+    && versionParticipantsMatchSeries(series, version)
+    && hasRequiredHandwrittenSignatures(version.content);
+}
+
 function hasModernCurrentVersion(series: ContractSeries): boolean {
   const version = contractVersionById(series, series.currentVersionId);
   return !!version
@@ -102,7 +109,7 @@ function requestVersionMatchesTransport(series: ContractSeries, request: Contrac
   if (request.action === "activate") {
     return series.draftVersionId === request.versionId
       && version.state === "pending_signature"
-      && versionParticipantsMatchSeries(series, version);
+      && activatableVersion(series, version);
   }
   return series.currentVersionId === request.versionId;
 }
@@ -188,10 +195,9 @@ export function authorizeContractRequestCreation(input: {
 
   if (action === "activate") {
     const version = contractVersionById(series, series.draftVersionId);
-    if (!version?.content
-      || !series.draftVersionId
+    if (!series.draftVersionId
       || series.draftVersionId === series.currentVersionId
-      || !versionParticipantsMatchSeries(series, version)) {
+      || !activatableVersion(series, version)) {
       return fail("invalid_version");
     }
     return { ok: true };
@@ -272,10 +278,10 @@ export function authorizeContractResponse(input: {
   if (request.action === "activate") {
     if (currentSeries.draftVersionId !== request.versionId) return fail("invalid_version");
     const version = contractVersionById(currentSeries, request.versionId);
-    if (!version?.content
+    if (!version
       || version.contentHash !== request.contentHash
       || version.state !== "pending_signature"
-      || !versionParticipantsMatchSeries(currentSeries, version)) {
+      || !activatableVersion(currentSeries, version)) {
       return fail("invalid_version");
     }
     if (!currentSeries.currentVersionId && currentSeries.status !== "pending_signature") {

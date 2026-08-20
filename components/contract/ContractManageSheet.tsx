@@ -7,6 +7,7 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { deleteContractArtifactsForSeries } from "@/lib/contractArtifacts";
 import {
   contractBucket,
   currentContractVersion,
@@ -200,6 +201,22 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
     setView("qr");
   }
 
+  async function permanentlyDeleteSeries() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteContractArtifactsForSeries(workingSeries.id);
+      deleteSeries(workingSeries.id);
+      showToast({ message: "Contract, lokale geschiedenis en getekende documenten permanent verwijderd." });
+      onClose();
+    } catch {
+      setError("Permanent verwijderen is niet volledig gelukt. Het contract blijft bewaard zodat er geen verborgen documentrest achterblijft.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <>
       <Sheet open={open} onClose={onClose} scrollable aria-label="Contract beheren">
@@ -241,16 +258,13 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 {bucket === "archive" && (
                   <button
                     type="button"
-                    onClick={() => {
-                      deleteSeries(workingSeries.id);
-                      showToast({ message: "Contract en lokale geschiedenis permanent verwijderd." });
-                      onClose();
-                    }}
-                    className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium"
+                    disabled={busy}
+                    onClick={() => void permanentlyDeleteSeries()}
+                    className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium disabled:opacity-50"
                     style={{ color: "var(--hard-no)", border: "1px solid var(--border)" }}
                   >
                     <Trash size={18} aria-hidden="true" />
-                    Permanent verwijderen
+                    {busy ? "Permanent verwijderen…" : "Permanent verwijderen"}
                   </button>
                 )}
               </div>

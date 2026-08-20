@@ -33,5 +33,5 @@ test("about opens the public technical security reference", async ({ page }) => 
   const [eyebrowBox, headingBox] = await Promise.all([eyebrow.boundingBox(), heading.boundingBox()]);
   expect(eyebrowBox).not.toBeNull();
   expect(headingBox).not.toBeNull();
-  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(8);
+  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(12);
 });

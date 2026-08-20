@@ -50,7 +50,7 @@ function profile(id: string, name: string, origin: "own" | "shared" = "own", per
 }
 
 function content(a: Profile, b: Profile): ContractVersionContent {
-  return {
+  const base: ContractVersionContent = {
     schema: 1,
     profileA: contractParticipantFromProfile(a),
     profileB: contractParticipantFromProfile(b),
@@ -66,6 +66,25 @@ function content(a: Profile, b: Profile): ContractVersionContent {
     hardLimitDetails: [{ name: "Needles", statusA: "no", statusB: "hard_no" }],
     discuss: [{ name: "Blindfold", statusA: "maybe", statusB: "yes" }],
   };
+  return {
+    ...base,
+    handwrittenSignatures: {
+      profileA: {
+        schema: 1,
+        width: 240,
+        height: 80,
+        bitmap: Buffer.alloc(2400, 0xaa).toString("base64url"),
+        capturedAt: 100,
+      },
+      profileB: {
+        schema: 1,
+        width: 240,
+        height: 80,
+        bitmap: Buffer.alloc(2400, 0x55).toString("base64url"),
+        capturedAt: 101,
+      },
+    },
+  } as ContractVersionContent;
 }
 
 async function draftSeries(a: Profile, b: Profile): Promise<ContractSeries> {
@@ -190,6 +209,25 @@ describe("contract lifecycle", () => {
     expect(await verifyContractProof(body, proof)).toBe(true);
     expect(await verifyContractProof({ ...body, preamble: "gewijzigd" }, proof)).toBe(false);
     expect(await verifyContractProof(body, { ...proof, signedAt: proof.signedAt + 1 })).toBe(false);
+  });
+
+  it("rejects activation when the canonical draft lacks handwritten signatures", async () => {
+    const a = profile("a-dom", "A");
+    const b = profile("b-sub", "B");
+    const keyA = await generateProfileOwnerKey(a.id);
+    const draft = await draftSeries(a, b);
+    const stripped = structuredClone(draft.versions[0].content!) as ContractVersionContent & { handwrittenSignatures?: unknown };
+    delete stripped.handwrittenSignatures;
+    draft.versions[0].content = stripped;
+    draft.versions[0].contentHash = await hashContractContent(stripped);
+
+    await expect(createContractRequest({
+      series: draft,
+      action: "activate",
+      actor: a,
+      counterparty: b,
+      ownerKey: keyA,
+    })).rejects.toThrow(/contractversie/i);
   });
 
   it("rejects a request that claims a known profile id with an unrelated signing key", async () => {

@@ -75,7 +75,7 @@ test.describe("Page cohesion contracts", () => {
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 
-  test("contracteditor gebruikt TopNav als enige routeheader en schaalt acties mobiel", async ({ page }) => {
+  test("contracteditor gebruikt TopNav als enige routeheader en schaalt de canonieke actie mobiel", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await seedAndGo(page, "/contract?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
 
@@ -84,12 +84,12 @@ test.describe("Page cohesion contracts", () => {
     await expect(page.getByRole("heading", { name: /Alex.*Sam/ })).toBeVisible();
     await expect(page.getByText("Stel de afspraken samen; het ondertekende document blijft de formele weergave.", { exact: true })).toBeVisible();
 
-    const pdf = page.getByRole("button", { name: /Opslaan als PDF/ });
-    const sign = page.getByRole("button", { name: "Contract bewaren of tekenen" });
-    const [pdfBox, signBox] = await Promise.all([pdf.boundingBox(), sign.boundingBox()]);
-    expect(pdfBox).not.toBeNull();
+    await expect(page.getByRole("button", { name: /Opslaan als PDF/i })).toHaveCount(0);
+    const sign = page.getByRole("button", { name: "Contract bewaren of digitaal bevestigen" });
+    const signBox = await sign.boundingBox();
     expect(signBox).not.toBeNull();
-    expect(signBox!.y).toBeGreaterThan(pdfBox!.y);
+    expect(signBox!.x).toBeGreaterThanOrEqual(0);
+    expect(signBox!.x + signBox!.width).toBeLessThanOrEqual(390);
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 });

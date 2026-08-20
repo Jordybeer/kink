@@ -7,8 +7,11 @@ import {
   contractPairKey,
   hashContractContent,
   type ContractSeries,
-  type ContractVersionContent,
 } from "@/lib/contractLifecycle";
+import {
+  type ContractContentWithHandwriting,
+  type HandwrittenSignature,
+} from "@/lib/contractHandwriting";
 import {
   createContractReceipt,
   createContractRequest,
@@ -35,7 +38,17 @@ function profile(id: string, name: string, origin: "own" | "shared" = "own"): Pr
   };
 }
 
-function content(a: Profile, b: Profile, label = "v1"): ContractVersionContent {
+function signature(fill: number, capturedAt: number): HandwrittenSignature {
+  return {
+    schema: 1,
+    width: 240,
+    height: 80,
+    bitmap: Buffer.alloc(2400, fill).toString("base64url"),
+    capturedAt,
+  };
+}
+
+function content(a: Profile, b: Profile, label = "v1"): ContractContentWithHandwriting {
   return {
     schema: 1,
     profileA: contractParticipantFromProfile(a),
@@ -51,6 +64,10 @@ function content(a: Profile, b: Profile, label = "v1"): ContractVersionContent {
     hardLimits: [],
     hardLimitDetails: [],
     discuss: [],
+    handwrittenSignatures: {
+      profileA: signature(0xff, 101),
+      profileB: signature(0x55, 102),
+    },
   };
 }
 

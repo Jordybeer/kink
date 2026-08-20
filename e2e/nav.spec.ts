@@ -32,12 +32,25 @@ test("subpages show back chevron pointing at the right parent", async ({ page })
     ["/compare?a=pw-alex-001&b=pw-sam-002", "/"],
     ["/contract?a=pw-alex-001&b=pw-sam-002", "/compare"],
     ["/profile/pw-alex-001", "/"],
+    ["/profile?id=pw-alex-001", "/"],
   ];
   for (const [url, parent] of cases) {
     await seedAndGo(page, url, PROFILES);
     const back = page.getByLabel("Hoofdnavigatie").getByRole("link", { name: "Terug" });
     await expect(back).toHaveAttribute("href", parent);
   }
+});
+
+test("profile tab uses the offline-safe shell without changing profile UX", async ({ page }) => {
+  await seedAndGo(page, "/profile?id=pw-alex-001", PROFILES);
+
+  await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Profiel delen" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
+
+  const profileTab = page.locator('nav[aria-label="Tabbladen"] a').filter({ hasText: "Profiel" });
+  await expect(profileTab).toHaveAttribute("href", "/profile?id=pw-alex-001");
+  await expect(profileTab).toHaveAttribute("aria-current", "page");
 });
 
 test("contextual actions live in the TopNav as icon-only commands", async ({ page }) => {

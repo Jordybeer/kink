@@ -89,8 +89,8 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     );
 
     await expect(page).toHaveURL(/\/contracts\/pw-contract-series-alex-sam\/history$/);
-    await expect(page.getByRole("tab", { name: "Gebeurtenissen" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "Getekende versies" })).toBeVisible();
+    await expect(page.getByText("Contractgeschiedenis", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("tablist")).toHaveCount(0);
   });
 
   test("DiscussedToggle: hidden until a kink is marked besproken", async ({ page }) => {
