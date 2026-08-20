@@ -1,17 +1,23 @@
 import { describe, expect, it } from "vitest";
-import type { ConsentLedgerEvent, Profile } from "@/types";
+import type { ConsentLedgerEvent, Profile, ProfileConsentPayload, ProfileConsentProof, ProfileOwnerKey } from "@/types";
 import {
+  canonicalJson,
   createConsentLedgerEvent,
   createConsentSnapshot,
   generateProfileOwnerKey,
+  PROFILE_CONSENT_FINGERPRINT_BITS,
   profileConsentAlias,
+  profileConsentFingerprint,
+  projectProfileConsent,
   projectSceneConsentAgreement,
   sceneMatchesConsentAgreement,
+  sha256Base64Url,
   signProfileConsent,
   verifyConsentLedger,
   verifyConsentLedgerEvent,
   verifyProfileConsent,
 } from "@/lib/consentProof";
+import { getProfileVerificationCode } from "@/lib/profileVerification";
 
 function profile(overrides: Partial<Profile> = {}): Profile {
   return {
@@ -32,6 +38,53 @@ function profile(overrides: Partial<Profile> = {}): Profile {
   };
 }
 
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function legacyPayload(source: Profile): ProfileConsentPayload {
+  const core = projectProfileConsent(source);
+  return {
+    ...core,
+    ...(source.bdsmtestUrl ? { bdsmtestUrl: source.bdsmtestUrl } : {}),
+    ...(source.bdsmtestScores?.length ? { bdsmtestScores: source.bdsmtestScores } : {}),
+  };
+}
+
+async function signLegacyProfile(source: Profile, ownerKey: ProfileOwnerKey): Promise<ProfileConsentProof> {
+  const payloadHash = await sha256Base64Url(canonicalJson(legacyPayload(source)));
+  const unsigned = {
+    schema: 1 as const,
+    algorithm: "ECDSA-P256-SHA256" as const,
+    keyId: ownerKey.keyId,
+    publicKeyJwk: ownerKey.publicKeyJwk,
+    version: 1,
+    signedAt: 1234,
+    payloadHash,
+  };
+  const privateKey = await crypto.subtle.importKey(
+    "jwk",
+    ownerKey.privateKeyJwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+  const signature = bytesToBase64Url(new Uint8Array(await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    privateKey,
+    new TextEncoder().encode(canonicalJson(unsigned)),
+  )));
+  const withoutHash = { ...unsigned, signature };
+  return {
+    ...withoutHash,
+    proofHash: await sha256Base64Url(canonicalJson(withoutHash)),
+  };
+}
+
 describe("signed consent", () => {
   it("seals a profile and catches answer manipulation", async () => {
     const original = profile();
@@ -43,6 +96,54 @@ describe("signed consent", () => {
       ...sealed,
       entries: { ...sealed.entries, rope: { ...sealed.entries.rope, status: "hard_no" } },
     })).status).toBe("invalid");
+  });
+
+  it("keeps optional BDSMTest enrichment outside the core profile proof", async () => {
+    const original = profile({
+      bdsmtestUrl: "https://bdsmtest.org/r/original",
+      bdsmtestScores: [{ role: "Switch", pct: 88 }],
+    });
+    const ownerKey = await generateProfileOwnerKey(original.id);
+    const signed = await signProfileConsent(original, ownerKey);
+    const sealed = { ...original, consentProof: signed.proof };
+
+    expect((await verifyProfileConsent(sealed)).status).toBe("valid");
+    expect((await verifyProfileConsent({
+      ...sealed,
+      bdsmtestUrl: "https://bdsmtest.org/r/later",
+      bdsmtestScores: [{ role: "Rigger", pct: 72 }],
+    })).status).toBe("valid");
+    expect(projectProfileConsent(sealed)).not.toHaveProperty("bdsmtestUrl");
+    expect(projectProfileConsent(sealed)).not.toHaveProperty("bdsmtestScores");
+  });
+
+  it("still verifies a shared legacy proof that bound BDSMTest into the signed payload", async () => {
+    const original = profile({
+      id: "legacy-shared",
+      origin: "shared",
+      isImported: true,
+      bdsmtestUrl: "https://bdsmtest.org/r/legacy",
+      bdsmtestScores: [{ role: "Switch", pct: 91 }],
+    });
+    const ownerKey = await generateProfileOwnerKey(original.id);
+    const proof = await signLegacyProfile(original, ownerKey);
+    const sealed = { ...original, consentProof: proof };
+
+    expect((await verifyProfileConsent(sealed)).status).toBe("valid");
+    const snapshot = await createConsentSnapshot(sealed);
+    expect(snapshot?.payload.bdsmtestUrl).toBe(original.bdsmtestUrl);
+    expect(snapshot?.payload.bdsmtestScores).toEqual(original.bdsmtestScores);
+  });
+
+  it("does not silently keep legacy enrichment semantics for an own profile", async () => {
+    const original = profile({
+      id: "legacy-own",
+      bdsmtestUrl: "https://bdsmtest.org/r/legacy-own",
+      bdsmtestScores: [{ role: "Switch", pct: 91 }],
+    });
+    const ownerKey = await generateProfileOwnerKey(original.id);
+    const proof = await signLegacyProfile(original, ownerKey);
+    expect((await verifyProfileConsent({ ...original, consentProof: proof })).status).toBe("invalid");
   });
 
   it("chains newer versions to the previous proof", async () => {
@@ -64,11 +165,30 @@ describe("signed consent", () => {
     expect(snapshot?.payload.entries.hidden).toBeUndefined();
   });
 
-  it("uses a readable stable alias without replacing the technical identity", () => {
+  it("derives a stable 80-bit readable fingerprint from the canonical code and key", () => {
+    const fingerprint = profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a");
+    expect(PROFILE_CONSENT_FINGERPRINT_BITS).toBe(80);
+    expect(fingerprint).toBe("HQT3-KF1R-4T5D-Q9BW");
+    expect(fingerprint).toMatch(/^[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){3}$/);
+    expect(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a")).toBe(fingerprint);
+  });
+
+  it("keeps a broad deterministic key sample distinct within the 80-bit space", () => {
+    const fingerprints = new Set(Array.from({ length: 4096 }, (_, index) => (
+      profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", `key-${index}`)
+    )));
+    expect(fingerprints.size).toBe(4096);
+    expect(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a"))
+      .not.toBe(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-b"));
+    expect(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a"))
+      .not.toBe(profileConsentFingerprint("KS-8J4R-5T6V-W7XY", "key-a"));
+  });
+
+  it("keeps the display alias stable without exposing the technical code", () => {
     const alias = profileConsentAlias(profile());
-    expect(alias.split("-")).toHaveLength(4);
     expect(profileConsentAlias(profile())).toBe(alias);
     expect(alias).not.toContain("KS-");
+    expect(getProfileVerificationCode(profile())).toContain("KS-");
   });
 
   it("binds the exact scene setlist to the locked consent version", async () => {

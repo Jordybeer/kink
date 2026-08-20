@@ -21,6 +21,7 @@ const RAW_SVG_EXCEPTIONS = new Set([
   "components/ProfileTrendsChart.tsx",
   "components/ContractTrendsChart.tsx",
   "components/brand/FetLifeMark.tsx",
+  "components/brand/BdsmtestMark.tsx",
 ]);
 
 const DISALLOWED_ICON_IMPORT = /(lucide|react-icons|heroicons|fontawesome|iconify|icons8|material-icons|@mui\/icons-material)/i;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProfileIdentityAnchor } from "@/types";
+import type { ProfileIdentityAnchorLock } from "@/lib/storeSecurity";
 import {
   PROFILE_IDENTITY_ANCHOR_STORAGE_KEY,
   PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
@@ -7,6 +8,7 @@ import {
   persistProfileIdentityAnchor,
   readProfileIdentityAnchorRegistry,
   removePersistedProfileIdentityAnchor,
+  removePersistedProfileIdentityAnchorIfMatches,
 } from "@/lib/storeSecurity";
 
 class MemoryStorage {
@@ -25,6 +27,16 @@ class MemoryStorage {
   }
 }
 
+class MemoryLock implements ProfileIdentityAnchorLock {
+  private tail: Promise<void> = Promise.resolve();
+
+  runExclusive<T>(operation: () => T): Promise<T> {
+    const result = this.tail.then(operation);
+    this.tail = result.then(() => undefined, () => undefined);
+    return result;
+  }
+}
+
 const ALICE_ANCHOR: ProfileIdentityAnchor = {
   schema: 1,
   profileId: "alice-profile",
@@ -36,12 +48,13 @@ const ALICE_ANCHOR: ProfileIdentityAnchor = {
 };
 
 describe("profile identity anchor persistence", () => {
-  it("stores anchors under a dedicated local-only schema-versioned key", () => {
+  it("stores anchors under a dedicated local-only schema-versioned key", async () => {
     const storage = new MemoryStorage();
+    const lock = new MemoryLock();
 
     expect(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY).not.toBe("kink-profiles");
     expect(PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA).toBe(1);
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock)).toBe(true);
 
     expect(JSON.parse(storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY)!)).toEqual({
       schema: 1,
@@ -49,9 +62,9 @@ describe("profile identity anchor persistence", () => {
     });
   });
 
-  it("round-trips the exact anchor without changing trust material", () => {
+  it("round-trips the exact anchor without changing trust material", async () => {
     const storage = new MemoryStorage();
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, new MemoryLock())).toBe(true);
 
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({
       schema: 1,
@@ -65,26 +78,26 @@ describe("profile identity anchor persistence", () => {
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [] });
   });
 
-  it("fails closed on malformed JSON and refuses to overwrite it", () => {
+  it("fails closed on malformed JSON and refuses to overwrite it", async () => {
     const storage = new MemoryStorage();
     storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, "{not-json");
 
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [] });
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(false);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, new MemoryLock())).toBe(false);
     expect(storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY)).toBe("{not-json");
   });
 
-  it("fails closed on an unsupported future schema and refuses downgrade overwrite", () => {
+  it("fails closed on an unsupported future schema and refuses downgrade overwrite", async () => {
     const storage = new MemoryStorage();
     const future = JSON.stringify({ schema: 2, anchors: [ALICE_ANCHOR] });
     storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, future);
 
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [] });
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(false);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, new MemoryLock())).toBe(false);
     expect(storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY)).toBe(future);
   });
 
-  it("fails closed when persisted anchor records are malformed", () => {
+  it("fails closed when persisted anchor records are malformed", async () => {
     const storage = new MemoryStorage();
     const malformed = JSON.stringify({
       schema: 1,
@@ -93,31 +106,37 @@ describe("profile identity anchor persistence", () => {
     storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, malformed);
 
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [] });
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(false);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, new MemoryLock())).toBe(false);
     expect(storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY)).toBe(malformed);
   });
 
-  it("accepts an exact repeated write idempotently without duplicating the anchor", () => {
+  it("accepts an exact repeated write idempotently without duplicating the anchor", async () => {
     const storage = new MemoryStorage();
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
+    const lock = new MemoryLock();
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock)).toBe(true);
     const once = storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY);
 
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock)).toBe(true);
     expect(storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY)).toBe(once);
     expect(readProfileIdentityAnchorRegistry(storage).anchors).toHaveLength(1);
   });
 
-  it("refuses anchor replacement for the same profile id", () => {
+  it("refuses anchor replacement for the same profile id", async () => {
     const storage = new MemoryStorage();
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
+    const lock = new MemoryLock();
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock)).toBe(true);
     const original = storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY);
 
-    expect(persistProfileIdentityAnchor({ ...ALICE_ANCHOR, keyId: "mallory-key" }, storage)).toBe(false);
+    expect(await persistProfileIdentityAnchor(
+      { ...ALICE_ANCHOR, keyId: "mallory-key" },
+      storage,
+      lock,
+    )).toBe(false);
     expect(storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY)).toBe(original);
     expect(getPersistedProfileIdentityAnchor("alice-profile", storage)).toEqual(ALICE_ANCHOR);
   });
 
-  it("rejects a registry that contains duplicate profile identities", () => {
+  it("rejects a registry that contains duplicate profile identities", async () => {
     const storage = new MemoryStorage();
     storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
       schema: 1,
@@ -125,11 +144,12 @@ describe("profile identity anchor persistence", () => {
     }));
 
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [] });
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(false);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, new MemoryLock())).toBe(false);
   });
 
-  it("removes only the explicitly selected persisted anchor", () => {
+  it("removes only the explicitly selected persisted anchor", async () => {
     const storage = new MemoryStorage();
+    const lock = new MemoryLock();
     const bob: ProfileIdentityAnchor = {
       ...ALICE_ANCHOR,
       profileId: "bob-profile",
@@ -137,21 +157,75 @@ describe("profile identity anchor persistence", () => {
       keyId: "bob-key",
       fingerprint: "collar-steady-gold-shadow",
     };
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
-    expect(persistProfileIdentityAnchor(bob, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock)).toBe(true);
+    expect(await persistProfileIdentityAnchor(bob, storage, lock)).toBe(true);
 
-    expect(removePersistedProfileIdentityAnchor("alice-profile", storage)).toBe(true);
+    expect(await removePersistedProfileIdentityAnchor("alice-profile", storage, lock)).toBe(true);
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [bob] });
   });
 
-  it("reports storage write failure without mutating the in-memory trust decision", () => {
+  it("rolls back only the exact anchor created by the current operation", async () => {
+    const storage = new MemoryStorage();
+    const lock = new MemoryLock();
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock)).toBe(true);
+
+    expect(await removePersistedProfileIdentityAnchorIfMatches(
+      { ...ALICE_ANCHOR, anchoredAt: ALICE_ANCHOR.anchoredAt + 1 },
+      storage,
+      lock,
+    )).toBe(false);
+    expect(getPersistedProfileIdentityAnchor(ALICE_ANCHOR.profileId, storage)).toEqual(ALICE_ANCHOR);
+
+    expect(await removePersistedProfileIdentityAnchorIfMatches(ALICE_ANCHOR, storage, lock)).toBe(true);
+    expect(getPersistedProfileIdentityAnchor(ALICE_ANCHOR.profileId, storage)).toBeUndefined();
+  });
+
+  it("reports storage write failure without mutating the in-memory trust decision", async () => {
     const storage = {
       getItem: () => null,
       setItem: () => { throw new Error("quota"); },
       removeItem: () => undefined,
     };
 
-    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(false);
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, new MemoryLock())).toBe(false);
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [] });
+  });
+
+  it("fails closed when an exclusive cross-tab lock is unavailable", async () => {
+    const storage = new MemoryStorage();
+    expect(await persistProfileIdentityAnchor(ALICE_ANCHOR, storage, null)).toBe(false);
+    expect(readProfileIdentityAnchorRegistry(storage).anchors).toEqual([]);
+  });
+
+  it("serializes competing first anchors and never lets the second key replace the first", async () => {
+    const storage = new MemoryStorage();
+    const lock = new MemoryLock();
+    const competing = { ...ALICE_ANCHOR, keyId: "mallory-key", fingerprint: "mallory-fingerprint" };
+
+    const results = await Promise.all([
+      persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock),
+      persistProfileIdentityAnchor(competing, storage, lock),
+    ]);
+
+    expect(results).toEqual([true, false]);
+    expect(readProfileIdentityAnchorRegistry(storage).anchors).toEqual([ALICE_ANCHOR]);
+  });
+
+  it("re-reads inside the lock so concurrent unrelated anchors are both retained", async () => {
+    const storage = new MemoryStorage();
+    const lock = new MemoryLock();
+    const bob: ProfileIdentityAnchor = {
+      ...ALICE_ANCHOR,
+      profileId: "bob-profile",
+      verificationCode: "KS-8J4R-5T6V-W7XY",
+      keyId: "bob-key",
+      fingerprint: "bob-fingerprint",
+    };
+
+    expect(await Promise.all([
+      persistProfileIdentityAnchor(ALICE_ANCHOR, storage, lock),
+      persistProfileIdentityAnchor(bob, storage, lock),
+    ])).toEqual([true, true]);
+    expect(readProfileIdentityAnchorRegistry(storage).anchors).toEqual([ALICE_ANCHOR, bob]);
   });
 });

@@ -17,6 +17,7 @@ import type { useStore as CoreUseStore } from "@/lib/storeCore";
 
 export const PROFILE_IDENTITY_ANCHOR_STORAGE_KEY = "kinksync-profile-identity-anchors";
 export const PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA = 1 as const;
+export const PROFILE_IDENTITY_ANCHOR_LOCK_NAME = "kinksync-profile-identity-anchors-write";
 
 export interface ProfileIdentityAnchorRegistry {
   schema: typeof PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA;
@@ -25,12 +26,16 @@ export interface ProfileIdentityAnchorRegistry {
 
 type IdentityAnchorStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
+export interface ProfileIdentityAnchorLock {
+  runExclusive<T>(operation: () => T): Promise<T>;
+}
+
 const EMPTY_PROFILE_IDENTITY_ANCHOR_REGISTRY: ProfileIdentityAnchorRegistry = {
   schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
   anchors: [],
 };
 
-function sameProfileIdentityAnchor(
+export function sameProfileIdentityAnchor(
   left: ProfileIdentityAnchor,
   right: ProfileIdentityAnchor,
 ): boolean {
@@ -70,6 +75,17 @@ function browserIdentityAnchorStorage(): IdentityAnchorStorage | undefined {
   }
 }
 
+function browserIdentityAnchorLock(): ProfileIdentityAnchorLock | undefined {
+  if (typeof navigator === "undefined" || !navigator.locks) return undefined;
+  return {
+    runExclusive: <T>(operation: () => T) => navigator.locks.request<T>(
+      PROFILE_IDENTITY_ANCHOR_LOCK_NAME,
+      { mode: "exclusive" },
+      operation,
+    ),
+  };
+}
+
 function loadWritableProfileIdentityAnchorRegistry(
   storage: IdentityAnchorStorage | undefined,
 ): ProfileIdentityAnchorRegistry | null {
@@ -97,43 +113,89 @@ export function getPersistedProfileIdentityAnchor(
   return readProfileIdentityAnchorRegistry(storage).anchors.find((anchor) => anchor.profileId === profileId);
 }
 
-export function persistProfileIdentityAnchor(
+export async function persistProfileIdentityAnchor(
   anchor: ProfileIdentityAnchor,
   storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
-): boolean {
-  if (!isProfileIdentityAnchor(anchor)) return false;
-  const registry = loadWritableProfileIdentityAnchorRegistry(storage);
-  if (!registry || !storage) return false;
-
-  const existing = registry.anchors.find((candidate) => candidate.profileId === anchor.profileId);
-  if (existing) return sameProfileIdentityAnchor(existing, anchor);
-
+  lock: ProfileIdentityAnchorLock | null | undefined = browserIdentityAnchorLock(),
+): Promise<boolean> {
+  if (!isProfileIdentityAnchor(anchor) || !storage || !lock) return false;
   try {
-    storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
-      schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
-      anchors: [...registry.anchors, anchor],
-    } satisfies ProfileIdentityAnchorRegistry));
-    return true;
+    return await lock.runExclusive(() => {
+      const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+      if (!registry) return false;
+      const existing = registry.anchors.find((candidate) => candidate.profileId === anchor.profileId);
+      if (existing) return sameProfileIdentityAnchor(existing, anchor);
+
+      const expected = [...registry.anchors, anchor];
+      storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
+        schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+        anchors: expected,
+      } satisfies ProfileIdentityAnchorRegistry));
+      const persisted = loadWritableProfileIdentityAnchorRegistry(storage);
+      return !!persisted
+        && persisted.anchors.length === expected.length
+        && expected.every((candidate) => persisted.anchors.some((stored) => (
+          sameProfileIdentityAnchor(candidate, stored)
+        )));
+    });
   } catch {
     return false;
   }
 }
 
-export function removePersistedProfileIdentityAnchor(
+export async function removePersistedProfileIdentityAnchor(
   profileId: string,
   storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
-): boolean {
-  const registry = loadWritableProfileIdentityAnchorRegistry(storage);
-  if (!registry || !storage) return false;
-  const anchors = registry.anchors.filter((anchor) => anchor.profileId !== profileId);
-  if (anchors.length === registry.anchors.length) return true;
-
+  lock: ProfileIdentityAnchorLock | null | undefined = browserIdentityAnchorLock(),
+): Promise<boolean> {
+  if (!storage || !lock) return false;
   try {
-    storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
-      schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
-      anchors,
-    } satisfies ProfileIdentityAnchorRegistry));
-    return true;
+    return await lock.runExclusive(() => {
+      const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+      if (!registry) return false;
+      const anchors = registry.anchors.filter((anchor) => anchor.profileId !== profileId);
+      if (anchors.length === registry.anchors.length) return true;
+      storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
+        schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+        anchors,
+      } satisfies ProfileIdentityAnchorRegistry));
+      const persisted = loadWritableProfileIdentityAnchorRegistry(storage);
+      return !!persisted
+        && persisted.anchors.length === anchors.length
+        && anchors.every((candidate) => persisted.anchors.some((stored) => (
+          sameProfileIdentityAnchor(candidate, stored)
+        )));
+    });
+  } catch {
+    return false;
+  }
+}
+
+export async function removePersistedProfileIdentityAnchorIfMatches(
+  expected: ProfileIdentityAnchor,
+  storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
+  lock: ProfileIdentityAnchorLock | null | undefined = browserIdentityAnchorLock(),
+): Promise<boolean> {
+  if (!storage || !lock) return false;
+  try {
+    return await lock.runExclusive(() => {
+      const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+      if (!registry) return false;
+      const existing = registry.anchors.find((anchor) => anchor.profileId === expected.profileId);
+      if (!existing) return true;
+      if (!sameProfileIdentityAnchor(existing, expected)) return false;
+      const anchors = registry.anchors.filter((anchor) => anchor.profileId !== expected.profileId);
+      storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
+        schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+        anchors,
+      } satisfies ProfileIdentityAnchorRegistry));
+      const persisted = loadWritableProfileIdentityAnchorRegistry(storage);
+      return !!persisted
+        && persisted.anchors.length === anchors.length
+        && anchors.every((candidate) => persisted.anchors.some((stored) => (
+          sameProfileIdentityAnchor(candidate, stored)
+        )));
+    });
   } catch {
     return false;
   }
@@ -198,6 +260,61 @@ function preserveLocalMetadata(incoming: Profile, existing: Profile): Profile {
   };
 }
 
+export interface SafeProfileImportPlan {
+  profiles: Profile[];
+  acceptedCount: number;
+  rejectedProfileIds: string[];
+}
+
+export function planSafeProfileImport(
+  existingProfiles: readonly Profile[],
+  incoming: readonly Profile[],
+  now = Date.now(),
+): SafeProfileImportPlan {
+  const profiles = [...existingProfiles];
+  let acceptedCount = 0;
+  const rejectedProfileIds: string[] = [];
+
+  for (const raw of incoming) {
+    const profile = {
+      ...raw,
+      verificationCode: getProfileVerificationCode(raw),
+      origin: "shared" as const,
+      isImported: true,
+      lockedAt: raw.lockedAt ?? now,
+    };
+    const exactId = profiles.find((candidate) => candidate.id === profile.id);
+    if (exactId && getProfileVerificationCode(exactId) !== getProfileVerificationCode(profile)) {
+      rejectedProfileIds.push(profile.id);
+      continue;
+    }
+
+    const identity = classifyProfileImport(profiles, profile);
+    if (identity.kind === "new") {
+      profiles.push(profile);
+      acceptedCount += 1;
+      continue;
+    }
+
+    if (identity.kind !== "signed-update" || identity.profile.id !== profile.id) {
+      rejectedProfileIds.push(profile.id);
+      continue;
+    }
+    const index = profiles.findIndex((candidate) => candidate.id === identity.profile.id);
+    if (index < 0) {
+      rejectedProfileIds.push(profile.id);
+      continue;
+    }
+    profiles[index] = preserveLocalMetadata({
+      ...profile,
+      lockedAt: identity.profile.lockedAt ?? now,
+    }, identity.profile);
+    acceptedCount += 1;
+  }
+
+  return { profiles, acceptedCount, rejectedProfileIds };
+}
+
 function upsertOwnerKey(
   keys: ProfileOwnerKey[],
   incoming: ProfileOwnerKey,
@@ -237,39 +354,9 @@ export function installStoreSecurity(store: StoreHook): void {
   };
 
   function safeImportProfiles(incoming: Profile[]): void {
-    store.setState((state) => {
-      const profiles = [...state.profiles];
-
-      for (const profile of incoming) {
-        const exactId = profiles.find((candidate) => candidate.id === profile.id);
-        if (exactId && getProfileVerificationCode(exactId) !== getProfileVerificationCode(profile)) {
-          continue;
-        }
-
-        const identity = classifyProfileImport(profiles, profile);
-        if (identity.kind === "new") {
-          profiles.push({
-            ...profile,
-            origin: "shared",
-            isImported: true,
-            lockedAt: profile.lockedAt ?? Date.now(),
-          });
-          continue;
-        }
-
-        if (identity.kind !== "signed-update" || identity.profile.id !== profile.id) continue;
-        const index = profiles.findIndex((candidate) => candidate.id === identity.profile.id);
-        if (index < 0) continue;
-        profiles[index] = preserveLocalMetadata({
-          ...profile,
-          origin: "shared",
-          isImported: true,
-          lockedAt: identity.profile.lockedAt ?? Date.now(),
-        }, identity.profile);
-      }
-
-      return { profiles };
-    });
+    store.setState((state) => ({
+      profiles: planSafeProfileImport(state.profiles, incoming).profiles,
+    }));
   }
 
   function safeRestoreBackupProfiles(

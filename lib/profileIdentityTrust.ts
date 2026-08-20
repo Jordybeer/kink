@@ -1,4 +1,4 @@
-import { profileConsentAlias } from "@/lib/consentProof";
+import { profileConsentFingerprint } from "@/lib/consentProof";
 import { getProfileVerificationCode, normalizeProfileVerificationCode } from "@/lib/profileVerification";
 import type {
   Profile,
@@ -54,7 +54,7 @@ export function createProfileIdentityAnchor(
     profileId: profile.id,
     verificationCode: getProfileVerificationCode(profile),
     keyId: verifiedProof.keyId,
-    fingerprint: profileConsentAlias(profile),
+    fingerprint: profileConsentFingerprint(getProfileVerificationCode(profile), verifiedProof.keyId),
     anchoredAt,
     method,
   };
@@ -69,7 +69,10 @@ export function matchProfileIdentityAnchor(
     return { matches: false, reason: "verification-code" };
   }
   if (anchor.keyId !== profile.consentProof?.keyId) return { matches: false, reason: "key-id" };
-  if (anchor.fingerprint !== profileConsentAlias(profile)) return { matches: false, reason: "fingerprint" };
+  if (anchor.fingerprint !== profileConsentFingerprint(
+    getProfileVerificationCode(profile),
+    profile.consentProof.keyId,
+  )) return { matches: false, reason: "fingerprint" };
   return { matches: true };
 }
 

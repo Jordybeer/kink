@@ -76,11 +76,12 @@ export default function SecurityPage() {
         <SectionHeading eyebrow="01 · Opslagmodel" title="Local-first betekent browseropslag, geen beveiligde enclave" id="storage-title" />
         <TechnicalCard icon={Database}>
           <p>
-            KinkSync gebruikt twee afzonderlijk gepersisteerde lokale Zustand-stores. Beide leven in browseropslag, maar hebben elk hun eigen storage key:
+            KinkSync gebruikt twee afzonderlijk gepersisteerde Zustand-stores in localStorage en daarnaast een lokale IndexedDB-documentstore voor getekende contract-PDF&apos;s. Elke laag heeft een eigen opslagcontext:
           </p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <Spec label="Kernstore" value="kink-profiles" />
             <Spec label="Contractstore" value="kink-contract-series" />
+            <Spec label="Documentstore" value="IndexedDB · kinksync-contract-artifacts" />
           </div>
           <p className="mt-5 font-semibold" style={{ color: "var(--text)" }}>De kernstore bevat onder meer:</p>
           <ul className="mt-3 space-y-2.5">
@@ -90,8 +91,11 @@ export default function SecurityPage() {
           <ul className="mt-3 space-y-2.5">
             {contractPersistedData.map((item) => <CheckRow key={item}>{item}</CheckRow>)}
           </ul>
+          <p className="mt-5">
+            Een getekende contract-PDF is een lokaal afgeleid documentartifact. Het artifact krijgt een eigen SHA-256-hash en wordt gekoppeld aan contractreeks, versie en inhoudshash. De cryptografisch getekende canonieke contractinhoud blijft de bron van waarheid; de PDF is de documentweergave daarvan.
+          </p>
           <Callout className="mt-5">
-            De gewone browseropslag is niet als geheel versleuteld. Local-first vermindert de centrale serverdata die KinkSync bewaart, maar maakt localStorage niet onleesbaar voor code die binnen dezelfde origin draait of voor iemand die het toestel, de browser of het besturingssysteem controleert.
+            Browseropslag is niet als geheel versleuteld. Local-first vermindert de centrale serverdata die KinkSync bewaart, maar maakt localStorage of IndexedDB niet onleesbaar voor code die binnen dezelfde origin draait of voor iemand die het toestel, de browser of het besturingssysteem controleert.
           </Callout>
         </TechnicalCard>
       </section>
@@ -112,6 +116,9 @@ export default function SecurityPage() {
           </p>
           <p className="mt-3">
             De versleutelde herstelroute kan profiel-eigendomssleutels meenemen. Dat is bewust anders dan een profielshare: een back-up is bedoeld om jouw lokale eigendom te herstellen, niet om die eigendom aan een andere persoon over te dragen.
+          </p>
+          <p className="mt-3">
+            Getekende contractinhoud en de daarin vastgelegde handgeschreven handtekeningen reizen mee als onderdeel van de geverifieerde contractversie. De PDF-binary zelf wordt bewust niet als vertrouwde back-updata geëxporteerd of geïmporteerd. Na herstel bouwt KinkSync een ontbrekend lokaal PDF-document opnieuw op uit de cryptografisch gecontroleerde contractinhoud.
           </p>
         </TechnicalCard>
       </section>
@@ -155,9 +162,12 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="contracts-title">
         <SectionHeading eyebrow="05 · Contractdata" title="Versies, signatures en hash-gekoppelde historiek zijn verschillende lagen" id="contracts-title" />
-        <TechnicalCard icon={Key}>
+        <TechnicalCard icon={Key} quiet>
           <p>
             Contractreeksen bevatten deelnemers, versies, inhoudshashes, signatures en lifecycle-events. Bij back-upimport worden beschikbare contractstructuren gecontroleerd op interne referenties, content hashes, participant-key koppelingen, signatures en eventhash-ketens voordat ze als geldige reeks worden meegenomen.
+          </p>
+          <p className="mt-3">
+            De twee verplichte handgeschreven handtekeningen zitten in de canonieke inhoud van een nieuw getekend contract en vallen daardoor onder dezelfde inhoudshash als de afspraken zelf. De afgeleide PDF-binary is geen aparte consent authority.
           </p>
           <p className="mt-3">
             Dat maakt cryptografisch controleerbare historiek mogelijk, maar een geldige oude versie is niet hetzelfde als actuele consent authority. Productlogica voor huidige state, lifecycle-transities en wederzijdse bevestiging blijft een aparte beveiligingslaag boven op de cryptografie.
@@ -167,9 +177,12 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="restore-title">
         <SectionHeading eyebrow="06 · Restore boundary" title="Herstel valideert data, maar tijd en context blijven betekenis houden" id="restore-title" />
-        <TechnicalCard icon={ShieldCheck}>
+        <TechnicalCard icon={ShieldCheck} quiet>
           <p>
             Een herstelbestand wordt niet blind teruggeschreven. Profielen worden gesaneerd, eigendomssleutels worden cryptografisch gecontroleerd en contractreeksen moeten hun structurele en cryptografische integriteitschecks doorstaan.
+          </p>
+          <p className="mt-3">
+            PDF-artifacts uit een herstelbestand worden niet als autoritatieve contractdata overgenomen. Een lokaal ontbrekend document wordt afgeleid uit de contractversie die de restorechecks wel heeft doorstaan.
           </p>
           <p className="mt-3">
             Toch mag een restore niet worden gelezen als bewijs dat een oude afspraak vandaag opnieuw actief of gewenst is. Back-upintegriteit en actuele toestemming zijn verschillende vragen.
@@ -179,7 +192,7 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="browser-title">
         <SectionHeading eyebrow="07 · Browser en PWA" title="De storage boundary volgt de browsercontext" id="browser-title" />
-        <TechnicalCard icon={Database}>
+        <TechnicalCard icon={Database} quiet>
           <p>
             Safari en een geïnstalleerde Home Screen-app kunnen op iOS in verschillende opslagcontexten terechtkomen. Een installatie of toestelwissel is daarom geen synchronisatiehandeling. Maak vóór zo&apos;n wissel een versleutelde back-up wanneer je lokale data wilt behouden.
           </p>
@@ -191,7 +204,7 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="app-lock-title">
         <SectionHeading eyebrow="08 · App lock" title="Een lokale toegangspoort, geen encryptie-at-rest" id="app-lock-title" />
-        <TechnicalCard icon={LockKey}>
+        <TechnicalCard icon={LockKey} quiet>
           <p>
             Een ingestelde PIN wordt niet als platte tekst bewaard. Nieuwe PINs worden met PBKDF2 en SHA-256 over 310.000 iteraties gehasht met een random salt. Verificatie vergelijkt het afgeleide resultaat zonder de PIN terug te halen.
           </p>
@@ -277,25 +290,35 @@ function TechnicalCard({
   icon: Icon,
   children,
   accent = false,
+  quiet = false,
 }: {
   icon: typeof ShieldCheck;
   children: React.ReactNode;
   accent?: boolean;
+  quiet?: boolean;
 }) {
   return (
     <div
-      className="mt-4 rounded-[28px] p-5 sm:p-6"
+      className={quiet
+        ? "mt-4 border-t pt-5 sm:grid sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4"
+        : "mt-4 rounded-[28px] p-5 sm:p-6"}
       style={{
-        background: accent
-          ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface))"
-          : "var(--surface)",
-        border: "1px solid var(--border)",
+        background: quiet
+          ? "transparent"
+          : accent
+            ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface))"
+            : "var(--surface)",
+        borderColor: "var(--border)",
+        ...(!quiet ? { border: "1px solid var(--border)" } : {}),
       }}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-        <Icon size={22} aria-hidden="true" />
+      <div
+        className={`flex items-center justify-center ${quiet ? "h-9 w-9 rounded-xl" : "h-11 w-11 rounded-2xl"}`}
+        style={{ background: "var(--surface2)", color: "var(--accent)" }}
+      >
+        <Icon size={quiet ? 19 : 22} aria-hidden="true" />
       </div>
-      <div className="mt-4 max-w-3xl text-[15px] leading-6" style={{ color: "var(--text2)" }}>
+      <div className={`${quiet ? "mt-3 sm:mt-0" : "mt-4"} max-w-3xl text-[15px] leading-6`} style={{ color: "var(--text2)" }}>
         {children}
       </div>
     </div>
@@ -314,7 +337,7 @@ function CheckRow({ children }: { children: React.ReactNode }) {
 function Spec({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--text2)" }}>{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--text2)" }}>{label}</p>
       <p className="mt-1 font-mono text-sm" style={{ color: "var(--text)" }}>{value}</p>
     </div>
   );

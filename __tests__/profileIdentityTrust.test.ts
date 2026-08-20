@@ -64,7 +64,7 @@ describe("profile identity trust", () => {
       anchoredAt: 1234,
       method: "source-device-fingerprint",
     });
-    expect(anchor.fingerprint.split("-")).toHaveLength(4);
+    expect(anchor.fingerprint).toMatch(/^[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){3}$/);
     expect(matchProfileIdentityAnchor(profile, anchor)).toEqual({ matches: true });
     expect(resolveProfileIdentityTrust(profile, "valid", anchor).status).toBe("identity-anchored");
   });

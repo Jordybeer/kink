@@ -43,7 +43,6 @@ test.describe("Contractpagina", () => {
   });
 
   test("toont namen van beide profielen", async ({ page }) => {
-    // Names appear many times (headers, badges, preamble) — just need at least one visible
     await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Sam", { exact: true }).first()).toBeVisible();
   });
@@ -62,7 +61,6 @@ test.describe("Contractpagina", () => {
   });
 
   test("handtekeningveld of canvas is aanwezig", async ({ page }) => {
-    // Contract always renders canvases inline (signature pads)
     expect(await page.locator("canvas").count()).toBeGreaterThan(0);
   });
 
@@ -73,7 +71,6 @@ test.describe("Contractpagina", () => {
 
   test("harde grenzen sectie is aanwezig (humiliation_verbal = no/hard_no)", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
-    // ContractSection renders title "Harde grenzen"
     expect(text).toMatch(/Harde grenzen/);
   });
 
@@ -88,9 +85,9 @@ test.describe("Contractpagina", () => {
     expect(text).toMatch(/geen|selecteer|profiel/i);
   });
 
-  test("opslaan / afdrukken knop is zichtbaar", async ({ page }) => {
-    const btn = page.locator("button").filter({ hasText: /[Oo]pslaan|[Aa]fdrukken|[Gg]enereren/i }).first();
-    await expect(btn).toBeVisible();
+  test("toont één lifecycle-actie en geen losse PDF-bypass", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Contract bewaren of digitaal bevestigen" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Opslaan als PDF/i })).toHaveCount(0);
   });
 });
 
@@ -100,7 +97,6 @@ test.describe("Contractpagina — handtekening canvas", () => {
   });
 
   test("handtekening trigger-knop of canvas is aanwezig per profiel", async ({ page }) => {
-    // On mobile: modal trigger button; on desktop: inline canvas may also exist
     const trigger = page.locator("button[aria-label*='Handtekeningveld'], canvas[aria-label*='Handtekening']");
     expect(await trigger.count()).toBeGreaterThan(0);
   });

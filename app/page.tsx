@@ -10,12 +10,18 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { decodeSharedProfileTransfer } from "@/lib/profileSwitchShare";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import { classifyProfileImportWithIdentityAnchor, getProfileVerificationCode } from "@/lib/profileVerification";
-import { profileConsentAlias, verifyProfileConsent } from "@/lib/consentProof";
+import { canonicalJson, profileConsentAlias, verifyProfileConsent } from "@/lib/consentProof";
 import { createProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
 import {
+  createImportOperationGuard,
+  ImportOperationCancelledError,
+  type ImportOperationGuard,
+} from "@/lib/importOperationGuard";
+import {
   persistProfileIdentityAnchor,
+  planSafeProfileImport,
   readProfileIdentityAnchorRegistry,
-  removePersistedProfileIdentityAnchor,
+  removePersistedProfileIdentityAnchorIfMatches,
 } from "@/lib/storeSecurity";
 import Onboarding from "@/components/Onboarding";
 import PwaInstallGuide from "@/components/PwaInstallGuide";
@@ -77,6 +83,11 @@ function HomeContent() {
   const [identityConfirmMethod, setIdentityConfirmMethod] = useState<ProfileIdentityAnchorMethod | null>(null);
   const [identityConfirmError, setIdentityConfirmError] = useState<string | null>(null);
   const [identityConfirming, setIdentityConfirming] = useState(false);
+  const importTransferRef = useRef<Profile[] | null>(null);
+  const identityConfirmMethodRef = useRef<ProfileIdentityAnchorMethod | null>(null);
+  const importOperationGuardRef = useRef<ImportOperationGuard | null>(null);
+  if (!importOperationGuardRef.current) importOperationGuardRef.current = createImportOperationGuard();
+  const importOperationGuard = importOperationGuardRef.current;
   const importPreview = importTransfer?.[0] ?? null;
   const persistedAnchors = importTransfer ? readProfileIdentityAnchorRegistry().anchors : [];
   const importIdentities = importTransfer?.map((candidate) =>
@@ -103,11 +114,24 @@ function HomeContent() {
     && importTransfer.every((candidate) =>
       candidate.personGroupId === importTransfer[0].personGroupId);
 
-  useEffect(() => {
+  function replaceImportTransfer(next: Profile[] | null) {
+    importOperationGuard.invalidate();
+    importTransferRef.current = next;
+    identityConfirmMethodRef.current = null;
+    setImportTransfer(next);
     setIdentityConfirmMethod(null);
     setIdentityConfirmError(null);
     setIdentityConfirming(false);
-  }, [importTransfer]);
+    setImportDone(false);
+  }
+
+  function changeIdentityConfirmMethod(next: ProfileIdentityAnchorMethod) {
+    importOperationGuard.invalidate();
+    identityConfirmMethodRef.current = next;
+    setIdentityConfirmMethod(next);
+    setIdentityConfirmError(null);
+    setIdentityConfirming(false);
+  }
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
@@ -129,9 +153,12 @@ function HomeContent() {
     async function readShareLocation() {
       const parsed = parseSharePaste(window.location.href);
       if (parsed.kind !== "profile") return;
+      const decodeToken = importOperationGuard.begin();
       try {
         const decoded = await decodeSharedProfileTransfer(parsed.encoded);
-        if (!cancelled) setImportTransfer(decoded.profiles);
+        if (!cancelled && importOperationGuard.isCurrent(decodeToken)) {
+          replaceImportTransfer(decoded.profiles);
+        }
       } catch {
         // Beschadigde of ongeldige deelcodes komen niet in de store.
       }
@@ -223,73 +250,166 @@ function HomeContent() {
     event.target.value = "";
   }
 
-  function finishProfileImport(): boolean {
-    if (!importTransfer?.length) return false;
-    const prepared = importTransfer.map((candidate) => ({
+  function prepareProfileImport(transfer: readonly Profile[], lockedAt = Date.now()): Profile[] {
+    return transfer.map((candidate) => ({
       ...candidate,
       verificationCode: getProfileVerificationCode(candidate),
       isImported: true,
       origin: "shared" as const,
-      lockedAt: Date.now(),
+      lockedAt,
     }));
-    importProfiles(prepared);
-    const stored = useStore.getState().profiles;
-    const accepted = prepared.every((candidate) => stored.some((profile) =>
-      profile.id === candidate.id
-      && getProfileVerificationCode(profile) === getProfileVerificationCode(candidate)));
-    if (!accepted) return false;
+  }
 
+  function completeProfileImport(operationToken?: number) {
     setImportDone(true);
     router.replace("/");
     window.setTimeout(() => {
-      setImportTransfer(null);
-      setImportDone(false);
+      if (operationToken !== undefined && !importOperationGuard.isCurrent(operationToken)) return;
+      replaceImportTransfer(null);
     }, 1500);
+  }
+
+  function finishProfileImport(
+    transfer: Profile[] | null = importTransferRef.current,
+    operationToken?: number,
+  ): boolean {
+    if (!transfer?.length) return false;
+    if (operationToken !== undefined) importOperationGuard.assertCurrent(operationToken);
+    const previousProfiles = useStore.getState().profiles;
+    const prepared = prepareProfileImport(transfer);
+    const plan = planSafeProfileImport(previousProfiles, prepared);
+    if (plan.acceptedCount !== prepared.length) return false;
+
+    try {
+      if (operationToken !== undefined) importOperationGuard.assertCurrent(operationToken);
+      useStore.setState({ profiles: plan.profiles });
+      if (canonicalJson(useStore.getState().profiles) !== canonicalJson(plan.profiles)) {
+        throw new Error("Profile import commit did not persist exactly");
+      }
+    } catch {
+      useStore.setState({ profiles: previousProfiles });
+      return false;
+    }
+
+    completeProfileImport(operationToken);
     return true;
   }
 
   async function confirmIdentityAndImport() {
-    if (!importTransfer?.length || !identityConfirmMethod || hasIdentityConflict || hasLegacyUnverified) return;
+    const transfer = importTransferRef.current;
+    const method = identityConfirmMethodRef.current;
+    if (!transfer?.length || !method || hasIdentityConflict || hasLegacyUnverified) return;
+    const operationToken = importOperationGuard.begin();
     setIdentityConfirmError(null);
     setIdentityConfirming(true);
-    const newlyPersistedProfileIds: string[] = [];
+    const newlyPersistedAnchors: ReturnType<typeof createProfileIdentityAnchor>[] = [];
+    let previousProfiles: Profile[] | null = null;
+    let profileWriteStarted = false;
 
     try {
-      const currentAnchors = readProfileIdentityAnchorRegistry().anchors;
-      for (let index = 0; index < importTransfer.length; index += 1) {
-        const candidate = importTransfer[index];
-        const identity = importIdentities[index];
-        if (identity?.kind === "anchored-update") continue;
-        if (identity?.kind !== "new-unanchored") {
-          throw new Error("Deze import kan niet als nieuw contact worden bevestigd.");
-        }
-
+      for (const candidate of transfer) {
+        importOperationGuard.assertCurrent(operationToken);
         const verification = await verifyProfileConsent(candidate);
+        importOperationGuard.assertCurrent(operationToken);
         if (verification.status !== "valid" || !candidate.consentProof) {
           throw new Error("De digitale handtekening is niet geldig. Identiteitsbevestiging is geblokkeerd.");
         }
+      }
 
-        const existed = currentAnchors.some((anchor) => anchor.profileId === candidate.id);
-        const anchor = createProfileIdentityAnchor(
+      importOperationGuard.assertCurrent(operationToken);
+      previousProfiles = useStore.getState().profiles;
+      const initialAnchors = readProfileIdentityAnchorRegistry().anchors;
+      const anchorsToCreate: ReturnType<typeof createProfileIdentityAnchor>[] = [];
+      for (const candidate of transfer) {
+        const identity = classifyProfileImportWithIdentityAnchor(previousProfiles, candidate, initialAnchors);
+        if (identity.kind === "anchored-update") continue;
+        if (identity.kind !== "new-unanchored" || !candidate.consentProof) {
+          throw new Error("Deze import kan niet als nieuw contact worden bevestigd.");
+        }
+        anchorsToCreate.push(createProfileIdentityAnchor(
           candidate,
           candidate.consentProof,
           Date.now(),
-          identityConfirmMethod,
-        );
-        if (!persistProfileIdentityAnchor(anchor)) {
-          throw new Error("De onafhankelijke identiteitsbevestiging kon niet veilig worden opgeslagen.");
-        }
-        if (!existed) newlyPersistedProfileIds.push(candidate.id);
+          method,
+        ));
       }
 
-      if (!finishProfileImport()) {
-        throw new Error("Het profiel kon niet veilig worden geïmporteerd; de identiteitsbevestiging is teruggedraaid.");
+      const prepared = prepareProfileImport(transfer);
+      const importPlan = planSafeProfileImport(previousProfiles, prepared);
+      if (importPlan.acceptedCount !== prepared.length) {
+        throw new Error("Het profiel kan niet veilig worden geïmporteerd zonder de ondertekende identiteit te wijzigen.");
       }
+
+      for (const anchor of anchorsToCreate) {
+        importOperationGuard.assertCurrent(operationToken);
+        const freshProfiles = useStore.getState().profiles;
+        const freshAnchors = readProfileIdentityAnchorRegistry().anchors;
+        const candidate = transfer.find((profile) => profile.id === anchor.profileId);
+        if (!candidate
+          || canonicalJson(freshProfiles) !== canonicalJson(previousProfiles)
+          || classifyProfileImportWithIdentityAnchor(freshProfiles, candidate, freshAnchors).kind !== "new-unanchored") {
+          throw new Error("De importstatus veranderde vóór de identity anchor kon worden opgeslagen.");
+        }
+        const persisted = await persistProfileIdentityAnchor(anchor);
+        if (persisted) newlyPersistedAnchors.push(anchor);
+        importOperationGuard.assertCurrent(operationToken);
+        if (!persisted) {
+          throw new Error("De onafhankelijke identiteitsbevestiging kon niet veilig worden opgeslagen.");
+        }
+      }
+
+      importOperationGuard.assertCurrent(operationToken);
+      const finalProfiles = useStore.getState().profiles;
+      const finalAnchors = readProfileIdentityAnchorRegistry().anchors;
+      const createdAnchorById = new Map(
+        newlyPersistedAnchors.map((anchor) => [anchor.profileId, anchor]),
+      );
+      const anchorsBeforeThisOperation = finalAnchors.filter(
+        (anchor) => !createdAnchorById.has(anchor.profileId),
+      );
+      if (canonicalJson(finalProfiles) !== canonicalJson(previousProfiles)) {
+        throw new Error("De profielopslag veranderde tijdens de import. Import is geblokkeerd.");
+      }
+      for (const candidate of transfer) {
+        const refreshed = classifyProfileImportWithIdentityAnchor(
+          finalProfiles,
+          candidate,
+          anchorsBeforeThisOperation,
+        );
+        const createdAnchor = createdAnchorById.get(candidate.id);
+        if (createdAnchor) {
+          const persisted = finalAnchors.find((anchor) => anchor.profileId === candidate.id);
+          if (refreshed.kind !== "new-unanchored"
+            || !persisted
+            || canonicalJson(persisted) !== canonicalJson(createdAnchor)) {
+            throw new Error("De identity anchor veranderde tijdens de import. Import is geblokkeerd.");
+          }
+        } else if (refreshed.kind !== "anchored-update") {
+          throw new Error("De identity anchor veranderde tijdens de import. Import is geblokkeerd.");
+        }
+      }
+
+      importOperationGuard.assertCurrent(operationToken);
+      profileWriteStarted = true;
+      useStore.setState({ profiles: importPlan.profiles });
+      if (canonicalJson(useStore.getState().profiles) !== canonicalJson(importPlan.profiles)) {
+        throw new Error("Het profiel kon niet exact volgens het vooraf gecontroleerde importplan worden opgeslagen.");
+      }
+      completeProfileImport(operationToken);
     } catch (error) {
-      for (const profileId of newlyPersistedProfileIds) removePersistedProfileIdentityAnchor(profileId);
-      setIdentityConfirmError(error instanceof Error ? error.message : "Identiteitsbevestiging is mislukt.");
+      if (profileWriteStarted && previousProfiles) useStore.setState({ profiles: previousProfiles });
+      let anchorsRolledBack = true;
+      for (const anchor of [...newlyPersistedAnchors].reverse()) {
+        if (!await removePersistedProfileIdentityAnchorIfMatches(anchor)) anchorsRolledBack = false;
+      }
+      if (!(error instanceof ImportOperationCancelledError)) {
+        const message = error instanceof Error ? error.message : "Identiteitsbevestiging is mislukt.";
+        setIdentityConfirmError(anchorsRolledBack
+          ? message
+          : `${message} Een gelijktijdig gewijzigde identity anchor is niet verwijderd.`);
+      }
     } finally {
-      setIdentityConfirming(false);
+      if (importOperationGuard.isCurrent(operationToken)) setIdentityConfirming(false);
     }
   }
 
@@ -548,15 +668,24 @@ function HomeContent() {
         <QRScanner
           open={scanOpen}
           onResult={async (payload) => {
+            const decodeToken = importOperationGuard.begin();
             try {
-              setImportTransfer((await decodeSharedProfileTransfer(payload)).profiles);
-              setScanError(null);
+              const decoded = await decodeSharedProfileTransfer(payload);
+              if (importOperationGuard.isCurrent(decodeToken)) {
+                replaceImportTransfer(decoded.profiles);
+                setScanError(null);
+              }
             } catch {
-              setScanError("Profielcode is ongeldig of beschadigd.");
+              if (importOperationGuard.isCurrent(decodeToken)) {
+                setScanError("Profielcode is ongeldig of beschadigd.");
+              }
             }
+            if (importOperationGuard.isCurrent(decodeToken)) setScanOpen(false);
+          }}
+          onClose={() => {
+            importOperationGuard.invalidate();
             setScanOpen(false);
           }}
-          onClose={() => setScanOpen(false)}
         />
       )}
 
@@ -580,7 +709,7 @@ function HomeContent() {
 
       <Sheet
         open={!!importPreview}
-        onClose={() => setImportTransfer(null)}
+        onClose={() => replaceImportTransfer(null)}
         title={needsIdentityConfirmation ? "Identiteit onafhankelijk vergelijken" : isSwitchImport ? "Switch-profiel importeren?" : "Profiel importeren?"}
         aria-label="Profiel importeren"
       >
@@ -658,7 +787,7 @@ function HomeContent() {
                 <button
                   type="button"
                   aria-pressed={identityConfirmMethod === "source-device-fingerprint"}
-                  onClick={() => setIdentityConfirmMethod("source-device-fingerprint")}
+                  onClick={() => changeIdentityConfirmMethod("source-device-fingerprint")}
                   className="focus-ring min-h-11 rounded-xl border px-3 py-2 text-left text-sm"
                   style={{ borderColor: identityConfirmMethod === "source-device-fingerprint" ? "var(--accent)" : "var(--border)", background: "var(--surface2)" }}
                 >
@@ -667,7 +796,7 @@ function HomeContent() {
                 <button
                   type="button"
                   aria-pressed={identityConfirmMethod === "independent-channel-fingerprint"}
-                  onClick={() => setIdentityConfirmMethod("independent-channel-fingerprint")}
+                  onClick={() => changeIdentityConfirmMethod("independent-channel-fingerprint")}
                   className="focus-ring min-h-11 rounded-xl border px-3 py-2 text-left text-sm"
                   style={{ borderColor: identityConfirmMethod === "independent-channel-fingerprint" ? "var(--accent)" : "var(--border)", background: "var(--surface2)" }}
                 >
@@ -694,7 +823,7 @@ function HomeContent() {
               <button
                 type="button"
                 onClick={() => {
-                  setImportTransfer(null);
+                  replaceImportTransfer(null);
                   router.push(`/profile/${importIdentity.profile!.id}`);
                 }}
                 className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
@@ -739,7 +868,7 @@ function HomeContent() {
           <button
             type="button"
             onClick={() => {
-              setImportTransfer(null);
+              replaceImportTransfer(null);
               router.replace("/");
             }}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"

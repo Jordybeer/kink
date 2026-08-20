@@ -2,14 +2,6 @@ import { describe, expect, it } from "vitest";
 import { migrateStoredBdsmtestUrlV25 } from "@/lib/storeCore";
 import type { Profile } from "@/types";
 
-/**
- * De sanitizer kwam te laat voor wie al binnen was.
- *
- * `sanitizeBdsmtestUrl` sloot de importdeur, maar niet de la waar oude import
- * al in lag. Een profiel dat vóór die fix binnenkwam met een vreemde
- * bdsmtestUrl overleefde hydration ongewijzigd en haalde nog steeds de href van
- * "Origineel resultaat openen". Deze migratie haalt die achterstand in.
- */
 function profile(bdsmtestUrl?: string): Profile {
   return {
     id: "p1",
@@ -25,8 +17,14 @@ function profile(bdsmtestUrl?: string): Profile {
 }
 
 describe("migrateStoredBdsmtestUrlV25", () => {
-  it("laat een echte bdsmtest.org-link met rust", () => {
+  it("laat een canonieke bdsmtest.org-resultaatlink met rust", () => {
     const state = { profiles: [profile("https://bdsmtest.org/r/abc")] };
+    migrateStoredBdsmtestUrlV25(state, 24);
+    expect(state.profiles[0].bdsmtestUrl).toBe("https://bdsmtest.org/r/abc");
+  });
+
+  it("maakt een oude www/http/tracking-link canoniek", () => {
+    const state = { profiles: [profile("http://www.bdsmtest.org/r/abc?utm_source=old#result")] };
     migrateStoredBdsmtestUrlV25(state, 24);
     expect(state.profiles[0].bdsmtestUrl).toBe("https://bdsmtest.org/r/abc");
   });
@@ -38,7 +36,13 @@ describe("migrateStoredBdsmtestUrlV25", () => {
   });
 
   it("gooit een look-alike domein alsnog weg", () => {
-    const state = { profiles: [profile("https://bdsmtest.org.kwaad.example/r/1")] };
+    const state = { profiles: [profile("https://bdsmtest.org.kwaad.example/r/abc")] };
+    migrateStoredBdsmtestUrlV25(state, 24);
+    expect(state.profiles[0].bdsmtestUrl).toBeUndefined();
+  });
+
+  it("gooit een andere route op hetzelfde domein weg", () => {
+    const state = { profiles: [profile("https://bdsmtest.org/about")] };
     migrateStoredBdsmtestUrlV25(state, 24);
     expect(state.profiles[0].bdsmtestUrl).toBeUndefined();
   });

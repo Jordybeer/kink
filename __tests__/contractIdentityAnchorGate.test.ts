@@ -22,6 +22,7 @@ import { createProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
 import {
   persistProfileIdentityAnchor,
   PROFILE_IDENTITY_ANCHOR_STORAGE_KEY,
+  type ProfileIdentityAnchorLock,
 } from "@/lib/storeSecurity";
 
 class MemoryStorage implements Pick<Storage, "getItem" | "setItem" | "removeItem"> {
@@ -37,6 +38,12 @@ class MemoryStorage implements Pick<Storage, "getItem" | "setItem" | "removeItem
 
   removeItem(key: string): void {
     this.values.delete(key);
+  }
+}
+
+class MemoryLock implements ProfileIdentityAnchorLock {
+  async runExclusive<T>(operation: () => T): Promise<T> {
+    return operation();
   }
 }
 
@@ -66,7 +73,7 @@ async function sealedShared(source: Profile) {
 }
 
 function content(a: Profile, b: Profile): ContractVersionContent {
-  return {
+  const base: ContractVersionContent = {
     schema: 1,
     profileA: contractParticipantFromProfile(a),
     profileB: contractParticipantFromProfile(b),
@@ -82,6 +89,25 @@ function content(a: Profile, b: Profile): ContractVersionContent {
     hardLimitDetails: [],
     discuss: [],
   };
+  return {
+    ...base,
+    handwrittenSignatures: {
+      profileA: {
+        schema: 1,
+        width: 240,
+        height: 80,
+        bitmap: Buffer.alloc(2400, 0xaa).toString("base64url"),
+        capturedAt: 100,
+      },
+      profileB: {
+        schema: 1,
+        width: 240,
+        height: 80,
+        bitmap: Buffer.alloc(2400, 0x55).toString("base64url"),
+        capturedAt: 101,
+      },
+    },
+  } as ContractVersionContent;
 }
 
 async function draftSeries(a: Profile, b: Profile): Promise<ContractSeries> {
@@ -141,7 +167,7 @@ describe("contract first-activation identity anchor gate", () => {
       1234,
       "source-device-fingerprint",
     );
-    expect(persistProfileIdentityAnchor(anchor, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(anchor, storage, new MemoryLock())).toBe(true);
     expect((await resolveContractCounterpartyIdentityTrust(remote.profile)).status).toBe("identity-anchored");
 
     const result = await createContractRequest({
@@ -197,7 +223,7 @@ describe("contract first-activation identity anchor gate", () => {
       2345,
       "independent-channel-fingerprint",
     );
-    expect(persistProfileIdentityAnchor(anchor, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(anchor, storage, new MemoryLock())).toBe(true);
     const responder = profile("phase5-b", "Sam");
     const responderKey = await generateProfileOwnerKey(responder.id);
     const request = await createContractRequest({
@@ -236,7 +262,7 @@ describe("contract first-activation identity anchor gate", () => {
       3456,
       "source-device-fingerprint",
     );
-    expect(persistProfileIdentityAnchor(anchor, storage)).toBe(true);
+    expect(await persistProfileIdentityAnchor(anchor, storage, new MemoryLock())).toBe(true);
 
     const attackerKey = await generateProfileOwnerKey(legitimateSource.id);
     const attackerSigned = await signProfileConsent(legitimateSource, attackerKey);

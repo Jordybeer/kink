@@ -29,9 +29,13 @@ test("about opens the public technical security reference", async ({ page }) => 
   await expect(page.getByText("4.000.000 bytes", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "security@jordy.dev" })).toHaveAttribute("href", "mailto:security@jordy.dev");
   await expect(page.getByRole("navigation", { name: "Tabbladen" })).toHaveCount(0);
+  await expect.poll(() => page.getByText("Encryptie", { exact: true }).evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).fontSize),
+  )).toBeGreaterThanOrEqual(12);
+  expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
 
   const [eyebrowBox, headingBox] = await Promise.all([eyebrow.boundingBox(), heading.boundingBox()]);
   expect(eyebrowBox).not.toBeNull();
   expect(headingBox).not.toBeNull();
-  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(8);
+  expect(headingBox!.y - (eyebrowBox!.y + eyebrowBox!.height)).toBeGreaterThanOrEqual(12);
 });
