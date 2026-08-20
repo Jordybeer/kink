@@ -4,7 +4,9 @@ import {
   createConsentLedgerEvent,
   createConsentSnapshot,
   generateProfileOwnerKey,
+  PROFILE_CONSENT_FINGERPRINT_BITS,
   profileConsentAlias,
+  profileConsentFingerprint,
   projectSceneConsentAgreement,
   sceneMatchesConsentAgreement,
   signProfileConsent,
@@ -64,9 +66,27 @@ describe("signed consent", () => {
     expect(snapshot?.payload.entries.hidden).toBeUndefined();
   });
 
-  it("uses a readable stable alias without replacing the technical identity", () => {
+  it("derives a stable 80-bit readable fingerprint from the canonical code and key", () => {
+    const fingerprint = profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a");
+    expect(PROFILE_CONSENT_FINGERPRINT_BITS).toBe(80);
+    expect(fingerprint).toBe("HQT3-KF1R-4T5D-Q9BW");
+    expect(fingerprint).toMatch(/^[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){3}$/);
+    expect(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a")).toBe(fingerprint);
+  });
+
+  it("keeps a broad deterministic key sample distinct within the 80-bit space", () => {
+    const fingerprints = new Set(Array.from({ length: 4096 }, (_, index) => (
+      profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", `key-${index}`)
+    )));
+    expect(fingerprints.size).toBe(4096);
+    expect(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a"))
+      .not.toBe(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-b"));
+    expect(profileConsentFingerprint("KS-7H3P-9Q2M-A4BC", "key-a"))
+      .not.toBe(profileConsentFingerprint("KS-8J4R-5T6V-W7XY", "key-a"));
+  });
+
+  it("keeps the display alias stable without exposing the technical code", () => {
     const alias = profileConsentAlias(profile());
-    expect(alias.split("-")).toHaveLength(4);
     expect(profileConsentAlias(profile())).toBe(alias);
     expect(alias).not.toContain("KS-");
   });
