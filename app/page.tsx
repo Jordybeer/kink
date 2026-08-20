@@ -10,8 +10,13 @@ import { useStore, useHasHydrated } from "@/lib/store";
 import { decodeSharedProfileTransfer } from "@/lib/profileSwitchShare";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import { classifyProfileImportWithIdentityAnchor, getProfileVerificationCode } from "@/lib/profileVerification";
-import { profileConsentAlias, verifyProfileConsent } from "@/lib/consentProof";
+import { canonicalJson, profileConsentAlias, verifyProfileConsent } from "@/lib/consentProof";
 import { createProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
+import {
+  createImportOperationGuard,
+  ImportOperationCancelledError,
+  type ImportOperationGuard,
+} from "@/lib/importOperationGuard";
 import {
   persistProfileIdentityAnchor,
   readProfileIdentityAnchorRegistry,
@@ -77,6 +82,11 @@ function HomeContent() {
   const [identityConfirmMethod, setIdentityConfirmMethod] = useState<ProfileIdentityAnchorMethod | null>(null);
   const [identityConfirmError, setIdentityConfirmError] = useState<string | null>(null);
   const [identityConfirming, setIdentityConfirming] = useState(false);
+  const importTransferRef = useRef<Profile[] | null>(null);
+  const identityConfirmMethodRef = useRef<ProfileIdentityAnchorMethod | null>(null);
+  const importOperationGuardRef = useRef<ImportOperationGuard | null>(null);
+  if (!importOperationGuardRef.current) importOperationGuardRef.current = createImportOperationGuard();
+  const importOperationGuard = importOperationGuardRef.current;
   const importPreview = importTransfer?.[0] ?? null;
   const persistedAnchors = importTransfer ? readProfileIdentityAnchorRegistry().anchors : [];
   const importIdentities = importTransfer?.map((candidate) =>
@@ -103,11 +113,24 @@ function HomeContent() {
     && importTransfer.every((candidate) =>
       candidate.personGroupId === importTransfer[0].personGroupId);
 
-  useEffect(() => {
+  function replaceImportTransfer(next: Profile[] | null) {
+    importOperationGuard.invalidate();
+    importTransferRef.current = next;
+    identityConfirmMethodRef.current = null;
+    setImportTransfer(next);
     setIdentityConfirmMethod(null);
     setIdentityConfirmError(null);
     setIdentityConfirming(false);
-  }, [importTransfer]);
+    setImportDone(false);
+  }
+
+  function changeIdentityConfirmMethod(next: ProfileIdentityAnchorMethod) {
+    importOperationGuard.invalidate();
+    identityConfirmMethodRef.current = next;
+    setIdentityConfirmMethod(next);
+    setIdentityConfirmError(null);
+    setIdentityConfirming(false);
+  }
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
@@ -129,9 +152,12 @@ function HomeContent() {
     async function readShareLocation() {
       const parsed = parseSharePaste(window.location.href);
       if (parsed.kind !== "profile") return;
+      const decodeToken = importOperationGuard.begin();
       try {
         const decoded = await decodeSharedProfileTransfer(parsed.encoded);
-        if (!cancelled) setImportTransfer(decoded.profiles);
+        if (!cancelled && importOperationGuard.isCurrent(decodeToken)) {
+          replaceImportTransfer(decoded.profiles);
+        }
       } catch {
         // Beschadigde of ongeldige deelcodes komen niet in de store.
       }
@@ -223,9 +249,13 @@ function HomeContent() {
     event.target.value = "";
   }
 
-  function finishProfileImport(): boolean {
-    if (!importTransfer?.length) return false;
-    const prepared = importTransfer.map((candidate) => ({
+  function finishProfileImport(
+    transfer: Profile[] | null = importTransferRef.current,
+    operationToken?: number,
+  ): boolean {
+    if (!transfer?.length) return false;
+    if (operationToken !== undefined) importOperationGuard.assertCurrent(operationToken);
+    const prepared = transfer.map((candidate) => ({
       ...candidate,
       verificationCode: getProfileVerificationCode(candidate),
       isImported: true,
@@ -242,29 +272,35 @@ function HomeContent() {
     setImportDone(true);
     router.replace("/");
     window.setTimeout(() => {
-      setImportTransfer(null);
-      setImportDone(false);
+      if (operationToken !== undefined && !importOperationGuard.isCurrent(operationToken)) return;
+      replaceImportTransfer(null);
     }, 1500);
     return true;
   }
 
   async function confirmIdentityAndImport() {
-    if (!importTransfer?.length || !identityConfirmMethod || hasIdentityConflict || hasLegacyUnverified) return;
+    const transfer = importTransferRef.current;
+    const method = identityConfirmMethodRef.current;
+    if (!transfer?.length || !method || hasIdentityConflict || hasLegacyUnverified) return;
+    const operationToken = importOperationGuard.begin();
     setIdentityConfirmError(null);
     setIdentityConfirming(true);
     const newlyPersistedProfileIds: string[] = [];
+    const newlyPersistedAnchors = new Map<string, ReturnType<typeof createProfileIdentityAnchor>>();
 
     try {
-      const currentAnchors = readProfileIdentityAnchorRegistry().anchors;
-      for (let index = 0; index < importTransfer.length; index += 1) {
-        const candidate = importTransfer[index];
-        const identity = importIdentities[index];
+      for (const candidate of transfer) {
+        importOperationGuard.assertCurrent(operationToken);
+        const verification = await verifyProfileConsent(candidate);
+        importOperationGuard.assertCurrent(operationToken);
+
+        const currentProfiles = useStore.getState().profiles;
+        const currentAnchors = readProfileIdentityAnchorRegistry().anchors;
+        const identity = classifyProfileImportWithIdentityAnchor(currentProfiles, candidate, currentAnchors);
         if (identity?.kind === "anchored-update") continue;
         if (identity?.kind !== "new-unanchored") {
           throw new Error("Deze import kan niet als nieuw contact worden bevestigd.");
         }
-
-        const verification = await verifyProfileConsent(candidate);
         if (verification.status !== "valid" || !candidate.consentProof) {
           throw new Error("De digitale handtekening is niet geldig. Identiteitsbevestiging is geblokkeerd.");
         }
@@ -274,22 +310,54 @@ function HomeContent() {
           candidate,
           candidate.consentProof,
           Date.now(),
-          identityConfirmMethod,
+          method,
         );
+        importOperationGuard.assertCurrent(operationToken);
         if (!persistProfileIdentityAnchor(anchor)) {
           throw new Error("De onafhankelijke identiteitsbevestiging kon niet veilig worden opgeslagen.");
         }
-        if (!existed) newlyPersistedProfileIds.push(candidate.id);
+        if (!existed) {
+          newlyPersistedProfileIds.push(candidate.id);
+          newlyPersistedAnchors.set(candidate.id, anchor);
+        }
       }
 
-      if (!finishProfileImport()) {
+      importOperationGuard.assertCurrent(operationToken);
+      const finalProfiles = useStore.getState().profiles;
+      const finalAnchors = readProfileIdentityAnchorRegistry().anchors;
+      const anchorsBeforeThisOperation = finalAnchors.filter(
+        (anchor) => !newlyPersistedAnchors.has(anchor.profileId),
+      );
+      for (const candidate of transfer) {
+        const refreshed = classifyProfileImportWithIdentityAnchor(
+          finalProfiles,
+          candidate,
+          anchorsBeforeThisOperation,
+        );
+        const createdAnchor = newlyPersistedAnchors.get(candidate.id);
+        if (createdAnchor) {
+          const persisted = finalAnchors.find((anchor) => anchor.profileId === candidate.id);
+          if (refreshed.kind !== "new-unanchored"
+            || !persisted
+            || canonicalJson(persisted) !== canonicalJson(createdAnchor)) {
+            throw new Error("De identity anchor veranderde tijdens de import. Import is geblokkeerd.");
+          }
+        } else if (refreshed.kind !== "anchored-update") {
+          throw new Error("De identity anchor veranderde tijdens de import. Import is geblokkeerd.");
+        }
+      }
+
+      importOperationGuard.assertCurrent(operationToken);
+      if (!finishProfileImport(transfer, operationToken)) {
         throw new Error("Het profiel kon niet veilig worden geïmporteerd; de identiteitsbevestiging is teruggedraaid.");
       }
     } catch (error) {
       for (const profileId of newlyPersistedProfileIds) removePersistedProfileIdentityAnchor(profileId);
-      setIdentityConfirmError(error instanceof Error ? error.message : "Identiteitsbevestiging is mislukt.");
+      if (!(error instanceof ImportOperationCancelledError)) {
+        setIdentityConfirmError(error instanceof Error ? error.message : "Identiteitsbevestiging is mislukt.");
+      }
     } finally {
-      setIdentityConfirming(false);
+      if (importOperationGuard.isCurrent(operationToken)) setIdentityConfirming(false);
     }
   }
 
@@ -548,15 +616,24 @@ function HomeContent() {
         <QRScanner
           open={scanOpen}
           onResult={async (payload) => {
+            const decodeToken = importOperationGuard.begin();
             try {
-              setImportTransfer((await decodeSharedProfileTransfer(payload)).profiles);
-              setScanError(null);
+              const decoded = await decodeSharedProfileTransfer(payload);
+              if (importOperationGuard.isCurrent(decodeToken)) {
+                replaceImportTransfer(decoded.profiles);
+                setScanError(null);
+              }
             } catch {
-              setScanError("Profielcode is ongeldig of beschadigd.");
+              if (importOperationGuard.isCurrent(decodeToken)) {
+                setScanError("Profielcode is ongeldig of beschadigd.");
+              }
             }
+            if (importOperationGuard.isCurrent(decodeToken)) setScanOpen(false);
+          }}
+          onClose={() => {
+            importOperationGuard.invalidate();
             setScanOpen(false);
           }}
-          onClose={() => setScanOpen(false)}
         />
       )}
 
@@ -580,7 +657,7 @@ function HomeContent() {
 
       <Sheet
         open={!!importPreview}
-        onClose={() => setImportTransfer(null)}
+        onClose={() => replaceImportTransfer(null)}
         title={needsIdentityConfirmation ? "Identiteit onafhankelijk vergelijken" : isSwitchImport ? "Switch-profiel importeren?" : "Profiel importeren?"}
         aria-label="Profiel importeren"
       >
@@ -658,7 +735,7 @@ function HomeContent() {
                 <button
                   type="button"
                   aria-pressed={identityConfirmMethod === "source-device-fingerprint"}
-                  onClick={() => setIdentityConfirmMethod("source-device-fingerprint")}
+                  onClick={() => changeIdentityConfirmMethod("source-device-fingerprint")}
                   className="focus-ring min-h-11 rounded-xl border px-3 py-2 text-left text-sm"
                   style={{ borderColor: identityConfirmMethod === "source-device-fingerprint" ? "var(--accent)" : "var(--border)", background: "var(--surface2)" }}
                 >
@@ -667,7 +744,7 @@ function HomeContent() {
                 <button
                   type="button"
                   aria-pressed={identityConfirmMethod === "independent-channel-fingerprint"}
-                  onClick={() => setIdentityConfirmMethod("independent-channel-fingerprint")}
+                  onClick={() => changeIdentityConfirmMethod("independent-channel-fingerprint")}
                   className="focus-ring min-h-11 rounded-xl border px-3 py-2 text-left text-sm"
                   style={{ borderColor: identityConfirmMethod === "independent-channel-fingerprint" ? "var(--accent)" : "var(--border)", background: "var(--surface2)" }}
                 >
@@ -694,7 +771,7 @@ function HomeContent() {
               <button
                 type="button"
                 onClick={() => {
-                  setImportTransfer(null);
+                  replaceImportTransfer(null);
                   router.push(`/profile/${importIdentity.profile!.id}`);
                 }}
                 className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
@@ -739,7 +816,7 @@ function HomeContent() {
           <button
             type="button"
             onClick={() => {
-              setImportTransfer(null);
+              replaceImportTransfer(null);
               router.replace("/");
             }}
             className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
