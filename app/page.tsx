@@ -350,10 +350,12 @@ function HomeContent() {
           || classifyProfileImportWithIdentityAnchor(freshProfiles, candidate, freshAnchors).kind !== "new-unanchored") {
           throw new Error("De importstatus veranderde vóór de identity anchor kon worden opgeslagen.");
         }
-        if (!persistProfileIdentityAnchor(anchor)) {
+        const persisted = await persistProfileIdentityAnchor(anchor);
+        if (persisted) newlyPersistedAnchors.push(anchor);
+        importOperationGuard.assertCurrent(operationToken);
+        if (!persisted) {
           throw new Error("De onafhankelijke identiteitsbevestiging kon niet veilig worden opgeslagen.");
         }
-        newlyPersistedAnchors.push(anchor);
       }
 
       importOperationGuard.assertCurrent(operationToken);
@@ -398,7 +400,7 @@ function HomeContent() {
       if (profileWriteStarted && previousProfiles) useStore.setState({ profiles: previousProfiles });
       let anchorsRolledBack = true;
       for (const anchor of [...newlyPersistedAnchors].reverse()) {
-        if (!removePersistedProfileIdentityAnchorIfMatches(anchor)) anchorsRolledBack = false;
+        if (!await removePersistedProfileIdentityAnchorIfMatches(anchor)) anchorsRolledBack = false;
       }
       if (!(error instanceof ImportOperationCancelledError)) {
         const message = error instanceof Error ? error.message : "Identiteitsbevestiging is mislukt.";
