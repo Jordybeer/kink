@@ -30,7 +30,7 @@ const EMPTY_PROFILE_IDENTITY_ANCHOR_REGISTRY: ProfileIdentityAnchorRegistry = {
   anchors: [],
 };
 
-function sameProfileIdentityAnchor(
+export function sameProfileIdentityAnchor(
   left: ProfileIdentityAnchor,
   right: ProfileIdentityAnchor,
 ): boolean {
@@ -139,6 +139,27 @@ export function removePersistedProfileIdentityAnchor(
   }
 }
 
+export function removePersistedProfileIdentityAnchorIfMatches(
+  expected: ProfileIdentityAnchor,
+  storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
+): boolean {
+  const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+  if (!registry || !storage) return false;
+  const existing = registry.anchors.find((anchor) => anchor.profileId === expected.profileId);
+  if (!existing) return true;
+  if (!sameProfileIdentityAnchor(existing, expected)) return false;
+
+  try {
+    storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
+      schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+      anchors: registry.anchors.filter((anchor) => anchor.profileId !== expected.profileId),
+    } satisfies ProfileIdentityAnchorRegistry));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export interface BackupRestoreResult {
   added: number;
   updated: number;
@@ -198,6 +219,61 @@ function preserveLocalMetadata(incoming: Profile, existing: Profile): Profile {
   };
 }
 
+export interface SafeProfileImportPlan {
+  profiles: Profile[];
+  acceptedCount: number;
+  rejectedProfileIds: string[];
+}
+
+export function planSafeProfileImport(
+  existingProfiles: readonly Profile[],
+  incoming: readonly Profile[],
+  now = Date.now(),
+): SafeProfileImportPlan {
+  const profiles = [...existingProfiles];
+  let acceptedCount = 0;
+  const rejectedProfileIds: string[] = [];
+
+  for (const raw of incoming) {
+    const profile = {
+      ...raw,
+      verificationCode: getProfileVerificationCode(raw),
+      origin: "shared" as const,
+      isImported: true,
+      lockedAt: raw.lockedAt ?? now,
+    };
+    const exactId = profiles.find((candidate) => candidate.id === profile.id);
+    if (exactId && getProfileVerificationCode(exactId) !== getProfileVerificationCode(profile)) {
+      rejectedProfileIds.push(profile.id);
+      continue;
+    }
+
+    const identity = classifyProfileImport(profiles, profile);
+    if (identity.kind === "new") {
+      profiles.push(profile);
+      acceptedCount += 1;
+      continue;
+    }
+
+    if (identity.kind !== "signed-update" || identity.profile.id !== profile.id) {
+      rejectedProfileIds.push(profile.id);
+      continue;
+    }
+    const index = profiles.findIndex((candidate) => candidate.id === identity.profile.id);
+    if (index < 0) {
+      rejectedProfileIds.push(profile.id);
+      continue;
+    }
+    profiles[index] = preserveLocalMetadata({
+      ...profile,
+      lockedAt: identity.profile.lockedAt ?? now,
+    }, identity.profile);
+    acceptedCount += 1;
+  }
+
+  return { profiles, acceptedCount, rejectedProfileIds };
+}
+
 function upsertOwnerKey(
   keys: ProfileOwnerKey[],
   incoming: ProfileOwnerKey,
@@ -237,39 +313,9 @@ export function installStoreSecurity(store: StoreHook): void {
   };
 
   function safeImportProfiles(incoming: Profile[]): void {
-    store.setState((state) => {
-      const profiles = [...state.profiles];
-
-      for (const profile of incoming) {
-        const exactId = profiles.find((candidate) => candidate.id === profile.id);
-        if (exactId && getProfileVerificationCode(exactId) !== getProfileVerificationCode(profile)) {
-          continue;
-        }
-
-        const identity = classifyProfileImport(profiles, profile);
-        if (identity.kind === "new") {
-          profiles.push({
-            ...profile,
-            origin: "shared",
-            isImported: true,
-            lockedAt: profile.lockedAt ?? Date.now(),
-          });
-          continue;
-        }
-
-        if (identity.kind !== "signed-update" || identity.profile.id !== profile.id) continue;
-        const index = profiles.findIndex((candidate) => candidate.id === identity.profile.id);
-        if (index < 0) continue;
-        profiles[index] = preserveLocalMetadata({
-          ...profile,
-          origin: "shared",
-          isImported: true,
-          lockedAt: identity.profile.lockedAt ?? Date.now(),
-        }, identity.profile);
-      }
-
-      return { profiles };
-    });
+    store.setState((state) => ({
+      profiles: planSafeProfileImport(state.profiles, incoming).profiles,
+    }));
   }
 
   function safeRestoreBackupProfiles(

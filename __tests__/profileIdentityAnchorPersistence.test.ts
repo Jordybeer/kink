@@ -7,6 +7,7 @@ import {
   persistProfileIdentityAnchor,
   readProfileIdentityAnchorRegistry,
   removePersistedProfileIdentityAnchor,
+  removePersistedProfileIdentityAnchorIfMatches,
 } from "@/lib/storeSecurity";
 
 class MemoryStorage {
@@ -142,6 +143,20 @@ describe("profile identity anchor persistence", () => {
 
     expect(removePersistedProfileIdentityAnchor("alice-profile", storage)).toBe(true);
     expect(readProfileIdentityAnchorRegistry(storage)).toEqual({ schema: 1, anchors: [bob] });
+  });
+
+  it("rolls back only the exact anchor created by the current operation", () => {
+    const storage = new MemoryStorage();
+    expect(persistProfileIdentityAnchor(ALICE_ANCHOR, storage)).toBe(true);
+
+    expect(removePersistedProfileIdentityAnchorIfMatches(
+      { ...ALICE_ANCHOR, anchoredAt: ALICE_ANCHOR.anchoredAt + 1 },
+      storage,
+    )).toBe(false);
+    expect(getPersistedProfileIdentityAnchor(ALICE_ANCHOR.profileId, storage)).toEqual(ALICE_ANCHOR);
+
+    expect(removePersistedProfileIdentityAnchorIfMatches(ALICE_ANCHOR, storage)).toBe(true);
+    expect(getPersistedProfileIdentityAnchor(ALICE_ANCHOR.profileId, storage)).toBeUndefined();
   });
 
   it("reports storage write failure without mutating the in-memory trust decision", () => {
