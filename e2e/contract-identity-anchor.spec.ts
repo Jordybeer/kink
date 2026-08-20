@@ -136,11 +136,34 @@ async function submitContractFrames(
   }
 }
 
+async function drawContractSignature(
+  page: Parameters<typeof seedAndGo>[0],
+  profileName: string,
+): Promise<void> {
+  await page.getByRole("button", {
+    name: `Handtekeningveld openen voor ${profileName}`,
+  }).click();
+  const canvas = page.getByLabel(`Handtekening voor ${profileName}`);
+  await expect(canvas).toBeVisible();
+  const bounds = await canvas.boundingBox();
+  if (!bounds) throw new Error(`Handtekeningcanvas voor ${profileName} ontbreekt`);
+
+  await page.mouse.move(bounds.x + bounds.width * 0.2, bounds.y + bounds.height * 0.55);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width * 0.4, bounds.y + bounds.height * 0.35, { steps: 6 });
+  await page.mouse.move(bounds.x + bounds.width * 0.6, bounds.y + bounds.height * 0.65, { steps: 6 });
+  await page.mouse.move(bounds.x + bounds.width * 0.8, bounds.y + bounds.height * 0.45, { steps: 6 });
+  await page.mouse.up();
+  await page.getByRole("button", { name: "Klaar", exact: true }).click();
+}
+
 test("signed-unanchored contact cannot start activation; anchoring unlocks the existing signing flow", async ({ page }) => {
   const local = profile("phase5-e2e-a", "Alex");
   const remote = await signedShared(profile("phase5-e2e-b", "Sam", "shared"));
 
   await seedAndGo(page, `/contract?a=${local.id}&b=${remote.profile.id}`, [local, remote.profile]);
+  await drawContractSignature(page, local.name);
+  await drawContractSignature(page, remote.profile.name);
   await page.getByRole("button", { name: "Contract bewaren of digitaal bevestigen" }).click();
   await page.getByRole("button", { name: "Digitaal bevestigen via QR" }).click();
 
