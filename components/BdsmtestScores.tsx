@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowSquareOut, CaretRight } from "@phosphor-icons/react";
+import { CaretRight } from "@phosphor-icons/react";
 import type { BdsmtestScore } from "@/types";
 import Sheet, { SheetContent } from "@/components/Sheet";
 
@@ -50,7 +50,7 @@ function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compa
   );
 }
 
-export default function BdsmtestScores({ scores, url }: Props) {
+export default function BdsmtestScores({ scores }: Props) {
   const [open, setOpen] = useState(false);
   if (!scores.length) return null;
 
@@ -91,19 +91,6 @@ export default function BdsmtestScores({ scores, url }: Props) {
           <h2 className="mb-4 px-1 text-lg font-bold">BDSMTest-resultaten</h2>
 
           <div className="px-1 pb-2">
-            {url && (
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="focus-ring mb-4 inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold"
-                style={{ color: "var(--accent)", borderColor: "var(--border-accent)" }}
-              >
-                Origineel resultaat openen
-                <ArrowSquareOut size={12} aria-hidden="true" />
-              </a>
-            )}
-
             <ScoreRows scores={scores} />
           </div>
 

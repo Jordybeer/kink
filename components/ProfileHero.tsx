@@ -10,12 +10,15 @@ import {
   FileText,
   Lock,
   PencilSimple,
+  Sparkle,
   Trash,
 } from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
 import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
+import BdsmtestMark from "@/components/brand/BdsmtestMark";
+import ProfileEnrichmentModal from "@/components/profile/ProfileEnrichmentModal";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { Profile } from "@/types";
 import { resizeImage } from "@/lib/imageUtils";
@@ -47,6 +50,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [enrichmentOpen, setEnrichmentOpen] = useState(false);
   useLegacyContractMigration();
   const contractSeries = useContractStore((state) => state.series);
   const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
@@ -204,6 +208,23 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie">
           <ProfileTrust profile={profile} />
 
+          {canEdit && (
+            <button
+              type="button"
+              data-tour="profile-enrichment"
+              onClick={() => setEnrichmentOpen(true)}
+              className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-[12.5px] font-medium transition-colors active:opacity-70"
+              style={{
+                color: "var(--accent-text)",
+                background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
+                border: "1px solid var(--border-accent)",
+              }}
+            >
+              <Sparkle size={14} weight="duotone" aria-hidden="true" />
+              Profiel aanvullen
+            </button>
+          )}
+
           {profileType === "partner" && profile.lockedAt && (
             <span
               className="inline-flex min-h-8 items-center rounded-full px-2.5 text-[11px] font-normal"
@@ -258,6 +279,31 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
             </a>
           )}
+
+          {profile.bdsmtestUrl && (
+            <a
+              href={profile.bdsmtestUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open het opgeslagen BDSMTest-resultaat"
+              className="profile-bdsmtest-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-[12.5px] font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+              style={{
+                color: "var(--text)",
+                background: "var(--surface2)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
+                style={{ color: "var(--accent-text)", background: "color-mix(in srgb, var(--accent) 12%, var(--surface))", border: "1px solid var(--border-accent)" }}
+              >
+                <BdsmtestMark className="h-[16px] w-[16px]" />
+              </span>
+              <span>BDSMTest</span>
+              <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
+            </a>
+          )}
         </div>
 
         {profile.privateNote && (
@@ -270,11 +316,21 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
         <style jsx>{`
           .profile-fetlife-link:hover,
-          .profile-fetlife-link:focus-visible {
+          .profile-fetlife-link:focus-visible,
+          .profile-bdsmtest-link:hover,
+          .profile-bdsmtest-link:focus-visible {
             border-color: color-mix(in srgb, var(--text2) 45%, var(--border));
           }
         `}</style>
       </section>
+
+      {canEdit && (
+        <ProfileEnrichmentModal
+          open={enrichmentOpen}
+          profile={profile}
+          onClose={() => setEnrichmentOpen(false)}
+        />
+      )}
 
       <Sheet
         open={photoViewerOpen && Boolean(profile.avatarDataUrl)}
