@@ -190,7 +190,7 @@ function cleanEntry(entry: KinkEntry): KinkEntry {
   };
 }
 
-export function projectProfileConsent(profile: Profile): ProfileConsentPayload {
+function projectProfileConsentBase(profile: Profile): ProfileConsentPayload {
   const entries: Record<string, KinkEntry> = {};
   for (const id of Object.keys(profile.entries).sort()) {
     const entry = profile.entries[id];
@@ -212,10 +212,26 @@ export function projectProfileConsent(profile: Profile): ProfileConsentPayload {
     role: profile.role,
     experienceLevel: profile.experienceLevel,
     ...(profile.relationshipStatus ? { relationshipStatus: profile.relationshipStatus } : {}),
-    ...(profile.bdsmtestUrl ? { bdsmtestUrl: profile.bdsmtestUrl } : {}),
-    ...(profile.bdsmtestScores?.length ? { bdsmtestScores: profile.bdsmtestScores } : {}),
     customKinks,
     entries,
+  };
+}
+
+/**
+ * Core profile proof. Optional external enrichments deliberately live outside
+ * this payload so changing or withholding BDSMTest data never invalidates the
+ * consent/profile source proof.
+ */
+export function projectProfileConsent(profile: Profile): ProfileConsentPayload {
+  return projectProfileConsentBase(profile);
+}
+
+/** Legacy projection retained only to verify already-shared v3 profiles. */
+function projectLegacyProfileConsent(profile: Profile): ProfileConsentPayload {
+  return {
+    ...projectProfileConsentBase(profile),
+    ...(profile.bdsmtestUrl ? { bdsmtestUrl: profile.bdsmtestUrl } : {}),
+    ...(profile.bdsmtestScores?.length ? { bdsmtestScores: profile.bdsmtestScores } : {}),
   };
 }
 
@@ -297,22 +313,48 @@ export async function verifyConsentPayload(
   }
 }
 
+async function verifyProfileConsentWithPayload(profile: Profile): Promise<{
+  verification: ConsentVerification;
+  payload: ProfileConsentPayload;
+}> {
+  if (!profile.consentProof) {
+    return { verification: { status: "unsigned" }, payload: projectProfileConsent(profile) };
+  }
+
+  const core = projectProfileConsent(profile);
+  const current = await verifyConsentPayload(core, profile.consentProof);
+  if (current.status === "valid") return { verification: current, payload: core };
+
+  // Legacy profiles signed before external enrichments were separated can still
+  // be read when they arrive from a shared source. Own profiles intentionally
+  // re-seal on the next share/scene instead of continuing the old semantics.
+  const shared = profile.origin === "shared" || profile.isImported === true;
+  if (shared && (profile.bdsmtestUrl || profile.bdsmtestScores?.length)) {
+    const legacy = projectLegacyProfileConsent(profile);
+    const legacyVerification = await verifyConsentPayload(legacy, profile.consentProof);
+    if (legacyVerification.status === "valid") {
+      return { verification: legacyVerification, payload: legacy };
+    }
+  }
+
+  return { verification: current, payload: core };
+}
+
 export async function verifyProfileConsent(profile: Profile): Promise<ConsentVerification> {
-  if (!profile.consentProof) return { status: "unsigned" };
-  return verifyConsentPayload(projectProfileConsent(profile), profile.consentProof);
+  return (await verifyProfileConsentWithPayload(profile)).verification;
 }
 
 export async function createConsentSnapshot(profile: Profile): Promise<ConsentSnapshot | null> {
-  const verification = await verifyProfileConsent(profile);
-  if (verification.status !== "valid") return null;
+  const checked = await verifyProfileConsentWithPayload(profile);
+  if (checked.verification.status !== "valid") return null;
   return {
     profileId: profile.id,
     profileName: profile.name,
     verificationCode: getProfileVerificationCode(profile),
     alias: profileConsentAlias(profile),
     capturedAt: Date.now(),
-    payload: projectProfileConsent(profile),
-    proof: verification.proof,
+    payload: checked.payload,
+    proof: checked.verification.proof,
   };
 }
 
