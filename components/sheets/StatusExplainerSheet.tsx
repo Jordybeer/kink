@@ -22,9 +22,11 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
     <Sheet open={open} onClose={onClose} scrollable aria-label="Uitleg keuzes">
       <SheetContent
         className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
-        style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), 32rem)" }}
+        style={{
+          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), calc(100dvh - 1rem), 28rem)",
+        }}
       >
-        <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
+        <h3 className="mb-4 text-lg font-semibold" style={{ color: "var(--text)" }}>Wat betekenen deze keuzes?</h3>
         <ul className="flex flex-col gap-3">
           {STATUS_ORDER.map((status) => ({
             status,
@@ -32,7 +34,7 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
             description: STATUS_EXPLAINER[status],
           })).map(({ status, label, description }) => (
             <li key={label} className="flex gap-3">
-              <span className="w-3 h-3 rounded-full mt-1 flex-none" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
+              <span className="mt-1 h-3 w-3 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
               <div className="flex-1">
                 <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{label}</p>
                 <p className="text-sm leading-snug" style={{ color: "var(--text2)" }}>{description}</p>
@@ -49,13 +51,13 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
             </div>
           </li>
         </ul>
-        <p className="text-sm italic mt-4" style={{ color: "var(--text2)" }}>
+        <p className="mt-4 text-sm italic" style={{ color: "var(--text2)" }}>
           Tip: tik nogmaals op een actieve knop om hem uit te zetten.
         </p>
         <button
           type="button"
           onClick={onClose}
-          className="focus-ring w-full min-h-12 rounded-xl mt-5 text-sm font-semibold"
+          className="focus-ring mt-5 min-h-12 w-full rounded-xl text-sm font-semibold"
           style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
         >
           Sluit
