@@ -97,17 +97,24 @@ function leadFor(kind: CompareStoryKind): string {
   }
 }
 
+function additionalLimitCopy(limit: number): string {
+  if (limit === 0) return "";
+  if (limit === 1) return " Daarnaast staat bij één ander antwoord een harde grens.";
+  return ` Daarnaast staan bij ${limit} andere antwoorden harde grenzen.`;
+}
+
 function boundaryInsight(summary: CompareSummary): CompareInsight | null {
   const hard = summary.conflict + summary.limit;
   if (hard === 0) return null;
 
   if (summary.conflict > 0) {
+    const conflictCopy = summary.conflict === 1
+      ? "Bij één antwoord staat enthousiasme tegenover een harde grens."
+      : `Bij ${summary.conflict} antwoorden staat enthousiasme tegenover een harde grens.`;
     return {
       kind: "boundaries",
       title: "Grenzen",
-      body: summary.conflict === 1
-        ? "Bij één antwoord staat enthousiasme tegenover een harde grens. Daar staan jullie best even bij stil."
-        : `Bij ${summary.conflict} antwoorden staat enthousiasme tegenover een harde grens. Daar staan jullie best even bij stil.`,
+      body: `${conflictCopy}${additionalLimitCopy(summary.limit)} Daar staan jullie best even bij stil.`,
     };
   }
 

@@ -88,14 +88,19 @@ describe("compare narrative copy", () => {
     expect(story.coverage).toContain("12 andere");
   });
 
-  it("houdt harde grenzen als inzicht zichtbaar zonder de algemene story over te nemen", () => {
+  it("houdt alle harde grenzen zichtbaar zonder de algemene story over te nemen", () => {
     const story = planCompareStory(summary({ shared: 32, discuss: 2, soft: 2, conflict: 1, limit: 2, jointlyAssessed: 39 }));
     expect(story.kind).toBe("very-overlapping");
     expect(story.insights[0]).toEqual({
       kind: "boundaries",
       title: "Grenzen",
-      body: "Bij één antwoord staat enthousiasme tegenover een harde grens. Daar staan jullie best even bij stil.",
+      body: "Bij één antwoord staat enthousiasme tegenover een harde grens. Daarnaast staan bij 2 andere antwoorden harde grenzen. Daar staan jullie best even bij stil.",
     });
+  });
+
+  it("houdt enkelvoud correct wanneer naast een conflict één andere harde grens staat", () => {
+    const story = planCompareStory(summary({ shared: 18, discuss: 4, soft: 2, conflict: 2, limit: 1, jointlyAssessed: 27 }));
+    expect(story.insights[0]?.body).toBe("Bij 2 antwoorden staat enthousiasme tegenover een harde grens. Daarnaast staat bij één ander antwoord een harde grens. Daar staan jullie best even bij stil.");
   });
 
   it("noemt een categorie alleen wanneer verschillen er echt clusteren", () => {
