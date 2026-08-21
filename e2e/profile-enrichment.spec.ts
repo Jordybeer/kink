@@ -101,7 +101,7 @@ test.describe("Profiel aanvullen", () => {
       "https://bdsmtest.org.evil.example/r/steal\n100% Little",
     );
     await expect(dialog.getByText("De resultaatlink lijkt niet van bdsmtest.org te komen.")).toBeVisible();
-    await dialog.getByRole("button", { name: "Opslaan" }).click();
+    await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeDisabled();
     await expect(dialog).toBeVisible();
 
     const stored = await page.evaluate(() => {
