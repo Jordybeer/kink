@@ -101,7 +101,7 @@ test.describe("Profiel aanvullen", () => {
       "https://bdsmtest.org.evil.example/r/steal\n100% Little",
     );
     await expect(dialog.getByText("De resultaatlink lijkt niet van bdsmtest.org te komen.")).toBeVisible();
-    await dialog.getByRole("button", { name: "Opslaan" }).click();
+    await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeDisabled();
     await expect(dialog).toBeVisible();
 
     const stored = await page.evaluate(() => {
@@ -110,6 +110,20 @@ test.describe("Profiel aanvullen", () => {
     });
     expect(stored.bdsmtestUrl).toBe("https://bdsmtest.org/r/safeResult");
     expect(stored.bdsmtestScores).toEqual([{ role: "Switch", pct: 88 }]);
+  });
+
+  test("weigert een te grote paste zonder een geldige prefix stil af te kappen", async ({ page }) => {
+    await page.getByRole("button", { name: "Profiel aanvullen" }).click();
+    const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
+    const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
+    const validPrefix = "https://bdsmtest.org/r/oversized\n100% Little\n";
+
+    await paste.click();
+    await page.keyboard.insertText(validPrefix + "x".repeat(20_000));
+
+    await expect(dialog.getByText("Deze plaktekst is te groot om veilig te verwerken.")).toBeVisible();
+    await expect.poll(async () => (await paste.inputValue()).length).toBe(16_385);
+    await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeDisabled();
   });
 
   test("houdt FetLife op beide Switch-perspectieven maar BDSMTest op het gekozen perspectief", async ({ page }) => {

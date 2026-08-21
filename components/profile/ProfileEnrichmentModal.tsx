@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle, LinkSimple, Sparkle, Trash, X } from "@phosphor-icons/react";
-import { parseBdsmtestCopyAll, type BdsmtestCopyAllError } from "@/lib/parseBdsmtest";
+import {
+  MAX_BDSMTEST_COPY_CHARS,
+  parseBdsmtestCopyAll,
+  type BdsmtestCopyAllError,
+} from "@/lib/parseBdsmtest";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useStore } from "@/lib/store";
 import type { Profile } from "@/types";
@@ -22,6 +26,10 @@ const ERROR_COPY: Record<BdsmtestCopyAllError, string> = {
   "missing-results": "Geen herkenbare BDSMTest-resultaten gevonden.",
   "invalid-results": "Een of meer BDSMTest-resultaten hebben een ongeldig formaat.",
 };
+
+// Keep one sentinel character so an oversized paste cannot look like valid input
+// after the browser applies maxLength.
+const BDSMTEST_INPUT_MAX_CHARS = MAX_BDSMTEST_COPY_CHARS + 1;
 
 function validFetLifeUsername(value: string): boolean {
   const clean = value.trim();
@@ -99,6 +107,8 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
     if (!bdsmPaste.trim()) return null;
     return parseBdsmtestCopyAll(bdsmPaste);
   }, [bdsmPaste]);
+  const canSave = validFetLifeUsername(fetLife)
+    && (!bdsmPaste.trim() || parsed?.ok === true);
 
   if (!mounted || !open) return null;
 
@@ -261,7 +271,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
                 setError(null);
               }}
               rows={5}
-              maxLength={16_384}
+              maxLength={BDSMTEST_INPUT_MAX_CHARS}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
@@ -333,7 +343,8 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             <button
               type="button"
               onClick={save}
-              className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
+              disabled={!canSave}
+              className="focus-ring min-h-12 rounded-xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               style={{ color: "var(--on-accent-fill)", background: "var(--accent-fill)" }}
             >
               Opslaan

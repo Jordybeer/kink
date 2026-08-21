@@ -79,7 +79,7 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).not.toContainText(/100%/);
 });
 
-test("BDSMTest stays readable at the top of the profile overview", async ({ page }) => {
+test("BDSMTest stays readable below the profile hero across both tabs", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
@@ -99,6 +99,9 @@ test("BDSMTest stays readable at the top of the profile overview", async ({ page
   await expect.poll(() => summary.getByText("Dominant", { exact: true }).evaluate((element) =>
     Number.parseFloat(getComputedStyle(element).fontSize),
   )).toBeGreaterThanOrEqual(12);
+
+  await page.getByRole("tab", { name: "Bewerken" }).click();
+  await expect(summary).toBeVisible();
 });
 
 test("dense profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {
