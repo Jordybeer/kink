@@ -107,6 +107,8 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
     if (!bdsmPaste.trim()) return null;
     return parseBdsmtestCopyAll(bdsmPaste);
   }, [bdsmPaste]);
+  const canSave = validFetLifeUsername(fetLife)
+    && (!bdsmPaste.trim() || parsed?.ok === true);
 
   if (!mounted || !open) return null;
 
@@ -341,7 +343,8 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             <button
               type="button"
               onClick={save}
-              className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
+              disabled={!canSave}
+              className="focus-ring min-h-12 rounded-xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               style={{ color: "var(--on-accent-fill)", background: "var(--accent-fill)" }}
             >
               Opslaan
