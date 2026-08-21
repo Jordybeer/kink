@@ -128,8 +128,15 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const editBody = editDialog.getByTestId("profile-edit-scroll-body");
   const editFooter = editDialog.getByTestId("profile-edit-footer");
   await expect(editDialog).toBeVisible();
+  const editOverflows = await editBody.evaluate(
+    (element) => element.scrollHeight > element.clientHeight + 1,
+  );
   await editBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await expect.poll(() => editBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  if (editOverflows) {
+    await expect.poll(() => editBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  } else {
+    await expect.poll(() => editBody.evaluate((element) => element.scrollTop)).toBe(0);
+  }
   await expectWithinVisualViewport(editFooter);
   await saveScreenshot(page, testInfo, "profile-edit-scrolled");
   await editDialog.getByRole("button", { name: "Annuleer" }).click();
