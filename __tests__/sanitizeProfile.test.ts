@@ -280,9 +280,9 @@ describe("sanitizeProfileFull — de BDSMTest-link is geen vrije doorgang", () =
   const withUrl = (bdsmtestUrl: unknown) =>
     sanitizeProfileFull({ id: "p1", name: "Val", bdsmtestUrl })?.bdsmtestUrl;
 
-  it("laat een echte bdsmtest.org-link ongemoeid door de deur", () => {
+  it("canonicaliseert een echte bdsmtest.org-link", () => {
     expect(withUrl("https://bdsmtest.org/r/abc123")).toBe("https://bdsmtest.org/r/abc123");
-    expect(withUrl("https://www.bdsmtest.org/r/abc123")).toBe("https://www.bdsmtest.org/r/abc123");
+    expect(withUrl("https://www.bdsmtest.org/r/abc123")).toBe("https://bdsmtest.org/r/abc123");
   });
 
   it("weigert elk ander protocol, hoe onschuldig het zich ook voordoet", () => {
@@ -310,10 +310,15 @@ describe("sanitizeProfileFull — de BDSMTest-link is geen vrije doorgang", () =
 });
 
 describe("parseBdsmtestOutput — flood control", () => {
-  it("caps a hostile paste at 100 rows and 64-char roles", () => {
-    const flood = Array.from({ length: 5_000 }, (_, i) => `${i % 101}% ${"R".repeat(500)}${i}`).join("\n");
+  it("caps a valid-size paste at the shared 50-row boundary", () => {
+    const flood = Array.from({ length: 200 }, (_, i) => `${i % 101}% role-${i}`).join("\n");
     const rows = parseBdsmtestOutput(flood);
-    expect(rows.length).toBe(100);
+    expect(rows.length).toBe(50);
     for (const row of rows) expect(row.role.length).toBeLessThanOrEqual(64);
+  });
+
+  it("rejects input above the clipboard size boundary before parsing", () => {
+    const oversized = Array.from({ length: 5_000 }, (_, i) => `${i % 101}% ${"R".repeat(500)}${i}`).join("\n");
+    expect(parseBdsmtestOutput(oversized)).toEqual([]);
   });
 });

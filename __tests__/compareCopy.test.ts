@@ -89,7 +89,7 @@ describe("compare narrative copy", () => {
   });
 
   it("houdt harde grenzen als inzicht zichtbaar zonder de algemene story over te nemen", () => {
-    const story = planCompareStory(summary({ shared: 31, discuss: 3, soft: 2, conflict: 1, limit: 2, jointlyAssessed: 39 }));
+    const story = planCompareStory(summary({ shared: 32, discuss: 2, soft: 2, conflict: 1, limit: 2, jointlyAssessed: 39 }));
     expect(story.kind).toBe("very-overlapping");
     expect(story.insights[0]).toEqual({
       kind: "boundaries",

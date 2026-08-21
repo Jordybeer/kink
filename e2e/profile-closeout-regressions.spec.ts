@@ -79,7 +79,7 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).not.toContainText(/100%/);
 });
 
-test("BDSMTest stays readable and follows the primary profile content", async ({ page }) => {
+test("BDSMTest stays readable at the top of the profile overview", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
@@ -89,7 +89,7 @@ test("BDSMTest stays readable and follows the primary profile content", async ({
   await expect(lastCategory).toBeVisible();
   expect(await lastCategory.evaluate((heading, selector) => {
     const target = document.querySelector(selector);
-    return Boolean(target && (heading.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING));
+    return Boolean(target && (target.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING));
   }, '[data-testid="bdsmtest-summary"]')).toBe(true);
 
   const disclosure = summary.getByRole("button", { name: /Bekijk alle 3/ });

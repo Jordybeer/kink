@@ -3,18 +3,26 @@
 import { useEffect } from "react";
 
 const VISUAL_VIEWPORT_HEIGHT = "--visual-viewport-height";
+const VISUAL_VIEWPORT_OFFSET_TOP = "--visual-viewport-offset-top";
 
 export default function VisualViewportBridge() {
   useEffect(() => {
     const root = document.documentElement;
     const viewport = window.visualViewport;
     let renderedHeight = -1;
+    let renderedOffsetTop = -1;
 
     const syncHeight = () => {
       const nextHeight = Math.round(viewport?.height ?? window.innerHeight);
-      if (nextHeight === renderedHeight) return;
-      renderedHeight = nextHeight;
-      root.style.setProperty(VISUAL_VIEWPORT_HEIGHT, `${nextHeight}px`);
+      const nextOffsetTop = Math.round(viewport?.offsetTop ?? 0);
+      if (nextHeight !== renderedHeight) {
+        renderedHeight = nextHeight;
+        root.style.setProperty(VISUAL_VIEWPORT_HEIGHT, `${nextHeight}px`);
+      }
+      if (nextOffsetTop !== renderedOffsetTop) {
+        renderedOffsetTop = nextOffsetTop;
+        root.style.setProperty(VISUAL_VIEWPORT_OFFSET_TOP, `${nextOffsetTop}px`);
+      }
     };
 
     syncHeight();
@@ -33,6 +41,7 @@ export default function VisualViewportBridge() {
       window.removeEventListener("pageshow", syncHeight);
       document.removeEventListener("visibilitychange", syncHeight);
       root.style.removeProperty(VISUAL_VIEWPORT_HEIGHT);
+      root.style.removeProperty(VISUAL_VIEWPORT_OFFSET_TOP);
     };
   }, []);
 

@@ -17,16 +17,18 @@ test.describe("profiel delen — optionele externe data", () => {
     await page.getByRole("button", { name: "Profiel delen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel delen" });
     const bdsmtest = dialog.getByLabel("BDSMTest-resultaten meesturen");
+    const bdsmtestToggle = dialog.getByText("BDSMTest-resultaten meesturen", { exact: true });
 
     await expect(bdsmtest).toBeVisible();
     await expect(bdsmtest).not.toBeChecked();
     await expect(dialog.getByText(/BDSMTest blijft op dit toestel/i)).toBeVisible();
 
-    await bdsmtest.check();
+    await bdsmtestToggle.click();
     await expect(bdsmtest).toBeChecked();
     await expect(dialog.getByText(/BDSMTest wordt alleen voor deze deelactie meegestuurd/i)).toBeVisible();
 
-    await bdsmtest.uncheck();
+    await bdsmtestToggle.click();
+    await expect(bdsmtest).not.toBeChecked();
     await expect(dialog.getByText(/BDSMTest blijft op dit toestel/i)).toBeVisible();
   });
 });

@@ -3,6 +3,7 @@
 :root {
   /* JS keeps this in lockstep with iOS visualViewport; 100dvh is the no-JS fallback. */
   --visual-viewport-height: 100dvh;
+  --visual-viewport-offset-top: 0px;
   --bg: #09080E;
   --surface: #110F19;
   --surface2: #16141F;

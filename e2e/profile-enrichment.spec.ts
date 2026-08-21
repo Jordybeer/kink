@@ -1,14 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { buildStore, PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
-const COPY_ALL = `Don’t judge 🙈
-
-https://www.bdsmtest.org/r/qXBN9QWw?utm_source=copy#result
-
-100% Little
-93% Switch
-78% Rope bunny
-0% Primal (Prey)`;
+const IOS_URI_ENCODED_COPY_ALL = "https://www.bdsmtest.org/r/qXBN9QWw%0A%0A100%25%20Little%0A93%25%20Switch%0A78%25%20Rope%20bunny%0A0%25%20Primal%20(Prey)";
 
 test.describe("Profiel aanvullen", () => {
   test.beforeEach(async ({ page }) => {
@@ -28,16 +21,48 @@ test.describe("Profiel aanvullen", () => {
       return Math.max(0, -rect.top, rect.bottom - visibleHeight);
     })).toBeLessThanOrEqual(1);
 
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty("--visual-viewport-height", "420px");
+      document.documentElement.style.setProperty("--visual-viewport-offset-top", "80px");
+    });
+
+    const viewportFrame = page.getByTestId("profile-enrichment-viewport");
+    const header = dialog.getByTestId("profile-enrichment-header");
+    const scrollBody = dialog.getByTestId("profile-enrichment-scroll-body");
+    const footer = dialog.getByTestId("profile-enrichment-footer");
+    const before = await Promise.all([header.boundingBox(), footer.boundingBox()]);
+    await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    const after = await Promise.all([header.boundingBox(), footer.boundingBox()]);
+
+    expect(before[0]).not.toBeNull();
+    expect(before[1]).not.toBeNull();
+    expect(after[0]!.y).toBeCloseTo(before[0]!.y, 0);
+    expect(after[1]!.y).toBeCloseTo(before[1]!.y, 0);
+    await expect.poll(() => viewportFrame.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return { top: Math.round(rect.top), height: Math.round(rect.height) };
+    })).toEqual({ top: 80, height: 420 });
+    await expect.poll(() => dialog.evaluate((element) => {
+      const frame = element.parentElement?.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
+    })).toBeLessThanOrEqual(1);
+
     await dialog.getByRole("button", { name: "Annuleer" }).click();
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
+    expect(await page.evaluate(() => ({
+      rootOverflow: document.documentElement.style.overflow,
+      bodyOverflow: document.body.style.overflow,
+      bodyPosition: document.body.style.position,
+    }))).toEqual({ rootOverflow: "", bodyOverflow: "", bodyPosition: "" });
   });
 
-  test("splitst Copy all lokaal in een canonical link en resultaten", async ({ page }) => {
+  test("splitst de URI-encoded iOS Copy all lokaal in een canonical link en resultaten", async ({ page }) => {
     await page.getByRole("button", { name: "Profiel aanvullen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
     const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
-    await paste.fill(COPY_ALL);
+    await paste.fill(IOS_URI_ENCODED_COPY_ALL);
 
     await expect(dialog.getByText("Resultaatlink gevonden")).toBeVisible();
     await expect(dialog.getByText("4 resultaten gevonden")).toBeVisible();
