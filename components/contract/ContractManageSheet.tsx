@@ -21,6 +21,11 @@ import {
   requestInstruction,
   verifyAndApplyContractResponse,
 } from "@/lib/contractProtocol";
+import {
+  canSelfSignLocalDevContract,
+  completeLocalDevContractAction,
+} from "@/lib/devLocalContract";
+import { syncDevTestToolsFromLocation } from "@/lib/devTestTools";
 import { decodeContractEnvelope, encodeContractEnvelope } from "@/lib/contractQr";
 import ContractQrDisplay from "@/components/contract/ContractQrDisplay";
 import ContractQrScannerSheet from "@/components/contract/ContractQrScannerSheet";
@@ -59,6 +64,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devTestToolsEnabled, setDevTestToolsEnabled] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -70,6 +76,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
     setScannerOpen(false);
     setBusy(false);
     setError(null);
+    setDevTestToolsEnabled(syncDevTestToolsFromLocation());
   }, [open, series]);
 
   const bucket = contractBucket(workingSeries, profiles);
@@ -77,7 +84,13 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
   const participantProfiles = workingSeries.participants.map((participant) =>
     profiles.find((profile) => profile.id === participant.profileId));
   const localProfiles = participantProfiles.filter(owned);
-  const canManage = localProfiles.length === 1;
+  const localDevPair = participantProfiles[0]
+    && participantProfiles[1]
+    && canSelfSignLocalDevContract(participantProfiles[0], participantProfiles[1])
+    ? [participantProfiles[0], participantProfiles[1]] as const
+    : null;
+  const canLocalDevManage = devTestToolsEnabled && localDevPair !== null;
+  const canManage = localProfiles.length === 1 || canLocalDevManage;
   const profilesAvailable = participantProfiles.every(Boolean);
 
   const menuActions = useMemo(() => {
@@ -106,6 +119,37 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
       if (action === "reactivate" && !currentVersion.content) {
         throw new Error("Dit historische contract bevat geen volledige getekende versie en kan daarom niet veilig worden heractiveerd.");
       }
+
+      if (canLocalDevManage && localDevPair) {
+        const actor = await sealProfileConsent(localDevPair[0].id);
+        const responder = await sealProfileConsent(localDevPair[1].id);
+        if (!actor || !responder) {
+          throw new Error("Beide lokale profielen moeten cryptografisch kunnen worden bevestigd.");
+        }
+        const ownerKeys = useStore.getState().profileOwnerKeys;
+        const actorKey = ownerKeys.find((key) => key.profileId === actor.id);
+        const responderKey = ownerKeys.find((key) => key.profileId === responder.id);
+        if (!actorKey || !responderKey) {
+          throw new Error("De lokale eigendomssleutel van één van de profielen ontbreekt.");
+        }
+        const result = await completeLocalDevContractAction({
+          series: workingSeries,
+          action,
+          actor,
+          responder,
+          actorKey,
+          responderKey,
+          ...(action === "pause" ? { reason: "Tijdelijk gepauzeerd" as const } : {}),
+          ...(action === "stop" ? { reason: "Dynamiek beëindigd" as const } : {}),
+          ...(note.trim() ? { note: note.trim() } : {}),
+        });
+        upsertSeries(result.series);
+        setWorkingSeries(result.series);
+        setView("complete");
+        showToast({ message: `${actionLabel(action)} lokaal bevestigd in testmodus.`, variant: "success" });
+        return;
+      }
+
       const actor = localProfiles[0];
       const counterparty = participantProfiles.find((profile) => profile?.id !== actor.id);
       if (!counterparty) throw new Error("Het profiel van de tweede partij ontbreekt.");
@@ -268,6 +312,12 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                   </button>
                 )}
               </div>
+              {canLocalDevManage && (
+                <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                  <span className="font-medium" style={{ color: "var(--accent)" }}>Testmodus.</span>{" "}
+                  Beide lokale profielen kunnen deze acties op dit toestel bevestigen.
+                </p>
+              )}
               {!profilesAvailable && (
                 <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
                   Heractiveren is niet mogelijk omdat een gekoppeld profiel niet meer beschikbaar is.
@@ -297,6 +347,11 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                       ? "Het contract blijft gepauzeerd totdat de tweede partij deze hervatting op het eigen toestel bevestigt."
                       : "Het contract wordt pas opnieuw actief nadat beide partijen de heractivering bevestigen."}
               </p>
+              {canLocalDevManage && (
+                <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--accent)" }}>
+                  Testmodus: de tweede lokale bevestiging gebeurt op dit toestel.
+                </p>
+              )}
               {(action === "pause" || action === "stop") && (
                 <div className="mt-4 rounded-xl px-3 py-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                   <p className="text-xs" style={{ color: "var(--text2)" }}>Reden</p>

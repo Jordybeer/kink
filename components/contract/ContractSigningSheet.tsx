@@ -17,6 +17,11 @@ import {
   requestInstruction,
   verifyAndApplyContractResponse,
 } from "@/lib/contractProtocol";
+import {
+  activateLocalDevContract,
+  canSelfSignLocalDevContract,
+} from "@/lib/devLocalContract";
+import { syncDevTestToolsFromLocation } from "@/lib/devTestTools";
 import { decodeContractEnvelope, encodeContractEnvelope } from "@/lib/contractQr";
 import ContractQrDisplay from "@/components/contract/ContractQrDisplay";
 import ContractQrScannerSheet from "@/components/contract/ContractQrScannerSheet";
@@ -46,6 +51,8 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
   const [scannerOpen, setScannerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devTestToolsEnabled, setDevTestToolsEnabled] = useState(false);
+  const canLocalDevSign = devTestToolsEnabled && canSelfSignLocalDevContract(profileA, profileB);
 
   useEffect(() => {
     if (!open) return;
@@ -55,6 +62,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
     setScannerOpen(false);
     setBusy(false);
     setError(null);
+    setDevTestToolsEnabled(syncDevTestToolsFromLocation());
   }, [open]);
 
   function assertHandwrittenSignatures() {
@@ -71,6 +79,52 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
       onClose();
     }
     return result.series;
+  }
+
+  async function startLocalDevSigning() {
+    setBusy(true);
+    setError(null);
+    try {
+      assertHandwrittenSignatures();
+      if (!devTestToolsEnabled || !canSelfSignLocalDevContract(profileA, profileB)) {
+        throw new Error("Lokale testondertekening is hier niet beschikbaar.");
+      }
+
+      const actor = await sealProfileConsent(profileA.id);
+      const responder = await sealProfileConsent(profileB.id);
+      if (!actor || !responder) {
+        throw new Error("Beide lokale profielen moeten cryptografisch kunnen worden bevestigd.");
+      }
+
+      const ownerKeys = useStore.getState().profileOwnerKeys;
+      const actorKey = ownerKeys.find((key) => key.profileId === actor.id);
+      const responderKey = ownerKeys.find((key) => key.profileId === responder.id);
+      if (!actorKey || !responderKey) {
+        throw new Error("De lokale eigendomssleutel van één van de profielen ontbreekt.");
+      }
+
+      const draft = await saveDraft({ profileA: actor, profileB: responder, content });
+      const result = await activateLocalDevContract({
+        series: draft.series,
+        actor,
+        responder,
+        actorKey,
+        responderKey,
+      });
+
+      // Dev mode may skip the second device, never the durable signed artifact.
+      await ensureContractPdfArtifact(result.series, result.versionId);
+      upsertSeries(result.series);
+      showToast({
+        message: "Testcontract actief. Je kunt nu scènes en de volledige lifecycle testen.",
+        variant: "success",
+      });
+      onClose();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "De lokale testondertekening is mislukt.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function startSigning() {
@@ -177,17 +231,38 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                 >
                   Opslaan als concept
                 </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void startSigning()}
-                  className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                  style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-                >
-                  <QrCode size={18} aria-hidden="true" />
-                  {busy ? "Voorbereiden…" : "Digitaal bevestigen via QR"}
-                </button>
+                {canLocalDevSign ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void startLocalDevSigning()}
+                    className="focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                  >
+                    {busy ? "Lokaal bevestigen…" : "Beide lokale profielen bevestigen"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void startSigning()}
+                    className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                  >
+                    <QrCode size={18} aria-hidden="true" />
+                    {busy ? "Voorbereiden…" : "Digitaal bevestigen via QR"}
+                  </button>
+                )}
               </div>
+
+              {canLocalDevSign && (
+                <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+                  <p className="text-xs font-medium" style={{ color: "var(--accent)" }}>Testmodus</p>
+                  <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                    Beide profielen zijn lokaal aangemaakt. Hiermee doorloop je dezelfde cryptografische contractflow zonder een tweede toestel.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

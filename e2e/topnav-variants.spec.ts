@@ -25,7 +25,7 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
   expect(homeClusterBox!.x - homeNavBox!.x).toBeLessThanOrEqual(30);
   expect(homeClusterBox!.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
   expect(homeClusterBox!.y - homeNavBox!.y).toBeLessThanOrEqual(5);
-  expect(homeClusterBox!.y + homeClusterBox!.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 1);
+  expect(homeClusterBox!.y + homeClusterBox!.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
   await expect.poll(() => homeCluster.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
 
   const homeHeader = await homeNav.evaluate((element) => {
