@@ -21,11 +21,18 @@ export interface IntimacyRecord {
   completedAt?: number;
 }
 
+export interface IntimacyRestoreResult {
+  added: number;
+  updated: number;
+  unchanged: number;
+}
+
 interface IntimacyState {
   entries: IntimacyRecord[];
   addEntry: (entry: Omit<IntimacyRecord, "id" | "createdAt" | "updatedAt">) => string;
-  completeEntry: (id: string) => void;
+  updateEntry: (id: string, patch: Partial<Omit<IntimacyRecord, "id" | "createdAt">>) => void;
   deleteEntry: (id: string) => void;
+  restoreEntries: (incoming: IntimacyRecord[]) => IntimacyRestoreResult;
 }
 
 const storage = createQuotaSafeStorage();
@@ -33,6 +40,12 @@ const MAX_ENTRIES = 300;
 
 function uid() {
   return crypto.randomUUID();
+}
+
+function newestFirst(entries: Iterable<IntimacyRecord>): IntimacyRecord[] {
+  return [...entries]
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, MAX_ENTRIES);
 }
 
 export const useIntimacyStore = create<IntimacyState>()(
@@ -56,19 +69,54 @@ export const useIntimacyStore = create<IntimacyState>()(
         return id;
       },
 
-      completeEntry(id) {
+      updateEntry(id, patch) {
         const now = Date.now();
         set((state) => ({
-          entries: state.entries.map((entry) =>
-            entry.id === id
-              ? { ...entry, status: "completed" as const, completedAt: now, updatedAt: now }
-              : entry
-          ),
+          entries: state.entries.map((entry) => {
+            if (entry.id !== id) return entry;
+            const status = patch.status ?? entry.status;
+            const next: IntimacyRecord = {
+              ...entry,
+              ...patch,
+              status,
+              updatedAt: now,
+            };
+            if (status === "planned") {
+              delete next.completedAt;
+            } else if (!next.completedAt) {
+              next.completedAt = now;
+            }
+            return next;
+          }),
         }));
       },
 
       deleteEntry(id) {
         set((state) => ({ entries: state.entries.filter((entry) => entry.id !== id) }));
+      },
+
+      restoreEntries(incoming) {
+        const current = useIntimacyStore.getState().entries;
+        const merged = new Map(current.map((entry) => [entry.id, entry]));
+        let added = 0;
+        let updated = 0;
+        let unchanged = 0;
+
+        for (const entry of incoming) {
+          const existing = merged.get(entry.id);
+          if (!existing) {
+            merged.set(entry.id, entry);
+            added++;
+          } else if (entry.updatedAt > existing.updatedAt) {
+            merged.set(entry.id, entry);
+            updated++;
+          } else {
+            unchanged++;
+          }
+        }
+
+        set({ entries: newestFirst(merged.values()) });
+        return { added, updated, unchanged };
       },
     }),
     {

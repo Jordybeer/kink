@@ -7,7 +7,9 @@ import {
   Clock,
   DotsThree,
   Heart,
+  PencilSimple,
   Plus,
+  ShieldCheck,
   Trash,
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
@@ -53,6 +55,7 @@ function downloadCalendar(entry: IntimacyRecord, includeDetails: boolean) {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = `kinksync-${entry.date}.ics`;
+  anchor.rel = "noopener";
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -61,12 +64,14 @@ function downloadCalendar(entry: IntimacyRecord, includeDetails: boolean) {
 
 function IntimacyCard({
   entry,
-  onComplete,
+  onLog,
+  onEdit,
   onCalendar,
   onDelete,
 }: {
   entry: IntimacyRecord;
-  onComplete: () => void;
+  onLog: () => void;
+  onEdit: () => void;
   onCalendar: () => void;
   onDelete: () => void;
 }) {
@@ -108,6 +113,11 @@ function IntimacyCard({
           onClose={() => setMenuOpen(false)}
           items={[
             {
+              label: "Bewerken",
+              icon: <PencilSimple size={16} aria-hidden="true" />,
+              onClick: onEdit,
+            },
+            {
               label: "Verwijderen",
               icon: <Trash size={16} aria-hidden="true" />,
               danger: true,
@@ -139,12 +149,12 @@ function IntimacyCard({
         <div className="mt-4 flex gap-2">
           <button
             type="button"
-            onClick={onComplete}
+            onClick={onLog}
             className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             <Check size={15} weight="bold" aria-hidden="true" />
-            Gebeurd
+            Bijhouden
           </button>
           <button
             type="button"
@@ -154,7 +164,7 @@ function IntimacyCard({
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             <CalendarPlus size={15} aria-hidden="true" />
-            Apple Agenda
+            Naar agenda
           </button>
         </div>
       )}
@@ -165,11 +175,12 @@ function IntimacyCard({
 export default function IntimacyPlanner() {
   const profiles = useStore((state) => state.profiles);
   const mainHydrated = useHasHydrated();
-  const { entries, addEntry, completeEntry, deleteEntry } = useIntimacyStore();
+  const { entries, addEntry, updateEntry, deleteEntry } = useIntimacyStore();
   const intimacyHydrated = useIntimacyHasHydrated();
 
   const [tab, setTab] = useState<"planned" | "completed">("planned");
   const [composerMode, setComposerMode] = useState<ComposerMode | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [calendarTarget, setCalendarTarget] = useState<IntimacyRecord | null>(null);
   const [includeCalendarDetails, setIncludeCalendarDetails] = useState(false);
   const [date, setDate] = useState(localDateInputValue());
@@ -192,16 +203,20 @@ export default function IntimacyPlanner() {
     [entries],
   );
 
-  const thisMonth = localDateInputValue().slice(0, 7);
-  const completedThisMonth = completed.filter((entry) => entry.date.startsWith(thisMonth)).length;
+  const closeComposer = useCallback(() => {
+    setComposerMode(null);
+    setEditingId(null);
+    setFormError(null);
+  }, []);
 
-  const openComposer = useCallback((mode: ComposerMode) => {
+  const openComposer = useCallback((mode: ComposerMode, entry?: IntimacyRecord) => {
     setComposerMode(mode);
-    setDate(localDateInputValue());
-    setTime("");
-    setTitle("");
-    setPartnerId("");
-    setNote("");
+    setEditingId(entry?.id ?? null);
+    setDate(entry?.date ?? localDateInputValue());
+    setTime(entry?.time ?? "");
+    setTitle(entry?.title ?? "");
+    setPartnerId(entry?.partnerProfileId ?? "");
+    setNote(entry?.note ?? "");
     setFormError(null);
   }, []);
 
@@ -225,6 +240,19 @@ export default function IntimacyPlanner() {
 
   if (!mainHydrated || !intimacyHydrated) return <PageShell loading />;
 
+  const editingEntry = editingId ? entries.find((entry) => entry.id === editingId) : undefined;
+  const loggingPlannedMoment = editingEntry?.status === "planned" && composerMode === "completed";
+  const composerTitle = composerMode === "planned"
+    ? editingId ? "Plan aanpassen" : "Moment plannen"
+    : loggingPlannedMoment
+      ? "Moment bijhouden"
+      : editingId ? "Logboek aanpassen" : "Moment bijhouden";
+  const saveLabel = loggingPlannedMoment
+    ? "Bewaar in logboek"
+    : editingId
+      ? "Wijzigingen bewaren"
+      : composerMode === "planned" ? "Plan moment" : "Bewaar";
+
   function saveEntry() {
     if (!composerMode) return;
     if (!date) {
@@ -237,18 +265,36 @@ export default function IntimacyPlanner() {
     }
 
     const partner = profiles.find((profile) => profile.id === partnerId);
-    addEntry({
-      status: composerMode,
+    const common = {
       date,
       time: time || undefined,
       title: title.trim() || undefined,
       partnerProfileId: partner?.id,
       partnerName: partner?.name,
       note: note.trim() || undefined,
-      ...(composerMode === "completed" ? { completedAt: Date.now() } : {}),
-    });
-    setComposerMode(null);
+    };
+
+    if (editingId) {
+      const existing = entries.find((entry) => entry.id === editingId);
+      if (!existing) {
+        setFormError("Dit moment bestaat niet meer.");
+        return;
+      }
+      updateEntry(editingId, {
+        ...common,
+        status: composerMode,
+        completedAt: composerMode === "completed" ? existing.completedAt ?? Date.now() : undefined,
+      });
+    } else {
+      addEntry({
+        ...common,
+        status: composerMode,
+        ...(composerMode === "completed" ? { completedAt: Date.now() } : {}),
+      });
+    }
+
     setTab(composerMode);
+    closeComposer();
   }
 
   const visible = tab === "planned" ? planned : completed;
@@ -272,17 +318,11 @@ export default function IntimacyPlanner() {
           Ruimte maken voor intimiteit
         </p>
         <p className="mt-1 text-sm leading-6" style={{ color: "var(--text2)" }}>
-          Plan seks of een intiem moment zonder er een contract van te maken. Wat je bijhoudt blijft lokaal op dit toestel.
+          Plan seks of een intiem moment als uitnodiging om bewust tijd voor elkaar vrij te maken. Een gepland moment is geen toestemming en hoeft niet door te gaan.
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)" }}>
-            <p className="text-lg font-semibold" style={{ color: "var(--text)" }}>{planned.length}</p>
-            <p className="text-xs" style={{ color: "var(--text2)" }}>gepland</p>
-          </div>
-          <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)" }}>
-            <p className="text-lg font-semibold" style={{ color: "var(--text)" }}>{completedThisMonth}</p>
-            <p className="text-xs" style={{ color: "var(--text2)" }}>deze maand</p>
-          </div>
+        <div className="mt-3 flex items-start gap-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+          <ShieldCheck size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
+          <span>Je planning en logboek blijven lokaal op dit toestel.</span>
         </div>
       </section>
 
@@ -303,6 +343,7 @@ export default function IntimacyPlanner() {
               type="button"
               role="tab"
               aria-selected={active}
+              aria-controls="intimacy-tab-panel"
               onClick={() => setTab(value)}
               className="focus-ring min-h-11 rounded-lg px-3 text-sm font-semibold"
               style={{
@@ -317,65 +358,65 @@ export default function IntimacyPlanner() {
         })}
       </div>
 
-      {visible.length === 0 ? (
-        <div className="py-12 text-center">
-          <Heart size={38} weight="duotone" aria-hidden="true" className="mx-auto mb-3" style={{ color: "var(--accent)", opacity: 0.7 }} />
-          <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-            {tab === "planned" ? "Nog niets gepland" : "Nog niets bijgehouden"}
-          </p>
-          <p className="mx-auto mt-1 max-w-sm text-sm leading-6" style={{ color: "var(--text2)" }}>
-            {tab === "planned"
-              ? "Kies een moment wanneer jullie er bewust ruimte voor willen maken."
-              : "Bewaar alleen wat voor jou nuttig voelt. Geen scorebord nodig."}
-          </p>
-          <button
-            type="button"
-            onClick={() => openComposer(tab)}
-            className="focus-ring mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold"
-            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-          >
-            {tab === "planned" ? <CalendarPlus size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
-            {tab === "planned" ? "Moment plannen" : "Moment bijhouden"}
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {visible.map((entry) => (
-            <IntimacyCard
-              key={entry.id}
-              entry={entry}
-              onComplete={() => {
-                completeEntry(entry.id);
-                setTab("completed");
-              }}
-              onCalendar={() => {
-                setIncludeCalendarDetails(false);
-                setCalendarTarget(entry);
-              }}
-              onDelete={() => deleteEntry(entry.id)}
-            />
-          ))}
-        </div>
-      )}
+      <div id="intimacy-tab-panel" role="tabpanel" aria-label={tab === "planned" ? "Geplande momenten" : "Logboek"}>
+        {visible.length === 0 ? (
+          <div className="py-12 text-center">
+            <Heart size={38} weight="duotone" aria-hidden="true" className="mx-auto mb-3" style={{ color: "var(--accent)", opacity: 0.7 }} />
+            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+              {tab === "planned" ? "Nog niets gepland" : "Nog niets bijgehouden"}
+            </p>
+            <p className="mx-auto mt-1 max-w-sm text-sm leading-6" style={{ color: "var(--text2)" }}>
+              {tab === "planned"
+                ? "Kies een moment wanneer jullie er bewust ruimte voor willen maken."
+                : "Bewaar alleen wat voor jou nuttig voelt. Geen scorebord nodig."}
+            </p>
+            <button
+              type="button"
+              onClick={() => openComposer(tab)}
+              className="focus-ring mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+            >
+              {tab === "planned" ? <CalendarPlus size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+              {tab === "planned" ? "Moment plannen" : "Moment bijhouden"}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {visible.map((entry) => (
+              <IntimacyCard
+                key={entry.id}
+                entry={entry}
+                onLog={() => openComposer("completed", entry)}
+                onEdit={() => openComposer(entry.status, entry)}
+                onCalendar={() => {
+                  setIncludeCalendarDetails(false);
+                  setCalendarTarget(entry);
+                }}
+                onDelete={() => deleteEntry(entry.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <Sheet
         open={composerMode !== null}
-        onClose={() => setComposerMode(null)}
+        onClose={closeComposer}
         aria-label={composerMode === "planned" ? "Intiem moment plannen" : "Intiem moment bijhouden"}
         scrollable
       >
         <SheetContent className="max-h-[82dvh] overflow-y-auto px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-4">
           <div className="mb-5 flex items-center gap-3">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-xl"
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-xl"
               style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent)" }}
               aria-hidden="true"
             >
               {composerMode === "planned" ? <CalendarPlus size={21} /> : <Heart size={21} weight="fill" />}
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>
-                {composerMode === "planned" ? "Moment plannen" : "Moment bijhouden"}
+                {composerTitle}
               </h2>
               <p className="text-xs" style={{ color: "var(--text2)" }}>
                 Privé en alleen lokaal opgeslagen
@@ -384,7 +425,7 @@ export default function IntimacyPlanner() {
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
               <label className="text-xs font-medium" style={{ color: "var(--text2)" }}>
                 Datum
                 <input
@@ -440,7 +481,7 @@ export default function IntimacyPlanner() {
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 rows={3}
-                placeholder={composerMode === "planned" ? "Waar hebben jullie zin in?" : "Wat wil je onthouden?"}
+                placeholder={composerMode === "planned" ? "Waar willen jullie bewust ruimte voor maken?" : "Wat wil je onthouden?"}
                 className="focus-ring mt-1.5 w-full resize-none rounded-xl px-3 py-2.5 text-sm leading-6 focus:outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
@@ -454,7 +495,7 @@ export default function IntimacyPlanner() {
           <div className="mt-5 flex gap-2">
             <button
               type="button"
-              onClick={() => setComposerMode(null)}
+              onClick={closeComposer}
               className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
             >
@@ -466,7 +507,7 @@ export default function IntimacyPlanner() {
               className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
-              {composerMode === "planned" ? "Plan moment" : "Bewaar"}
+              {saveLabel}
             </button>
           </div>
         </SheetContent>
@@ -475,12 +516,12 @@ export default function IntimacyPlanner() {
       <Sheet
         open={calendarTarget !== null}
         onClose={() => setCalendarTarget(null)}
-        aria-label="Naar Apple Agenda"
+        aria-label="Naar agenda"
       >
         <SheetContent className="px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-4">
-          <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>Naar Apple Agenda</h2>
+          <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>Naar agenda</h2>
           <p className="mt-2 text-sm leading-6" style={{ color: "var(--text2)" }}>
-            Standaard exporteert KinkSync alleen “Privé moment”. Apple Agenda valt buiten KinkSync en kan via iCloud synchroniseren.
+            KinkSync maakt een eenmalig agenda-item. Standaard staat er alleen “Privé moment”. Op iPhone kun je het daarna in Apple Agenda openen en zelf bevestigen.
           </p>
 
           <label
@@ -501,6 +542,11 @@ export default function IntimacyPlanner() {
             </span>
           </label>
 
+          <div className="mt-3 flex items-start gap-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+            <ShieldCheck size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
+            <span>Agenda-apps kunnen buiten KinkSync synchroniseren. Wijzigingen in KinkSync werken dit geëxporteerde item niet automatisch bij.</span>
+          </div>
+
           <button
             type="button"
             onClick={() => {
@@ -512,7 +558,7 @@ export default function IntimacyPlanner() {
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             <CalendarPlus size={17} aria-hidden="true" />
-            Voeg toe aan Apple Agenda
+            Open agenda-item
           </button>
         </SheetContent>
       </Sheet>

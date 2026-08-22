@@ -41,7 +41,7 @@ export default function BottomNav() {
           <Link
             key={label}
             href={href}
-            className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none sm:px-3"
+            className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
             style={{
               color: active ? "var(--text)" : "var(--text2)",
               fontWeight: active ? 700 : 500,
