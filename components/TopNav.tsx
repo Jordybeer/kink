@@ -19,6 +19,26 @@ import {
 
 const MotionLink = motion.create(Link);
 
+const homeActionSurface: React.CSSProperties = {
+  background: "color-mix(in srgb, var(--surface) 76%, transparent)",
+  borderColor: "color-mix(in srgb, var(--border-accent) 52%, var(--border))",
+  backdropFilter: "blur(14px) saturate(135%)",
+  WebkitBackdropFilter: "blur(14px) saturate(135%)",
+  boxShadow: "0 10px 30px color-mix(in srgb, var(--bg) 32%, transparent)",
+  pointerEvents: "auto",
+};
+
+const contentHeaderSurface: React.CSSProperties = {
+  background: "color-mix(in srgb, var(--bg) 72%, transparent)",
+  backdropFilter: "blur(14px) saturate(120%)",
+  WebkitBackdropFilter: "blur(14px) saturate(120%)",
+  pointerEvents: "none",
+};
+
+const contentNavRow: React.CSSProperties = {
+  pointerEvents: "auto",
+};
+
 export default function TopNav() {
   const path = usePathname();
   const router = useRouter();
@@ -111,68 +131,76 @@ export default function TopNav() {
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
-  const shell = {
+  const safeAreaShell = {
     paddingTop: "env(safe-area-inset-top)",
-    background: "color-mix(in srgb, var(--surface) 82%, transparent)",
-    borderBottom: "1px solid var(--border)",
-    backdropFilter: "blur(12px) saturate(140%)",
-    WebkitBackdropFilter: "blur(12px) saturate(140%)",
+    pointerEvents: "none",
   } as const;
 
   if (path === "/") {
     return (
       <>
-        <header className="sticky top-0 z-40 transition-colors" style={shell}>
-          <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-end gap-1" aria-label="Hoofdnavigatie">
-            <OfflineStatus />
-            {installAvailable && (
+        <header className="sticky top-0 z-40" style={safeAreaShell}>
+          <nav
+            className="mx-auto flex h-14 max-w-2xl items-start justify-start px-6 pt-1 lg:max-w-4xl"
+            aria-label="Hoofdnavigatie"
+            data-top-nav-variant="home"
+          >
+            <div
+              data-testid="home-topnav-actions"
+              className="flex items-center gap-0.5 rounded-full border p-1"
+              style={homeActionSurface}
+            >
+              <OfflineStatus />
+              {installAvailable && (
+                <button
+                  type="button"
+                  onClick={() => setInstallGuideOpen(true)}
+                  aria-label="KinkSync installeren"
+                  title="KinkSync installeren"
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <DownloadSimple size={20} aria-hidden="true" />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setInstallGuideOpen(true)}
-                aria-label="KinkSync installeren"
-                title="KinkSync installeren"
+                onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+                aria-label="Instellingen openen"
                 className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
                 style={{ color: "var(--text2)" }}
               >
-                <DownloadSimple size={20} aria-hidden="true" />
+                <GearSix size={20} aria-hidden="true" />
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-              aria-label="Instellingen openen"
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-              style={{ color: "var(--text2)" }}
-            >
-              <GearSix size={20} aria-hidden="true" />
-            </button>
-            <ContextMenu
-              open={overflowOpen}
-              onClose={() => setOverflowOpen(false)}
-              items={[
-                {
-                  label: "Over KinkSync",
-                  icon: <Info size={17} aria-hidden="true" />,
-                  onClick: () => router.push("/about"),
-                },
-                {
-                  label: "Security & privacy",
-                  icon: <ShieldCheck size={17} aria-hidden="true" />,
-                  onClick: () => router.push("/security"),
-                },
-              ]}
-            >
-              <button
-                type="button"
-                onClick={() => setOverflowOpen((open) => !open)}
-                aria-label="Meer over KinkSync"
-                aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--text2)" }}
+              <ContextMenu
+                open={overflowOpen}
+                onClose={() => setOverflowOpen(false)}
+                align="left"
+                items={[
+                  {
+                    label: "Over KinkSync",
+                    icon: <Info size={17} aria-hidden="true" />,
+                    onClick: () => router.push("/about"),
+                  },
+                  {
+                    label: "Security & privacy",
+                    icon: <ShieldCheck size={17} aria-hidden="true" />,
+                    onClick: () => router.push("/security"),
+                  },
+                ]}
               >
-                <DotsThree size={22} weight="bold" aria-hidden="true" />
-              </button>
-            </ContextMenu>
+                <button
+                  type="button"
+                  onClick={() => setOverflowOpen((open) => !open)}
+                  aria-label="Meer over KinkSync"
+                  aria-expanded={overflowOpen}
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <DotsThree size={22} weight="bold" aria-hidden="true" />
+                </button>
+              </ContextMenu>
+            </div>
           </nav>
         </header>
         {installGuideOpen && (
@@ -204,73 +232,86 @@ export default function TopNav() {
   const overflowActions = actions.filter((action) => !visibleIds.has(action.id));
 
   return (
-    <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className={`relative ${navWidth} mx-auto px-4 h-14 flex items-center gap-1`} aria-label="Hoofdnavigatie">
-        <MotionLink
-          href={route.back}
-          whileTap={t.tap}
-          className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
-          style={{ color: "var(--text2)" }}
-          aria-label="Terug"
+    <header
+      className="sticky top-0 z-40"
+      style={{ ...safeAreaShell, ...contentHeaderSurface }}
+    >
+      <nav
+        className={`mx-auto flex h-14 ${navWidth} items-center px-4`}
+        aria-label="Hoofdnavigatie"
+        data-top-nav-variant="content"
+      >
+        <div
+          data-testid="content-topnav-row"
+          className="relative flex h-14 w-full items-center gap-1"
+          style={contentNavRow}
         >
-          <CaretLeft aria-hidden="true" size={20} />
-        </MotionLink>
-        <span
-          className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
-          style={{
-            fontFamily: "var(--font-display, Georgia, serif)",
-            fontWeight: 500,
-            color: "var(--text)",
-            opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
-          }}
-        >
-          {questionTitle ? (
-            <>
-              <span>{questionTitle[0]}</span>
-              <span> · {questionTitle[1]}</span>
-            </>
-          ) : title}
-        </span>
-        {saveFeedbackRoute && (
+          <MotionLink
+            href={route.back}
+            whileTap={t.tap}
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
+            aria-label="Terug"
+          >
+            <CaretLeft aria-hidden="true" size={20} />
+          </MotionLink>
           <span
-            role="status"
-            aria-live="polite"
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap transition-opacity"
-            style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
+            className="serif-safe min-w-0 flex-1 truncate text-base italic transition-opacity"
+            style={{
+              fontFamily: "var(--font-display, Georgia, serif)",
+              fontWeight: 500,
+              color: "var(--text)",
+              opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
+            }}
           >
-            Opgeslagen ✓
+            {questionTitle ? (
+              <>
+                <span>{questionTitle[0]}</span>
+                <span> · {questionTitle[1]}</span>
+              </>
+            ) : title}
           </span>
-        )}
-        {primary && <TopNavActionButton action={primary} emphasis="primary" />}
-        {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
-        {overflowActions.length > 0 && (
-          <ContextMenu
-            open={overflowOpen}
-            onClose={() => setOverflowOpen(false)}
-            items={overflowActions
-              .filter((action) => !action.disabled)
-              .map((action) => ({
-                label: action.label,
-                icon: action.icon,
-                danger: action.danger,
-                selected: action.selected,
-                onClick: action.onClick,
-              }))}
-          >
-            <button
-              type="button"
-              data-tour={questionTitle ? "questionnaire-menu" : undefined}
-              onClick={() => setOverflowOpen((open) => !open)}
-              aria-label="Meer acties"
-              aria-expanded={overflowOpen}
-              className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
-              style={{ color: "var(--text2)" }}
+          {saveFeedbackRoute && (
+            <span
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-opacity"
+              style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
             >
-              <DotsThree size={22} weight="bold" aria-hidden="true" />
-            </button>
-          </ContextMenu>
-        )}
-        <OfflineStatus />
+              Opgeslagen ✓
+            </span>
+          )}
+          {primary && <TopNavActionButton action={primary} emphasis="primary" />}
+          {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
+          {overflowActions.length > 0 && (
+            <ContextMenu
+              open={overflowOpen}
+              onClose={() => setOverflowOpen(false)}
+              items={overflowActions
+                .filter((action) => !action.disabled)
+                .map((action) => ({
+                  label: action.label,
+                  icon: action.icon,
+                  danger: action.danger,
+                  selected: action.selected,
+                  onClick: action.onClick,
+                }))}
+            >
+              <button
+                type="button"
+                data-tour={questionTitle ? "questionnaire-menu" : undefined}
+                onClick={() => setOverflowOpen((open) => !open)}
+                aria-label="Meer acties"
+                aria-expanded={overflowOpen}
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                style={{ color: "var(--text2)" }}
+              >
+                <DotsThree size={22} weight="bold" aria-hidden="true" />
+              </button>
+            </ContextMenu>
+          )}
+          <OfflineStatus />
+        </div>
       </nav>
     </header>
   );
@@ -294,7 +335,7 @@ function TopNavActionButton({
       disabled={action.disabled}
       aria-label={action.label}
       title={action.label}
-      className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
+      className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
       style={{
         color: action.danger
           ? "var(--hard-no)"
