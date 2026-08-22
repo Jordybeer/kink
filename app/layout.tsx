@@ -4,6 +4,7 @@ import "./globals.css";
 import "./design-role-tokens.css";
 import InstallPromptBridge from "@/components/InstallPromptBridge";
 import VisualViewportBridge from "@/components/VisualViewportBridge";
+import DevTestToolsBootstrap from "@/components/DevTestToolsBootstrap";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col antialiased">
         <MotionPolicy>
           <VisualViewportBridge />
+          <DevTestToolsBootstrap />
           <AmbientGlow />
           <AppLockGate>
             <OnboardingRouteGate>
