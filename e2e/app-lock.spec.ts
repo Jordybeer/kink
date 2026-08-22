@@ -38,6 +38,7 @@ test("app-lock blocks direct data routes before their content mounts", async ({ 
     "/compare?a=pw-alex-001&b=pw-sam-002",
     "/contracts",
     "/scenes",
+    "/intimacy",
   ]) {
     await page.goto(route);
     await expect(page.getByRole("heading", { name: "KinkSync ontgrendelen" })).toBeVisible();

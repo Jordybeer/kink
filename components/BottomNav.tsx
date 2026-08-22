@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Lightning, FilmSlate, User } from "@phosphor-icons/react";
+import { CalendarDots, Lightning, FilmSlate, User } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { profileHref } from "@/lib/localRoutes";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -20,6 +20,7 @@ export default function BottomNav() {
   const items = [
     { href: "/compare", label: "Vergelijk", icon: Lightning, section: "compare" as const },
     { href: "/scenes", label: "Scènes", icon: FilmSlate, section: "scenes" as const },
+    { href: "/intimacy", label: "Agenda", icon: CalendarDots, section: "intimacy" as const },
     { href: firstProfileHref, label: "Profiel", icon: User, section: "profile" as const },
   ];
 
@@ -40,7 +41,7 @@ export default function BottomNav() {
           <Link
             key={label}
             href={href}
-            className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
+            className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none sm:px-3"
             style={{
               color: active ? "var(--text)" : "var(--text2)",
               fontWeight: active ? 700 : 500,

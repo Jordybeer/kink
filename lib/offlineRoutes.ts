@@ -39,6 +39,7 @@ export const STATIC_OFFLINE_ROUTES = [
   "/scene",
   "/scenes",
   SCENE_DETAIL_SHELL_ROUTE,
+  "/intimacy",
   "/about",
   "/security",
   "/timeline",
