@@ -19,12 +19,12 @@ import {
 
 const MotionLink = motion.create(Link);
 
-const homeActionSurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--surface) 76%, transparent)",
-  borderColor: "color-mix(in srgb, var(--border-accent) 52%, var(--border))",
-  backdropFilter: "blur(14px) saturate(135%)",
-  WebkitBackdropFilter: "blur(14px) saturate(135%)",
-  boxShadow: "0 10px 30px color-mix(in srgb, var(--bg) 32%, transparent)",
+const homeUtilitySurface: React.CSSProperties = {
+  background: "color-mix(in srgb, var(--surface) 38%, transparent)",
+  borderColor: "color-mix(in srgb, var(--border-accent) 38%, var(--border))",
+  backdropFilter: "blur(12px) saturate(120%)",
+  WebkitBackdropFilter: "blur(12px) saturate(120%)",
+  boxShadow: "0 8px 24px color-mix(in srgb, var(--bg) 20%, transparent)",
   pointerEvents: "auto",
 };
 
@@ -141,14 +141,27 @@ export default function TopNav() {
       <>
         <header className="sticky top-0 z-40" style={safeAreaShell}>
           <nav
-            className="mx-auto flex h-14 max-w-2xl items-start justify-start px-6 pt-1 lg:max-w-4xl"
+            className="mx-auto flex h-14 max-w-2xl items-start justify-between px-6 pt-1 lg:max-w-4xl"
             aria-label="Hoofdnavigatie"
             data-top-nav-variant="home"
           >
+            <button
+              type="button"
+              data-testid="home-topnav-settings"
+              onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+              aria-label="Instellingen openen"
+              title="Instellingen openen"
+              className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full px-1.5 text-xs font-medium"
+              style={{ color: "var(--text2)", pointerEvents: "auto" }}
+            >
+              <GearSix size={17} aria-hidden="true" />
+              <span>Instellingen</span>
+            </button>
+
             <div
               data-testid="home-topnav-actions"
-              className="flex items-center gap-0.5 rounded-full border p-1"
-              style={homeActionSurface}
+              className="flex items-center gap-2"
+              style={{ pointerEvents: "auto" }}
             >
               <OfflineStatus />
               {installAvailable && (
@@ -157,25 +170,16 @@ export default function TopNav() {
                   onClick={() => setInstallGuideOpen(true)}
                   aria-label="KinkSync installeren"
                   title="KinkSync installeren"
-                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                  style={{ color: "var(--text2)" }}
+                  className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full border px-3 text-xs font-medium"
+                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
                 >
-                  <DownloadSimple size={20} aria-hidden="true" />
+                  <DownloadSimple size={17} aria-hidden="true" />
+                  <span className="hidden min-[340px]:inline">Installeren</span>
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-                aria-label="Instellingen openen"
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--text2)" }}
-              >
-                <GearSix size={20} aria-hidden="true" />
-              </button>
               <ContextMenu
                 open={overflowOpen}
                 onClose={() => setOverflowOpen(false)}
-                align="left"
                 items={[
                   {
                     label: "Over KinkSync",
@@ -194,8 +198,8 @@ export default function TopNav() {
                   onClick={() => setOverflowOpen((open) => !open)}
                   aria-label="Meer over KinkSync"
                   aria-expanded={overflowOpen}
-                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                  style={{ color: "var(--text2)" }}
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
+                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
                 >
                   <DotsThree size={22} weight="bold" aria-hidden="true" />
                 </button>
