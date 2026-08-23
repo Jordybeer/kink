@@ -273,7 +273,11 @@ span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]):not([cl
 [data-testid="question-essence"],
 [data-testid="question-agreements-label"],
 [data-testid="about-promises"] p,
-[aria-live="polite"] > div[class~="text-center"] > p[class~="text-xs"][class~="tabular-nums"] {
+[aria-live="polite"] > div[class~="text-center"] > p[class~="text-xs"][class~="tabular-nums"],
+.contract-print label > span[class~="text-xs"],
+.contract-print span[class~="w-32"][class~="text-xs"],
+.contract-print div[class~="text-xs"][class~="font-semibold"],
+span[class~="mr-auto"][class~="text-xs"] {
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
