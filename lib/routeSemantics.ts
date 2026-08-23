@@ -49,9 +49,6 @@ export function routeChromeSemantics(
   if (path === "/sandbox") {
     return { title: "Intimiteit sandbox", back: "/", hideBottomNav: true, bottomNavSection: null };
   }
-  if (path === "/sandboxhome") {
-    return { title: "Home sandbox", back: "/", hideBottomNav: true, bottomNavSection: null };
-  }
   if (path.includes("/versions/") && path.startsWith("/contracts/")) {
     return {
       title: "Getekend document",
