@@ -9,7 +9,7 @@ const PROFILE_STEPS: readonly SpotlightStep[] = [
   {
     selector: '[data-tour="avatar"]',
     title: "Maak het profiel herkenbaar",
-    body: "Tik de avatar om een foto toe te voegen. De afbeelding wordt lokaal opgeslagen en blijft onder jouw controle.",
+    body: "Tik de avatar om een foto toe te voegen.",
     pad: 8,
   },
   {

@@ -221,7 +221,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               </div>
               <h2 className="mt-3 text-center text-lg font-semibold">Contract bewaren</h2>
               <p className="mt-2 text-center text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Beide handgeschreven handtekeningen zijn onderdeel van exact deze versie. Bewaar haar als concept, of laat je partner dezelfde versie op diens eigen toestel digitaal bevestigen.
+                Beide handgeschreven handtekeningen horen bij exact deze versie. Bewaar haar als concept, of laat je partner dezelfde versie via QR bevestigen.
               </p>
               <div className="mt-5 flex flex-col gap-2">
                 <button
@@ -297,12 +297,12 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               <ContractQrDisplay
                 encoded={encoded}
                 title="Contract actief"
-                instruction="Laat je partner deze korte afrondings-QR scannen. Daarna staat op beide toestellen vast dat exact deze contractversie werd ontvangen en opgeslagen."
+                instruction="Laat je partner deze korte afrondings-QR scannen. Daarna is de uitwisseling voor exact deze contractversie afgerond."
               />
               <div className="mt-4 flex items-start gap-2 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 <CheckCircle size={18} weight="fill" aria-hidden="true" className="mt-0.5 flex-none" style={{ color: "var(--yes)" }} />
                 <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                  Deze contractversie bevat beide handgeschreven én beide cryptografische handtekeningen. De definitieve PDF is lokaal aan precies deze versie gekoppeld.
+                  Deze contractversie bevat beide handgeschreven én beide cryptografische handtekeningen. De definitieve PDF is aan precies deze versie gekoppeld.
                 </p>
               </div>
               <button

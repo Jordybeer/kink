@@ -4,12 +4,11 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowSquareOut,
-  Check,
-  Database,
   DeviceMobile,
   MapPin,
   QrCode,
-  ShieldCheck,
+  Sparkle,
+  UsersThree,
   WarningCircle,
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
@@ -23,13 +22,13 @@ const rules = [
   },
   {
     number: "02",
-    title: "Lokaal is het uitgangspunt",
-    text: "Je profielen en afspraken leven standaard op dit toestel. Er is geen KinkSync-account dat je voorkeuren ergens centraal bewaart.",
+    title: "Vergelijken zonder rapportcijfer",
+    text: "KinkSync laat zien waar jullie overlappen, verschillen of nog iets te bespreken hebben. Geen compatibility-score die voor jullie beslist.",
   },
   {
     number: "03",
-    title: "Delen blijft een bewuste stap",
-    text: "Een QR-code, link, export of back-up ontstaat pas na jouw actie. Afgeschermde antwoorden reizen niet zomaar mee.",
+    title: "Afspraken blijven van jullie",
+    text: "Scènes en contracten geven structuur aan wat jullie samen afspreken, zonder het gesprek te vervangen.",
   },
 ] as const;
 
@@ -41,29 +40,17 @@ const journey = [
     text: "Leg voorkeuren, grenzen en context vast op je eigen tempo. Geven en ontvangen blijven waar nodig aparte keuzes.",
   },
   {
-    icon: ShieldCheck,
+    icon: UsersThree,
     eyebrow: "Vergelijk",
     title: "Zie waar het klikt en schuurt",
-    text: "Leg twee gekozen profielen lokaal naast elkaar en krijg overeenkomsten, bespreekpunten en grenzen overzichtelijk bij elkaar.",
+    text: "Leg twee gekozen profielen naast elkaar en krijg overeenkomsten, bespreekpunten en grenzen overzichtelijk bij elkaar.",
   },
   {
     icon: QrCode,
     eyebrow: "Deel",
-    title: "Neem alleen mee wat bedoeld is",
-    text: "Deel een profiel, scène of afspraak pas wanneer dat nuttig is. Privé blijft privé tenzij jij expliciet anders kiest.",
+    title: "Neem mee wat relevant is",
+    text: "Deel een profiel of gebruik jullie uitkomst als vertrekpunt voor een scène, afspraak of verder gesprek.",
   },
-] as const;
-
-const localData = [
-  "Profielen en antwoorden",
-  "Privénotities en afgeschermde keuzes",
-  "Vergelijkingen, scènes en contracthistoriek",
-] as const;
-
-const absentData = [
-  "Geen KinkSync-account",
-  "Geen centrale profielendatabank",
-  "Geen automatische cloudsync tussen toestellen",
 ] as const;
 
 const communityPlaces = [
@@ -99,10 +86,9 @@ export default function AboutPage() {
           <EditorialHeading
             level={1}
             size="hero"
-            eyebrow="Privacy door ontwerp"
-            icon={<ShieldCheck size={16} weight="fill" aria-hidden="true" />}
-            title={<><span>Jouw voorkeuren.</span><br />Jouw toestel. Jouw woorden.</>}
-            titleAriaLabel="Jouw voorkeuren. Jouw toestel. Jouw woorden."
+            eyebrow="Over KinkSync"
+            icon={<Sparkle size={16} weight="fill" aria-hidden="true" />}
+            title="Maak het gesprek makkelijker."
             description="KinkSync helpt mensen praten over voorkeuren, grenzen en afspraken. Je krijgt structuur voor het gesprek zonder dat de app voor jou beslist."
             testId="about-eyebrow"
           />
@@ -111,12 +97,12 @@ export default function AboutPage() {
             data-testid="about-promises"
             className="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-2xl"
             style={{ background: "var(--border)", border: "1px solid var(--border)" }}
-            aria-label="Kernbeloftes"
+            aria-label="Kernfuncties"
           >
             {[
-              ["Lokaal", "Op jouw toestel"],
-              ["Bewust delen", "Alleen na jouw actie"],
-              ["Jouw woorden", "Geen stille invulling"],
+              ["Verkennen", "Ontdek wat bij je past"],
+              ["Vergelijken", "Zie waar het klikt"],
+              ["Afspraken", "Leg samen vast"],
             ].map(([title, text]) => (
               <div
                 key={title}
@@ -151,7 +137,7 @@ export default function AboutPage() {
       <section className="mt-10" aria-labelledby="journey-title">
         <SectionHeading
           eyebrow="Van profiel tot afspraak"
-          title="Verkennen, vergelijken en delen zonder het gesprek kwijt te raken"
+          title="Verkennen, vergelijken en verder praten"
           id="journey-title"
         />
         <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -180,50 +166,14 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section
-        className="mt-10 overflow-hidden rounded-[28px]"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-        aria-labelledby="privacy-title"
-      >
-        <div className="grid md:grid-cols-2">
-          <div className="p-5 sm:p-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-              <Database size={22} aria-hidden="true" />
-            </div>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>Bij jou</p>
-            <h2 id="privacy-title" className="mt-2 text-xl font-semibold">Privacy begint lokaal</h2>
-            <ul className="mt-4 space-y-2.5">
-              {localData.map((item) => <CheckRow key={item}>{item}</CheckRow>)}
-            </ul>
-          </div>
-
-          <div className="p-5 sm:p-6" style={{ background: "color-mix(in srgb, var(--surface2) 72%, var(--surface))" }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--text2)" }}>Niet bij KinkSync</p>
-            <h2 className="mt-2 text-xl font-semibold">Geen verborgen cloudlaag</h2>
-            <ul className="mt-4 space-y-2.5">
-              {absentData.map((item) => <CheckRow key={item} muted>{item}</CheckRow>)}
-            </ul>
-          </div>
-        </div>
-        <div
-          className="border-t px-5 py-4 text-[15px] leading-6 sm:px-6"
-          style={{ borderColor: "var(--border)", color: "var(--text2)" }}
-        >
-          Local-first betekent niet onverliesbaar. Maak een versleutelde back-up voordat je van browser, opslagcontext of toestel wisselt.
-        </div>
-      </section>
-
       <section className="mt-10" aria-labelledby="limits-title">
-        <SectionHeading eyebrow="Menselijke grens" title="Eerlijk over wat de app niet kan beslissen" id="limits-title" />
+        <SectionHeading eyebrow="Waar de app stopt" title="KinkSync helpt praten, niet beslissen" id="limits-title" />
         <div className="mt-5 divide-y" style={{ borderColor: "var(--border)" }}>
           <Limit title="Een match is een gesprekstarter">
-            Een overeenkomst zegt dat twee ingevulde voorkeuren bij elkaar passen. Ze zegt niets over timing, context, stemming of toestemming op dit moment.
+            Een overeenkomst laat zien dat twee ingevulde voorkeuren bij elkaar passen. Timing, context en wat jullie ermee doen komen uit het gesprek zelf.
           </Limit>
-          <Limit title="Een digitale bevestiging is geen identiteitsbewijs">
-            Technische controles kunnen exacte inhoud en sleutelcontrole helpen verifiëren. Ze bewijzen geen wettelijke identiteit, begrip of afwezigheid van druk.
-          </Limit>
-          <Limit title="Historiek is geen blijvende toestemming">
-            Een oude afspraak blijft geschiedenis. Consent kan altijd veranderen, verminderen of stoppen, ook buiten KinkSync.
+          <Limit title="Afspraken blijven momentopnames">
+            Profielen, scènes en contracten leggen vast wat jullie hebben ingevuld of afgesproken. Wat vandaag geldt, bepalen jullie zelf.
           </Limit>
         </div>
       </section>
@@ -275,7 +225,7 @@ export default function AboutPage() {
           </div>
 
           <p className="mt-4 text-xs leading-5" style={{ color: "var(--text2)" }}>
-            Geen betaalde plaatsingen of officiële partners. Google Maps opent pas wanneer jij zelf op een locatie tikt; KinkSync stuurt geen profieldata mee.
+            Geen betaalde plaatsingen of officiële partners.
           </p>
         </div>
       </section>
@@ -288,7 +238,7 @@ export default function AboutPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>Technische verdieping</p>
         <h2 id="technical-title" className="mt-2 text-lg font-semibold">Wil je onder de motorkap kijken?</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-6" style={{ color: "var(--text2)" }}>
-          De technische pagina beschrijft opslaggrenzen, cryptografische primitives, sleutelbeheer, back-ups, importvalidatie en responsible disclosure.
+          De technische pagina beschrijft opslaggrenzen, cryptografie, back-ups, importvalidatie en responsible disclosure.
         </p>
         <Link
           href="/security"
@@ -330,15 +280,6 @@ export default function AboutPage() {
 
 function SectionHeading({ eyebrow, title, id }: { eyebrow: string; title: string; id: string }) {
   return <EditorialHeading level={2} size="section" eyebrow={eyebrow} title={title} id={id} />;
-}
-
-function CheckRow({ children, muted = false }: { children: React.ReactNode; muted?: boolean }) {
-  return (
-    <li className="flex items-start gap-2.5 text-[15px] leading-6" style={{ color: muted ? "var(--text2)" : "var(--text)" }}>
-      <Check size={17} weight="bold" className="mt-1 flex-none" aria-hidden="true" style={{ color: muted ? "var(--text2)" : "var(--yes)" }} />
-      <span>{children}</span>
-    </li>
-  );
 }
 
 function Limit({ title, children }: { title: string; children: React.ReactNode }) {

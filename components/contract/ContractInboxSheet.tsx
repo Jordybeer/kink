@@ -89,7 +89,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
         upsertSeries(applied);
         setRequestEnvelope(envelope);
         setPhase("complete");
-        showToast({ message: "Uitwisseling op beide toestellen cryptografisch afgerond.", variant: "success" });
+        showToast({ message: "Uitwisseling afgerond.", variant: "success" });
         return;
       }
       if (envelope.kind !== "request" || !envelope.series) {
@@ -151,7 +151,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       const action = requestEnvelope.request.action;
       showToast({
         message: action === "activate"
-          ? "Exact deze contractversie is ondertekend en lokaal aan je contracten toegevoegd."
+          ? "Exact deze contractversie is ondertekend en aan je contracten toegevoegd."
           : action === "resume" || action === "reactivate"
             ? "Wederzijdse bevestiging toegevoegd. Laat de andere persoon het antwoord scannen."
             : "Ontvangst bevestigd. Laat de andere persoon het antwoord scannen.",
@@ -182,7 +182,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
               <QrCode size={32} aria-hidden="true" className="mx-auto" style={{ color: "var(--accent)" }} />
               <h2 className="mt-3 text-lg font-semibold">Contract van partner scannen</h2>
               <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Je bekijkt eerst exact de ontvangen versie. Er wordt pas iets lokaal opgeslagen nadat je zelf bevestigt.
+                Je bekijkt eerst exact de ontvangen versie. Bevestig alleen als die klopt.
               </p>
               <button
                 type="button"
@@ -219,14 +219,14 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                     style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
                   >
                     <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                      Na jouw bevestiging wordt dit contract lokaal toegevoegd
+                      Na jouw bevestiging wordt dit contract toegevoegd
                     </p>
                     <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                      Je ondertekent exact deze versie. KinkSync slaat haar daarna op dit toestel op en maakt een antwoord-QR voor je partner.
+                      Je ondertekent exact deze versie. Daarna maakt KinkSync een antwoord-QR voor je partner.
                     </p>
                   </div>
                   <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                    De QR-handtekening wordt gekoppeld aan de hash van exact dit document, inclusief de twee handgeschreven handtekeningen. Wijzigingen achteraf maken een andere contractversie.
+                    Wijzigingen achteraf maken een nieuwe contractversie.
                   </p>
                 </div>
               ) : (
@@ -273,7 +273,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
               <Check size={38} weight="bold" aria-hidden="true" className="mx-auto" style={{ color: "var(--yes)" }} />
               <h2 className="mt-3 text-lg font-semibold">Uitwisseling afgerond</h2>
               <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Dit toestel heeft gecontroleerd dat de andere persoon jouw antwoord ontving en lokaal opsloeg. De getekende contract-PDF blijft aan deze versie gekoppeld.
+                De uitwisseling is afgerond. De getekende contract-PDF blijft aan deze versie gekoppeld.
               </p>
             </div>
           )}

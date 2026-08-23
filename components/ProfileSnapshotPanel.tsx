@@ -153,7 +153,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
       )}
 
       <p className="mt-4 text-sm leading-5" style={{ color: "var(--text2)" }}>
-        Nieuwe momenten worden automatisch en lokaal bijgehouden wanneer je profiel verandert. Privéantwoorden blijven hier verborgen.
+        Nieuwe profielmomenten worden automatisch bijgehouden wanneer je profiel verandert. Privéantwoorden verschijnen hier niet.
       </p>
     </section>
   );
