@@ -1,6 +1,6 @@
 import { decodeLocalRouteId, profileHref } from "@/lib/localRoutes";
 
-export type BottomNavSection = "compare" | "scenes" | "profile" | null;
+export type BottomNavSection = "home" | "compare" | "contracts" | "scenes" | "profile" | null;
 
 export interface RouteChromeSemantics {
   title: string;
@@ -38,7 +38,7 @@ export function routeChromeSemantics(
     return { title: "Vergelijk", back: "/", hideBottomNav: false, bottomNavSection: "compare" };
   }
   if (path === "/timeline") {
-    return { title: "Contractgeschiedenis", back: "/contracts", hideBottomNav: false, bottomNavSection: null };
+    return { title: "Contractgeschiedenis", back: "/contracts", hideBottomNav: false, bottomNavSection: "contracts" };
   }
   if (path === "/about") {
     return { title: "Hoe KinkSync werkt", back: "/", hideBottomNav: true, bottomNavSection: null };
@@ -51,7 +51,7 @@ export function routeChromeSemantics(
       title: "Getekend document",
       back: path.replace(/\/versions\/[^/]+$/, "/history"),
       hideBottomNav: false,
-      bottomNavSection: null,
+      bottomNavSection: "contracts",
     };
   }
   if (path.endsWith("/history") && path.startsWith("/contracts/")) {
@@ -59,17 +59,20 @@ export function routeChromeSemantics(
       title: "Contractgeschiedenis",
       back: path.replace(/\/history$/, ""),
       hideBottomNav: false,
-      bottomNavSection: null,
+      bottomNavSection: "contracts",
     };
   }
   if (path.startsWith("/contracts/")) {
-    return { title: "Contract", back: "/contracts", hideBottomNav: false, bottomNavSection: null };
+    return { title: "Contract", back: "/contracts", hideBottomNav: false, bottomNavSection: "contracts" };
   }
   if (path === "/contracts") {
-    return { title: "Contracten", back: "/", hideBottomNav: false, bottomNavSection: null };
+    return { title: "Contracten", back: "/", hideBottomNav: false, bottomNavSection: "contracts" };
   }
   if (path === "/contract") {
-    return { title: "Contract opstellen", back: "/compare", hideBottomNav: false, bottomNavSection: null };
+    return { title: "Contract opstellen", back: "/compare", hideBottomNav: false, bottomNavSection: "contracts" };
+  }
+  if (path === "/") {
+    return { title: "KinkSync", back: "/", hideBottomNav: false, bottomNavSection: "home" };
   }
   return { title: "KinkSync", back: "/", hideBottomNav: false, bottomNavSection: null };
 }
