@@ -10,9 +10,8 @@ export default function OfflinePage() {
         Je bent offline
       </h1>
       <p className="max-w-xs text-sm" style={{ color: "var(--text2)" }}>
-        Geen verbinding op dit moment. Je opgeslagen profielen en contracten
-        blijven veilig in dit toestel. Zodra je weer online bent, gaat alles
-        gewoon door.
+        Geen verbinding op dit moment. Onderdelen die al beschikbaar zijn
+        blijven bruikbaar. Zodra je weer online bent, gaat alles gewoon door.
       </p>
     </main>
   );

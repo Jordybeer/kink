@@ -10,10 +10,10 @@ test("home opens a compact human-first KinkSync story", async ({ page }) => {
   await page.getByRole("menuitem", { name: "Over KinkSync" }).click();
 
   await expect(page).toHaveURL(/\/about$/);
-  const heading = page.getByRole("heading", { name: "Jouw voorkeuren. Jouw toestel. Jouw woorden." });
+  const heading = page.getByRole("heading", { name: "Maak het gesprek makkelijker." });
   const eyebrow = page.getByTestId("about-eyebrow");
   await expect(heading).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Eerlijk over wat de app niet kan beslissen" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "KinkSync helpt praten, niet beslissen" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Security & privacy" })).toHaveAttribute("href", "/security");
 
   const [eyebrowBox, headingBox] = await Promise.all([eyebrow.boundingBox(), heading.boundingBox()]);
