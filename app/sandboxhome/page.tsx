@@ -112,33 +112,31 @@ export default function SandboxHomePage() {
         </section>
 
         <footer
-          className="mx-auto mt-6 max-w-md border-t px-2 pt-4"
+          className="mx-auto mt-7 max-w-sm border-t px-4 pt-5 text-center"
           style={{ borderColor: "var(--border)" }}
         >
-          <div className="flex flex-col items-center justify-between gap-1.5 text-center sm:flex-row sm:text-left">
-            <p className="text-xs font-semibold tracking-[0.04em]" style={{ color: "var(--text)" }}>
-              For adults. By adults.
-            </p>
-            <div className="flex items-center justify-center gap-1 text-xs" style={{ color: "var(--text2)" }}>
-              <span>Vragen of suggesties?</span>
-              <a
-                href="https://fetlife.com/zwoelebeer"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="focus-ring inline-flex min-h-9 items-center rounded-md px-1.5 font-semibold"
-                style={{ color: "var(--accent-text)" }}
-              >
-                FetLife
-              </a>
-              <span aria-hidden="true">·</span>
-              <a
-                href="mailto:info@jordy.beer"
-                className="focus-ring inline-flex min-h-9 items-center rounded-md px-1.5 font-semibold"
-                style={{ color: "var(--accent-text)" }}
-              >
-                E-mail
-              </a>
-            </div>
+          <p className="text-xs font-semibold tracking-[0.04em]" style={{ color: "var(--text)" }}>
+            For adults. By adults.
+          </p>
+          <div className="mt-1 flex items-center justify-center gap-1 text-xs" style={{ color: "var(--text2)" }}>
+            <span>Vragen of suggesties?</span>
+            <a
+              href="https://fetlife.com/zwoelebeer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="focus-ring inline-flex min-h-10 items-center rounded-md px-1.5 font-semibold"
+              style={{ color: "var(--accent-text)" }}
+            >
+              FetLife
+            </a>
+            <span aria-hidden="true">·</span>
+            <a
+              href="mailto:info@jordy.beer"
+              className="focus-ring inline-flex min-h-10 items-center rounded-md px-1.5 font-semibold"
+              style={{ color: "var(--accent-text)" }}
+            >
+              E-mail
+            </a>
           </div>
         </footer>
       </PageShell>
