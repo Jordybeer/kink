@@ -100,10 +100,10 @@ test("stopt een contractcamera die pas na sluiten beschikbaar komt", async ({ pa
   await installDeferredCamera(page);
   await seedAndGo(page, "/contracts", [PROFILE_ALEX]);
 
-  await page.getByRole("button", { name: "Contractverzoek scannen" }).click();
-  await expect(page.getByRole("dialog", { name: "Contractcode scannen" })).toBeVisible();
+  await page.getByRole("button", { name: "Contract van partner scannen" }).click();
+  await expect(page.getByRole("dialog", { name: "Contract van partner scannen" })).toBeVisible();
   await page.getByRole("button", { name: "Annuleer" }).click();
-  await expect(page.getByRole("dialog", { name: "Contractcode scannen" })).toBeHidden();
+  await expect(page.getByRole("dialog", { name: "Contract van partner scannen" })).toBeHidden();
 
   await resolveCameraAfterClose(page);
 });
@@ -120,6 +120,6 @@ test("stopt de contractcamera als video afspelen faalt", async ({ page }) => {
   await installPlaybackRejectingCamera(page);
   await seedAndGo(page, "/contracts", [PROFILE_ALEX]);
 
-  await page.getByRole("button", { name: "Contractverzoek scannen" }).click();
+  await page.getByRole("button", { name: "Contract van partner scannen" }).click();
   await expectRejectedPlaybackStoppedCamera(page);
 });

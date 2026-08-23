@@ -151,7 +151,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       const action = requestEnvelope.request.action;
       showToast({
         message: action === "activate"
-          ? "Exact deze contractversie is ondertekend en als PDF lokaal vastgelegd."
+          ? "Exact deze contractversie is ondertekend en lokaal aan je contracten toegevoegd."
           : action === "resume" || action === "reactivate"
             ? "Wederzijdse bevestiging toegevoegd. Laat de andere persoon het antwoord scannen."
             : "Ontvangst bevestigd. Laat de andere persoon het antwoord scannen.",
@@ -180,7 +180,10 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
           {phase === "scan" && (
             <div className="py-4 text-center">
               <QrCode size={32} aria-hidden="true" className="mx-auto" style={{ color: "var(--accent)" }} />
-              <h2 className="mt-3 text-lg font-semibold">Contractcode scannen</h2>
+              <h2 className="mt-3 text-lg font-semibold">Contract van partner scannen</h2>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+                Je bekijkt eerst exact de ontvangen versie. Er wordt pas iets lokaal opgeslagen nadat je zelf bevestigt.
+              </p>
               <button
                 type="button"
                 onClick={() => setScannerOpen(true)}
@@ -211,6 +214,17 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
               {request.action === "activate" && version?.content ? (
                 <div className="mt-5">
                   <ContractCanonicalPreview content={version.content} />
+                  <div
+                    className="mt-4 rounded-xl p-3"
+                    style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                  >
+                    <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
+                      Na jouw bevestiging wordt dit contract lokaal toegevoegd
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                      Je ondertekent exact deze versie. KinkSync slaat haar daarna op dit toestel op en maakt een antwoord-QR voor je partner.
+                    </p>
+                  </div>
                   <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
                     De QR-handtekening wordt gekoppeld aan de hash van exact dit document, inclusief de twee handgeschreven handtekeningen. Wijzigingen achteraf maken een andere contractversie.
                   </p>
@@ -247,8 +261,8 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
           {phase === "response" && responseEncoded && request && (
             <ContractQrDisplay
               encoded={responseEncoded}
-              title="Antwoord terugsturen"
-              instruction="Laat de andere persoon deze QR-reeks scannen. Scan daarna diens korte afrondingsbewijs terug."
+              title="Bevestiging terugsturen"
+              instruction="Laat je partner deze antwoord-QR scannen. Scan daarna diens korte afrondingsbewijs terug."
               onScanResponse={() => setScannerOpen(true)}
               scanLabel="Afrondingsbewijs scannen"
             />
@@ -283,7 +297,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
 
       <ContractQrScannerSheet
         open={open && scannerOpen}
-        title={phase === "response" ? "Afrondingsbewijs scannen" : "Contractcode scannen"}
+        title={phase === "response" ? "Afrondingsbewijs scannen" : "Contract van partner scannen"}
         onClose={() => { setScannerOpen(false); if (!requestEnvelope) onClose(); }}
         onEncoded={(value) => void receive(value)}
       />

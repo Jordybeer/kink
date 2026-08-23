@@ -153,7 +153,8 @@ function ContractsContent() {
   const navActions = useMemo<TopNavAction[]>(() => [
     {
       id: "scan-contract-request",
-      label: "Contractverzoek scannen",
+      label: "Contract van partner scannen",
+      shortLabel: "Scan QR",
       icon: <QrCode size={18} aria-hidden="true" />,
       onClick: () => setInboxOpen(true),
       placement: "primary",
