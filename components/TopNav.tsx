@@ -329,6 +329,7 @@ function TopNavActionButton({
   emphasis: "primary" | "secondary";
 }) {
   const t = useMotionSafe();
+  const labelled = Boolean(action.shortLabel);
 
   return (
     <motion.button
@@ -339,7 +340,7 @@ function TopNavActionButton({
       disabled={action.disabled}
       aria-label={action.label}
       title={action.label}
-      className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
+      className={`focus-ring flex h-11 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5 ${labelled ? "min-w-11 gap-1.5 px-3 text-xs font-semibold" : "w-11"}`}
       style={{
         color: action.danger
           ? "var(--hard-no)"
@@ -349,6 +350,7 @@ function TopNavActionButton({
       }}
     >
       {action.icon}
+      {action.shortLabel && <span className="whitespace-nowrap">{action.shortLabel}</span>}
     </motion.button>
   );
 }
