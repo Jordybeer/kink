@@ -71,7 +71,7 @@ export default function BottomNav() {
               }}
             />
             <span
-              className="max-w-full truncate text-[10px] leading-none"
+              className="max-w-full truncate text-[11px] leading-none"
               style={{
                 color: active ? "var(--pwa-nav-icon-active)" : "var(--pwa-nav-icon)",
                 fontWeight: active ? 650 : 500,
