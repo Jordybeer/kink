@@ -2,6 +2,7 @@
 
 import { Check, QrCode, ShieldCheck } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import type { Profile } from "@/types";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { useStore } from "@/lib/store";
@@ -16,6 +17,7 @@ import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
 import { ensureContractPdfArtifact } from "@/lib/contractDocument";
 import {
   createContractResponse,
+  resolveContractCounterpartyIdentityTrust,
   verifyAndApplyContractReceipt,
   verifyContractRequest,
 } from "@/lib/contractProtocol";
@@ -44,6 +46,18 @@ function actionButton(action: ContractExchangeEnvelope["request"]["action"]): st
   if (action === "pause" || action === "stop") return "Ontvangst bevestigen";
   if (action === "resume") return "Hervatting bevestigen";
   return "Heractivering bevestigen";
+}
+
+async function requireAnchoredFirstActivation(profile: Profile): Promise<void> {
+  const trust = await resolveContractCounterpartyIdentityTrust(profile);
+  if (trust.status === "identity-anchored") return;
+  if (trust.status === "identity-conflict") {
+    throw new Error(`Identiteitsconflict voor ${profile.name}. Contractactivatie is geblokkeerd en kan niet worden omzeild.`);
+  }
+  if (trust.status === "cryptographically-invalid") {
+    throw new Error(`De profielidentiteit van ${profile.name} kan niet veilig worden bevestigd. Contractactivatie is geblokkeerd.`);
+  }
+  throw new Error(`Bevestig eerst onafhankelijk de identiteit van ${profile.name} via het profiel voordat je een contract activeert.`);
 }
 
 function authoritativeLocalSeries(envelope: ContractExchangeEnvelope): ContractSeries | null {
@@ -99,6 +113,9 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       if (!trustedActor) {
         throw new Error("Importeer eerst het geverifieerde profiel van de andere contractpartij.");
       }
+      if (envelope.request.action === "activate") {
+        await requireAnchoredFirstActivation(trustedActor);
+      }
       const currentSeries = authoritativeLocalSeries(envelope);
       if (!await verifyContractRequest(envelope, trustedActor, currentSeries)) {
         throw new Error("Dit verzoek is verouderd, hoort niet bij de actuele contractgeschiedenis of gebruikt een andere profielidentiteit.");
@@ -128,12 +145,15 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
     try {
       const responder = profiles.find((profile) => profile.id === requestEnvelope.request.counterpartyProfileId);
       if (!responder) throw new Error("Het eigen profiel ontbreekt.");
+      const trustedActor = profiles.find((profile) => profile.id === requestEnvelope.request.actorProfileId);
+      if (!trustedActor) throw new Error("Het geverifieerde profiel van de andere contractpartij ontbreekt.");
+      if (requestEnvelope.request.action === "activate") {
+        await requireAnchoredFirstActivation(trustedActor);
+      }
       const sealed = await sealProfileConsent(responder.id);
       if (!sealed) throw new Error(`${responder.name} kon niet cryptografisch worden bevestigd.`);
       const ownerKey = useStore.getState().profileOwnerKeys.find((key) => key.profileId === responder.id);
       if (!ownerKey) throw new Error("De eigendomssleutel ontbreekt.");
-      const trustedActor = profiles.find((profile) => profile.id === requestEnvelope.request.actorProfileId);
-      if (!trustedActor) throw new Error("Het geverifieerde profiel van de andere contractpartij ontbreekt.");
       const currentSeries = authoritativeLocalSeries(requestEnvelope);
       const result = await createContractResponse({
         envelope: requestEnvelope,
