@@ -174,7 +174,7 @@ export default function TopNav() {
                   style={{ ...homeUtilitySurface, color: "var(--text2)" }}
                 >
                   <DownloadSimple size={17} aria-hidden="true" />
-                  <span className="hidden min-[340px]:inline">Installeren</span>
+                  <span className="hidden min-[360px]:inline">Installeren</span>
                 </button>
               )}
               <ContextMenu
