@@ -8,6 +8,14 @@ describe("route chrome semantics", () => {
     expect(routeChromeSemantics("/profile/alex").hideBottomNav).toBe(false);
   });
 
+  it("koppelt de vijf primaire PWA-bestemmingen aan stabiele tabs", () => {
+    expect(routeChromeSemantics("/").bottomNavSection).toBe("home");
+    expect(routeChromeSemantics("/compare").bottomNavSection).toBe("compare");
+    expect(routeChromeSemantics("/contracts").bottomNavSection).toBe("contracts");
+    expect(routeChromeSemantics("/scenes").bottomNavSection).toBe("scenes");
+    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
+  });
+
   it("behandelt de vragenlijst als focusroute met offline-veilige terugweg", () => {
     const route = routeChromeSemantics("/profile/alex%20one/questions");
     expect(route.hideBottomNav).toBe(true);
@@ -15,21 +23,24 @@ describe("route chrome semantics", () => {
     expect(route.back).toBe("/profile?id=alex%20one");
   });
 
-  it("gebruikt één taal voor contractgeschiedenis en documenten", () => {
+  it("houdt contractdetailroutes visueel bij de contracttab", () => {
     expect(routeChromeSemantics("/contracts/series/history")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts/series",
       hideBottomNav: false,
+      bottomNavSection: "contracts",
     });
     expect(routeChromeSemantics("/contracts/series/versions/v1")).toMatchObject({
       title: "Getekend document",
       back: "/contracts/series/history",
       hideBottomNav: false,
+      bottomNavSection: "contracts",
     });
     expect(routeChromeSemantics("/timeline")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts",
       hideBottomNav: false,
+      bottomNavSection: "contracts",
     });
   });
 
@@ -37,6 +48,7 @@ describe("route chrome semantics", () => {
     expect(routeChromeSemantics("/contract")).toMatchObject({
       title: "Contract opstellen",
       back: "/compare",
+      bottomNavSection: "contracts",
     });
     expect(routeChromeSemantics("/scene")).toMatchObject({
       hideBottomNav: true,

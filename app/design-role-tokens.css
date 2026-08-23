@@ -14,6 +14,13 @@
   --hard-no-text: #F25555;
   --decorative-glow: var(--accent-glow);
 
+  /* Installed-PWA dock: cool navigation hue, separate from verdict/status colours. */
+  --pwa-nav-surface: #11142A;
+  --pwa-nav-surface-deep: #0D1022;
+  --pwa-nav-active: #242D55;
+  --pwa-nav-icon: #8FB7EB;
+  --pwa-nav-icon-active: #C6DDFF;
+
   /* Shared sticky stacks. */
   --profile-subnav-h: 3.5rem;
   --compare-subnav-h: 4.75rem;
