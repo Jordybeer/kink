@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Camera, UserPlus, X } from "@phosphor-icons/react";
+import { ArrowRight, Camera, Sparkle, UserPlus, X } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import type { Profile } from "@/types";
 import type { EncryptedBackup } from "@/lib/crypto";
@@ -209,6 +209,12 @@ function HomeContent() {
 
   return (
     <>
+      <style>{`
+        header:has([data-top-nav-variant="home"]) {
+          position: static !important;
+        }
+      `}</style>
+
       <PageShell width="2xl" className="lg:max-w-4xl">
         <div className="mb-6 pt-3 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>
@@ -274,46 +280,59 @@ function HomeContent() {
           </div>
         ) : (
           <section
-            className="relative overflow-hidden rounded-[26px] p-5 mb-5"
+            className="mx-auto max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 sm:px-5 sm:pb-7 sm:pt-5"
             style={{
-              background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
-              border: "1px solid var(--border-accent)",
-              boxShadow: "0 18px 60px color-mix(in srgb, var(--accent) 10%, transparent)",
+              background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 7%, var(--surface2)), color-mix(in srgb, var(--accent) 2%, var(--surface)))",
+              border: "1px solid color-mix(in srgb, var(--border-accent) 72%, var(--border))",
+              boxShadow: "0 18px 44px color-mix(in srgb, var(--accent) 7%, transparent)",
             }}
           >
-            <div
-              className="absolute -right-14 -top-14 w-36 h-36 rounded-full blur-3xl pointer-events-none"
-              style={{ background: "color-mix(in srgb, var(--accent) 24%, transparent)" }}
-              aria-hidden="true"
-            />
-            <div className="relative">
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+            <div className="px-2 pb-8 pt-1 text-center">
+              <span
+                className="mx-auto flex h-9 w-9 items-center justify-center rounded-full"
+                style={{
+                  background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
+                  border: "1px solid var(--border-accent)",
+                  color: "var(--accent)",
+                }}
               >
-                <UserPlus size={23} weight="duotone" aria-hidden="true" />
-              </div>
-              <p className="text-xs uppercase tracking-[0.2em] mb-1.5" style={{ color: "var(--accent)" }}>
-                Jouw startpunt
-              </p>
+                <Sparkle size={17} weight="duotone" aria-hidden="true" />
+              </span>
               <h2
-                className="text-3xl leading-tight mb-2"
+                className="mt-3 text-[1.9rem] leading-[1.08] sm:text-[2.05rem]"
                 style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
               >
                 Maak je eerste profiel
               </h2>
-              <p className="text-sm leading-relaxed mb-5 max-w-md" style={{ color: "var(--text2)" }}>
-                Kies je naam, perspectief, interesses en gewenste lijstomvang. Je antwoorden en foto volgen daarna in je eigen tempo.
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+                Begin met wat nieuwsgierig maakt.<br />
+                De rest mag later komen.
               </p>
+            </div>
 
+            <div className="grid gap-3.5">
               <button
                 type="button"
                 onClick={() => setFormOpen(true)}
-                className="focus-ring w-full min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-opacity hover:opacity-90"
-                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                className="focus-ring flex min-h-[72px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-opacity hover:opacity-95"
+                style={{
+                  background: "color-mix(in srgb, var(--accent) 13%, var(--surface2))",
+                  border: "1px solid color-mix(in srgb, var(--accent) 34%, var(--border))",
+                }}
               >
-                Begin met jouw profiel
-                <ArrowRight size={16} weight="bold" aria-hidden="true" />
+                <span
+                  className="flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                >
+                  <UserPlus size={20} weight="duotone" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">Maak mijn profiel</span>
+                  <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
+                    Kies wat bij jou past
+                  </span>
+                </span>
+                <ArrowRight size={17} weight="bold" aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
               </button>
 
               {!importPreview && (
@@ -323,53 +342,30 @@ function HomeContent() {
                     setScanError(null);
                     setScanOpen(true);
                   }}
-                  className="focus-ring w-full min-h-11 mt-2 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-                  style={{ color: "var(--text2)", border: "1px solid var(--border)", background: "var(--surface)" }}
+                  className="focus-ring flex min-h-[68px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
+                  style={{
+                    background: "color-mix(in srgb, var(--surface2) 82%, transparent)",
+                    border: "1px solid var(--border)",
+                  }}
                 >
-                  <Camera size={16} aria-hidden="true" />
-                  Scan het profiel van je partner
+                  <span
+                    className="flex h-10 w-10 flex-none items-center justify-center rounded-full"
+                    style={{ background: "var(--surface3)", color: "var(--text2)" }}
+                  >
+                    <Camera size={18} aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">Scan partnerprofiel</span>
+                    <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
+                      Bekijk wat je partner heeft gedeeld
+                    </span>
+                  </span>
+                  <ArrowRight size={16} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
                 </button>
               )}
             </div>
           </section>
         )}
-
-        {profiles.length === 0 && (
-          <p className="text-xs text-center px-4" style={{ color: "var(--text2)" }}>
-            Je kunt later altijd een extra perspectief of partnerprofiel toevoegen.
-          </p>
-        )}
-
-        <footer
-          className="mx-auto mt-9 max-w-sm border-t px-4 pt-7 text-center"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <p className="text-sm font-semibold tracking-[0.04em]" style={{ color: "var(--text)" }}>
-            For adults. By adults.
-          </p>
-          <p className="mt-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
-            Vragen of suggesties?
-          </p>
-          <div className="mt-1.5 flex items-center justify-center gap-2 text-xs font-semibold">
-            <a
-              href="https://fetlife.com/zwoelebeer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="focus-ring inline-flex min-h-11 items-center rounded-md px-2.5"
-              style={{ color: "var(--accent-text)" }}
-            >
-              FetLife
-            </a>
-            <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
-            <a
-              href="mailto:info@jordy.beer"
-              className="focus-ring inline-flex min-h-11 items-center rounded-md px-2.5"
-              style={{ color: "var(--accent-text)" }}
-            >
-              E-mail
-            </a>
-          </div>
-        </footer>
       </PageShell>
 
       <ProfileCreateSheet
