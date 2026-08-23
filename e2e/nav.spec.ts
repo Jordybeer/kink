@@ -7,9 +7,12 @@ test("hub keeps secondary product info in the shared context menu", async ({ pag
   await seedAndGo(page, "/", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
+  await expect(nav).toHaveAttribute("data-top-nav-variant", "home");
   await expect(nav.getByRole("link", { name: "Ontdek hoe KinkSync werkt" })).toHaveCount(0);
   await expect(nav.getByText("Hoe het werkt", { exact: true })).toHaveCount(0);
-  await expect(nav.getByRole("button", { name: "Instellingen openen" })).toBeVisible();
+  const settings = nav.getByRole("button", { name: "Instellingen openen" });
+  await expect(settings).toBeVisible();
+  await expect(settings).toContainText("Instellingen");
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
   await expect(nav.getByText("KinkSync", { exact: true })).toHaveCount(0);
 
