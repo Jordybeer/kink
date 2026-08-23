@@ -20,8 +20,13 @@
   --pwa-nav-active: #242D55;
   --pwa-nav-icon: #8FB7EB;
   --pwa-nav-icon-active: #C6DDFF;
+  --bottom-nav-h: calc(env(safe-area-inset-bottom) + 4.25rem);
 
   /* Shared sticky stacks. */
   --profile-subnav-h: 3.5rem;
   --compare-subnav-h: 4.75rem;
+}
+
+@media (display-mode: standalone) {
+  :root { --toast-lift: calc(4.25rem + 0.75rem); }
 }
