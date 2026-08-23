@@ -20,6 +20,12 @@ export default function SandboxHomePage() {
 
   return (
     <>
+      <style>{`
+        header:has([data-top-nav-variant="content"]) {
+          position: static !important;
+        }
+      `}</style>
+
       <PageShell width="2xl" className="lg:max-w-4xl">
         <div className="mb-6 pt-1 text-center">
           <h1 className="text-6xl"><Wordmark /></h1>
