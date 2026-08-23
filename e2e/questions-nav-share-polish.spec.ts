@@ -28,12 +28,12 @@ test("profile notes toggle says what it will do", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Verberg notities" })).toBeVisible();
 });
 
-test("sharing keeps the decision-time privacy summary compact", async ({ page }) => {
+test("sharing keeps local-only warning and links to the trust explanation", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, PROFILES);
   await page.getByRole("button", { name: "Profiel delen" }).click();
 
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/Verborgen antwoorden.*persoonlijke notitie.*blijven op dit toestel/i)).toBeVisible();
-  await expect(dialog.getByRole("link", { name: "Hoe delen en beveiliging werken" })).toHaveCount(0);
+  await expect(dialog.getByRole("link", { name: "Hoe delen en beveiliging werken" })).toHaveAttribute("href", "/about#limits-title");
 });
