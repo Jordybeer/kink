@@ -259,14 +259,12 @@ select {
 }
 
 /* Semantic typography floor.
-   `text-xs` remains the tertiary utility, but older components historically used
-   it for actions, explanatory prose and readable state labels. Keep the source
-   compatible while enforcing the house rule at render time: anything a user
-   must read, decide or tap is at least 14px. True tertiary metadata remains 12px. */
+   Source code should still choose the right semantic size. This is deliberately
+   narrow: it catches legacy actions, required status text and explanatory copy
+   without inflating timestamps, counts, chart labels, domains or eyebrows. */
 :is(button, a, label)[class~="text-xs"],
 :is(button, a) > [class~="text-xs"],
-p[class~="text-xs"]:not([class~="uppercase"]):not([class~="tabular-nums"]),
-div[class~="text-xs"]:not([class~="font-mono"]):not([class~="uppercase"]):not([class~="tabular-nums"]),
+summary[class~="text-xs"],
 [role="alert"][class~="text-xs"],
 span[class~="text-xs"][class~="font-medium"][class~="rounded-full"],
 span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]):not([class~="tabular-nums"]),
