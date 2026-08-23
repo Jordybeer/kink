@@ -33,7 +33,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="bottom-nav fixed inset-x-0 bottom-0 z-40 gap-1 px-2 pt-1.5"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-40 gap-1 pt-1.5"
       style={{
         background:
           "linear-gradient(180deg, var(--pwa-nav-surface) 0%, var(--pwa-nav-surface-deep) 100%)",
@@ -42,6 +42,8 @@ export default function BottomNav() {
           "0 -10px 30px color-mix(in srgb, var(--pwa-nav-surface-deep) 70%, transparent)",
         height: "var(--bottom-nav-h)",
         alignItems: "flex-start",
+        paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+        paddingRight: "max(0.75rem, env(safe-area-inset-right))",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
       aria-label="Tabbladen"
