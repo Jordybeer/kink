@@ -117,9 +117,9 @@ export default function SandboxHomePage() {
             style={{ background: "color-mix(in srgb, var(--border-accent) 70%, var(--border))" }}
             aria-hidden="true"
           />
-          <div className="mt-2 flex min-h-11 items-center justify-center gap-2 text-xs">
+          <div className="mt-2 flex min-h-11 items-center justify-center gap-2 text-sm">
             <span className="font-semibold tracking-[0.03em]" style={{ color: "var(--text2)" }}>
-              For adults. By adults.
+              For adults, by adults.
             </span>
             <span aria-hidden="true" style={{ color: "var(--border-accent)" }}>·</span>
             <a
