@@ -56,7 +56,7 @@ test("profile tab uses the offline-safe shell without changing profile UX", asyn
   await expect(profileTab).toHaveAttribute("aria-current", "page");
 });
 
-test("contextual actions live in the TopNav as icon-only commands", async ({ page }) => {
+test("contextual actions stay compact while the ambiguous QR scanner is labelled", async ({ page }) => {
   await seedAndGo(page, "/scenes", PROFILES);
   const newScene = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Nieuwe scène" });
   await expect(newScene).toBeVisible();
@@ -64,11 +64,11 @@ test("contextual actions live in the TopNav as icon-only commands", async ({ pag
 
   await seedAndGo(page, "/contracts", PROFILES);
   const contractsNav = page.getByLabel("Hoofdnavigatie");
-  const scanContract = contractsNav.getByRole("button", { name: "Contractverzoek scannen" });
+  const scanContract = contractsNav.getByRole("button", { name: "Contract van partner scannen" });
   await expect(scanContract).toBeVisible();
-  await expect(scanContract).toHaveText("");
+  await expect(scanContract).toHaveText("Scan QR");
   await expect(contractsNav.getByRole("button", { name: /Nieuw contract/i })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Contractverzoek scannen" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Contract van partner scannen" })).toHaveCount(1);
 
   await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", PROFILES);
   const compareNav = page.getByLabel("Hoofdnavigatie");
