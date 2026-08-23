@@ -31,6 +31,13 @@ describe("semantic typography floor", () => {
     expect(globalsCss).toContain('[class~="text-xs"][class~="leading-relaxed"]');
   });
 
+  it("covers the last scoped legacy labels without broadening the floor", () => {
+    expect(globalsCss).toContain('.contract-print label > span[class~="text-xs"]');
+    expect(globalsCss).toContain('.contract-print span[class~="w-32"][class~="text-xs"]');
+    expect(globalsCss).toContain('.contract-print div[class~="text-xs"][class~="font-semibold"]');
+    expect(globalsCss).toContain('span[class~="mr-auto"][class~="text-xs"]');
+  });
+
   it("does not blanket-lift tertiary paragraphs or divs", () => {
     expect(globalsCss).not.toContain('p[class~="text-xs"]:not(');
     expect(globalsCss).not.toContain('div[class~="text-xs"]:not(');
