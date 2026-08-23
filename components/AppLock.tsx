@@ -182,12 +182,12 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
               {bioLoading ? "Controleren…" : "Face ID / vingerafdruk"}
             </motion.button>
             {bioError && (
-              <p style={{ fontSize: "0.75rem", color: "var(--text2)", marginTop: "0.375rem" }}>
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.4, color: "var(--text2)", marginTop: "0.375rem" }}>
                 Niet herkend. Gebruik je PIN
               </p>
             )}
             {storedHash && (
-              <p style={{ fontSize: "0.75rem", color: "var(--text2)", marginTop: "0.375rem", opacity: 0.6 }}>
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.4, color: "var(--text2)", marginTop: "0.375rem", opacity: 0.6 }}>
                 of voer PIN in
               </p>
             )}
@@ -214,13 +214,13 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
             </AnimatePresence>
 
             {legacyPinMode && cooldownLeft === 0 && (
-              <p role="status" style={{ textAlign: "center", fontSize: "0.6875rem", lineHeight: 1.35, color: "var(--text2)", margin: "0 0 0.75rem" }}>
+              <p role="status" style={{ textAlign: "center", fontSize: "0.875rem", lineHeight: 1.4, color: "var(--text2)", margin: "0 0 0.75rem" }}>
                 PIN niet herkend. Had je eerder 5–8 cijfers? Vul de rest in en tik op ✓.
               </p>
             )}
 
             {cooldownLeft > 0 && (
-              <p style={{ textAlign: "center", fontSize: "0.8125rem", color: "var(--hard-no)", marginBottom: "1rem" }}>
+              <p style={{ textAlign: "center", fontSize: "0.875rem", color: "var(--hard-no)", marginBottom: "1rem" }}>
                 Wacht {cooldownLeft}s
               </p>
             )}
