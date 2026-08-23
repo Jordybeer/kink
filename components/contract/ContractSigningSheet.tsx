@@ -270,11 +270,11 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
                 >
                   <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
-                    QR-bevestiging gebruikt twee eigen toestellen
+                    QR-bevestiging gebeurt op het eigen toestel van beide personen
                   </p>
                   <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
                     {ownedProfiles.length === 2
-                      ? "Beide profielen zijn lokaal op dit toestel. Importeer eerst het profiel dat je partner vanaf diens eigen toestel deelt; daarna kan KinkSync een contract-QR maken."
+                      ? "Beide profielen zijn op dit toestel aangemaakt. Voor echte QR-bevestiging moet het partnerprofiel afkomstig zijn van diens eigen toestel. Importeer eerst het gedeelde partnerprofiel; daarna kan KinkSync de QR maken."
                       : "Dit toestel bezit geen van beide profielen. Open het contract op het eigen toestel van één deelnemer om een contract-QR te maken."}
                   </p>
                 </div>
