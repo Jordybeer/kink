@@ -33,7 +33,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="bottom-nav fixed inset-x-0 bottom-0 z-40 px-2 pt-1"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-40 px-2 pt-1.5"
       style={{
         background:
           "linear-gradient(180deg, var(--pwa-nav-surface) 0%, var(--pwa-nav-surface-deep) 100%)",
@@ -60,7 +60,7 @@ export default function BottomNav() {
             }}
           >
             <Icon
-              size={23}
+              size={24}
               weight={active ? "fill" : "regular"}
               aria-hidden="true"
               style={{
