@@ -42,8 +42,8 @@ export default function BottomNav() {
           "0 -10px 30px color-mix(in srgb, var(--pwa-nav-surface-deep) 70%, transparent)",
         height: "var(--bottom-nav-h)",
         alignItems: "flex-start",
-        paddingLeft: "max(1.25rem, env(safe-area-inset-left, 0px))",
-        paddingRight: "max(1.25rem, env(safe-area-inset-right, 0px))",
+        paddingLeft: "max(var(--bottom-nav-side-inset), env(safe-area-inset-left, 0px))",
+        paddingRight: "max(var(--bottom-nav-side-inset), env(safe-area-inset-right, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
       aria-label="Tabbladen"
@@ -73,7 +73,7 @@ export default function BottomNav() {
               }}
             />
             <span
-              className="max-w-full truncate text-[11px] leading-none"
+              className="max-w-full truncate text-[10px] leading-none min-[360px]:text-[11px]"
               style={{
                 color: active ? "var(--pwa-nav-icon-active)" : "var(--pwa-nav-icon)",
                 fontWeight: active ? 650 : 500,
