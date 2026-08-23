@@ -48,7 +48,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect(page.getByRole("heading", { name: "Jouw voorkeuren. Jouw toestel. Jouw woorden." })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Drie regels sturen het hele product" })).toBeVisible();
       await expect(page.getByText("Geen KinkSync-account", { exact: true })).toBeVisible();
-      await expect(page.getByText(/op iOS kunnen Safari en de geïnstalleerde Home Screen-app aparte opslagcontexten zijn/i)).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Privacy begint lokaal" })).toBeVisible();
       break;
     case "profile":
       await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();
@@ -61,7 +61,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       const statusGroup = page.getByRole("group", { name: "Status kiezen" });
       await expect(statusGroup).toBeVisible();
       await expect(statusGroup.getByRole("button")).toHaveCount(5);
-      await expect(page.locator('[data-tour="kink-card"] h3')).toHaveCount(1);
+      await expect(page.locator('[data-tour="kink-card"] h2')).toHaveCount(1);
       break;
     }
     case "compare":
@@ -72,7 +72,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect.poll(() => page.locator('section[id^="cat-"]').count()).toBeGreaterThan(0);
       break;
     case "contract":
-      await expect(page.getByRole("heading", { name: "Teken het contract" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Alex.*Sam/ })).toBeVisible();
       await expect(page.getByText("Gedeelde verlangens", { exact: true })).toBeVisible();
       await expect(page.getByText("Zachte grenzen", { exact: true })).toBeVisible();
       await expect(page.getByText("Harde grenzen", { exact: true })).toBeVisible();

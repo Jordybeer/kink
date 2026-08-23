@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
+import { getCompareSummary } from "@/lib/compare";
 import type { Profile } from "@/types";
 
 const URL = "/compare?a=pw-alex-001&b=pw-sam-002";
@@ -23,26 +24,25 @@ test.describe("Vergelijkingspagina", () => {
     await seedAndGo(page, URL, [PROFILE_ALEX, PROFILE_SAM]);
   });
 
-  test("toont transparante overlap met natuurlijke uitleg", async ({ page }) => {
+  test("toont een menselijke samenvatting zonder compatibility-score", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).toMatch(/Alex/);
     expect(text).toMatch(/Sam/);
     expect(text).toContain("Wat valt op tussen jullie");
-    expect(text).toMatch(/\d+%/);
-    expect(text).toContain("duidelijke overlap");
-    expect(text).toMatch(/voorkeuren die aan beide kanten zijn ingevuld/i);
-    expect(text).not.toMatch(/sluiten er .* duidelijk aan/i);
+    expect(text).toMatch(/golflengte|één lijn|goed gesprek|anders over|beeld is nog niet helemaal compleet/i);
+    expect(text).not.toContain("duidelijke overlap");
     expect(text).not.toContain("Sterke compatibiliteit");
     expect(text).not.toContain("Goede basis");
     expect(text).not.toContain("compatibiliteitsscore");
   });
 
-  test("toont vier stabiele hoofdvakken, ook wanneer grenzen nul zijn", async ({ page }) => {
+  test("toont vier rustige hoofdvakken, ook wanneer grenzen nul zijn", async ({ page }) => {
     const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
-    await expect(summary).toContainText("samen");
-    await expect(summary).toContainText("bespreken");
-    await expect(summary).toContainText("zachte verschillen");
-    await expect(summary).toContainText("grenzen");
+    await expect(summary).toContainText("Overlap");
+    await expect(summary).toContainText("Bespreekbaar");
+    await expect(summary).toContainText("Verschillen");
+    await expect(summary).toContainText("Grenzen");
+    await expect(summary).not.toContainText("zachte verschillen");
   });
 
   test("toont de rol van beide gekozen profielen", async ({ page }) => {
@@ -52,9 +52,9 @@ test.describe("Vergelijkingspagina", () => {
 
   test("houdt profielrol en expliciete richting van elkaar gescheiden", async ({ page }) => {
     const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
-    await expect(summary).toContainText(/samen/i);
-    await expect(summary).toContainText(/bespreken/i);
-    await expect(summary).toContainText(/grenzen/i);
+    await expect(summary).toContainText(/Overlap/i);
+    await expect(summary).toContainText(/Bespreekbaar/i);
+    await expect(summary).toContainText(/Grenzen/i);
 
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).toContain("Spanking (hand)");
@@ -87,14 +87,14 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).not.toMatch(/Diaper wearing[\s\S]{0,120}geven.*ontvangen/i);
   });
 
-  test("neemt aanvullende matches mee in het samen-vak", async ({ page }) => {
+  test("neemt aanvullende matches mee in Overlap zonder ze opnieuw in de intro uit te schrijven", async ({ page }) => {
     const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+    const expected = getCompareSummary(PROFILE_ALEX, PROFILE_SAM);
+    const expectedClearOverlap = expected.shared + expected.complementary;
+    const overlapStat = summary.getByText("Overlap", { exact: true }).locator("..");
+    await expect(overlapStat).toContainText(String(expectedClearOverlap));
     const summaryText = await summary.innerText();
-    const leadMatch = summaryText.match(/interesse bij (\d+) aan beide kanten positief\. Bij (\d+) andere/);
-    expect(leadMatch).not.toBeNull();
-    const expectedClearOverlap = Number(leadMatch![1]) + Number(leadMatch![2]);
-    const togetherStat = summary.getByText("samen", { exact: true }).locator("..");
-    await expect(togetherStat).toContainText(String(expectedClearOverlap));
+    expect(summaryText).not.toContain(`${expectedClearOverlap}%`);
   });
 
   test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
@@ -110,6 +110,8 @@ test.describe("Vergelijkingspagina", () => {
     const resultsDialog = page.getByRole("dialog", { name: "Resultaten filteren" });
     await expect(resultsDialog).toBeVisible();
     await expect(resultsDialog.getByRole("button", { name: "Alles" })).toHaveAttribute("aria-pressed", "true");
+    await expect(resultsDialog.getByRole("button", { name: /Bespreekbaar/ })).toBeVisible();
+    await expect(resultsDialog.getByRole("button", { name: /Verschillen/ })).toBeVisible();
 
     const shared = resultsDialog.getByRole("button", { name: /Zelfde interesse/ });
     const boundaries = resultsDialog.getByRole("button", { name: /Grenzen/ });

@@ -26,6 +26,17 @@ const DENSE_PROFILE: Profile = {
   ),
 };
 
+const PROFILE_WITH_BDSMTEST: Profile = {
+  ...PROFILE,
+  id: "pw-profile-bdsmtest",
+  name: "BDSMTest profile",
+  bdsmtestScores: [
+    { role: "Dominant", pct: 92 },
+    { role: "Rigger", pct: 78 },
+    { role: "Sadist", pct: 65 },
+  ],
+};
+
 test("profile keeps catalog search and category filtering available from Overview without duplicate answer help", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
@@ -66,6 +77,31 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).toContainText("Je eerste ronde is afgerond.");
   await expect(continueCard).not.toContainText(/brede dekking/i);
   await expect(continueCard).not.toContainText(/100%/);
+});
+
+test("BDSMTest stays readable below the profile hero across both tabs", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
+
+  const summary = page.getByTestId("bdsmtest-summary");
+  const lastCategory = page.getByRole("heading", { name: "Sensation Play" });
+  await expect(summary).toBeVisible();
+  await expect(lastCategory).toBeVisible();
+  expect(await lastCategory.evaluate((heading, selector) => {
+    const target = document.querySelector(selector);
+    return Boolean(target && (target.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING));
+  }, '[data-testid="bdsmtest-summary"]')).toBe(true);
+
+  const disclosure = summary.getByRole("button", { name: /Bekijk alle 3/ });
+  const disclosureBox = await disclosure.boundingBox();
+  expect(disclosureBox).not.toBeNull();
+  expect(disclosureBox!.height).toBeGreaterThanOrEqual(44);
+  await expect.poll(() => summary.getByText("Dominant", { exact: true }).evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).fontSize),
+  )).toBeGreaterThanOrEqual(12);
+
+  await page.getByRole("tab", { name: "Bewerken" }).click();
+  await expect(summary).toBeVisible();
 });
 
 test("dense profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {

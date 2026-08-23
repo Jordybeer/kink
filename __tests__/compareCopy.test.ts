@@ -33,49 +33,74 @@ function category(overrides: Partial<CompareCategoryScore>): CompareCategoryScor
 }
 
 describe("compare narrative copy", () => {
-  it("maakt een transparant overlappercentage uit alleen duidelijke overlap", () => {
+  it("houdt het overlappercentage beschikbaar als intern transparant feit", () => {
     expect(getClearOverlapPercent(summary())).toBe(69);
     expect(getClearOverlapPercent(summary({ shared: 20, complementary: 5, jointlyAssessed: 40 }))).toBe(63);
     expect(getClearOverlapPercent(summary({ jointlyAssessed: 0 }))).toBeNull();
   });
 
-  it("legt het percentage uit in natuurlijk Nederlands zonder technische stopwoorden", () => {
+  it("kiest de heel-veel-overlap tekst zonder de cijfers opnieuw uit te schrijven", () => {
+    const story = planCompareStory(summary({ shared: 34, discuss: 3, soft: 2, jointlyAssessed: 39 }));
+    expect(story.kind).toBe("very-overlapping");
+    expect(story.lead).toBe("Jullie zitten wel héél vaak op dezelfde golflengte 😏 Misschien zijn de paar verschillen juist het leukst om samen verder te ontdekken.");
+    expect(story.lead).not.toMatch(/\b34\b|\b39\b|%/);
+  });
+
+  it("kiest de gewone overlaptekst en houdt de emoji natuurlijk in de zin", () => {
     const story = planCompareStory(summary());
-    expect(story.overlapPercent).toBe(69);
-    expect(story.lead).toContain("39 voorkeuren");
-    expect(story.lead).toContain("27");
-    expect(story.lead).toMatch(/overlap|overeenkomsten|interesse|één lijn/i);
-    expect(story.lead).not.toMatch(/[—–]/);
-    expect(story.lead).not.toMatch(/punten|complementair|asymmetrie|gemeenschappelijke grond|sluiten er .* duidelijk aan/i);
-    expect((story.lead.match(/jullie/gi) ?? []).length).toBe(0);
-    expect(story.coverage).toContain("233 andere");
+    expect(story.kind).toBe("overlapping");
+    expect(story.lead).toBe("Jullie zitten verrassend vaak op dezelfde golflengte 👀 Waar jullie antwoorden verschillen, valt misschien nog iets nieuws te ontdekken.");
+    expect(story.lead).not.toContain("golflengte. 👀");
   });
 
-  it("beschrijft complementaire overlap zonder aan te nemen dat elk paar geven en ontvangen is", () => {
-    const story = planCompareStory(summary({ shared: 24, complementary: 3, discuss: 0, soft: 0, match: 27 }));
-    expect(story.lead).toMatch(/interesse bij 24.*beide kanten positief/i);
-    expect(story.lead).toMatch(/3 andere.*twee kanten.*elkaar aan/i);
-    expect(story.lead).not.toMatch(/geven.*ontvangen/i);
-    expect(story.insights.join(" ")).not.toMatch(/geven.*ontvangen/i);
+  it("kiest bespreekbaar wanneer onduidelijkheid duidelijk domineert", () => {
+    const story = planCompareStory(summary({ shared: 12, discuss: 16, soft: 3, conflict: 0, limit: 0, jointlyAssessed: 31 }));
+    expect(story.kind).toBe("discuss-heavy");
+    expect(story.lead).toBe("Niet alles is meteen duidelijk tussen jullie. Sommige antwoorden liggen dicht bij elkaar, andere vragen misschien om een goed gesprek.");
   });
 
-  it("houdt harde grenzen belangrijker dan gewone nuance", () => {
-    const story = planCompareStory(summary({ conflict: 1, discuss: 5, jointlyAssessed: 36 }));
-    expect(story.insights[0]).toMatch(/harde grens/i);
-    expect(story.insights[0]).toMatch(/best eerst even samen over praten/i);
+  it("kiest verschillen wanneer zachte verschillen de niet-overlap domineren", () => {
+    const story = planCompareStory(summary({ shared: 7, discuss: 5, soft: 11, conflict: 0, limit: 0, jointlyAssessed: 23 }));
+    expect(story.kind).toBe("different");
+    expect(story.lead).toBe("Jullie denken er best vaak anders over. Dat is niet per se een probleem. Misschien valt er juist daardoor nog veel over elkaar te ontdekken.");
   });
 
-  it("laat andere harde grenzen niet verdwijnen wanneer er ook een conflict is", () => {
-    const story = planCompareStory(summary({ conflict: 1, limit: 2, discuss: 5, jointlyAssessed: 39 }));
-    expect(story.insights[0]).toMatch(/enthousiasme tegenover een harde grens/i);
-    expect(story.insights[0]).toMatch(/2 andere voorkeuren/i);
+  it("valt terug op een gemengde tekst wanneer geen patroon overheerst", () => {
+    const story = planCompareStory(summary({ shared: 12, discuss: 7, soft: 5, conflict: 1, limit: 0, jointlyAssessed: 25 }));
+    expect(story.kind).toBe("mixed");
+    expect(story.lead).toBe("Jullie zitten best vaak op één lijn, maar verschillen ook regelmatig van mening. Genoeg om nog over te praten en samen te ontdekken.");
   });
 
-  it("blijft in de samenvatting neutraal over het type complementaire participatie", () => {
-    const story = planCompareStory(summary({ shared: 24, complementary: 3, match: 27 }));
-    const copy = `${story.lead} ${story.insights.join(" ")}`;
-    expect(copy).toMatch(/twee kanten/i);
-    expect(copy).not.toMatch(/rollen mooi|complementair|geven.*ontvangen/i);
+  it("blijft voorzichtig wanneer er nog te weinig gezamenlijk is ingevuld", () => {
+    const story = planCompareStory(summary({
+      shared: 3,
+      complementary: 0,
+      discuss: 1,
+      soft: 1,
+      conflict: 0,
+      limit: 0,
+      jointlyAssessed: 5,
+      unpairedVisible: 12,
+      match: 3,
+    }));
+    expect(story.kind).toBe("low-coverage");
+    expect(story.lead).toBe("Het beeld is nog niet helemaal compleet. Vul allebei wat meer in en vergelijk daarna opnieuw.");
+    expect(story.coverage).toContain("12 andere");
+  });
+
+  it("houdt alle harde grenzen zichtbaar zonder de algemene story over te nemen", () => {
+    const story = planCompareStory(summary({ shared: 32, discuss: 2, soft: 2, conflict: 1, limit: 2, jointlyAssessed: 39 }));
+    expect(story.kind).toBe("very-overlapping");
+    expect(story.insights[0]).toEqual({
+      kind: "boundaries",
+      title: "Grenzen",
+      body: "Bij één antwoord staat enthousiasme tegenover een harde grens. Daarnaast staan bij 2 andere antwoorden harde grenzen. Daar staan jullie best even bij stil.",
+    });
+  });
+
+  it("houdt enkelvoud correct wanneer naast een conflict één andere harde grens staat", () => {
+    const story = planCompareStory(summary({ shared: 18, discuss: 4, soft: 2, conflict: 2, limit: 1, jointlyAssessed: 27 }));
+    expect(story.insights[0]?.body).toBe("Bij 2 antwoorden staat enthousiasme tegenover een harde grens. Daarnaast staat bij één ander antwoord een harde grens. Daar staan jullie best even bij stil.");
   });
 
   it("noemt een categorie alleen wanneer verschillen er echt clusteren", () => {
@@ -84,24 +109,20 @@ describe("compare narrative copy", () => {
       category({ category: "power", jointlyAssessed: 4, discuss: 1, shared: 3 }),
       category({ category: "impact", jointlyAssessed: 7, discuss: 1, shared: 6 }),
     ];
-    const story = planCompareStory(summary({ discuss: 6, soft: 2 }), categories);
-    const copy = story.insights.join(" ");
-    expect(copy).toMatch(/Bondage/);
-    expect(copy).not.toMatch(/daarbuiten|vaker op dezelfde lijn/i);
+    const story = planCompareStory(summary({ shared: 11, discuss: 6, soft: 2, jointlyAssessed: 19 }), categories);
+    const categoryCopy = story.insights.find((insight) => insight.kind === "category");
+    expect(categoryCopy?.body).toMatch(/Bondage/);
   });
 
-  it("blijft voorzichtig wanneer er nog niets gezamenlijk beoordeeld is", () => {
-    const story = planCompareStory(summary({
-      shared: 0,
-      complementary: 0,
-      discuss: 0,
-      soft: 0,
-      jointlyAssessed: 0,
-      unpairedVisible: 12,
-      match: 0,
-    }));
-    expect(story.overlapPercent).toBeNull();
-    expect(story.lead).toMatch(/nog geen voorkeuren.*aan beide kanten/i);
-    expect(story.coverage).toMatch(/12 voorkeuren/i);
+  it("gebruikt nergens gedachtestreepjes in de zichtbare story-copy", () => {
+    const stories = [
+      planCompareStory(summary()),
+      planCompareStory(summary({ shared: 34, discuss: 3, soft: 2, jointlyAssessed: 39 })),
+      planCompareStory(summary({ shared: 12, discuss: 16, soft: 3, jointlyAssessed: 31 })),
+      planCompareStory(summary({ shared: 7, discuss: 5, soft: 11, jointlyAssessed: 23 })),
+      planCompareStory(summary({ shared: 12, discuss: 7, soft: 5, conflict: 1, jointlyAssessed: 25 })),
+    ];
+    const copy = stories.flatMap((story) => [story.lead, story.coverage, ...story.insights.flatMap((insight) => [insight.title, insight.body])]).join(" ");
+    expect(copy).not.toMatch(/[—–]/);
   });
 });

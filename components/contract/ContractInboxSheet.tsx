@@ -10,7 +10,10 @@ import {
   contractVersionById,
   formatContractTimestamp,
   type ContractExchangeEnvelope,
+  type ContractSeries,
 } from "@/lib/contractLifecycle";
+import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
+import { ensureContractPdfArtifact } from "@/lib/contractDocument";
 import {
   createContractResponse,
   verifyAndApplyContractReceipt,
@@ -19,6 +22,7 @@ import {
 import { decodeContractEnvelope, encodeContractEnvelope } from "@/lib/contractQr";
 import ContractQrDisplay from "@/components/contract/ContractQrDisplay";
 import ContractQrScannerSheet from "@/components/contract/ContractQrScannerSheet";
+import ContractCanonicalPreview from "@/components/contract/ContractCanonicalPreview";
 
 interface Props {
   open: boolean;
@@ -36,10 +40,19 @@ function actionTitle(action: ContractExchangeEnvelope["request"]["action"]): str
 }
 
 function actionButton(action: ContractExchangeEnvelope["request"]["action"]): string {
-  if (action === "activate") return "Contract ondertekenen";
+  if (action === "activate") return "Exact dit contract ondertekenen";
   if (action === "pause" || action === "stop") return "Ontvangst bevestigen";
   if (action === "resume") return "Hervatting bevestigen";
   return "Heractivering bevestigen";
+}
+
+function authoritativeLocalSeries(envelope: ContractExchangeEnvelope): ContractSeries | null {
+  const transportSeries = envelope.series;
+  if (!transportSeries) return null;
+  const local = useContractStore.getState().series;
+  return local.find((series) => series.id === envelope.request.seriesId)
+    ?? local.find((series) => series.pairKey === transportSeries.pairKey)
+    ?? null;
 }
 
 export default function ContractInboxSheet({ open, onClose }: Props) {
@@ -86,13 +99,19 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       if (!trustedActor) {
         throw new Error("Importeer eerst het geverifieerde profiel van de andere contractpartij.");
       }
-      if (!await verifyContractRequest(envelope, trustedActor)) {
-        throw new Error("De contractcode hoort niet bij de lokaal geverifieerde profielidentiteit.");
+      const currentSeries = authoritativeLocalSeries(envelope);
+      if (!await verifyContractRequest(envelope, trustedActor, currentSeries)) {
+        throw new Error("Dit verzoek is verouderd, hoort niet bij de actuele contractgeschiedenis of gebruikt een andere profielidentiteit.");
       }
       const responder = profiles.find((profile) => profile.id === envelope.request.counterpartyProfileId);
       if (!responder) throw new Error("Het profiel waarvoor dit verzoek bestemd is staat niet op dit toestel.");
       if (responder.origin === "shared" || responder.isImported === true) {
         throw new Error(`Open dit verzoek op het eigen toestel van ${responder.name}.`);
+      }
+      const version = contractVersionById(envelope.series, envelope.request.versionId);
+      if (envelope.request.action === "activate"
+        && (!version?.content || !hasRequiredHandwrittenSignatures(version.content))) {
+        throw new Error("Dit contract bevat niet de twee verplichte handgeschreven handtekeningen.");
       }
       setRequestEnvelope(envelope);
       setPhase("review");
@@ -115,19 +134,24 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
       if (!ownerKey) throw new Error("De eigendomssleutel ontbreekt.");
       const trustedActor = profiles.find((profile) => profile.id === requestEnvelope.request.actorProfileId);
       if (!trustedActor) throw new Error("Het geverifieerde profiel van de andere contractpartij ontbreekt.");
+      const currentSeries = authoritativeLocalSeries(requestEnvelope);
       const result = await createContractResponse({
         envelope: requestEnvelope,
         trustedActor,
         responder: sealed,
         ownerKey,
+        currentSeries,
       });
+      if (requestEnvelope.request.action === "activate") {
+        await ensureContractPdfArtifact(result.series, requestEnvelope.request.versionId);
+      }
       upsertSeries(result.series);
       setResponseEncoded(encodeContractEnvelope(result.envelope));
       setPhase("response");
       const action = requestEnvelope.request.action;
       showToast({
         message: action === "activate"
-          ? "Contract ondertekend. Laat de andere persoon nu het antwoord scannen."
+          ? "Exact deze contractversie is ondertekend en als PDF lokaal vastgelegd."
           : action === "resume" || action === "reactivate"
             ? "Wederzijdse bevestiging toegevoegd. Laat de andere persoon het antwoord scannen."
             : "Ontvangst bevestigd. Laat de andere persoon het antwoord scannen.",
@@ -184,34 +208,29 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                 {formatContractTimestamp(request.createdAt)}
               </p>
 
-              <div className="mt-5 rounded-xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                <p className="text-sm font-medium">
-                  {request.action === "pause"
-                    ? `${actor.profileName} heeft het contract tijdelijk gepauzeerd.`
-                    : request.action === "stop"
-                      ? `${actor.profileName} heeft het contract stopgezet.`
-                      : request.action === "resume"
-                        ? `${actor.profileName} vraagt om het contract samen te hervatten.`
-                        : request.action === "reactivate"
-                          ? `${actor.profileName} vraagt om het contract samen te heractiveren.`
-                          : `${actor.profileName} heeft exact deze contractversie ondertekend.`}
-                </p>
-                {request.action === "activate" && version && (
-                  <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                    {version.summary.matchCount} matches · {version.summary.softLimitCount} zachte grenzen · {version.summary.hardLimitCount} harde grenzen
+              {request.action === "activate" && version?.content ? (
+                <div className="mt-5">
+                  <ContractCanonicalPreview content={version.content} />
+                  <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                    De QR-handtekening wordt gekoppeld aan de hash van exact dit document, inclusief de twee handgeschreven handtekeningen. Wijzigingen achteraf maken een andere contractversie.
                   </p>
-                )}
-                {request.reason && (
-                  <p className="mt-2 text-xs" style={{ color: "var(--text2)" }}>{request.reason}</p>
-                )}
-                {request.note && (
-                  <p className="mt-4 text-sm italic leading-relaxed">“{request.note}”</p>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="mt-5 rounded-xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                  <p className="text-sm font-medium">
+                    {request.action === "pause"
+                      ? `${actor.profileName} heeft het contract tijdelijk gepauzeerd.`
+                      : request.action === "stop"
+                        ? `${actor.profileName} heeft het contract stopgezet.`
+                        : request.action === "resume"
+                          ? `${actor.profileName} vraagt om het contract samen te hervatten.`
+                          : `${actor.profileName} vraagt om het contract samen te heractiveren.`}
+                  </p>
+                  {request.reason && <p className="mt-2 text-xs" style={{ color: "var(--text2)" }}>{request.reason}</p>}
+                  {request.note && <p className="mt-4 text-sm italic leading-relaxed">“{request.note}”</p>}
+                </div>
+              )}
 
-              <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                De profielidentiteit en contracthash zijn cryptografisch gecontroleerd. Controleer ook zelf of namen, rollen en afspraken kloppen voordat je bevestigt.
-              </p>
               <button
                 type="button"
                 disabled={busy}
@@ -240,7 +259,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
               <Check size={38} weight="bold" aria-hidden="true" className="mx-auto" style={{ color: "var(--yes)" }} />
               <h2 className="mt-3 text-lg font-semibold">Uitwisseling afgerond</h2>
               <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Dit toestel heeft gecontroleerd dat de andere persoon jouw antwoord ontving en lokaal opsloeg.
+                Dit toestel heeft gecontroleerd dat de andere persoon jouw antwoord ontving en lokaal opsloeg. De getekende contract-PDF blijft aan deze versie gekoppeld.
               </p>
             </div>
           )}

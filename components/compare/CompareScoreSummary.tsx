@@ -1,10 +1,17 @@
 import { ChatCircle, Heart, Info, ShieldWarning, WaveSine } from "@phosphor-icons/react";
-import { planCompareStory } from "@/lib/compareCopy";
+import { planCompareStory, type CompareInsightKind } from "@/lib/compareCopy";
 import type { CompareCategoryScore, CompareSummary } from "@/lib/compare";
 
 interface Props extends CompareSummary {
   categoryScores: CompareCategoryScore[];
 }
+
+const INSIGHT_STYLE: Record<CompareInsightKind, { color: string; icon: typeof ShieldWarning }> = {
+  boundaries: { color: "var(--hard-no-text)", icon: ShieldWarning },
+  discuss: { color: "var(--conflict)", icon: ChatCircle },
+  differences: { color: "var(--maybe)", icon: WaveSine },
+  category: { color: "var(--accent-text)", icon: Info },
+};
 
 export default function CompareScoreSummary({
   shared,
@@ -37,40 +44,30 @@ export default function CompareScoreSummary({
 
   const stats = [
     {
-      key: "together",
+      key: "overlap",
       count: clearOverlapCount,
-      label: "samen",
-      helper: complementary > 0 ? "Zelfde interesse of passende kanten" : "Aan beide kanten positief",
+      label: "Overlap",
       color: "var(--yes)",
       icon: Heart,
     },
     {
       key: "discuss",
       count: discuss,
-      label: "bespreken",
-      helper: "Nog niet helemaal duidelijk",
+      label: "Bespreekbaar",
       color: "var(--conflict)",
       icon: ChatCircle,
     },
     {
       key: "soft",
       count: soft,
-      label: "zachte verschillen",
-      helper: "De één is positiever",
+      label: "Verschillen",
       color: "var(--maybe)",
       icon: WaveSine,
     },
     {
       key: "boundaries",
       count: hardBoundaryCount,
-      label: "grenzen",
-      helper: hardBoundaryCount === 0
-        ? "Geen harde grens"
-        : conflict > 0
-          ? `${conflict} ${conflict === 1 ? "botst" : "botsen"} met positief antwoord`
-          : hardBoundaryCount === 1
-            ? "Eén harde grens"
-            : `${hardBoundaryCount} harde grenzen`,
+      label: "Grenzen",
       color: hardBoundaryCount > 0 ? "var(--hard-no-text)" : "var(--text2)",
       icon: ShieldWarning,
     },
@@ -79,55 +76,41 @@ export default function CompareScoreSummary({
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
       <div
-        className="rounded-2xl border p-5"
+        className="rounded-2xl border p-4 sm:p-5"
         style={{ borderColor: "var(--border)", background: "var(--surface)" }}
       >
-        <h2
-          id="compare-summary-heading"
-          className="text-[22px] font-semibold leading-tight"
-          style={{ color: "var(--text)" }}
+        <div
+          className="rounded-2xl px-4 py-4 sm:px-5"
+          style={{
+            background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+            border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
+          }}
         >
-          Wat valt op tussen jullie
-        </h2>
-
-        {story.overlapPercent !== null ? (
-          <div className="mt-4">
-            <div className="flex items-end gap-2.5">
-              <div
-                className="text-[52px] font-semibold leading-none tabular-nums"
-                style={{ color: "var(--accent-text)" }}
-              >
-                {story.overlapPercent}%
-              </div>
-              <div className="pb-1 text-[15px] font-medium" style={{ color: "var(--accent-text)" }}>
-                duidelijke overlap
-              </div>
-            </div>
-            <p className="mt-3 max-w-2xl text-[17px] leading-[1.55]" style={{ color: "var(--text)" }}>
-              {story.lead}
-            </p>
-          </div>
-        ) : (
-          <p className="mt-4 text-[17px] leading-[1.55]" style={{ color: "var(--text)" }}>
+          <h2
+            id="compare-summary-heading"
+            className="text-[19px] font-semibold leading-tight sm:text-[21px]"
+            style={{ color: "var(--text)" }}
+          >
+            Wat valt op tussen jullie
+          </h2>
+          <p className="mt-2.5 max-w-3xl text-[16px] leading-[1.55] sm:text-[17px]" style={{ color: "var(--text)" }}>
             {story.lead}
           </p>
-        )}
+        </div>
 
         <div
-          className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border"
+          className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border"
           style={{ borderColor: "var(--border)", background: "var(--border)" }}
+          aria-label="Vergelijkingssamenvatting"
         >
-          {stats.map(({ key, count, label, helper, color, icon: Icon }) => (
-            <div key={key} className="min-w-0 px-3 py-4 text-center" style={{ background: "var(--surface2)" }}>
-              <div className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
+          {stats.map(({ key, count, label, color, icon: Icon }) => (
+            <div key={key} className="min-w-0 px-3 py-4 text-center sm:px-4 sm:py-5" style={{ background: "var(--surface2)" }}>
+              <Icon size={18} weight="duotone" className="mx-auto mb-2" aria-hidden="true" style={{ color }} />
+              <div className="text-[30px] font-semibold leading-none tabular-nums sm:text-[32px]" style={{ color }}>
                 {count}
               </div>
-              <div className="mt-2 text-[15px] font-semibold leading-tight" style={{ color: "var(--text)" }}>
+              <div className="mt-2 text-[14px] font-semibold leading-tight sm:text-[15px]" style={{ color: "var(--text)" }}>
                 {label}
-              </div>
-              <div className="mt-2 flex items-start justify-center gap-1.5 text-[14px] leading-[1.35]" style={{ color: "var(--text2)" }}>
-                <Icon size={16} weight="regular" className="mt-0.5 shrink-0" aria-hidden="true" style={{ color }} />
-                <span>{helper}</span>
               </div>
             </div>
           ))}
@@ -135,12 +118,39 @@ export default function CompareScoreSummary({
 
         {story.insights.length > 0 && (
           <div
-            className="mt-4 space-y-3 rounded-2xl border p-4 text-[16px] leading-[1.5]"
-            style={{ borderColor: "var(--border)", background: "var(--surface2)", color: "var(--text)" }}
+            className="mt-4 overflow-hidden rounded-2xl border"
+            style={{ borderColor: "var(--border)", background: "var(--surface2)" }}
+            aria-label="Inzichten"
           >
-            {story.insights.map((insight) => (
-              <p key={insight}>{insight}</p>
-            ))}
+            <div className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>
+              Inzichten
+            </div>
+            {story.insights.map((insight, index) => {
+              const meta = INSIGHT_STYLE[insight.kind];
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={`${insight.kind}-${insight.title}`}
+                  className="flex gap-3 px-4 py-3.5"
+                  style={index > 0 ? { borderTop: "1px solid var(--border)" } : undefined}
+                >
+                  <span
+                    className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-xl"
+                    style={{ color: meta.color, background: `color-mix(in srgb, ${meta.color} 10%, transparent)` }}
+                  >
+                    <Icon size={17} weight="duotone" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold leading-snug" style={{ color: "var(--text)" }}>
+                      {insight.title}
+                    </p>
+                    <p className="mt-0.5 text-[14px] leading-[1.45]" style={{ color: "var(--text2)" }}>
+                      {insight.body}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

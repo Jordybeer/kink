@@ -1,16 +1,17 @@
 "use client";
-import { Backspace, Fingerprint, SpinnerGap } from "@phosphor-icons/react";
+import { Backspace, Check, Fingerprint, SpinnerGap } from "@phosphor-icons/react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SHAKE_ANIM, useMotionSafe } from "@/lib/motion";
 import { verifyPin } from "@/lib/crypto";
 import { verifyBiometric } from "@/lib/webauthn";
+import { APP_LOCK_PIN_LENGTH, LEGACY_APP_LOCK_PIN_MAX_LENGTH } from "@/lib/appLockPin";
 
 const COOLDOWN_S = 30;
 const MAX_ATTEMPTS = 5;
-const PIN_LENGTH = 4;
+const PIN_LENGTH = APP_LOCK_PIN_LENGTH;
 
-const KEYS = ["1","2","3","4","5","6","7","8","9","","0","backspace"];
+const KEYS = ["1","2","3","4","5","6","7","8","9","submit","0","backspace"];
 
 interface Props {
   storedHash: string | null;
@@ -26,8 +27,9 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const [bioLoading, setBioLoading] = useState(false);
   const [bioError, setBioError] = useState(false);
+  const [legacyPinMode, setLegacyPinMode] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
 
-  // Auto-trigger biometric on mount if available
   useEffect(() => {
     if (biometricCredentialId) tryBiometric();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,30 +56,81 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
     }
   }
 
-  async function handleKey(k: string) {
-    if (cooldownLeft > 0) return;
-    if (k === "backspace") { setDigits(d => d.slice(0, -1)); return; }
-    if (digits.length >= PIN_LENGTH) return;
-    const next = [...digits, k];
-    setDigits(next);
-    if (next.length < PIN_LENGTH) return;
+  function registerFailedAttempt(keepDigitsForLegacy: boolean) {
+    setShake(true);
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
 
-    if (!storedHash) return;
-    const ok = await verifyPin(next.join(""), storedHash);
-    if (ok) {
-      onUnlock();
-    } else {
-      setShake(true);
-      setTimeout(() => { setShake(false); setDigits([]); }, 500);
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      if (newAttempts >= MAX_ATTEMPTS) {
-        setAttempts(0);
-        setCooldownLeft(COOLDOWN_S);
-        setDigits([]);
+    if (newAttempts >= MAX_ATTEMPTS) {
+      setAttempts(0);
+      setCooldownLeft(COOLDOWN_S);
+      setDigits([]);
+      setLegacyPinMode(false);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
+
+    if (keepDigitsForLegacy) {
+      setLegacyPinMode(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
+
+    setTimeout(() => {
+      setShake(false);
+      setDigits([]);
+      setLegacyPinMode(false);
+    }, 500);
+  }
+
+  async function verifyEnteredPin(candidate: string, allowLegacyContinuation: boolean) {
+    if (!storedHash || pinLoading) return;
+    setPinLoading(true);
+    try {
+      const ok = await verifyPin(candidate, storedHash);
+      if (ok) {
+        onUnlock();
+        return;
       }
+      registerFailedAttempt(allowLegacyContinuation);
+    } finally {
+      setPinLoading(false);
     }
   }
+
+  async function handleKey(k: string) {
+    if (cooldownLeft > 0 || pinLoading || shake) return;
+
+    if (k === "backspace") {
+      const next = digits.slice(0, -1);
+      setDigits(next);
+      if (next.length < PIN_LENGTH) setLegacyPinMode(false);
+      return;
+    }
+
+    if (k === "submit") {
+      if (!legacyPinMode || digits.length <= PIN_LENGTH) return;
+      await verifyEnteredPin(digits.join(""), false);
+      return;
+    }
+
+    const maxLength = legacyPinMode ? LEGACY_APP_LOCK_PIN_MAX_LENGTH : PIN_LENGTH;
+    if (digits.length >= maxLength) return;
+
+    const next = [...digits, k];
+    setDigits(next);
+
+    if (next.length === PIN_LENGTH && !legacyPinMode) {
+      await verifyEnteredPin(next.join(""), true);
+      return;
+    }
+
+    if (legacyPinMode && next.length === LEGACY_APP_LOCK_PIN_MAX_LENGTH) {
+      await verifyEnteredPin(next.join(""), false);
+    }
+  }
+
+  const indicatorCount = Math.max(PIN_LENGTH, digits.length);
 
   return (
     <motion.div
@@ -99,11 +152,10 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
           boxShadow: "0 8px 32px var(--scrim)",
         }}
       >
-        <h2 style={{ margin: "0 0 0.25rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
+        <h2 style={{ margin: "0 0 0.75rem", fontSize: "0.9375rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
           KinkSync ontgrendelen
         </h2>
 
-        {/* Biometric button */}
         {biometricCredentialId && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.25rem", marginTop: "0.5rem" }}>
             <motion.button
@@ -142,18 +194,16 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
           </div>
         )}
 
-        {/* PIN pad — only shown when PIN is set */}
         {storedHash && (
           <>
-            {/* Dot indicators */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={shake ? "shake" : "normal"}
                 animate={shake && !t.reduced ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
                 transition={t.reduced ? t.fast : SHAKE_ANIM}
-                style={{ display: "flex", justifyContent: "center", gap: "0.875rem", marginBottom: "1.25rem" }}
+                style={{ display: "flex", justifyContent: "center", gap: "0.875rem", marginBottom: legacyPinMode ? "0.5rem" : "1.25rem" }}
               >
-                {Array.from({ length: PIN_LENGTH }, (_, i) => (
+                {Array.from({ length: indicatorCount }, (_, i) => (
                   <div key={i} style={{
                     width: 12, height: 12, borderRadius: "9999px",
                     background: i < digits.length ? "var(--accent)" : "var(--border)",
@@ -163,6 +213,12 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
               </motion.div>
             </AnimatePresence>
 
+            {legacyPinMode && cooldownLeft === 0 && (
+              <p role="status" style={{ textAlign: "center", fontSize: "0.6875rem", lineHeight: 1.35, color: "var(--text2)", margin: "0 0 0.75rem" }}>
+                PIN niet herkend. Had je eerder 5–8 cijfers? Vul de rest in en tik op ✓.
+              </p>
+            )}
+
             {cooldownLeft > 0 && (
               <p style={{ textAlign: "center", fontSize: "0.8125rem", color: "var(--hard-no)", marginBottom: "1rem" }}>
                 Wacht {cooldownLeft}s
@@ -170,27 +226,51 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
             )}
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
-              {KEYS.map((k, i) => (
-                <motion.button
-                  key={i}
-                  aria-label={k === "backspace" ? "Laatste cijfer wissen" : k || undefined}
-                  onClick={() => k && handleKey(k)}
-                  disabled={!k || cooldownLeft > 0}
-                  whileTap={k && cooldownLeft === 0 ? t.tap : undefined}
-                  style={{
-                    height: "3.25rem", borderRadius: "0.75rem",
-                    fontWeight: 600, cursor: k && cooldownLeft === 0 ? "pointer" : "default",
-                    background: k ? "var(--surface3)" : "transparent",
-                    border: k ? "1px solid var(--border)" : "none",
-                    color: k === "backspace" ? "var(--text2)" : "var(--text)",
-                    fontSize: "1.375rem",
-                    opacity: (!k || cooldownLeft > 0) ? (k ? 0.4 : 0) : 1,
-                    transition: "opacity 150ms ease, background 150ms ease",
-                  }}
-                >
-                  {k === "backspace" ? <Backspace size={20} aria-hidden="true" /> : k}
-                </motion.button>
-              ))}
+              {KEYS.map((k, i) => {
+                const submitEnabled = k === "submit" && legacyPinMode && digits.length > PIN_LENGTH;
+                const keyEnabled = k === "submit" ? submitEnabled : !!k;
+                const disabled = !keyEnabled || cooldownLeft > 0 || pinLoading || shake;
+                const visible = k !== "submit" || submitEnabled;
+                const ariaLabel = !visible
+                  ? undefined
+                  : k === "backspace"
+                    ? "Laatste cijfer wissen"
+                    : k === "submit"
+                      ? "Oudere PIN bevestigen"
+                      : k || undefined;
+
+                return (
+                  <motion.button
+                    key={i}
+                    aria-label={ariaLabel}
+                    aria-hidden={!visible ? true : undefined}
+                    tabIndex={visible ? undefined : -1}
+                    onClick={() => keyEnabled && handleKey(k)}
+                    disabled={disabled}
+                    whileTap={!disabled ? t.tap : undefined}
+                    style={{
+                      height: "3.25rem", borderRadius: "0.75rem",
+                      fontWeight: 600, cursor: !disabled ? "pointer" : "default",
+                      background: visible ? "var(--surface3)" : "transparent",
+                      border: visible ? "1px solid var(--border)" : "none",
+                      color: k === "backspace" || k === "submit" ? "var(--text2)" : "var(--text)",
+                      fontSize: "1.375rem",
+                      opacity: visible ? (disabled ? 0.4 : 1) : 0,
+                      transition: "opacity 150ms ease, background 150ms ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                    }}
+                  >
+                    {k === "backspace"
+                      ? <Backspace size={20} aria-hidden="true" />
+                      : k === "submit"
+                        ? <Check size={20} weight="bold" aria-hidden="true" />
+                        : k}
+                  </motion.button>
+                );
+              })}
             </div>
           </>
         )}

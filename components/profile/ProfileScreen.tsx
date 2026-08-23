@@ -273,6 +273,10 @@ export default function ProfilePage({ params }: Props) {
         />
       </div>
 
+      {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
+        <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} />
+      )}
+
       {!shared && (
         <div className="mx-4 mb-3">
           <Link
@@ -486,12 +490,6 @@ export default function ProfilePage({ params }: Props) {
               transition={transition.fast}
               className="px-4 pt-3 pb-5"
             >
-              {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
-                <div className="-mx-4 -mt-3">
-                  <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} />
-                </div>
-              )}
-
               {totalRated === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>

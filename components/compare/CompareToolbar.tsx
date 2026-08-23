@@ -24,8 +24,8 @@ interface Props {
 const RESULT_OPTIONS: ReadonlyArray<{ id: CompareResultFilter; label: string; helper: string }> = [
   { id: "shared", label: "Zelfde interesse", helper: "Aan beide kanten positief" },
   { id: "complementary", label: "Vult elkaar aan", helper: "Twee kanten van dezelfde voorkeur passen bij elkaar" },
-  { id: "discuss", label: "Bespreken", helper: "Nog niet helemaal duidelijk" },
-  { id: "soft", label: "Zachte verschillen", helper: "De ene is duidelijk enthousiaster" },
+  { id: "discuss", label: "Bespreekbaar", helper: "Nog niet helemaal duidelijk" },
+  { id: "soft", label: "Verschillen", helper: "De ene is duidelijk enthousiaster" },
   { id: "boundaries", label: "Grenzen", helper: "Harde grenzen en duidelijke botsingen" },
 ];
 

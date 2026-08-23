@@ -8,6 +8,7 @@ import { defaultQuestionnaireSetup, normalizeStoredQuestionnaireProfiles } from 
 import { partnerDirectionalKinkId, stripDeprecatedDirectionalEntries, stripDeprecatedDirectionalProfile } from "@/lib/directionality";
 import { STORE_PERSIST_VERSION } from "@/lib/storePersistVersion";
 import { generateProfileVerificationCode, getProfileVerificationCode } from "@/lib/profileVerification";
+import { sanitizeBdsmtestUrl } from "@/lib/profileSanitizePrimitives";
 import {
   createConsentLedgerEvent,
   createConsentSnapshot,
@@ -95,6 +96,35 @@ const AUTO_SNAPSHOT_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 export { STORE_PERSIST_VERSION };
 
+/**
+ * De sanitizer kwam te laat voor wie al binnen was.
+ *
+ * `sanitizeBdsmtestUrl` bewaakt sinds kort de importgrens, maar bewaakte niet
+ * wat er vóór die fix al in localStorage stond. Een profiel dat toen is
+ * geïmporteerd met een vreemde `bdsmtestUrl` overleeft hydration ongewijzigd en
+ * bereikt nog steeds de `href` van "Origineel resultaat openen". Deze migratie
+ * haalt die achterstand in: één keer, bij het optillen naar v25.
+ */
+export function migrateStoredBdsmtestUrlV25<T extends {
+  profiles?: Profile[];
+}>(
+  state: T,
+  version: number,
+): T {
+  if (version >= 25) return state;
+  if (!state.profiles) return state;
+
+  state.profiles = state.profiles.map((profile) => {
+    if (profile.bdsmtestUrl === undefined) return profile;
+    const clean = sanitizeBdsmtestUrl(profile.bdsmtestUrl);
+    if (clean === profile.bdsmtestUrl) return profile;
+    const { bdsmtestUrl: _dropped, ...rest } = profile;
+    return clean ? { ...rest, bdsmtestUrl: clean } : (rest as Profile);
+  });
+
+  return state;
+}
+
 export function migrateStoredDirectionalityV24<T extends {
   profiles?: Profile[];
   profileSnapshots?: ProfileSnapshot[];
@@ -102,7 +132,10 @@ export function migrateStoredDirectionalityV24<T extends {
   state: T,
   version: number,
 ): T {
-  if (version >= STORE_PERSIST_VERSION) return state;
+  // Pin op 24, niet op STORE_PERSIST_VERSION. Deze migratie hoort bij die ene
+  // versiestap; hing hij aan de globale constante, dan zou elke volgende bump
+  // hem stilletjes opnieuw over al gemigreerde data laten lopen.
+  if (version >= 24) return state;
 
   if (state.profiles) {
     // Preserve the previous proof as a cryptographic chain anchor. Because the
@@ -722,6 +755,7 @@ export const useStore = create<State>()(
           state.profiles = normalizeStoredQuestionnaireProfiles(state.profiles);
         }
         migrateStoredDirectionalityV24(state, version);
+        migrateStoredBdsmtestUrlV25(state, version);
         return state;
       },
     }

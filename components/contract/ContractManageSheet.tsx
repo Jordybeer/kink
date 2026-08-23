@@ -7,19 +7,25 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { deleteContractArtifactsForSeries } from "@/lib/contractArtifacts";
 import {
   contractBucket,
   currentContractVersion,
   type ContractAction,
-  type ContractExchangeEnvelope,
   type ContractSeries,
 } from "@/lib/contractLifecycle";
+import type { ContractLineageEnvelope } from "@/lib/contractLineage";
 import {
   createContractReceipt,
   createContractRequest,
   requestInstruction,
   verifyAndApplyContractResponse,
 } from "@/lib/contractProtocol";
+import {
+  canSelfSignLocalDevContract,
+  completeLocalDevContractAction,
+} from "@/lib/devLocalContract";
+import { syncDevTestToolsFromLocation } from "@/lib/devTestTools";
 import { decodeContractEnvelope, encodeContractEnvelope } from "@/lib/contractQr";
 import ContractQrDisplay from "@/components/contract/ContractQrDisplay";
 import ContractQrScannerSheet from "@/components/contract/ContractQrScannerSheet";
@@ -58,6 +64,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devTestToolsEnabled, setDevTestToolsEnabled] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +76,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
     setScannerOpen(false);
     setBusy(false);
     setError(null);
+    setDevTestToolsEnabled(syncDevTestToolsFromLocation());
   }, [open, series]);
 
   const bucket = contractBucket(workingSeries, profiles);
@@ -76,7 +84,13 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
   const participantProfiles = workingSeries.participants.map((participant) =>
     profiles.find((profile) => profile.id === participant.profileId));
   const localProfiles = participantProfiles.filter(owned);
-  const canManage = localProfiles.length === 1;
+  const localDevPair = participantProfiles[0]
+    && participantProfiles[1]
+    && canSelfSignLocalDevContract(participantProfiles[0], participantProfiles[1])
+    ? [participantProfiles[0], participantProfiles[1]] as const
+    : null;
+  const canLocalDevManage = devTestToolsEnabled && localDevPair !== null;
+  const canManage = localProfiles.length === 1 || canLocalDevManage;
   const profilesAvailable = participantProfiles.every(Boolean);
 
   const menuActions = useMemo(() => {
@@ -105,6 +119,37 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
       if (action === "reactivate" && !currentVersion.content) {
         throw new Error("Dit historische contract bevat geen volledige getekende versie en kan daarom niet veilig worden heractiveerd.");
       }
+
+      if (canLocalDevManage && localDevPair) {
+        const actor = await sealProfileConsent(localDevPair[0].id);
+        const responder = await sealProfileConsent(localDevPair[1].id);
+        if (!actor || !responder) {
+          throw new Error("Beide lokale profielen moeten cryptografisch kunnen worden bevestigd.");
+        }
+        const ownerKeys = useStore.getState().profileOwnerKeys;
+        const actorKey = ownerKeys.find((key) => key.profileId === actor.id);
+        const responderKey = ownerKeys.find((key) => key.profileId === responder.id);
+        if (!actorKey || !responderKey) {
+          throw new Error("De lokale eigendomssleutel van één van de profielen ontbreekt.");
+        }
+        const result = await completeLocalDevContractAction({
+          series: workingSeries,
+          action,
+          actor,
+          responder,
+          actorKey,
+          responderKey,
+          ...(action === "pause" ? { reason: "Tijdelijk gepauzeerd" as const } : {}),
+          ...(action === "stop" ? { reason: "Dynamiek beëindigd" as const } : {}),
+          ...(note.trim() ? { note: note.trim() } : {}),
+        });
+        upsertSeries(result.series);
+        setWorkingSeries(result.series);
+        setView("complete");
+        showToast({ message: `${actionLabel(action)} lokaal bevestigd in testmodus.`, variant: "success" });
+        return;
+      }
+
       const actor = localProfiles[0];
       const counterparty = participantProfiles.find((profile) => profile?.id !== actor.id);
       if (!counterparty) throw new Error("Het profiel van de tweede partij ontbreekt.");
@@ -177,16 +222,43 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
   }
 
   function showPendingRequest() {
-    if (!workingSeries.pendingRequest) return;
-    const envelope: ContractExchangeEnvelope = {
+    const request = workingSeries.pendingRequest;
+    if (!request) return;
+    const event = workingSeries.events.at(-1);
+    if (!event
+      || event.requestId !== request.requestId
+      || event.actorProfileId !== request.actorProfileId
+      || event.counterpartyProfileId !== request.counterpartyProfileId
+      || (event.previousEventHash ?? null) !== (request.previousEventHash ?? null)) {
+      setError("De lokale contractgeschiedenis voor dit openstaande verzoek ontbreekt of is verouderd.");
+      return;
+    }
+    const envelope: ContractLineageEnvelope = {
       schema: 1,
       kind: "request",
-      request: workingSeries.pendingRequest,
+      request,
       series: workingSeries,
+      event,
     };
     setEncoded(encodeContractEnvelope(envelope));
-    setAction(workingSeries.pendingRequest.action);
+    setAction(request.action);
     setView("qr");
+  }
+
+  async function permanentlyDeleteSeries() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteContractArtifactsForSeries(workingSeries.id);
+      deleteSeries(workingSeries.id);
+      showToast({ message: "Contract, lokale geschiedenis en getekende documenten permanent verwijderd." });
+      onClose();
+    } catch {
+      setError("Permanent verwijderen is niet volledig gelukt. Het contract blijft bewaard zodat er geen verborgen documentrest achterblijft.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -230,19 +302,22 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 {bucket === "archive" && (
                   <button
                     type="button"
-                    onClick={() => {
-                      deleteSeries(workingSeries.id);
-                      showToast({ message: "Contract en lokale geschiedenis permanent verwijderd." });
-                      onClose();
-                    }}
-                    className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium"
+                    disabled={busy}
+                    onClick={() => void permanentlyDeleteSeries()}
+                    className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium disabled:opacity-50"
                     style={{ color: "var(--hard-no)", border: "1px solid var(--border)" }}
                   >
                     <Trash size={18} aria-hidden="true" />
-                    Permanent verwijderen
+                    {busy ? "Permanent verwijderen…" : "Permanent verwijderen"}
                   </button>
                 )}
               </div>
+              {canLocalDevManage && (
+                <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                  <span className="font-medium" style={{ color: "var(--accent)" }}>Testmodus.</span>{" "}
+                  Beide lokale profielen kunnen deze acties op dit toestel bevestigen.
+                </p>
+              )}
               {!profilesAvailable && (
                 <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
                   Heractiveren is niet mogelijk omdat een gekoppeld profiel niet meer beschikbaar is.
@@ -272,6 +347,11 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                       ? "Het contract blijft gepauzeerd totdat de tweede partij deze hervatting op het eigen toestel bevestigt."
                       : "Het contract wordt pas opnieuw actief nadat beide partijen de heractivering bevestigen."}
               </p>
+              {canLocalDevManage && (
+                <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--accent)" }}>
+                  Testmodus: de tweede lokale bevestiging gebeurt op dit toestel.
+                </p>
+              )}
               {(action === "pause" || action === "stop") && (
                 <div className="mt-4 rounded-xl px-3 py-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                   <p className="text-xs" style={{ color: "var(--text2)" }}>Reden</p>

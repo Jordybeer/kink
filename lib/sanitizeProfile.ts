@@ -25,6 +25,7 @@ import {
   MAX_NAME_LEN,
   MAX_ROLE_LEN,
   sanitizeAvatar,
+  sanitizeBdsmtestUrl,
   VALID_LEVELS,
 } from "@/lib/profileSanitizePrimitives";
 
@@ -153,9 +154,8 @@ export function sanitizeProfileFull(raw: unknown, now: number = Date.now()): Pro
   if (typeof r.fetLifeUsername === "string" && r.fetLifeUsername.trim()) {
     profile.fetLifeUsername = clamp(r.fetLifeUsername, MAX_FREE_TEXT_LEN);
   }
-  if (typeof r.bdsmtestUrl === "string" && r.bdsmtestUrl.trim()) {
-    profile.bdsmtestUrl = clamp(r.bdsmtestUrl, MAX_FREE_TEXT_LEN);
-  }
+  const bdsmtestUrl = sanitizeBdsmtestUrl(r.bdsmtestUrl);
+  if (bdsmtestUrl) profile.bdsmtestUrl = bdsmtestUrl;
   if (typeof r.privateNote === "string" && r.privateNote.trim()) {
     profile.privateNote = clamp(r.privateNote, MAX_COMMENT_LEN);
   }

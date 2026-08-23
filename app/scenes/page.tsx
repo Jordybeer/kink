@@ -7,14 +7,15 @@ import { sceneDetailHref } from "@/lib/localRoutes";
 import AftercareSheet from "@/components/AftercareSheet";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
-import { FilmSlate, Play, Plus, Trash } from "@phosphor-icons/react";
+import ContextMenu from "@/components/ui/ContextMenu";
+import { DotsThree, FilmSlate, Play, Plus, Trash } from "@phosphor-icons/react";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { SceneRecord } from "@/types";
 
 const TRAFFIC = {
-  green: { label: "Geweldig",    color: "var(--yes)"     },
-  amber: { label: "Goed, maar…", color: "var(--maybe)"   },
-  red:   { label: "Zwaar",        color: "var(--hard-no)" },
+  green: { label: "Geweldig", color: "var(--yes)" },
+  amber: { label: "Goed, maar…", color: "var(--maybe)" },
+  red: { label: "Zwaar", color: "var(--hard-no)" },
 };
 
 function intensityCounts(items: SceneRecord["items"]) {
@@ -33,6 +34,7 @@ function SceneCard({
   onAftercare: (id: string) => void;
 }) {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const counts = intensityCounts(scene.items);
   const aftercare = scene.aftercare;
   const traffic = aftercare ? TRAFFIC[aftercare.trafficLight] : null;
@@ -44,54 +46,58 @@ function SceneCard({
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <article className="rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
       {traffic && (
         <div
-          className="flex items-center gap-2.5 px-4 py-2.5"
+          className="flex items-center gap-2.5 rounded-t-[15px] px-4 py-2.5"
           style={{ background: `color-mix(in srgb, ${traffic.color} 8%, transparent)`, borderBottom: "1px solid var(--border)" }}
         >
-          <span className="w-2.5 h-2.5 rounded-full flex-none" style={{ background: traffic.color }} aria-hidden="true" />
+          <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: traffic.color }} aria-hidden="true" />
           <span className="text-xs font-semibold" style={{ color: traffic.color }}>{traffic.label}</span>
-          <span className="text-xs ml-auto" style={{ color: "var(--text2)" }}>{date}</span>
+          <span className="ml-auto text-xs" style={{ color: "var(--text2)" }}>{date}</span>
         </div>
       )}
 
-      <div className="p-4 flex flex-col gap-2">
-        <div>
-          <p className="text-sm font-semibold">{scene.title}</p>
-          <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+      <div className="flex flex-col gap-3 p-4">
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold">{scene.title}</p>
+          <p className="mt-0.5 text-xs" style={{ color: "var(--text2)" }}>
             {scene.profileAName} &amp; {scene.profileBName}
             {!traffic && ` · ${date}${scene.plannedTime ? ` · ${scene.plannedTime}` : ""}`}
           </p>
         </div>
 
         {scene.items.length > 0 && (
-          <div className="flex gap-1.5 flex-wrap">
-            {counts.zacht  > 0 && <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--willing) 15%, transparent)", color: "var(--willing)" }}>{counts.zacht}× zacht</span>}
-            {counts.midden > 0 && <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--maybe) 15%, transparent)", color: "var(--maybe)" }}>{counts.midden}× midden</span>}
-            {counts.intens > 0 && <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--hard-no) 15%, transparent)", color: "var(--hard-no)" }}>{counts.intens}× intens</span>}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {counts.zacht > 0 && <span className="rounded-full px-2 py-0.5 text-[11px]" style={{ background: "color-mix(in srgb, var(--willing) 15%, transparent)", color: "var(--willing)" }}>{counts.zacht}× zacht</span>}
+            {counts.midden > 0 && <span className="rounded-full px-2 py-0.5 text-[11px]" style={{ background: "color-mix(in srgb, var(--maybe) 15%, transparent)", color: "var(--maybe)" }}>{counts.midden}× midden</span>}
+            {counts.intens > 0 && <span className="rounded-full px-2 py-0.5 text-[11px]" style={{ background: "color-mix(in srgb, var(--hard-no) 15%, transparent)", color: "var(--hard-no)" }}>{counts.intens}× intens</span>}
             <span className="text-xs" style={{ color: "var(--text2)" }}>{scene.items.length} activiteiten</span>
           </div>
         )}
 
-        {aftercare?.wentWell && (
-          <p className="text-xs line-clamp-2" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
-            <span className="font-medium" style={{ color: "var(--text)" }}>Wat werkte goed: </span>
-            {aftercare.wentWell}
-          </p>
-        )}
-        {aftercare?.remember && (
-          <p className="text-xs line-clamp-2" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
-            <span className="font-medium" style={{ color: "var(--text)" }}>Onthouden: </span>
-            {aftercare.remember}
-          </p>
+        {(aftercare?.wentWell || aftercare?.remember) && (
+          <div className="space-y-1.5">
+            {aftercare?.wentWell && (
+              <p className="line-clamp-2 text-xs" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
+                <span className="font-medium" style={{ color: "var(--text)" }}>Wat werkte goed: </span>
+                {aftercare.wentWell}
+              </p>
+            )}
+            {aftercare?.remember && (
+              <p className="line-clamp-2 text-xs" style={{ color: "var(--text2)", lineHeight: 1.5 }}>
+                <span className="font-medium" style={{ color: "var(--text)" }}>Onthouden: </span>
+                {aftercare.remember}
+              </p>
+            )}
+          </div>
         )}
 
-        <div className="flex gap-2 mt-1">
+        <div className="flex items-center gap-2 pt-0.5">
           {scene.status === "completed" ? (
             <button
               onClick={() => router.push(sceneDetailHref(scene.id))}
-              className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring"
+              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               Bekijken
@@ -100,43 +106,60 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90 focus-ring inline-flex items-center justify-center gap-1.5"
+                className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
-                <Play size={12} weight="fill" aria-hidden="true" /> Spelen
+                <Play size={13} weight="fill" aria-hidden="true" /> Spelen
               </button>
               <button
                 onClick={() => onAftercare(scene.id)}
-                className="flex-1 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-90 focus-ring"
+                className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               >
                 Afronden
               </button>
             </>
           )}
-          <button
-            onClick={onDelete}
-            className="px-3 py-2 rounded-lg text-xs transition-opacity hover:opacity-70 focus-ring"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
-            aria-label="Scène verwijderen"
+
+          <ContextMenu
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            items={[
+              {
+                label: "Scène verwijderen",
+                icon: <Trash size={16} aria-hidden="true" />,
+                danger: true,
+                onClick: onDelete,
+              },
+            ]}
           >
-            <Trash size={14} aria-hidden="true" />
-          </button>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((current) => !current)}
+              className="focus-ring flex h-11 w-11 items-center justify-center rounded-xl"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+              aria-label={`Meer acties voor ${scene.title}`}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              <DotsThree size={20} weight="bold" aria-hidden="true" />
+            </button>
+          </ContextMenu>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
 const SECTION_INVITES: Record<string, string> = {
-  planned:   "Niets gepland. Kies een moment en zet het vast.",
-  drafts:    "Geen concepten. Half afgemaakte ideeën wachten hier.",
+  planned: "Niets gepland. Kies een moment en zet het vast.",
+  drafts: "Geen concepten. Half afgemaakte ideeën wachten hier.",
   completed: "Nog niets afgerond. Na het spelen leeft de scène hier verder.",
 };
 
 function EmptySection({ invite }: { invite: string }) {
   return (
-    <p className="text-sm text-center py-6" style={{ color: "var(--text2)" }}>{invite}</p>
+    <p className="py-6 text-center text-sm" style={{ color: "var(--text2)" }}>{invite}</p>
   );
 }
 
@@ -158,14 +181,14 @@ export default function ScenesPage() {
 
   if (!_hasHydrated) return <PageShell loading />;
 
-  const planned   = scenes.filter((s) => s.status === "planned").sort((a, b) => (a.plannedDate ?? "").localeCompare(b.plannedDate ?? ""));
-  const drafts    = scenes.filter((s) => s.status === "draft").sort((a, b) => b.updatedAt - a.updatedAt);
+  const planned = scenes.filter((s) => s.status === "planned").sort((a, b) => (a.plannedDate ?? "").localeCompare(b.plannedDate ?? ""));
+  const drafts = scenes.filter((s) => s.status === "draft").sort((a, b) => b.updatedAt - a.updatedAt);
   const completed = scenes.filter((s) => s.status === "completed").sort((a, b) => (b.aftercare?.completedAt ?? 0) - (a.aftercare?.completedAt ?? 0));
 
   const sections: { key: string; label: string; items: SceneRecord[] }[] = [
-    { key: "planned",   label: "Gepland",   items: planned },
-    { key: "drafts",    label: "Concepten", items: drafts },
-    { key: "completed", label: "Afgerond",  items: completed },
+    { key: "planned", label: "Gepland", items: planned },
+    { key: "drafts", label: "Concepten", items: drafts },
+    { key: "completed", label: "Afgerond", items: completed },
   ];
 
   return (
@@ -181,27 +204,27 @@ export default function ScenesPage() {
           ctaLabel="Plan een scène"
         />
       ) : (
-      <div className="flex flex-col gap-8">
-        {sections.map(({ key, label, items }) => (
-          <section key={key}>
-            <h2 className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>{label}</h2>
-            {items.length === 0 ? (
-              <EmptySection invite={SECTION_INVITES[key]} />
-            ) : (
-              <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
-                {items.map((scene) => (
-                  <SceneCard
-                    key={scene.id}
-                    scene={scene}
-                    onDelete={() => deleteScene(scene.id)}
-                    onAftercare={(id) => setAftercareTarget(id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
-      </div>
+        <div className="flex flex-col gap-8">
+          {sections.map(({ key, label, items }) => (
+            <section key={key}>
+              <h2 className="mb-3 text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--text2)" }}>{label}</h2>
+              {items.length === 0 ? (
+                <EmptySection invite={SECTION_INVITES[key]} />
+              ) : (
+                <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
+                  {items.map((scene) => (
+                    <SceneCard
+                      key={scene.id}
+                      scene={scene}
+                      onDelete={() => deleteScene(scene.id)}
+                      onAftercare={(id) => setAftercareTarget(id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          ))}
+        </div>
       )}
 
       {aftercareTarget && (

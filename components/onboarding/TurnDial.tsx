@@ -2,14 +2,15 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { LockKey, LockKeyOpen } from "@phosphor-icons/react";
+import { ArrowClockwise, LockKey, LockKeyOpen } from "@phosphor-icons/react";
 
 interface TurnDialProps {
   onComplete: () => void;
 }
 
-const END_ROTATION = 94;
-const COMPLETE_AT = 78;
+const END_ROTATION = 236;
+const COMPLETE_AT = 224;
+const ALMOST_AT = 168;
 const DETENT_DEGREES = 15;
 const MIN_GESTURE_MS = 320;
 const MIN_TRAVEL_PX = 56;
@@ -41,6 +42,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
   const [dragging, setDragging] = useState(false);
   const [armed, setArmed] = useState(false);
   const [done, setDone] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const rotationRef = useRef(0);
   const previousAngleRef = useRef<number | null>(null);
   const lastDetentRef = useRef(0);
@@ -50,6 +52,15 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
   const completingRef = useRef(false);
 
   const progressDegrees = Math.max(0, Math.min(rotation, END_ROTATION));
+  const hint = done
+    ? "Open."
+    : armed
+      ? "Loslaten om te openen"
+      : rotation >= ALMOST_AT
+        ? "Bijna…"
+        : rotation > 0
+          ? "Blijf draaien…"
+          : "Draai de kluisschijf naar rechts";
 
   function applyRotation(next: number, withFeedback = false) {
     rotationRef.current = next;
@@ -86,6 +97,7 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
     if (done) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
+    setHasInteracted(true);
     setDragging(true);
     setArmed(false);
     startedAtRef.current = performance.now();
@@ -139,9 +151,10 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
       return;
     }
 
+    // Een kluisschijf springt niet terug naar nul zodra je je hand verplaatst.
+    // Bewaar de opgebouwde draaihoek, zodat een telefoonduim comfortabel kan
+    // regrippen zonder dat de privacy-metafoor in vingergymnastiek verandert.
     setArmed(false);
-    lastDetentRef.current = 0;
-    applyRotation(0);
   }
 
   function cancelPointer(event: ReactPointerEvent<HTMLButtonElement>) {
@@ -153,16 +166,14 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
 
     setDragging(false);
     setArmed(false);
-    lastDetentRef.current = 0;
     resetGesture();
-    applyRotation(0);
   }
 
   return (
     <div className="mx-auto flex w-full max-w-[19rem] flex-col items-center px-2 py-1">
       <motion.button
         type="button"
-        aria-label="Draai open en ga naar KinkSync"
+        aria-label="Draai de kluisschijf naar rechts om KinkSync te openen"
         aria-describedby="onboarding-turn-dial-hint"
         data-testid="onboarding-turn-dial"
         onPointerDown={onPointerDown}
@@ -222,21 +233,30 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
         />
         <span
           aria-hidden="true"
-          className="absolute right-1.5 top-1/2 h-1 w-3 -translate-y-1/2 rounded-full"
-          style={{
-            background: "var(--accent)",
-            boxShadow: armed || done ? "0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent)" : "none",
-            transition: reduceMotion ? "none" : "box-shadow 180ms ease",
-          }}
-        />
+          className="pointer-events-none absolute inset-1.5"
+          style={{ transform: `rotate(${END_ROTATION}deg)` }}
+        >
+          <span
+            className="absolute left-1/2 top-0 h-3 w-1 -translate-x-1/2 rounded-full"
+            style={{
+              background: "var(--accent)",
+              boxShadow: armed || done ? "0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent)" : "none",
+              transition: reduceMotion ? "none" : "box-shadow 180ms ease",
+            }}
+          />
+        </span>
 
-        <span
+        <motion.span
           aria-hidden="true"
           className="absolute inset-[16%] flex items-start justify-center rounded-full pt-1.5"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: dragging || reduceMotion ? "none" : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
+          animate={!hasInteracted && !reduceMotion
+            ? { rotate: [0, 12, 0] }
+            : { rotate: rotation }}
+          transition={!hasInteracted && !reduceMotion
+            ? { duration: 0.68, delay: 0.7, ease: "easeInOut" }
+            : dragging || reduceMotion
+              ? { duration: 0 }
+              : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         >
           <span
             className="h-2.5 w-2.5 rounded-full"
@@ -246,7 +266,22 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
               transition: reduceMotion ? "none" : "background 160ms ease, box-shadow 160ms ease",
             }}
           />
-        </span>
+        </motion.span>
+
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-[12%] top-[10%] flex h-8 w-8 items-center justify-center rounded-full"
+          initial={false}
+          animate={{ opacity: hasInteracted || done ? 0 : 1, scale: hasInteracted || done ? 0.92 : 1 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
+          style={{
+            color: "var(--accent)",
+            background: "color-mix(in srgb, var(--surface) 84%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--accent) 28%, var(--border))",
+          }}
+        >
+          <ArrowClockwise size={19} weight="bold" />
+        </motion.span>
 
         <span
           aria-hidden="true"
@@ -278,10 +313,10 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
 
       <p
         id="onboarding-turn-dial-hint"
-        className="mt-[clamp(0.75rem,1.8dvh,1rem)] min-h-5 text-center text-sm font-semibold"
+        className="mt-[clamp(0.75rem,1.8dvh,1rem)] flex min-h-6 items-center justify-center text-center text-sm font-semibold leading-5"
         style={{ color: done || armed ? "var(--text)" : "var(--text2)" }}
       >
-        {done ? "Open." : armed ? "Loslaten om te openen" : "Draai met de klok mee"}
+        {hint}
       </p>
     </div>
   );

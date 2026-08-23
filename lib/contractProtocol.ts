@@ -3,9 +3,10 @@ import { canonicalJson, sha256Base64Url, verifyProfileConsent } from "@/lib/cons
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import {
   cloneSeries,
+  contractPairKey,
   contractParticipantFromProfile,
+  contractSummaryFromContent,
   contractVersionById,
-  createContractEvent,
   hashContractContent,
   signContractPayload,
   verifyContractProof,
@@ -17,14 +18,50 @@ import {
   type ContractReceiptPayload,
   type ContractSeries,
   type ContractSignatureProof,
+  type ContractVersion,
 } from "@/lib/contractLifecycle";
-
-const REQUEST_TTL_MS = 15 * 60 * 1000;
+import {
+  CONTRACT_REQUEST_TTL_MS,
+  authorizeContractRequestCreation,
+  authorizeContractResponse,
+  authorizeIncomingContractRequest,
+  contractRequestEventType,
+  contractResponseEventType,
+  contractStatusAfterRequest,
+  contractStatusAfterResponse,
+  contractTailHash,
+  type ContractStateMachineResult,
+} from "@/lib/contractStateMachine";
+import {
+  createContractLineageEvent,
+  lineageEventFromEnvelope,
+  lineageReceiptPayload,
+  verifyContractLineageEvent,
+  type ContractLineageEnvelope,
+  type ContractLineageReceiptPayload,
+} from "@/lib/contractLineage";
 
 function uid(): string {
   return crypto.randomUUID();
 }
 
+function stateMachineError(result: ContractStateMachineResult): string {
+  if (result.ok) return "";
+  if (result.reason === "pending_request") return "Er staat al een contractverzoek open.";
+  if (result.reason === "invalid_transition") return "Deze contractactie past niet bij de huidige status.";
+  if (result.reason === "invalid_version") return "De verwachte getekende contractversie ontbreekt of klopt niet.";
+  if (result.reason === "expired_request") return "Dit contractverzoek is verlopen.";
+  if (result.reason === "future_request" || result.reason === "invalid_lifetime") {
+    return "De geldigheidsduur van dit contractverzoek klopt niet.";
+  }
+  if (result.reason === "stale_tail" || result.reason === "forked_request") {
+    return "Dit contractverzoek sluit niet aan op de actuele contractgeschiedenis.";
+  }
+  if (result.reason === "bootstrap_not_allowed") {
+    return "Dit toestel mist de actuele contractgeschiedenis voor deze actie.";
+  }
+  return "De contractpartijen of contractreeks komen niet overeen.";
+}
 
 function bindProfileIdentity(
   series: ContractSeries,
@@ -58,6 +95,7 @@ function requestPayload(
   phase: "request" | "response",
   actorProfileId = request.actorProfileId,
   counterpartyProfileId = request.counterpartyProfileId,
+  lineagePreviousEventHash = request.previousEventHash,
 ): ContractActionPayload {
   return {
     schema: 1,
@@ -71,26 +109,53 @@ function requestPayload(
     counterpartyProfileId,
     createdAt: request.createdAt,
     expiresAt: request.expiresAt,
-    ...(request.previousEventHash ? { previousEventHash: request.previousEventHash } : {}),
+    ...(lineagePreviousEventHash ? { previousEventHash: lineagePreviousEventHash } : {}),
     ...(request.reason ? { reason: request.reason } : {}),
     ...(request.note ? { note: request.note } : {}),
   };
 }
 
-function eventTypeForRequest(action: ContractAction): ContractLifecycleEvent["type"] {
-  if (action === "activate") return "signature_added";
-  if (action === "pause") return "paused";
-  if (action === "resume") return "resume_requested";
-  if (action === "stop") return "stopped";
-  return "reactivation_requested";
+function requestsEqual(left: ContractPendingRequest, right: ContractPendingRequest): boolean {
+  return canonicalJson(left) === canonicalJson(right);
 }
 
-function eventTypeForResponse(action: ContractAction): ContractLifecycleEvent["type"] {
-  if (action === "activate") return "activated";
-  if (action === "pause") return "pause_acknowledged";
-  if (action === "resume") return "resumed";
-  if (action === "stop") return "stop_acknowledged";
-  return "reactivated";
+function proofsEqual(left: ContractSignatureProof | undefined, right: ContractSignatureProof): boolean {
+  return !!left && canonicalJson(left) === canonicalJson(right);
+}
+
+async function verifiedEnvelopeEvent(input: {
+  envelope: ContractExchangeEnvelope;
+  request: ContractPendingRequest;
+  type: ContractLifecycleEvent["type"];
+  proof: ContractSignatureProof;
+  actorProfileId: string;
+  counterpartyProfileId: string;
+  previousEventHash?: string;
+  includeRequestNote: boolean;
+  requireSeriesTailMatch?: boolean;
+}): Promise<ContractLifecycleEvent | null> {
+  const event = lineageEventFromEnvelope(input.envelope);
+  if (!event
+    || event.type !== input.type
+    || event.requestId !== input.request.requestId
+    || event.actorProfileId !== input.actorProfileId
+    || event.counterpartyProfileId !== input.counterpartyProfileId
+    || (event.previousEventHash ?? null) !== (input.previousEventHash ?? null)
+    || event.createdAt !== input.proof.signedAt
+    || !proofsEqual(event.proof, input.proof)) {
+    return null;
+  }
+  if (input.requireSeriesTailMatch
+    && input.envelope.series?.events.at(-1)?.eventHash !== event.eventHash) {
+    return null;
+  }
+  if (input.includeRequestNote
+    && ((event.reason ?? null) !== (input.request.reason ?? null)
+      || (event.note ?? null) !== (input.request.note ?? null))) {
+    return null;
+  }
+  if (!await verifyContractLineageEvent(event)) return null;
+  return event;
 }
 
 async function appendEvent(
@@ -101,8 +166,8 @@ async function appendEvent(
   request: ContractPendingRequest,
   proof: ContractSignatureProof,
 ): Promise<ContractSeries> {
-  const previousEventHash = series.events.at(-1)?.eventHash;
-  const event = await createContractEvent({
+  const previousEventHash = contractTailHash(series);
+  const event = await createContractLineageEvent({
     id: uid(),
     type,
     createdAt: proof.signedAt,
@@ -118,6 +183,106 @@ async function appendEvent(
   return { ...series, events: [...series.events, event], updatedAt: event.createdAt };
 }
 
+async function currentVersionIsAuthoritative(series: ContractSeries): Promise<boolean> {
+  const version = contractVersionById(series, series.currentVersionId);
+  if (!version?.content || version.state !== "signed" || version.legacySnapshotId) return false;
+  if (await hashContractContent(version.content) !== version.contentHash) return false;
+  if (series.participants.length !== 2) return false;
+
+  for (const participant of series.participants) {
+    if (!participant.keyId) return false;
+    const proof = version.signatures.find((candidate) => candidate.profileId === participant.profileId);
+    if (!proof || proof.keyId !== participant.keyId || !await verifyContractProof(version.content, proof)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function canonicalActivationVersion(
+  baseSeries: ContractSeries,
+  transportSeries: ContractSeries,
+  request: ContractPendingRequest,
+): ContractVersion {
+  const incoming = contractVersionById(transportSeries, request.versionId);
+  if (!incoming?.content) throw new Error("De volledige contractversie ontbreekt");
+  const initiatorProof = incoming.signatures.find((proof) => proof.profileId === request.actorProfileId);
+  if (!initiatorProof) throw new Error("De eerste contracthandtekening ontbreekt");
+  const existing = contractVersionById(baseSeries, request.versionId);
+  const nextNumber = existing?.number
+    ?? Math.max(0, ...baseSeries.versions.map((version) => version.number)) + 1;
+
+  return {
+    id: request.versionId,
+    number: nextNumber,
+    createdAt: existing?.createdAt ?? request.createdAt,
+    updatedAt: request.proof.signedAt,
+    contentHash: request.contentHash,
+    content: structuredClone(incoming.content),
+    summary: contractSummaryFromContent(incoming.content),
+    ...(existing?.note ? { note: existing.note } : {}),
+    state: "pending_signature",
+    signatures: [structuredClone(initiatorProof)],
+  };
+}
+
+function bootstrapParticipants(
+  transportSeries: ContractSeries,
+  trustedActor: Profile,
+  responder: Profile,
+): ContractSeries["participants"] {
+  const byId = new Map<string, Profile>([
+    [trustedActor.id, trustedActor],
+    [responder.id, responder],
+  ]);
+  return transportSeries.participants.map((participant) => {
+    const profile = byId.get(participant.profileId);
+    if (!profile) throw new Error("Een contractpartij ontbreekt");
+    return contractParticipantFromProfile(profile);
+  }) as ContractSeries["participants"];
+}
+
+function canonicalSeriesForIncomingRequest(input: {
+  currentSeries: ContractSeries | null;
+  transportSeries: ContractSeries;
+  request: ContractPendingRequest;
+  requestEvent: ContractLifecycleEvent;
+  trustedActor: Profile;
+  responder: Profile;
+}): ContractSeries {
+  const { currentSeries, transportSeries, request, requestEvent, trustedActor, responder } = input;
+  let series: ContractSeries;
+
+  if (currentSeries) {
+    series = cloneSeries(currentSeries);
+  } else {
+    series = {
+      id: request.seriesId,
+      pairKey: contractPairKey(request.actorProfileId, request.counterpartyProfileId),
+      participants: bootstrapParticipants(transportSeries, trustedActor, responder),
+      status: "draft",
+      createdAt: request.createdAt,
+      updatedAt: requestEvent.createdAt,
+      versions: [],
+      events: [],
+    };
+  }
+
+  if (request.action === "activate") {
+    const version = canonicalActivationVersion(series, transportSeries, request);
+    series.versions = [version, ...series.versions.filter((item) => item.id !== version.id)];
+    series.draftVersionId = version.id;
+  }
+
+  series.status = contractStatusAfterRequest(series, request.action);
+  series.pendingRequest = structuredClone(request);
+  series.events = [...series.events, structuredClone(requestEvent)];
+  series.updatedAt = requestEvent.createdAt;
+  bindProfileIdentity(series, trustedActor, request.proof);
+  bindProfileIdentity(series, responder);
+  return series;
+}
+
 export async function createContractRequest(input: {
   series: ContractSeries;
   action: ContractAction;
@@ -128,19 +293,30 @@ export async function createContractRequest(input: {
   note?: string;
 }): Promise<{ envelope: ContractExchangeEnvelope; series: ContractSeries }> {
   const { action, actor, counterparty, ownerKey } = input;
+  const createdAt = Date.now();
+  const authorization = authorizeContractRequestCreation({
+    series: input.series,
+    action,
+    actorProfileId: actor.id,
+    counterpartyProfileId: counterparty.id,
+    now: createdAt,
+  });
+  if (!authorization.ok) throw new Error(stateMachineError(authorization));
+  if ((action === "resume" || action === "reactivate")
+    && !await currentVersionIsAuthoritative(input.series)) {
+    throw new Error("De actuele contractversie kan niet cryptografisch als authority worden bevestigd.");
+  }
+
   const series = cloneSeries(input.series);
   bindProfileIdentity(series, actor);
   bindProfileIdentity(series, counterparty);
-  const versionId = action === "activate"
-    ? series.draftVersionId
-    : series.currentVersionId;
+  const versionId = action === "activate" ? series.draftVersionId : series.currentVersionId;
   const version = contractVersionById(series, versionId);
   if (!version || !versionId) throw new Error("De contractversie ontbreekt");
   if (version.content && await hashContractContent(version.content) !== version.contentHash) {
     throw new Error("De contractinhoud is gewijzigd");
   }
-  const createdAt = Date.now();
-  const previousEventHash = series.events.at(-1)?.eventHash;
+  const previousEventHash = contractTailHash(series);
   const unsigned: Omit<ContractPendingRequest, "proof"> = {
     requestId: uid(),
     action,
@@ -148,7 +324,7 @@ export async function createContractRequest(input: {
     versionId,
     contentHash: version.contentHash,
     createdAt,
-    expiresAt: createdAt + REQUEST_TTL_MS,
+    expiresAt: createdAt + CONTRACT_REQUEST_TTL_MS,
     actorProfileId: actor.id,
     counterpartyProfileId: counterparty.id,
     ...(previousEventHash ? { previousEventHash } : {}),
@@ -168,39 +344,44 @@ export async function createContractRequest(input: {
     version.signatures = [versionProof, ...version.signatures.filter((item) => item.profileId !== actor.id)];
     version.state = "pending_signature";
     version.updatedAt = Date.now();
-    if (!series.currentVersionId) series.status = "pending_signature";
-  } else if (action === "pause") {
-    series.status = "paused";
-  } else if (action === "resume") {
-    series.status = "resume_pending";
-  } else if (action === "stop") {
-    series.status = "stopped";
   }
+  series.status = contractStatusAfterRequest(series, action);
   series.pendingRequest = request;
   const withEvent = await appendEvent(
     series,
-    eventTypeForRequest(action),
+    contractRequestEventType(action),
     actor,
     counterparty.id,
     request,
     proof,
   );
+  const event = withEvent.events.at(-1)!;
   return {
     series: withEvent,
-    envelope: { schema: 1, kind: "request", request, series: withEvent },
+    envelope: { schema: 1, kind: "request", request, series: withEvent, event } as ContractLineageEnvelope,
   };
 }
 
 export async function verifyContractRequest(
   envelope: ContractExchangeEnvelope,
   trustedActor?: Profile,
+  currentSeries: ContractSeries | null = null,
+  now: number = Date.now(),
 ): Promise<boolean> {
   if (envelope.schema !== 1 || envelope.kind !== "request" || !envelope.series) return false;
   const { request, series } = envelope;
-  if (request.seriesId !== series.id) return false;
-  if (request.expiresAt < Date.now()) return false;
-  const actor = series.participants.find((participant) => participant.profileId === request.actorProfileId);
-  const counterparty = series.participants.find((participant) => participant.profileId === request.counterpartyProfileId);
+  const authorization = authorizeIncomingContractRequest({
+    localSeries: currentSeries,
+    transportSeries: series,
+    request,
+    now,
+  });
+  if (!authorization.ok) return false;
+
+  const actor = currentSeries?.participants.find((participant) => participant.profileId === request.actorProfileId)
+    ?? series.participants.find((participant) => participant.profileId === request.actorProfileId);
+  const counterparty = currentSeries?.participants.find((participant) => participant.profileId === request.counterpartyProfileId)
+    ?? series.participants.find((participant) => participant.profileId === request.counterpartyProfileId);
   if (!actor || !counterparty) return false;
   if (request.proof.profileId !== actor.profileId) return false;
   if (actor.keyId && actor.keyId !== request.proof.keyId) return false;
@@ -212,13 +393,30 @@ export async function verifyContractRequest(
     if (trustedConsent.proof.keyId !== request.proof.keyId) return false;
   }
   if (!await verifyContractProof(requestPayload(request, "request"), request.proof)) return false;
+
+  const requestEvent = await verifiedEnvelopeEvent({
+    envelope,
+    request,
+    type: contractRequestEventType(request.action),
+    proof: request.proof,
+    actorProfileId: request.actorProfileId,
+    counterpartyProfileId: request.counterpartyProfileId,
+    previousEventHash: request.previousEventHash,
+    includeRequestNote: true,
+    requireSeriesTailMatch: true,
+  });
+  if (!requestEvent) return false;
+
   const version = contractVersionById(series, request.versionId);
   if (!version || version.contentHash !== request.contentHash) return false;
-  if (version.content && await hashContractContent(version.content) !== version.contentHash) return false;
   if (request.action === "activate") {
-    if (!version.content) return false;
+    if (!version.content || await hashContractContent(version.content) !== version.contentHash) return false;
     const initiatorProof = version.signatures.find((proof) => proof.profileId === request.actorProfileId);
-    if (!initiatorProof || !await verifyContractProof(version.content, initiatorProof)) return false;
+    if (!initiatorProof
+      || initiatorProof.keyId !== request.proof.keyId
+      || !await verifyContractProof(version.content, initiatorProof)) return false;
+  } else if (request.action === "resume" || request.action === "reactivate") {
+    if (!currentSeries || !await currentVersionIsAuthoritative(currentSeries)) return false;
   }
   return true;
 }
@@ -228,19 +426,41 @@ export async function createContractResponse(input: {
   trustedActor: Profile;
   responder: Profile;
   ownerKey: ProfileOwnerKey;
+  currentSeries?: ContractSeries | null;
 }): Promise<{ envelope: ContractExchangeEnvelope; series: ContractSeries }> {
-  const sourceSeries = input.envelope.series;
-  if (input.envelope.kind !== "request" || !sourceSeries
-    || !await verifyContractRequest(input.envelope, input.trustedActor)) {
-    throw new Error("Dit verzoek is ongeldig of verlopen");
+  const transportSeries = input.envelope.series;
+  const currentSeries = input.currentSeries ?? null;
+  if (input.envelope.kind !== "request" || !transportSeries
+    || !await verifyContractRequest(input.envelope, input.trustedActor, currentSeries)) {
+    throw new Error("Dit verzoek is ongeldig, verlopen of sluit niet aan op de actuele contractgeschiedenis");
   }
   const request = input.envelope.request;
   if (input.responder.id !== request.counterpartyProfileId) {
     throw new Error("Dit verzoek hoort bij een ander profiel");
   }
-  let series = cloneSeries(sourceSeries);
+  const requestEvent = await verifiedEnvelopeEvent({
+    envelope: input.envelope,
+    request,
+    type: contractRequestEventType(request.action),
+    proof: request.proof,
+    actorProfileId: request.actorProfileId,
+    counterpartyProfileId: request.counterpartyProfileId,
+    previousEventHash: request.previousEventHash,
+    includeRequestNote: true,
+    requireSeriesTailMatch: true,
+  });
+  if (!requestEvent) throw new Error("De contractgeschiedenis in dit verzoek klopt niet");
+
+  let series = canonicalSeriesForIncomingRequest({
+    currentSeries,
+    transportSeries,
+    request,
+    requestEvent,
+    trustedActor: input.trustedActor,
+    responder: input.responder,
+  });
   const responseProof = await signContractPayload(
-    requestPayload(request, "response", input.responder.id, request.actorProfileId),
+    requestPayload(request, "response", input.responder.id, request.actorProfileId, requestEvent.eventHash),
     input.responder.id,
     input.ownerKey,
   );
@@ -263,23 +483,18 @@ export async function createContractResponse(input: {
     version.updatedAt = Date.now();
     series.currentVersionId = version.id;
     series.draftVersionId = undefined;
-    series.status = "active";
-  } else if (request.action === "pause") {
-    series.status = "paused";
-  } else if (request.action === "resume" || request.action === "reactivate") {
-    series.status = "active";
-  } else if (request.action === "stop") {
-    series.status = "stopped";
   }
+  series.status = contractStatusAfterResponse(request.action);
   series.pendingRequest = undefined;
   series = await appendEvent(
     series,
-    eventTypeForResponse(request.action),
+    contractResponseEventType(request.action),
     input.responder,
     request.actorProfileId,
     request,
     responseProof,
   );
+  const event = series.events.at(-1)!;
   return {
     series,
     envelope: {
@@ -287,9 +502,10 @@ export async function createContractResponse(input: {
       kind: "response",
       request,
       series,
+      event,
       responderProof: responseProof,
       ...(versionProof ? { versionProof } : {}),
-    },
+    } as ContractLineageEnvelope,
   };
 }
 
@@ -302,11 +518,11 @@ export async function verifyAndApplyContractResponse(input: {
     throw new Error("Geen geldig contractantwoord ontvangen");
   }
   const request = currentSeries.pendingRequest;
-  if (!request || request.requestId !== envelope.request.requestId) {
+  if (!request || !requestsEqual(request, envelope.request)) {
     throw new Error("Dit antwoord hoort niet bij het openstaande verzoek");
   }
-  if (request.expiresAt < Date.now()) throw new Error("De QR-sessie is verlopen");
-  if (request.seriesId !== currentSeries.id) throw new Error("Het openstaande verzoek hoort bij een ander contract");
+  const authorization = authorizeContractResponse({ currentSeries, request });
+  if (!authorization.ok) throw new Error(stateMachineError(authorization));
   if (envelope.responderProof.profileId !== request.counterpartyProfileId) {
     throw new Error("De bevestiging komt niet van de verwachte contractpartij");
   }
@@ -318,14 +534,30 @@ export async function verifyAndApplyContractResponse(input: {
     throw new Error("De bevestiging gebruikt een andere eigendomssleutel dan eerder vastgelegd");
   }
 
+  const previousEventHash = contractTailHash(currentSeries);
   const responsePayload = requestPayload(
     request,
     "response",
     request.counterpartyProfileId,
     request.actorProfileId,
+    previousEventHash,
   );
   if (!await verifyContractProof(responsePayload, envelope.responderProof)) {
     throw new Error("De bevestiging van de tweede partij klopt niet");
+  }
+
+  const responseEvent = await verifiedEnvelopeEvent({
+    envelope,
+    request,
+    type: contractResponseEventType(request.action),
+    proof: envelope.responderProof,
+    actorProfileId: request.counterpartyProfileId,
+    counterpartyProfileId: request.actorProfileId,
+    previousEventHash,
+    includeRequestNote: true,
+  });
+  if (!responseEvent) {
+    throw new Error("Het antwoord sluit niet aan op de lokale contractgeschiedenis");
   }
 
   const series = cloneSeries(currentSeries);
@@ -356,36 +588,15 @@ export async function verifyAndApplyContractResponse(input: {
     version.updatedAt = envelope.versionProof.signedAt;
     series.currentVersionId = version.id;
     series.draftVersionId = undefined;
-    series.status = "active";
-  } else if (request.action === "pause") {
-    series.status = "paused";
-  } else if (request.action === "resume" || request.action === "reactivate") {
-    series.status = "active";
-  } else if (request.action === "stop") {
-    series.status = "stopped";
   }
 
+  series.status = contractStatusAfterResponse(request.action);
   bindProofIdentity(series, request.counterpartyProfileId, envelope.responderProof);
   series.pendingRequest = undefined;
-  const previousEventHash = series.events.at(-1)?.eventHash;
-  const event = await createContractEvent({
-    id: uid(),
-    type: eventTypeForResponse(request.action),
-    createdAt: envelope.responderProof.signedAt,
-    actorProfileId: responder.profileId,
-    actorName: responder.profileName,
-    counterpartyProfileId: request.actorProfileId,
-    ...(request.reason ? { reason: request.reason } : {}),
-    ...(request.note ? { note: request.note } : {}),
-    proof: envelope.responderProof,
-    requestId: request.requestId,
-    ...(previousEventHash ? { previousEventHash } : {}),
-  });
-  series.events = [...series.events, event];
-  series.updatedAt = event.createdAt;
+  series.events = [...series.events, structuredClone(responseEvent)];
+  series.updatedAt = responseEvent.createdAt;
   return series;
 }
-
 
 async function responseProofHash(proof: ContractSignatureProof): Promise<string> {
   return sha256Base64Url(canonicalJson(proof));
@@ -416,17 +627,26 @@ export async function createContractReceipt(input: {
     throw new Error("Het antwoord gebruikt een andere eigendomssleutel dan vastgelegd");
   }
 
+  const responseEvent = series.events.at(-1);
+  if (!responseEvent
+    || responseEvent.type !== contractResponseEventType(request.action)
+    || responseEvent.requestId !== request.requestId
+    || !proofsEqual(responseEvent.proof, responseProof)
+    || !await verifyContractLineageEvent(responseEvent)) {
+    throw new Error("De lokale bevestiging van de tweede partij ontbreekt of is verouderd");
+  }
   const responsePayload = requestPayload(
     request,
     "response",
     request.counterpartyProfileId,
     request.actorProfileId,
+    responseEvent.previousEventHash,
   );
   if (!await verifyContractProof(responsePayload, responseProof)) {
     throw new Error("Het antwoord van de tweede partij is ongeldig");
   }
 
-  const receipt: ContractReceiptPayload = {
+  const receipt: ContractLineageReceiptPayload = {
     schema: 1,
     requestId: request.requestId,
     seriesId: request.seriesId,
@@ -436,13 +656,14 @@ export async function createContractReceipt(input: {
     counterpartyProfileId: request.counterpartyProfileId,
     responderProofHash: await responseProofHash(responseProof),
     receivedAt: Date.now(),
+    previousEventHash: responseEvent.eventHash,
   };
   const receiptProof = await signContractPayload(receipt, actor.id, ownerKey);
   bindProfileIdentity(series, actor, receiptProof);
 
   if (!series.events.some((event) => event.type === "receipt_confirmed" && event.requestId === request.requestId)) {
-    const previousEventHash = series.events.at(-1)?.eventHash;
-    const event = await createContractEvent({
+    const previousEventHash = contractTailHash(series);
+    const event = await createContractLineageEvent({
       id: uid(),
       type: "receipt_confirmed",
       createdAt: receiptProof.signedAt,
@@ -457,15 +678,17 @@ export async function createContractReceipt(input: {
     series.updatedAt = event.createdAt;
   }
 
+  const event = series.events.at(-1)!;
   return {
     series,
     envelope: {
       schema: 1,
       kind: "receipt",
       request,
+      event,
       receipt,
       receiptProof,
-    },
+    } as ContractLineageEnvelope,
   };
 }
 
@@ -498,24 +721,35 @@ export async function verifyAndApplyContractReceipt(input: {
     || !await verifyContractProof(requestPayload(request, "request"), request.proof)) {
     throw new Error("Het oorspronkelijke contractverzoek is niet meer geldig");
   }
-  if (receiptProof.profileId !== actor.profileId
+  const signedReceipt = lineageReceiptPayload(receipt);
+  if (!signedReceipt
+    || receiptProof.profileId !== actor.profileId
     || (actor.keyId && actor.keyId !== receiptProof.keyId)
-    || !await verifyContractProof(receipt, receiptProof)) {
+    || !await verifyContractProof(signedReceipt, receiptProof)) {
     throw new Error("Het afrondingsbewijs is niet geldig ondertekend");
   }
 
-  const expectedResponseType = eventTypeForResponse(request.action);
-  const responseEvent = [...currentSeries.events].reverse().find((event) =>
-    event.type === expectedResponseType
-      && event.requestId === request.requestId
-      && event.actorProfileId === responder.profileId
-      && event.proof);
-  if (!responseEvent?.proof) throw new Error("De lokale bevestiging van de tweede partij ontbreekt");
-  if (responder.keyId && responder.keyId !== responseEvent.proof.keyId) {
+  const localResponseEvent = currentSeries.events.at(-1);
+  if (!localResponseEvent
+    || localResponseEvent.type !== contractResponseEventType(request.action)
+    || localResponseEvent.requestId !== request.requestId
+    || localResponseEvent.actorProfileId !== responder.profileId
+    || !localResponseEvent.proof
+    || !await verifyContractLineageEvent(localResponseEvent)) {
+    const existingReceipt = currentSeries.events.find((event) =>
+      event.type === "receipt_confirmed" && event.requestId === request.requestId);
+    const incomingReceipt = lineageEventFromEnvelope(envelope);
+    if (existingReceipt && incomingReceipt?.eventHash === existingReceipt.eventHash) return cloneSeries(currentSeries);
+    throw new Error("De lokale bevestiging van de tweede partij ontbreekt");
+  }
+  if (responder.keyId && responder.keyId !== localResponseEvent.proof.keyId) {
     throw new Error("De lokale bevestiging gebruikt een andere eigendomssleutel");
   }
-  if (await responseProofHash(responseEvent.proof) !== receipt.responderProofHash) {
+  if (await responseProofHash(localResponseEvent.proof) !== receipt.responderProofHash) {
     throw new Error("Het afrondingsbewijs verwijst naar een ander antwoord");
+  }
+  if (!signedReceipt || signedReceipt.previousEventHash !== localResponseEvent.eventHash) {
+    throw new Error("Het afrondingsbewijs sluit niet aan op de lokale contractgeschiedenis");
   }
 
   const version = contractVersionById(currentSeries, request.versionId);
@@ -523,25 +757,22 @@ export async function verifyAndApplyContractReceipt(input: {
     throw new Error("De lokale contractversie komt niet overeen");
   }
 
-  const series = cloneSeries(currentSeries);
-  if (series.events.some((event) => event.type === "receipt_confirmed" && event.requestId === request.requestId)) {
-    return series;
-  }
-  bindProofIdentity(series, actor.profileId, receiptProof);
-  const previousEventHash = series.events.at(-1)?.eventHash;
-  const event = await createContractEvent({
-    id: uid(),
+  const receiptEvent = await verifiedEnvelopeEvent({
+    envelope,
+    request,
     type: "receipt_confirmed",
-    createdAt: receiptProof.signedAt,
-    actorProfileId: actor.profileId,
-    actorName: actor.profileName,
-    counterpartyProfileId: responder.profileId,
     proof: receiptProof,
-    requestId: request.requestId,
-    ...(previousEventHash ? { previousEventHash } : {}),
+    actorProfileId: actor.profileId,
+    counterpartyProfileId: responder.profileId,
+    previousEventHash: localResponseEvent.eventHash,
+    includeRequestNote: false,
   });
-  series.events = [...series.events, event];
-  series.updatedAt = Math.max(series.updatedAt, event.createdAt);
+  if (!receiptEvent) throw new Error("Het afrondingsbewijs sluit niet aan op de lokale contractgeschiedenis");
+
+  const series = cloneSeries(currentSeries);
+  bindProofIdentity(series, actor.profileId, receiptProof);
+  series.events = [...series.events, structuredClone(receiptEvent)];
+  series.updatedAt = Math.max(series.updatedAt, receiptEvent.createdAt);
   return series;
 }
 

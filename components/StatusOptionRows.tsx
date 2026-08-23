@@ -13,6 +13,10 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
       {OPTIONS.map(({ status: s, label, hint, danger }) => {
         const active = current === s;
         const colour = STATUS_VAR[s];
+        // De harde grens leest zijn label in een opgelichte tint; zie
+        // --hard-no-text in globals.css. Rand, vulling en glyph blijven op
+        // --hard-no, dus de ingetogen behandeling van principe 10 verandert niet.
+        const labelColour = danger ? "var(--hard-no-text)" : colour;
         return (
           <button
             key={s}
@@ -50,7 +54,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
               >
                 {active ? <Check size={11} weight="bold" /> : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour, boxShadow: `0 0 8px color-mix(in srgb, ${colour} 20%, transparent)` }} />}
               </span>
-              <span className="whitespace-nowrap text-sm font-semibold leading-5" style={{ color: active ? colour : "var(--text)" }}>{label}</span>
+              <span className="whitespace-nowrap text-sm font-semibold leading-5" style={{ color: active ? labelColour : "var(--text)" }}>{label}</span>
               <span data-status-hint={s} className="min-w-0 justify-self-end text-right text-xs leading-4" style={{ color: "var(--text2)" }}>{hint}</span>
             </span>
           </button>

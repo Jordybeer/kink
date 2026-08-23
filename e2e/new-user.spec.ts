@@ -52,11 +52,15 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /^verder/i }).click();
 
     await expect(page.getByRole("heading", { name: /niet voor iedere pottenkijker/i })).toBeVisible();
-    await expect(page.getByText(/privacy voorop/i)).toBeVisible();
+    // Was /privacy voorop/. Die claim luidde "Volledig offline" en beloofde meer
+    // dan de architectuur waarmaakt: /about zegt zelf dat de hosting appcode en
+    // updates serveert. De belofte die hier telt is dat de antwoorden niet
+    // vertrekken, en die staat er nog steeds.
+    await expect(page.getByText(/antwoorden vertrekken niet/i)).toBeVisible();
     await page.getByRole("button", { name: "Niet nu" }).click();
 
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
-    await page.getByRole("button", { name: /naar kinksync/i }).press("Enter");
+    await page.getByRole("button", { name: /kluisschijf.*kinksync/i }).press("Enter");
 
     // Onboarding rondt af op home. Profielaanmaak blijft een bewuste volgende tik.
     await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
@@ -64,7 +68,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
 
-  test("pin instellen gooit de wizard niet terug naar slide één", async ({ page }) => {
+  test("PIN-bevestiging houdt de numpad op exact dezelfde plek", async ({ page }) => {
     await page.getByRole("button", { name: /^begin$/i }).click();
     await page.getByRole("button", { name: /18\+/i }).click();
     await page.getByRole("button", { name: /kom maar door/i }).click();
@@ -76,11 +80,31 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
         await page.getByRole("button", { name: digit, exact: true }).click();
       }
     };
+    const pinPad = page.getByTestId("onboarding-pin-pad");
+    const pinCopy = page.getByTestId("onboarding-pin-copy");
+    const waitForPinPadAtRest = async () => {
+      await expect.poll(
+        () => pinPad.evaluate((element) => getComputedStyle(element).transform),
+      ).toBe("none");
+    };
+
     await expect(page.getByRole("heading", { name: /hou nieuwsgierige vingers buiten/i })).toBeVisible();
+    await expect(pinCopy).toContainText("Hou ze voor jezelf.");
+    expect(await pinCopy.evaluate((element) => element.scrollHeight > element.clientHeight + 1)).toBe(false);
+    await waitForPinPadAtRest();
+    const firstPadBox = await pinPad.boundingBox();
+    expect(firstPadBox).not.toBeNull();
+
     await tapPin();
     await expect(page.getByRole("heading", { name: /nog één keer/i })).toBeVisible();
-    await tapPin();
+    await expect(pinCopy).toContainText("Dezelfde vier cijfers.");
+    expect(await pinCopy.evaluate((element) => element.scrollHeight > element.clientHeight + 1)).toBe(false);
+    await waitForPinPadAtRest();
+    const secondPadBox = await pinPad.boundingBox();
+    expect(secondPadBox).not.toBeNull();
+    expect(Math.abs(secondPadBox!.y - firstPadBox!.y)).toBeLessThanOrEqual(1);
 
+    await tapPin();
     await expect(page.getByRole("heading", { name: /liever met één blik|genoeg voorspel/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /^begin$/i })).not.toBeVisible();
   });
@@ -110,7 +134,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /kom maar door/i }).click();
     await page.getByRole("button", { name: /^verder/i }).click();
     await page.getByRole("button", { name: "Niet nu" }).click();
-    await page.getByRole("button", { name: /naar kinksync/i }).press("Enter");
+    await page.getByRole("button", { name: /kluisschijf.*kinksync/i }).press("Enter");
 
     await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
     await page.getByLabel("Naam of alias").fill("Testmeester");

@@ -7,13 +7,21 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
-import type { ContractSeries, ContractVersionContent } from "@/lib/contractLifecycle";
+import type { ContractSeries } from "@/lib/contractLifecycle";
+import type { ContractContentWithHandwriting } from "@/lib/contractHandwriting";
+import { hasRequiredHandwrittenSignatures } from "@/lib/contractHandwriting";
+import { ensureContractPdfArtifact } from "@/lib/contractDocument";
 import {
   createContractReceipt,
   createContractRequest,
   requestInstruction,
   verifyAndApplyContractResponse,
 } from "@/lib/contractProtocol";
+import {
+  activateLocalDevContract,
+  canSelfSignLocalDevContract,
+} from "@/lib/devLocalContract";
+import { syncDevTestToolsFromLocation } from "@/lib/devTestTools";
 import { decodeContractEnvelope, encodeContractEnvelope } from "@/lib/contractQr";
 import ContractQrDisplay from "@/components/contract/ContractQrDisplay";
 import ContractQrScannerSheet from "@/components/contract/ContractQrScannerSheet";
@@ -23,7 +31,7 @@ interface Props {
   onClose: () => void;
   profileA: Profile;
   profileB: Profile;
-  content: ContractVersionContent;
+  content: ContractContentWithHandwriting;
 }
 
 type Phase = "intro" | "request" | "receipt";
@@ -43,6 +51,8 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
   const [scannerOpen, setScannerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devTestToolsEnabled, setDevTestToolsEnabled] = useState(false);
+  const canLocalDevSign = devTestToolsEnabled && canSelfSignLocalDevContract(profileA, profileB);
 
   useEffect(() => {
     if (!open) return;
@@ -52,21 +62,76 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
     setScannerOpen(false);
     setBusy(false);
     setError(null);
+    setDevTestToolsEnabled(syncDevTestToolsFromLocation());
   }, [open]);
 
+  function assertHandwrittenSignatures() {
+    if (!hasRequiredHandwrittenSignatures(content)) {
+      throw new Error("Beide handgeschreven handtekeningen zijn verplicht voordat dit contract kan worden bewaard of digitaal bevestigd.");
+    }
+  }
+
   async function persistDraft(closeAfter: boolean) {
+    assertHandwrittenSignatures();
     const result = await saveDraft({ profileA, profileB, content });
     if (closeAfter) {
-      showToast({ message: "Concept opgeslagen. Je kunt het later verder bespreken.", variant: "success" });
+      showToast({ message: "Concept met beide handgeschreven handtekeningen opgeslagen.", variant: "success" });
       onClose();
     }
     return result.series;
+  }
+
+  async function startLocalDevSigning() {
+    setBusy(true);
+    setError(null);
+    try {
+      assertHandwrittenSignatures();
+      if (!devTestToolsEnabled || !canSelfSignLocalDevContract(profileA, profileB)) {
+        throw new Error("Lokale testondertekening is hier niet beschikbaar.");
+      }
+
+      const actor = await sealProfileConsent(profileA.id);
+      const responder = await sealProfileConsent(profileB.id);
+      if (!actor || !responder) {
+        throw new Error("Beide lokale profielen moeten cryptografisch kunnen worden bevestigd.");
+      }
+
+      const ownerKeys = useStore.getState().profileOwnerKeys;
+      const actorKey = ownerKeys.find((key) => key.profileId === actor.id);
+      const responderKey = ownerKeys.find((key) => key.profileId === responder.id);
+      if (!actorKey || !responderKey) {
+        throw new Error("De lokale eigendomssleutel van één van de profielen ontbreekt.");
+      }
+
+      const draft = await saveDraft({ profileA: actor, profileB: responder, content });
+      const result = await activateLocalDevContract({
+        series: draft.series,
+        actor,
+        responder,
+        actorKey,
+        responderKey,
+      });
+
+      // Dev mode may skip the second device, never the durable signed artifact.
+      await ensureContractPdfArtifact(result.series, result.versionId);
+      upsertSeries(result.series);
+      showToast({
+        message: "Testcontract actief. Je kunt nu scènes en de volledige lifecycle testen.",
+        variant: "success",
+      });
+      onClose();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "De lokale testondertekening is mislukt.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function startSigning() {
     setBusy(true);
     setError(null);
     try {
+      assertHandwrittenSignatures();
       const owned = [profileA, profileB].filter(isOwned);
       if (owned.length !== 1) {
         throw new Error("Open dit contract op het eigen toestel van één deelnemer. De andere deelnemer bevestigt daarna op diens eigen toestel via QR.");
@@ -118,11 +183,18 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
         actor,
         ownerKey,
       });
+      // A newly active version must never be persisted without its definitive
+      // human-readable artifact. If PDF capture fails, the pending request
+      // remains available for a safe retry instead of recording half a result.
+      await ensureContractPdfArtifact(receipt.series, request.versionId);
       upsertSeries(receipt.series);
       setCurrentSeries(receipt.series);
       setEncoded(encodeContractEnvelope(receipt.envelope));
       setPhase("receipt");
-      showToast({ message: "Contract actief. Laat de tweede partij nog het korte afrondingsbewijs scannen.", variant: "success" });
+      showToast({
+        message: "Contract actief. De getekende PDF staat vast in de contractgeschiedenis.",
+        variant: "success",
+      });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Het antwoord kon niet worden gecontroleerd.");
     } finally {
@@ -147,36 +219,57 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               </div>
               <h2 className="mt-3 text-center text-lg font-semibold">Contract bewaren</h2>
               <p className="mt-2 text-center text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Bewaar dit eerst als concept, of start de digitale ondertekening. Activeren vereist twee eigen toestellen en twee profielgebonden handtekeningen.
+                Beide handgeschreven handtekeningen zijn al onderdeel van exact deze versie. Je kunt haar als concept bewaren of de profielgebonden QR-bevestiging starten.
               </p>
               <div className="mt-5 flex flex-col gap-2">
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => void persistDraft(true)}
+                  onClick={() => void persistDraft(true).catch((caught) => setError(caught instanceof Error ? caught.message : "Opslaan mislukt."))}
                   className="focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 >
                   Opslaan als concept
                 </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void startSigning()}
-                  className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                  style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-                >
-                  <QrCode size={18} aria-hidden="true" />
-                  {busy ? "Voorbereiden…" : "Digitaal ondertekenen"}
-                </button>
+                {canLocalDevSign ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void startLocalDevSigning()}
+                    className="focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                  >
+                    {busy ? "Lokaal bevestigen…" : "Beide lokale profielen bevestigen"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void startSigning()}
+                    className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                  >
+                    <QrCode size={18} aria-hidden="true" />
+                    {busy ? "Voorbereiden…" : "Digitaal bevestigen via QR"}
+                  </button>
+                )}
               </div>
+
+              {canLocalDevSign && (
+                <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+                  <p className="text-xs font-medium" style={{ color: "var(--accent)" }}>Testmodus</p>
+                  <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                    Beide profielen zijn lokaal aangemaakt. Hiermee doorloop je dezelfde cryptografische contractflow zonder een tweede toestel.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {phase === "request" && encoded && currentSeries?.pendingRequest && (
             <ContractQrDisplay
               encoded={encoded}
-              title="Tweede handtekening"
+              title="Tweede digitale bevestiging"
               instruction={requestInstruction(currentSeries.pendingRequest.action)}
               onScanResponse={() => setScannerOpen(true)}
             />
@@ -192,7 +285,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               <div className="mt-4 flex items-start gap-2 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 <CheckCircle size={18} weight="fill" aria-hidden="true" className="mt-0.5 flex-none" style={{ color: "var(--yes)" }} />
                 <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                  Het contract is al actief. Deze laatste scan synchroniseert alleen het cryptografische ontvangstbewijs op het tweede toestel.
+                  Deze contractversie bevat beide handgeschreven én beide cryptografische handtekeningen. De definitieve PDF is lokaal aan precies deze versie gekoppeld.
                 </p>
               </div>
               <button

@@ -103,7 +103,7 @@ test("questions route locks the document while sheets keep their own scroll", as
   await dialog.getByRole("button", { name: "Sluit" }).click();
 
   await page.getByRole("link", { name: "Terug" }).click();
-  await expect(page).toHaveURL(new RegExp(`/profile/${CUCKOLDING_PROFILE.id}$`));
+  await expect(page).toHaveURL(new RegExp(`/profile\\?id=${CUCKOLDING_PROFILE.id}$`));
   expect(await page.evaluate(() => ({
     rootOverflow: document.documentElement.style.overflow,
     rootHeight: document.documentElement.style.height,
@@ -138,7 +138,7 @@ test("answered question persists across a reload without document-width overflow
   await page.setViewportSize({ width: 375, height: 812 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
   const nav = page.getByLabel("Hoofdnavigatie");
-  const cardTitle = page.locator('[data-tour="kink-card"] h3');
+  const cardTitle = page.locator('[data-tour="kink-card"] h2');
   const firstQuestion = await cardTitle.innerText();
   await page.getByRole("button", { name: /Heel graag/i }).click();
   await expect(cardTitle).not.toHaveText(firstQuestion);
@@ -155,7 +155,7 @@ test("question change keeps a stable visual shell without a full-content fade", 
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
   const card = page.locator('[data-tour="kink-card"]');
   const content = card.getByTestId("question-content");
-  const title = card.locator("h3");
+  const title = card.locator("h2");
   const firstQuestion = await title.innerText();
   const progressFill = page.getByTestId("questions-top-progress-fill");
   await expect(content).toHaveCSS("opacity", "1");

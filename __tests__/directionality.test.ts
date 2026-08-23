@@ -313,7 +313,12 @@ describe("directionele kinkvragen", () => {
   });
 
   it("migreert v19 profielen en snapshots en bewaart de consent chain-anchor", async () => {
-    expect(STORE_PERSIST_VERSION).toBe(24);
+    // Deze tripwire stond op `toBe(24)` en heeft precies gedaan waarvoor hij
+    // bedoeld was: bij de bump naar v25 viel hij om en dwong hij een blik op
+    // deze migratie. Nu de guard van migrateStoredDirectionalityV24 zelf op 24
+    // is gepind, hoeft de globale versie niet meer stil te blijven staan. Wat
+    // wél moet gelden is dat v19-opslag deze migratie nog steeds passeert.
+    expect(STORE_PERSIST_VERSION).toBeGreaterThanOrEqual(24);
     const profile = ownProfile("dominant", {
       spanking_hand: { status: "yes", comment: "oud C" },
       anal_sex: { status: "willing", comment: "oud B" },

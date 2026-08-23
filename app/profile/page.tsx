@@ -3,7 +3,7 @@
 import { Suspense, useMemo } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import PageShell from "@/components/PageShell";
-import ProfileScreen from "@/components/profile/ProfileScreen";
+import ProfileRoute from "@/components/profile/ProfileRoute";
 import QuestionsScreen from "@/components/profile/QuestionsScreen";
 import { profileIdFromLocation } from "@/lib/localRoutes";
 
@@ -14,7 +14,7 @@ function LocalProfileShell() {
   const params = useMemo(() => Promise.resolve({ id }), [id]);
   const questionsRoute = /^\/profile\/[^/]+\/questions$/.test(pathname);
 
-  return questionsRoute ? <QuestionsScreen params={params} /> : <ProfileScreen params={params} />;
+  return questionsRoute ? <QuestionsScreen params={params} /> : <ProfileRoute id={id} />;
 }
 
 export default function ProfileQueryPage() {

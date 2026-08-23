@@ -133,6 +133,15 @@ export default function QuestionsScreen({ params }: Props) {
       style={{ height: "min(calc(100svh - var(--nav-h)), calc(var(--visual-viewport-height, 100dvh) - var(--nav-h)))", paddingTop: "1rem", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       data-testid="questions-screen"
     >
+      {/* Dit scherm was het enige zonder h1; het eerste kopniveau was de h3 met
+          de kinknaam. Wie op koppen navigeert landde dus midden in de langste
+          flow van de app zonder te horen waar hij was of voor wie hij antwoordt.
+          Antwoorden namens het verkeerde profiel is een consentprobleem, geen
+          navigatieprobleem. De navtitel toont dit al visueel, dus hier alleen
+          voor wie luistert. */}
+      <h1 className="sr-only">
+        Vragenlijst van {currentProfile.name} · {modeLabel}
+      </h1>
       <div
         className="pointer-events-none fixed inset-x-0 z-[41] h-0.5 overflow-hidden"
         style={{ top: "calc(var(--nav-h) - 2px)", background: "var(--surface3)" }}

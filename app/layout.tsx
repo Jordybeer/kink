@@ -4,6 +4,7 @@ import "./globals.css";
 import "./design-role-tokens.css";
 import InstallPromptBridge from "@/components/InstallPromptBridge";
 import VisualViewportBridge from "@/components/VisualViewportBridge";
+import DevTestToolsBootstrap from "@/components/DevTestToolsBootstrap";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
 import UpdateBanner from "@/components/UpdateBanner";
@@ -52,7 +53,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl" className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}>
+    <html
+      lang="nl"
+      className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}
+      style={{ scrollPaddingTop: "var(--nav-h)" }}
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -63,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col antialiased">
         <MotionPolicy>
           <VisualViewportBridge />
+          <DevTestToolsBootstrap />
           <AmbientGlow />
           <AppLockGate>
             <OnboardingRouteGate>

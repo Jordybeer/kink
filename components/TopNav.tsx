@@ -1,18 +1,47 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, GearSix, Info, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { routeChromeSemantics } from "@/lib/routeSemantics";
 import ContextMenu from "@/components/ui/ContextMenu";
+import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
+import {
+  clearInstallPrompt,
+  detectIosInstallBrowser,
+  getInstallPrompt,
+  INSTALL_PROMPT_CHANGE_EVENT,
+} from "@/lib/installPrompt";
 
 const MotionLink = motion.create(Link);
 
+const homeUtilitySurface: React.CSSProperties = {
+  background: "color-mix(in srgb, var(--surface) 38%, transparent)",
+  borderColor: "color-mix(in srgb, var(--border-accent) 38%, var(--border))",
+  backdropFilter: "blur(12px) saturate(120%)",
+  WebkitBackdropFilter: "blur(12px) saturate(120%)",
+  boxShadow: "0 8px 24px color-mix(in srgb, var(--bg) 20%, transparent)",
+  pointerEvents: "auto",
+};
+
+const contentHeaderSurface: React.CSSProperties = {
+  background: "color-mix(in srgb, var(--bg) 72%, transparent)",
+  backdropFilter: "blur(14px) saturate(120%)",
+  WebkitBackdropFilter: "blur(14px) saturate(120%)",
+  pointerEvents: "none",
+};
+
+const contentNavRow: React.CSSProperties = {
+  pointerEvents: "auto",
+};
+
 export default function TopNav() {
   const path = usePathname();
+  const router = useRouter();
   const hydrated = useHasHydrated();
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
@@ -21,6 +50,9 @@ export default function TopNav() {
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const [installAvailable, setInstallAvailable] = useState(false);
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
+  const [iosInstall, setIosInstall] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -57,58 +89,144 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
+  useEffect(() => {
+    if (path !== "/") {
+      setInstallAvailable(false);
+      setInstallGuideOpen(false);
+      return;
+    }
+
+    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
+    const ios = detectIosInstallBrowser(
+      navigator.userAgent,
+      navigator.platform,
+      navigator.maxTouchPoints,
+    ) !== null;
+    setIosInstall(ios);
+
+    const refreshInstallAvailability = () => {
+      const standalone = window.matchMedia("(display-mode: standalone)").matches
+        || navigatorWithStandalone.standalone === true;
+      const available = !standalone && (ios || getInstallPrompt() !== null);
+      setInstallAvailable(available);
+      if (!available) setInstallGuideOpen(false);
+    };
+    const handleAppInstalled = () => {
+      clearInstallPrompt();
+      setInstallAvailable(false);
+      setInstallGuideOpen(false);
+    };
+
+    refreshInstallAvailability();
+    window.addEventListener("beforeinstallprompt", refreshInstallAvailability);
+    window.addEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", refreshInstallAvailability);
+      window.removeEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, [path]);
+
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
-  const shell = {
+  const safeAreaShell = {
     paddingTop: "env(safe-area-inset-top)",
-    background: "color-mix(in srgb, var(--surface) 82%, transparent)",
-    borderBottom: "1px solid var(--border)",
-    backdropFilter: "blur(12px) saturate(140%)",
-    WebkitBackdropFilter: "blur(12px) saturate(140%)",
+    pointerEvents: "none",
   } as const;
 
   if (path === "/") {
     return (
-      <header className="sticky top-0 z-40 transition-colors" style={shell}>
-        <nav className="max-w-2xl mx-auto px-4 h-14 flex items-center" aria-label="Hoofdnavigatie">
-          {/* Hulp en instellingen zijn allebei tertiair. Deze droeg als enige
-              font-semibold en werd daarmee het luidste element in een balk
-              zonder titel; nu dragen ze hetzelfde gewicht (UI-principles #2, #4). */}
-          <Link
-            href="/about"
-            aria-label="Ontdek hoe KinkSync werkt"
-            className="focus-ring -ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm"
-            style={{ color: "var(--text2)" }}
+      <>
+        <header className="sticky top-0 z-40" style={safeAreaShell}>
+          <nav
+            className="mx-auto flex h-14 max-w-2xl items-start justify-between px-6 pt-1 lg:max-w-4xl"
+            aria-label="Hoofdnavigatie"
+            data-top-nav-variant="home"
           >
-            <Info size={20} aria-hidden="true" />
-            <span>Hoe het werkt</span>
-          </Link>
-          <div className="ml-auto flex items-center justify-end gap-1">
-            <OfflineStatus />
             <button
               type="button"
+              data-testid="home-topnav-settings"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full"
-              style={{ color: "var(--text2)" }}
+              title="Instellingen openen"
+              className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full px-1.5 text-xs font-medium"
+              style={{ color: "var(--text2)", pointerEvents: "auto" }}
             >
-              <GearSix size={20} aria-hidden="true" />
+              <GearSix size={17} aria-hidden="true" />
+              <span>Instellingen</span>
             </button>
-          </div>
-        </nav>
-      </header>
+
+            <div
+              data-testid="home-topnav-actions"
+              className="flex items-center gap-2"
+              style={{ pointerEvents: "auto" }}
+            >
+              <OfflineStatus />
+              {installAvailable && (
+                <button
+                  type="button"
+                  onClick={() => setInstallGuideOpen(true)}
+                  aria-label="KinkSync installeren"
+                  title="KinkSync installeren"
+                  className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full border px-3 text-xs font-medium"
+                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                >
+                  <DownloadSimple size={17} aria-hidden="true" />
+                  <span className="hidden min-[360px]:inline">Installeren</span>
+                </button>
+              )}
+              <ContextMenu
+                open={overflowOpen}
+                onClose={() => setOverflowOpen(false)}
+                items={[
+                  {
+                    label: "Over KinkSync",
+                    icon: <Info size={17} aria-hidden="true" />,
+                    onClick: () => router.push("/about"),
+                  },
+                  {
+                    label: "Security & privacy",
+                    icon: <ShieldCheck size={17} aria-hidden="true" />,
+                    onClick: () => router.push("/security"),
+                  },
+                ]}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOverflowOpen((open) => !open)}
+                  aria-label="Meer over KinkSync"
+                  aria-expanded={overflowOpen}
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
+                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                >
+                  <DotsThree size={22} weight="bold" aria-hidden="true" />
+                </button>
+              </ContextMenu>
+            </div>
+          </nav>
+        </header>
+        {installGuideOpen && (
+          <PwaInstallGuide
+            isIos={iosInstall}
+            manual
+            onDismiss={() => setInstallGuideOpen(false)}
+          />
+        )}
+      </>
     );
   }
 
   const sceneMatch = path.match(/^\/scenes\/([^/]+)/);
-  const { title: routeTitle, back } = focusedRoute(path, {
+  const route = routeChromeSemantics(path, {
     sceneTitle: sceneMatch ? scenes.find((scene) => scene.id === sceneMatch[1])?.title : undefined,
   });
-  const title = contextualTitle ?? routeTitle;
+  const title = contextualTitle ?? route.title;
   const questionTitle = contextualTitle?.startsWith("Vragenlijst · ")
     ? contextualTitle.split(" · ", 2)
     : null;
+  const navWidth = navWidthForRoute(path);
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -118,73 +236,86 @@ export default function TopNav() {
   const overflowActions = actions.filter((action) => !visibleIds.has(action.id));
 
   return (
-    <header className="sticky top-0 z-40 transition-colors" style={shell}>
-      <nav className="relative max-w-2xl mx-auto px-4 h-14 flex items-center gap-1" aria-label="Hoofdnavigatie">
-        <MotionLink
-          href={back}
-          whileTap={t.tap}
-          className="focus-ring -ml-2 flex-none flex items-center justify-center h-10 w-10 rounded-full"
-          style={{ color: "var(--text2)" }}
-          aria-label="Terug"
+    <header
+      className="sticky top-0 z-40"
+      style={{ ...safeAreaShell, ...contentHeaderSurface }}
+    >
+      <nav
+        className={`mx-auto flex h-14 ${navWidth} items-center px-4`}
+        aria-label="Hoofdnavigatie"
+        data-top-nav-variant="content"
+      >
+        <div
+          data-testid="content-topnav-row"
+          className="relative flex h-14 w-full items-center gap-1"
+          style={contentNavRow}
         >
-          <CaretLeft aria-hidden="true" size={20} />
-        </MotionLink>
-        <span
-          className="flex-1 min-w-0 text-base italic truncate serif-safe transition-opacity"
-          style={{
-            fontFamily: "var(--font-display, Georgia, serif)",
-            fontWeight: 500,
-            color: "var(--text)",
-            opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
-          }}
-        >
-          {questionTitle ? (
-            <>
-              <span>{questionTitle[0]}</span>
-              <span> · {questionTitle[1]}</span>
-            </>
-          ) : title}
-        </span>
-        {saveFeedbackRoute && (
+          <MotionLink
+            href={route.back}
+            whileTap={t.tap}
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
+            aria-label="Terug"
+          >
+            <CaretLeft aria-hidden="true" size={20} />
+          </MotionLink>
           <span
-            role="status"
-            aria-live="polite"
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap transition-opacity"
-            style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
+            className="serif-safe min-w-0 flex-1 truncate text-base italic transition-opacity"
+            style={{
+              fontFamily: "var(--font-display, Georgia, serif)",
+              fontWeight: 500,
+              color: "var(--text)",
+              opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
+            }}
           >
-            Opgeslagen ✓
+            {questionTitle ? (
+              <>
+                <span>{questionTitle[0]}</span>
+                <span> · {questionTitle[1]}</span>
+              </>
+            ) : title}
           </span>
-        )}
-        {primary && <TopNavActionButton action={primary} emphasis="primary" />}
-        {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
-        {overflowActions.length > 0 && (
-          <ContextMenu
-            open={overflowOpen}
-            onClose={() => setOverflowOpen(false)}
-            items={overflowActions
-              .filter((action) => !action.disabled)
-              .map((action) => ({
-                label: action.label,
-                icon: action.icon,
-                danger: action.danger,
-                selected: action.selected,
-                onClick: action.onClick,
-              }))}
-          >
-            <button
-              type="button"
-              data-tour={questionTitle ? "questionnaire-menu" : undefined}
-              onClick={() => setOverflowOpen((open) => !open)}
-              aria-label="Meer acties"
-              aria-expanded={overflowOpen}
-              className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
-              style={{ color: "var(--text2)" }}
+          {saveFeedbackRoute && (
+            <span
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-opacity"
+              style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
             >
-              <DotsThree size={22} weight="bold" aria-hidden="true" />
-            </button>
-          </ContextMenu>
-        )}
-        <OfflineStatus />
+              Opgeslagen ✓
+            </span>
+          )}
+          {primary && <TopNavActionButton action={primary} emphasis="primary" />}
+          {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
+          {overflowActions.length > 0 && (
+            <ContextMenu
+              open={overflowOpen}
+              onClose={() => setOverflowOpen(false)}
+              items={overflowActions
+                .filter((action) => !action.disabled)
+                .map((action) => ({
+                  label: action.label,
+                  icon: action.icon,
+                  danger: action.danger,
+                  selected: action.selected,
+                  onClick: action.onClick,
+                }))}
+            >
+              <button
+                type="button"
+                data-tour={questionTitle ? "questionnaire-menu" : undefined}
+                onClick={() => setOverflowOpen((open) => !open)}
+                aria-label="Meer acties"
+                aria-expanded={overflowOpen}
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                style={{ color: "var(--text2)" }}
+              >
+                <DotsThree size={22} weight="bold" aria-hidden="true" />
+              </button>
+            </ContextMenu>
+          )}
+          <OfflineStatus />
+        </div>
       </nav>
     </header>
   );
@@ -208,7 +339,7 @@ function TopNavActionButton({
       disabled={action.disabled}
       aria-label={action.label}
       title={action.label}
-      className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
+      className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
       style={{
         color: action.danger
           ? "var(--hard-no)"
@@ -243,33 +374,22 @@ function OfflineStatus() {
       role="status"
       aria-live="polite"
       aria-label="Offline"
-      className="inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
+      className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
       <WifiSlash size={15} aria-hidden="true" />
-      <span className="hidden min-[360px]:inline">Offline</span>
+      <span className="hidden min-[400px]:inline">Offline</span>
     </span>
   );
 }
 
-function focusedRoute(
-  path: string,
-  dyn: { sceneTitle?: string },
-): { title: string; back: string } {
-  if (path === "/profile") return { title: "Profiel", back: "/" };
-  if (/^\/profile\/[^/]+\/questions$/.test(path)) {
-    return { title: "Vragenlijst", back: path.replace(/\/questions$/, "") };
+function navWidthForRoute(path: string): string {
+  if (path === "/compare") return "max-w-5xl";
+  if (path === "/about" || path === "/security" || path === "/contracts" || path === "/scenes" || path === "/timeline") {
+    return "max-w-4xl";
   }
-  if (path.startsWith("/profile/")) return { title: "Profiel", back: "/" };
-  if (path.startsWith("/scenes/")) return { title: dyn.sceneTitle ?? "Scène", back: "/scenes" };
-  if (path === "/scenes") return { title: "Scènes", back: "/" };
-  if (path === "/compare") return { title: "Vergelijk", back: "/" };
-  if (path === "/timeline") return { title: "Verloop", back: "/" };
-  if (path === "/about") return { title: "Hoe KinkSync werkt", back: "/" };
-  if (path.includes("/versions/")) return { title: "Contractversie", back: path.replace(/\/versions\/[^/]+$/, "/history") };
-  if (path.endsWith("/history") && path.startsWith("/contracts/")) return { title: "Contractverloop", back: path.replace(/\/history$/, "") };
-  if (path.startsWith("/contracts/")) return { title: "Contract", back: "/contracts" };
-  if (path === "/contracts") return { title: "Contracten", back: "/" };
-  if (path === "/contract") return { title: "Contract", back: "/compare" };
-  return { title: "KinkSync", back: "/" };
+  if (path === "/contract" || path.startsWith("/contracts/") || path === "/profile" || path.startsWith("/profile/")) {
+    return "max-w-3xl";
+  }
+  return "max-w-2xl";
 }

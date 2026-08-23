@@ -1,4 +1,4 @@
-name: safe-word check
+name: KinkSync CI
 
 on:
   pull_request:
@@ -9,6 +9,8 @@ on:
 permissions:
   contents: read
 
+# A newer commit on the same ref makes the older candidate irrelevant. Cancelling
+# that stale workflow saves runner time without ever reusing its result.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -32,14 +34,18 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  # The dungeon rehearsal has earned the safeword: the full suite has stayed
-  # green across the hardening PRs, so browser regressions now block a merge.
-  # A small launch matrix then checks the current iPhone/iPad/Galaxy-sized
-  # surfaces without multiplying the entire 200+ test suite four times.
+  # The complete browser suite stays single-worker for deterministic local-first
+  # state isolation. Give it enough wall-clock room to finish instead of turning
+  # a slow GitHub runner into a false product failure.
   scene-rehearsal:
     name: Browser and device rehearsal
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    # Do not make the regular and production-browser rehearsals for one PR fight
+    # for downloads/build resources at the same time. Other PRs remain independent.
+    concurrency:
+      group: browser-${{ github.repository }}-${{ github.event.pull_request.number || github.ref_name }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -75,12 +81,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  # PWA/offline behavior only exists in a production build. It used to be a
-  # local-only suite; for a mobile-first public release it belongs in CI too.
+  # Offline/PWA behavior needs a real production build. Keep it as a separate
+  # gate, but serialize it with the regular browser rehearsal for this candidate.
   pwa-rehearsal:
     name: Production PWA and offline rehearsal
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    concurrency:
+      group: browser-${{ github.repository }}-${{ github.event.pull_request.number || github.ref_name }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -94,3 +103,13 @@ jobs:
       - run: npm run test:e2e:offline
         env:
           CI: "1"
+      - name: Keep offline failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: offline-failure-diagnostics
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 14
