@@ -14,7 +14,7 @@ export default function SafewordRibbon({ safeword }: Props) {
         height: 32,
       }}
     >
-      <span className="text-xs font-bold uppercase tracking-widest flex-none mr-3" style={{ color: "var(--hard-no)" }}>
+      <span className="text-sm font-bold uppercase tracking-widest flex-none mr-3" style={{ color: "var(--hard-no)" }}>
         Safeword
       </span>
       <span className="text-sm font-semibold" style={{ color: "var(--hard-no)" }}>{safeword}</span>
