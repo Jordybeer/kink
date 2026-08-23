@@ -70,12 +70,12 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
               <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
               {b.profileName}
             </h2>
-            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
               {a.role} × {b.role}
             </p>
           </div>
           <span
-            className="flex-none rounded-full px-2.5 py-1 text-[11px] font-medium"
+            className="flex-none rounded-full px-2.5 py-1 text-xs font-medium"
             style={{ color: statusColour(bucket), background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
             {contractStatusLabel(series, profiles)}
@@ -87,7 +87,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
             <p className="mt-4 text-xs" style={{ color: "var(--text2)" }}>
               {formatContractTimestamp(version.updatedAt)} · versie {version.number}
             </p>
-            <p className="mt-2 text-xs leading-5 sm:hidden" style={{ color: "var(--text2)" }}>
+            <p className="mt-2 text-sm leading-5 sm:hidden" style={{ color: "var(--text2)" }}>
               <span style={{ color: "var(--yes)" }}>{version.summary.matchCount} matches</span>
               <span aria-hidden="true"> · </span>
               <span style={{ color: "var(--maybe)" }}>{version.summary.softLimitCount} zacht</span>
@@ -113,7 +113,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         )}
 
         {series.pendingRequest && (
-          <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
             Bevestiging van de tweede partij staat nog open.
           </p>
         )}
@@ -123,7 +123,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}`}
           prefetch={false}
-          className="focus-ring inline-flex min-h-10 items-center gap-1.5 px-2 text-xs font-semibold"
+          className="focus-ring inline-flex min-h-10 items-center gap-1.5 px-2 text-sm font-semibold"
           style={{ color: "var(--text)" }}
         >
           Open contract
@@ -132,7 +132,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring ml-auto inline-flex min-h-10 items-center px-2 text-xs font-medium"
+          className="focus-ring ml-auto inline-flex min-h-10 items-center px-2 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           Verloop
@@ -184,7 +184,7 @@ function ContractsContent() {
       {personId && (
         <Link
           href="/contracts"
-          className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs"
+          className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-sm"
           style={{ color: "var(--text2)", background: "var(--surface2)" }}
         >
           <X size={12} aria-hidden="true" />
@@ -201,7 +201,7 @@ function ContractsContent() {
           >
             <FileText size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
             <span className="text-sm font-medium">{concepts.length} {concepts.length === 1 ? "open concept" : "open concepten"}</span>
-            <span className="ml-auto hidden text-xs sm:inline" style={{ color: "var(--text2)" }}>Verder bespreken</span>
+            <span className="ml-auto hidden text-sm sm:inline" style={{ color: "var(--text2)" }}>Verder bespreken</span>
             <CaretDown size={14} aria-hidden="true" className={conceptsOpen ? "rotate-180" : ""} />
           </button>
           {conceptsOpen && (

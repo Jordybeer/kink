@@ -46,12 +46,11 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         aria-label="Tijd kiezen"
-        className="focus-ring rounded-lg px-2 tabular-nums disabled:opacity-50"
+        className="focus-ring rounded-lg px-2 text-sm tabular-nums disabled:opacity-50"
         style={{
           background: "var(--surface2)",
           border: "1px solid var(--border)",
           color: value ? "var(--text)" : "var(--text2)",
-          fontSize: 12,
           height: 44,
           minWidth: 60,
         }}
@@ -80,7 +79,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
               maxWidth: 288,
             }}
           >
-            <p id="time-picker-label" className="text-xs mb-3" style={{ color: "var(--text2)" }}>
+            <p id="time-picker-label" className="text-sm mb-3" style={{ color: "var(--text2)" }}>
               Starttijd
             </p>
             <div className="flex gap-3">
@@ -92,7 +91,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
                     type="button"
                     onClick={() => setHour(h)}
                     aria-pressed={hour === h}
-                    className="focus-ring rounded-lg py-2 text-xs tabular-nums font-medium"
+                    className="focus-ring rounded-lg py-2 text-sm tabular-nums font-medium"
                     style={
                       hour === h
                         ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
@@ -111,7 +110,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
                     type="button"
                     onClick={() => setMinute(m)}
                     aria-pressed={minute === m}
-                    className="focus-ring rounded-lg py-2 px-2 text-xs tabular-nums font-medium"
+                    className="focus-ring rounded-lg py-2 px-2 text-sm tabular-nums font-medium"
                     style={
                       minute === m
                         ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
@@ -130,7 +129,7 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
               <button
                 type="button"
                 onClick={confirm}
-                className="focus-ring px-4 py-2 rounded-lg text-xs font-semibold"
+                className="focus-ring px-4 py-2 rounded-lg text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)", minHeight: 36 }}
               >
                 Bevestigen

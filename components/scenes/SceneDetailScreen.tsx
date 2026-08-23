@@ -87,7 +87,6 @@ export default function SceneDetailScreen({ id }: { id: string }) {
 
   return (
     <PageShell width="2xl">
-      {/* Header */}
       <h1
         className="text-3xl mb-1"
         style={{
@@ -98,7 +97,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         {scene.title}
       </h1>
       <p
-        className="text-xs uppercase tracking-[0.15em] mb-0.5"
+        className="text-sm uppercase tracking-[0.15em] mb-0.5"
         style={{ color: "var(--text2)" }}
       >
         {scene.profileAName} — {scene.profileBName}
@@ -112,12 +111,11 @@ export default function SceneDetailScreen({ id }: { id: string }) {
 
       <ConsentLedgerPanel scene={scene} profiles={profiles} />
 
-      {/* Aftercare block */}
       {aftercare && traffic ? (
         <section className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <h2
-              className="text-sm"
+              className="text-base"
               style={{
                 fontFamily: "var(--font-display, Georgia, serif)",
                 fontStyle: "italic",
@@ -129,11 +127,11 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             </h2>
             <button
               onClick={() => setShowAftercare(true)}
-              className="text-xs focus-ring rounded-lg px-3 py-1"
+              className="text-sm focus-ring rounded-lg px-3 py-1"
               style={{
                 color: "var(--accent)",
                 border: "1px solid var(--border-accent)",
-                minHeight: 32,
+                minHeight: 36,
               }}
             >
               ✎ Bewerken
@@ -147,7 +145,6 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               border: "1px solid var(--border)",
             }}
           >
-            {/* Traffic light header */}
             <div
               className="flex items-center gap-3 px-4 py-3"
               style={{
@@ -172,7 +169,6 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               </div>
             </div>
 
-            {/* Journal fields */}
             <div
               className="flex flex-col divide-y"
               style={{ borderColor: "var(--border)" }}
@@ -180,13 +176,13 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               {aftercare.wentWell ? (
                 <div className="px-4 py-3">
                   <p
-                    className="text-xs font-semibold mb-1"
+                    className="text-sm font-semibold mb-1"
                     style={{ color: "var(--text2)" }}
                   >
                     Wat werkte goed
                   </p>
                   <p
-                    className="text-sm"
+                    className="text-base"
                     style={{ color: "var(--text)", lineHeight: 1.6 }}
                   >
                     {aftercare.wentWell}
@@ -203,13 +199,13 @@ export default function SceneDetailScreen({ id }: { id: string }) {
               {aftercare.remember ? (
                 <div className="px-4 py-3">
                   <p
-                    className="text-xs font-semibold mb-1"
+                    className="text-sm font-semibold mb-1"
                     style={{ color: "var(--text2)" }}
                   >
                     Onthouden voor volgende keer
                   </p>
                   <p
-                    className="text-sm"
+                    className="text-base"
                     style={{ color: "var(--text)", lineHeight: 1.6 }}
                   >
                     {aftercare.remember}
@@ -228,7 +224,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
       ) : (
         <section className="mb-6">
           <h2
-            className="text-sm mb-3"
+            className="text-base mb-3"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
               fontStyle: "italic",
@@ -264,11 +260,10 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         </section>
       )}
 
-      {/* Activiteiten */}
       {scene.items.length > 0 && (
         <section className="mb-6">
           <h2
-            className="text-sm mb-1"
+            className="text-base mb-1"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
               fontStyle: "italic",
@@ -286,7 +281,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             if (counts.intens > 0) parts.push(`${counts.intens} intens`);
             return (
               <p
-                className="text-xs italic mb-3"
+                className="text-sm italic mb-3"
                 style={{ color: "var(--text2)" }}
               >
                 {parts.join(" · ")}, {total} in totaal
@@ -320,7 +315,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                       {item.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-[11px] px-1.5 py-0.5 rounded-full border"
+                          className="text-xs px-1.5 py-0.5 rounded-full border"
                           style={{
                             borderColor: "var(--border)",
                             color: "var(--text2)",
@@ -352,7 +347,6 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         </section>
       )}
 
-      {/* Actions */}
       <div className="flex flex-col gap-4 mt-2">
         {scene.status !== "completed" && (
           <Link
@@ -396,7 +390,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             <div className="ml-auto flex items-center gap-3">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="focus-ring rounded-lg text-xs px-2 py-1"
+                className="focus-ring rounded-lg text-sm px-2 py-1"
                 style={{ color: "var(--text2)" }}
               >
                 Annuleren
@@ -406,7 +400,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                   deleteScene(scene.id);
                   router.push("/scenes");
                 }}
-                className="focus-ring rounded-lg text-xs font-bold px-2 py-1"
+                className="focus-ring rounded-lg text-sm font-bold px-2 py-1"
                 style={{ color: "var(--hard-no)" }}
               >
                 Definitief verwijderen
@@ -416,7 +410,6 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Aftercare sheet */}
       {showAftercare && (
         <AftercareSheet
           existing={aftercare}

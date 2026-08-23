@@ -207,7 +207,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             <Sparkle size={20} weight="duotone" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>Profiel</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>Profiel</p>
             <h2 id="profile-enrichment-title" className="mt-1 text-xl font-semibold" style={{ color: "var(--text)" }}>
               Profiel aanvullen
             </h2>
@@ -236,7 +236,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-semibold">FetLife</h3>
             </div>
-            <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
               Alleen je gebruikersnaam. KinkSync maakt daar lokaal de profiel-link van.
             </p>
             <input
@@ -259,7 +259,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               <Sparkle size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-semibold">BDSMTest</h3>
             </div>
-            <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
               Gebruik op bdsmtest.org de optie Copy all en plak hier alles in één keer.
             </p>
 
@@ -276,7 +276,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               autoCorrect="off"
               spellCheck={false}
               placeholder="Plak hier de resultaatlink en resultaten"
-              className="focus-ring mt-3 w-full resize-none rounded-xl px-3 py-2.5 text-sm leading-5 focus:outline-none"
+              className="focus-ring mt-3 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
 
@@ -292,7 +292,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             )}
 
             {parsed && !parsed.ok && (
-              <p className="mt-2 text-xs leading-5" role="status" style={{ color: "var(--hard-no-text)" }}>
+              <p className="mt-2 text-sm leading-5" role="status" style={{ color: "var(--hard-no-text)" }}>
                 {ERROR_COPY[parsed.error]}
               </p>
             )}
@@ -308,7 +308,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
                     setRemoveBdsmtest(true);
                     setError(null);
                   }}
-                  className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold"
+                  className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold"
                   style={{ color: "var(--hard-no-text)" }}
                 >
                   <Trash size={14} aria-hidden="true" /> Verwijder
@@ -317,7 +317,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             )}
 
             {removeBdsmtest && (
-              <p className="mt-3 text-xs leading-5" style={{ color: "var(--text2)" }}>
+              <p className="mt-3 text-sm leading-5" style={{ color: "var(--text2)" }}>
                 De opgeslagen BDSMTest-link en resultaten worden verwijderd wanneer je opslaat.
               </p>
             )}

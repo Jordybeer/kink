@@ -31,7 +31,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
         <h2 className="text-lg font-bold mb-5">{existing ? "Aftercare bewerken" : "Aftercare check-in"}</h2>
 
         <div>
-          <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", color: "var(--text2)" }}>
+          <p className="text-base mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", color: "var(--text2)" }}>
             Hoe voelde het?
           </p>
           <div className="flex gap-3">
@@ -53,7 +53,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
                   style={{ background: color, boxShadow: light === value ? `0 0 14px ${color}` : "none" }}
                   aria-hidden="true"
                 />
-                <span className="text-xs" style={{ color: light === value ? "var(--text)" : "var(--text2)" }}>
+                <span className="text-sm" style={{ color: light === value ? "var(--text)" : "var(--text2)" }}>
                   {label}
                 </span>
               </button>
@@ -63,24 +63,24 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
 
         <div className="flex flex-col gap-3 mt-5">
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: "var(--text2)" }}>Wat werkte goed?</label>
+            <label className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Wat werkte goed?</label>
             <textarea
               rows={2}
               value={wentWell}
               onChange={(event) => setWentWell(event.target.value)}
               placeholder="Bijvoorbeeld het tempo of de communicatie…"
-              className="focus-ring w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none resize-none"
+              className="focus-ring w-full text-base rounded-xl px-3 py-2.5 focus:outline-none resize-none"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
           </div>
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer</label>
+            <label className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer</label>
             <textarea
               rows={2}
               value={remember}
               onChange={(event) => setRemember(event.target.value)}
               placeholder="Bijvoorbeeld meer tijd nemen voor…"
-              className="focus-ring w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none resize-none"
+              className="focus-ring w-full text-base rounded-xl px-3 py-2.5 focus:outline-none resize-none"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
           </div>

@@ -77,16 +77,16 @@ function MomentRow({ moment, planned }: { moment: Moment; planned: boolean }) {
     <article className="grid grid-cols-[52px_1fr] gap-3 py-5 first:pt-2" style={{ borderBottom: "1px solid var(--border)" }}>
       <div className="pt-0.5 text-center" aria-label={moment.dateLabel}>
         <p className="text-lg font-semibold leading-none" style={{ color: "var(--text)" }}>{moment.day}</p>
-        <p className="mt-1 text-[10px] font-semibold tracking-[0.12em]" style={{ color: "var(--text2)" }}>{moment.month}</p>
+        <p className="mt-1 text-xs font-semibold tracking-[0.12em]" style={{ color: "var(--text2)" }}>{moment.month}</p>
       </div>
 
       <div className="min-w-0">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium" style={{ color: "var(--text2)" }}>{moment.time}</p>
-            <h2 className="mt-1 truncate text-[15px] font-semibold" style={{ color: "var(--text)" }}>{moment.title}</h2>
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
-              <User size={13} aria-hidden="true" />
+            <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>{moment.time}</p>
+            <h2 className="mt-1 truncate text-base font-semibold" style={{ color: "var(--text)" }}>{moment.title}</h2>
+            <div className="mt-1.5 flex items-center gap-1.5 text-sm" style={{ color: "var(--text2)" }}>
+              <User size={14} aria-hidden="true" />
               <span className="truncate">{moment.meta}</span>
             </div>
           </div>
@@ -102,7 +102,7 @@ function MomentRow({ moment, planned }: { moment: Moment; planned: boolean }) {
         </div>
 
         {moment.note && (
-          <p className="mt-2 text-sm leading-5" style={{ color: "var(--text2)" }}>{moment.note}</p>
+          <p className="mt-2 text-base leading-6" style={{ color: "var(--text2)" }}>{moment.note}</p>
         )}
 
         {planned && (
@@ -158,11 +158,11 @@ export default function SandboxPage() {
           >
             Ruimte voor elkaar, wanneer het past.
           </p>
-          <p className="mt-2 max-w-md text-sm leading-6" style={{ color: "var(--text2)" }}>
+          <p className="mt-2 max-w-md text-base leading-6" style={{ color: "var(--text2)" }}>
             Plan bewust tijd. Hou alleen bij wat voor jou betekenis heeft.
           </p>
 
-          <div className="mt-4 flex items-center gap-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+          <div className="mt-4 flex items-center gap-2 text-sm leading-5" style={{ color: "var(--text2)" }}>
             <ShieldCheck size={15} aria-hidden="true" style={{ color: "var(--accent)" }} />
             <span>Planning is geen toestemming. Alles blijft lokaal.</span>
           </div>
@@ -210,7 +210,7 @@ export default function SandboxPage() {
               <button
                 type="button"
                 onClick={() => setComposerOpen(true)}
-                className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-lg px-1 text-xs font-semibold"
+                className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold"
                 style={{ color: "var(--accent)" }}
               >
                 <Plus size={14} weight="bold" aria-hidden="true" />
@@ -239,7 +239,7 @@ export default function SandboxPage() {
         scrollable
       >
         <div className="space-y-6 px-1">
-          <p className="text-sm leading-6" style={{ color: "var(--text2)" }}>
+          <p className="text-base leading-6" style={{ color: "var(--text2)" }}>
             Maak ruimte zonder druk. Je kunt dit later altijd aanpassen of verwijderen.
           </p>
 
@@ -247,15 +247,15 @@ export default function SandboxPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--text2)" }}>Wanneer</p>
             <div className="grid grid-cols-[1fr_120px] gap-2 rounded-2xl p-2" style={{ background: "var(--surface2)" }}>
               <label className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface)" }}>
-                <span className="block text-[11px]" style={{ color: "var(--text2)" }}>Datum</span>
-                <span className="mt-1 flex items-center gap-2 text-sm font-medium">
+                <span className="block text-sm" style={{ color: "var(--text2)" }}>Datum</span>
+                <span className="mt-1 flex items-center gap-2 text-base font-medium">
                   <CalendarPlus size={15} aria-hidden="true" style={{ color: "var(--accent)" }} />
                   30 aug 2026
                 </span>
               </label>
               <label className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface)" }}>
-                <span className="block text-[11px]" style={{ color: "var(--text2)" }}>Tijd</span>
-                <span className="mt-1 flex items-center gap-2 text-sm font-medium">
+                <span className="block text-sm" style={{ color: "var(--text2)" }}>Tijd</span>
+                <span className="mt-1 flex items-center gap-2 text-base font-medium">
                   <Clock size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
                   20:30
                 </span>
@@ -265,34 +265,34 @@ export default function SandboxPage() {
 
           <section className="space-y-4">
             <label className="block">
-              <span className="text-xs font-semibold" style={{ color: "var(--text2)" }}>Titel</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Titel</span>
               <input
                 defaultValue="Date night"
-                className="mt-1.5 min-h-12 w-full border-0 border-b bg-transparent px-0 text-sm outline-none"
+                className="mt-1.5 min-h-12 w-full border-0 border-b bg-transparent px-0 text-base outline-none"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               />
             </label>
 
             <label className="block">
-              <span className="text-xs font-semibold" style={{ color: "var(--text2)" }}>Met wie</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Met wie</span>
               <div className="mt-1.5 flex min-h-12 items-center gap-2 border-b" style={{ borderColor: "var(--border)" }}>
                 <User size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
-                <span className="text-sm">Alex</span>
+                <span className="text-base">Alex</span>
               </div>
             </label>
 
             <label className="block">
-              <span className="text-xs font-semibold" style={{ color: "var(--text2)" }}>Privénotitie</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Privénotitie</span>
               <textarea
                 defaultValue="Samen koken en daarna niets moeten."
                 rows={3}
-                className="mt-2 w-full resize-none rounded-2xl p-3 text-sm leading-6 outline-none"
+                className="mt-2 w-full resize-none rounded-2xl p-3 text-base leading-6 outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
             </label>
           </section>
 
-          <div className="flex items-start gap-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+          <div className="flex items-start gap-2 text-sm leading-5" style={{ color: "var(--text2)" }}>
             <Heart size={14} aria-hidden="true" style={{ color: "var(--accent2)" }} />
             <span>Apple Agenda blijft een aparte, optionele stap nadat je het moment hebt gepland.</span>
           </div>

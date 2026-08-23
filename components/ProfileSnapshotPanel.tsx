@@ -100,13 +100,13 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
           >
             Wat er echt veranderde
           </h3>
-          <p className="mt-1.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
+          <p className="mt-1.5 text-sm leading-5" style={{ color: "var(--text2)" }}>
             {liveShifts.length > 0
               ? "Sinds het laatste profielmoment."
               : "Laatste betekenisvolle wijziging."}
           </p>
           <p
-            className="mt-1 text-[11px] leading-4"
+            className="mt-1 text-xs leading-4"
             style={{ color: "color-mix(in srgb, var(--accent) 44%, var(--text2))" }}
             aria-label={`Profielmoment ${dateLabel} om ${timeLabel}`}
           >
@@ -125,7 +125,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
             <p className="truncate text-sm font-medium">
               {names.get(shift.kinkId) ?? "Eigen onderwerp"}
             </p>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-sm">
               <span style={{ color: "var(--text2)" }}>
                 {shift.from ? STATUS_LABEL[shift.from] : "Nieuw"}
               </span>
@@ -145,14 +145,14 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          className="focus-ring mt-3 min-h-9 rounded-lg px-2 text-xs font-semibold"
+          className="focus-ring mt-3 min-h-9 rounded-lg px-2 text-sm font-semibold"
           style={{ color: "var(--accent)" }}
         >
           Toon {hiddenCount} meer
         </button>
       )}
 
-      <p className="mt-4 text-xs leading-5" style={{ color: "var(--text2)" }}>
+      <p className="mt-4 text-sm leading-5" style={{ color: "var(--text2)" }}>
         Nieuwe momenten worden automatisch en lokaal bijgehouden wanneer je profiel verandert. Privéantwoorden blijven hier verborgen.
       </p>
     </section>
