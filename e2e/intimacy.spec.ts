@@ -25,10 +25,11 @@ test.describe("Intimiteitsagenda", () => {
     await logDialog.getByLabel("Privé notitie (optioneel)").fill("Een dag later was fijner");
     await logDialog.getByRole("button", { name: "Bewaar in logboek" }).click();
 
+    const logbook = page.getByLabel("Logboek");
     await expect(page.getByRole("tab", { name: "Logboek" })).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByText("Date night", { exact: true })).toBeVisible();
-    await expect(page.getByText("Een dag later was fijner", { exact: true })).toBeVisible();
-    await expect(page.getByText(/31 aug/)).toBeVisible();
+    await expect(logbook.getByText("Date night", { exact: true })).toBeVisible();
+    await expect(logbook.getByText("Een dag later was fijner", { exact: true })).toBeVisible();
+    await expect(logbook.getByText(/31 aug/)).toBeVisible();
 
     const persisted = await page.evaluate(() => localStorage.getItem("kinksync-intimacy"));
     expect(persisted).toContain("Date night");

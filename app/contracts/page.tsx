@@ -2,13 +2,14 @@
 
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Archive,
   CaretDown,
   CaretRight,
   FileText,
   Pause,
+  Plus,
   QrCode,
   X,
 } from "@phosphor-icons/react";
@@ -143,6 +144,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
 }
 
 function ContractsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
   const series = useContractStore((state) => state.series);
@@ -158,7 +160,14 @@ function ContractsContent() {
       onClick: () => setInboxOpen(true),
       placement: "primary",
     },
-  ], []);
+    {
+      id: "new-contract",
+      label: "Nieuw contract",
+      icon: <Plus size={18} aria-hidden="true" />,
+      onClick: () => router.push("/compare"),
+      placement: "secondary",
+    },
+  ], [router]);
   useTopNavActions(navActions);
 
   if (!contractsReady) return <PageShell loading width="2xl" />;
@@ -259,7 +268,7 @@ function ContractsContent() {
               : tab === "paused"
                 ? "Tijdelijk gepauzeerde contracten blijven hier totdat beide partijen ze hervatten of iemand ze stopzet."
                 : "Stopgezette contracten en contracten met verwijderde profielen verschijnen hier."}
-            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Vergelijk profielen" } : {})}
+            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Nieuw contract" } : {})}
           />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
