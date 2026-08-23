@@ -76,7 +76,7 @@ describe("tokenContrast — the fixed dark room holds its ratios", () => {
       "--pwa-nav-icon",
       "--pwa-nav-icon-active",
     ]) {
-      expect(TOKENS[token], `${token} not found in the fixed palette`).toMatch(/^#[0-9a-f]{6}$/);
+      expect(TOKENS[token], `${token} not found in fixed palette`).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
 
@@ -107,9 +107,9 @@ describe("tokenContrast — the fixed dark room holds its ratios", () => {
     assertPair("--on-accent", "--accent2", 4.5);
   });
 
-  it("PWA dock icons keep non-text contrast in both states", () => {
-    assertPair("--pwa-nav-icon", "--pwa-nav-surface", 3);
-    assertPair("--pwa-nav-icon-active", "--pwa-nav-active", 3);
+  it("PWA dock icons and mini labels keep AA contrast in both states", () => {
+    assertPair("--pwa-nav-icon", "--pwa-nav-surface", 4.5);
+    assertPair("--pwa-nav-icon-active", "--pwa-nav-active", 4.5);
   });
 
   // Gevulde knoppen dragen een diepere vulling zodat er wit op kan. Zou iemand
