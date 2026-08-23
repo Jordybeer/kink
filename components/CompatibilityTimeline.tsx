@@ -74,9 +74,9 @@ export function CompatibilityTimeline({ contracts }: Props) {
                 );
               })}
               {c.safeword && (
-                <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
+                <p className="text-sm mt-1" style={{ color: "var(--text2)" }}>
                   safeword:{" "}
-                  <span style={{ color: "var(--text)" }}>{c.safeword}</span>
+                  <span className="font-semibold" style={{ color: "var(--text)" }}>{c.safeword}</span>
                 </p>
               )}
             </div>
