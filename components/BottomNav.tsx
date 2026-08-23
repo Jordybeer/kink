@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Lightning, FilmSlate, User } from "@phosphor-icons/react";
+import {
+  ArrowsLeftRight,
+  FileText,
+  FilmSlate,
+  House,
+  UserCircle,
+} from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { profileHref } from "@/lib/localRoutes";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -16,47 +22,57 @@ export default function BottomNav() {
   if (route.hideBottomNav) return null;
 
   const firstProfileId = hydrated ? profiles[0]?.id : undefined;
-  const firstProfileHref = firstProfileId ? profileHref(firstProfileId) : "/";
+  const firstProfileHref = firstProfileId ? profileHref(firstProfileId) : "/profile";
   const items = [
-    { href: "/compare", label: "Vergelijk", icon: Lightning, section: "compare" as const },
+    { href: "/", label: "Home", icon: House, section: "home" as const },
+    { href: "/compare", label: "Vergelijk", icon: ArrowsLeftRight, section: "compare" as const },
+    { href: "/contracts", label: "Contracten", icon: FileText, section: "contracts" as const },
     { href: "/scenes", label: "Scènes", icon: FilmSlate, section: "scenes" as const },
-    { href: firstProfileHref, label: "Profiel", icon: User, section: "profile" as const },
+    { href: firstProfileHref, label: "Profiel", icon: UserCircle, section: "profile" as const },
   ];
 
   return (
     <nav
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-40 justify-around px-2"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-40 px-2 pt-1"
       style={{
-        background: "var(--bg)",
-        borderTop: "1px solid var(--border)",
+        background:
+          "linear-gradient(180deg, color-mix(in srgb, #171a38 82%, var(--surface)) 0%, color-mix(in srgb, #0d1028 88%, var(--bg)) 100%)",
+        borderTop: "1px solid color-mix(in srgb, #879cff 18%, var(--border))",
+        boxShadow: "0 -10px 30px rgba(4, 6, 20, 0.28)",
         height: "var(--bottom-nav-h)",
-        alignItems: "center",
+        alignItems: "flex-start",
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
-      aria-label="Tabbladen"
+      aria-label="Hoofdnavigatie"
     >
       {items.map(({ href, label, icon: Icon, section }) => {
         const active = route.bottomNavSection === section;
         return (
           <Link
-            key={label}
+            key={section}
             href={href}
-            className="focus-ring flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
-            style={{
-              color: active ? "var(--text)" : "var(--text2)",
-              fontWeight: active ? 700 : 500,
-              minWidth: 44,
-              minHeight: 44,
-              justifyContent: "center",
-            }}
+            aria-label={label}
             aria-current={active ? "page" : undefined}
+            className="focus-ring flex min-h-11 flex-1 items-center justify-center rounded-xl transition-[background-color,transform] duration-150 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
+            style={{
+              background: active
+                ? "color-mix(in srgb, #5367b8 28%, transparent)"
+                : "transparent",
+            }}
           >
             <Icon
-              size={20}
+              size={23}
               weight={active ? "fill" : "regular"}
               aria-hidden="true"
-              className={`transition-transform duration-200 motion-reduce:transform-none motion-reduce:transition-none ${active ? "-translate-y-0.5 scale-[1.06]" : ""}`}
+              style={{
+                color: active
+                  ? "#c6ddff"
+                  : "#8fb7eb",
+                filter: active ? "drop-shadow(0 0 8px rgba(143, 183, 235, 0.24))" : "none",
+              }}
+              className="transition-transform duration-150 motion-reduce:transform-none motion-reduce:transition-none"
             />
-            <span className="text-xs tracking-[0.01em]">{label}</span>
+            <span className="sr-only">{label}</span>
           </Link>
         );
       })}
