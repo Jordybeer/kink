@@ -36,8 +36,8 @@ export default function BottomNav() {
       className="bottom-nav fixed inset-x-0 bottom-0 z-40 px-2 pt-1"
       style={{
         background:
-          "linear-gradient(180deg, color-mix(in srgb, #171a38 82%, var(--surface)) 0%, color-mix(in srgb, #0d1028 88%, var(--bg)) 100%)",
-        borderTop: "1px solid color-mix(in srgb, #879cff 18%, var(--border))",
+          "linear-gradient(180deg, var(--pwa-nav-surface) 0%, var(--pwa-nav-surface-deep) 100%)",
+        borderTop: "1px solid color-mix(in srgb, var(--pwa-nav-icon) 18%, var(--border))",
         boxShadow: "0 -10px 30px rgba(4, 6, 20, 0.28)",
         height: "var(--bottom-nav-h)",
         alignItems: "flex-start",
@@ -55,9 +55,7 @@ export default function BottomNav() {
             aria-current={active ? "page" : undefined}
             className="focus-ring flex min-h-11 flex-1 items-center justify-center rounded-xl transition-[background-color,transform] duration-150 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
             style={{
-              background: active
-                ? "color-mix(in srgb, #5367b8 28%, transparent)"
-                : "transparent",
+              background: active ? "var(--pwa-nav-active)" : "transparent",
             }}
           >
             <Icon
@@ -65,9 +63,7 @@ export default function BottomNav() {
               weight={active ? "fill" : "regular"}
               aria-hidden="true"
               style={{
-                color: active
-                  ? "#c6ddff"
-                  : "#8fb7eb",
+                color: active ? "var(--pwa-nav-icon-active)" : "var(--pwa-nav-icon)",
                 filter: active ? "drop-shadow(0 0 8px rgba(143, 183, 235, 0.24))" : "none",
               }}
               className="transition-transform duration-150 motion-reduce:transform-none motion-reduce:transition-none"
