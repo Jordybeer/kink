@@ -78,9 +78,10 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
   const contentRow = contentNav.getByTestId("content-topnav-row");
   await expect(contentRow).toBeVisible();
   const back = contentNav.getByRole("link", { name: "Terug" });
-  const primaryAction = contentNav.getByRole("button", { name: "Contractverzoek scannen" });
+  const primaryAction = contentNav.getByRole("button", { name: "Contract van partner scannen" });
   await expect(back).toBeVisible();
   await expect(primaryAction).toBeVisible();
+  await expect(primaryAction).toHaveText("Scan QR");
 
   const [backBox, primaryActionBox] = await Promise.all([
     back.boundingBox(),
@@ -88,12 +89,14 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
   ]);
   expect(backBox).not.toBeNull();
   expect(primaryActionBox).not.toBeNull();
-  for (const box of [backBox!, primaryActionBox!]) {
-    expect(box.width).toBeGreaterThanOrEqual(43);
-    expect(box.width).toBeLessThanOrEqual(45);
-    expect(box.height).toBeGreaterThanOrEqual(43);
-    expect(box.height).toBeLessThanOrEqual(45);
-  }
+  expect(backBox!.width).toBeGreaterThanOrEqual(43);
+  expect(backBox!.width).toBeLessThanOrEqual(45);
+  expect(backBox!.height).toBeGreaterThanOrEqual(43);
+  expect(backBox!.height).toBeLessThanOrEqual(45);
+  expect(primaryActionBox!.width).toBeGreaterThanOrEqual(72);
+  expect(primaryActionBox!.width).toBeLessThanOrEqual(110);
+  expect(primaryActionBox!.height).toBeGreaterThanOrEqual(43);
+  expect(primaryActionBox!.height).toBeLessThanOrEqual(45);
 
   const contentGeometry = await contentRow.evaluate((element) => {
     const style = getComputedStyle(element);
