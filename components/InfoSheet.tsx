@@ -46,7 +46,7 @@ export default function InfoSheet({ kink, onClose }: Props) {
           </span>
         )}
 
-        <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text)" }}>
+        <p className="text-base leading-relaxed mb-6" style={{ color: "var(--text)" }}>
           {kink?.description ?? "Geen beschrijving beschikbaar."}
         </p>
 
