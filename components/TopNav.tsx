@@ -151,7 +151,7 @@ export default function TopNav() {
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
               title="Instellingen openen"
-              className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full px-1.5 text-xs font-medium"
+              className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full px-1.5 text-sm font-medium"
               style={{ color: "var(--text2)", pointerEvents: "auto" }}
             >
               <GearSix size={17} aria-hidden="true" />
@@ -170,7 +170,7 @@ export default function TopNav() {
                   onClick={() => setInstallGuideOpen(true)}
                   aria-label="KinkSync installeren"
                   title="KinkSync installeren"
-                  className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full border px-3 text-xs font-medium"
+                  className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full border px-3 text-sm font-medium"
                   style={{ ...homeUtilitySurface, color: "var(--text2)" }}
                 >
                   <DownloadSimple size={17} aria-hidden="true" />
@@ -340,7 +340,7 @@ function TopNavActionButton({
       disabled={action.disabled}
       aria-label={action.label}
       title={action.label}
-      className={`focus-ring flex h-11 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5 ${labelled ? "min-w-11 gap-1.5 px-3 text-xs font-semibold" : "w-11"}`}
+      className={`focus-ring flex h-11 flex-none items-center justify-center rounded-full disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5 ${labelled ? "min-w-11 gap-1.5 px-3 text-sm font-semibold" : "w-11"}`}
       style={{
         color: action.danger
           ? "var(--hard-no)"
@@ -376,7 +376,7 @@ function OfflineStatus() {
       role="status"
       aria-live="polite"
       aria-label="Offline"
-      className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-[11px] font-medium"
+      className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-xs font-medium"
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
       <WifiSlash size={15} aria-hidden="true" />
