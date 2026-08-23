@@ -111,7 +111,7 @@ export default function SandboxHomePage() {
           </div>
         </section>
 
-        <footer className="mx-auto mt-7 max-w-sm px-2 text-center">
+        <footer className="mx-auto mt-7 max-w-sm px-2 pb-7 text-center">
           <div
             className="mx-auto h-px w-12"
             style={{ background: "color-mix(in srgb, var(--border-accent) 70%, var(--border))" }}
