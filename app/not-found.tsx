@@ -32,10 +32,6 @@ export default function NotFound() {
             Terug naar home
             <ArrowRight size={17} weight="bold" aria-hidden="true" />
           </Link>
-
-          <p className={styles.reassurance} data-testid="not-found-reassurance">
-            Je lokale profielen en antwoorden zijn niet weg. Alleen deze pagina ontbreekt.
-          </p>
         </div>
       </section>
     </PageShell>

@@ -103,7 +103,7 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
               {[scene.consentSnapshots.profileA, scene.consentSnapshots.profileB].map((snapshot) => (
                 <div key={snapshot.profileId} className="rounded-lg px-3 py-2" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                   <p className="text-sm font-semibold truncate">{snapshot.profileName}</p>
-                  <p className="text-sm mt-0.5" style={{ color: "var(--yes)" }}>Profielbron bevestigd · v{snapshot.proof.version}</p>
+                  <p className="text-sm mt-0.5" style={{ color: "var(--text2)" }}>Profielversie · v{snapshot.proof.version}</p>
                   <p className="text-xs truncate mt-0.5" style={{ color: "var(--text2)" }}>{snapshot.alias}</p>
                 </div>
               ))}
@@ -112,8 +112,8 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
             {valid && (
               <div className="rounded-lg px-3 py-2.5 mb-4 text-sm leading-relaxed" style={{ background: "color-mix(in srgb, var(--yes) 7%, var(--surface2))", border: "1px solid var(--border)", color: "var(--text2)" }}>
                 {bothSigned
-                  ? `De exacte scène-afspraak is door beide lokale profielsleutels bevestigd (${signerNames.join(" en ")}).`
-                  : `De exacte scène-afspraak is vastgezet door ${signerNames.join(" en ")}. De andere profielbron is bevestigd, maar dat is geen aparte live bevestiging voor deze specifieke sessie.`}
+                  ? `Vastgezet door ${signerNames.join(" en ")}.`
+                  : `Vastgezet door ${signerNames.join(" en ")}. De andere profielversie hoort bij deze afspraak, maar is niet apart voor deze sessie bevestigd.`}
               </div>
             )}
 
@@ -132,7 +132,7 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
 
             {ownProfiles.length > 0 && valid && (
               <div className="rounded-lg p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                <p className="text-sm mb-2 leading-relaxed" style={{ color: "var(--text2)" }}>Een nieuwe wijziging wordt ondertekend door het gekozen eigen profiel en achteraan toegevoegd. Eerdere regels blijven staan.</p>
+                <p className="text-sm mb-2 leading-relaxed" style={{ color: "var(--text2)" }}>Nieuwe wijzigingen worden achteraan toegevoegd; eerdere regels blijven staan.</p>
                 {ownProfiles.length > 1 && (
                   <select value={selectedProfileId} onChange={(event) => setSelectedProfileId(event.target.value)} className="w-full rounded-lg px-3 py-2 text-sm mb-2" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}>
                     {ownProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
@@ -151,11 +151,11 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
         {message && <p role="status" className="text-sm mt-3" style={{ color: message.startsWith("✓") ? "var(--yes)" : "var(--text2)" }}>{message}</p>}
 
         <details className="mt-4">
-          <summary className="text-sm cursor-pointer focus-ring rounded" style={{ color: "var(--accent)" }}>Hoe beschermt dit jullie afspraken?</summary>
+          <summary className="text-sm cursor-pointer focus-ring rounded" style={{ color: "var(--accent)" }}>Technische details</summary>
           <div className="text-sm mt-2 flex flex-col gap-2 leading-relaxed" style={{ color: "var(--text2)" }}>
             <p>Elke bevestigde profielversie heeft een controleerbare digitale verzegeling. Een logregel telt alleen wanneer de sleutel werkelijk bij één van de twee scèneprofielen hoort; een willekeurige andere sleutel wordt afgewezen.</p>
             <p>Bij het vastzetten bewaart KinkSync exact welke profielversies, activiteiten, intensiteiten, notities en welk safeword golden. Een wijziging of intrekking komt later als nieuwe regel erbij.</p>
-            <p>Dit maakt gewijzigde inhoud en gebroken ketens zichtbaar. Zonder server kan een volledig toestel of volledige backup nog steeds naar een oudere, op zichzelf geldige kopie worden teruggezet. Twee onafhankelijke toestelkopieën of een versleutelde backup geven bij belangrijke afspraken extra controle.</p>
+            <p>Dit maakt gewijzigde inhoud en gebroken ketens zichtbaar. Zonder server kan een volledig toestel of volledige back-up nog steeds naar een oudere, op zichzelf geldige kopie worden teruggezet. Twee onafhankelijke toestelkopieën of een versleutelde back-up geven bij belangrijke afspraken extra controle.</p>
             <p>Dit vervangt geen gesprek: toestemming kan altijd mondeling of non-verbaal worden ingetrokken en dan moet de activiteit meteen stoppen.</p>
           </div>
         </details>

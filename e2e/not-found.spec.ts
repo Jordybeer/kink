@@ -24,13 +24,6 @@ async function assertNotFoundFits(page: Page) {
   const homeLink = page.getByRole("link", { name: /terug naar home/i });
   await expect(homeLink).toHaveAttribute("href", "/");
 
-  const reassurance = page.getByTestId("not-found-reassurance");
-  await expect(reassurance).toContainText(/lokale profielen en antwoorden zijn niet weg/i);
-  await expect(reassurance).toContainText(/alleen deze pagina ontbreekt/i);
-  // De twee zinnen lopen bewust in één adem door; een harde regelbreuk hakte
-  // die gedachte in tweeën. Dit pint dus de afwezigheid, niet de aanwezigheid.
-  await expect(reassurance.locator("br")).toHaveCount(0);
-
   const hero = page.getByTestId("not-found-hero");
   await expect(hero).toBeVisible();
 

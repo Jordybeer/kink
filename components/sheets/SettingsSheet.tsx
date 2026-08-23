@@ -8,7 +8,7 @@ import {
   Fingerprint,
   Key,
   LockKey,
-  ShieldCheck,
+  Sparkle,
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
@@ -265,10 +265,10 @@ export default function SettingsSheet({
               className={SETTINGS_ROW_CLASS}
             >
               <RowContent
-                icon={<ShieldCheck size={19} aria-hidden="true" />}
+                icon={<Sparkle size={19} aria-hidden="true" />}
                 iconColor={SETTINGS_ICON_TONES.about}
                 title="Over KinkSync"
-                description="Privacy, verificatie en lokale opslag"
+                description="Wat KinkSync doet en hoe het werkt"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </Link>

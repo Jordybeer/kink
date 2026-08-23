@@ -5,8 +5,7 @@ import { useEffect } from "react";
 /**
  * De laatste deur. Deze vangt fouten in de root layout zelf en vervángt die
  * layout, dus hier is geen globals.css, geen ThemeProvider en geen font — alles
- * staat inline. Zelfde toon als app/error.tsx, maar tot op het bot uitgekleed,
- * want alles wat hier nog kan breken, breekt het vangnet zelf.
+ * staat inline. Zelfde toon als app/error.tsx, maar tot op het bot uitgekleed.
  */
 export default function GlobalError({
   error,
@@ -73,10 +72,6 @@ export default function GlobalError({
           >
             Herlaad KinkSync
           </button>
-
-          <p style={{ marginTop: "1.25rem", fontSize: "0.875rem", lineHeight: 1.6, color: "#A198A4" }}>
-            Je profielen, antwoorden en contracten staan nog op dit toestel. Er is niets verloren gegaan.
-          </p>
         </main>
       </body>
     </html>

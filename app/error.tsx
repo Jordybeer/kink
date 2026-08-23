@@ -8,11 +8,8 @@ import styles from "./error.module.css";
 
 /**
  * De kamer waar het misging.
- *
- * Serious ≠ scary (UI-principles #10): geen alarmrood, geen stacktrace, geen
- * dramatiek. En het eerste wat iemand bij een crash wil weten in een app die
- * belooft dat alles lokaal blijft: staat mijn spul er nog? Dat antwoord staat er
- * daarom letterlijk, net als op de 404.
+ * Serious ≠ scary (UI-principles #10): geen alarmrood, geen stacktrace en geen
+ * garanties over state die een onverwachte runtimefout niet kan waarmaken.
  */
 export default function Error({
   error,
@@ -36,7 +33,7 @@ export default function Error({
             Deze pagina liep vast.
           </h1>
           <p className={styles.description}>
-            Niet jouw schuld. Er ging hier iets onverwachts mis. Opnieuw proberen helpt meestal.
+            Er ging hier iets onverwachts mis. Opnieuw proberen helpt meestal.
           </p>
 
           <div className={styles.actions}>
@@ -48,10 +45,6 @@ export default function Error({
               Terug naar home
             </Link>
           </div>
-
-          <p className={styles.reassurance} data-testid="error-reassurance">
-            Je profielen, antwoorden en contracten staan nog op dit toestel. Er is niets verloren gegaan.
-          </p>
         </div>
       </section>
     </PageShell>
