@@ -42,6 +42,8 @@ Anything sub-12px that a user must *read* (counts, "N resultaten", interactive s
 - Prose keeps default Tailwind leading (≥ 1.4). `leading-tight` only on single-line truncated serif titles.
 - Contrast: AA everywhere — colour tokens verified in Phases 3e + 24c; new tokens must pass before shipping (`corrections.md` 2026-06-20).
 
+`globals.css` also carries a semantic floor backstop for older components that still contain historical `text-xs` classes on actions, explanatory prose or meaningful states. It renders those contexts at 14px while preserving the fixed PWA navigation labels at 12px. This is a migration guard, **not** permission to author new actions or required copy with `text-xs`; touched code should use the correct semantic class directly.
+
 ## How to add type without getting spanked
 
 1. Pick a role from the tables above; use its class. No inline `fontSize`.
