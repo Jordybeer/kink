@@ -329,29 +329,43 @@ export default function ProfilePage({ params }: Props) {
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           />
 
-          <div className="mt-2 flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setCategoriesOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={categoriesOpen}
-              className="focus-ring inline-flex min-h-9 min-w-0 max-w-[76vw] items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-              style={catalogCategoryFilter
-                ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-                : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-            >
-              <span className="truncate">{catalogCategoryFilterLabel}</span>
-              <CaretDown size={11} className="flex-none" aria-hidden="true" />
-            </button>
-            {catalogCategoryFilter && (
+          <div className="mt-2 flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setCatalogCategoryFilter(null)}
-                aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
-                className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                onClick={() => setCategoriesOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={categoriesOpen}
+                className="focus-ring inline-flex min-h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                style={catalogCategoryFilter
+                  ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
+                  : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
               >
-                <X size={13} weight="bold" aria-hidden="true" />
+                <span className="truncate">{catalogCategoryFilterLabel}</span>
+                <CaretDown size={11} className="flex-none" aria-hidden="true" />
+              </button>
+              {catalogCategoryFilter && (
+                <button
+                  type="button"
+                  onClick={() => setCatalogCategoryFilter(null)}
+                  aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
+                  className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+                >
+                  <X size={13} weight="bold" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+            {effectiveTab === "overzicht" && totalRated > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowOverviewComments((value) => !value)}
+                aria-label={showOverviewComments ? "Verberg notities" : "Toon notities"}
+                className="focus-ring inline-flex min-h-10 flex-none items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                style={{ color: showOverviewComments ? "var(--accent)" : "var(--text2)", border: "1px solid var(--border)" }}
+              >
+                <ChatCircle aria-hidden="true" size={16} />
+                <span>{showOverviewComments ? "Verberg notities" : "Toon notities"}</span>
               </button>
             )}
           </div>
@@ -509,19 +523,6 @@ export default function ProfilePage({ params }: Props) {
                 </p>
               ) : (
                 <>
-                  <div className="flex justify-end mb-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowOverviewComments((value) => !value)}
-                      aria-label={showOverviewComments ? "Verberg notities" : "Toon notities"}
-                      className="focus-ring min-h-10 rounded-full px-3 flex items-center justify-center gap-1.5 text-xs font-semibold"
-                      style={{ color: showOverviewComments ? "var(--accent)" : "var(--text2)", border: "1px solid var(--border)" }}
-                    >
-                      <ChatCircle aria-hidden="true" size={16} />
-                      <span>{showOverviewComments ? "Verberg notities" : "Toon notities"}</span>
-                    </button>
-                  </div>
-
                   {ratedByCategory.map(({ category, kinks }) => (
                     <section key={category} className="mb-4">
                       <h3
