@@ -266,15 +266,16 @@ select {
 :is(button, a, label)[class~="text-xs"],
 :is(button, a) > [class~="text-xs"],
 p[class~="text-xs"]:not([class~="uppercase"]):not([class~="tabular-nums"]),
-div[class~="text-xs"]:not([class~="font-mono"]),
+div[class~="text-xs"]:not([class~="font-mono"]):not([class~="uppercase"]):not([class~="tabular-nums"]),
 [role="alert"][class~="text-xs"],
 span[class~="text-xs"][class~="font-medium"][class~="rounded-full"],
-span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]),
+span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]):not([class~="tabular-nums"]),
 [class~="text-xs"][class~="leading-relaxed"],
 [class~="text-xs"][class~="leading-5"],
 [data-testid="question-essence"],
 [data-testid="question-agreements-label"],
-[data-testid="about-promises"] p {
+[data-testid="about-promises"] p,
+[aria-live="polite"] > div[class~="text-center"] > p[class~="text-xs"][class~="tabular-nums"] {
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
@@ -318,7 +319,7 @@ span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]),
 .ks-glow-willing { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--willing) 22%, transparent); }
 .ks-glow-maybe   { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--maybe) 22%, transparent); }
 .ks-glow-no      { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--no) 22%, transparent); }
-.ks-glow-hard_no { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--hard-no) 22%, transparent); }
+.ks-glow-hard-no { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--hard-no) 22%, transparent); }
 
 .partner-hidden {
   filter: blur(8px);
