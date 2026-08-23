@@ -20,7 +20,10 @@
   --pwa-nav-active: #242D55;
   --pwa-nav-icon: #8FB7EB;
   --pwa-nav-icon-active: #C6DDFF;
-  --bottom-nav-h: calc(env(safe-area-inset-bottom) + 4.25rem);
+  /* 76px base = 56px tab + 6px top air + 14px lift above the iPhone corner/home-indicator zone. */
+  --bottom-nav-base-h: 4.75rem;
+  --bottom-nav-h: calc(env(safe-area-inset-bottom) + var(--bottom-nav-base-h));
+  --bottom-nav-side-inset: 1.25rem;
   /* Browser and installed PWA keep the same page geometry; only the dock itself is PWA-only. */
   --page-bottom-clearance: calc(var(--bottom-nav-h) + 0.75rem);
 
@@ -31,6 +34,12 @@
 
 @media (display-mode: standalone) {
   :root {
-    --toast-lift: calc(4.25rem + 0.75rem);
+    --toast-lift: calc(var(--bottom-nav-base-h) + 0.75rem);
   }
+}
+
+/* Home alone can sit a little closer to its utility nav. The selector only
+   matches once onboarding is complete and the home TopNav is actually present. */
+body:has([data-top-nav-variant="home"]) main {
+  padding-top: 0.75rem;
 }
