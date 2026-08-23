@@ -30,14 +30,14 @@ export default function PrivateResponseStatus({
 }: Props) {
   const t = useMotionSafe();
   const sizeClass = readable
-    ? "text-[14px] px-2 py-1"
+    ? "text-sm px-2 py-1"
     : compact
-      ? "text-[11px] px-1.5 py-0.5"
-      : "text-xs px-1.5 py-0.5 min-w-[5.5rem]";
+      ? "text-sm px-1.5 py-0.5"
+      : "text-sm px-1.5 py-0.5 min-w-[5.5rem]";
   const sharedClass = `focus-ring rounded-full border whitespace-nowrap inline-flex items-center justify-center gap-1 ${sizeClass}`;
 
   if (!status) {
-    return <span className={readable ? "text-[14px]" : "text-xs"} style={{ color: "var(--text2)" }}>—</span>;
+    return <span className="text-sm" style={{ color: "var(--text2)" }}>—</span>;
   }
 
   const colour = STATUS_VAR[status];
@@ -73,7 +73,7 @@ export default function PrivateResponseStatus({
             exit={{ opacity: 0, filter: "blur(4px)" }}
             transition={t.fast}
           >
-            <EyeSlash size={readable ? 13 : compact ? 9 : 10} aria-hidden="true" />
+            <EyeSlash size={readable ? 13 : compact ? 10 : 10} aria-hidden="true" />
             Privé
           </motion.button>
         ) : (
@@ -89,7 +89,7 @@ export default function PrivateResponseStatus({
             exit={{ opacity: 0, filter: "blur(4px)" }}
             transition={t.fast}
           >
-            <Eye size={readable ? 13 : compact ? 9 : 10} aria-hidden="true" />
+            <Eye size={readable ? 13 : compact ? 10 : 10} aria-hidden="true" />
             <StatusGlyph status={status} />
             {STATUS_LABEL[status]}
           </motion.button>

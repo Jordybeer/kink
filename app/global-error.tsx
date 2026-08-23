@@ -29,8 +29,8 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           padding: "1.5rem",
-          background: "#0a0a0f",
-          color: "#f2ecf5",
+          background: "#09070D",
+          color: "#F1EAF0",
           fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
           textAlign: "center",
         }}
@@ -47,7 +47,7 @@ export default function GlobalError({
           >
             KinkSync liep vast.
           </h1>
-          <p style={{ marginTop: "0.75rem", fontSize: "0.9rem", lineHeight: 1.6, color: "#b9adc4" }}>
+          <p style={{ marginTop: "0.75rem", fontSize: "0.9rem", lineHeight: 1.6, color: "#A198A4" }}>
             Er ging iets mis bij het opstarten van de app. Herladen helpt meestal.
           </p>
 
@@ -64,8 +64,8 @@ export default function GlobalError({
               padding: "0 1.25rem",
               border: "none",
               borderRadius: "1rem",
-              background: "#E45AAB",
-              color: "#1a0714",
+              background: "#D4527C",
+              color: "#181225",
               fontSize: "0.875rem",
               fontWeight: 700,
               cursor: "pointer",
@@ -74,7 +74,7 @@ export default function GlobalError({
             Herlaad KinkSync
           </button>
 
-          <p style={{ marginTop: "1.25rem", fontSize: "0.75rem", lineHeight: 1.6, color: "#b9adc4" }}>
+          <p style={{ marginTop: "1.25rem", fontSize: "0.875rem", lineHeight: 1.6, color: "#A198A4" }}>
             Je profielen, antwoorden en contracten staan nog op dit toestel. Er is niets verloren gegaan.
           </p>
         </main>

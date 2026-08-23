@@ -78,7 +78,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${label}. Bekijk bron en toestemming`}
-        className="focus-ring inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full px-2.5 text-[12px] font-normal transition-colors active:opacity-70"
+        className="focus-ring inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"
         style={{ color, background, border: `1px solid ${borderColor}` }}
       >
         {checking
@@ -99,7 +99,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
           className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-6"
         >
           <h2 className="mb-2 text-lg font-bold">Bron en toestemming</h2>
-          <p className="mb-4 text-sm" style={{ color: "var(--text2)", lineHeight: 1.65 }}>
+          <p className="mb-4 text-base" style={{ color: "var(--text2)", lineHeight: 1.65 }}>
             KinkSync kan een versie van dit profiel digitaal verzegelen. Alleen het toestel met de eigendomssleutel kan daarna een geldige nieuwe versie maken. Zo valt op wanneer gedeelde antwoorden achteraf zijn aangepast.
           </p>
 
@@ -107,14 +107,14 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Profielbewijs</p>
-                <p className="mt-0.5 text-xs" style={{ color: "var(--text2)" }}>
+                <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
                   Gebruik dit om dezelfde profielbron op twee toestellen te herkennen.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={copyProof}
-                className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium"
+                className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium"
                 style={{
                   borderColor: copied ? "var(--willing)" : "var(--border)",
                   color: copied ? "var(--willing)" : "var(--text2)",
@@ -162,7 +162,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
             </div>
           )}
 
-          <p className="mb-5 text-xs" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
+          <p className="mb-5 text-sm" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
             Dit bevestigt de cryptografische bron en inhoud van de opgeslagen versie. Het bewijst geen wettelijke identiteit of vrijwilligheid. Mondelinge of non-verbale intrekking geldt altijd onmiddellijk.
           </p>
           <button onClick={() => setOpen(false)} className="focus-ring w-full rounded-xl border py-2.5 text-sm" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>

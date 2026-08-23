@@ -52,9 +52,9 @@ export default function ContractDetailPage() {
             <h1 className="truncate text-2xl italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
               {a.profileName} × {b.profileName}
             </h1>
-            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{a.role} × {b.role}</p>
+            <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{a.role} × {b.role}</p>
           </div>
-          <span className="rounded-full px-2.5 py-1 text-[11px] font-medium" style={{ color: statusColour, background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <span className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ color: statusColour, background: "var(--surface2)", border: "1px solid var(--border)" }}>
             {contractStatusLabel(series, profiles)}
           </span>
         </div>
@@ -79,7 +79,7 @@ export default function ContractDetailPage() {
             </div>
             {version.summary.safeword && (
               <div className="mt-3 flex min-h-11 items-center rounded-xl px-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                <span className="text-xs" style={{ color: "var(--text2)" }}>Safeword</span>
+                <span className="text-sm" style={{ color: "var(--text2)" }}>Safeword</span>
                 <span className="ml-auto text-sm font-semibold">{version.summary.safeword}</span>
               </div>
             )}
@@ -89,7 +89,7 @@ export default function ContractDetailPage() {
         {series.pendingRequest && (
           <div className="mt-4 rounded-xl px-3 py-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <p className="text-sm font-medium">Bevestiging staat nog open</p>
-            <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
               Open Beheren om de QR opnieuw te tonen of het antwoord van de tweede partij te scannen.
             </p>
           </div>
@@ -98,7 +98,7 @@ export default function ContractDetailPage() {
         {!profilesAvailable && (
           <div className="mt-4 rounded-xl px-3 py-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <p className="text-sm font-medium">Profiel niet meer beschikbaar</p>
-            <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
               De historiek blijft leesbaar, maar dit contract kan niet worden heractiveerd.
             </p>
           </div>

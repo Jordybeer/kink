@@ -1,7 +1,5 @@
 "use client";
 import { useState, useCallback, useEffect, Suspense } from "react";
-import { motion } from "framer-motion";
-import { useMotionSafe } from "@/lib/motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -11,165 +9,19 @@ import type { Profile, SceneItem, SceneRecord } from "@/types";
 import {
   activeSignedContractForPair,
   contractVersionById,
-  type ContractSeries,
 } from "@/lib/contractLifecycle";
 import Sheet from "@/components/Sheet";
 import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
-import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, LockKey, Plus, Trash, X } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, Plus, Trash, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 import { comparableEntry, visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
 import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
 
 function uid() {
   return crypto.randomUUID();
-}
-
-// ─── Contract gate ────────────────────────────────────────────────────────────
-
-function ContractGate({
-  profiles,
-  initialA,
-  initialB,
-  contractSeries,
-}: {
-  profiles: Profile[];
-  initialA: string;
-  initialB: string;
-  contractSeries: ContractSeries[];
-}) {
-  const router = useRouter();
-  const t = useMotionSafe();
-  const [selectedA, setSelectedA] = useState(initialA);
-  const [selectedB, setSelectedB] = useState(initialB);
-  const [whyOpen, setWhyOpen] = useState(false);
-
-  const canProceed = selectedA && selectedB && selectedA !== selectedB;
-  const existingContract = canProceed
-    ? activeSignedContractForPair(contractSeries, selectedA, selectedB)
-    : undefined;
-  const contractHref = canProceed
-    ? `/contract?a=${selectedA}&b=${selectedB}`
-    : "/contract";
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 60,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))",
-        background: "rgba(0,0,0,0.45)",
-        backdropFilter: "blur(20px) saturate(0.6)",
-        WebkitBackdropFilter: "blur(20px) saturate(0.6)",
-      }}
-    >
-      <motion.div
-        initial={{ scale: 0.92, y: 20, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        transition={t.modal}
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 20,
-          maxWidth: 460,
-          width: "100%",
-          maxHeight: "min(680px, calc(var(--visual-viewport-height, 100dvh) - 32px))",
-          overflowY: "auto",
-          padding: "24px 20px 20px",
-        }}
-      >
-        <div className="mb-4 flex items-center justify-center">
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              background: "color-mix(in srgb, var(--accent) 12%, transparent)",
-              border: "1px solid var(--border-accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <LockKey size={22} weight="duotone" aria-hidden="true" style={{ color: "var(--accent)" }} />
-          </div>
-        </div>
-
-        <h2 className="mb-2 text-center text-lg font-semibold" style={{ color: "var(--text)" }}>
-          Verbond vereist
-        </h2>
-
-        <p className="mx-auto mb-4 max-w-sm text-center text-sm leading-6" style={{ color: "var(--text2)" }}>
-          Voor een scène is een actief bevestigd contract nodig. Kies twee profielen om verder te gaan.
-        </p>
-
-        <button
-          type="button"
-          onClick={() => setWhyOpen((open) => !open)}
-          aria-expanded={whyOpen}
-          className="focus-ring mx-auto mb-4 flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-medium"
-          style={{ color: "var(--accent)" }}
-        >
-          Waarom is dit nodig?
-          <CaretDown size={13} aria-hidden="true" className={whyOpen ? "rotate-180" : ""} />
-        </button>
-
-        {whyOpen && (
-          <div className="mb-5 rounded-xl p-3 text-sm leading-6" style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
-            Een verbond legt grenzen, verlangens en safewords vast voordat de setlist wordt gepland. Zo blijven toestemming en afspraken het uitgangspunt van de scène.
-          </div>
-        )}
-
-        <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <ProfileSelect
-            profiles={profiles}
-            value={selectedA}
-            onChange={setSelectedA}
-            placeholder="Profiel A"
-          />
-          <ProfileSelect
-            profiles={profiles}
-            value={selectedB}
-            onChange={setSelectedB}
-            placeholder="Profiel B"
-          />
-        </div>
-
-        {existingContract ? (
-          <button
-            onClick={() => router.push(`/scene?a=${selectedA}&b=${selectedB}`)}
-            className="focus-ring mb-2 inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-semibold"
-            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-          >
-            Ga naar scène <ArrowRight size={15} aria-hidden="true" />
-          </button>
-        ) : (
-          <button
-            onClick={() => router.push(contractHref)}
-            disabled={!canProceed}
-            className="focus-ring mb-2 min-h-12 w-full rounded-xl px-4 text-sm font-semibold disabled:opacity-40"
-            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-          >
-            Contract opstellen
-          </button>
-        )}
-
-        <button
-          onClick={() => router.back()}
-          className="focus-ring min-h-11 w-full rounded-xl px-4 text-sm"
-          style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
-        >
-          Terug
-        </button>
-      </motion.div>
-    </div>
-  );
 }
 
 // ─── Arc bar ────────────────────────────────────────────────────────────────
@@ -426,6 +278,16 @@ function ScenePage() {
     }
   }, [_hasHydrated, resolvedAId, resolvedBId, contractSeries]);
 
+  function selectProfile(side: "a" | "b", profileId: string) {
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("id");
+    next.set(side, profileId);
+    const otherSide = side === "a" ? "b" : "a";
+    if (next.get(otherSide) === profileId) next.delete(otherSide);
+    setSaveError(null);
+    router.replace(`/scene?${next.toString()}`);
+  }
+
   const handleUpdate = useCallback((id: string, patch: Partial<SceneItem>) => {
     if (isConsentLocked) return;
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -475,8 +337,8 @@ function ScenePage() {
       setSaveError("Deze afspraken zijn vastgezet. Maak een nieuwe scène voor een gewijzigde setlist.");
       return;
     }
-    if (!profileA || !profileB) {
-      setSaveError("Kies twee profielen voordat je deze scène vastlegt.");
+    if (!profileA || !profileB || profileA.id === profileB.id) {
+      setSaveError("Kies twee verschillende profielen voordat je deze scène vastlegt.");
       return;
     }
     setSaveError(null);
@@ -563,7 +425,11 @@ function ScenePage() {
   });
 
   const hasKinks = mutualKinks.length > 0 || spanningKinks.length > 0 || topKinks.length > 0;
-  const gated = !sceneIdParam && !activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId);
+  const activeContract = resolvedAId && resolvedBId && resolvedAId !== resolvedBId
+    ? activeSignedContractForPair(contractSeries, resolvedAId, resolvedBId)
+    : undefined;
+  const needsProfiles = !sceneIdParam && (!profileA || !profileB || profileA.id === profileB.id);
+  const showOptionalContract = !sceneIdParam && !needsProfiles && !activeContract;
 
   return (
     <>
@@ -615,11 +481,58 @@ function ScenePage() {
           />
         </div>
 
-        {!profileA && !profileB && !sceneIdParam && (
-          <div className="mb-3 rounded-xl px-3 py-2.5 text-xs" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-            <p className="mb-1" style={{ color: "var(--text2)" }}>Kies profielen voor kink-suggesties, of voeg items handmatig toe.</p>
-            <Link href="/compare" className="inline-flex items-center gap-1" style={{ color: "var(--accent)" }}><ArrowRight size={13} aria-hidden="true" />Profielen kiezen via Vergelijk</Link>
-          </div>
+        {needsProfiles && (
+          <section
+            className="mb-3 rounded-xl p-3"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+            aria-labelledby="scene-profiles-title"
+          >
+            <p id="scene-profiles-title" className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+              Voor wie is deze scène?
+            </p>
+            <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+              Kies twee profielen. Een contract is optioneel.
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <ProfileSelect
+                profiles={profiles}
+                value={aId}
+                onChange={(id) => selectProfile("a", id)}
+                placeholder="Profiel A"
+              />
+              <ProfileSelect
+                profiles={profiles}
+                value={bId}
+                onChange={(id) => selectProfile("b", id)}
+                placeholder="Profiel B"
+              />
+            </div>
+          </section>
+        )}
+
+        {showOptionalContract && profileA && profileB && (
+          <section
+            className="mb-3 flex flex-col gap-3 rounded-xl p-3 sm:flex-row sm:items-center"
+            style={{ background: "color-mix(in srgb, var(--accent) 5%, var(--surface2))", border: "1px solid var(--border)" }}
+            aria-labelledby="scene-contract-title"
+          >
+            <div className="min-w-0 flex-1">
+              <p id="scene-contract-title" className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
+                Contract · optioneel
+              </p>
+              <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                Een contract kan jullie kink-matches en afspraken als extra startpunt geven, zodat je de scène persoonlijker kunt maken.
+              </p>
+            </div>
+            <Link
+              href={`/contract?a=${profileA.id}&b=${profileB.id}`}
+              className="focus-ring inline-flex min-h-10 flex-none items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold"
+              style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
+            >
+              Contract opstellen
+              <ArrowRight size={13} aria-hidden="true" />
+            </Link>
+          </section>
         )}
 
         <div className="mb-3 flex items-center gap-2">
@@ -752,15 +665,6 @@ function ScenePage() {
           )}
         </div>
       </div>
-
-      {gated && (
-        <ContractGate
-          profiles={profiles}
-          initialA={aId}
-          initialB={bId}
-          contractSeries={contractSeries}
-        />
-      )}
 
       <Sheet open={drawerOpen} onClose={() => setDrawerOpen(false)} aria-label="Kinks toevoegen">
         <div className="rounded-t-2xl px-4 pt-5 pb-8" style={{ background: "var(--surface)", maxHeight: "70vh", overflowY: "auto" }}>

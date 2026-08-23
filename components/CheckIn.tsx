@@ -45,7 +45,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
               style={{ border: "1px solid var(--border)", color: "var(--text)" }}
             >
               <MoodIcon size={28} aria-hidden="true" />
-              <span className="text-xs" style={{ color: "var(--text2)" }}>
+              <span className="text-sm" style={{ color: "var(--text2)" }}>
                 {label}
               </span>
             </button>
@@ -55,7 +55,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
         <button
           type="button"
           onClick={() => onDone()}
-          className="focus-ring mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-xs underline-offset-2 hover:underline"
+          className="focus-ring mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm underline-offset-2 hover:underline"
           style={{ color: "var(--text2)" }}
         >
           Doorgaan

@@ -55,7 +55,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
                 {active ? <Check size={11} weight="bold" /> : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour, boxShadow: `0 0 8px color-mix(in srgb, ${colour} 20%, transparent)` }} />}
               </span>
               <span className="whitespace-nowrap text-sm font-semibold leading-5" style={{ color: active ? labelColour : "var(--text)" }}>{label}</span>
-              <span data-status-hint={s} className="min-w-0 justify-self-end text-right text-xs leading-4" style={{ color: "var(--text2)" }}>{hint}</span>
+              <span data-status-hint={s} className="min-w-0 justify-self-end text-right text-sm leading-5" style={{ color: "var(--text2)" }}>{hint}</span>
             </span>
           </button>
         );

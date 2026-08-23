@@ -48,15 +48,15 @@ export default function ContractVersionPage() {
         <h1 className="mt-3 text-2xl italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
           Contractversie {version.number}
         </h1>
-        <p className="mt-1 text-sm">{a.profileName} × {b.profileName}</p>
-        <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{a.role} × {b.role}</p>
+        <p className="mt-1 text-base">{a.profileName} × {b.profileName}</p>
+        <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{a.role} × {b.role}</p>
         <p className="mt-2 text-xs" style={{ color: "var(--text2)" }}>{formatContractTimestamp(version.updatedAt)}</p>
       </header>
 
       {historical && (
         <div className="mt-5 flex gap-3 rounded-xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
           <Info size={18} aria-hidden="true" className="mt-0.5 flex-none" style={{ color: "var(--maybe)" }} />
-          <p className="text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+          <p className="text-base leading-relaxed" style={{ color: "var(--text2)" }}>
             Dit is de toenmalige contractversie. Latere afspraken of statuswijzigingen veranderen dit document niet.
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function ContractVersionPage() {
       <section className="mt-5 rounded-2xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
         <div className="flex items-center gap-2">
           <ShieldCheck size={18} aria-hidden="true" style={{ color: version.signatures.length >= 2 ? "var(--yes)" : "var(--text2)" }} />
-          <h2 className="text-sm font-semibold">Digitale bevestiging</h2>
+          <h2 className="text-base font-semibold">Digitale bevestiging</h2>
         </div>
         <div className="mt-4 flex flex-col gap-3">
           {[a, b].map((participant) => {
@@ -77,7 +77,7 @@ export default function ContractVersionPage() {
                 <CheckCircle size={16} weight={proof ? "fill" : "regular"} aria-hidden="true" className="mt-0.5" style={{ color: proof ? "var(--yes)" : "var(--text2)" }} />
                 <div>
                   <p className="text-sm font-medium">{participant.profileName} · {participant.role}</p>
-                  <p className="mt-0.5 text-xs" style={{ color: "var(--text2)" }}>
+                  <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
                     {proof ? `Cryptografisch bevestigd op ${formatContractTimestamp(proof.signedAt)}` : "Geen digitale bevestiging in deze historische opslag"}
                   </p>
                 </div>
@@ -89,7 +89,7 @@ export default function ContractVersionPage() {
         <button
           type="button"
           onClick={() => setTechnicalOpen((current) => !current)}
-          className="focus-ring mt-4 min-h-10 text-xs font-medium"
+          className="focus-ring mt-4 min-h-10 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           {technicalOpen ? "Technische verificatie verbergen" : "Technische verificatie bekijken"}

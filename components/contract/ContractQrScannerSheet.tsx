@@ -154,7 +154,7 @@ export default function ContractQrScannerSheet({
 
         {pasteMode ? (
           <div className="mt-4">
-            <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
+            <p className="text-sm mb-2 leading-relaxed" style={{ color: "var(--text2)" }}>
               Plak één contractcode of QR-deel. Bij meerdere delen kun je ze na elkaar toevoegen.
             </p>
             <textarea
@@ -188,7 +188,7 @@ export default function ContractQrScannerSheet({
             <button
               type="button"
               onClick={() => { stopCamera(); setPasteMode(true); }}
-              className="focus-ring mx-auto mt-3 block min-h-10 px-3 text-xs underline-offset-2 hover:underline"
+              className="focus-ring mx-auto mt-3 block min-h-10 px-3 text-sm underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
               Geen camera? Plak de code

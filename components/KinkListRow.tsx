@@ -41,7 +41,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
         </span>
 
         {(askFirst || firstTime) && (
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-tight">
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm leading-tight">
             {askFirst && (
               <span className="inline-flex items-center gap-1 font-semibold" style={{ color: "var(--accent)" }}>
                 <WarningCircle size={10} weight="fill" aria-hidden="true" />
@@ -60,7 +60,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
 
       {status ? (
         <span
-          className="flex-none text-xs px-2 py-0.5 rounded-full border whitespace-nowrap min-w-[5.5rem] text-center inline-flex items-center justify-center gap-1"
+          className="flex-none text-sm px-2 py-0.5 rounded-full border whitespace-nowrap min-w-[5.5rem] text-center inline-flex items-center justify-center gap-1"
           style={status === "hard_no"
             ? { color: colour, borderColor: colour, borderStyle: "dashed" }
             : { color: colour, borderColor: `color-mix(in srgb, ${colour} 45%, transparent)`, background: `color-mix(in srgb, ${colour} 12%, transparent)` }}
@@ -69,7 +69,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
           {STATUS_LABEL[status]}
         </span>
       ) : (
-        <span className="flex-none text-xs min-w-[5.5rem] text-center" style={{ color: "var(--text2)" }}>
+        <span className="flex-none text-sm min-w-[5.5rem] text-center" style={{ color: "var(--text2)" }}>
           beoordeel
         </span>
       )}

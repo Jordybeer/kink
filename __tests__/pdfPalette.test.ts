@@ -16,7 +16,7 @@ function contrastOnWhite(hex: string): number {
 describe("pdfPalette", () => {
   it("decodes hex to RGB tuples", () => {
     expect(hexToRgb("#ffffff")).toEqual([255, 255, 255]);
-    expect(hexToRgb("#af1d73")).toEqual([175, 29, 115]);
+    expect(hexToRgb("#ab2a50")).toEqual([171, 42, 80]);
   });
 
   it("every paper colour holds AA contrast on white", () => {
@@ -44,10 +44,11 @@ describe("pdfPalette", () => {
     expect(PDF_PARTY_ON_PAPER.a).toBe(PDF_PAPER_PALETTE.accent); // A wears the brand
   });
 
-  it("dark-page chrome wears the warmer brand pink", () => {
-    expect(PDF_DARK_PAGE.accent).toBe("#e45aab"); // --accent
-    expect(PDF_DARK_PAGE.muted).toBe("#9d9ab8");  // --text2
-    expect(PDF_DARK_PAGE.light).toBe("#ede8f5");  // --text
+  it("dark-page chrome mirrors the warm-deep house palette", () => {
+    expect(PDF_DARK_PAGE.accent).toBe("#d4527c"); // --accent
+    expect(PDF_DARK_PAGE.bg).toBe("#09070d");     // --bg
+    expect(PDF_DARK_PAGE.muted).toBe("#a198a4"); // --text2
+    expect(PDF_DARK_PAGE.light).toBe("#f1eaf0"); // --text
     expect(Object.values(PDF_DARK_PAGE)).not.toContain("#c084fc");
   });
 });

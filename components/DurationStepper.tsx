@@ -41,7 +41,7 @@ export default function DurationStepper({ value, onChange, disabled = false }: D
           disabled={disabled}
           onClick={() => set(p)}
           aria-pressed={currentMinutes === p && !showRaw}
-          className="focus-ring px-3 py-1.5 rounded-full text-xs font-medium border disabled:opacity-50"
+          className="focus-ring px-3 py-1.5 rounded-full text-sm font-medium border disabled:opacity-50"
           style={
             currentMinutes === p && !showRaw
               ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", borderColor: "var(--accent-fill)" }
@@ -57,16 +57,16 @@ export default function DurationStepper({ value, onChange, disabled = false }: D
           disabled={disabled}
           onClick={() => nudge(-5)}
           aria-label="5 minuten minder"
-          className="focus-ring rounded-lg text-xs font-medium border disabled:opacity-50"
+          className="focus-ring rounded-lg text-sm font-medium border disabled:opacity-50"
           style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           −5
         </button>
         {showRaw && (
-          <span className="text-xs px-2 py-2" style={{ color: "var(--text2)" }}>{value}</span>
+          <span className="text-sm px-2 py-2" style={{ color: "var(--text2)" }}>{value}</span>
         )}
         {!showRaw && currentMinutes !== null && !PRESETS.includes(currentMinutes) && (
-          <span className="text-xs tabular-nums px-2 py-2" style={{ color: "var(--text)" }}>
+          <span className="text-sm tabular-nums px-2 py-2" style={{ color: "var(--text)" }}>
             {formatDurationMinutes(currentMinutes)}
           </span>
         )}
@@ -75,7 +75,7 @@ export default function DurationStepper({ value, onChange, disabled = false }: D
           disabled={disabled}
           onClick={() => nudge(5)}
           aria-label="5 minuten meer"
-          className="focus-ring rounded-lg text-xs font-medium border disabled:opacity-50"
+          className="focus-ring rounded-lg text-sm font-medium border disabled:opacity-50"
           style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           +5
