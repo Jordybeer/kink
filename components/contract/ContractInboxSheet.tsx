@@ -218,14 +218,14 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                     className="mt-4 rounded-xl p-3"
                     style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
                   >
-                    <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
                       Na jouw bevestiging wordt dit contract lokaal toegevoegd
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                    <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                       Je ondertekent exact deze versie. KinkSync slaat haar daarna op dit toestel op en maakt een antwoord-QR voor je partner.
                     </p>
                   </div>
-                  <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                  <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                     De QR-handtekening wordt gekoppeld aan de hash van exact dit document, inclusief de twee handgeschreven handtekeningen. Wijzigingen achteraf maken een andere contractversie.
                   </p>
                 </div>
@@ -240,7 +240,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                           ? `${actor.profileName} vraagt om het contract samen te hervatten.`
                           : `${actor.profileName} vraagt om het contract samen te heractiveren.`}
                   </p>
-                  {request.reason && <p className="mt-2 text-xs" style={{ color: "var(--text2)" }}>{request.reason}</p>}
+                  {request.reason && <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>{request.reason}</p>}
                   {request.note && <p className="mt-4 text-sm italic leading-relaxed">“{request.note}”</p>}
                 </div>
               )}
