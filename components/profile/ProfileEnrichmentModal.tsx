@@ -282,10 +282,10 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
             {parsed?.ok && (
               <div className="mt-3 flex flex-wrap gap-2" role="status">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs" style={{ color: "var(--yes)", background: "color-mix(in srgb, var(--yes) 8%, var(--surface))" }}>
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm" style={{ color: "var(--yes)", background: "color-mix(in srgb, var(--yes) 8%, var(--surface))" }}>
                   <CheckCircle size={14} weight="fill" aria-hidden="true" /> Resultaatlink gevonden
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs" style={{ color: "var(--yes)", background: "color-mix(in srgb, var(--yes) 8%, var(--surface))" }}>
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm" style={{ color: "var(--yes)", background: "color-mix(in srgb, var(--yes) 8%, var(--surface))" }}>
                   <CheckCircle size={14} weight="fill" aria-hidden="true" /> {parsed.scores.length} resultaten gevonden
                 </span>
               </div>
