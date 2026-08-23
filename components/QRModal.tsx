@@ -271,13 +271,13 @@ export default function QRModal({ profile, onClose }: Props) {
           <h2 className="text-base font-bold">Deel profiel</h2>
           {profile && (
             <p className="mt-0.5 text-sm" style={{ color: "var(--accent-text)" }}>
-              {profile.name}{proofConfirmed ? <span className="ml-1.5 text-xs" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
+              {profile.name}{proofConfirmed ? <span className="ml-1.5 text-sm" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
             </p>
           )}
         </div>
 
         {multi && currentFrame && (
-          <p className="mt-2 text-center text-xs font-semibold" style={{ color: "var(--text2)" }}>
+          <p className="mt-2 text-center text-sm font-semibold" style={{ color: "var(--text2)" }}>
             {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
           </p>
         )}
@@ -308,7 +308,7 @@ export default function QRModal({ profile, onClose }: Props) {
           </div>
         ) : (
           <div
-            className="profile-share-qr mx-auto my-2.5 flex aspect-square w-[min(64vw,15rem)] animate-pulse items-center justify-center rounded-xl px-5 text-center text-xs"
+            className="profile-share-qr mx-auto my-2.5 flex aspect-square w-[min(64vw,15rem)] animate-pulse items-center justify-center rounded-xl px-5 text-center text-sm"
             style={{ background: "#FFFFFF", color: "#4b5563", border: "1px solid var(--border)" }}
             aria-label="QR-code laden…"
           >
@@ -333,7 +333,7 @@ export default function QRModal({ profile, onClose }: Props) {
                 type="button"
                 onClick={() => setSlowMode((slow) => !slow)}
                 aria-pressed={slowMode}
-                className="focus-ring min-h-11 rounded-xl border text-xs font-semibold"
+                className="focus-ring min-h-11 rounded-xl border text-sm font-semibold"
                 style={{ borderColor: slowMode ? "var(--border-accent)" : "var(--border)", color: slowMode ? "var(--accent-text)" : "var(--text2)" }}
               >
                 {slowMode ? "Rustig tempo" : "Rustiger"}
@@ -341,19 +341,19 @@ export default function QRModal({ profile, onClose }: Props) {
             </div>
             {!autoAdvance && (
               <div className="mt-2 flex gap-2">
-                <button type="button" onClick={showPrevious} className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border text-xs" style={{ borderColor: "var(--border)", color: "var(--text2)" }}><ArrowLeft size={13} aria-hidden="true" /> Vorige</button>
-                <button type="button" onClick={showNext} className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border text-xs" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Volgende <ArrowRight size={13} aria-hidden="true" /></button>
+                <button type="button" onClick={showPrevious} className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border text-sm" style={{ borderColor: "var(--border)", color: "var(--text2)" }}><ArrowLeft size={13} aria-hidden="true" /> Vorige</button>
+                <button type="button" onClick={showNext} className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border text-sm" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Volgende <ArrowRight size={13} aria-hidden="true" /></button>
               </div>
             )}
-            <p className="mt-2 text-center text-xs" style={{ color: "var(--text2)" }}>
+            <p className="mt-2 text-center text-sm" style={{ color: "var(--text2)" }}>
               Volgorde maakt niet uit. Dubbele scans zijn oké.
             </p>
-            {reducedMotion && !autoAdvance && <p className="mt-1 text-center text-xs" style={{ color: "var(--text2)" }}>Automatisch wisselen blijft uit volgens je bewegingsinstelling.</p>}
+            {reducedMotion && !autoAdvance && <p className="mt-1 text-center text-sm" style={{ color: "var(--text2)" }}>Automatisch wisselen blijft uit volgens je bewegingsinstelling.</p>}
           </>
         )}
 
-        {avatarInQrSequence && <p className="mt-1 text-center text-xs" style={{ color: "var(--yes)" }}>De bevestigde profielfoto reist mee.</p>}
-        {avatarLinkOnly && <p className="mt-1 text-center text-xs" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
+        {avatarInQrSequence && <p className="mt-1 text-center text-sm" style={{ color: "var(--yes)" }}>De bevestigde profielfoto reist mee.</p>}
+        {avatarLinkOnly && <p className="mt-1 text-center text-sm" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
 
         {(canShareAvatar || profile?.fetLifeUsername || hasBdsmtest) && (
           <div className="mt-2 grid gap-1">
@@ -389,20 +389,20 @@ export default function QRModal({ profile, onClose }: Props) {
           </div>
         )}
 
-        {avatarSkipped && <p className="mt-2 text-xs" style={{ color: "var(--hard-no-text)" }} role="alert">De profielfoto kon niet veilig worden bevestigd en wordt niet meegestuurd.</p>}
+        {avatarSkipped && <p className="mt-2 text-sm" style={{ color: "var(--hard-no-text)" }} role="alert">De profielfoto kon niet veilig worden bevestigd en wordt niet meegestuurd.</p>}
 
         <button onClick={handleCopy} disabled={!url} className="focus-ring mt-2 w-full min-h-11 rounded-xl text-sm font-medium border transition-colors disabled:opacity-40" style={copied ? { borderColor: "var(--yes)", color: "var(--yes)" } : { borderColor: "var(--border)", color: "var(--text)" }}>
           {copied ? <span className="inline-flex items-center justify-center gap-1.5"><Check size={14} weight="bold" aria-hidden="true" />Gekopieerd!</span> : <span className="inline-flex items-center justify-center gap-1.5"><CopySimple size={14} aria-hidden="true" />Kopieer volledige link</span>}
         </button>
 
-        <p className="mt-2 text-center text-xs leading-5" style={{ color: "var(--text2)" }}>
+        <p className="mt-2 text-center text-sm leading-5" style={{ color: "var(--text2)" }}>
           Verborgen antwoorden en persoonlijke notitie blijven op dit toestel.
           {avatarIncluded ? " De profielfoto wordt meegestuurd." : " De profielfoto blijft op dit toestel."}
           {bdsmtestIncluded ? " BDSMTest wordt alleen voor deze deelactie meegestuurd." : hasBdsmtest ? " BDSMTest blijft op dit toestel." : ""}
         </p>
         <Link
           href="/about#limits-title"
-          className="focus-ring mx-auto flex min-h-9 w-fit items-center gap-1 px-2 text-xs font-semibold"
+          className="focus-ring mx-auto flex min-h-9 w-fit items-center gap-1 px-2 text-sm font-semibold"
           style={{ color: "var(--accent-text)" }}
         >
           Hoe delen en beveiliging werken
