@@ -52,6 +52,8 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [devTestToolsEnabled, setDevTestToolsEnabled] = useState(false);
+  const ownedProfiles = [profileA, profileB].filter(isOwned);
+  const canStartQrSigning = ownedProfiles.length === 1;
   const canLocalDevSign = devTestToolsEnabled && canSelfSignLocalDevContract(profileA, profileB);
 
   useEffect(() => {
@@ -134,7 +136,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
       assertHandwrittenSignatures();
       const owned = [profileA, profileB].filter(isOwned);
       if (owned.length !== 1) {
-        throw new Error("Open dit contract op het eigen toestel van één deelnemer. De andere deelnemer bevestigt daarna op diens eigen toestel via QR.");
+        throw new Error("Voor QR-bevestiging moet dit toestel exact één van beide profielen bezitten.");
       }
       const actor = owned[0];
       const counterparty = actor.id === profileA.id ? profileB : profileA;
@@ -219,7 +221,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               </div>
               <h2 className="mt-3 text-center text-lg font-semibold">Contract bewaren</h2>
               <p className="mt-2 text-center text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-                Beide handgeschreven handtekeningen zijn al onderdeel van exact deze versie. Je kunt haar als concept bewaren of de profielgebonden QR-bevestiging starten.
+                Beide handgeschreven handtekeningen zijn onderdeel van exact deze versie. Bewaar haar als concept, of laat je partner dezelfde versie op diens eigen toestel digitaal bevestigen.
               </p>
               <div className="mt-5 flex flex-col gap-2">
                 <button
@@ -241,7 +243,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                   >
                     {busy ? "Lokaal bevestigen…" : "Beide lokale profielen bevestigen"}
                   </button>
-                ) : (
+                ) : canStartQrSigning ? (
                   <button
                     type="button"
                     disabled={busy}
@@ -250,28 +252,43 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                     style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                   >
                     <QrCode size={18} aria-hidden="true" />
-                    {busy ? "Voorbereiden…" : "Digitaal bevestigen via QR"}
+                    {busy ? "QR maken…" : "QR voor partner tonen"}
                   </button>
-                )}
+                ) : null}
               </div>
 
-              {canLocalDevSign && (
+              {canLocalDevSign ? (
                 <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
                   <p className="text-xs font-medium" style={{ color: "var(--accent)" }}>Testmodus</p>
                   <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
                     Beide profielen zijn lokaal aangemaakt. Hiermee doorloop je dezelfde cryptografische contractflow zonder een tweede toestel.
                   </p>
                 </div>
-              )}
+              ) : !canStartQrSigning ? (
+                <div
+                  className="mt-4 rounded-xl p-3"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                >
+                  <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
+                    QR-bevestiging gebeurt op het eigen toestel van beide personen
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                    {ownedProfiles.length === 2
+                      ? "Beide profielen zijn op dit toestel aangemaakt. Voor echte QR-bevestiging moet het partnerprofiel afkomstig zijn van diens eigen toestel. Importeer eerst het gedeelde partnerprofiel; daarna kan KinkSync de QR maken."
+                      : "Dit toestel bezit geen van beide profielen. Open het contract op het eigen toestel van één deelnemer om een contract-QR te maken."}
+                  </p>
+                </div>
+              ) : null}
             </div>
           )}
 
           {phase === "request" && encoded && currentSeries?.pendingRequest && (
             <ContractQrDisplay
               encoded={encoded}
-              title="Tweede digitale bevestiging"
+              title="Laat je partner scannen"
               instruction={requestInstruction(currentSeries.pendingRequest.action)}
               onScanResponse={() => setScannerOpen(true)}
+              scanLabel="Bevestiging van partner scannen"
             />
           )}
 
@@ -280,7 +297,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               <ContractQrDisplay
                 encoded={encoded}
                 title="Contract actief"
-                instruction="Laat de andere persoon deze korte QR scannen. Daarna staat op beide toestellen vast dat het antwoord werd ontvangen en opgeslagen."
+                instruction="Laat je partner deze korte afrondings-QR scannen. Daarna staat op beide toestellen vast dat exact deze contractversie werd ontvangen en opgeslagen."
               />
               <div className="mt-4 flex items-start gap-2 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 <CheckCircle size={18} weight="fill" aria-hidden="true" className="mt-0.5 flex-none" style={{ color: "var(--yes)" }} />
@@ -309,7 +326,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
 
       <ContractQrScannerSheet
         open={scannerOpen}
-        title="Antwoord van tweede partij scannen"
+        title="Bevestiging van partner scannen"
         onClose={() => setScannerOpen(false)}
         onEncoded={(value) => void handleResponse(value)}
       />

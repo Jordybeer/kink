@@ -29,6 +29,6 @@ test("explicit dev test mode offers local dual signing for two own profiles", as
 
   await expect(page.getByText("Testmodus", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Beide lokale profielen bevestigen" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Digitaal bevestigen via QR" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "QR voor partner tonen" })).toHaveCount(0);
   await expect(page).not.toHaveURL(/testtools=/);
 });
