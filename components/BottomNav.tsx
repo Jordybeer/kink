@@ -42,8 +42,8 @@ export default function BottomNav() {
           "0 -10px 30px color-mix(in srgb, var(--pwa-nav-surface-deep) 70%, transparent)",
         height: "var(--bottom-nav-h)",
         alignItems: "flex-start",
-        paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
-        paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+        paddingLeft: "max(1.25rem, env(safe-area-inset-left, 0px))",
+        paddingRight: "max(1.25rem, env(safe-area-inset-right, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
       aria-label="Tabbladen"
