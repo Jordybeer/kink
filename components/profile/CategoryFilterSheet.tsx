@@ -43,7 +43,7 @@ export default function CategoryFilterSheet({
       >
         <div className="px-1 pb-3">
           <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>Categorieën</h3>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+          <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
             Kies wat je in de catalogus wilt bekijken.
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function CategoryFilterSheet({
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Alle categorieën</p>
-            <p className="mt-0.5 text-[11px] tabular-nums" style={{ color: "var(--text2)" }}>
+            <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
               {totalRated} van {totalCount} beoordeeld
             </p>
           </div>
@@ -81,12 +81,12 @@ export default function CategoryFilterSheet({
                   : { background: "var(--surface2)", border: "1px solid var(--border)" }}
               >
                 <div className="flex items-start gap-2">
-                  <span className="min-w-0 flex-1 text-xs font-semibold leading-snug" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>
+                  <span className="min-w-0 flex-1 text-sm font-semibold leading-snug" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>
                     {category.label}
                   </span>
                   {active && <Check size={14} weight="bold" className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />}
                 </div>
-                <span className="mt-1 block text-[11px] tabular-nums" style={{ color: "var(--text2)" }}>
+                <span className="mt-1 block text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                   {category.rated} / {category.total} beoordeeld
                 </span>
               </button>
