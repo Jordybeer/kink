@@ -14,12 +14,12 @@
   --hard-no-text: #F25555;
   --decorative-glow: var(--accent-glow);
 
-  /* Installed-PWA dock: cool navigation hue, separate from verdict/status colours. */
-  --pwa-nav-surface: #11142A;
-  --pwa-nav-surface-deep: #0D1022;
-  --pwa-nav-active: #242D55;
-  --pwa-nav-icon: #8FB7EB;
-  --pwa-nav-icon-active: #C6DDFF;
+  /* Installed-PWA dock: warm indigo navigation hue, separate from verdict/status colours. */
+  --pwa-nav-surface: #181225;
+  --pwa-nav-surface-deep: #120D1D;
+  --pwa-nav-active: #332246;
+  --pwa-nav-icon: #A7A2D8;
+  --pwa-nav-icon-active: #D8D1F5;
   /* 76px base = 56px tab + 6px top air + 14px lift above the iPhone corner/home-indicator zone. */
   --bottom-nav-base-h: 4.75rem;
   --bottom-nav-h: calc(env(safe-area-inset-bottom) + var(--bottom-nav-base-h));
