@@ -12,7 +12,7 @@ import {
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
 
-type PaletteMode = "current" | "warm";
+type PaletteMode = "current" | "warm" | "deep";
 
 type ThemeStyle = CSSProperties & Record<`--${string}`, string>;
 
@@ -50,6 +50,23 @@ const WARM_THEME: ThemeStyle = {
   "--on-accent-fill": "#FFFFFF",
 };
 
+const DEEP_THEME: ThemeStyle = {
+  "--bg": "#09070D",
+  "--surface": "#120E16",
+  "--surface2": "#19131E",
+  "--surface3": "#241C2A",
+  "--border": "#302635",
+  "--border-accent": "rgba(212, 82, 124, 0.32)",
+  "--text": "#F1EAF0",
+  "--text2": "#A198A4",
+  "--accent": "#D4527C",
+  "--accent2": "#8F7BA8",
+  "--accent-fill": "#BD416B",
+  "--accent-text": "#DE6C92",
+  "--on-accent": "#181225",
+  "--on-accent-fill": "#FFFFFF",
+};
+
 const statusSamples = [
   ["Heel graag", "#f97316", "Sterke positieve voorkeur"],
   ["Ja", "#10b981", "Positief"],
@@ -70,9 +87,30 @@ const warmSwatches = [
   ["Tekst 2", "#ABA1AD"],
 ] as const;
 
+const deepSwatches = [
+  ["Achtergrond", "#09070D"],
+  ["Surface", "#120E16"],
+  ["Surface 2", "#19131E"],
+  ["Surface 3", "#241C2A"],
+  ["Brand", "#D4527C"],
+  ["Brand fill", "#BD416B"],
+  ["Lavender", "#8F7BA8"],
+  ["Tekst", "#F1EAF0"],
+  ["Tekst 2", "#A198A4"],
+] as const;
+
+const modeLabels: Record<PaletteMode, string> = {
+  current: "Huidig",
+  warm: "Warm",
+  deep: "Warm + deep",
+};
+
 export default function PaletteSandboxPage() {
   const [mode, setMode] = useState<PaletteMode>("warm");
-  const theme = mode === "current" ? CURRENT_THEME : WARM_THEME;
+  const theme = mode === "current" ? CURRENT_THEME : mode === "warm" ? WARM_THEME : DEEP_THEME;
+  const proposalSwatches = mode === "deep" ? deepSwatches : warmSwatches;
+  const proposalLabel = mode === "deep" ? "Warm + deep tokens" : "Warm restrained tokens";
+  const secondaryContrast = mode === "deep" ? "~7.2:1" : "~7.9:1";
 
   return (
     <PageShell width="3xl" className="lg:max-w-4xl">
@@ -87,23 +125,23 @@ export default function PaletteSandboxPage() {
           Kleur zonder redesign
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "var(--text2)" }}>
-          Vergelijk de huidige tokens met een warmere, restrained richting. De structuur en semantische statuskleuren blijven bewust intact.
+          Vergelijk huidig, warm en een diepere warme variant. De structuur en semantische statuskleuren blijven bewust intact.
         </p>
 
         <div
-          className="mt-5 grid grid-cols-2 rounded-xl p-1"
+          className="mt-5 grid grid-cols-3 rounded-xl p-1"
           style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
           role="group"
           aria-label="Palet kiezen"
         >
-          {(["current", "warm"] as const).map((value) => {
+          {(["current", "warm", "deep"] as const).map((value) => {
             const active = mode === value;
             return (
               <button
                 key={value}
                 type="button"
                 onClick={() => setMode(value)}
-                className="focus-ring min-h-11 rounded-lg px-3 text-sm font-semibold"
+                className="focus-ring min-h-11 rounded-lg px-2 text-[11px] font-semibold sm:px-3 sm:text-sm"
                 style={{
                   background: active ? "var(--surface)" : "transparent",
                   color: active ? "var(--text)" : "var(--text2)",
@@ -111,7 +149,7 @@ export default function PaletteSandboxPage() {
                 }}
                 aria-pressed={active}
               >
-                {value === "current" ? "Huidig" : "Warm restrained"}
+                {modeLabels[value]}
               </button>
             );
           })}
@@ -266,7 +304,7 @@ export default function PaletteSandboxPage() {
       <section className="mt-7 rounded-2xl p-4 sm:p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text2)" }}>Warm restrained tokens</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text2)" }}>{proposalLabel}</p>
             <h2 className="mt-2 text-lg font-semibold">Voorstel, niet globaal toegepast</h2>
           </div>
           <div className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", color: "var(--yes)" }}>
@@ -275,7 +313,7 @@ export default function PaletteSandboxPage() {
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5">
-          {warmSwatches.map(([label, color]) => (
+          {proposalSwatches.map(([label, color]) => (
             <div key={label}>
               <div className="h-12 rounded-xl" style={{ background: color, border: "1px solid var(--border)" }} />
               <p className="mt-1.5 text-[11px] font-medium">{label}</p>
@@ -285,8 +323,8 @@ export default function PaletteSandboxPage() {
         </div>
 
         <div className="mt-5 grid gap-2 text-xs sm:grid-cols-3">
-          <Metric label="Brand op bg" value="~5.0:1" note="AA voor gewone tekst" />
-          <Metric label="Secondary op bg" value="~7.9:1" note="Sterk voor lange sessies" />
+          <Metric label="Brand op bg" value={mode === "deep" ? "~5.1:1" : "~5.0:1"} note="AA voor gewone tekst" />
+          <Metric label="Secondary op bg" value={secondaryContrast} note="Sterk voor lange sessies" />
           <Metric label="Wit op brand fill" value="~5.1:1" note="AA voor CTA-labels" />
         </div>
       </section>
