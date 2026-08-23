@@ -110,37 +110,6 @@ export default function SandboxHomePage() {
             </button>
           </div>
         </section>
-
-        <footer className="mx-auto mt-7 max-w-sm px-2 pb-7 text-center">
-          <div
-            className="mx-auto h-px w-12"
-            style={{ background: "color-mix(in srgb, var(--border-accent) 70%, var(--border))" }}
-            aria-hidden="true"
-          />
-          <div className="mt-2 flex min-h-11 items-center justify-center gap-2 text-sm">
-            <span className="font-semibold tracking-[0.03em]" style={{ color: "var(--text2)" }}>
-              For adults, by adults.
-            </span>
-            <span aria-hidden="true" style={{ color: "var(--border-accent)" }}>·</span>
-            <a
-              href="https://fetlife.com/zwoelebeer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="focus-ring inline-flex min-h-11 items-center rounded-md px-1 font-semibold"
-              style={{ color: "var(--accent-text)" }}
-            >
-              FetLife
-            </a>
-            <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
-            <a
-              href="mailto:info@jordy.beer"
-              className="focus-ring inline-flex min-h-11 items-center rounded-md px-1 font-semibold"
-              style={{ color: "var(--accent-text)" }}
-            >
-              E-mail
-            </a>
-          </div>
-        </footer>
       </PageShell>
 
       <ProfileCreateSheet open={formOpen} onClose={() => setFormOpen(false)} />
