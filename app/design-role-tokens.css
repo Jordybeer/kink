@@ -34,3 +34,9 @@
     --toast-lift: calc(4.75rem + 0.75rem);
   }
 }
+
+/* Home alone can sit a little closer to its utility nav. The selector only
+   matches once onboarding is complete and the home TopNav is actually present. */
+body:has([data-top-nav-variant="home"]) main {
+  padding-top: 0.75rem;
+}
