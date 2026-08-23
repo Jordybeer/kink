@@ -258,6 +258,34 @@ select {
   font-size: 16px !important;
 }
 
+/* Semantic typography floor.
+   `text-xs` remains the tertiary utility, but older components historically used
+   it for actions, explanatory prose and readable state labels. Keep the source
+   compatible while enforcing the house rule at render time: anything a user
+   must read, decide or tap is at least 14px. True tertiary metadata remains 12px. */
+:is(button, a, label)[class~="text-xs"],
+:is(button, a) > [class~="text-xs"],
+p[class~="text-xs"]:not([class~="uppercase"]):not([class~="tabular-nums"]),
+div[class~="text-xs"]:not([class~="font-mono"]),
+[role="alert"][class~="text-xs"],
+span[class~="text-xs"][class~="font-medium"][class~="rounded-full"],
+span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]),
+[class~="text-xs"][class~="leading-relaxed"],
+[class~="text-xs"][class~="leading-5"],
+[data-testid="question-essence"],
+[data-testid="question-agreements-label"],
+[data-testid="about-promises"] p {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* The fixed PWA dock is the one intentional navigation-floor exception: its
+   labels are tertiary chrome and stay at the sanctioned 12px minimum. */
+.bottom-nav [class~="text-xs"] {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
 /* Larger inputs that still clear the 16px iOS-zoom threshold opt out via this class */
 .ks-input-lg { font-size: 18px !important; }
 
@@ -290,7 +318,7 @@ select {
 .ks-glow-willing { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--willing) 22%, transparent); }
 .ks-glow-maybe   { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--maybe) 22%, transparent); }
 .ks-glow-no      { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--no) 22%, transparent); }
-.ks-glow-hard-no { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--hard-no) 22%, transparent); }
+.ks-glow-hard_no { box-shadow: var(--shadow), 0 0 10px 1px color-mix(in srgb, var(--hard-no) 22%, transparent); }
 
 .partner-hidden {
   filter: blur(8px);
