@@ -55,7 +55,8 @@ export default function SandboxHomePage() {
               Maak je eerste profiel
             </h2>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-              Begin met wat nieuwsgierig maakt. De rest mag later komen.
+              Begin met wat nieuwsgierig maakt.<br />
+              De rest mag later komen.
             </p>
           </div>
 
