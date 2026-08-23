@@ -24,13 +24,13 @@ export default function PageShell({
   const w = WIDTH[width];
   if (loading) {
     return (
-      <main className={`${w} mx-auto px-4 pt-16 ${flush ? "" : "pb-16"} w-full flex items-start justify-center`}>
+      <main className={`${w} mx-auto px-4 pt-16 ${flush ? "" : "pb-[calc(var(--bottom-nav-h)+0.75rem)]"} w-full flex items-start justify-center`}>
         <span className="ks-spinner" role="status" aria-label="Laden" />
       </main>
     );
   }
   return (
-    <main className={`${w} mx-auto px-4 ${flush ? "" : "pt-6 pb-16"} w-full ${className}`}>
+    <main className={`${w} mx-auto px-4 ${flush ? "" : "pt-6 pb-[calc(var(--bottom-nav-h)+0.75rem)]"} w-full ${className}`}>
       {children}
     </main>
   );
