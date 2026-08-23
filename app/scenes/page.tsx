@@ -6,9 +6,9 @@ import { parseLocalDate } from "@/lib/dates";
 import { sceneDetailHref } from "@/lib/localRoutes";
 import AftercareSheet from "@/components/AftercareSheet";
 import PageShell from "@/components/PageShell";
-import EmptyState from "@/components/EmptyState";
+import ScenesEmptyState from "@/components/scenes/ScenesEmptyState";
 import ContextMenu from "@/components/ui/ContextMenu";
-import { DotsThree, FilmSlate, Play, Plus, Trash } from "@phosphor-icons/react";
+import { DotsThree, Play, Plus, Trash } from "@phosphor-icons/react";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { SceneRecord } from "@/types";
 
@@ -196,13 +196,7 @@ export default function ScenesPage() {
       <h1 className="sr-only">Scènes</h1>
 
       {scenes.length === 0 ? (
-        <EmptyState
-          icon={FilmSlate}
-          title="Nog geen scènes"
-          message="Plan je eerste scène en bewaar wat jullie samen willen proberen."
-          ctaHref="/scene"
-          ctaLabel="Plan een scène"
-        />
+        <ScenesEmptyState />
       ) : (
         <div className="flex flex-col gap-8">
           {sections.map(({ key, label, items }) => (

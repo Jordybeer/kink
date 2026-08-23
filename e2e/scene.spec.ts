@@ -84,6 +84,16 @@ test("een legacy contractsnapshot blokkeert de scène niet en telt niet als acti
   await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
 });
 
+test("scènes legt de term één keer uit", async ({ page }) => {
+  await seedAndGo(page, "/scenes", [PROFILE_ALEX, PROFILE_SAM]);
+  await expect(page.getByText("Nog geen scènes", { exact: true })).toBeVisible();
+  await expect(page.getByText(
+    "Een scène is een afgesproken kinkmoment met een duidelijk begin en einde. Plan samen wat jullie willen doen en welke afspraken gelden.",
+    { exact: true },
+  )).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: "Plan een scène" })).toBeVisible();
+});
+
 test.describe("Scene planner — zonder URL-params", () => {
   test("vraagt rechtstreeks voor welke twee profielen de scène is", async ({ page }) => {
     await seedAndGo(page, "/scene", [PROFILE_ALEX, PROFILE_SAM]);
