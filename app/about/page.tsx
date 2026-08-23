@@ -299,6 +299,31 @@ export default function AboutPage() {
           <ArrowRight size={16} weight="bold" aria-hidden="true" />
         </Link>
       </section>
+
+      <section
+        className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-4 py-3 text-sm"
+        style={{ background: "color-mix(in srgb, var(--surface2) 64%, transparent)", color: "var(--text2)" }}
+        aria-label="Contact"
+      >
+        <span className="font-medium">Vragen of suggesties?</span>
+        <a
+          href="https://fetlife.com/zwoelebeer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="focus-ring inline-flex min-h-11 items-center rounded-md px-1.5 font-semibold"
+          style={{ color: "var(--accent-text)" }}
+        >
+          FetLife
+        </a>
+        <span aria-hidden="true">·</span>
+        <a
+          href="mailto:info@jordy.beer"
+          className="focus-ring inline-flex min-h-11 items-center rounded-md px-1.5 font-semibold"
+          style={{ color: "var(--accent-text)" }}
+        >
+          E-mail
+        </a>
+      </section>
     </PageShell>
   );
 }
