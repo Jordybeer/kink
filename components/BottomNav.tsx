@@ -33,16 +33,18 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="bottom-nav fixed inset-x-0 bottom-0 z-40 px-2 pt-1.5"
+      className="bottom-nav fixed inset-x-0 bottom-0 z-40 gap-1 pt-1.5"
       style={{
         background:
           "linear-gradient(180deg, var(--pwa-nav-surface) 0%, var(--pwa-nav-surface-deep) 100%)",
-        borderTop: "1px solid color-mix(in srgb, var(--pwa-nav-icon) 18%, var(--border))",
+        borderTop: "1px solid color-mix(in srgb, var(--pwa-nav-icon) 16%, var(--border))",
         boxShadow:
           "0 -10px 30px color-mix(in srgb, var(--pwa-nav-surface-deep) 70%, transparent)",
         height: "var(--bottom-nav-h)",
         alignItems: "flex-start",
-        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
+        paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
       aria-label="Tabbladen"
     >
@@ -54,7 +56,7 @@ export default function BottomNav() {
             href={href}
             aria-label={label}
             aria-current={active ? "page" : undefined}
-            className="focus-ring flex min-h-11 flex-1 items-center justify-center rounded-xl transition-[background-color,transform] duration-150 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
+            className="focus-ring flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-[background-color,transform] duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
             style={{
               background: active ? "var(--pwa-nav-active)" : "transparent",
             }}
@@ -66,12 +68,20 @@ export default function BottomNav() {
               style={{
                 color: active ? "var(--pwa-nav-icon-active)" : "var(--pwa-nav-icon)",
                 filter: active
-                  ? "drop-shadow(0 0 8px color-mix(in srgb, var(--pwa-nav-icon) 24%, transparent))"
+                  ? "drop-shadow(0 0 8px color-mix(in srgb, var(--pwa-nav-icon) 22%, transparent))"
                   : "none",
               }}
-              className="transition-transform duration-150 motion-reduce:transform-none motion-reduce:transition-none"
             />
-            <span className="sr-only">{label}</span>
+            <span
+              className="max-w-full truncate text-[11px] leading-none"
+              style={{
+                color: active ? "var(--pwa-nav-icon-active)" : "var(--pwa-nav-icon)",
+                fontWeight: active ? 650 : 500,
+                opacity: active ? 1 : 0.86,
+              }}
+            >
+              {label}
+            </span>
           </Link>
         );
       })}
