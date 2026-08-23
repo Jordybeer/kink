@@ -99,13 +99,13 @@ export default function ContractHistoryPage() {
             <h1 className="mt-3 truncate text-2xl italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
               {a.profileName} × {b.profileName}
             </h1>
-            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{a.role} × {b.role}</p>
+            <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{a.role} × {b.role}</p>
           </div>
-          <span className="rounded-full px-2.5 py-1 text-[11px] font-medium" style={{ color: statusColour, background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <span className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ color: statusColour, background: "var(--surface2)", border: "1px solid var(--border)" }}>
             {contractStatusLabel(series, profiles)}
           </span>
         </div>
-        <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+        <p className="mt-4 text-base leading-relaxed" style={{ color: "var(--text2)" }}>
           Getekende documenten en latere contractacties staan hier in één chronologische geschiedenis. Een oude getekende versie verandert nooit mee met een nieuwer profiel of contract.
         </p>
       </header>
@@ -125,7 +125,7 @@ export default function ContractHistoryPage() {
                     <time className="text-xs" style={{ color: "var(--text2)" }}>{formatContractTimestamp(item.event.createdAt)}</time>
                     <p className="mt-2 text-sm font-medium leading-relaxed">{eventTitle(item.event)}</p>
                     {status && <p className="mt-0.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>{status}</p>}
-                    {item.event.note && <p className="mt-3 text-sm italic leading-relaxed">“{item.event.note}”</p>}
+                    {item.event.note && <p className="mt-3 text-base italic leading-relaxed">“{item.event.note}”</p>}
                   </article>
                 );
               }
@@ -148,20 +148,20 @@ export default function ContractHistoryPage() {
                       <div className="min-w-0 flex-1">
                         <h2 className="text-sm font-semibold">Getekende overeenkomst · versie {version.number}</h2>
                         {current && <p className="mt-0.5 text-xs" style={{ color: "var(--yes)" }}>Huidige contractversie</p>}
-                        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                        <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                           {completeModernDocument
                             ? `Handgeschreven én cryptografisch bevestigd door ${a.profileName} en ${b.profileName}.`
                             : version.legacySnapshotId
                               ? "Historische contractopslag; de oorspronkelijke volledige PDF en handgeschreven signatures zijn niet beschikbaar."
                               : "Oudere getekende versie zonder de huidige documentartifact-semantiek."}
                         </p>
-                        {version.note && <p className="mt-3 text-sm italic">“{version.note}”</p>}
+                        {version.note && <p className="mt-3 text-base italic">“{version.note}”</p>}
                       </div>
                     </div>
                     <Link
                       href={`/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`}
                       prefetch={false}
-                      className="focus-ring mt-3 flex min-h-10 items-center text-xs font-semibold"
+                      className="focus-ring mt-3 flex min-h-10 items-center text-sm font-semibold"
                       style={{ color: "var(--text)" }}
                     >
                       {completeModernDocument ? "Getekende PDF bekijken" : "Historische versie bekijken"}
