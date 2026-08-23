@@ -70,15 +70,15 @@ export default function ContractSection({
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col gap-0.5">
                     {item.statusA
-                      ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-xs" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
-                      : <span style={{ color: "var(--text2)", fontSize: "11px" }}>{nA}: geen antwoord</span>
+                      ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-sm" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
+                      : <span style={{ color: "var(--text2)", fontSize: "14px" }}>{nA}: geen antwoord</span>
                     }
                   </div>
                   <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
                   <div className="flex flex-col items-end gap-0.5">
                     {item.statusB
-                      ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-xs" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
-                      : <span style={{ color: "var(--text2)", fontSize: "11px" }}>geen antwoord: {nB}</span>
+                      ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-sm" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
+                      : <span style={{ color: "var(--text2)", fontSize: "14px" }}>geen antwoord: {nB}</span>
                     }
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default function ContractSection({
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {(items as (string | { text: string; tag: string })[]).map((item, i) => (
-            <span key={i} className="rounded-full px-2.5 py-1 text-xs" style={{
+            <span key={i} className="rounded-full px-2.5 py-1 text-sm" style={{
               background: `color-mix(in srgb, ${colour} 12%, transparent)`,
               color: colour,
               border: `1px solid color-mix(in srgb, ${colour} 30%, transparent)`,

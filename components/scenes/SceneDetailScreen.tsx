@@ -329,14 +329,14 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                 </div>
                 {item.duration && (
                   <span
-                    className="text-xs flex-none"
+                    className="text-sm flex-none"
                     style={{ color: "var(--text2)" }}
                   >
                     {item.duration}
                   </span>
                 )}
                 <span
-                  className="text-xs flex-none"
+                  className="text-sm flex-none"
                   style={{ color: "var(--text2)" }}
                 >
                   {item.intensity}

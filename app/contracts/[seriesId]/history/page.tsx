@@ -147,7 +147,7 @@ export default function ContractHistoryPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h2 className="text-sm font-semibold">Getekende overeenkomst · versie {version.number}</h2>
-                        {current && <p className="mt-0.5 text-xs" style={{ color: "var(--yes)" }}>Huidige contractversie</p>}
+                        {current && <p className="mt-0.5 text-sm" style={{ color: "var(--yes)" }}>Huidige contractversie</p>}
                         <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                           {completeModernDocument
                             ? `Handgeschreven én cryptografisch bevestigd door ${a.profileName} en ${b.profileName}.`

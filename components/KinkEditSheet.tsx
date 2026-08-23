@@ -121,7 +121,7 @@ export default function KinkEditSheet({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold">{agreement.label}</span>
-                    <span className="block text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                    <span className="block text-sm mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
                       {agreement.description}
                     </span>
                   </span>
@@ -138,7 +138,7 @@ export default function KinkEditSheet({
               type="button"
               onClick={() => onCuriousChange(!entry.curious)}
               aria-pressed={!!entry.curious}
-              className="focus-ring rounded-full border transition-colors text-xs px-3 min-h-10 inline-flex items-center gap-1.5"
+              className="focus-ring rounded-full border transition-colors text-sm px-3 min-h-10 inline-flex items-center gap-1.5"
               style={entry.curious
                 ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
                 : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
@@ -152,7 +152,7 @@ export default function KinkEditSheet({
               onClick={() => onPrivateChange(!entry.privateResponse)}
               aria-pressed={!!entry.privateResponse}
               aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
-              className="focus-ring rounded-full border transition-colors text-xs px-3 min-h-10 inline-flex items-center gap-1.5"
+              className="focus-ring rounded-full border transition-colors text-sm px-3 min-h-10 inline-flex items-center gap-1.5"
               style={entry.privateResponse
                 ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
                 : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
@@ -170,7 +170,7 @@ export default function KinkEditSheet({
                   key={tag.value}
                   onClick={() => toggleTag(tag.value)}
                   aria-pressed={active}
-                  className="focus-ring rounded-full border transition-colors text-xs px-3 min-h-10"
+                  className="focus-ring rounded-full border transition-colors text-sm px-3 min-h-10"
                   style={{
                     background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
                     borderColor: active ? "var(--accent)" : "var(--border)",

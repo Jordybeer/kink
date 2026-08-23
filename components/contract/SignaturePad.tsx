@@ -132,7 +132,7 @@ export default function SignaturePad({
 
   return (
     <div className="flex flex-col items-center gap-2 flex-1 min-w-[140px]">
-      <div className="text-xs font-semibold" style={{ color: colour }}>
+      <div className="text-sm font-semibold" style={{ color: colour }}>
         {label}
       </div>
       {/* Clickable canvas — tap to open modal */}
@@ -161,7 +161,7 @@ export default function SignaturePad({
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={clear}
-          className="focus-ring flex-1 text-xs px-3 py-1 rounded-full border transition-colors"
+          className="focus-ring flex-1 text-sm px-3 py-1 rounded-full border transition-colors"
           style={{ color: "var(--text2)", borderColor: "var(--border)" }}
         >
           Veld wissen
@@ -194,7 +194,7 @@ export default function SignaturePad({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold" style={{ color: colour }}>
+              <span className="text-sm font-semibold" style={{ color: colour }}>
                 {label}
               </span>
               <button
@@ -218,14 +218,14 @@ export default function SignaturePad({
             <div className="flex items-center justify-between mt-4">
               <button
                 onClick={clear}
-                className="focus-ring text-xs px-3 py-1.5 rounded-full border"
+                className="focus-ring text-sm px-3 py-1.5 rounded-full border"
                 style={{ color: "var(--text2)", borderColor: "var(--border)" }}
               >
                 Wis
               </button>
               <button
                 onClick={closeModal}
-                className="focus-ring text-xs px-4 py-1.5 rounded-full font-semibold"
+                className="focus-ring text-sm px-4 py-1.5 rounded-full font-semibold"
                 style={{ background: colour, color: "var(--on-accent)" }}
               >
                 Klaar

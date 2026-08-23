@@ -258,6 +258,37 @@ select {
   font-size: 16px !important;
 }
 
+/* Semantic typography floor.
+   Source code should still choose the right semantic size. This is deliberately
+   narrow: it catches legacy actions, required status text and explanatory copy
+   without inflating timestamps, counts, chart labels, domains or eyebrows. */
+:is(button, a, label)[class~="text-xs"],
+:is(button, a) > [class~="text-xs"],
+summary[class~="text-xs"],
+[role="alert"][class~="text-xs"],
+span[class~="text-xs"][class~="font-medium"][class~="rounded-full"],
+span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]):not([class~="tabular-nums"]),
+[class~="text-xs"][class~="leading-relaxed"],
+[class~="text-xs"][class~="leading-5"],
+[data-testid="question-essence"],
+[data-testid="question-agreements-label"],
+[data-testid="about-promises"] p,
+[aria-live="polite"] > div[class~="text-center"] > p[class~="text-xs"][class~="tabular-nums"],
+.contract-print label > span[class~="text-xs"],
+.contract-print span[class~="w-32"][class~="text-xs"],
+.contract-print div[class~="text-xs"][class~="font-semibold"],
+span[class~="mr-auto"][class~="text-xs"] {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* The fixed PWA dock is the one intentional navigation-floor exception: its
+   labels are tertiary chrome and stay at the sanctioned 12px minimum. */
+.bottom-nav [class~="text-xs"] {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
 /* Larger inputs that still clear the 16px iOS-zoom threshold opt out via this class */
 .ks-input-lg { font-size: 18px !important; }
 

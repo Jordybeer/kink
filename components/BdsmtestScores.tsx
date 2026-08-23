@@ -69,10 +69,10 @@ export default function BdsmtestScores({ scores }: Props) {
           aria-haspopup="dialog"
           className="focus-ring mb-1 flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-left"
         >
-          <span className="text-xs font-semibold" style={{ color: "var(--text2)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--text2)" }}>
             BDSMTest
           </span>
-          <span className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--accent)" }}>
+          <span className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: "var(--accent)" }}>
             Bekijk alle {scores.length}
             <CaretRight size={11} aria-hidden="true" />
           </span>

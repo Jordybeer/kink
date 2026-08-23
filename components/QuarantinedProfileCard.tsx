@@ -93,7 +93,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
       </div>
 
       {error && (
-        <p role="alert" className="text-xs mt-3 rounded-lg px-3 py-2" style={{ color: "var(--hard-no)", background: "var(--surface2)" }}>
+        <p role="alert" className="text-sm mt-3 rounded-lg px-3 py-2" style={{ color: "var(--hard-no)", background: "var(--surface2)" }}>
           {error}
         </p>
       )}
@@ -114,7 +114,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
             <button
               type="button"
               onClick={() => deleteQuarantinedProfile(record.profile.id)}
-              className="focus-ring flex-1 min-h-10 rounded-xl text-xs font-semibold"
+              className="focus-ring flex-1 min-h-10 rounded-xl text-sm font-semibold"
               style={{ background: "var(--hard-no)", color: "white" }}
             >
               Definitief verwijderen
@@ -122,7 +122,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
-              className="focus-ring px-4 min-h-10 rounded-xl text-xs border"
+              className="focus-ring px-4 min-h-10 rounded-xl text-sm border"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
               Annuleer
@@ -132,7 +132,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="focus-ring w-full min-h-10 rounded-xl text-xs flex items-center justify-center gap-2 border"
+            className="focus-ring w-full min-h-10 rounded-xl text-sm flex items-center justify-center gap-2 border"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
             <Trash size={15} aria-hidden="true" />
@@ -141,7 +141,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
         )}
       </div>
 
-      <details className="mt-4 text-xs" style={{ color: "var(--text2)" }}>
+      <details className="mt-4 text-sm" style={{ color: "var(--text2)" }}>
         <summary className="cursor-pointer focus-ring rounded-md">Technische details</summary>
         <p className="mt-2 break-words" style={{ lineHeight: 1.55 }}>{record.reason}</p>
       </details>

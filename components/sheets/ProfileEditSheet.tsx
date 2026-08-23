@@ -153,7 +153,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <h3 className="text-sm font-semibold">Persoon &amp; perspectief</h3>
             </div>
 
-            <label htmlFor="profile-edit-name" className="mb-1.5 block text-xs font-semibold" style={{ color: "var(--text2)" }}>
+            <label htmlFor="profile-edit-name" className="mb-1.5 block text-sm font-semibold" style={{ color: "var(--text2)" }}>
               Naam of alias
             </label>
             <input
@@ -182,7 +182,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <p className="text-sm font-semibold">
                     {perspective === "dominant" ? "Dominant" : "Submissive"}
                   </p>
-                  <p className="mt-0.5 text-xs" style={{ color: "var(--text2)" }}>
+                  <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
                     Gekoppeld aan {siblings.map((sibling) => sibling.role).join(" en ")}. De naam wordt voor beide aangepast.
                   </p>
                   {profile.legacyRole && (
@@ -194,7 +194,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               </div>
             ) : (
               <fieldset className="m-0 border-0 p-0">
-                <legend className="mb-2 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+                <legend className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                   Primaire richting
                 </legend>
                 <div className="grid grid-cols-2 gap-2">
@@ -222,7 +222,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   })}
                 </div>
                 {!profile.perspective && (
-                  <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                     Je oude rol “{profile.role || "niet ingevuld"}” wordt als historische context bewaard wanneer je deze keuze opslaat.
                   </p>
                 )}
@@ -243,11 +243,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <ListChecks aria-hidden="true" size={17} style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-semibold">Jouw vragenlijst</h3>
             </div>
-            <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+            <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
               Bestaande antwoorden blijven staan. De flow kiest alleen welke onbeantwoorde vraag nu nuttig is.
             </p>
 
-            <p className="mb-2 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+            <p className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
               Flow
             </p>
             <div className="mb-4 grid gap-2">
@@ -268,7 +268,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       <span className="text-sm font-semibold">{option.label}</span>
                       {active && <Check aria-hidden="true" size={14} style={{ color: "var(--accent)" }} />}
                     </span>
-                    <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>
+                    <span className="mt-0.5 block text-sm" style={{ color: "var(--text2)" }}>
                       {option.description}
                     </span>
                   </button>
@@ -276,7 +276,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               })}
             </div>
 
-            <p className="mb-2 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+            <p className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
               Interessegebieden
             </p>
             <div className="flex flex-wrap gap-2">
@@ -288,7 +288,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     type="button"
                     onClick={() => toggleInterest(interest.value)}
                     aria-pressed={active}
-                    className="focus-ring min-h-10 rounded-full px-3 text-xs font-semibold"
+                    className="focus-ring min-h-10 rounded-full px-3 text-sm font-semibold"
                     style={active
                       ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                       : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -298,7 +298,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 );
               })}
             </div>
-            <p className="mt-3 text-xs" style={{ color: "var(--accent)" }}>
+            <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--accent)" }}>
               {questionnaireMode === "dynamic"
                 ? "Dynamic heeft geen vast aantal: coverage blijft stabiel, expliciete positieve antwoorden kunnen één lokale vervolgdeur openen."
                 : "Deep Dive blijft ordenen, maar laat uiteindelijk geen catalogusonderwerp over."}
@@ -314,7 +314,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <h3 className="text-sm font-semibold">Profielinformatie</h3>
             </div>
 
-            <p className="mb-2 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+            <p className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
               Relatiestatus <span className="font-normal opacity-60">(optioneel)</span>
             </p>
             <div className="flex flex-wrap gap-2">
@@ -326,7 +326,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     type="button"
                     onClick={() => setRelationshipStatus(active ? "" : status)}
                     aria-pressed={active}
-                    className="focus-ring min-h-10 rounded-full px-3 text-xs font-semibold"
+                    className="focus-ring min-h-10 rounded-full px-3 text-sm font-semibold"
                     style={active
                       ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                       : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -336,7 +336,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 );
               })}
             </div>
-            <p className="mt-3 text-xs leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-3 text-sm leading-5" style={{ color: "var(--text2)" }}>
               FetLife en BDSMTest beheer je via Profiel aanvullen op je profiel.
             </p>
           </section>
@@ -348,7 +348,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
         >
           {error && (
-            <p className="mb-2 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
+            <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>
               {error}
             </p>
           )}

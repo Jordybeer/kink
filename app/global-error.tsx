@@ -74,7 +74,7 @@ export default function GlobalError({
             Herlaad KinkSync
           </button>
 
-          <p style={{ marginTop: "1.25rem", fontSize: "0.75rem", lineHeight: 1.6, color: "#A198A4" }}>
+          <p style={{ marginTop: "1.25rem", fontSize: "0.875rem", lineHeight: 1.6, color: "#A198A4" }}>
             Je profielen, antwoorden en contracten staan nog op dit toestel. Er is niets verloren gegaan.
           </p>
         </main>

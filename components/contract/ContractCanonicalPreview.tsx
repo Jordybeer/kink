@@ -19,8 +19,8 @@ function DetailList({ title, items }: {
         {items.map((item, index) => (
           <div key={`${item.name}:${index}`} className="rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <p className="text-sm font-medium">{item.name}</p>
-            {item.commentA && <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>{item.commentA}</p>}
-            {item.commentB && <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>{item.commentB}</p>}
+            {item.commentA && <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>{item.commentA}</p>}
+            {item.commentB && <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>{item.commentB}</p>}
           </div>
         ))}
       </div>
@@ -37,7 +37,7 @@ function SignatureImage({ dataUrl, label }: { dataUrl: string; label: string }) 
     <div className="rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={ref} alt={`Handtekening van ${label}`} className="h-16 w-full object-contain" />
-      <p className="mt-2 text-center text-xs font-medium" style={{ color: "var(--text2)" }}>{label}</p>
+      <p className="mt-2 text-center text-sm font-medium" style={{ color: "var(--text2)" }}>{label}</p>
     </div>
   );
 }
@@ -59,9 +59,9 @@ export default function ContractCanonicalPreview({ content }: { content: Contrac
           {[content.profileA, content.profileB].map((participant, index) => (
             <div key={participant.profileId} className="rounded-xl p-3" style={{ background: "var(--surface2)" }}>
               <p className="text-sm font-medium">{participant.profileName}</p>
-              <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{participant.role}</p>
+              <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{participant.role}</p>
               {(index === 0 ? content.realNameA : content.realNameB) && (
-                <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{index === 0 ? content.realNameA : content.realNameB}</p>
+                <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>{index === 0 ? content.realNameA : content.realNameB}</p>
               )}
             </div>
           ))}
@@ -75,7 +75,7 @@ export default function ContractCanonicalPreview({ content }: { content: Contrac
             { name: content.profileA.profileName, signals: content.signalsA, aftercare: content.aftercareA },
             { name: content.profileB.profileName, signals: content.signalsB, aftercare: content.aftercareB },
           ].map(({ name, signals, aftercare }) => (
-            <div key={name} className="rounded-xl p-3 text-xs leading-relaxed" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+            <div key={name} className="rounded-xl p-3 text-sm leading-relaxed" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
               <p className="text-sm font-medium">{name}</p>
               <p className="mt-2" style={{ color: "var(--text2)" }}>Groen: {signals.green}</p>
               <p style={{ color: "var(--text2)" }}>Oranje: {signals.amber}</p>

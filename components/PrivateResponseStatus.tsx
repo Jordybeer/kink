@@ -32,12 +32,12 @@ export default function PrivateResponseStatus({
   const sizeClass = readable
     ? "text-sm px-2 py-1"
     : compact
-      ? "text-xs px-1.5 py-0.5"
-      : "text-xs px-1.5 py-0.5 min-w-[5.5rem]";
+      ? "text-sm px-1.5 py-0.5"
+      : "text-sm px-1.5 py-0.5 min-w-[5.5rem]";
   const sharedClass = `focus-ring rounded-full border whitespace-nowrap inline-flex items-center justify-center gap-1 ${sizeClass}`;
 
   if (!status) {
-    return <span className={readable ? "text-sm" : "text-xs"} style={{ color: "var(--text2)" }}>—</span>;
+    return <span className="text-sm" style={{ color: "var(--text2)" }}>—</span>;
   }
 
   const colour = STATUS_VAR[status];

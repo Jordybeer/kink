@@ -288,7 +288,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
         )}
 
         {assembly && !bundleProgress && (
-          <p className="text-xs text-center mb-3" style={{ color: "var(--accent)" }}>
+          <p className="text-sm text-center mb-3" style={{ color: "var(--accent)" }}>
             Deel ontvangen. Houd de camera gericht; volgende delen worden automatisch verzameld.
           </p>
         )}
@@ -298,7 +298,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             {error && (
               <p className="text-sm mb-3 text-center" style={{ color: "var(--text2)" }}>{error}</p>
             )}
-            <p className="text-xs mb-2" style={{ color: "var(--text2)" }}>
+            <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>
               Plak hier de link, code of één deel van een multi-QR.
             </p>
             <textarea
@@ -311,7 +311,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               autoFocus
             />
             {(pasteError || partError) && (
-              <p className="text-xs mb-3" style={{ color: "var(--hard-no)" }}>{pasteError ?? partError}</p>
+              <p className="text-sm mb-3" style={{ color: "var(--hard-no)" }}>{pasteError ?? partError}</p>
             )}
             <button
               onClick={handlePasteSubmit}
@@ -347,9 +347,9 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             </div>
             <canvas ref={canvasRef} className="hidden" />
             {partError && (
-              <p className="text-xs text-center mb-2" style={{ color: "var(--hard-no)" }}>{partError}</p>
+              <p className="text-sm text-center mb-2" style={{ color: "var(--hard-no)" }}>{partError}</p>
             )}
-            <p className="text-xs text-center mb-2" style={{ color: "var(--text2)" }}>
+            <p className="text-sm text-center mb-2" style={{ color: "var(--text2)" }}>
               {bundleProgress
                 ? bundleProgress.profileComplete
                   ? "Blijf richten. De profielfoto wordt nu automatisch verzameld."
@@ -360,7 +360,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             </p>
             <button
               onClick={() => { stopCamera(); setPartError(null); setPasteMode(true); }}
-              className="focus-ring block mx-auto mb-3 text-xs underline-offset-2 hover:underline"
+              className="focus-ring block mx-auto mb-3 text-sm underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
               Geen camera? Plak een link

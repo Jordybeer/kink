@@ -47,7 +47,7 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
           >
             <ShieldWarning aria-hidden="true" size={28} weight="duotone" className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
             <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Gedeelde profielkopieën controleren…</p>
-            <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>
+            <p className="text-sm mt-1 leading-relaxed" style={{ color: "var(--text2)" }}>
               KinkSync controleert of de opgeslagen antwoorden nog overeenkomen met hun eerder bevestigde versie.
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
           }}
         >
           <ShieldWarning size={20} weight="fill" aria-hidden="true" style={{ color: "var(--hard-no)", flexShrink: 0 }} />
-          <p className="text-xs flex-1" style={{ color: "var(--text2)" }}>
+          <p className="text-sm flex-1 leading-relaxed" style={{ color: "var(--text2)" }}>
             <strong style={{ color: "var(--text)" }}>
               {quarantinedProfiles.length} profielkopie{quarantinedProfiles.length === 1 ? "" : "ën"} {quarantinedProfiles.length === 1 ? "moet" : "moeten"} opnieuw worden bevestigd.
             </strong>{" "}
@@ -73,7 +73,7 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
           </p>
           <Link
             href="/quarantine"
-            className="focus-ring rounded-lg px-3 py-2 text-xs font-semibold flex-none"
+            className="focus-ring rounded-lg px-3 py-2 text-sm font-semibold flex-none"
             style={{ background: "var(--hard-no)", color: "white" }}
           >
             Bekijken

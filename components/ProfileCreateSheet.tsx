@@ -203,7 +203,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         >
           {step === 0 && (
             <div className="ks-fade-in">
-              <label htmlFor={nameId} className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
+              <label htmlFor={nameId} className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
                 Naam of alias
               </label>
               <input
@@ -225,7 +225,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
               />
 
               <fieldset className="border-0 p-0 m-0">
-                <legend className="text-xs font-semibold mb-2" style={{ color: "var(--text2)" }}>
+                <legend className="text-sm font-semibold mb-2" style={{ color: "var(--text2)" }}>
                   Kant van de dynamiek
                 </legend>
                 <div className="grid gap-2">
@@ -259,7 +259,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                         </span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-sm font-semibold">{label}</span>
-                          <span className="block text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                          <span className="block text-sm mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
                             {description}
                           </span>
                         </span>
@@ -272,7 +272,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
 
               {direction === "both" && (
                 <div
-                  className="rounded-xl p-3 mt-3 text-xs leading-relaxed"
+                  className="rounded-xl p-3 mt-3 text-sm leading-relaxed"
                   style={{
                     color: "var(--text2)",
                     background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
@@ -284,7 +284,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
               )}
 
               {nameError && (
-                <p className="text-xs mt-3" role="alert" style={{ color: "var(--hard-no)" }}>
+                <p className="text-sm mt-3" role="alert" style={{ color: "var(--hard-no)" }}>
                   {nameError}
                 </p>
               )}
@@ -326,7 +326,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       </span>
                       <span className="min-w-0">
                         <span className="block text-sm font-semibold">{interest.label}</span>
-                        <span className="block text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                        <span className="block text-sm mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
                           {interest.description}
                         </span>
                       </span>
@@ -334,7 +334,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                   );
                 })}
               </div>
-              <p className="text-xs mt-3" style={{ color: "var(--text2)" }}>
+              <p className="text-sm mt-3" style={{ color: "var(--text2)" }}>
                 Niets gekozen? Dan krijg je een brede, neutrale startselectie.
               </p>
             </div>

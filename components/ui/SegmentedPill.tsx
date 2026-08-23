@@ -71,7 +71,7 @@ export default function SegmentedPill<T extends string>({ segments, value, onCha
             role="tab"
             aria-selected={active}
             tabIndex={active ? 0 : -1}
-            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-[13px] transition-[color,transform] duration-150 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
+            className="focus-ring relative flex min-h-11 flex-1 items-center justify-center px-3 text-sm transition-[color,transform] duration-150 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
             style={{
               color: active ? "var(--text)" : "var(--text2)",
               fontWeight: active ? 500 : 400,

@@ -1,6 +1,6 @@
 import { categorizeRole } from "@/lib/roles";
 
-const BASE = "text-xs px-2 py-0.5 rounded-full border whitespace-nowrap";
+const BASE = "text-sm px-2 py-0.5 rounded-full border whitespace-nowrap";
 
 export default function RolePill({ role }: { role?: string }) {
   const dir = categorizeRole(role ?? "");

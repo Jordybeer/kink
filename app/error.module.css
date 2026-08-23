@@ -106,7 +106,7 @@
 .reassurance {
   max-width: 24rem;
   margin-top: 1.25rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
 }
 
 @media (max-height: 700px) and (orientation: portrait) {

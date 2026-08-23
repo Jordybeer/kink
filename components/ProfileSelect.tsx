@@ -91,7 +91,7 @@ export default function ProfileSelect({
           >
             <div style={{ overflowY: "auto", maxHeight: 220 }}>
               {profiles.length === 0 ? (
-                <p style={{ padding: "10px 12px", fontSize: 13, color: "var(--text2)" }}>
+                <p style={{ padding: "10px 12px", fontSize: 14, color: "var(--text2)" }}>
                   Geen profielen
                 </p>
               ) : (

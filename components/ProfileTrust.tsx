@@ -78,7 +78,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${label}. Bekijk bron en toestemming`}
-        className="focus-ring inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full px-2.5 text-xs font-normal transition-colors active:opacity-70"
+        className="focus-ring inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"
         style={{ color, background, border: `1px solid ${borderColor}` }}
       >
         {checking
