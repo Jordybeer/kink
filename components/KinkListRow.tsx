@@ -41,7 +41,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
         </span>
 
         {(askFirst || firstTime) && (
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-tight">
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs leading-tight">
             {askFirst && (
               <span className="inline-flex items-center gap-1 font-semibold" style={{ color: "var(--accent)" }}>
                 <WarningCircle size={10} weight="fill" aria-hidden="true" />

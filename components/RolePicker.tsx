@@ -60,7 +60,7 @@ export default function RolePicker({ value, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => { onChange(""); setOpen(false); }}
-                className="focus-ring text-xs rounded-lg"
+                className="focus-ring text-sm rounded-lg"
                 style={{ color: "var(--text2)" }}
               >
                 Wis keuze

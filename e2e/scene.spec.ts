@@ -61,24 +61,37 @@ test.describe("Scene planner", () => {
   });
 });
 
-test("scene planner requires a contract for a selected pair", async ({ page }) => {
+test("scene planner maakt een contract optioneel voor een geselecteerd paar", async ({ page }) => {
   await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
-  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Contract opstellen" })).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toHaveCount(0);
+  await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
+  await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
+  await expect(page.getByText(/kink-matches en afspraken als extra startpunt/i)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Contract opstellen" })).toHaveAttribute(
+    "href",
+    "/contract?a=pw-alex-001&b=pw-sam-002",
+  );
 });
 
-test("a legacy contract snapshot alone never opens the scene gate", async ({ page }) => {
+test("een legacy contractsnapshot blokkeert de scène niet en telt niet als actief contract", async ({ page }) => {
   await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM], {
     contracts: [CONTRACT_ALEX_SAM],
   });
-  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Verbond vereist" })).toHaveCount(0);
+  await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
+  await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
 });
 
 test.describe("Scene planner — zonder URL-params", () => {
-  test("laadt zonder profielen en toont scène menu", async ({ page }) => {
+  test("vraagt rechtstreeks voor welke twee profielen de scène is", async ({ page }) => {
     await seedAndGo(page, "/scene", [PROFILE_ALEX, PROFILE_SAM]);
-    const text = await page.evaluate(() => document.body.innerText);
-    expect(text).toMatch(/[Ss]cène|[Ss]cene/);
+
+    await expect(page.getByText("Voor wie is deze scène?", { exact: true })).toBeVisible();
+    await expect(page.getByText("Kies twee profielen. Een contract is optioneel.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Profiel A" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Profiel B" })).toBeVisible();
   });
 
   test("geen overflow zonder params", async ({ page }) => {

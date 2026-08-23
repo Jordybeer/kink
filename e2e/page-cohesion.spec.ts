@@ -120,17 +120,16 @@ test.describe("Page cohesion scenes", () => {
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 
-  test("contractgate houdt de kern zichtbaar en zet verdieping in disclosure", async ({ page }) => {
+  test("optioneel contract blijft compact en blokkeert de scène niet", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 667 });
     await seedAndGo(page, "/scene?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
 
-    await expect(page.getByRole("heading", { name: "Verbond vereist" })).toBeVisible();
-    await expect(page.getByText("Voor een scène is een actief bevestigd contract nodig. Kies twee profielen om verder te gaan.", { exact: true })).toBeVisible();
-    const why = page.getByRole("button", { name: "Waarom is dit nodig?" });
-    await expect(why).toHaveAttribute("aria-expanded", "false");
-    await why.click();
-    await expect(why).toHaveAttribute("aria-expanded", "true");
-    await expect(page.getByText(/grenzen, verlangens en safewords/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Verbond vereist" })).toHaveCount(0);
+    await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
+    await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
+    await expect(page.getByText(/kink-matches en afspraken als extra startpunt/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Contract opstellen" })).toBeVisible();
+    expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 
   test("scene-item beheer verschijnt pas bij details en blijft toegankelijk", async ({ page }) => {

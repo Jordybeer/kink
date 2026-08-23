@@ -88,12 +88,12 @@ export default function CompareScoreSummary({
         >
           <h2
             id="compare-summary-heading"
-            className="text-[19px] font-semibold leading-tight sm:text-[21px]"
+            className="text-xl font-semibold leading-tight"
             style={{ color: "var(--text)" }}
           >
             Wat valt op tussen jullie
           </h2>
-          <p className="mt-2.5 max-w-3xl text-[16px] leading-[1.55] sm:text-[17px]" style={{ color: "var(--text)" }}>
+          <p className="mt-2.5 max-w-3xl text-base leading-relaxed" style={{ color: "var(--text)" }}>
             {story.lead}
           </p>
         </div>
@@ -106,10 +106,10 @@ export default function CompareScoreSummary({
           {stats.map(({ key, count, label, color, icon: Icon }) => (
             <div key={key} className="min-w-0 px-3 py-4 text-center sm:px-4 sm:py-5" style={{ background: "var(--surface2)" }}>
               <Icon size={18} weight="duotone" className="mx-auto mb-2" aria-hidden="true" style={{ color }} />
-              <div className="text-[30px] font-semibold leading-none tabular-nums sm:text-[32px]" style={{ color }}>
+              <div className="text-3xl font-semibold leading-none tabular-nums" style={{ color }}>
                 {count}
               </div>
-              <div className="mt-2 text-[14px] font-semibold leading-tight sm:text-[15px]" style={{ color: "var(--text)" }}>
+              <div className="mt-2 text-sm font-semibold leading-tight" style={{ color: "var(--text)" }}>
                 {label}
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function CompareScoreSummary({
             style={{ borderColor: "var(--border)", background: "var(--surface2)" }}
             aria-label="Inzichten"
           >
-            <div className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>
+            <div className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>
               Inzichten
             </div>
             {story.insights.map((insight, index) => {
@@ -141,10 +141,10 @@ export default function CompareScoreSummary({
                     <Icon size={17} weight="duotone" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[14px] font-semibold leading-snug" style={{ color: "var(--text)" }}>
+                    <p className="text-sm font-semibold leading-snug" style={{ color: "var(--text)" }}>
                       {insight.title}
                     </p>
-                    <p className="mt-0.5 text-[14px] leading-[1.45]" style={{ color: "var(--text2)" }}>
+                    <p className="mt-0.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                       {insight.body}
                     </p>
                   </div>
@@ -155,7 +155,7 @@ export default function CompareScoreSummary({
         )}
 
         <div
-          className="mt-4 space-y-2 border-t pt-4 text-[14px] leading-[1.45]"
+          className="mt-4 space-y-2 border-t pt-4 text-sm leading-relaxed"
           style={{ color: "var(--text2)", borderColor: "var(--border)" }}
         >
           <div className="flex items-start gap-2.5">
