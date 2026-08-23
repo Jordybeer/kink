@@ -195,12 +195,12 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
             >
               {profile.name}
             </h2>
-            <p className="mt-1 flex flex-wrap items-center gap-1 text-xs leading-snug" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 flex flex-wrap items-center gap-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
               {profile.role && <span style={{ color: "var(--text)", fontWeight: 500 }}>{profile.role}</span>}
               {profile.role && <span aria-hidden="true">·</span>}
               <span>{expLevel}</span>
               {profile.relationshipStatus && <><span aria-hidden="true">·</span><span>{profile.relationshipStatus}</span></>}
-              {profileType === "partner" && <Lock size={10} weight="regular" aria-hidden="true" className="shrink-0" />}
+              {profileType === "partner" && <Lock size={11} weight="regular" aria-hidden="true" className="shrink-0" />}
             </p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               type="button"
               data-tour="profile-enrichment"
               onClick={() => setEnrichmentOpen(true)}
-              className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-[12.5px] font-medium transition-colors active:opacity-70"
+              className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium transition-colors active:opacity-70"
               style={{
                 color: "var(--accent-text)",
                 background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
@@ -227,7 +227,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
 
           {profileType === "partner" && profile.lockedAt && (
             <span
-              className="inline-flex min-h-8 items-center rounded-full px-2.5 text-[11px] font-normal"
+              className="inline-flex min-h-8 items-center rounded-full px-2.5 text-xs font-normal"
               style={{
                 color: "var(--text2)",
                 background: "var(--surface2)",
@@ -243,7 +243,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               href={`/contracts/${encodeURIComponent(latestContract.id)}`}
               prefetch={false}
               aria-label={`Open het meest recente contract met ${profile.name}`}
-              className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-normal"
+              className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-normal"
               style={{
                 color: "var(--text2)",
                 background: "var(--surface2)",
@@ -261,7 +261,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-              className="profile-fetlife-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-[12.5px] font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+              className="profile-fetlife-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
               style={{
                 color: "var(--text)",
                 background: "var(--surface2)",
@@ -286,7 +286,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Open het opgeslagen BDSMTest-resultaat"
-              className="profile-bdsmtest-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-[12.5px] font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+              className="profile-bdsmtest-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
               style={{
                 color: "var(--text)",
                 background: "var(--surface2)",
@@ -307,7 +307,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
         </div>
 
         {profile.privateNote && (
-          <p className="mt-2.5 text-xs italic leading-snug" style={{ color: "var(--text2)" }}>
+          <p className="mt-2.5 text-sm italic leading-snug" style={{ color: "var(--text2)" }}>
             {profile.privateNote.length > 120
               ? profile.privateNote.slice(0, 120) + "…"
               : profile.privateNote}
