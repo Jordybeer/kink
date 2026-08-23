@@ -72,7 +72,19 @@ const statusSamples = [
   ["Ja", "#10b981", "Positief"],
   ["Misschien", "#38bdf8", "Open gesprek"],
   ["Voor hen", "#818cf8", "Niet voor zichzelf"],
-  ["Harde grens", "#ef4444", "Duidelijke limiet"],
+  ["Harde grens", "#f26d6d", "Duidelijke limiet"],
+] as const;
+
+const currentSwatches = [
+  ["Achtergrond", "#09080E"],
+  ["Surface", "#110F19"],
+  ["Surface 2", "#16141F"],
+  ["Surface 3", "#26222E"],
+  ["Brand", "#D946AF"],
+  ["Brand fill", "#A93187"],
+  ["Accent 2", "#D4527C"],
+  ["Tekst", "#EDE8F5"],
+  ["Tekst 2", "#9D9AB8"],
 ] as const;
 
 const warmSwatches = [
@@ -105,12 +117,22 @@ const modeLabels: Record<PaletteMode, string> = {
   deep: "Warm + deep",
 };
 
+const contrastMetrics: Record<PaletteMode, {
+  brand: string;
+  secondary: string;
+  icon: string;
+  fill: string;
+}> = {
+  current: { brand: "5.17:1", secondary: "7.36:1", icon: "4.72:1", fill: "6.04:1" },
+  warm: { brand: "4.96:1", secondary: "7.89:1", icon: "5.63:1", fill: "5.08:1" },
+  deep: { brand: "5.06:1", secondary: "7.20:1", icon: "5.78:1", fill: "5.08:1" },
+};
+
 export default function PaletteSandboxPage() {
   const [mode, setMode] = useState<PaletteMode>("warm");
   const theme = mode === "current" ? CURRENT_THEME : mode === "warm" ? WARM_THEME : DEEP_THEME;
-  const proposalSwatches = mode === "deep" ? deepSwatches : warmSwatches;
-  const proposalLabel = mode === "deep" ? "Warm + deep tokens" : "Warm restrained tokens";
-  const secondaryContrast = mode === "deep" ? "~7.2:1" : "~7.9:1";
+  const selectedSwatches = mode === "current" ? currentSwatches : mode === "warm" ? warmSwatches : deepSwatches;
+  const metrics = contrastMetrics[mode];
 
   return (
     <PageShell width="3xl" className="lg:max-w-4xl">
@@ -131,7 +153,7 @@ export default function PaletteSandboxPage() {
         <div
           className="mt-5 grid grid-cols-3 rounded-xl p-1"
           style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          role="group"
+          role="tablist"
           aria-label="Palet kiezen"
         >
           {(["current", "warm", "deep"] as const).map((value) => {
@@ -140,6 +162,8 @@ export default function PaletteSandboxPage() {
               <button
                 key={value}
                 type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => setMode(value)}
                 className="focus-ring min-h-11 rounded-lg px-2 text-[11px] font-semibold sm:px-3 sm:text-sm"
                 style={{
@@ -147,7 +171,6 @@ export default function PaletteSandboxPage() {
                   color: active ? "var(--text)" : "var(--text2)",
                   boxShadow: active ? "0 4px 16px rgba(0,0,0,.18)" : "none",
                 }}
-                aria-pressed={active}
               >
                 {modeLabels[value]}
               </button>
@@ -157,7 +180,7 @@ export default function PaletteSandboxPage() {
       </section>
 
       <div
-        className="overflow-hidden rounded-[28px] transition-colors duration-200"
+        className="overflow-hidden rounded-[28px]"
         style={{ ...theme, background: "var(--bg)", border: "1px solid var(--border)" }}
       >
         <div className="p-4 sm:p-6">
@@ -301,19 +324,27 @@ export default function PaletteSandboxPage() {
         </div>
       </div>
 
-      <section className="mt-7 rounded-2xl p-4 sm:p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <section
+        className="mt-7 rounded-2xl p-4 sm:p-5"
+        style={{ ...theme, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+      >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text2)" }}>{proposalLabel}</p>
-            <h2 className="mt-2 text-lg font-semibold">Voorstel, niet globaal toegepast</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--text2)" }}>
+              {modeLabels[mode]} tokens
+            </p>
+            <h2 className="mt-2 text-lg font-semibold">Geselecteerde variant</h2>
           </div>
-          <div className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", color: "var(--yes)" }}>
-            Contrast-first
+          <div
+            className="rounded-full px-3 py-1 text-xs font-semibold"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
+          >
+            WCAG AA referentie
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5">
-          {proposalSwatches.map(([label, color]) => (
+          {selectedSwatches.map(([label, color]) => (
             <div key={label}>
               <div className="h-12 rounded-xl" style={{ background: color, border: "1px solid var(--border)" }} />
               <p className="mt-1.5 text-[11px] font-medium">{label}</p>
@@ -322,11 +353,16 @@ export default function PaletteSandboxPage() {
           ))}
         </div>
 
-        <div className="mt-5 grid gap-2 text-xs sm:grid-cols-3">
-          <Metric label="Brand op bg" value={mode === "deep" ? "~5.1:1" : "~5.0:1"} note="AA voor gewone tekst" />
-          <Metric label="Secondary op bg" value={secondaryContrast} note="Sterk voor lange sessies" />
-          <Metric label="Wit op brand fill" value="~5.1:1" note="AA voor CTA-labels" />
+        <div className="mt-5 grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
+          <Metric label="Brand op bg" value={metrics.brand} note="AA voor gewone tekst" />
+          <Metric label="Secondary op bg" value={metrics.secondary} note="AAA voor gewone tekst" />
+          <Metric label="Icon accent op surface 2" value={metrics.icon} note="Boven 3:1 voor UI" />
+          <Metric label="Wit op brand fill" value={metrics.fill} note="AA voor CTA-labels" />
         </div>
+
+        <p className="mt-4 text-[11px] leading-5" style={{ color: "var(--text2)" }}>
+          Contrast is een minimumcheck, geen oordeel over comfort of sfeer. De drie varianten gebruiken dezelfde layout zodat kleur het enige onderzochte verschil blijft.
+        </p>
       </section>
 
       <p className="mt-5 pb-3 text-xs leading-5" style={{ color: "var(--text2)" }}>
