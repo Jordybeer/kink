@@ -14,20 +14,26 @@ function cssRuleFor(selectorNeedle: string): string {
 }
 
 describe("semantic typography floor", () => {
-  it("keeps interactive text at the 14px readable floor", () => {
+  it("keeps normal interactive text at the 14px readable floor", () => {
     const rule = cssRuleFor(':is(button, a, label)[class~="text-xs"]');
     expect(rule).toContain("font-size: 0.875rem");
     expect(rule).toContain("line-height: 1.25rem");
+    expect(globalsCss).toContain('summary[class~="text-xs"]');
   });
 
-  it("lifts legacy explanatory copy and meaningful state text", () => {
-    const rule = cssRuleFor('p[class~="text-xs"]');
+  it("lifts required legacy prose and meaningful state text", () => {
+    const rule = cssRuleFor('[role="alert"][class~="text-xs"]');
     expect(rule).toContain("font-size: 0.875rem");
-    expect(globalsCss).toContain('[role="alert"][class~="text-xs"]');
     expect(globalsCss).toContain('[data-testid="question-essence"]');
     expect(globalsCss).toContain('[data-testid="question-agreements-label"]');
     expect(globalsCss).toContain('[data-testid="about-promises"] p');
     expect(globalsCss).toContain('span[class~="text-xs"][class~="font-medium"][class~="rounded-full"]');
+    expect(globalsCss).toContain('[class~="text-xs"][class~="leading-relaxed"]');
+  });
+
+  it("does not blanket-lift tertiary paragraphs or divs", () => {
+    expect(globalsCss).not.toContain('p[class~="text-xs"]:not(');
+    expect(globalsCss).not.toContain('div[class~="text-xs"]:not(');
   });
 
   it("preserves the deliberate 12px PWA navigation-label floor", () => {
