@@ -264,7 +264,7 @@ function ContractsContent() {
           />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
-            {visible.map((item) => <ContractCard key={item.id} series={series} profiles={profiles} />)}
+            {visible.map((item) => <ContractCard key={item.id} series={item} profiles={profiles} />)}
           </div>
         )}
       </div>
