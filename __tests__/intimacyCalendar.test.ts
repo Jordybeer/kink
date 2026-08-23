@@ -22,6 +22,9 @@ describe("intimacy calendar export", () => {
     expect(ics).not.toContain("Stoute zaterdag");
     expect(ics).not.toContain("Sam");
     expect(ics).not.toContain("massage");
+    expect(ics).not.toContain("DESCRIPTION:");
+    expect(ics).not.toContain("KinkSync");
+    expect(ics).not.toContain("kinksync.local");
   });
 
   it("includes explicitly requested details with ICS escaping", () => {
@@ -32,6 +35,7 @@ describe("intimacy calendar export", () => {
     expect(ics).toContain("SUMMARY:Stoute zaterdag");
     expect(ics).toContain("Met: Sam");
     expect(ics).toContain("Wijn\\, massage\\;\\nen zien waar het eindigt.");
+    expect(ics).not.toContain("KinkSync");
   });
 
   it("requires a real local date and time", () => {

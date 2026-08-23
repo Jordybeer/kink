@@ -44,29 +44,35 @@ export function buildIntimacyCalendarFile(
     ? entry.title?.trim() || (entry.partnerName ? `Moment met ${entry.partnerName}` : "Privé moment")
     : "Privé moment";
 
-  const details = includeDetails
+  const description = includeDetails
     ? [
-        "Gepland in KinkSync.",
         entry.partnerName ? `Met: ${entry.partnerName}` : "",
         entry.note?.trim() || "",
       ].filter(Boolean).join("\n")
-    : "Gepland in KinkSync. Details blijven lokaal in de app.";
+    : "";
 
-  const uid = `intimacy-${entry.id.replace(/[^a-zA-Z0-9._-]/g, "")}@kinksync.local`;
-
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//KinkSync//Intimiteit//NL",
-    "CALSCALE:GREGORIAN",
+  const safeId = entry.id.replace(/[^a-zA-Z0-9._-]/g, "");
+  const eventLines = [
     "BEGIN:VEVENT",
-    `UID:${uid}`,
+    `UID:private-${safeId}@local.invalid`,
     `DTSTAMP:${compactUtc(options.now ?? new Date())}`,
     `DTSTART:${localStart(entry.date, entry.time)}`,
     "DURATION:PT1H",
     `SUMMARY:${escapeIcs(summary)}`,
-    `DESCRIPTION:${escapeIcs(details)}`,
-    "END:VEVENT",
+  ];
+
+  if (description) {
+    eventLines.push(`DESCRIPTION:${escapeIcs(description)}`);
+  }
+
+  eventLines.push("END:VEVENT");
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Private Calendar Event//EN",
+    "CALSCALE:GREGORIAN",
+    ...eventLines,
     "END:VCALENDAR",
     "",
   ].join("\r\n");

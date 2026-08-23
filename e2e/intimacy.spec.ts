@@ -19,7 +19,7 @@ test.describe("Intimiteitsagenda", () => {
     await expect(page.getByText("Date night", { exact: true })).toBeVisible();
     await expect(page.getByText(/30 aug.*20:30/)).toBeVisible();
 
-    await page.getByRole("button", { name: "Bijhouden" }).click();
+    await page.getByRole("button", { name: "Bijhouden", exact: true }).click();
     const logDialog = page.getByRole("dialog", { name: "Intiem moment bijhouden" });
     await logDialog.getByLabel("Datum").fill("2026-08-31");
     await logDialog.getByLabel("Privé notitie (optioneel)").fill("Een dag later was fijner");
