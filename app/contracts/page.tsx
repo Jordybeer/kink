@@ -153,7 +153,8 @@ function ContractsContent() {
   const navActions = useMemo<TopNavAction[]>(() => [
     {
       id: "scan-contract-request",
-      label: "Contractverzoek scannen",
+      label: "Contract van partner scannen",
+      shortLabel: "Scan QR",
       icon: <QrCode size={18} aria-hidden="true" />,
       onClick: () => setInboxOpen(true),
       placement: "primary",
@@ -263,7 +264,7 @@ function ContractsContent() {
           />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
-            {visible.map((item) => <ContractCard key={item.id} series={item} profiles={profiles} />)}
+            {visible.map((item) => <ContractCard key={item.id} series={series} profiles={profiles} />)}
           </div>
         )}
       </div>
