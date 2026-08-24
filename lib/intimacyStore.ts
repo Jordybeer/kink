@@ -16,6 +16,7 @@ export interface IntimacyRecord {
   partnerProfileId?: string;
   partnerName?: string;
   note?: string;
+  reminderDays?: number;
   createdAt: number;
   updatedAt: number;
   completedAt?: number;
@@ -63,6 +64,9 @@ export const useIntimacyStore = create<IntimacyState>()(
           updatedAt: now,
           ...(entry.status === "completed" && !entry.completedAt ? { completedAt: now } : {}),
         };
+        if (record.status === "completed") {
+          delete record.reminderDays;
+        }
         set((state) => ({
           entries: [record, ...state.entries].slice(0, MAX_ENTRIES),
         }));
@@ -83,8 +87,9 @@ export const useIntimacyStore = create<IntimacyState>()(
             };
             if (status === "planned") {
               delete next.completedAt;
-            } else if (!next.completedAt) {
-              next.completedAt = now;
+            } else {
+              delete next.reminderDays;
+              if (!next.completedAt) next.completedAt = now;
             }
             return next;
           }),
