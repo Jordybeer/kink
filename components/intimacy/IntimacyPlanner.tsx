@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import {
+  Bell,
   CalendarPlus,
   Check,
   Clock,
@@ -14,8 +15,10 @@ import {
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
-import Sheet, { SheetContent } from "@/components/Sheet";
+import LegacySheet, { SheetContent } from "@/components/Sheet";
 import ContextMenu from "@/components/ui/ContextMenu";
+import ModalSheet from "@/components/ui/Sheet";
+import Switch from "@/components/ui/Switch";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import { useStore, useHasHydrated } from "@/lib/store";
 import {
@@ -25,6 +28,12 @@ import {
   type IntimacyStatus,
 } from "@/lib/intimacyStore";
 import { buildIntimacyCalendarFile } from "@/lib/intimacyCalendar";
+import {
+  daysUntilIntimacyLabel,
+  isValidIntimacyReminderDays,
+  MAX_INTIMACY_REMINDER_DAYS,
+  MIN_INTIMACY_REMINDER_DAYS,
+} from "@/lib/intimacyReminder";
 
 type ComposerMode = IntimacyStatus;
 
@@ -60,6 +69,16 @@ function downloadCalendar(entry: IntimacyRecord, includeDetails: boolean) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
+function isIOSBrowserTab(): boolean {
+  if (typeof navigator === "undefined" || typeof window === "undefined") return false;
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+  if (!isIOS) return false;
+  const standalone =
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+    || window.matchMedia("(display-mode: standalone)").matches;
+  return !standalone;
 }
 
 function IntimacyCard({
@@ -174,6 +193,7 @@ function IntimacyCard({
 
 export default function IntimacyPlanner() {
   const profiles = useStore((state) => state.profiles);
+  const setNotificationPermissionAsked = useStore((state) => state.setNotificationPermissionAsked);
   const mainHydrated = useHasHydrated();
   const { entries, addEntry, updateEntry, deleteEntry } = useIntimacyStore();
   const intimacyHydrated = useIntimacyHasHydrated();
@@ -188,6 +208,9 @@ export default function IntimacyPlanner() {
   const [title, setTitle] = useState("");
   const [partnerId, setPartnerId] = useState("");
   const [note, setNote] = useState("");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderDays, setReminderDays] = useState(1);
+  const [reminderNotice, setReminderNotice] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const planned = useMemo(
@@ -206,6 +229,7 @@ export default function IntimacyPlanner() {
   const closeComposer = useCallback(() => {
     setComposerMode(null);
     setEditingId(null);
+    setReminderNotice(null);
     setFormError(null);
   }, []);
 
@@ -217,6 +241,9 @@ export default function IntimacyPlanner() {
     setTitle(entry?.title ?? "");
     setPartnerId(entry?.partnerProfileId ?? "");
     setNote(entry?.note ?? "");
+    setReminderEnabled(mode === "planned" && isValidIntimacyReminderDays(entry?.reminderDays));
+    setReminderDays(isValidIntimacyReminderDays(entry?.reminderDays) ? entry.reminderDays : 1);
+    setReminderNotice(null);
     setFormError(null);
   }, []);
 
@@ -252,6 +279,44 @@ export default function IntimacyPlanner() {
     : editingId
       ? "Wijzigingen bewaren"
       : composerMode === "planned" ? "Plan moment" : "Bewaar";
+  const dateDistance = composerMode === "planned" ? daysUntilIntimacyLabel(date) : null;
+  const permissionWarning = reminderEnabled
+    && typeof Notification !== "undefined"
+    && Notification.permission !== "granted"
+    ? "Meldingen staan momenteel uit op dit toestel."
+    : null;
+
+  async function handleReminderToggle(next: boolean) {
+    setReminderNotice(null);
+    if (!next) {
+      setReminderEnabled(false);
+      return;
+    }
+
+    if (typeof Notification === "undefined") {
+      setReminderNotice("Dit toestel of deze browser ondersteunt geen KinkSync-meldingen.");
+      return;
+    }
+
+    if (isIOSBrowserTab()) {
+      setReminderNotice("Op iPhone werken meldingen pas wanneer KinkSync op je beginscherm staat.");
+      return;
+    }
+
+    setNotificationPermissionAsked();
+    try {
+      const permission = Notification.permission === "default"
+        ? await Notification.requestPermission()
+        : Notification.permission;
+      if (permission !== "granted") {
+        setReminderNotice("Meldingen zijn geblokkeerd. Zet ze aan in de instellingen van je toestel of browser.");
+        return;
+      }
+      setReminderEnabled(true);
+    } catch {
+      setReminderNotice("Meldingen konden niet worden ingeschakeld op dit toestel.");
+    }
+  }
 
   function saveEntry() {
     if (!composerMode) return;
@@ -272,6 +337,7 @@ export default function IntimacyPlanner() {
       partnerProfileId: partner?.id,
       partnerName: partner?.name,
       note: note.trim() || undefined,
+      reminderDays: composerMode === "planned" && reminderEnabled ? reminderDays : undefined,
     };
 
     if (editingId) {
@@ -399,60 +465,124 @@ export default function IntimacyPlanner() {
         )}
       </div>
 
-      <Sheet
+      <ModalSheet
         open={composerMode !== null}
         onClose={closeComposer}
+        title={composerTitle}
         aria-label={composerMode === "planned" ? "Intiem moment plannen" : "Intiem moment bijhouden"}
         scrollable
       >
-        <SheetContent className="max-h-[82dvh] overflow-y-auto px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-4">
-          <div className="mb-5 flex items-center gap-3">
-            <div
-              className="flex h-11 w-11 flex-none items-center justify-center rounded-xl"
-              style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent)" }}
-              aria-hidden="true"
-            >
-              {composerMode === "planned" ? <CalendarPlus size={21} /> : <Heart size={21} weight="fill" />}
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>
-                {composerTitle}
-              </h2>
-              <p className="text-sm" style={{ color: "var(--text2)" }}>
-                Privé en alleen lokaal opgeslagen
-              </p>
-            </div>
+        <div className="min-w-0 overflow-x-hidden pb-0.5">
+          <div className="mb-4 flex min-w-0 items-start gap-2 px-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            <ShieldCheck size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
+            <span>Privé en alleen lokaal opgeslagen.</span>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
-              <label className="text-sm font-medium" style={{ color: "var(--text2)" }}>
+          <div className="min-w-0 space-y-4">
+            <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Datum
                 <input
                   type="date"
                   value={date}
                   onChange={(event) => setDate(event.target.value)}
-                  className="focus-ring mt-1.5 h-11 w-full rounded-xl px-3 text-base focus:outline-none"
+                  className="focus-ring mt-1.5 block h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-base focus:outline-none"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", colorScheme: "dark" }}
                 />
               </label>
-              <label className="text-sm font-medium" style={{ color: "var(--text2)" }}>
+              <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Tijd {composerMode === "completed" ? "(optioneel)" : ""}
-                <div className="relative mt-1.5">
+                <div className="relative mt-1.5 min-w-0 max-w-full">
                   <Clock size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text2)" }} />
                   <input
                     type="time"
                     value={time}
                     onChange={(event) => setTime(event.target.value)}
-                    className="focus-ring h-11 w-full rounded-xl pl-9 pr-2 text-base focus:outline-none"
+                    className="focus-ring block h-11 w-full min-w-0 max-w-full rounded-xl pl-9 pr-2 text-base focus:outline-none"
                     style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", colorScheme: "dark" }}
                   />
                 </div>
               </label>
             </div>
 
+            {dateDistance && (
+              <p className="-mt-1 px-1 text-sm font-medium" style={{ color: dateDistance === "Datum is voorbij" ? "var(--hard-no)" : "var(--text2)" }}>
+                {dateDistance}
+              </p>
+            )}
+
+            {composerMode === "planned" && (
+              <section
+                className="min-w-0 rounded-2xl p-3.5"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                aria-label="Herinnering"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 flex-none items-center justify-center rounded-xl"
+                    style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent)" }}
+                    aria-hidden="true"
+                  >
+                    <Bell size={19} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Herinnering</p>
+                    <p className="mt-0.5 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                      Krijg een melding wanneer het moment dichterbij komt.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={reminderEnabled}
+                    onCheckedChange={(checked) => void handleReminderToggle(checked)}
+                    label="Herinnering voor dit moment"
+                  />
+                </div>
+
+                {reminderEnabled && (
+                  <div className="mt-4 min-w-0 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <label htmlFor="intimacy-reminder-days" className="min-w-0 text-sm font-medium" style={{ color: "var(--text)" }}>
+                        Hoeveel dagen vooraf?
+                      </label>
+                      <output
+                        htmlFor="intimacy-reminder-days"
+                        className="flex-none text-sm font-semibold"
+                        style={{ color: "var(--accent)" }}
+                      >
+                        {reminderDays === 1 ? "1 dag" : `${reminderDays} dagen`}
+                      </output>
+                    </div>
+                    <input
+                      id="intimacy-reminder-days"
+                      aria-label="Dagen vooraf"
+                      type="range"
+                      min={MIN_INTIMACY_REMINDER_DAYS}
+                      max={MAX_INTIMACY_REMINDER_DAYS}
+                      step={1}
+                      value={reminderDays}
+                      onChange={(event) => setReminderDays(Number(event.target.value))}
+                      className="mt-2 h-11 w-full min-w-0 max-w-full accent-[var(--accent)]"
+                    />
+                    <div className="-mt-1 flex justify-between text-xs" style={{ color: "var(--text2)" }} aria-hidden="true">
+                      <span>1 dag</span>
+                      <span>14 dagen</span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                      Lokaal herinnert KinkSync je zodra de app actief is binnen dit venster. Agenda-export neemt dezelfde termijn mee als agenda-alarm.
+                    </p>
+                  </div>
+                )}
+
+                {(reminderNotice || permissionWarning) && (
+                  <p className="mt-3 text-sm leading-5" role="status" style={{ color: "var(--text2)" }}>
+                    {reminderNotice || permissionWarning}
+                  </p>
+                )}
+              </section>
+            )}
+
             {profiles.length > 0 && (
-              <div>
+              <div className="min-w-0 max-w-full">
                 <p className="mb-1.5 text-sm font-medium" style={{ color: "var(--text2)" }}>Met wie? (optioneel)</p>
                 <ProfileSelect
                   profiles={profiles}
@@ -463,26 +593,26 @@ export default function IntimacyPlanner() {
               </div>
             )}
 
-            <label className="block text-sm font-medium" style={{ color: "var(--text2)" }}>
+            <label className="block min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
               Titel (optioneel)
               <input
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Bijv. date night"
-                className="focus-ring mt-1.5 h-11 w-full rounded-xl px-3 text-base focus:outline-none"
+                className="focus-ring mt-1.5 block h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-base focus:outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
             </label>
 
-            <label className="block text-sm font-medium" style={{ color: "var(--text2)" }}>
+            <label className="block min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
               Privé notitie (optioneel)
               <textarea
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 rows={3}
                 placeholder={composerMode === "planned" ? "Waar willen jullie bewust ruimte voor maken?" : "Wat wil je onthouden?"}
-                className="focus-ring mt-1.5 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
+                className="focus-ring mt-1.5 block w-full min-w-0 max-w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
             </label>
@@ -492,11 +622,11 @@ export default function IntimacyPlanner() {
             <p role="alert" className="mt-3 text-sm" style={{ color: "var(--hard-no)" }}>{formError}</p>
           )}
 
-          <div className="mt-5 flex gap-2">
+          <div className="mt-5 flex min-w-0 gap-2">
             <button
               type="button"
               onClick={closeComposer}
-              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              className="focus-ring min-h-11 min-w-0 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
             >
               Annuleer
@@ -504,16 +634,16 @@ export default function IntimacyPlanner() {
             <button
               type="button"
               onClick={saveEntry}
-              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              className="focus-ring min-h-11 min-w-0 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {saveLabel}
             </button>
           </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      </ModalSheet>
 
-      <Sheet
+      <LegacySheet
         open={calendarTarget !== null}
         onClose={() => setCalendarTarget(null)}
         aria-label="Naar agenda"
@@ -561,7 +691,7 @@ export default function IntimacyPlanner() {
             Open agenda-item
           </button>
         </SheetContent>
-      </Sheet>
+      </LegacySheet>
     </PageShell>
   );
 }
