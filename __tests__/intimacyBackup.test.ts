@@ -20,10 +20,44 @@ describe("intimacy backup sanitation", () => {
     expect(sanitizeIntimacyRecord(VALID)).toEqual(VALID);
   });
 
+  it("keeps valid planned reminder settings", () => {
+    const planned = {
+      ...VALID,
+      status: "planned",
+      completedAt: undefined,
+      reminderDaysBefore: 4,
+    };
+    expect(sanitizeIntimacyRecord(planned)).toEqual({
+      id: "moment-1",
+      status: "planned",
+      date: "2026-08-22",
+      time: "21:15",
+      title: "Privé moment",
+      partnerProfileId: "partner-1",
+      partnerName: "Sam",
+      note: "Fijn en rustig",
+      reminderDaysBefore: 4,
+      createdAt: 10,
+      updatedAt: 20,
+    });
+  });
+
   it("drops malformed dates, times and incomplete completed records", () => {
     expect(sanitizeIntimacyRecord({ ...VALID, date: "2026-02-31" })).toBeNull();
     expect(sanitizeIntimacyRecord({ ...VALID, time: "25:00" })).toBeNull();
     expect(sanitizeIntimacyRecord({ ...VALID, completedAt: undefined })).toBeNull();
+  });
+
+  it("omits out-of-range reminder settings instead of poisoning the record", () => {
+    const planned = {
+      ...VALID,
+      status: "planned",
+      completedAt: undefined,
+      reminderDaysBefore: 99,
+    };
+    const restored = sanitizeIntimacyRecord(planned);
+    expect(restored).not.toBeNull();
+    expect(restored).not.toHaveProperty("reminderDaysBefore");
   });
 
   it("filters invalid records instead of trusting backup payloads", () => {
