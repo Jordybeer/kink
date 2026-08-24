@@ -303,12 +303,9 @@ export default function IntimacyPlanner() {
     <PageShell width="2xl">
       <h1 className="sr-only">Intimiteit</h1>
 
-      <section
-        className="mb-5 rounded-2xl p-4"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      >
+      <section className="mb-5 px-1">
         <p
-          className="text-base"
+          className="text-lg"
           style={{
             fontFamily: "var(--font-display, Georgia, serif)",
             fontStyle: "italic",
@@ -318,12 +315,15 @@ export default function IntimacyPlanner() {
           Ruimte maken voor intimiteit
         </p>
         <p className="mt-1 text-sm leading-6" style={{ color: "var(--text2)" }}>
-          Plan seks of een intiem moment als uitnodiging om bewust tijd voor elkaar vrij te maken. Een gepland moment is geen toestemming en hoeft niet door te gaan.
+          Plan seks of een intiem moment als uitnodiging om bewust tijd voor elkaar vrij te maken. Een gepland moment is geen toestemming.
         </p>
-        <div className="mt-3 flex items-start gap-2 text-sm leading-5" style={{ color: "var(--text2)" }}>
+        <div className="mt-2 flex items-start gap-2 text-sm leading-5" style={{ color: "var(--text2)" }}>
           <ShieldCheck size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
           <span>Je planning en logboek blijven lokaal op dit toestel.</span>
         </div>
+        <p className="mt-3 text-xs italic tracking-wide" style={{ color: "var(--text2)", opacity: 0.78 }}>
+          “Dominant on the streets. Submissive in the sheets.”
+        </p>
       </section>
 
       <div
