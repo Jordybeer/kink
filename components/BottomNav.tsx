@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowsLeftRight,
-  CalendarDots,
   FileText,
   FilmSlate,
   House,
@@ -29,7 +28,6 @@ export default function BottomNav() {
     { href: "/compare", label: "Vergelijk", icon: ArrowsLeftRight, section: "compare" as const },
     { href: "/contracts", label: "Contracten", icon: FileText, section: "contracts" as const },
     { href: "/scenes", label: "Scènes", icon: FilmSlate, section: "scenes" as const },
-    { href: "/intimacy", label: "Agenda", icon: CalendarDots, section: "intimacy" as const },
     { href: firstProfileHref, label: "Profiel", icon: UserCircle, section: "profile" as const },
   ];
 
