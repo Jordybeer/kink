@@ -18,6 +18,7 @@ import AppLockGate from "@/components/AppLockGate";
 import MotionPolicy from "@/components/MotionPolicy";
 import OnboardingRouteGate from "@/components/OnboardingRouteGate";
 import { TopNavProvider } from "@/components/nav/TopNavContext";
+import IntimacyReminderRunner from "@/components/intimacy/IntimacyReminderRunner";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ToastProvider>
                   <ImportedProfileIntegrityGate>
                     {children}
+                    <IntimacyReminderRunner />
                     <UpdateBanner />
                     <NotificationPrompt />
                     <StorageFullNotice />
