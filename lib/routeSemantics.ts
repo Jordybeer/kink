@@ -1,6 +1,6 @@
 import { decodeLocalRouteId, profileHref } from "@/lib/localRoutes";
 
-export type BottomNavSection = "home" | "compare" | "contracts" | "scenes" | "intimacy" | "profile" | null;
+export type BottomNavSection = "home" | "compare" | "contracts" | "scenes" | "profile" | null;
 
 export interface RouteChromeSemantics {
   title: string;
@@ -35,7 +35,7 @@ export function routeChromeSemantics(
     return { title: dynamic.sceneTitle ?? "Scène", back: "/scenes", hideBottomNav: true, bottomNavSection: null };
   }
   if (path === "/intimacy") {
-    return { title: "Intimiteit", back: "/", hideBottomNav: false, bottomNavSection: "intimacy" };
+    return { title: "Intimiteit", back: "/", hideBottomNav: true, bottomNavSection: null };
   }
   if (path === "/compare" || path.startsWith("/compare/")) {
     return { title: "Vergelijk", back: "/", hideBottomNav: false, bottomNavSection: "compare" };
