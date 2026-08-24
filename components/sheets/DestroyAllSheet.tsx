@@ -39,7 +39,7 @@ export default function DestroyAllSheet({ open, onClose }: DestroyAllSheetProps)
   return (
     <Sheet open={open} onClose={handleClose} title="Vernietig alle data" aria-label="Alle data verwijderen">
       <p id="destroy-all-instruction" className="mb-4 text-center text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
-        Dit verwijdert profielen, contracten, getekende PDF&apos;s, lokale sleutels, PIN/biometrie en instellingen permanent. De offline app zelf blijft beschikbaar.{" "}
+        Dit verwijdert profielen, contracten, je intimiteitsagenda, getekende PDF&apos;s, lokale sleutels, PIN/biometrie en instellingen permanent. De offline app zelf blijft beschikbaar.{" "}
         Typ <strong style={{ color: "var(--text)" }}>wis alles</strong> om te bevestigen.
       </p>
       <input
