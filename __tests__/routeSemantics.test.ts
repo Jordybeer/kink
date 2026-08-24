@@ -8,13 +8,21 @@ describe("route chrome semantics", () => {
     expect(routeChromeSemantics("/profile/alex").hideBottomNav).toBe(false);
   });
 
-  it("koppelt de zes primaire PWA-bestemmingen aan stabiele tabs", () => {
+  it("koppelt de vijf primaire PWA-bestemmingen aan stabiele tabs", () => {
     expect(routeChromeSemantics("/").bottomNavSection).toBe("home");
     expect(routeChromeSemantics("/compare").bottomNavSection).toBe("compare");
     expect(routeChromeSemantics("/contracts").bottomNavSection).toBe("contracts");
     expect(routeChromeSemantics("/scenes").bottomNavSection).toBe("scenes");
-    expect(routeChromeSemantics("/intimacy").bottomNavSection).toBe("intimacy");
     expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
+  });
+
+  it("houdt intimiteit als rustige secundaire focusroute", () => {
+    expect(routeChromeSemantics("/intimacy")).toMatchObject({
+      title: "Intimiteit",
+      back: "/",
+      hideBottomNav: true,
+      bottomNavSection: null,
+    });
   });
 
   it("behandelt de vragenlijst als focusroute met offline-veilige terugweg", () => {
