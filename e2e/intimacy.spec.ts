@@ -8,6 +8,8 @@ test.describe("Intimiteitsagenda", () => {
 
     await expect(page.getByText("Ruimte maken voor intimiteit")).toBeVisible();
     await expect(page.getByText(/geen toestemming/)).toBeVisible();
+    await expect(page.getByText("“Dominant on the streets. Submissive in the sheets.”")).toBeVisible();
+    await expect(page.getByLabel("Tabbladen")).toHaveCount(0);
     await page.getByRole("button", { name: "Moment plannen" }).first().click();
 
     const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
