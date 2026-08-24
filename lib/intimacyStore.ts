@@ -64,6 +64,7 @@ export const useIntimacyStore = create<IntimacyState>()(
           updatedAt: now,
           ...(entry.status === "completed" && !entry.completedAt ? { completedAt: now } : {}),
         };
+        if (record.status === "completed") delete record.reminderDaysBefore;
         set((state) => ({
           entries: [record, ...state.entries].slice(0, MAX_ENTRIES),
         }));
@@ -84,8 +85,9 @@ export const useIntimacyStore = create<IntimacyState>()(
             };
             if (status === "planned") {
               delete next.completedAt;
-            } else if (!next.completedAt) {
-              next.completedAt = now;
+            } else {
+              delete next.reminderDaysBefore;
+              if (!next.completedAt) next.completedAt = now;
             }
             return next;
           }),
