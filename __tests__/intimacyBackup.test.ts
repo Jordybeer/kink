@@ -20,6 +20,31 @@ describe("intimacy backup sanitation", () => {
     expect(sanitizeIntimacyRecord(VALID)).toEqual(VALID);
   });
 
+  it("keeps a valid planned reminder and rejects malformed lead times", () => {
+    const planned = {
+      ...VALID,
+      status: "planned",
+      completedAt: undefined,
+      reminderDays: 4,
+    };
+    expect(sanitizeIntimacyRecord(planned)).toEqual({
+      id: VALID.id,
+      status: "planned",
+      date: VALID.date,
+      time: VALID.time,
+      title: VALID.title,
+      partnerProfileId: VALID.partnerProfileId,
+      partnerName: VALID.partnerName,
+      note: VALID.note,
+      reminderDays: 4,
+      createdAt: VALID.createdAt,
+      updatedAt: VALID.updatedAt,
+    });
+    expect(sanitizeIntimacyRecord({ ...planned, reminderDays: 0 })).toBeNull();
+    expect(sanitizeIntimacyRecord({ ...planned, reminderDays: 15 })).toBeNull();
+    expect(sanitizeIntimacyRecord({ ...planned, reminderDays: 2.5 })).toBeNull();
+  });
+
   it("drops malformed dates, times and incomplete completed records", () => {
     expect(sanitizeIntimacyRecord({ ...VALID, date: "2026-02-31" })).toBeNull();
     expect(sanitizeIntimacyRecord({ ...VALID, time: "25:00" })).toBeNull();
