@@ -4,8 +4,8 @@ export const MIN_INTIMACY_REMINDER_DAYS = 1;
 export const MAX_INTIMACY_REMINDER_DAYS = 14;
 
 export function isValidIntimacyReminderDays(value: unknown): value is number {
-  return Number.isInteger(value)
-    && typeof value === "number"
+  return typeof value === "number"
+    && Number.isInteger(value)
     && value >= MIN_INTIMACY_REMINDER_DAYS
     && value <= MAX_INTIMACY_REMINDER_DAYS;
 }
