@@ -16,6 +16,7 @@ export interface IntimacyRecord {
   partnerProfileId?: string;
   partnerName?: string;
   note?: string;
+  reminderDaysBefore?: number;
   createdAt: number;
   updatedAt: number;
   completedAt?: number;
