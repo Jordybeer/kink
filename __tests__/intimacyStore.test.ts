@@ -12,11 +12,13 @@ describe("intimacy store", () => {
       date: "2026-08-30",
       time: "20:30",
       title: "Date night",
+      reminderDaysBefore: 2,
     });
 
     const planned = useIntimacyStore.getState().entries.find((entry) => entry.id === id);
     expect(planned?.status).toBe("planned");
     expect(planned?.completedAt).toBeUndefined();
+    expect(planned?.reminderDaysBefore).toBe(2);
 
     useIntimacyStore.getState().updateEntry(id, {
       status: "completed",
@@ -28,6 +30,7 @@ describe("intimacy store", () => {
     expect(completed?.date).toBe("2026-08-31");
     expect(completed?.note).toBe("Een dag later was beter");
     expect(completed?.completedAt).toBeTypeOf("number");
+    expect(completed?.reminderDaysBefore).toBeUndefined();
   });
 
   it("can edit a planned moment without turning it into history", () => {
@@ -50,11 +53,13 @@ describe("intimacy store", () => {
       status: "completed",
       date: "2026-08-22",
       note: "Goed om te onthouden",
+      reminderDaysBefore: 3,
     });
 
     const entry = useIntimacyStore.getState().entries.find((candidate) => candidate.id === id);
     expect(entry?.status).toBe("completed");
     expect(entry?.completedAt).toBeTypeOf("number");
+    expect(entry?.reminderDaysBefore).toBeUndefined();
   });
 
   it("restores backup entries idempotently and only accepts newer edits", () => {
