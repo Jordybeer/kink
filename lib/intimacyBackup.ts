@@ -1,4 +1,5 @@
 import type { IntimacyRecord } from "@/lib/intimacyStore";
+import { isValidIntimacyReminderDays } from "@/lib/intimacyReminder";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -44,6 +45,7 @@ export function sanitizeIntimacyRecord(value: unknown): IntimacyRecord | null {
     || !optionalString(value.partnerProfileId)
     || !optionalString(value.partnerName)
     || !optionalString(value.note)) return null;
+  if (value.reminderDays !== undefined && !isValidIntimacyReminderDays(value.reminderDays)) return null;
   if (!finiteNumber(value.createdAt) || !finiteNumber(value.updatedAt)) return null;
   if (value.completedAt !== undefined && !finiteNumber(value.completedAt)) return null;
   if (value.status === "completed" && value.completedAt === undefined) return null;
@@ -57,6 +59,9 @@ export function sanitizeIntimacyRecord(value: unknown): IntimacyRecord | null {
     ...(value.partnerProfileId ? { partnerProfileId: value.partnerProfileId } : {}),
     ...(value.partnerName ? { partnerName: value.partnerName } : {}),
     ...(value.note ? { note: value.note } : {}),
+    ...(value.status === "planned" && isValidIntimacyReminderDays(value.reminderDays)
+      ? { reminderDays: value.reminderDays }
+      : {}),
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
     ...(value.status === "completed" ? { completedAt: value.completedAt as number } : {}),
