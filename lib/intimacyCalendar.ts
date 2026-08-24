@@ -33,6 +33,13 @@ function localStart(date: string, time: string): string {
   return `${year}${month}${day}T${hour}${minute}00`;
 }
 
+function validReminderDays(value: unknown): value is number {
+  return typeof value === "number"
+    && Number.isInteger(value)
+    && value >= 1
+    && value <= 14;
+}
+
 export function buildIntimacyCalendarFile(
   entry: IntimacyRecord,
   options: { includeDetails?: boolean; now?: Date } = {},
@@ -63,6 +70,16 @@ export function buildIntimacyCalendarFile(
 
   if (description) {
     eventLines.push(`DESCRIPTION:${escapeIcs(description)}`);
+  }
+
+  if (validReminderDays(entry.reminderDaysBefore)) {
+    eventLines.push(
+      "BEGIN:VALARM",
+      `TRIGGER:-P${entry.reminderDaysBefore}D`,
+      "ACTION:DISPLAY",
+      "DESCRIPTION:Privé moment",
+      "END:VALARM",
+    );
   }
 
   eventLines.push("END:VEVENT");
