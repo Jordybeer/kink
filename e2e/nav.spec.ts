@@ -3,7 +3,7 @@ import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("hub keeps secondary product info in the shared context menu", async ({ page }) => {
+test("hub keeps navigation and secondary product info in the shared context menu", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
@@ -23,11 +23,12 @@ test("hub keeps secondary product info in the shared context menu", async ({ pag
 
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Agenda" })).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
 
-  await menu.getByRole("menuitem", { name: "Over KinkSync" }).click();
-  await expect(page).toHaveURL(/\/about$/);
+  await menu.getByRole("menuitem", { name: "Agenda" }).click();
+  await expect(page).toHaveURL(/\/intimacy$/);
 });
 
 test("subpages show back chevron pointing at the right parent", async ({ page }) => {
@@ -36,6 +37,7 @@ test("subpages show back chevron pointing at the right parent", async ({ page })
     ["/contract?a=pw-alex-001&b=pw-sam-002", "/compare"],
     ["/profile/pw-alex-001", "/"],
     ["/profile?id=pw-alex-001", "/"],
+    ["/intimacy", "/"],
   ];
   for (const [url, parent] of cases) {
     await seedAndGo(page, url, PROFILES);
@@ -65,10 +67,15 @@ test("contextual actions stay compact while the ambiguous QR scanner is labelled
   await seedAndGo(page, "/contracts", PROFILES);
   const contractsNav = page.getByLabel("Hoofdnavigatie");
   const scanContract = contractsNav.getByRole("button", { name: "Contract van partner scannen" });
+  const newContract = contractsNav.getByRole("button", { name: "Nieuw contract" });
   await expect(scanContract).toBeVisible();
   await expect(scanContract).toHaveText("Scan QR");
-  await expect(contractsNav.getByRole("button", { name: /Nieuw contract/i })).toHaveCount(0);
+  await expect(newContract).toBeVisible();
+  await expect(newContract).toHaveText("");
   await expect(page.getByRole("button", { name: "Contract van partner scannen" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Nieuw contract" })).toHaveCount(1);
+  await newContract.click();
+  await expect(page).toHaveURL(/\/compare$/);
 
   await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", PROFILES);
   const compareNav = page.getByLabel("Hoofdnavigatie");

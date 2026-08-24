@@ -6,6 +6,8 @@ import { ArrowLeft, DownloadSimple, Eye, EyeSlash, Warning } from "@phosphor-ico
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { useIntimacyStore } from "@/lib/intimacyStore";
+import { sanitizeIntimacyBackupEntries } from "@/lib/intimacyBackup";
 import type { EncryptedBackup } from "@/lib/crypto";
 
 interface ExportSheetProps {
@@ -22,6 +24,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   const t = useMotionSafe();
   const { profiles, contracts, profileOwnerKeys } = useStore();
   const contractSeries = useContractStore((state) => state.series);
+  const intimacyEntries = useIntimacyStore((state) => state.entries);
   const [step, setStep] = useState(0);
   const [pw, setPw] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
@@ -54,12 +57,13 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
     setPwError(null);
     try {
       const plain = JSON.stringify({
-        version: 4,
+        version: 5,
         source: "backup",
         profiles,
         contracts,
         contractSeries,
         profileOwnerKeys,
+        intimacyEntries,
       });
       const { encryptBackup } = await import("@/lib/crypto");
       const encrypted = await encryptBackup(plain, pw);
@@ -131,7 +135,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               <h2 className="text-base font-bold">Backup versleutelen</h2>
               <div className="flex flex-col gap-3 rounded-xl p-4 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen.</p>
-                <p>De versleutelde backup bevat ook private eigendomssleutels en de geverifieerde contractinhoud, inclusief handgeschreven handtekeningen. PDF-bestanden zelf worden niet als vertrouwde backupdata meegenomen; KinkSync maakt ze na herstel opnieuw uit de getekende contractversie.</p>
+                <p>De versleutelde backup bevat ook private eigendomssleutels, de geverifieerde contractinhoud, handgeschreven handtekeningen en je lokale intimiteitslogboek. PDF-bestanden zelf worden niet als vertrouwde backupdata meegenomen; KinkSync maakt ze na herstel opnieuw uit de getekende contractversie.</p>
                 <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="flex items-start gap-1.5 font-semibold" style={{ color: "var(--hard-no)" }}><Warning size={16} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" /><span>Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</span></p>
               </div>
@@ -202,6 +206,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
   const t = useMotionSafe();
   const { importProfiles, restoreBackupProfiles, restoreContracts } = useStore();
   const restoreContractSeries = useContractStore((state) => state.restoreSeries);
+  const restoreIntimacyEntries = useIntimacyStore((state) => state.restoreEntries);
   const [pw, setPw] = useState("");
   const [pwShow, setPwShow] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
@@ -245,9 +250,13 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         return;
       }
 
-      if (!prepared.profiles.length && !prepared.contracts.length && !prepared.contractSeries.length) {
+      const intimacyEntries = prepared.source === "backup"
+        ? sanitizeIntimacyBackupEntries(parsed.intimacyEntries)
+        : [];
+
+      if (!prepared.profiles.length && !prepared.contracts.length && !prepared.contractSeries.length && !intimacyEntries.length) {
         handleClose();
-        onError("De backup bevat geen geldige profielen of contracten om te herstellen.");
+        onError("De backup bevat geen geldige profielen, contracten of intimiteitsmomenten om te herstellen.");
         return;
       }
 
@@ -259,17 +268,19 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         const result = restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
         if (prepared.contracts.length) restoreContracts(prepared.contracts);
         const seriesResult = restoreContractSeries(prepared.contractSeries);
+        const intimacyResult = restoreIntimacyEntries(intimacyEntries);
 
         const profileChanges = result.added + result.updated;
         const keyChanges = result.ownerKeysAdded + result.ownerKeysUpdated;
         const seriesChanges = seriesResult.added + seriesResult.updated;
+        const intimacyChanges = intimacyResult.added + intimacyResult.updated;
 
-        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0 && seriesChanges === 0) {
+        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0 && seriesChanges === 0 && intimacyChanges === 0) {
           message = result.conflicts > 0
             ? `Backup gecontroleerd: niets overschreven; ${result.conflicts} bronconflict(en) veilig overgeslagen.`
             : "Backup gecontroleerd: de bestaande gegevens waren al even nieuw of nieuwer.";
         } else {
-          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s), ${contractsAdded} oud(e) contract(en) en ${seriesChanges} contractreeks(en) toegevoegd of bijgewerkt. Getekende PDF-documenten worden lokaal opnieuw opgebouwd uit de geverifieerde contractversie wanneer je ze opent.`;
+          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s), ${contractsAdded} oud(e) contract(en), ${seriesChanges} contractreeks(en) en ${intimacyChanges} intimiteitsmoment(en) toegevoegd of bijgewerkt. Getekende PDF-documenten worden lokaal opnieuw opgebouwd uit de geverifieerde contractversie wanneer je ze opent.`;
         }
       } else {
         importProfiles(prepared.profiles);

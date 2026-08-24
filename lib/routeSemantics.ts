@@ -34,6 +34,9 @@ export function routeChromeSemantics(
   if (path.startsWith("/scenes/")) {
     return { title: dynamic.sceneTitle ?? "Scène", back: "/scenes", hideBottomNav: true, bottomNavSection: null };
   }
+  if (path === "/intimacy") {
+    return { title: "Intimiteit", back: "/", hideBottomNav: true, bottomNavSection: null };
+  }
   if (path === "/compare" || path.startsWith("/compare/")) {
     return { title: "Vergelijk", back: "/", hideBottomNav: false, bottomNavSection: "compare" };
   }

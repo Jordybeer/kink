@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
+import { CalendarDots, CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -181,6 +181,11 @@ export default function TopNav() {
                 open={overflowOpen}
                 onClose={() => setOverflowOpen(false)}
                 items={[
+                  {
+                    label: "Agenda",
+                    icon: <CalendarDots size={17} aria-hidden="true" />,
+                    onClick: () => router.push("/intimacy"),
+                  },
                   {
                     label: "Over KinkSync",
                     icon: <Info size={17} aria-hidden="true" />,
