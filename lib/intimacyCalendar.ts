@@ -1,4 +1,5 @@
 import type { IntimacyRecord } from "@/lib/intimacyStore";
+import { isValidIntimacyReminderDays } from "@/lib/intimacyReminder";
 
 function escapeIcs(value: string): string {
   return value
@@ -63,6 +64,16 @@ export function buildIntimacyCalendarFile(
 
   if (description) {
     eventLines.push(`DESCRIPTION:${escapeIcs(description)}`);
+  }
+
+  if (isValidIntimacyReminderDays(entry.reminderDays)) {
+    eventLines.push(
+      "BEGIN:VALARM",
+      `TRIGGER:-P${entry.reminderDays}D`,
+      "ACTION:DISPLAY",
+      "DESCRIPTION:Privé moment",
+      "END:VALARM",
+    );
   }
 
   eventLines.push("END:VEVENT");
