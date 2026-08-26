@@ -1,8 +1,14 @@
 import { expect, test } from "@playwright/test";
 
-test("dev QA console imports a flat kink fixture into a local profile", async ({ page }) => {
-  await page.goto("/qa?testtools=1");
+test("dev QA console activates persistently and imports a flat kink fixture", async ({ page }) => {
+  await page.goto("/qa");
 
+  await expect(page.getByRole("heading", { name: "QA is vergrendeld" })).toBeVisible();
+  await page.getByRole("button", { name: "Testtools activeren" }).click();
+  await expect(page.getByRole("heading", { name: "QA-lab" })).toBeVisible();
+  await expect(page).toHaveURL(/\/qa$/);
+
+  await page.reload();
   await expect(page.getByRole("heading", { name: "QA-lab" })).toBeVisible();
 
   await page.locator('input[type="file"]').setInputFiles({
@@ -24,9 +30,15 @@ test("dev QA console imports a flat kink fixture into a local profile", async ({
   await expect(page.getByText("Lokale profielen op dit toestel: 1.")).toBeVisible();
 });
 
-test("dev QA console stays locally locked without explicit testtools activation", async ({ page }) => {
-  await page.goto("/qa?testtools=0");
+test("explicit dev testtools link remains visible while also persisting the mode", async ({ page }) => {
+  await page.goto("/qa?testtools=1");
 
+  await expect(page.getByRole("heading", { name: "QA-lab" })).toBeVisible();
+  await expect(page).toHaveURL(/\/qa\?testtools=1$/);
+
+  await page.goto("/qa");
+  await expect(page.getByRole("heading", { name: "QA-lab" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Testmodus op dit toestel uitschakelen" }).click();
   await expect(page.getByRole("heading", { name: "QA is vergrendeld" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Testtools activeren" })).toBeVisible();
 });
