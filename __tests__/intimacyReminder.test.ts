@@ -68,7 +68,7 @@ describe("intimacy reminders", () => {
     });
     vi.stubGlobal("navigator", {});
 
-    let latestNotification: FakeNotification | null = null;
+    const notifications: FakeNotification[] = [];
     class FakeNotification {
       static permission = "granted";
       onclick: ((event: Event) => void) | null = null;
@@ -78,7 +78,7 @@ describe("intimacy reminders", () => {
         public readonly title: string,
         public readonly options?: NotificationOptions,
       ) {
-        latestNotification = this;
+        notifications.push(this);
       }
     }
     vi.stubGlobal("Notification", FakeNotification);
@@ -89,13 +89,14 @@ describe("intimacy reminders", () => {
     );
 
     expect(delivered).toBe(1);
-    expect(latestNotification).not.toBeNull();
-    expect(latestNotification?.title).toBe("Privé moment");
-    expect(latestNotification?.options?.body).toBe("Je geplande privé moment komt dichterbij.");
+    expect(notifications).toHaveLength(1);
+    const latestNotification = notifications[0];
+    expect(latestNotification.title).toBe("Privé moment");
+    expect(latestNotification.options?.body).toBe("Je geplande privé moment komt dichterbij.");
 
-    latestNotification?.onclick?.({} as Event);
+    latestNotification.onclick?.({} as Event);
 
-    expect(latestNotification?.close).toHaveBeenCalledOnce();
+    expect(latestNotification.close).toHaveBeenCalledOnce();
     expect(focus).toHaveBeenCalledOnce();
     expect(assign).toHaveBeenCalledWith("/intimacy");
   });
