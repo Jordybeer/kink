@@ -11,7 +11,7 @@ import {
   Wrench,
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
-import { syncDevTestToolsFromLocation } from "@/lib/devTestTools";
+import { setDevTestToolsEnabled, syncDevTestToolsFromLocation } from "@/lib/devTestTools";
 import {
   parseDevQaKinkList,
   qaProfileNameFromFilename,
@@ -109,7 +109,7 @@ export default function DevQaConsole() {
           </p>
           <button
             type="button"
-            onClick={() => window.location.assign("/qa?testtools=1")}
+            onClick={() => setEnabled(setDevTestToolsEnabled(true))}
             className="focus-ring mt-5 min-h-11 rounded-xl px-5 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
@@ -271,7 +271,12 @@ export default function DevQaConsole() {
 
       <button
         type="button"
-        onClick={() => window.location.assign("/?testtools=0")}
+        onClick={() => {
+          setDevTestToolsEnabled(false);
+          setPreview(null);
+          setCreatedId(null);
+          setEnabled(false);
+        }}
         className="focus-ring mt-5 min-h-11 rounded-xl px-3 text-sm font-medium"
         style={{ color: "var(--text2)" }}
       >
