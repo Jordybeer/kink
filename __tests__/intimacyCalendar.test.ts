@@ -23,6 +23,7 @@ describe("intimacy calendar export", () => {
     expect(ics).not.toContain("Sam");
     expect(ics).not.toContain("massage");
     expect(ics).not.toContain("DESCRIPTION:");
+    expect(ics).not.toContain("BEGIN:VALARM");
     expect(ics).not.toContain("KinkSync");
     expect(ics).not.toContain("kinksync.local");
   });
@@ -36,6 +37,18 @@ describe("intimacy calendar export", () => {
     expect(ics).toContain("Met: Sam");
     expect(ics).toContain("Wijn\\, massage\\;\\nen zien waar het eindigt.");
     expect(ics).not.toContain("KinkSync");
+  });
+
+  it("includes a discreet display alarm when the user chose a reminder", () => {
+    const ics = buildIntimacyCalendarFile({ ...ENTRY, reminderDaysBefore: 3 }, {
+      now: new Date("2026-08-22T12:00:00Z"),
+    });
+    expect(ics).toContain("BEGIN:VALARM");
+    expect(ics).toContain("TRIGGER:-P3D");
+    expect(ics).toContain("ACTION:DISPLAY");
+    expect(ics).toContain("DESCRIPTION:Privé moment");
+    expect(ics).not.toContain("Stoute zaterdag");
+    expect(ics).not.toContain("Sam");
   });
 
   it("requires a real local date and time", () => {

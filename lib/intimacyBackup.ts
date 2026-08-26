@@ -35,6 +35,13 @@ function validTime(value: unknown): value is string | undefined {
   return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
 }
 
+function validReminderDays(value: unknown): value is number {
+  return typeof value === "number"
+    && Number.isInteger(value)
+    && value >= 1
+    && value <= 14;
+}
+
 export function sanitizeIntimacyRecord(value: unknown): IntimacyRecord | null {
   if (!isRecord(value)) return null;
   if (typeof value.id !== "string" || !value.id.trim()) return null;
@@ -57,6 +64,9 @@ export function sanitizeIntimacyRecord(value: unknown): IntimacyRecord | null {
     ...(value.partnerProfileId ? { partnerProfileId: value.partnerProfileId } : {}),
     ...(value.partnerName ? { partnerName: value.partnerName } : {}),
     ...(value.note ? { note: value.note } : {}),
+    ...(value.status === "planned" && validReminderDays(value.reminderDaysBefore)
+      ? { reminderDaysBefore: value.reminderDaysBefore }
+      : {}),
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
     ...(value.status === "completed" ? { completedAt: value.completedAt as number } : {}),

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import {
+  Bell,
   CalendarPlus,
   Check,
   Clock,
@@ -25,6 +26,15 @@ import {
   type IntimacyStatus,
 } from "@/lib/intimacyStore";
 import { buildIntimacyCalendarFile } from "@/lib/intimacyCalendar";
+import {
+  formatIntimacyReminderLead,
+  getIntimacyNotificationPermission,
+  intimacyCountdownLabel,
+  MAX_INTIMACY_REMINDER_DAYS,
+  MIN_INTIMACY_REMINDER_DAYS,
+  requestIntimacyNotificationPermission,
+  type IntimacyNotificationPermission,
+} from "@/lib/intimacyReminder";
 
 type ComposerMode = IntimacyStatus;
 
@@ -62,6 +72,19 @@ function downloadCalendar(entry: IntimacyRecord, includeDetails: boolean) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
+function reminderPermissionCopy(permission: IntimacyNotificationPermission | null): string {
+  if (permission === "granted") {
+    return "KinkSync geeft een discreet seintje zodra de app actief wordt binnen dit venster. Agenda-export neemt dezelfde termijn mee.";
+  }
+  if (permission === "denied") {
+    return "Systeemmeldingen zijn geblokkeerd. Agenda-export neemt deze herinnering wel mee.";
+  }
+  if (permission === "unsupported") {
+    return "Dit toestel ondersteunt geen KinkSync-meldingen. Agenda-export neemt de herinnering wel mee.";
+  }
+  return "Toestemming voor systeemmeldingen is nog niet gegeven. Agenda-export neemt de herinnering wel mee.";
+}
+
 function IntimacyCard({
   entry,
   onLog,
@@ -77,6 +100,7 @@ function IntimacyCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const planned = entry.status === "planned";
+  const countdown = planned ? intimacyCountdownLabel(entry.date) : null;
 
   return (
     <article
@@ -106,6 +130,14 @@ function IntimacyCard({
             {entry.time ? ` · ${entry.time}` : ""}
             {entry.partnerName ? ` · ${entry.partnerName}` : ""}
           </p>
+          {countdown && (
+            <p className="mt-1 text-xs font-medium" style={{ color: "var(--accent)" }}>
+              {countdown}
+              {entry.reminderDaysBefore
+                ? ` · herinnering ${formatIntimacyReminderLead(entry.reminderDaysBefore)}`
+                : ""}
+            </p>
+          )}
         </div>
 
         <ContextMenu
@@ -188,6 +220,9 @@ export default function IntimacyPlanner() {
   const [title, setTitle] = useState("");
   const [partnerId, setPartnerId] = useState("");
   const [note, setNote] = useState("");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderDays, setReminderDays] = useState(2);
+  const [notificationPermission, setNotificationPermission] = useState<IntimacyNotificationPermission | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const planned = useMemo(
@@ -217,6 +252,9 @@ export default function IntimacyPlanner() {
     setTitle(entry?.title ?? "");
     setPartnerId(entry?.partnerProfileId ?? "");
     setNote(entry?.note ?? "");
+    setReminderEnabled(mode === "planned" && entry?.reminderDaysBefore !== undefined);
+    setReminderDays(entry?.reminderDaysBefore ?? 2);
+    setNotificationPermission(getIntimacyNotificationPermission());
     setFormError(null);
   }, []);
 
@@ -253,6 +291,13 @@ export default function IntimacyPlanner() {
       ? "Wijzigingen bewaren"
       : composerMode === "planned" ? "Plan moment" : "Bewaar";
 
+  async function setReminder(enabled: boolean) {
+    setReminderEnabled(enabled);
+    if (!enabled) return;
+    const permission = await requestIntimacyNotificationPermission();
+    setNotificationPermission(permission);
+  }
+
   function saveEntry() {
     if (!composerMode) return;
     if (!date) {
@@ -272,6 +317,7 @@ export default function IntimacyPlanner() {
       partnerProfileId: partner?.id,
       partnerName: partner?.name,
       note: note.trim() || undefined,
+      reminderDaysBefore: composerMode === "planned" && reminderEnabled ? reminderDays : undefined,
     };
 
     if (editingId) {
@@ -451,6 +497,65 @@ export default function IntimacyPlanner() {
               </label>
             </div>
 
+            {composerMode === "planned" && (
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+              >
+                <label className="flex items-start justify-between gap-4">
+                  <span className="flex min-w-0 gap-2.5">
+                    <Bell size={18} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                    <span>
+                      <span className="block text-sm font-medium" style={{ color: "var(--text)" }}>Herinner mij</span>
+                      <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                        Krijg een discreet seintje wanneer het moment dichterbij komt.
+                      </span>
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    aria-label="Herinnering inschakelen"
+                    checked={reminderEnabled}
+                    onChange={(event) => void setReminder(event.target.checked)}
+                    className="mt-0.5 h-5 w-5 flex-none"
+                  />
+                </label>
+
+                {reminderEnabled && (
+                  <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                    <div className="flex items-center justify-between gap-3">
+                      <label htmlFor="intimacy-reminder-days" className="text-sm font-medium" style={{ color: "var(--text2)" }}>
+                        Wanneer?
+                      </label>
+                      <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                        {formatIntimacyReminderLead(reminderDays)}
+                      </span>
+                    </div>
+                    <input
+                      id="intimacy-reminder-days"
+                      type="range"
+                      min={MIN_INTIMACY_REMINDER_DAYS}
+                      max={MAX_INTIMACY_REMINDER_DAYS}
+                      step={1}
+                      value={reminderDays}
+                      onChange={(event) => setReminderDays(Number(event.target.value))}
+                      aria-label="Dagen vooraf"
+                      aria-valuetext={formatIntimacyReminderLead(reminderDays)}
+                      className="focus-ring mt-3 h-6 w-full"
+                      style={{ accentColor: "var(--accent)" }}
+                    />
+                    <div className="mt-1 flex justify-between text-xs" style={{ color: "var(--text2)" }}>
+                      <span>1 dag</span>
+                      <span>14 dagen</span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                      {reminderPermissionCopy(notificationPermission)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {profiles.length > 0 && (
               <div>
                 <p className="mb-1.5 text-sm font-medium" style={{ color: "var(--text2)" }}>Met wie? (optioneel)</p>
@@ -541,6 +646,13 @@ export default function IntimacyPlanner() {
               </span>
             </span>
           </label>
+
+          {calendarTarget?.reminderDaysBefore && (
+            <div className="mt-3 flex items-start gap-2 text-sm leading-5" style={{ color: "var(--text2)" }}>
+              <Bell size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <span>Je herinnering {formatIntimacyReminderLead(calendarTarget.reminderDaysBefore)} gaat mee in het agenda-item.</span>
+            </div>
+          )}
 
           <div className="mt-3 flex items-start gap-2 text-sm leading-5" style={{ color: "var(--text2)" }}>
             <ShieldCheck size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
