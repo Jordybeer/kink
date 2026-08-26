@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import DevQaConsole from "@/components/qa/DevQaConsole";
-import { isDevTestToolsHost } from "@/lib/devTestTools";
+import { devQaRouteAllowed } from "@/lib/devQaGate";
 
 function hostnameFromRequestHost(rawHost: string): string {
   const first = rawHost.split(",", 1)[0]?.trim().toLowerCase() ?? "";
@@ -17,10 +17,11 @@ export default async function QaPage() {
   const rawHost = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "";
   const hostname = hostnameFromRequestHost(rawHost);
 
-  // This is a server-side boundary, not a hidden button. Even if this code is
-  // ever present in another deployment, the QA route is a 404 outside the
-  // explicitly allow-listed dev/localhost hosts.
-  if (!isDevTestToolsHost(hostname)) notFound();
+  // Two independent server-side locks: the request must be on the explicit
+  // dev/localhost host allow-list, and an explicit main/master build is always
+  // denied. This remains a 404 even if QA source code is accidentally carried
+  // into a production branch later.
+  if (!devQaRouteAllowed(hostname, process.env.VERCEL_GIT_COMMIT_REF)) notFound();
 
   return <DevQaConsole />;
 }
