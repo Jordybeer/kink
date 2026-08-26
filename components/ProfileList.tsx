@@ -123,7 +123,11 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             key={group.key}
             variants={fadeUp(10)}
             className="rounded-2xl overflow-hidden"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+            style={{
+              background: "var(--surface2)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 8px 22px rgba(0,0,0,0.20)",
+            }}
           >
             {isPerspectiveGroup && (
               <div
@@ -208,6 +212,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
               border: "1px solid var(--border-accent)",
+              boxShadow: "0 10px 26px color-mix(in srgb, var(--accent) 12%, transparent)",
             }}
           >
             <div className="flex items-center gap-4">
@@ -478,7 +483,14 @@ function ProfileRow({
 function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "normal" }) {
   const sizeClass = size === "small" ? "w-9 h-9" : "w-12 h-12";
   return (
-    <div className={`${sizeClass} rounded-full overflow-hidden flex-none`} aria-hidden="true">
+    <div
+      className={`${sizeClass} rounded-full overflow-hidden flex-none`}
+      aria-hidden="true"
+      style={{
+        border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.22)",
+      }}
+    >
       {profile.avatarDataUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" />
@@ -495,7 +507,12 @@ function CompareCoin({ profile, overlap }: { profile: Profile; overlap?: boolean
   return (
     <div
       className={`w-12 h-12 rounded-full overflow-hidden flex-none ${overlap ? "-ml-3" : ""}`}
-      style={overlap ? { boxShadow: "0 0 0 2px var(--surface)" } : undefined}
+      style={{
+        border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+        boxShadow: overlap
+          ? "0 0 0 1px var(--surface), 0 5px 14px rgba(0,0,0,0.26)"
+          : "0 5px 14px rgba(0,0,0,0.26)",
+      }}
     >
       {profile.avatarDataUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
