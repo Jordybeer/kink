@@ -166,7 +166,12 @@ export async function showDueIntimacyReminders(
       if (registration) {
         await registration.showNotification("Privé moment", options);
       } else {
-        new Notification("Privé moment", options);
+        const notification = new Notification("Privé moment", options);
+        notification.onclick = () => {
+          notification.close();
+          window.focus();
+          window.location.assign("/intimacy");
+        };
       }
       rememberReceipt(receiptKey);
       delivered++;

@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   formatIntimacyReminderLead,
   intimacyCountdownLabel,
   intimacyReminderReceiptKey,
   shouldTriggerIntimacyReminder,
+  showDueIntimacyReminders,
 } from "@/lib/intimacyReminder";
 import type { IntimacyRecord } from "@/lib/intimacyStore";
 
@@ -16,6 +17,10 @@ const ENTRY: IntimacyRecord = {
   createdAt: 1,
   updatedAt: 1,
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("intimacy reminders", () => {
   it("formats the relative date without DST drift", () => {
@@ -46,5 +51,52 @@ describe("intimacy reminders", () => {
   it("uses calm Dutch lead-time copy", () => {
     expect(formatIntimacyReminderLead(1)).toBe("1 dag vooraf");
     expect(formatIntimacyReminderLead(4)).toBe("4 dagen vooraf");
+  });
+
+  it("opens Intimiteit when a fallback notification is clicked", async () => {
+    const storage = new Map<string, string>();
+    const focus = vi.fn();
+    const assign = vi.fn();
+
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) => storage.get(key) ?? null,
+        setItem: (key: string, value: string) => storage.set(key, value),
+      },
+      focus,
+      location: { assign },
+    });
+    vi.stubGlobal("navigator", {});
+
+    let latestNotification: FakeNotification | null = null;
+    class FakeNotification {
+      static permission = "granted";
+      onclick: ((event: Event) => void) | null = null;
+      close = vi.fn();
+
+      constructor(
+        public readonly title: string,
+        public readonly options?: NotificationOptions,
+      ) {
+        latestNotification = this;
+      }
+    }
+    vi.stubGlobal("Notification", FakeNotification);
+
+    const delivered = await showDueIntimacyReminders(
+      [ENTRY],
+      new Date(2026, 7, 29, 12, 0),
+    );
+
+    expect(delivered).toBe(1);
+    expect(latestNotification).not.toBeNull();
+    expect(latestNotification?.title).toBe("Privé moment");
+    expect(latestNotification?.options?.body).toBe("Je geplande privé moment komt dichterbij.");
+
+    latestNotification?.onclick?.({} as Event);
+
+    expect(latestNotification?.close).toHaveBeenCalledOnce();
+    expect(focus).toHaveBeenCalledOnce();
+    expect(assign).toHaveBeenCalledWith("/intimacy");
   });
 });
