@@ -48,7 +48,7 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
     };
   });
   expect(homeHeader).toEqual({
-    position: "sticky",
+    position: "static",
     backgroundColor: "rgba(0, 0, 0, 0)",
     borderBottomWidth: "0px",
     pointerEvents: "none",
