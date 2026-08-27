@@ -122,6 +122,23 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(boundary.locator("button[aria-label*='als besproken markeren']")).toHaveCount(0);
   });
 
+  test("compare notes stay readable until editing is requested", async ({ page }) => {
+    await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+
+    const row = page.locator(".compare-kink-row").filter({ hasText: "Klassiek en heerlijk" }).first();
+    await row.scrollIntoViewIfNeeded();
+    await expect(row).toBeVisible();
+    await expect(row.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+    await expect(row.locator("textarea")).toHaveCount(0);
+
+    await row.getByRole("button", { name: /Notitie bewerken voor/ }).click();
+    await expect(row.locator("textarea").first()).toBeVisible();
+    await row.getByRole("button", { name: "Klaar" }).click();
+
+    await expect(row.locator("textarea")).toHaveCount(0);
+    await expect(row.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  });
+
   test("compare print media removes app chrome and interactive controls", async ({ page }) => {
     await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
     await page.emulateMedia({ media: "print" });
