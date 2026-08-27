@@ -53,18 +53,18 @@ test.describe("Onboarding vault", () => {
 
     await dial.click();
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).not.toBeVisible();
 
     await deliberateGrip(page);
     await expect(page.getByText("Blijf draaien…", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).not.toBeVisible();
 
     await deliberateGrip(page);
     await expect(page.getByText("Open.", { exact: true })).toBeVisible();
     await page.waitForTimeout(220);
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible({ timeout: 100 });
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible({ timeout: 2500 });
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).not.toBeVisible({ timeout: 100 });
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible({ timeout: 2500 });
 
     await expect(page.getByText("For adults. By adults.", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "FetLife" })).toHaveAttribute("href", "https://fetlife.com/zwoelebeer");
@@ -77,7 +77,7 @@ test.describe("Onboarding vault", () => {
     await deliberateGrip(page);
 
     await expect(page.getByRole("heading", { name: /genoeg voorspel/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).not.toBeVisible();
     await expect(page.getByText("Blijf draaien…", { exact: true })).toBeVisible();
   });
 

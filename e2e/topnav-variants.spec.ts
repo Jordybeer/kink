@@ -9,24 +9,32 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
   await expect(homeNav).toHaveAttribute("data-top-nav-variant", "home");
-  const homeCluster = homeNav.getByTestId("home-topnav-actions");
-  await expect(homeCluster).toBeVisible();
+  const homeSettings = homeNav.getByTestId("home-topnav-settings");
+  const homeActions = homeNav.getByTestId("home-topnav-actions");
+  await expect(homeSettings).toBeVisible();
+  await expect(homeActions).toBeVisible();
 
-  const [homeNavBox, homeClusterBox] = await Promise.all([
+  const [homeNavBox, homeSettingsBox, homeActionsBox] = await Promise.all([
     homeNav.boundingBox(),
-    homeCluster.boundingBox(),
+    homeSettings.boundingBox(),
+    homeActions.boundingBox(),
   ]);
   expect(homeNavBox).not.toBeNull();
-  expect(homeClusterBox).not.toBeNull();
+  expect(homeSettingsBox).not.toBeNull();
+  expect(homeActionsBox).not.toBeNull();
   expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
   expect(homeNavBox!.height).toBeLessThanOrEqual(57);
-  expect(homeClusterBox!.width).toBeLessThan(homeNavBox!.width * 0.6);
-  expect(homeClusterBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(20);
-  expect(homeClusterBox!.x - homeNavBox!.x).toBeLessThanOrEqual(30);
-  expect(homeClusterBox!.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
-  expect(homeClusterBox!.y - homeNavBox!.y).toBeLessThanOrEqual(5);
-  expect(homeClusterBox!.y + homeClusterBox!.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
-  await expect.poll(() => homeCluster.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
+  expect(homeSettingsBox!.width + homeActionsBox!.width).toBeLessThan(homeNavBox!.width * 0.7);
+  expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(20);
+  expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(30);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeGreaterThanOrEqual(20);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeLessThanOrEqual(30);
+  for (const utilityBox of [homeSettingsBox!, homeActionsBox!]) {
+    expect(utilityBox.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
+    expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(5);
+    expect(utilityBox.y + utilityBox.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
+  }
+  await expect.poll(() => homeActions.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
 
   const homeHeader = await homeNav.evaluate((element) => {
     const header = element.parentElement;

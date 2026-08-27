@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { seedAndGo } from "./fixtures";
 
 test("dev QA console activates persistently and imports a flat kink fixture", async ({ page }) => {
-  await page.goto("/qa");
+  await seedAndGo(page, "/qa", []);
 
   await expect(page.getByRole("heading", { name: "QA is vergrendeld" })).toBeVisible();
   await page.getByRole("button", { name: "Testtools activeren" }).click();
@@ -31,7 +32,7 @@ test("dev QA console activates persistently and imports a flat kink fixture", as
 });
 
 test("explicit dev testtools link remains visible while also persisting the mode", async ({ page }) => {
-  await page.goto("/qa?testtools=1");
+  await seedAndGo(page, "/qa?testtools=1", []);
 
   await expect(page.getByRole("heading", { name: "QA-lab" })).toBeVisible();
   await expect(page).toHaveURL(/\/qa\?testtools=1$/);

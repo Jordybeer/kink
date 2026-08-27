@@ -131,7 +131,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
         {current ? (
           <div data-tour="kink-card" className="relative isolate h-full min-h-0 overflow-y-auto overscroll-contain rounded-[1.75rem] p-4" style={{ background: "color-mix(in srgb, var(--surface) 94%, #180f20)", border: "1px solid color-mix(in srgb, var(--border) 88%, var(--text2))", boxShadow: "0 18px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.035)" }}>
             <div aria-hidden="true" data-testid="question-ambient-glow" className="pointer-events-none absolute inset-x-0 top-0 h-36 rounded-[1.75rem]" style={{ background: `radial-gradient(circle at 18% 0%, color-mix(in srgb, ${categoryAccent} 12%, transparent), transparent 64%)` }} />
-            <div data-testid="question-content" className="relative z-[1] grid min-h-full min-w-0 gap-1" style={{ gridTemplateRows: "44px 56px 48px 48px minmax(14.75rem, 1fr) 88px 44px" }}>
+            <div data-testid="question-content" className="relative z-[1] grid min-h-full min-w-0 gap-1" style={{ gridTemplateRows: "44px 56px 60px 48px minmax(14.75rem, 1fr) 92px 44px" }}>
               <div className="flex min-h-0 min-w-0 items-center gap-2">
                 <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
                   <span
@@ -159,7 +159,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
               </div>
 
               <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="max-h-14 overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
-              <p data-testid="question-essence" className="h-12 self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
+              <p data-testid="question-essence" className="h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                 {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none" style={{ background: "color-mix(in srgb, var(--surface2) 66%, transparent)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>Info & uitleg</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}

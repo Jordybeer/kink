@@ -88,7 +88,7 @@ test("stopt een profielcamera die pas na sluiten beschikbaar komt", async ({ pag
   await installDeferredCamera(page);
   await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
-  await page.getByRole("button", { name: "Scan het profiel van je partner" }).click();
+  await page.getByRole("button", { name: /^Scan partnerprofiel\b/ }).click();
   await expect(page.getByRole("dialog", { name: "QR-code scannen" })).toBeVisible();
   await page.getByRole("button", { name: "Annuleer" }).click();
   await expect(page.getByRole("dialog", { name: "QR-code scannen" })).toBeHidden();
@@ -112,7 +112,7 @@ test("stopt de profielcamera als video afspelen faalt", async ({ page }) => {
   await installPlaybackRejectingCamera(page);
   await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
-  await page.getByRole("button", { name: "Scan het profiel van je partner" }).click();
+  await page.getByRole("button", { name: /^Scan partnerprofiel\b/ }).click();
   await expectRejectedPlaybackStoppedCamera(page);
 });
 

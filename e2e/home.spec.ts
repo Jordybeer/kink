@@ -107,7 +107,7 @@ test.describe("Profiel aanmaken via UI", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
-    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
+    await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
     await expect(page.getByRole("dialog", { name: "Nieuw profiel maken" })).toBeVisible();
     await expect(page.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
     await page.getByLabel("Naam of alias").fill("TestPersoon");
