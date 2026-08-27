@@ -100,9 +100,9 @@ export default function CompareKinkRow({
     >
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[15px] font-medium leading-snug">{displayName}</span>
+          <span className="text-base font-medium leading-snug">{displayName}</span>
           {custom && (
-            <span className="rounded-full px-1.5 py-0.5 text-[14px]" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
+            <span className="rounded-full px-1.5 py-0.5 text-sm" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
               eigen
             </span>
           )}
@@ -115,7 +115,7 @@ export default function CompareKinkRow({
         <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] leading-snug">
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug">
         <span
           className={`inline-flex items-center gap-1 ${isBoundary ? "font-semibold" : "font-medium"}`}
           style={{ color: semanticColour }}
@@ -129,14 +129,14 @@ export default function CompareKinkRow({
       </div>
 
       {hasPrintNotes && (
-        <div className="compare-print-notes mt-2 hidden space-y-1 text-[14px] leading-snug" style={{ color: "var(--text2)" }}>
+        <div className="compare-print-notes mt-2 hidden space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
           {entryA.comment && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
           {entryB.comment && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
         </div>
       )}
 
       {(showReadOnlyA || showReadOnlyB) && (
-        <div data-print-hide="true" className="mt-2 space-y-1 text-[14px] leading-snug" style={{ color: "var(--text2)" }}>
+        <div data-print-hide="true" className="mt-2 space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
           {showReadOnlyA && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
           {showReadOnlyB && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
         </div>
@@ -150,7 +150,7 @@ export default function CompareKinkRow({
               onClick={onToggleDiscussed}
               aria-label={isDiscussed ? `${accessibleName} als niet besproken markeren` : `${accessibleName} als besproken markeren`}
               aria-pressed={isDiscussed}
-              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[14px] font-medium transition-colors"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors"
               style={{ color: isDiscussed ? "var(--willing)" : "var(--text2)" }}
             >
               {isDiscussed
@@ -165,7 +165,7 @@ export default function CompareKinkRow({
               type="button"
               onClick={() => setNotesOpen(true)}
               aria-label={`Notitie toevoegen voor ${accessibleName}`}
-              className="focus-ring inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] transition-colors"
+              className="focus-ring inline-flex min-h-11 items-center rounded-lg px-2 text-sm transition-colors"
               style={{ color: "var(--text2)" }}
             >
               + Notitie
@@ -177,10 +177,10 @@ export default function CompareKinkRow({
       {canEdit && showEditors && (
         <div className="mt-2 space-y-2" data-print-hide="true">
           {canEditA && (
-            <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
+            <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
           )}
           {canEditB && (
-            <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
+            <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
           )}
         </div>
       )}
