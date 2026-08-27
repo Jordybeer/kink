@@ -83,6 +83,12 @@
     position: static !important;
   }
 
+  /* The profile chips remain useful identity blocks on paper; only their
+     dropdown affordance is interaction-only chrome. */
+  .compare-page button[aria-label^="Kies profiel"] > svg {
+    display: none !important;
+  }
+
   .compare-page section[aria-labelledby="compare-summary-heading"] {
     break-inside: avoid;
     page-break-inside: avoid;
