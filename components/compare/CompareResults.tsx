@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp, FileText, FilmSlate } from "@phosphor-icons/react";
+import { FileText, FilmSlate } from "@phosphor-icons/react";
 import CompareKinkRow from "@/components/CompareKinkRow";
 import { PROFILE_COLOUR_A, PROFILE_COLOUR_B, type CompareResultFilter } from "@/lib/compare";
 import { buildCompareModel, type ComparisonFact } from "@/lib/compareV2";
@@ -147,12 +147,9 @@ export default function CompareResults({
         </details>
       )}
 
-      <div className="flex flex-col gap-2 pb-2 pt-2">
-        <div className="flex gap-2">
-          <Link href={`/scene?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[14px] font-medium transition-opacity hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text)" }}><FilmSlate size={16} aria-hidden="true" /> Plan een scène</Link>
-          <Link href={`/contract?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-opacity hover:opacity-80" style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}><FileText size={16} aria-hidden="true" /> Contract</Link>
-        </div>
-        <div className="flex justify-center pt-1"><button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="focus-ring min-h-11 rounded-full border px-4 text-[14px] transition-colors" style={{ color: "var(--text2)", borderColor: "var(--border)" }}><ArrowUp size={16} aria-hidden="true" /> Terug naar boven</button></div>
+      <div className="compare-page-actions flex gap-2 pb-2 pt-2" data-print-hide="true">
+        <Link href={`/scene?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[14px] font-medium transition-opacity hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text)" }}><FilmSlate size={16} aria-hidden="true" /> Plan een scène</Link>
+        <Link href={`/contract?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-opacity hover:opacity-80" style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}><FileText size={16} aria-hidden="true" /> Contract</Link>
       </div>
     </>
   );
