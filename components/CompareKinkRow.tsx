@@ -82,6 +82,8 @@ export default function CompareKinkRow({
   const canEdit = canEditA || canEditB;
   const hasNotes = !!entryA.comment || !!entryB.comment;
   const hasEditableNotes = (canEditA && !!entryA.comment) || (canEditB && !!entryB.comment);
+  const showPreviewA = !!entryA.comment && (!canEditA || !notesOpen);
+  const showPreviewB = !!entryB.comment && (!canEditB || !notesOpen);
   const canMarkDiscussed = factKind === "discuss" || factKind === "soft";
   const isBoundary = factKind === "conflict" || factKind === "limit";
   const semanticColour = factBorder(factKind);
@@ -133,10 +135,10 @@ export default function CompareKinkRow({
         </div>
       )}
 
-      {hasNotes && !notesOpen && (
+      {(showPreviewA || showPreviewB) && (
         <div data-print-hide="true" className="mt-2 space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
-          {entryA.comment && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
-          {entryB.comment && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
+          {showPreviewA && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
+          {showPreviewB && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
         </div>
       )}
 
