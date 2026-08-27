@@ -108,4 +108,16 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveText(/Verberg besproken \(1\)|Toon alles \(1\)/);
   });
+
+  test("hard boundaries stay readable and are not framed as a discuss action", async ({ page }) => {
+    await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+
+    const boundary = page
+      .locator(".compare-kink-row[data-fact-kind='conflict'], .compare-kink-row[data-fact-kind='limit']")
+      .first();
+    await boundary.scrollIntoViewIfNeeded();
+    await expect(boundary).toBeVisible();
+    await expect(boundary).toContainText(/Harde grens|Botst met harde grens/);
+    await expect(boundary.locator("button[aria-label*='als besproken markeren']")).toHaveCount(0);
+  });
 });
