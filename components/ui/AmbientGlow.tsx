@@ -16,7 +16,7 @@ export default function AmbientGlow({
   bottomOpacity = 0.08,
 }: Props) {
   return (
-    <div aria-hidden="true" className="pointer-events-none">
+    <div aria-hidden="true" className="ks-ambient-glow pointer-events-none">
       <div
         className="fixed top-0 left-0 right-0 z-0"
         style={{
