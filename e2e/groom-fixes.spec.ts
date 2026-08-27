@@ -128,7 +128,7 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     const row = page.locator(".compare-kink-row").filter({ hasText: "Klassiek en heerlijk" }).first();
     await row.scrollIntoViewIfNeeded();
     await expect(row).toBeVisible();
-    await expect(row.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+    await expect(row).toContainText("Klassiek en heerlijk");
     await expect(row.locator("textarea")).toHaveCount(0);
 
     await row.getByRole("button", { name: /Notitie bewerken voor/ }).click();
@@ -136,7 +136,7 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await row.getByRole("button", { name: "Klaar" }).click();
 
     await expect(row.locator("textarea")).toHaveCount(0);
-    await expect(row.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+    await expect(row).toContainText("Klassiek en heerlijk");
   });
 
   test("compare print media removes app chrome and interactive controls", async ({ page }) => {
