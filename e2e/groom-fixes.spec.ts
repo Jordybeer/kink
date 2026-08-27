@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import {
   CONTRACT_SERIES_ALEX_SAM,
@@ -130,5 +131,19 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(page.locator(".compare-toolbar")).toBeHidden();
     await expect(page.locator(".compare-page-actions")).toBeHidden();
     await expect(page.locator("header:has([data-top-nav-variant])")).toBeHidden();
+  });
+
+  test("profile PDF export produces a real download", async ({ page }) => {
+    await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "PDF" }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe("Alex-kinks.pdf");
+    const path = await download.path();
+    expect(path).not.toBeNull();
+    const file = await stat(path!);
+    expect(file.size).toBeGreaterThan(5_000);
   });
 });
