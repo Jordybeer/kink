@@ -1,0 +1,83 @@
+/* Print rules load after the runtime design-role tokens so paper overrides win
+   the cascade. Keep this file intentionally small and document-oriented. */
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f7f4f6;
+    --surface3: #f0eaee;
+    --border: #d9d0d6;
+    --text: #241c2a;
+    --text2: #4b5563;
+    --border-accent: #c9a9b4;
+    --accent-glow: transparent;
+    --decorative-glow: transparent;
+    --shadow: none;
+    --shadow-lg: none;
+    --glow-accent: none;
+  }
+
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: var(--text) !important;
+  }
+
+  /* Application chrome and decorative fixed layers never belong on paper. */
+  .ks-ambient-glow,
+  .bottom-nav,
+  header:has([data-top-nav-variant]),
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  /* Compare is printable as a document, not as a frozen interactive screen. */
+  .compare-page {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .compare-page,
+  .compare-page * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .compare-page .sticky {
+    position: static !important;
+  }
+
+  .compare-page .compare-kink-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: var(--surface) !important;
+  }
+
+  .compare-page .compare-print-notes {
+    display: block !important;
+  }
+
+  .compare-page textarea,
+  .compare-page input,
+  .compare-page select {
+    display: none !important;
+  }
+
+  .compare-page a,
+  .compare-page button {
+    text-decoration: none !important;
+  }
+}
