@@ -1,8 +1,40 @@
 /* Print rules load after the runtime design-role tokens so paper overrides win
-   the cascade. Keep this file intentionally small and document-oriented. */
+   the cascade. Keep global paper defaults compatible with the existing print
+   contract; route-specific polish belongs below. */
 @media print {
   :root {
     --bg: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f5f5f5;
+    --text: #111111;
+    --text2: #444444;
+    --border: #cccccc;
+    --border-accent: #aaaaaa;
+    --border-bright: rgba(0, 0, 0, 0.18);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.10), 0 1px 0 rgba(255, 255, 255, 0.80) inset;
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(255, 255, 255, 0.90) inset;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: var(--text) !important;
+  }
+
+  /* Compare is printable as a document, not as a frozen interactive screen. */
+  body:has(.compare-page) .ks-ambient-glow,
+  body:has(.compare-page) .bottom-nav,
+  body:has(.compare-page) header:has([data-top-nav-variant]),
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  .compare-page {
     --surface: #ffffff;
     --surface2: #f7f4f6;
     --surface3: #f0eaee;
@@ -15,29 +47,7 @@
     --shadow: none;
     --shadow-lg: none;
     --glow-accent: none;
-  }
 
-  @page {
-    size: A4;
-    margin: 14mm;
-  }
-
-  html,
-  body {
-    background: #ffffff !important;
-    color: var(--text) !important;
-  }
-
-  /* Application chrome and decorative fixed layers never belong on paper. */
-  .ks-ambient-glow,
-  .bottom-nav,
-  header:has([data-top-nav-variant]),
-  [data-print-hide="true"] {
-    display: none !important;
-  }
-
-  /* Compare is printable as a document, not as a frozen interactive screen. */
-  .compare-page {
     max-width: none !important;
     width: 100% !important;
     padding: 0 !important;
