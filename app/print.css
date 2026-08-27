@@ -42,6 +42,19 @@
     --text: #241c2a;
     --text2: #4b5563;
     --border-accent: #c9a9b4;
+    --accent: #ab2a50;
+    --accent-text: #ab2a50;
+    --accent2: #66507b;
+    --accent2-text: #66507b;
+    --identity-a: #ab2a50;
+    --identity-b: #66507b;
+    --yes: #c2410c;
+    --willing: #047857;
+    --maybe: #0369a1;
+    --no: #4338ca;
+    --hard-no: #b91c1c;
+    --hard-no-text: #b91c1c;
+    --conflict: #b45309;
     --accent-glow: transparent;
     --decorative-glow: transparent;
     --shadow: none;
@@ -68,6 +81,16 @@
 
   .compare-page .sticky {
     position: static !important;
+  }
+
+  .compare-page section[aria-labelledby="compare-summary-heading"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .compare-page h2 {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   .compare-page .compare-kink-row {
