@@ -120,4 +120,15 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(boundary).toContainText(/Harde grens|Botst met harde grens/);
     await expect(boundary.locator("button[aria-label*='als besproken markeren']")).toHaveCount(0);
   });
+
+  test("compare print media removes app chrome and interactive controls", async ({ page }) => {
+    await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+    await page.emulateMedia({ media: "print" });
+
+    await expect(page.locator(".compare-kink-row").first()).toBeVisible();
+    await expect(page.locator(".ks-ambient-glow")).toBeHidden();
+    await expect(page.locator(".compare-toolbar")).toBeHidden();
+    await expect(page.locator(".compare-page-actions")).toBeHidden();
+    await expect(page.locator("header:has([data-top-nav-variant])")).toBeHidden();
+  });
 });
