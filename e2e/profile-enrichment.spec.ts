@@ -9,7 +9,7 @@ test.describe("Profiel aanvullen", () => {
   });
 
   test("opent als centered dialog en houdt focus binnen de modal", async ({ page }) => {
-    const trigger = page.getByRole("button", { name: "Profiel aanvullen" });
+    const trigger = page.getByRole("button", { name: "Profielinfo aanvullen" });
     await expect(trigger).toBeVisible();
     await trigger.click();
 
@@ -59,7 +59,7 @@ test.describe("Profiel aanvullen", () => {
   });
 
   test("splitst de URI-encoded iOS Copy all lokaal in een canonical link en resultaten", async ({ page }) => {
-    await page.getByRole("button", { name: "Profiel aanvullen" }).click();
+    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
     const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
     await paste.fill(IOS_URI_ENCODED_COPY_ALL);
@@ -95,7 +95,7 @@ test.describe("Profiel aanvullen", () => {
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: "Profiel aanvullen" }).click();
+    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
     await dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten").fill(
       "https://bdsmtest.org.evil.example/r/steal\n100% Little",
@@ -113,7 +113,7 @@ test.describe("Profiel aanvullen", () => {
   });
 
   test("weigert een te grote paste zonder een geldige prefix stil af te kappen", async ({ page }) => {
-    await page.getByRole("button", { name: "Profiel aanvullen" }).click();
+    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
     const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
     const validPrefix = "https://bdsmtest.org/r/oversized\n100% Little\n";
@@ -145,7 +145,7 @@ test.describe("Profiel aanvullen", () => {
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: "Profiel aanvullen" }).click();
+    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
     await dialog.getByPlaceholder("Gebruikersnaam").fill("alexOnFet");
     await dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten").fill(
@@ -168,6 +168,6 @@ test.describe("Profiel aanvullen", () => {
   test("toont de enrichment actie niet op een gedeeld profiel", async ({ page }) => {
     const shared = { ...PROFILE_SAM, id: "shared-sam", isImported: true, origin: "shared" as const };
     await seedAndGo(page, "/profile/shared-sam", [shared], { profileTourComplete: true });
-    await expect(page.getByRole("button", { name: "Profiel aanvullen" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Profielinfo aanvullen" })).toHaveCount(0);
   });
 });
