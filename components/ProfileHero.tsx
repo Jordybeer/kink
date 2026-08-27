@@ -221,7 +221,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               }}
             >
               <Sparkle size={14} weight="duotone" aria-hidden="true" />
-              Profiel aanvullen
+              Profielinfo aanvullen
             </button>
           )}
 
