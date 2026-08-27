@@ -77,16 +77,14 @@ export default function CompareKinkRow({
     setNotesOpen(false);
   }, [rowKey, profileA.id, profileB.id]);
 
-  const showReadOnlyA = profileA.isImported && !!entryA.comment;
-  const showReadOnlyB = profileB.isImported && !!entryB.comment;
   const canEditA = !!onCommentA;
   const canEditB = !!onCommentB;
   const canEdit = canEditA || canEditB;
-  const showEditors = notesOpen || (canEditA && !!entryA.comment) || (canEditB && !!entryB.comment);
+  const hasNotes = !!entryA.comment || !!entryB.comment;
+  const hasEditableNotes = (canEditA && !!entryA.comment) || (canEditB && !!entryB.comment);
   const canMarkDiscussed = factKind === "discuss" || factKind === "soft";
   const isBoundary = factKind === "conflict" || factKind === "limit";
   const semanticColour = factBorder(factKind);
-  const hasPrintNotes = !!entryA.comment || !!entryB.comment;
 
   return (
     <div
@@ -128,21 +126,21 @@ export default function CompareKinkRow({
         )}
       </div>
 
-      {hasPrintNotes && (
+      {hasNotes && (
         <div className="compare-print-notes mt-2 hidden space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
           {entryA.comment && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
           {entryB.comment && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
         </div>
       )}
 
-      {(showReadOnlyA || showReadOnlyB) && (
+      {hasNotes && !notesOpen && (
         <div data-print-hide="true" className="mt-2 space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
-          {showReadOnlyA && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
-          {showReadOnlyB && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
+          {entryA.comment && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
+          {entryB.comment && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
         </div>
       )}
 
-      {(canMarkDiscussed || (canEdit && !showEditors)) && (
+      {(canMarkDiscussed || (canEdit && !notesOpen)) && (
         <div className="mt-1 flex flex-wrap items-center gap-1" data-print-hide="true">
           {canMarkDiscussed && (
             <button
@@ -160,21 +158,21 @@ export default function CompareKinkRow({
             </button>
           )}
 
-          {canEdit && !showEditors && (
+          {canEdit && !notesOpen && (
             <button
               type="button"
               onClick={() => setNotesOpen(true)}
-              aria-label={`Notitie toevoegen voor ${accessibleName}`}
+              aria-label={`${hasEditableNotes ? "Notitie bewerken" : "Notitie toevoegen"} voor ${accessibleName}`}
               className="focus-ring inline-flex min-h-11 items-center rounded-lg px-2 text-sm transition-colors"
               style={{ color: "var(--text2)" }}
             >
-              + Notitie
+              {hasEditableNotes ? "Notitie bewerken" : "+ Notitie"}
             </button>
           )}
         </div>
       )}
 
-      {canEdit && showEditors && (
+      {canEdit && notesOpen && (
         <div className="mt-2 space-y-2" data-print-hide="true">
           {canEditA && (
             <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
@@ -182,6 +180,14 @@ export default function CompareKinkRow({
           {canEditB && (
             <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
           )}
+          <button
+            type="button"
+            onClick={() => setNotesOpen(false)}
+            className="focus-ring min-h-11 rounded-lg px-2 text-sm font-medium"
+            style={{ color: "var(--text2)" }}
+          >
+            Klaar
+          </button>
         </div>
       )}
     </div>
