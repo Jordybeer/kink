@@ -317,13 +317,12 @@ export function ContractTrendsChart({ contracts }: Props) {
               onClick={() =>
                 setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))
               }
-              className="focus-ring inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-opacity"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-opacity"
               style={{
                 background: tint(color, 14),
                 border: `1px solid ${tint(color, 35)}`,
                 color: "var(--text)",
                 opacity: isHidden ? 0.4 : 1,
-                minHeight: 32,
               }}
             >
               <span

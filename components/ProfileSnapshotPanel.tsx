@@ -145,7 +145,7 @@ export default function ProfileSnapshotPanel({ profileId, snapshots, currentEntr
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          className="focus-ring mt-3 min-h-9 rounded-lg px-2 text-sm font-semibold"
+          className="focus-ring mt-3 min-h-11 rounded-lg px-2 text-sm font-semibold"
           style={{ color: "var(--accent)" }}
         >
           Toon {hiddenCount} meer

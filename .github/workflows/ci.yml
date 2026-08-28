@@ -62,12 +62,17 @@ jobs:
       - run: npm run test:e2e:launch
         env:
           CI: "1"
-      - name: Keep device smoke screenshots
+      - run: npm run test:e2e:print
+        env:
+          CI: "1"
+      - name: Keep visual rehearsal screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: device-smoke-screenshots
-          path: test-results/device-screenshots
+          name: visual-rehearsal-screenshots
+          path: |
+            test-results/device-screenshots
+            test-results/print-screenshots
           if-no-files-found: ignore
           retention-days: 14
       - name: Keep Playwright failure diagnostics

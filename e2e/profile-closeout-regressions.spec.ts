@@ -64,6 +64,18 @@ test("profile keeps catalog search and category filtering available from Overvie
   await expect.poll(() => page.getByTestId("profile-category-header").first().evaluate((element) =>
     getComputedStyle(element).top,
   )).toBe("56px");
+
+  const jumpButton = page.getByRole("button", { name: /Andere categorie kiezen; nu/ }).first();
+  const jumpBox = await jumpButton.boundingBox();
+  expect(jumpBox).not.toBeNull();
+  expect(jumpBox!.width).toBeGreaterThanOrEqual(44);
+  expect(jumpBox!.height).toBeGreaterThanOrEqual(44);
+  await jumpButton.click();
+  const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
+  await expect(categoryDialog).toBeVisible();
+  await categoryDialog.getByRole("button", { name: /Impact Play/ }).click();
+  await expect(categoryDialog).not.toBeVisible();
+  await expect(page.getByRole("button", { name: /Impact Play/ }).first()).toHaveAttribute("aria-expanded", "true");
 });
 
 test("empty profile keeps the full catalog searchable from Edit", async ({ page }) => {

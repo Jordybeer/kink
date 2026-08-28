@@ -1,6 +1,12 @@
 /* Print rules load after the runtime design-role tokens so paper overrides win
    the cascade. Keep global paper defaults compatible with the existing print
    contract; route-specific polish belongs below. */
+@media screen {
+  .compare-print-document {
+    display: none;
+  }
+}
+
 @media print {
   :root {
     --bg: #ffffff;
@@ -31,6 +37,10 @@
   body:has(.compare-page) .bottom-nav,
   body:has(.compare-page) header:has([data-top-nav-variant]),
   [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  .compare-page > :not(.compare-print-document) {
     display: none !important;
   }
 
@@ -66,6 +76,262 @@
     padding: 0 !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+  }
+
+  .compare-print-document {
+    display: block !important;
+    color: var(--text);
+    font-family: var(--font-sans, Arial, sans-serif);
+    font-size: 9pt;
+    line-height: 1.35;
+  }
+
+  .compare-print-header {
+    break-inside: avoid;
+    margin-bottom: 8mm;
+    border-bottom: 0.5mm solid var(--accent);
+    padding-bottom: 5mm;
+  }
+
+  .compare-print-eyebrow {
+    margin: 0 0 2mm;
+    color: var(--accent);
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .compare-print-header h1 {
+    margin: 0;
+    color: var(--text);
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 22pt;
+    font-style: italic;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .compare-print-identities {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    margin-top: 4mm;
+  }
+
+  .compare-print-identities > div {
+    border: 0.3mm solid var(--border);
+    border-radius: 3mm;
+    padding: 3mm;
+  }
+
+  .compare-print-identities strong,
+  .compare-print-identities span {
+    display: block;
+  }
+
+  .compare-print-identities strong {
+    font-size: 10pt;
+  }
+
+  .compare-print-identities span,
+  .compare-print-meta {
+    color: var(--text2);
+    font-size: 7.5pt;
+  }
+
+  .compare-print-consent {
+    margin: 4mm 0 0;
+    border-left: 1mm solid var(--hard-no);
+    padding: 2.5mm 3mm;
+    background: #fff7f7;
+    color: #5f1b1b;
+    font-weight: 600;
+  }
+
+  .compare-print-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 4mm;
+    overflow: hidden;
+    border: 0.3mm solid var(--border);
+    border-radius: 3mm;
+  }
+
+  .compare-print-stats > div {
+    padding: 2.5mm;
+    text-align: center;
+  }
+
+  .compare-print-stats > div + div {
+    border-left: 0.3mm solid var(--border);
+  }
+
+  .compare-print-stats strong,
+  .compare-print-stats span {
+    display: block;
+  }
+
+  .compare-print-stats strong {
+    font-size: 15pt;
+    line-height: 1;
+  }
+
+  .compare-print-stats span {
+    margin-top: 1mm;
+    color: var(--text2);
+    font-size: 7.5pt;
+    font-weight: 600;
+  }
+
+  .compare-print-meta {
+    margin: 3mm 0 0;
+  }
+
+  .compare-print-section {
+    margin-top: 7mm;
+  }
+
+  .compare-print-section-heading {
+    break-after: avoid;
+    page-break-after: avoid;
+    margin-bottom: 2mm;
+    border-left: 1mm solid var(--accent2);
+    padding-left: 3mm;
+  }
+
+  .compare-print-section[data-tone="boundary"] .compare-print-section-heading {
+    border-left-color: var(--hard-no);
+  }
+
+  .compare-print-section[data-tone="discuss"] .compare-print-section-heading {
+    border-left-color: var(--conflict);
+  }
+
+  .compare-print-section[data-tone="difference"] .compare-print-section-heading {
+    border-left-color: var(--maybe);
+  }
+
+  .compare-print-section[data-tone="overlap"] .compare-print-section-heading {
+    border-left-color: var(--yes);
+  }
+
+  .compare-print-section-heading h2 {
+    margin: 0;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 13pt;
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .compare-print-section-heading h2 span {
+    color: var(--text2);
+    font-family: var(--font-sans, Arial, sans-serif);
+    font-size: 8pt;
+    font-style: normal;
+  }
+
+  .compare-print-section-heading p {
+    margin: 0.7mm 0 0;
+    color: var(--text2);
+    font-size: 7.5pt;
+  }
+
+  .compare-print-document table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-top: 0.3mm solid var(--border);
+  }
+
+  .compare-print-document thead {
+    display: table-header-group;
+  }
+
+  .compare-print-document th,
+  .compare-print-document td {
+    overflow-wrap: anywhere;
+    border-bottom: 0.3mm solid var(--border);
+    padding: 2.2mm 2mm;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .compare-print-document thead th {
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .compare-print-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .compare-print-row > th {
+    font-weight: 400;
+  }
+
+  .compare-print-kink,
+  .compare-print-classification,
+  .compare-print-direction,
+  .compare-print-row td:last-child span {
+    display: block;
+  }
+
+  .compare-print-kink {
+    color: var(--text);
+    font-size: 8.5pt;
+    font-weight: 700;
+  }
+
+  .compare-print-classification,
+  .compare-print-direction {
+    margin-top: 0.7mm;
+    color: var(--text2);
+    font-size: 7pt;
+  }
+
+  .compare-print-status {
+    display: inline-block;
+    border-left: 0.8mm solid var(--text2);
+    padding-left: 1.5mm;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .compare-print-status[data-status="yes"] { border-left-color: var(--yes); }
+  .compare-print-status[data-status="willing"] { border-left-color: var(--willing); }
+  .compare-print-status[data-status="maybe"] { border-left-color: var(--maybe); }
+  .compare-print-status[data-status="no"] { border-left-color: var(--no); }
+  .compare-print-status[data-status="hard_no"] { border-left-color: var(--hard-no); }
+
+  .compare-print-row td:last-child {
+    color: var(--text2);
+    font-size: 7.2pt;
+  }
+
+  .compare-print-row td:last-child span + span {
+    margin-top: 1mm;
+  }
+
+  .compare-print-col-kink { width: 32%; }
+  .compare-print-col-status { width: 13%; }
+  .compare-print-col-notes { width: 42%; }
+
+  .compare-print-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 4mm;
+    margin-top: 8mm;
+    border-top: 0.3mm solid var(--border);
+    padding-top: 3mm;
+    color: var(--text2);
+    font-size: 7pt;
   }
 
   .compare-page,

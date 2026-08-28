@@ -14,7 +14,7 @@ export default function StarScore({ value, onChange }: Props) {
           aria-label={`Geef ${n} ${n === 1 ? "ster" : "sterren"}`}
           aria-pressed={value !== null && n <= value}
           onClick={() => onChange(value === n ? null : n)}
-          className="focus-ring w-8 h-8 flex items-center justify-center text-lg leading-none transition-colors"
+          className="focus-ring flex h-11 w-11 items-center justify-center text-lg leading-none transition-colors"
           style={{ color: value !== null && n <= value ? "var(--accent)" : "var(--border)" }}
         >
           ★

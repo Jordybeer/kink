@@ -1,5 +1,6 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { X } from "@phosphor-icons/react";
 import {
   createContext,
   useEffect,
@@ -56,11 +57,57 @@ interface Props {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  title?: string;
   scrollable?: boolean;
   "aria-label"?: string;
 }
 
-export default function Sheet({ open, onClose, children, scrollable = false, "aria-label": ariaLabel }: Props) {
+function TitledSheetFrame({
+  title,
+  onClose,
+  scrollable,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  scrollable: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={scrollable
+        ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top))] flex-col overflow-hidden rounded-t-3xl px-4 pt-3"
+        : "rounded-t-3xl px-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-3"}
+      style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
+    >
+      <div className="mb-1 h-7" aria-hidden="true">
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
+      </div>
+      <div className="mb-4 flex min-h-11 items-center gap-2 px-1">
+        <h2 className="min-w-0 flex-1 text-lg font-bold">{title}</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={`${title} sluiten`}
+          className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+          style={{ color: "var(--text2)" }}
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+      </div>
+      {scrollable ? (
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
+          data-testid="sheet-scroll-body"
+        >
+          {children}
+        </div>
+      ) : children}
+    </div>
+  );
+}
+
+export default function Sheet({ open, onClose, children, title, scrollable = false, "aria-label": ariaLabel }: Props) {
   const t = useMotionSafe();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
@@ -95,7 +142,7 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
             ref={sheetRef}
             role="dialog"
             aria-modal="true"
-            aria-label={ariaLabel}
+            aria-label={ariaLabel ?? title}
             style={{
               position: "fixed",
               bottom: 0,
@@ -117,7 +164,9 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
             }}
           >
             <SheetCloseContext.Provider value={onClose}>
-              {children}
+              {title
+                ? <TitledSheetFrame title={title} onClose={onClose} scrollable={scrollable}>{children}</TitledSheetFrame>
+                : children}
             </SheetCloseContext.Provider>
           </motion.div>
         </>

@@ -288,7 +288,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     type="button"
                     onClick={() => toggleInterest(interest.value)}
                     aria-pressed={active}
-                    className="focus-ring min-h-10 rounded-full px-3 text-sm font-semibold"
+                    className="focus-ring min-h-11 rounded-full px-3 text-sm font-semibold"
                     style={active
                       ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                       : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -326,7 +326,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     type="button"
                     onClick={() => setRelationshipStatus(active ? "" : status)}
                     aria-pressed={active}
-                    className="focus-ring min-h-10 rounded-full px-3 text-sm font-semibold"
+                    className="focus-ring min-h-11 rounded-full px-3 text-sm font-semibold"
                     style={active
                       ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                       : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}

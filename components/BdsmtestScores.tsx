@@ -97,7 +97,7 @@ export default function BdsmtestScores({ scores }: Props) {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="focus-ring mt-4 w-full rounded-xl border py-2.5 text-sm font-medium"
+            className="focus-ring mt-4 min-h-11 w-full rounded-xl border py-2.5 text-sm font-medium"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
             Sluit

@@ -329,7 +329,7 @@ function ContractPage() {
             <button
               type="button"
               onClick={() => setPreambleOpen((value) => !value)}
-              className="focus-ring mt-2 inline-flex min-h-9 items-center gap-1 px-3 text-xs transition-colors"
+              className="focus-ring mt-2 inline-flex min-h-11 items-center gap-1 px-3 text-xs transition-colors"
               style={{ color: "var(--accent)" }}
             >
               {preambleOpen ? <>Minder <CaretUp size={13} aria-hidden="true" /></> : <>Lees meer <CaretDown size={13} aria-hidden="true" /></>}
@@ -372,7 +372,7 @@ function ContractPage() {
                           key={option}
                           type="button"
                           onClick={() => toggle(option)}
-                          className="focus-ring rounded-full border px-2 py-1 text-xs transition-all"
+                          className="focus-ring min-h-11 rounded-full border px-2 py-1 text-xs transition-all"
                           style={{
                             background: active ? "color-mix(in srgb, var(--yes) 20%, transparent)" : "transparent",
                             borderColor: active ? "var(--yes)" : "var(--border)",
@@ -467,7 +467,7 @@ function ContractPage() {
               <input value={realNameB} onChange={(event) => setRealNameB(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
             </label>
           </div>
-          <button type="button" onClick={() => setWhyOpen(true)} className="focus-ring mt-3 inline-flex min-h-9 items-center gap-1 text-xs transition-colors" style={{ color: "var(--accent)" }}>
+          <button type="button" onClick={() => setWhyOpen(true)} className="focus-ring mt-3 inline-flex min-h-11 items-center gap-1 text-xs transition-colors" style={{ color: "var(--accent)" }}>
             Waarom een echte naam toevoegen? <ArrowRight size={13} aria-hidden="true" />
           </button>
         </div>
@@ -493,7 +493,7 @@ function ContractPage() {
         >
           Contract bewaren of digitaal bevestigen
         </button>
-        <Link href="/contracts" className="focus-ring mt-3 flex min-h-10 items-center justify-center text-sm" style={{ color: "var(--text2)" }}>
+        <Link href="/contracts" className="focus-ring mt-3 flex min-h-11 items-center justify-center text-sm" style={{ color: "var(--text2)" }}>
           Naar contractgeschiedenis
         </Link>
       </PageShell>

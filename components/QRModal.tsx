@@ -402,7 +402,7 @@ export default function QRModal({ profile, onClose }: Props) {
         </p>
         <Link
           href="/about#limits-title"
-          className="focus-ring mx-auto flex min-h-9 w-fit items-center gap-1 px-2 text-sm font-semibold"
+          className="focus-ring mx-auto flex min-h-11 w-fit items-center gap-1 px-2 text-sm font-semibold"
           style={{ color: "var(--accent-text)" }}
         >
           Hoe delen en beveiliging werken

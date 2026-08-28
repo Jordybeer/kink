@@ -12,7 +12,7 @@ import {
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
-import Sheet from "@/components/ui/Sheet";
+import Sheet from "@/components/Sheet";
 import Switch from "@/components/ui/Switch";
 import { useStore } from "@/lib/store";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";

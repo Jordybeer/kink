@@ -9,6 +9,7 @@ import {
   classifyStatusPair,
   type VisibleCompareStatus,
 } from "@/lib/compareV2";
+import { compactComparisonName, comparisonDirectionNote } from "@/lib/comparePresentation";
 import { DIRECTIONAL_KINK_PAIRS } from "@/lib/directionality";
 import { complementaryParticipationSideLabel } from "@/lib/participation";
 import type { Profile } from "@/types";
@@ -53,6 +54,17 @@ describe("compare helpers", () => {
       { name: "Wax play", aId: "a-1", bId: "b-1" },
       { name: "Rope", aId: "a-2" },
     ]);
+  });
+
+  it("houdt compacte richtingstaal gelijk tussen scherm en print", () => {
+    const pair = DIRECTIONAL_KINK_PAIRS[0];
+    const left = profile("left", "Alex", { entries: { [pair.giveId]: { status: "yes", comment: "" } } });
+    const right = profile("right", "Sam", { entries: { [pair.receiveId]: { status: "willing", comment: "" } } });
+    const fact = buildCompareModel(left, right).facts[0];
+
+    expect(fact).toBeDefined();
+    expect(compactComparisonName(fact.label)).not.toContain("↔");
+    expect(comparisonDirectionNote(fact, left, right)).toBe("Alex geeft · Sam ontvangt");
   });
 });
 

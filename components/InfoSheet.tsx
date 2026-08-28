@@ -52,7 +52,7 @@ export default function InfoSheet({ kink, onClose }: Props) {
 
         <button
           onClick={onClose}
-          className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          className="focus-ring min-h-11 w-full py-2.5 rounded-xl text-sm font-semibold transition-colors"
           style={{ border: "1px solid var(--border)", color: "var(--text)" }}
         >
           Sluit

@@ -188,7 +188,7 @@ export default function ContractQrScannerSheet({
             <button
               type="button"
               onClick={() => { stopCamera(); setPasteMode(true); }}
-              className="focus-ring mx-auto mt-3 block min-h-10 px-3 text-sm underline-offset-2 hover:underline"
+              className="focus-ring mx-auto mt-3 block min-h-11 px-3 text-sm underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
               Geen camera? Plak de code

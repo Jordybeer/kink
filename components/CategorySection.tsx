@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { CaretDown, CaretRight, ListBullets } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import KinkListRow from "./KinkListRow";
@@ -10,6 +10,7 @@ interface Props {
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
   onEdit: (kink: Kink) => void;
+  onChooseCategory?: () => void;
   openByDefault?: boolean;
 }
 
@@ -24,6 +25,7 @@ export default function CategorySection({
   kinks,
   entries,
   onEdit,
+  onChooseCategory,
   openByDefault = false,
 }: Props) {
   const filled = countFilled(kinks, entries);
@@ -78,7 +80,7 @@ export default function CategorySection({
             {label}
           </h2>
           <div className="flex items-center gap-1.5 flex-none" aria-label={`${filled} van ${kinks.length} beoordeeld`}>
-            <div className="flex gap-0.5 items-center" aria-hidden="true">
+            <div className="hidden gap-0.5 items-center min-[360px]:flex" aria-hidden="true">
               {Array.from({ length: pipCount }, (_, index) => (
                 <div
                   key={index}
@@ -93,6 +95,17 @@ export default function CategorySection({
             </span>
           </div>
         </button>
+        {onChooseCategory && (
+          <button
+            type="button"
+            onClick={onChooseCategory}
+            aria-label={`Andere categorie kiezen; nu ${label}`}
+            className="focus-ring mr-1 flex h-11 w-11 flex-none items-center justify-center rounded-xl"
+            style={{ color: "var(--text2)" }}
+          >
+            <ListBullets size={18} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <div

@@ -41,7 +41,7 @@ export default function DurationStepper({ value, onChange, disabled = false }: D
           disabled={disabled}
           onClick={() => set(p)}
           aria-pressed={currentMinutes === p && !showRaw}
-          className="focus-ring px-3 py-1.5 rounded-full text-sm font-medium border disabled:opacity-50"
+          className="focus-ring min-h-11 px-3 py-1.5 rounded-full text-sm font-medium border disabled:opacity-50"
           style={
             currentMinutes === p && !showRaw
               ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", borderColor: "var(--accent-fill)" }
@@ -58,7 +58,7 @@ export default function DurationStepper({ value, onChange, disabled = false }: D
           onClick={() => nudge(-5)}
           aria-label="5 minuten minder"
           className="focus-ring rounded-lg text-sm font-medium border disabled:opacity-50"
-          style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           −5
         </button>
@@ -76,7 +76,7 @@ export default function DurationStepper({ value, onChange, disabled = false }: D
           onClick={() => nudge(5)}
           aria-label="5 minuten meer"
           className="focus-ring rounded-lg text-sm font-medium border disabled:opacity-50"
-          style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ color: "var(--text2)", borderColor: "var(--border)", minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           +5
         </button>

@@ -45,6 +45,8 @@ describe("profile text export", () => {
     });
 
     expect(text).toContain(ICE_PLAY_NAME);
+    expect(text).toContain("[Heel graag]");
+    expect(text).toContain("een voorkeur of overlap is geen toestemming");
     expect(text).toContain("zichtbare notitie");
     expect(text).toContain("Zichtbaar eigen ding");
     expect(text).not.toContain(LATEX_NAME);
