@@ -46,7 +46,7 @@ test("profile keeps catalog search and category filtering available from Overvie
   const search = page.getByRole("textbox", { name: "Profiel doorzoeken" });
   await expect(search).toBeVisible();
   await expect(page.getByRole("button", { name: "Alle categorieën" })).toBeVisible();
-  for (const control of [search, page.getByRole("button", { name: "Alle categorieën" }), page.getByRole("button", { name: "Toon notities" })]) {
+  for (const control of [search, page.getByRole("button", { name: "Alle categorieën" }), page.getByRole("button", { name: /notities/i })]) {
     const box = await control.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.height).toBeGreaterThanOrEqual(44);
