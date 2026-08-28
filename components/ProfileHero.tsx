@@ -213,7 +213,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               type="button"
               data-tour="profile-enrichment"
               onClick={() => setEnrichmentOpen(true)}
-              className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium transition-colors active:opacity-70"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium transition-colors active:opacity-70"
               style={{
                 color: "var(--accent-text)",
                 background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
@@ -243,7 +243,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               href={`/contracts/${encodeURIComponent(latestContract.id)}`}
               prefetch={false}
               aria-label={`Open het meest recente contract met ${profile.name}`}
-              className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-normal"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-xs font-normal"
               style={{
                 color: "var(--text2)",
                 background: "var(--surface2)",
@@ -261,7 +261,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-              className="profile-fetlife-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+              className="profile-fetlife-link focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
               style={{
                 color: "var(--text)",
                 background: "var(--surface2)",
@@ -286,7 +286,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Open het opgeslagen BDSMTest-resultaat"
-              className="profile-bdsmtest-link focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+              className="profile-bdsmtest-link focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
               style={{
                 color: "var(--text)",
                 background: "var(--surface2)",

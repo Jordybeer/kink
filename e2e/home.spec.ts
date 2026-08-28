@@ -47,6 +47,29 @@ test.describe("Home page — profielen aanwezig", () => {
     await expect(page).toHaveURL(/\/profile\/pw-alex-001/);
   });
 
+  test("bundelt zeldzame profielacties in een ruime actiekiezer", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    const profileLink = page.getByRole("link", { name: "Alex Dominant openen" });
+    const trigger = page.getByRole("button", { name: "Meer acties voor Alex" });
+    const [linkBox, triggerBox] = await Promise.all([profileLink.boundingBox(), trigger.boundingBox()]);
+
+    expect(linkBox).not.toBeNull();
+    expect(triggerBox).not.toBeNull();
+    expect(triggerBox!.width).toBeGreaterThanOrEqual(44);
+    expect(triggerBox!.height).toBeGreaterThanOrEqual(44);
+    expect(linkBox!.x + linkBox!.width).toBeLessThanOrEqual(triggerBox!.x + 1);
+
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Acties voor Alex" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Markeer als mijn profiel" })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Profiel bewerken" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Profiel verwijderen" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Annuleren" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
   test("houdt home vrij van directe contract- en scènecreatie", async ({ page }) => {
     await expect(page.getByRole("link", { name: "Maak een contract", exact: true })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Nieuwe scène", exact: true })).toHaveCount(0);

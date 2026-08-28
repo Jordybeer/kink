@@ -78,7 +78,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${label}. Bekijk bron en toestemming`}
-        className="focus-ring inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"
+        className="focus-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"
         style={{ color, background, border: `1px solid ${borderColor}` }}
       >
         {checking
@@ -114,7 +114,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
               <button
                 type="button"
                 onClick={copyProof}
-                className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium"
+                className="focus-ring inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-sm font-medium"
                 style={{
                   borderColor: copied ? "var(--willing)" : "var(--border)",
                   color: copied ? "var(--willing)" : "var(--text2)",
@@ -165,7 +165,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
           <p className="mb-5 text-sm" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
             Dit bevestigt de cryptografische bron en inhoud van de opgeslagen versie. Het bewijst geen wettelijke identiteit of vrijwilligheid. Mondelinge of non-verbale intrekking geldt altijd onmiddellijk.
           </p>
-          <button onClick={() => setOpen(false)} className="focus-ring w-full rounded-xl border py-2.5 text-sm" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
+          <button type="button" onClick={() => setOpen(false)} className="focus-ring min-h-11 w-full rounded-xl border px-3 text-sm" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>
             Sluit
           </button>
         </SheetContent>

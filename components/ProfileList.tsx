@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   CaretDown,
   CaretRight,
+  DotsThree,
   FileText,
   FilmSlate,
   Lock,
@@ -150,7 +151,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                   <Link
                     href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
                     prefetch={false}
-                    className="focus-ring min-h-9 px-3 rounded-full inline-flex items-center text-xs font-semibold"
+                    className="focus-ring inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold"
                     style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
                   >
                     Vergelijk kanten
@@ -412,74 +413,106 @@ function ProfileRow({
     : runtime.coverage.answered;
   const progress = questionnaireTotal > 0 ? Math.min(100, Math.round((ratedCount / questionnaireTotal) * 100)) : 0;
   const shared = getProfileType(profile, pinnedProfileId) === "partner";
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   return (
     <div
-      className="relative px-3 py-3"
+      className="px-3 py-3"
       style={divider ? { borderTop: "1px solid var(--border)" } : undefined}
     >
-      <Link
-        href={`/profile/${profile.id}`}
-        prefetch={false}
-        className="focus-ring flex items-center gap-3 rounded-xl pr-20"
-        aria-label={`${profile.name} ${profile.role} openen`}
-      >
-        {showName && <ProfileAvatar profile={profile} size="normal" />}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <p
-              className="text-base italic truncate"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-            >
-              {showName ? profile.name : profile.role}
+      <div className="flex items-center gap-1">
+        <Link
+          href={`/profile/${profile.id}`}
+          prefetch={false}
+          className="focus-ring flex min-w-0 flex-1 items-center gap-3 rounded-xl"
+          aria-label={`${profile.name} ${profile.role} openen`}
+        >
+          {showName && <ProfileAvatar profile={profile} size="normal" />}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p
+                className="truncate text-base italic"
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+              >
+                {showName ? profile.name : profile.role}
+              </p>
+              {shared && <Lock size={10} aria-label="Gedeeld profiel" style={{ color: "var(--text2)" }} />}
+            </div>
+            <p className="mt-0.5 truncate text-xs" style={{ color: "var(--text2)" }}>
+              {showName && profile.role ? `${profile.role} · ` : ""}{ratedCount} van {questionnaireTotal} beoordeeld
             </p>
-            {shared && <Lock size={10} aria-label="Gedeeld profiel" style={{ color: "var(--text2)" }} />}
+            <div className="mt-2 h-1 overflow-hidden rounded-full" style={{ background: "var(--surface3)" }}>
+              <div className="h-full rounded-full" style={{ width: `${progress}%`, background: "var(--accent)" }} />
+            </div>
           </div>
-          <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text2)" }}>
-            {showName && profile.role ? `${profile.role} · ` : ""}{ratedCount} van {questionnaireTotal} beoordeeld
-          </p>
-          <div className="h-1 rounded-full mt-2 overflow-hidden" style={{ background: "var(--surface3)" }}>
-            <div className="h-full rounded-full" style={{ width: `${progress}%`, background: "var(--accent)" }} />
-          </div>
-        </div>
-        <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
-      </Link>
+          <CaretRight size={14} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
+        </Link>
 
-      {!shared && (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+        {!shared && (
           <button
             type="button"
-            onClick={onPin}
-            aria-label={profile.id === pinnedProfileId ? "Niet langer als mijn profiel markeren" : "Markeer als mijn profiel"}
-            className="focus-ring w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ color: profile.id === pinnedProfileId ? "var(--accent)" : "var(--text2)" }}
-          >
-            {profile.id === pinnedProfileId ? <PushPinSlash aria-hidden="true" size={15} /> : <PushPin aria-hidden="true" size={15} />}
-          </button>
-          <Link
-            href={`/profile/${profile.id}?edit=1`}
-            prefetch={false}
-            aria-label={`${profile.name} bewerken`}
-            className="focus-ring w-9 h-9 rounded-full flex items-center justify-center"
+            onClick={() => setActionsOpen(true)}
+            aria-label={`Meer acties voor ${profile.name}`}
+            aria-haspopup="dialog"
+            aria-expanded={actionsOpen}
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
           >
-            <PencilSimple aria-hidden="true" size={15} />
-          </Link>
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label={`${profile.name} ${profile.role} verwijderen`}
-            className="focus-ring w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ color: "var(--hard-no)" }}
-          >
-            <Trash aria-hidden="true" size={14} />
+            <DotsThree aria-hidden="true" size={20} weight="bold" />
           </button>
-        </div>
+        )}
+      </div>
+
+      {!shared && (
+        <Sheet open={actionsOpen} onClose={() => setActionsOpen(false)} aria-label={`Acties voor ${profile.name}`}>
+          <SheetContent className="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
+            <div className="mb-3 px-1">
+              <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>{profile.name}</h3>
+              <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>{profile.role}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setActionsOpen(false); onPin(); }}
+              aria-pressed={profile.id === pinnedProfileId}
+              className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
+              style={{ color: profile.id === pinnedProfileId ? "var(--accent)" : "var(--text)", background: "var(--surface2)" }}
+            >
+              {profile.id === pinnedProfileId ? <PushPinSlash aria-hidden="true" size={18} /> : <PushPin aria-hidden="true" size={18} />}
+              {profile.id === pinnedProfileId ? "Niet langer als mijn profiel" : "Markeer als mijn profiel"}
+            </button>
+            <Link
+              href={`/profile/${profile.id}?edit=1`}
+              prefetch={false}
+              onClick={() => setActionsOpen(false)}
+              className="focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium"
+              style={{ color: "var(--text)", background: "var(--surface2)" }}
+            >
+              <PencilSimple aria-hidden="true" size={18} />
+              Profiel bewerken
+            </Link>
+            <button
+              type="button"
+              onClick={() => { setActionsOpen(false); onDelete(); }}
+              className="focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
+              style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 6%, var(--surface2))" }}
+            >
+              <Trash aria-hidden="true" size={18} />
+              Profiel verwijderen
+            </button>
+            <button
+              type="button"
+              onClick={() => setActionsOpen(false)}
+              className="focus-ring mt-3 min-h-11 w-full rounded-xl px-3 text-sm font-medium"
+              style={{ color: "var(--text2)" }}
+            >
+              Annuleren
+            </button>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );
 }
-
 function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "normal" }) {
   const sizeClass = size === "small" ? "w-9 h-9" : "w-12 h-12";
   return (
