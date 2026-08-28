@@ -1,0 +1,122 @@
+/* Print rules load after the runtime design-role tokens so paper overrides win
+   the cascade. Keep global paper defaults compatible with the existing print
+   contract; route-specific polish belongs below. */
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f5f5f5;
+    --text: #111111;
+    --text2: #444444;
+    --border: #cccccc;
+    --border-accent: #aaaaaa;
+    --border-bright: rgba(0, 0, 0, 0.18);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.10), 0 1px 0 rgba(255, 255, 255, 0.80) inset;
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(255, 255, 255, 0.90) inset;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: var(--text) !important;
+  }
+
+  /* Compare is printable as a document, not as a frozen interactive screen. */
+  body:has(.compare-page) .ks-ambient-glow,
+  body:has(.compare-page) .bottom-nav,
+  body:has(.compare-page) header:has([data-top-nav-variant]),
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  .compare-page {
+    --surface: #ffffff;
+    --surface2: #f7f4f6;
+    --surface3: #f0eaee;
+    --border: #d9d0d6;
+    --text: #241c2a;
+    --text2: #4b5563;
+    --border-accent: #c9a9b4;
+    --accent: #ab2a50;
+    --accent-text: #ab2a50;
+    --accent2: #66507b;
+    --accent2-text: #66507b;
+    --identity-a: #ab2a50;
+    --identity-b: #66507b;
+    --yes: #c2410c;
+    --willing: #047857;
+    --maybe: #0369a1;
+    --no: #4338ca;
+    --hard-no: #b91c1c;
+    --hard-no-text: #b91c1c;
+    --conflict: #b45309;
+    --accent-glow: transparent;
+    --decorative-glow: transparent;
+    --shadow: none;
+    --shadow-lg: none;
+    --glow-accent: none;
+
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .compare-page,
+  .compare-page * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .compare-page .sticky {
+    position: static !important;
+  }
+
+  /* The profile chips remain useful identity blocks on paper; only their
+     dropdown affordance is interaction-only chrome. */
+  .compare-page button[aria-label^="Kies profiel"] > svg {
+    display: none !important;
+  }
+
+  .compare-page section[aria-labelledby="compare-summary-heading"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .compare-page h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .compare-page .compare-kink-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: var(--surface) !important;
+  }
+
+  .compare-page .compare-print-notes {
+    display: block !important;
+  }
+
+  .compare-page textarea,
+  .compare-page input,
+  .compare-page select {
+    display: none !important;
+  }
+
+  .compare-page a,
+  .compare-page button {
+    text-decoration: none !important;
+  }
+}

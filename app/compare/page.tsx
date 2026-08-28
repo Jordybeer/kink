@@ -101,7 +101,7 @@ function ComparePage() {
   if (!hasHydrated) return <PageShell loading width="5xl" />;
 
   return (
-    <PageShell width="5xl">
+    <PageShell width="5xl" className="compare-page">
       <h1 className="sr-only">Profielen vergelijken</h1>
 
       <CompareProfileHeader
@@ -115,18 +115,20 @@ function ComparePage() {
       {hasPair && (
         <>
           <CompareScoreSummary {...summary} categoryScores={categoryScores} />
-          <CompareToolbar
-            categoryScores={categoryScores}
-            selectedResults={selectedResults}
-            selectedCategories={selectedCategories}
-            discussedCount={discussed.size}
-            hideDiscussed={hideDiscussed}
-            onToggleResult={(filter) => setSelectedResults((current) => toggleSetValue(current, filter))}
-            onClearResults={() => setSelectedResults(new Set())}
-            onToggleCategory={(category) => setSelectedCategories((current) => toggleSetValue(current, category))}
-            onClearCategories={() => setSelectedCategories(new Set())}
-            onToggleHideDiscussed={() => setHideDiscussed((value) => !value)}
-          />
+          <div className="compare-toolbar" data-print-hide="true">
+            <CompareToolbar
+              categoryScores={categoryScores}
+              selectedResults={selectedResults}
+              selectedCategories={selectedCategories}
+              discussedCount={discussed.size}
+              hideDiscussed={hideDiscussed}
+              onToggleResult={(filter) => setSelectedResults((current) => toggleSetValue(current, filter))}
+              onClearResults={() => setSelectedResults(new Set())}
+              onToggleCategory={(category) => setSelectedCategories((current) => toggleSetValue(current, category))}
+              onClearCategories={() => setSelectedCategories(new Set())}
+              onToggleHideDiscussed={() => setHideDiscussed((value) => !value)}
+            />
+          </div>
         </>
       )}
 

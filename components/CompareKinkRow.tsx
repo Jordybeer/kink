@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "@phosphor-icons/react";
+import { ChatCircle, Check, ShieldWarning } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import type { CompareFactKind } from "@/lib/compareV2";
@@ -27,12 +27,12 @@ interface Props {
 }
 
 const FACT_LABEL: Record<CompareFactKind, string> = {
-  shared: "zelfde interesse",
-  complementary: "past bij elkaar",
-  discuss: "even bespreken",
-  soft: "verschil in enthousiasme",
-  conflict: "botst met harde grens",
-  limit: "harde grens",
+  shared: "Zelfde interesse",
+  complementary: "Past bij elkaar",
+  discuss: "Even bespreken",
+  soft: "Verschil in enthousiasme",
+  conflict: "Botst met harde grens",
+  limit: "Harde grens",
 };
 
 function factBorder(kind: CompareFactKind): string {
@@ -77,85 +77,119 @@ export default function CompareKinkRow({
     setNotesOpen(false);
   }, [rowKey, profileA.id, profileB.id]);
 
-  const showReadOnlyA = profileA.isImported && !!entryA.comment;
-  const showReadOnlyB = profileB.isImported && !!entryB.comment;
   const canEditA = !!onCommentA;
   const canEditB = !!onCommentB;
   const canEdit = canEditA || canEditB;
-  const showEditors = notesOpen || (canEditA && !!entryA.comment) || (canEditB && !!entryB.comment);
+  const hasNotes = !!entryA.comment || !!entryB.comment;
+  const hasEditableNotes = (canEditA && !!entryA.comment) || (canEditB && !!entryB.comment);
+  const showPreviewA = !!entryA.comment && (!canEditA || !notesOpen);
+  const showPreviewB = !!entryB.comment && (!canEditB || !notesOpen);
+  const canMarkDiscussed = factKind === "discuss" || factKind === "soft";
+  const isBoundary = factKind === "conflict" || factKind === "limit";
+  const semanticColour = factBorder(factKind);
 
   return (
     <div
-      className="rounded-xl px-3 py-3 transition-opacity"
+      className="compare-kink-row rounded-xl px-3 py-3"
+      data-fact-kind={factKind}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        borderLeft: `4px solid ${factBorder(factKind)}`,
-        opacity: isDiscussed ? 0.45 : 1,
+        borderLeft: `4px solid ${semanticColour}`,
       }}
     >
-      <div className="mb-2 flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[15px] font-medium leading-snug">{displayName}</span>
-            {custom && (
-              <span className="rounded-full px-1.5 py-0.5 text-[14px]" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
-                eigen
-              </span>
-            )}
-          </div>
-          {directionNote && (
-            <p className="mt-1 text-[14px] leading-snug" style={{ color: "var(--text2)" }}>
-              {directionNote}
-            </p>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-base font-medium leading-snug">{displayName}</span>
+          {custom && (
+            <span className="rounded-full px-1.5 py-0.5 text-sm" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
+              eigen
+            </span>
           )}
-          <p className="mt-1 text-[14px] leading-snug sm:hidden" style={{ color: factBorder(factKind) }}>
-            {FACT_LABEL[factKind]}
-          </p>
         </div>
-        <span className="hidden shrink-0 pt-0.5 text-[14px] sm:inline" style={{ color: factBorder(factKind) }}>
-          {FACT_LABEL[factKind]}
-        </span>
-        <button
-          type="button"
-          onClick={onToggleDiscussed}
-          aria-label={isDiscussed ? `${accessibleName} als niet besproken markeren` : `${accessibleName} als besproken markeren`}
-          className="focus-ring min-h-11 flex-none whitespace-nowrap rounded-full border px-3 text-[14px] transition-colors"
-          style={isDiscussed
-            ? { background: "color-mix(in srgb, var(--yes) 15%, transparent)", borderColor: "var(--yes)", color: "var(--yes)" }
-            : { background: "transparent", borderColor: "var(--border)", color: "var(--text2)" }}
-        >
-          {isDiscussed ? <span className="inline-flex items-center gap-1"><Check size={14} aria-hidden="true" />Besproken</span> : "Bespreken"}
-        </button>
       </div>
 
-      <div className="mb-1 flex items-center gap-2">
+      <div className="mt-2 flex items-center gap-2">
         <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
         <div className="h-px flex-1" style={{ background: "var(--border)", opacity: 0.35 }} />
         <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
       </div>
 
-      {(showReadOnlyA || showReadOnlyB) && (
-        <div className="mt-2 space-y-1 text-[14px] leading-snug" style={{ color: "var(--text2)" }}>
-          {showReadOnlyA && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
-          {showReadOnlyB && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug">
+        <span
+          className={`inline-flex items-center gap-1 ${isBoundary ? "font-semibold" : "font-medium"}`}
+          style={{ color: semanticColour }}
+        >
+          {isBoundary && <ShieldWarning size={15} weight="duotone" aria-hidden="true" />}
+          {FACT_LABEL[factKind]}
+        </span>
+        {directionNote && (
+          <span style={{ color: "var(--text2)" }}>{directionNote}</span>
+        )}
+      </div>
+
+      {hasNotes && (
+        <div className="compare-print-notes mt-2 hidden space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
+          {entryA.comment && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
+          {entryB.comment && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
         </div>
       )}
 
-      {canEdit && !showEditors && (
-        <button type="button" onClick={() => setNotesOpen(true)} aria-label={`Notitie toevoegen voor ${accessibleName}`} className="focus-ring -mb-1 -ml-2 mt-1 inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] transition-colors" style={{ color: "var(--text2)" }}>
-          + Notitie
-        </button>
+      {(showPreviewA || showPreviewB) && (
+        <div data-print-hide="true" className="mt-2 space-y-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
+          {showPreviewA && <div><span className="font-medium" style={{ color: colourA }}>{profileA.name}:</span> {entryA.comment}</div>}
+          {showPreviewB && <div><span className="font-medium" style={{ color: colourB }}>{profileB.name}:</span> {entryB.comment}</div>}
+        </div>
       )}
 
-      {canEdit && showEditors && (
-        <div className="mt-2 space-y-2">
+      {(canMarkDiscussed || (canEdit && !notesOpen)) && (
+        <div className="mt-1 flex flex-wrap items-center gap-1" data-print-hide="true">
+          {canMarkDiscussed && (
+            <button
+              type="button"
+              onClick={onToggleDiscussed}
+              aria-label={isDiscussed ? `${accessibleName} als niet besproken markeren` : `${accessibleName} als besproken markeren`}
+              aria-pressed={isDiscussed}
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors"
+              style={{ color: isDiscussed ? "var(--willing)" : "var(--text2)" }}
+            >
+              {isDiscussed
+                ? <Check size={15} weight="bold" aria-hidden="true" />
+                : <ChatCircle size={15} aria-hidden="true" />}
+              {isDiscussed ? "Besproken" : "Bespreken"}
+            </button>
+          )}
+
+          {canEdit && !notesOpen && (
+            <button
+              type="button"
+              onClick={() => setNotesOpen(true)}
+              aria-label={`${hasEditableNotes ? "Notitie bewerken" : "Notitie toevoegen"} voor ${accessibleName}`}
+              className="focus-ring inline-flex min-h-11 items-center rounded-lg px-2 text-sm transition-colors"
+              style={{ color: "var(--text2)" }}
+            >
+              {hasEditableNotes ? "Notitie bewerken" : "+ Notitie"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {canEdit && notesOpen && (
+        <div className="mt-2 space-y-2" data-print-hide="true">
           {canEditA && (
-            <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
+            <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
           )}
           {canEditB && (
-            <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-[14px] focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
+            <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
           )}
+          <button
+            type="button"
+            onClick={() => setNotesOpen(false)}
+            className="focus-ring min-h-11 rounded-lg px-2 text-sm font-medium"
+            style={{ color: "var(--text2)" }}
+          >
+            Klaar
+          </button>
         </div>
       )}
     </div>

@@ -78,6 +78,6 @@ test("onboarding stays usable inside the browser viewport", async ({ page }, tes
 
   await finish.focus();
   await finish.press("Enter");
-  await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible();
   await expect(dialog).toBeHidden();
 });

@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import {
   CONTRACT_SERIES_ALEX_SAM,
@@ -107,5 +108,59 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     const toggle = page.getByRole("button", { name: /Verberg besproken \(\d+\)|Toon alles \(\d+\)/ });
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveText(/Verberg besproken \(1\)|Toon alles \(1\)/);
+  });
+
+  test("hard boundaries stay readable and are not framed as a discuss action", async ({ page }) => {
+    await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+
+    const boundary = page
+      .locator(".compare-kink-row[data-fact-kind='conflict'], .compare-kink-row[data-fact-kind='limit']")
+      .first();
+    await boundary.scrollIntoViewIfNeeded();
+    await expect(boundary).toBeVisible();
+    await expect(boundary).toContainText(/Harde grens|Botst met harde grens/);
+    await expect(boundary.locator("button[aria-label*='als besproken markeren']")).toHaveCount(0);
+  });
+
+  test("compare notes stay readable until editing is requested", async ({ page }) => {
+    await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+
+    const row = page.locator(".compare-kink-row").filter({ hasText: "Klassiek en heerlijk" }).first();
+    await row.scrollIntoViewIfNeeded();
+    await expect(row).toBeVisible();
+    await expect(row).toContainText("Klassiek en heerlijk");
+    await expect(row.locator("textarea")).toHaveCount(0);
+
+    await row.getByRole("button", { name: /Notitie bewerken voor/ }).click();
+    await expect(row.locator("textarea").first()).toBeVisible();
+    await row.getByRole("button", { name: "Klaar" }).click();
+
+    await expect(row.locator("textarea")).toHaveCount(0);
+    await expect(row).toContainText("Klassiek en heerlijk");
+  });
+
+  test("compare print media removes app chrome and interactive controls", async ({ page }) => {
+    await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
+    await page.emulateMedia({ media: "print" });
+
+    await expect(page.locator(".compare-kink-row").first()).toBeVisible();
+    await expect(page.locator(".ks-ambient-glow")).toBeHidden();
+    await expect(page.locator(".compare-toolbar")).toBeHidden();
+    await expect(page.locator(".compare-page-actions")).toBeHidden();
+    await expect(page.locator("header:has([data-top-nav-variant])")).toBeHidden();
+  });
+
+  test("profile PDF export produces a real download", async ({ page }) => {
+    await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "PDF" }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe("Alex-kinks.pdf");
+    const path = await download.path();
+    expect(path).not.toBeNull();
+    const file = await stat(path!);
+    expect(file.size).toBeGreaterThan(5_000);
   });
 });

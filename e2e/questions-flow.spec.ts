@@ -179,7 +179,8 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   const essenceBefore = await card.getByTestId("question-essence").boundingBox();
   expect(cardBefore).not.toBeNull();
   expect(essenceBefore).not.toBeNull();
-  expect(essenceBefore!.height).toBeLessThanOrEqual(49);
+  expect(essenceBefore!.height).toBeGreaterThanOrEqual(59);
+  expect(essenceBefore!.height).toBeLessThanOrEqual(61);
 
   await card.getByRole("button", { name: /Heel graag/i }).click();
   await expect(title).not.toHaveText(firstTitle);

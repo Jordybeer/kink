@@ -45,10 +45,10 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       break;
     }
     case "about":
-      await expect(page.getByRole("heading", { name: "Jouw voorkeuren. Jouw toestel. Jouw woorden." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Maak het gesprek makkelijker." })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Drie regels sturen het hele product" })).toBeVisible();
-      await expect(page.getByText("Geen KinkSync-account", { exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Privacy begint lokaal" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "KinkSync helpt praten, niet beslissen" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Security & privacy" })).toHaveAttribute("href", "/security");
       break;
     case "profile":
       await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();
