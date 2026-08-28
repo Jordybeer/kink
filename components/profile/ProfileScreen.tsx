@@ -322,10 +322,11 @@ export default function ProfilePage({ params }: Props) {
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            aria-label="Profiel doorzoeken"
             placeholder={effectiveTab === "overzicht"
               ? (catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in je profiel…")
               : (catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…")}
-            className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+            className="focus-ring min-h-11 w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           />
 
@@ -336,7 +337,7 @@ export default function ProfilePage({ params }: Props) {
                 onClick={() => setCategoriesOpen(true)}
                 aria-haspopup="dialog"
                 aria-expanded={categoriesOpen}
-                className="focus-ring inline-flex min-h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                className="focus-ring inline-flex min-h-11 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
                 style={catalogCategoryFilter
                   ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
                   : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -349,7 +350,7 @@ export default function ProfilePage({ params }: Props) {
                   type="button"
                   onClick={() => setCatalogCategoryFilter(null)}
                   aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
-                  className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
                   style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
                 >
                   <X size={13} weight="bold" aria-hidden="true" />
@@ -361,7 +362,7 @@ export default function ProfilePage({ params }: Props) {
                 type="button"
                 onClick={() => setShowOverviewComments((value) => !value)}
                 aria-label={showOverviewComments ? "Verberg notities" : "Toon notities"}
-                className="focus-ring inline-flex min-h-10 flex-none items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
+                className="focus-ring inline-flex min-h-11 flex-none items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
                 style={{ color: showOverviewComments ? "var(--accent)" : "var(--text2)", border: "1px solid var(--border)" }}
               >
                 <ChatCircle aria-hidden="true" size={16} />

@@ -43,7 +43,6 @@
   --page-bottom-clearance: calc(var(--bottom-nav-h) + 0.75rem);
 
   /* Shared sticky stacks. */
-  --profile-subnav-h: 3.5rem;
   --compare-subnav-h: 4.75rem;
 }
 

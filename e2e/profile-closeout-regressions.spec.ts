@@ -43,11 +43,17 @@ test("profile keeps catalog search and category filtering available from Overvie
 
   await expect(page.getByRole("tab", { name: "Overzicht" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
-  await expect(page.getByPlaceholder("Zoek in je profiel…")).toBeVisible();
+  const search = page.getByRole("textbox", { name: "Profiel doorzoeken" });
+  await expect(search).toBeVisible();
+  await expect(page.getByRole("button", { name: "Alle categorieën" })).toBeVisible();
+  for (const control of [search, page.getByRole("button", { name: "Alle categorieën" }), page.getByRole("button", { name: /notities/i })]) {
+    const box = await control.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
   await expect(page.getByRole("button", { name: "Wat betekenen deze keuzes?" })).toHaveCount(0);
   await expect(page.getByText(/\d+ beoordeeld/, { exact: false })).toHaveCount(0);
 
-  const search = page.getByPlaceholder("Zoek in je profiel…");
   await search.fill("spanking");
   await expect(page.getByText(/spanking/i).first()).toBeVisible();
   await search.fill("");
@@ -55,6 +61,9 @@ test("profile keeps catalog search and category filtering available from Overvie
   await page.getByRole("tab", { name: "Bewerken" }).click();
   await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+  await expect.poll(() => page.getByTestId("profile-category-header").first().evaluate((element) =>
+    getComputedStyle(element).top,
+  )).toBe("56px");
 });
 
 test("empty profile keeps the full catalog searchable from Edit", async ({ page }) => {

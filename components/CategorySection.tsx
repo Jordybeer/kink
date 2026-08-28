@@ -51,9 +51,10 @@ export default function CategorySection({
   return (
     <section className="mb-3" aria-labelledby={headingId}>
       <div
+        data-testid="profile-category-header"
         className="sticky z-[5] flex items-center rounded-2xl transition-colors"
         style={{
-          top: "calc(var(--nav-h) + var(--profile-subnav-h))",
+          top: "var(--nav-h)",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
