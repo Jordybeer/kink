@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Camera, Sparkle, UserPlus, X } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
@@ -12,7 +12,6 @@ import { parseSharePaste } from "@/lib/parseSharePaste";
 import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
 import { profileConsentAlias } from "@/lib/consentProof";
 import Onboarding from "@/components/Onboarding";
-import PwaInstallGuide from "@/components/PwaInstallGuide";
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
 import ProfileList from "@/components/ProfileList";
@@ -26,11 +25,6 @@ import Sheet from "@/components/Sheet";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,15 +36,9 @@ function HomeContent() {
     restoreContracts,
     onboardingComplete,
     completeOnboarding,
-    installPromptDismissed,
-    dismissInstallPrompt,
   } = useStore();
   const hydrated = useHasHydrated();
 
-  const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
-  const [hasNativePrompt, setHasNativePrompt] = useState(false);
-  const [isIos, setIsIos] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
@@ -88,20 +76,6 @@ function HomeContent() {
       candidate.personGroupId === importTransfer[0].personGroupId);
 
   useEffect(() => {
-    const userAgent = navigator.userAgent;
-    setIsIos(/iPhone|iPad|iPod/.test(userAgent) && !/Chrome/.test(userAgent));
-    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
-
-    const handler = (event: Event) => {
-      event.preventDefault();
-      deferredPrompt.current = event as BeforeInstallPromptEvent;
-      setHasNativePrompt(true);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
 
     async function readShareLocation() {
@@ -128,15 +102,6 @@ function HomeContent() {
     window.addEventListener("ks:open-settings", handler);
     return () => window.removeEventListener("ks:open-settings", handler);
   }, []);
-
-  async function handleInstall() {
-    if (deferredPrompt.current) {
-      await deferredPrompt.current.prompt();
-      await deferredPrompt.current.userChoice;
-      deferredPrompt.current = null;
-    }
-    dismissInstallPrompt();
-  }
 
   function promptDelete(id: string) {
     setDeleteTarget(id);
@@ -604,14 +569,6 @@ function HomeContent() {
           </button>
         </div>
       </Sheet>
-
-      {hydrated && !installPromptDismissed && onboardingComplete && !isStandalone && (isIos || hasNativePrompt) && (
-        <PwaInstallGuide
-          isIos={isIos}
-          onInstall={handleInstall}
-          onDismiss={dismissInstallPrompt}
-        />
-      )}
     </>
   );
 }

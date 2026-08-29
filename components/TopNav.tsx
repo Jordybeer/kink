@@ -3,19 +3,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDots, CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
+import { CalendarDots, CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 import ContextMenu from "@/components/ui/ContextMenu";
-import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
-import {
-  clearInstallPrompt,
-  detectIosInstallBrowser,
-  getInstallPrompt,
-  INSTALL_PROMPT_CHANGE_EVENT,
-} from "@/lib/installPrompt";
 
 const MotionLink = motion.create(Link);
 
@@ -50,9 +43,6 @@ export default function TopNav() {
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
-  const [installAvailable, setInstallAvailable] = useState(false);
-  const [installGuideOpen, setInstallGuideOpen] = useState(false);
-  const [iosInstall, setIosInstall] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -89,45 +79,6 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
-  useEffect(() => {
-    if (path !== "/") {
-      setInstallAvailable(false);
-      setInstallGuideOpen(false);
-      return;
-    }
-
-    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
-    const ios = detectIosInstallBrowser(
-      navigator.userAgent,
-      navigator.platform,
-      navigator.maxTouchPoints,
-    ) !== null;
-    setIosInstall(ios);
-
-    const refreshInstallAvailability = () => {
-      const standalone = window.matchMedia("(display-mode: standalone)").matches
-        || navigatorWithStandalone.standalone === true;
-      const available = !standalone && (ios || getInstallPrompt() !== null);
-      setInstallAvailable(available);
-      if (!available) setInstallGuideOpen(false);
-    };
-    const handleAppInstalled = () => {
-      clearInstallPrompt();
-      setInstallAvailable(false);
-      setInstallGuideOpen(false);
-    };
-
-    refreshInstallAvailability();
-    window.addEventListener("beforeinstallprompt", refreshInstallAvailability);
-    window.addEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
-    window.addEventListener("appinstalled", handleAppInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", refreshInstallAvailability);
-      window.removeEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, [path]);
-
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
@@ -137,11 +88,41 @@ export default function TopNav() {
   } as const;
 
   if (path === "/") {
+    const homeMenuItems = [
+      {
+        label: "Agenda",
+        icon: <CalendarDots size={17} aria-hidden="true" />,
+        onClick: () => router.push("/intimacy"),
+      },
+      {
+        label: "Over KinkSync",
+        icon: <Info size={17} aria-hidden="true" />,
+        onClick: () => router.push("/about"),
+      },
+      {
+        label: "Security & privacy",
+        icon: <ShieldCheck size={17} aria-hidden="true" />,
+        onClick: () => router.push("/security"),
+      },
+    ];
+
     return (
       <>
+        <style>{`
+          [data-home-wordmark] {
+            font-size: clamp(3rem, 11vw, 3.35rem) !important;
+            line-height: 0.98;
+          }
+          @media (max-height: 520px) and (orientation: landscape) {
+            [data-home-wordmark] {
+              font-size: 2.85rem !important;
+              line-height: 0.96;
+            }
+          }
+        `}</style>
         <header className="sticky top-0 z-40" style={safeAreaShell}>
           <nav
-            className="mx-auto flex h-14 max-w-2xl items-start justify-between px-6 pt-1 lg:max-w-4xl"
+            className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4 lg:max-w-4xl"
             aria-label="Hoofdnavigatie"
             data-top-nav-variant="home"
           >
@@ -150,12 +131,11 @@ export default function TopNav() {
               data-testid="home-topnav-settings"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              title="Instellingen openen"
-              className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full px-1.5 text-sm font-medium"
-              style={{ color: "var(--text2)", pointerEvents: "auto" }}
+              title="Instellingen"
+              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
+              style={{ ...homeUtilitySurface, color: "var(--text2)" }}
             >
-              <GearSix size={17} aria-hidden="true" />
-              <span>Instellingen</span>
+              <GearSix size={18} aria-hidden="true" />
             </button>
 
             <div
@@ -164,44 +144,15 @@ export default function TopNav() {
               style={{ pointerEvents: "auto" }}
             >
               <OfflineStatus />
-              {installAvailable && (
-                <button
-                  type="button"
-                  onClick={() => setInstallGuideOpen(true)}
-                  aria-label="KinkSync installeren"
-                  title="KinkSync installeren"
-                  className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full border px-3 text-sm font-medium"
-                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
-                >
-                  <DownloadSimple size={17} aria-hidden="true" />
-                  <span className="hidden min-[360px]:inline">Installeren</span>
-                </button>
-              )}
               <ContextMenu
                 open={overflowOpen}
                 onClose={() => setOverflowOpen(false)}
-                items={[
-                  {
-                    label: "Agenda",
-                    icon: <CalendarDots size={17} aria-hidden="true" />,
-                    onClick: () => router.push("/intimacy"),
-                  },
-                  {
-                    label: "Over KinkSync",
-                    icon: <Info size={17} aria-hidden="true" />,
-                    onClick: () => router.push("/about"),
-                  },
-                  {
-                    label: "Security & privacy",
-                    icon: <ShieldCheck size={17} aria-hidden="true" />,
-                    onClick: () => router.push("/security"),
-                  },
-                ]}
+                items={homeMenuItems}
               >
                 <button
                   type="button"
                   onClick={() => setOverflowOpen((open) => !open)}
-                  aria-label="Meer over KinkSync"
+                  aria-label="Meer opties"
                   aria-expanded={overflowOpen}
                   className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
                   style={{ ...homeUtilitySurface, color: "var(--text2)" }}
@@ -212,13 +163,6 @@ export default function TopNav() {
             </div>
           </nav>
         </header>
-        {installGuideOpen && (
-          <PwaInstallGuide
-            isIos={iosInstall}
-            manual
-            onDismiss={() => setInstallGuideOpen(false)}
-          />
-        )}
       </>
     );
   }

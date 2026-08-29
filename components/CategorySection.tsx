@@ -14,8 +14,6 @@ interface Props {
   openByDefault?: boolean;
 }
 
-const MAX_PIPS = 12;
-
 function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
   return kinks.filter((k) => entries[k.id]?.status != null).length;
 }
@@ -31,9 +29,6 @@ export default function CategorySection({
   const filled = countFilled(kinks, entries);
   const [open, setOpen] = useState(() => openByDefault);
   const [hasOpened, setHasOpened] = useState(() => openByDefault);
-  const pipCount = Math.min(kinks.length, MAX_PIPS);
-  const filledPips = Math.round((filled / kinks.length) * pipCount);
-  const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
   const label = kinkCategoryLabel(category);
   const headingId = `category-${category}`;
 
@@ -51,15 +46,17 @@ export default function CategorySection({
   }
 
   return (
-    <section className="mb-3" aria-labelledby={headingId}>
+    <section className="mb-2.5" aria-labelledby={headingId}>
       <div
         data-testid="profile-category-header"
         className="sticky z-[5] flex items-center rounded-2xl transition-colors"
         style={{
           top: "var(--nav-h)",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
+          background: "color-mix(in srgb, var(--surface2) 92%, var(--surface))",
+          border: open
+            ? "1px solid color-mix(in srgb, var(--accent) 30%, var(--border))"
+            : "1px solid var(--border)",
+          boxShadow: open ? "0 8px 24px color-mix(in srgb, var(--bg) 22%, transparent)" : undefined,
         }}
       >
         <button
@@ -67,33 +64,25 @@ export default function CategorySection({
           onClick={toggleOpen}
           aria-expanded={open}
           aria-controls={`${headingId}-content`}
-          className="focus-ring flex min-h-12 flex-1 items-center gap-2 px-3 py-2.5 text-left min-w-0"
+          className="focus-ring flex min-h-12 min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-left"
         >
-          <span className="text-[var(--accent)] flex-none">
+          <span className="flex-none" style={{ color: open ? "var(--accent)" : "var(--text2)" }}>
             {open ? <CaretDown aria-hidden="true" size={16} /> : <CaretRight aria-hidden="true" size={16} />}
           </span>
           <h2
             id={headingId}
-            className="text-base flex-1 text-left truncate"
+            className="flex-1 truncate text-left text-base"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
           >
             {label}
           </h2>
-          <div className="flex items-center gap-1.5 flex-none" aria-label={`${filled} van ${kinks.length} beoordeeld`}>
-            <div className="hidden gap-0.5 items-center min-[360px]:flex" aria-hidden="true">
-              {Array.from({ length: pipCount }, (_, index) => (
-                <div
-                  key={index}
-                  className="w-1.5 h-1.5 rounded-full transition-colors"
-                  style={{ background: index < filledPips ? "var(--accent)" : "var(--border)" }}
-                />
-              ))}
-              {overflow && <span className="text-xs ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>}
-            </div>
-            <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-              {filled}/{kinks.length}
-            </span>
-          </div>
+          <span
+            className="flex-none text-xs tabular-nums"
+            aria-label={`${filled} van ${kinks.length} beoordeeld`}
+            style={{ color: filled > 0 ? "var(--text)" : "var(--text2)" }}
+          >
+            {filled}/{kinks.length}
+          </span>
         </button>
         {onChooseCategory && (
           <button
@@ -116,7 +105,7 @@ export default function CategorySection({
       >
         <div className="accordion-inner">
           {hasOpened && (
-            <div className="mt-1 flex flex-col pl-1">
+            <div className="mt-1.5 flex flex-col px-0.5">
               {kinks.map((kink) => (
                 <KinkListRow
                   key={kink.id}

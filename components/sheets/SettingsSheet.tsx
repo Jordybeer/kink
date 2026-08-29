@@ -28,18 +28,12 @@ interface SettingsSheetProps {
   importSuccess: string | null;
 }
 
-const SETTINGS_ICON_TONES = {
-  backup: "color-mix(in srgb, var(--willing) 72%, var(--text2))",
-  restore: "color-mix(in srgb, var(--no) 72%, var(--text2))",
-  lock: "color-mix(in srgb, var(--curious) 74%, var(--text2))",
-  biometric: "color-mix(in srgb, var(--maybe) 78%, var(--text2))",
-  about: "color-mix(in srgb, var(--accent) 68%, var(--text2))",
-} as const;
+const SETTINGS_ICON_TONE = "color-mix(in srgb, var(--accent) 72%, var(--text2))";
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h3
-      className="mb-1.5 px-1 font-serif text-sm italic"
+      className="mb-1.5 px-1 text-xs font-semibold tracking-wide"
       style={{ color: "var(--text2)" }}
     >
       {children}
@@ -77,7 +71,7 @@ function RowContent({
     <>
       <span
         className="flex w-8 flex-none items-center justify-center"
-        style={{ color: danger ? "var(--hard-no-text)" : iconColor ?? "var(--text2)" }}
+        style={{ color: danger ? "var(--hard-no-text)" : iconColor ?? SETTINGS_ICON_TONE }}
       >
         {icon}
       </span>
@@ -152,7 +146,6 @@ export default function SettingsSheet({
             >
               <RowContent
                 icon={<DownloadSimple size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.backup}
                 title="Back-up maken"
                 description="Bewaar een kopie van je lokale gegevens"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
@@ -171,7 +164,6 @@ export default function SettingsSheet({
               />
               <RowContent
                 icon={<UploadSimple size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.restore}
                 title="Back-up herstellen"
                 description="Zet eerder bewaarde gegevens terug"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
@@ -200,7 +192,6 @@ export default function SettingsSheet({
             >
               <RowContent
                 icon={<LockKey size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.lock}
                 title="Appvergrendeling"
                 description={appLockEnabled ? "PIN-vergrendeling actief" : "Bescherm KinkSync met een PIN"}
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
@@ -214,7 +205,6 @@ export default function SettingsSheet({
               >
                 <RowContent
                   icon={<Fingerprint size={19} aria-hidden="true" />}
-                  iconColor={SETTINGS_ICON_TONES.biometric}
                   title="Biometrie"
                   description="Ontgrendel met de beveiliging van je toestel"
                   trailing={
@@ -257,7 +247,7 @@ export default function SettingsSheet({
         </section>
 
         <section>
-          <SectionTitle>App</SectionTitle>
+          <SectionTitle>KinkSync</SectionTitle>
           <SettingsGroup>
             <Link
               href="/about"
@@ -266,7 +256,6 @@ export default function SettingsSheet({
             >
               <RowContent
                 icon={<Sparkle size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.about}
                 title="Over KinkSync"
                 description="Wat KinkSync doet en hoe het werkt"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}

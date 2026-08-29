@@ -132,10 +132,15 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   return (
     <>
       <section
-        className="ks-fade-in relative mx-4 px-3 pb-2.5 pt-3"
-        style={{ zIndex: menuOpen ? 30 : undefined }}
+        className="ks-fade-in relative mx-4 rounded-[24px] px-4 pb-4 pt-4"
+        style={{
+          zIndex: menuOpen ? 30 : undefined,
+          background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
+          border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+          boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
+        }}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3.5">
           <div className="relative flex-none">
             <ContextMenu
               open={menuOpen && avatarMenuItems.length > 0}
@@ -154,14 +159,14 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                   }
                 }}
                 disabled={!profile.avatarDataUrl && !onAvatarChange}
-                className="ks-icon-pop focus-ring relative h-12 w-12 overflow-hidden rounded-full disabled:cursor-default"
+                className="ks-icon-pop focus-ring relative h-14 w-14 overflow-hidden rounded-full disabled:cursor-default"
                 aria-label={profile.avatarDataUrl ? "Profielfoto-opties" : "Profielfoto uploaden"}
               >
                 {profile.avatarDataUrl ? (
                   <img src={profile.avatarDataUrl} alt={profile.name} className="h-full w-full object-cover" />
                 ) : (
                   <div
-                    className="flex h-full w-full items-center justify-center text-lg italic"
+                    className="flex h-full w-full items-center justify-center text-xl italic"
                     style={avatarStyle(profile.name)}
                   >
                     {initial}
@@ -187,15 +192,15 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 fontFamily: "var(--font-display, Georgia, serif)",
                 fontStyle: "italic",
                 fontWeight: 600,
-                fontSize: "1.5rem",
+                fontSize: "1.65rem",
                 lineHeight: 1.05,
-                letterSpacing: "-0.01em",
+                letterSpacing: "-0.015em",
                 color: "var(--text)",
               }}
             >
               {profile.name}
             </h2>
-            <p className="mt-1 flex flex-wrap items-center gap-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
+            <p className="mt-1.5 flex flex-wrap items-center gap-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
               {profile.role && <span style={{ color: "var(--text)", fontWeight: 500 }}>{profile.role}</span>}
               {profile.role && <span aria-hidden="true">·</span>}
               <span>{expLevel}</span>
@@ -205,7 +210,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
           </div>
         </div>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie">
           <ProfileTrust profile={profile} />
 
           {canEdit && (
@@ -307,7 +312,10 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
         </div>
 
         {profile.privateNote && (
-          <p className="mt-2.5 text-sm italic leading-snug" style={{ color: "var(--text2)" }}>
+          <p
+            className="mt-3 border-t pt-3 text-sm italic leading-snug"
+            style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+          >
             {profile.privateNote.length > 120
               ? profile.privateNote.slice(0, 120) + "…"
               : profile.privateNote}

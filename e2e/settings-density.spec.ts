@@ -9,25 +9,20 @@ async function overflowsHorizontally(locator: import("@playwright/test").Locator
   return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
 }
 
-test("settings blijft compact en installatie verhuist rustig naar de Home-TopNav", async ({ page }) => {
+test("settings blijft compact en web-installatie is verwijderd", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
-
-  await page.evaluate(() => {
-    (window as Window & { __installPrompt?: Event }).__installPrompt = new Event("beforeinstallprompt");
-    window.dispatchEvent(new Event("kinksync:installpromptchange"));
-  });
 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
   const contextAction = page.getByRole("button", { name: "Meer over KinkSync" });
   const installAction = page.getByRole("button", { name: "KinkSync installeren" });
   const settingsAction = page.getByRole("button", { name: "Instellingen openen" });
   await expect(contextAction).toBeVisible();
-  await expect(installAction).toBeVisible();
   await expect(settingsAction).toBeVisible();
+  await expect(installAction).toHaveCount(0);
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
-  for (const action of [contextAction, installAction, settingsAction]) {
+  for (const action of [contextAction, settingsAction]) {
     const box = await action.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);
@@ -64,24 +59,20 @@ test("settings blijft compact en installatie verhuist rustig naar de Home-TopNav
     .first()
     .evaluate((element) => getComputedStyle(element).color);
 
-  expect(new Set([backupIconColor, restoreIconColor, lockIconColor, aboutIconColor]).size).toBe(4);
+  expect(new Set([backupIconColor, restoreIconColor, lockIconColor, aboutIconColor]).size).toBe(1);
 
   await page.keyboard.press("Escape");
   await expect(settings).not.toBeVisible();
-  await installAction.click();
-  const installGuide = page.getByRole("dialog", { name: "KinkSync installeren" });
-  await expect(installGuide).toBeVisible();
-  await page.getByRole("button", { name: "Sluit installatiemelding" }).click();
-  await expect(installGuide).not.toBeVisible();
 
   await page.setViewportSize({ width: 375, height: 667 });
   await expect(contextAction).toBeVisible();
+  await expect(installAction).toHaveCount(0);
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
   await page.setViewportSize({ width: 320, height: 568 });
   await expect(contextAction).toBeVisible();
-  await expect(installAction).toBeVisible();
   await expect(settingsAction).toBeVisible();
+  await expect(installAction).toHaveCount(0);
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
   await page.setViewportSize({ width: 390, height: 430 });
