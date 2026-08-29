@@ -56,8 +56,21 @@ test("print-native vergelijking blijft volledig en artefactvrij", async ({ page 
   expect(geometry.right).toBeLessThanOrEqual(geometry.viewport + 1);
   expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewport + 1);
 
-  await page.screenshot({
-    path: `test-results/print-screenshots/${testInfo.project.name}/compare-print.png`,
-    fullPage: true,
-  });
+  const capture = await page.evaluate(() => ({
+    height: document.documentElement.scrollHeight,
+    width: document.documentElement.clientWidth,
+  }));
+  const sliceHeight = 8_000;
+
+  for (let top = 0, index = 1; top < capture.height; top += sliceHeight, index += 1) {
+    await page.screenshot({
+      path: `test-results/print-screenshots/${testInfo.project.name}/compare-print-${String(index).padStart(2, "0")}.png`,
+      clip: {
+        x: 0,
+        y: top,
+        width: capture.width,
+        height: Math.min(sliceHeight, capture.height - top),
+      },
+    });
+  }
 });
