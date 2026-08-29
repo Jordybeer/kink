@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Compass, Info, ListChecks, Sparkle, UserMinus } from "@phosphor-icons/react";
 import { useHasHydrated, useStore } from "@/lib/store";
 import { getQuestionnaireRuntime, type QuestionnaireIntent } from "@/lib/questionnaire";
+import { getDynamicFirstRound } from "@/lib/questionnaireFirstRound";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import { updateProfileQuestionnaire } from "@/lib/profilePerspectives";
 import type { KinkStatus } from "@/types";
@@ -39,6 +40,10 @@ export default function QuestionsScreen({ params }: Props) {
   }, [hydrated, profile, storedMode]);
 
   const runtime = useMemo(() => profile ? getQuestionnaireRuntime(profile, { intent }) : null, [profile, intent]);
+  const firstRound = useMemo(
+    () => profile && runtime?.intent.kind === "dynamic" ? getDynamicFirstRound(profile, runtime) : null,
+    [profile, runtime],
+  );
   const setup = useMemo(() => profile?.questionnaireSetup ?? defaultQuestionnaireSetup(), [profile?.questionnaireSetup]);
   const runtimeKind = runtime?.intent.kind ?? "dynamic";
   const modeLabel = runtimeKind === "deepDive" ? "Deep Dive" : runtimeKind === "discover" ? "Discover" : "Dynamic";
@@ -116,11 +121,16 @@ export default function QuestionsScreen({ params }: Props) {
   if (shared) return <PageShell width="lg"><EmptyState icon={UserMinus} title="Alleen-lezen profiel" message="Vragen invullen kan alleen op je eigen profiel. Gedeelde profielen blijven ongewijzigd." ctaHref={`/profile/${currentProfile.id}`} ctaLabel="Terug naar profiel" /></PageShell>;
 
   const activeRuntime = runtime!;
+  const activeFirstRound = runtimeKind === "dynamic" ? firstRound! : null;
   const scopedProgress = activeRuntime.scope;
-  const progressPercent = runtimeKind === "dynamic" ? activeRuntime.coverage.percent : Math.round((scopedProgress.answered / Math.max(1, scopedProgress.total)) * 100);
+  const progressPercent = runtimeKind === "dynamic"
+    ? activeFirstRound!.coverage.percent
+    : Math.round((scopedProgress.answered / Math.max(1, scopedProgress.total)) * 100);
   const progressLabel = runtimeKind === "discover" || runtimeKind === "deepDive"
     ? `${runtimeKind === "discover" ? "Discover" : "Deep Dive"} · ${scopedProgress.answered} / ${scopedProgress.total}`
-    : `Dynamic · ${activeRuntime.coverage.answered} / ${activeRuntime.coverage.total}`;
+    : `Dynamic · ${activeFirstRound!.coverage.answered} / ${activeFirstRound!.coverage.total}`;
+  const activeQueue = runtimeKind === "dynamic" ? activeFirstRound!.queue : activeRuntime.queue;
+  const activeComplete = runtimeKind === "dynamic" ? activeFirstRound!.complete : activeRuntime.complete;
   const discoverComplete = getQuestionnaireRuntime(currentProfile, { intent: { kind: "discover" } }).complete;
 
   function updateStatus(kinkId: string, status: KinkStatus) {
@@ -156,12 +166,12 @@ export default function QuestionsScreen({ params }: Props) {
       </div>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden" data-testid="questions-scroll-region">
-        {!activeRuntime.complete ? (
+        {!activeComplete ? (
           <div className="h-full min-h-0 w-full" data-testid="questions-active-stage">
             <TriageDeck
               key={runtimeKind}
               kinks={activeRuntime.visibleKinks}
-              queueItems={activeRuntime.queue}
+              queueItems={activeQueue}
               entries={currentProfile.entries}
               focusCategory={null}
               progressLabel={progressLabel}
@@ -180,7 +190,7 @@ export default function QuestionsScreen({ params }: Props) {
               {runtimeKind === "dynamic" ? "Je eerste ronde is klaar." : runtimeKind === "discover" ? "Discover afgerond." : "Deep Dive compleet."}
             </h2>
             <p className="mx-auto mt-2 max-w-xs text-sm leading-6" style={{ color: "var(--text2)" }}>
-              {runtimeKind === "dynamic" ? "Niets is ingevuld of voorspeld. Je kunt later verder ontdekken of de volledige catalogus doorlopen." : runtimeKind === "discover" ? "Genoeg ontdekt voor nu. Je kunt later verdergaan of bewust de volledige catalogus doorlopen." : "Je hebt de volledige catalogus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
+              {runtimeKind === "dynamic" ? "Je hebt breed gepeild zonder dat KinkSync antwoorden voor je invult. Je kunt nu gericht verder ontdekken of de volledige catalogus doorlopen." : runtimeKind === "discover" ? "Genoeg ontdekt voor nu. Je kunt later verdergaan of bewust de volledige catalogus doorlopen." : "Je hebt de volledige catalogus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
             </p>
 
             <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
