@@ -18,6 +18,10 @@ import {
   type QuestionnaireQueueItem,
 } from "@/lib/questionnaireEngine";
 import {
+  buildQuestionnaireFirstRoundPlan,
+  getDynamicFirstRound,
+} from "@/lib/questionnaireFirstRound";
+import {
   QUESTIONNAIRE_CANONICAL_MAPPING_VERSION,
   QUESTIONNAIRE_CANONICAL_PROBE_TARGETS,
   QUESTIONNAIRE_CATEGORY_ANCHOR_IDS,
@@ -132,6 +136,32 @@ describe("adaptive questionnaire", () => {
     expect(dominant.anchorIds).toContain("pegging_receive");
     expect(submissive.anchorIds).toContain("pegging_give");
     expect(submissive.anchorIds).toContain("pegging_receive");
+  });
+
+  it("keeps the Dynamic first round compact, explicit and role-neutral for sexual acts", () => {
+    const dominantPlan = buildQuestionnaireFirstRoundPlan([], "dominant");
+    const submissivePlan = buildQuestionnaireFirstRoundPlan([], "submissive");
+    expect(dominantPlan.anchorIds).toHaveLength(9);
+    expect(submissivePlan.anchorIds).toHaveLength(9);
+    expect(dominantPlan.anchorIds).toContain("spanking_hand_give");
+    expect(submissivePlan.anchorIds).toContain("spanking_hand_receive");
+    for (const plan of [dominantPlan, submissivePlan]) {
+      expect(plan.anchorIds).toContain("oral_sex_give");
+      expect(plan.anchorIds).toContain("oral_sex_receive");
+      expect(new Set(plan.anchorIds).size).toBe(plan.anchorIds.length);
+    }
+
+    const current = dynamicProfile();
+    current.entries.public_play = { status: "yes", comment: "historisch antwoord" };
+    const firstRound = getDynamicFirstRound(current, getQuestionnaireRuntime(current));
+    expect(firstRound.coverage).toMatchObject({ answered: 0, total: 9, percent: 0, complete: false });
+    expect(firstRound.queue).toHaveLength(9);
+    expect(firstRound.queue.some((item) => item.kink.id === "public_play")).toBe(false);
+
+    answerIds(current, firstRound.plan.anchorIds, "no");
+    const complete = getDynamicFirstRound(current, getQuestionnaireRuntime(current));
+    expect(complete.coverage).toMatchObject({ answered: 9, total: 9, percent: 100, complete: true });
+    expect(complete.complete).toBe(true);
   });
 
   it("never hides an existing answer outside the Dynamic plan", () => {
