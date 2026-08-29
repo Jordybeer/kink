@@ -130,6 +130,7 @@ export default function QuestionsScreen({ params }: Props) {
     ? `${runtimeKind === "discover" ? "Discover" : "Deep Dive"} · ${scopedProgress.answered} / ${scopedProgress.total}`
     : `Dynamic · ${activeFirstRound!.coverage.answered} / ${activeFirstRound!.coverage.total}`;
   const activeQueue = runtimeKind === "dynamic" ? activeFirstRound!.queue : activeRuntime.queue;
+  const activeKinks = runtimeKind === "dynamic" ? activeFirstRound!.visibleKinks : activeRuntime.visibleKinks;
   const activeComplete = runtimeKind === "dynamic" ? activeFirstRound!.complete : activeRuntime.complete;
   const discoverComplete = getQuestionnaireRuntime(currentProfile, { intent: { kind: "discover" } }).complete;
 
@@ -170,7 +171,7 @@ export default function QuestionsScreen({ params }: Props) {
           <div className="h-full min-h-0 w-full" data-testid="questions-active-stage">
             <TriageDeck
               key={runtimeKind}
-              kinks={activeRuntime.visibleKinks}
+              kinks={activeKinks}
               queueItems={activeQueue}
               entries={currentProfile.entries}
               focusCategory={null}
