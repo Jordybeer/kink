@@ -101,7 +101,7 @@ function queueItem(id: string, isProbe = false): QuestionnaireQueueItem {
 
 describe("adaptive questionnaire", () => {
   it("uses one Dynamic/Deep Dive runtime and defaults missing pre-launch setup to Dynamic", () => {
-    expect(questionnaireCount({ mode: "dynamic", interests: [], version: 2 })).toBe(45);
+    expect(questionnaireCount({ mode: "dynamic", interests: [], version: 2 })).toBe(48);
     expect(questionnaireCount({ mode: "deepDive", interests: [], version: 2 })).toBe(KINKS.length);
 
     const withoutSetup: Profile = {
@@ -116,14 +116,14 @@ describe("adaptive questionnaire", () => {
     };
     const runtime = getQuestionnaireRuntime(withoutSetup);
     expect(runtime.intent).toEqual({ kind: "dynamic" });
-    expect(runtime.coverage?.total).toBe(45);
+    expect(runtime.coverage?.total).toBe(48);
   });
 
   it("keeps compact role-affinity coverage the same size for both perspectives", () => {
     const dominant = buildQuestionnaireCoveragePlan([], "dominant");
     const submissive = buildQuestionnaireCoveragePlan([], "submissive");
-    expect(dominant.anchorIds).toHaveLength(45);
-    expect(submissive.anchorIds).toHaveLength(45);
+    expect(dominant.anchorIds).toHaveLength(48);
+    expect(submissive.anchorIds).toHaveLength(48);
     expect(dominant.anchorIds).toContain("handcuffs_give");
     expect(dominant.anchorIds).not.toContain("handcuffs_receive");
     expect(submissive.anchorIds).toContain("handcuffs_receive");
@@ -209,10 +209,14 @@ describe("adaptive questionnaire", () => {
     expect([...planClusters].sort()).toEqual([...catalogClusters].sort());
   });
 
-  it("pins a transparent 45-question base plan across every user-facing category", () => {
+  it("pins a transparent 48-question base plan across every user-facing category", () => {
     const catalogById = new Map(KINKS.map((kink) => [kink.id, kink]));
-    const configuredCategories = Object.keys(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS).sort();
+    const configuredCategories = Object.entries(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS)
+      .filter(([, anchors]) => anchors.length > 0)
+      .map(([category]) => category)
+      .sort();
     expect(configuredCategories).toEqual([...CATEGORIES].sort());
+    expect(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS.materials_scent).toEqual([]);
 
     for (const category of CATEGORIES) {
       const anchors = QUESTIONNAIRE_CATEGORY_ANCHOR_IDS[category];
@@ -223,7 +227,7 @@ describe("adaptive questionnaire", () => {
     const flattened = Object.values(QUESTIONNAIRE_CATEGORY_ANCHOR_IDS).flat();
     expect(QUESTIONNAIRE_COVERAGE_ANCHOR_IDS).toEqual(flattened);
     expect(new Set(flattened).size).toBe(flattened.length);
-    expect(buildQuestionnaireCoveragePlan([]).anchorIds).toHaveLength(45);
+    expect(buildQuestionnaireCoveragePlan([]).anchorIds).toHaveLength(48);
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {

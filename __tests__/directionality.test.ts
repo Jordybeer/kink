@@ -97,7 +97,7 @@ describe("directionele kinkvragen", () => {
   it("keeps neutral pairs role-independent while compact Dynamic aligns strong role-affinity anchors", () => {
     for (const perspective of ["dominant", "submissive"] as const) {
       const plan = buildQuestionnaireCoveragePlan([], perspective);
-      expect(plan.anchorIds).toHaveLength(45);
+      expect(plan.anchorIds).toHaveLength(48);
       expect(plan.anchorIds).toContain("pegging_give");
       expect(plan.anchorIds).toContain("pegging_receive");
       expect(plan.anchorIds).toContain(perspective === "dominant" ? "spanking_hand_give" : "spanking_hand_receive");

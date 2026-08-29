@@ -68,6 +68,7 @@ interface DirectSupport {
 }
 
 const MAX_CLUSTER_RUN = 2;
+const RECENT_TOPIC_WINDOW = 3;
 const DISCOVERY_INTERVAL = 5;
 
 const LANE_RANK: Record<QuestionnaireLane, number> = {
@@ -186,6 +187,19 @@ export function derivePendingExpansionProbes(
     });
 }
 
+function sharesTopic(left: Kink, right: Kink): boolean {
+  const leftTopics = questionnaireTopicsFor(left);
+  if (leftTopics.length === 0) return false;
+  const rightTopics = new Set(questionnaireTopicsFor(right));
+  return leftTopics.some((topic) => rightTopics.has(topic));
+}
+
+function wouldEchoRecentTopic(kink: Kink, queued: readonly Kink[]): boolean {
+  return queued
+    .slice(-RECENT_TOPIC_WINDOW)
+    .some((candidate) => sharesTopic(candidate, kink));
+}
+
 function wouldExtendClusterRun(kink: Kink, queued: readonly Kink[]): boolean {
   if (queued.length < MAX_CLUSTER_RUN) return false;
   const cluster = questionnairePrimaryCluster(kink);
@@ -214,7 +228,17 @@ function diversify<T extends { kink: Kink }>(
 
   while (remaining.length > 0) {
     let index = discoveryIndex(remaining, queuedKinks);
-    if (index < 0 || wouldExtendClusterRun(remaining[index].kink, queuedKinks)) {
+    if (
+      index < 0
+      || wouldExtendClusterRun(remaining[index].kink, queuedKinks)
+      || wouldEchoRecentTopic(remaining[index].kink, queuedKinks)
+    ) {
+      index = remaining.findIndex(({ kink }) =>
+        !wouldExtendClusterRun(kink, queuedKinks)
+        && !wouldEchoRecentTopic(kink, queuedKinks),
+      );
+    }
+    if (index < 0) {
       index = remaining.findIndex(({ kink }) => !wouldExtendClusterRun(kink, queuedKinks));
     }
     if (index < 0) index = 0;
@@ -352,13 +376,6 @@ export function rankQuestionnaireCandidates(
   return rankQuestionnaireQueueItems(items, catalog, entries).map((item) => item.kink);
 }
 
-function sharesTopic(left: Kink, right: Kink): boolean {
-  const leftTopics = questionnaireTopicsFor(left);
-  if (leftTopics.length === 0) return false;
-  const rightTopics = new Set(questionnaireTopicsFor(right));
-  return leftTopics.some((topic) => rightTopics.has(topic));
-}
-
 export function isConversationContinuation(
   item: QuestionnaireQueueItem | null | undefined,
   sourceKinkId: string | null | undefined,
@@ -373,7 +390,8 @@ export function isConversationContinuation(
 /**
  * De kaartdanser bewaakt alleen het gesprek. Hij maakt nooit eligibility of
  * antwoorden aan: een complement/probe moet al in de queue staan om direct te
- * mogen volgen.
+ * mogen volgen. Dynamic kiest breadth-first: een inhoudelijk nabije kaart wordt
+ * pas direct getoond als er geen geloofwaardig ander onderwerp beschikbaar is.
  */
 export function selectConversationQuestion(
   queue: readonly QuestionnaireQueueItem[],
@@ -405,6 +423,17 @@ export function selectConversationQuestion(
       return candidates[0] ?? null;
     }
 
+    if (context.lastKinkId) {
+      const last = catalog.find((kink) => kink.id === context.lastKinkId);
+      if (last) {
+        const differentTopic = candidates.find((item) =>
+          !isConversationContinuation(item, context.lastKinkId)
+          && !sharesTopic(last, item.kink),
+        );
+        if (differentTopic) return differentTopic;
+      }
+    }
+
     if (
       (context.phase === "preferComplement" || context.phase === "preferContinuation")
       && context.lastKinkId
@@ -413,7 +442,6 @@ export function selectConversationQuestion(
       const sibling = siblingId
         ? candidates.find((item) => item.kink.id === siblingId)
         : undefined;
-      if (sibling) return sibling;
 
       if (context.phase === "preferContinuation") {
         const canonicalProbe = candidates.find((item) =>
@@ -424,17 +452,10 @@ export function selectConversationQuestion(
         );
         if (canonicalProbe) return canonicalProbe;
       }
+
+      if (sibling) return sibling;
     }
 
-    // Geen echte continuation beschikbaar: behoud de bestaande conversation
-    // spacing in plaats van een gewone related/topic-buur direct te serveren.
-    if (context.lastKinkId) {
-      const last = catalog.find((kink) => kink.id === context.lastKinkId);
-      if (last) {
-        const differentTopic = candidates.find((item) => !sharesTopic(last, item.kink));
-        if (differentTopic) return differentTopic;
-      }
-    }
     return candidates[0] ?? null;
   }
 

@@ -131,7 +131,7 @@ describe("questionnaire semantic flow v3", () => {
     expect(searchAllKinks("Whipping").map((kink) => kink.id)).toContain("whipping_receive");
   });
 
-  it("prefers a same-concept complement, then one canonical source probe, then a topic break", () => {
+  it("prefers a credible topic break, then a canonical probe, then a same-concept complement", () => {
     const siblingQueue = [
       queueItem("pegging_receive"),
       queueItem("anal_sex_give", {
@@ -149,7 +149,7 @@ describe("questionnaire semantic flow v3", () => {
       phase: "preferContinuation",
       lastKinkId: "pegging_give",
     });
-    expect(sibling?.kink.id).toBe("pegging_receive");
+    expect(sibling?.kink.id).toBe("anal_sex_give");
     expect(isConversationContinuation(sibling, "pegging_give")).toBe(true);
 
     // Een sibling blijft concept-completion na een niet-positief antwoord, maar
@@ -170,6 +170,11 @@ describe("questionnaire semantic flow v3", () => {
       }],
     });
     expect(selectConversationQuestion([queueItem("doctor_patient"), probe], KINKS, {
+      phase: "preferContinuation",
+      lastKinkId: "handcuffs_give",
+    })?.kink.id).toBe("doctor_patient");
+
+    expect(selectConversationQuestion([probe], KINKS, {
       phase: "preferContinuation",
       lastKinkId: "handcuffs_give",
     })?.kink.id).toBe("leather_cuffs_give");
