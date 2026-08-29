@@ -75,7 +75,7 @@ test("profile keeps catalog search and category filtering available from Overvie
   await expect(categoryDialog).toBeVisible();
   await categoryDialog.getByRole("button", { name: /Impact Play/ }).click();
   await expect(categoryDialog).not.toBeVisible();
-  await expect(page.locator('button[aria-controls="category-impact_play-content"]')).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('button[aria-controls="category-impact-content"]')).toHaveAttribute("aria-expanded", "true");
 });
 
 test("empty profile keeps the full catalog searchable from Edit", async ({ page }) => {
