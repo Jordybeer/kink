@@ -120,6 +120,19 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
     await expectVisualViewportContract(page);
   }
 
+  const quickActionsTrigger = page.getByRole("button", { name: "Meer acties voor Alex" });
+  await quickActionsTrigger.click();
+  const quickActions = page.getByRole("dialog", { name: "Acties voor Alex" });
+  await expect(quickActions).toHaveAttribute("data-sheet-variant", "sheet");
+  await saveScreenshot(page, testInfo, "profile-quick-actions");
+  await quickActions.getByRole("button", { name: "Profiel verwijderen" }).click();
+
+  const deleteProfileDialog = page.getByRole("dialog", { name: "Profiel verwijderen" });
+  await expect(deleteProfileDialog).toBeVisible();
+  await saveScreenshot(page, testInfo, "profile-delete-confirmation");
+  await deleteProfileDialog.getByRole("button", { name: "Annuleer" }).click();
+  await expect(deleteProfileDialog).toBeHidden();
+
   await page.goto("/profile/" + PROFILE_ALEX.id);
   await page.waitForLoadState("networkidle");
   const editTrigger = page.getByRole("button", { name: "Profiel bewerken" });
@@ -141,6 +154,21 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await saveScreenshot(page, testInfo, "profile-edit-scrolled");
   await editDialog.getByRole("button", { name: "Annuleer" }).click();
   await expect(editTrigger).toBeFocused();
+
+  const kinkEditTab = page.getByRole("tab", { name: "Bewerken" });
+  await kinkEditTab.click();
+  const kinkSearch = page.getByPlaceholder("Zoek in de volledige catalogus…");
+  await kinkSearch.fill("spanking");
+  const kinkResult = page.locator('button[aria-label*=", bewerken"]').filter({ hasText: /spanking/i }).first();
+  await expect(kinkResult).toBeVisible();
+  await kinkResult.click();
+  const kinkDialog = page.locator('[role="dialog"][data-sheet-variant="task"]');
+  await expect(kinkDialog).toBeVisible();
+  await expect(kinkDialog.locator("[data-sheet-handle]")).toHaveCount(0);
+  await expectWithinVisualViewport(kinkDialog);
+  await saveScreenshot(page, testInfo, "kink-edit-task");
+  await kinkDialog.getByRole("button", { name: "Klaar" }).click();
+  await expect(kinkResult).toBeFocused();
 
   const shareTrigger = page.getByRole("button", { name: "Profiel delen" });
   await shareTrigger.click();
