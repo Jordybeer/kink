@@ -3,19 +3,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDots, CaretLeft, DotsThree, DownloadSimple, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
+import { CalendarDots, CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 import ContextMenu from "@/components/ui/ContextMenu";
-import PwaInstallGuide from "@/components/PwaInstallGuide";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
-import {
-  clearInstallPrompt,
-  detectIosInstallBrowser,
-  getInstallPrompt,
-  INSTALL_PROMPT_CHANGE_EVENT,
-} from "@/lib/installPrompt";
 
 const MotionLink = motion.create(Link);
 
@@ -50,9 +43,6 @@ export default function TopNav() {
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
-  const [installAvailable, setInstallAvailable] = useState(false);
-  const [installGuideOpen, setInstallGuideOpen] = useState(false);
-  const [iosInstall, setIosInstall] = useState(false);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -89,45 +79,6 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
-  useEffect(() => {
-    if (path !== "/") {
-      setInstallAvailable(false);
-      setInstallGuideOpen(false);
-      return;
-    }
-
-    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
-    const ios = detectIosInstallBrowser(
-      navigator.userAgent,
-      navigator.platform,
-      navigator.maxTouchPoints,
-    ) !== null;
-    setIosInstall(ios);
-
-    const refreshInstallAvailability = () => {
-      const standalone = window.matchMedia("(display-mode: standalone)").matches
-        || navigatorWithStandalone.standalone === true;
-      const available = !standalone && (ios || getInstallPrompt() !== null);
-      setInstallAvailable(available);
-      if (!available) setInstallGuideOpen(false);
-    };
-    const handleAppInstalled = () => {
-      clearInstallPrompt();
-      setInstallAvailable(false);
-      setInstallGuideOpen(false);
-    };
-
-    refreshInstallAvailability();
-    window.addEventListener("beforeinstallprompt", refreshInstallAvailability);
-    window.addEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
-    window.addEventListener("appinstalled", handleAppInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", refreshInstallAvailability);
-      window.removeEventListener(INSTALL_PROMPT_CHANGE_EVENT, refreshInstallAvailability);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, [path]);
-
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
@@ -138,13 +89,6 @@ export default function TopNav() {
 
   if (path === "/") {
     const homeMenuItems = [
-      ...(installAvailable
-        ? [{
-            label: "KinkSync installeren",
-            icon: <DownloadSimple size={17} aria-hidden="true" />,
-            onClick: () => setInstallGuideOpen(true),
-          }]
-        : []),
       {
         label: "Agenda",
         icon: <CalendarDots size={17} aria-hidden="true" />,
@@ -219,13 +163,6 @@ export default function TopNav() {
             </div>
           </nav>
         </header>
-        {installGuideOpen && (
-          <PwaInstallGuide
-            isIos={iosInstall}
-            manual
-            onDismiss={() => setInstallGuideOpen(false)}
-          />
-        )}
       </>
     );
   }
