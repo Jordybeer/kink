@@ -161,29 +161,24 @@ export function questionnaireTopicsFor(kink: Kink): readonly QuestionnaireTopic[
 }
 
 /**
- * De vaste Dynamic-meetlat per user-facing cataloguskamer. Een anchor zegt
- * alleen: "dit is expliciet gevraagd". Elke echte status telt; Later niet.
- *
- * Meerdere anchors binnen een categorie bestaan alleen waar één kaart een
- * aantoonbaar te brede kamer zou vertegenwoordigen. Ze zijn geen taxonomy en
- * dragen nooit antwoorden of relevantie over.
+ * Category anchors document broad browse coverage. The live set deliberately
+ * stays at the historical 45-question compatibility budget; the compact
+ * user-facing first round lives in questionnaireFirstRound.ts.
  */
-export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
+const LIVE_QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
   impact: ["spanking_hand_give", "flogging_give"],
   bondage: ["handcuffs_give", "rope_bondage_give", "gag_ball_give", "blindfold_give"],
   power: ["dominance_submission", "praise_kink", "humiliation_verbal", "orgasm_control"],
   rituals: ["rules_protocols"],
   discipline: ["punishment"],
   roleplay: ["masseur_client", "cnc"],
-  interaction: ["erotic_teasing", "sexual_sounds_auralism"],
+  interaction: ["erotic_teasing"],
   sensation: ["ice_play", "tickling", "choking", "geur_scent_fetish"],
-  sexual_acts: ["oral_sex_give", "oral_sex_receive"],
+  sexual_acts: ["oral_sex_give"],
   exhibition: ["exhibitionism", "voyeurism"],
   media: ["nude_photography", "recording"],
-  group_partner: ["voyeur_sharing", "trio_groepsseks"],
+  group_partner: ["trio_groepsseks"],
   body_focus: ["thigh_focus", "feet"],
-  // Retired category kept empty for compile/data compatibility only.
-  materials_scent: [],
   pet_play: ["petplay_collar_id", "petplay_puppy"],
   fluids: ["cum_play", "drool_play", "spitting"],
   toys: ["vibration_play", "remote_toy"],
@@ -191,7 +186,18 @@ export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
   aftercare: ["aftercare_physical", "aftercare_alone", "next_day_check_in"],
   appearance: ["lingerie", "hoge_hakken_dragen"],
   adult_ageplay: ["little_speelgoed", "ddlg_mdlb_dynamiek", "luiers_dragen"],
-} as const satisfies Record<KinkCategoryId, readonly string[]>;
+} as const;
+
+/**
+ * materials_scent is a legacy type-only category. Keeping a non-enumerable empty
+ * slot preserves direct compatibility without letting Object.keys/Object.values
+ * revive it as a user-facing category or inflate the fixed denominator.
+ */
+export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = Object.defineProperty(
+  LIVE_QUESTIONNAIRE_CATEGORY_ANCHOR_IDS,
+  "materials_scent",
+  { value: Object.freeze([]), enumerable: false, writable: false, configurable: false },
+) as typeof LIVE_QUESTIONNAIRE_CATEGORY_ANCHOR_IDS & { readonly materials_scent: readonly [] };
 
 export const QUESTIONNAIRE_COVERAGE_ANCHOR_IDS = Object.values(
   QUESTIONNAIRE_CATEGORY_ANCHOR_IDS,
