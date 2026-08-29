@@ -442,6 +442,7 @@ export function selectConversationQuestion(
       const sibling = siblingId
         ? candidates.find((item) => item.kink.id === siblingId)
         : undefined;
+      if (sibling) return sibling;
 
       if (context.phase === "preferContinuation") {
         const canonicalProbe = candidates.find((item) =>
@@ -452,8 +453,6 @@ export function selectConversationQuestion(
         );
         if (canonicalProbe) return canonicalProbe;
       }
-
-      if (sibling) return sibling;
     }
 
     return candidates[0] ?? null;
