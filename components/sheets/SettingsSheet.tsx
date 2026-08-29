@@ -134,7 +134,14 @@ export default function SettingsSheet({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Instellingen" scrollable aria-label="Instellingen">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Instellingen"
+      scrollable
+      variant="surface"
+      aria-label="Instellingen"
+    >
       <div className="grid gap-4 pb-0.5">
         <section>
           <SectionTitle>Gegevens</SectionTitle>
