@@ -14,7 +14,7 @@ test("settings blijft compact en web-installatie is verwijderd", async ({ page }
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
-  const contextAction = page.getByRole("button", { name: "Meer over KinkSync" });
+  const contextAction = page.getByRole("button", { name: "Meer opties" });
   const installAction = page.getByRole("button", { name: "KinkSync installeren" });
   const settingsAction = page.getByRole("button", { name: "Instellingen openen" });
   await expect(contextAction).toBeVisible();
