@@ -138,6 +138,22 @@ async function holdPress(page: Page, target: Locator) {
 
 test("critical launch routes hydrate with their real content inside the viewport", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+
+  await seedProfiles(page, []);
+  await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible();
+  await page.screenshot({
+    path: `test-results/device-screenshots/${testInfo.project.name}/home-empty.png`,
+    fullPage: true,
+  });
+
+  await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
+  await expect(page.getByRole("link", { name: "Alex Dominant openen" })).toBeVisible();
+  await expect(page.getByText("Voeg een profiel van een andere persoon toe om te vergelijken.", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: `test-results/device-screenshots/${testInfo.project.name}/home-single-profile.png`,
+    fullPage: true,
+  });
+
   await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM], {
     contractSeries: [CONTRACT_SERIES_ALEX_SAM],
     pinnedProfileId: PROFILE_ALEX.id,

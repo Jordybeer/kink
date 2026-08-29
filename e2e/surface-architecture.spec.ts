@@ -80,6 +80,8 @@ test("Settings uses a stable utility surface on mobile and a contained panel fro
   await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
   await expect(dialog.locator("[data-sheet-handle]")).toHaveCount(0);
 
+  await expect.poll(async () => (await dialog.boundingBox())?.y ?? Number.POSITIVE_INFINITY)
+    .toBeLessThanOrEqual(10);
   const mobileBox = await dialog.boundingBox();
   expect(mobileBox).not.toBeNull();
   expect(mobileBox!.height).toBeGreaterThan(844 * 0.9);

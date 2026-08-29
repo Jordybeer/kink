@@ -131,7 +131,7 @@ export default function TopNav() {
             className="serif-safe min-w-0 justify-self-center whitespace-nowrap"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
-              fontSize: "clamp(1.6rem, 8vw, 1.9rem)",
+              fontSize: "clamp(1.6rem, 8vw, 1.75rem)",
               fontWeight: 500,
               lineHeight: 1,
             }}
