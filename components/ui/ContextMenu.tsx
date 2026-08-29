@@ -24,6 +24,8 @@ interface Props {
 
 export default function ContextMenu({ open, onClose, items, children, align = "right" }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -42,10 +44,28 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+
+    const active = document.activeElement;
+    returnFocusRef.current = active instanceof HTMLElement && menuRef.current?.contains(active)
+      ? active
+      : menuRef.current?.querySelector<HTMLElement>('button[aria-expanded="true"]') ?? null;
+
+    const frame = window.requestAnimationFrame(() => itemRefs.current[0]?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
+
+  function focusItem(index: number) {
+    const available = itemRefs.current.filter((item): item is HTMLButtonElement => Boolean(item));
+    if (available.length === 0) return;
+    const nextIndex = (index + available.length) % available.length;
+    available[nextIndex]?.focus();
+  }
+
+  function restoreTriggerFocus() {
+    const trigger = returnFocusRef.current;
+    onClose();
+    window.requestAnimationFrame(() => trigger?.focus());
+  }
 
   return (
     <div ref={menuRef} className="relative inline-block">
@@ -70,12 +90,39 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: -6 }}
             transition={SPRING}
+            onKeyDown={(event) => {
+              const currentIndex = itemRefs.current.findIndex((item) => item === document.activeElement);
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                focusItem(currentIndex + 1);
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                focusItem(currentIndex - 1);
+              } else if (event.key === "Home") {
+                event.preventDefault();
+                focusItem(0);
+              } else if (event.key === "End") {
+                event.preventDefault();
+                focusItem(items.length - 1);
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                restoreTriggerFocus();
+              }
+            }}
+            onBlur={(event) => {
+              const next = event.relatedTarget;
+              if (next instanceof Node && menuRef.current?.contains(next)) return;
+              onClose();
+            }}
           >
             {items.map((item, i) => (
               <button
                 key={i}
+                ref={(element) => { itemRefs.current[i] = element; }}
+                type="button"
                 role={item.selected === undefined ? "menuitem" : "menuitemradio"}
                 aria-checked={item.selected}
+                tabIndex={-1}
                 onClick={() => { item.onClick?.(); onClose(); }}
                 className="w-full flex items-center justify-between px-4 py-[13px] text-sm font-medium text-left transition-colors duration-100 active:scale-[0.97]"
                 style={{
