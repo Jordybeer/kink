@@ -56,21 +56,23 @@ test("print-native vergelijking blijft volledig en artefactvrij", async ({ page 
   expect(geometry.right).toBeLessThanOrEqual(geometry.viewport + 1);
   expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewport + 1);
 
-  const capture = await page.evaluate(() => ({
-    height: document.documentElement.scrollHeight,
-    width: document.documentElement.clientWidth,
-  }));
-  const sliceHeight = 8_000;
+  const captureWidth = await page.evaluate(() => document.documentElement.clientWidth);
+  const sliceHeight = 4_000;
+  await page.setViewportSize({ width: captureWidth, height: sliceHeight });
 
-  for (let top = 0, index = 1; top < capture.height; top += sliceHeight, index += 1) {
+  const captureHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  const lastTop = Math.max(0, captureHeight - sliceHeight);
+  const sliceTops = Array.from(
+    new Set([
+      ...Array.from({ length: Math.ceil(captureHeight / sliceHeight) }, (_, index) => index * sliceHeight),
+      lastTop,
+    ]),
+  ).filter((top) => top <= lastTop);
+
+  for (const [index, top] of sliceTops.entries()) {
+    await page.evaluate((scrollTop) => window.scrollTo(0, scrollTop), top);
     await page.screenshot({
-      path: `test-results/print-screenshots/${testInfo.project.name}/compare-print-${String(index).padStart(2, "0")}.png`,
-      clip: {
-        x: 0,
-        y: top,
-        width: capture.width,
-        height: Math.min(sliceHeight, capture.height - top),
-      },
+      path: `test-results/print-screenshots/${testInfo.project.name}/compare-print-${String(index + 1).padStart(2, "0")}.png`,
     });
   }
 });
