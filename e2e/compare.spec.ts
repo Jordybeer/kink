@@ -147,7 +147,7 @@ test.describe("Vergelijkingspagina", () => {
   });
 
   test("benadrukt dat profieloverlap geen toestemming is", async ({ page }) => {
-    await expect(page.getByText(/overlap is geen toestemming/i)).toBeVisible();
+    await expect(page.locator("p:visible").filter({ hasText: /overlap is geen toestemming/i }).first()).toBeVisible();
   });
 
   test("geen horizontale overflow", async ({ page }) => {

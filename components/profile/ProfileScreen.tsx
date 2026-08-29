@@ -23,7 +23,7 @@ import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
-import { STATUS_VAR } from "@/lib/statusLabels";
+import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
@@ -152,6 +152,9 @@ export default function ProfilePage({ params }: Props) {
   const catalogCategoryFilterLabel = catalogCategoryFilter
     ? kinkCategoryLabel(catalogCategoryFilter)
     : "Alle categorieën";
+  const catalogFilterKinks = catalogCategoryFilter
+    ? CATALOG_KINKS_BY_CATEGORY.get(catalogCategoryFilter) ?? EMPTY_KINKS
+    : KINKS;
   const catalogCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
   const categoryFilterOptions = visibleCategories.map((category) => {
     const categoryKinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? EMPTY_KINKS;
@@ -168,6 +171,15 @@ export default function ProfilePage({ params }: Props) {
       )
     : [];
   const searchResultIds = searchTerm ? new Set(searchResults.map((kink) => kink.id)) : null;
+  const activeFilterKinks = searchTerm ? searchResults : catalogFilterKinks;
+
+  const statusSegments = STATUS_ORDER.map((status) => ({
+    status,
+    count: activeFilterKinks.filter(
+      (kink) => currentProfile.entries[kink.id]?.status === status
+        && currentProfile.entries[kink.id]?.privateResponse !== true,
+    ).length,
+  })).filter((segment) => segment.count > 0);
   const overviewCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
   const ratedByCategory = overviewCategories.map((category) => ({
     category,
@@ -357,6 +369,23 @@ export default function ProfilePage({ params }: Props) {
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {effectiveTab === "overzicht" && totalRated > 0 && !searchTerm && statusSegments.length > 0 && (
+        <div
+          role="img"
+          aria-label={statusSegments.map((segment) => `${segment.count} ${STATUS_LABEL[segment.status]}`).join(", ")}
+          className="mx-4 mb-3 h-1.5 rounded-full overflow-hidden flex"
+          style={{ background: "var(--surface2)" }}
+        >
+          {statusSegments.map((segment) => (
+            <div
+              key={segment.status}
+              className="h-full"
+              style={{ flex: segment.count, background: STATUS_VAR[segment.status] }}
+            />
+          ))}
         </div>
       )}
 
