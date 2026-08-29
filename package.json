@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:launch": "playwright test -c playwright.launch.config.ts",
+    "test:e2e:print": "playwright test -c playwright.print.config.ts",
     "test:e2e:offline": "playwright test -c playwright.offline.config.ts",
     "icons:check": "node scripts/check-icons.mjs",
     "lint": "npm run icons:check && eslint ."

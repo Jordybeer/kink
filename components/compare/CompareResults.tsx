@@ -4,10 +4,9 @@ import Link from "next/link";
 import { FileText, FilmSlate } from "@phosphor-icons/react";
 import CompareKinkRow from "@/components/CompareKinkRow";
 import { PROFILE_COLOUR_A, PROFILE_COLOUR_B, type CompareResultFilter } from "@/lib/compare";
-import { buildCompareModel, type ComparisonFact } from "@/lib/compareV2";
-import { directionalSideForKinkId } from "@/lib/directionality";
+import type { CompareModel, ComparisonFact } from "@/lib/compareV2";
+import { comparisonDirectionNote } from "@/lib/comparePresentation";
 import { CATEGORIES, kinkCategoryLabel } from "@/lib/kinks";
-import { complementaryParticipationSideLabel } from "@/lib/participation";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import type { KinkCategoryId, Profile } from "@/types";
 
@@ -19,6 +18,7 @@ interface Props {
   selectedCategories: ReadonlySet<KinkCategoryId>;
   discussed: ReadonlySet<string>;
   hideDiscussed: boolean;
+  model: CompareModel;
   onToggleDiscussed: (id: string) => void;
   onComment: (profileId: string, kinkId: string, comment: string) => void;
 }
@@ -29,22 +29,6 @@ function matchesResultFilter(fact: ComparisonFact, selected: ReadonlySet<Compare
   return selected.has(fact.kind);
 }
 
-function directionNote(fact: ComparisonFact, profileA: Profile, profileB: Profile): string | undefined {
-  if (fact.relation !== "complementary") return undefined;
-
-  const sideA = directionalSideForKinkId(fact.kinkAId);
-  if (sideA === "give") return `${profileA.name} geeft · ${profileB.name} ontvangt`;
-  if (sideA === "receive") return `${profileA.name} ontvangt · ${profileB.name} geeft`;
-
-  const participationA = complementaryParticipationSideLabel(fact.kinkAId);
-  const participationB = complementaryParticipationSideLabel(fact.kinkBId);
-  if (participationA && participationB) {
-    return `${profileA.name}: ${participationA.toLocaleLowerCase("nl-BE")} · ${profileB.name}: ${participationB.toLocaleLowerCase("nl-BE")}`;
-  }
-
-  return undefined;
-}
-
 export default function CompareResults({
   profileA,
   profileB,
@@ -53,6 +37,7 @@ export default function CompareResults({
   selectedCategories,
   discussed,
   hideDiscussed,
+  model,
   onToggleDiscussed,
   onComment,
 }: Props) {
@@ -64,7 +49,6 @@ export default function CompareResults({
     );
   }
 
-  const model = buildCompareModel(profileA, profileB);
   const facts = model.facts.filter((fact) => {
     if (!matchesResultFilter(fact, selectedResults)) return false;
     if (selectedCategories.size > 0 && (fact.category === null || !selectedCategories.has(fact.category))) return false;
@@ -77,7 +61,7 @@ export default function CompareResults({
       key={fact.id}
       rowKey={fact.id}
       name={fact.label}
-      directionNote={directionNote(fact, profileA, profileB)}
+      directionNote={comparisonDirectionNote(fact, profileA, profileB)}
       entryA={profileA.entries[fact.kinkAId]}
       entryB={profileB.entries[fact.kinkBId]}
       profileA={profileA}

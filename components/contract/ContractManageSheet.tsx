@@ -331,7 +331,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => setView("menu")}
-                className="focus-ring -ml-2 flex min-h-10 items-center gap-1 px-2 text-xs"
+                className="focus-ring -ml-2 flex min-h-11 items-center gap-1 px-2 text-xs"
                 style={{ color: "var(--text2)" }}
               >
                 <ArrowLeft size={14} aria-hidden="true" />

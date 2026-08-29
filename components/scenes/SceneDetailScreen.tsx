@@ -127,11 +127,10 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             </h2>
             <button
               onClick={() => setShowAftercare(true)}
-              className="text-sm focus-ring rounded-lg px-3 py-1"
+              className="focus-ring min-h-11 rounded-lg px-3 py-1 text-sm"
               style={{
                 color: "var(--accent)",
                 border: "1px solid var(--border-accent)",
-                minHeight: 36,
               }}
             >
               ✎ Bewerken
@@ -365,7 +364,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
           {scene.status === "completed" && (
             <button
               onClick={handleExportPdf}
-              className="focus-ring rounded-lg px-2 py-1"
+              className="focus-ring min-h-11 rounded-lg px-2 py-1"
             >
               Exporteer PDF
             </button>
@@ -381,7 +380,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="focus-ring rounded-lg ml-auto px-2 py-1"
+              className="focus-ring ml-auto min-h-11 rounded-lg px-2 py-1"
               style={{ color: "var(--text2)" }}
             >
               Verwijderen
@@ -390,7 +389,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             <div className="ml-auto flex items-center gap-3">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="focus-ring rounded-lg text-sm px-2 py-1"
+                className="focus-ring min-h-11 rounded-lg px-2 py-1 text-sm"
                 style={{ color: "var(--text2)" }}
               >
                 Annuleren
@@ -400,7 +399,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                   deleteScene(scene.id);
                   router.push("/scenes");
                 }}
-                className="focus-ring rounded-lg text-sm font-bold px-2 py-1"
+                className="focus-ring min-h-11 rounded-lg px-2 py-1 text-sm font-bold"
                 style={{ color: "var(--hard-no)" }}
               >
                 Definitief verwijderen

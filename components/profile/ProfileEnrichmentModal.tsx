@@ -219,7 +219,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             type="button"
             onClick={onClose}
             aria-label="Sluit profiel aanvullen"
-            className="focus-ring flex h-10 w-10 flex-none items-center justify-center rounded-full"
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
           >
             <X size={18} aria-hidden="true" />
@@ -308,7 +308,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
                     setRemoveBdsmtest(true);
                     setError(null);
                   }}
-                  className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold"
+                  className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold"
                   style={{ color: "var(--hard-no-text)" }}
                 >
                   <Trash size={14} aria-hidden="true" /> Verwijder

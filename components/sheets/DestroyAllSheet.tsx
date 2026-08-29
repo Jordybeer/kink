@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Sheet from "@/components/ui/Sheet";
+import Sheet from "@/components/Sheet";
 import { destroyAllLocalData } from "@/lib/destroyAllLocalData";
 
 const DESTROY_PHRASE = "wis alles";

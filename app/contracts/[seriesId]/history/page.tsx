@@ -86,7 +86,7 @@ export default function ContractHistoryPage() {
       <Link
         href={`/contracts/${encodeURIComponent(series.id)}`}
         prefetch={false}
-        className="focus-ring inline-flex min-h-10 items-center gap-1 text-sm"
+        className="focus-ring inline-flex min-h-11 items-center gap-1 text-sm"
         style={{ color: "var(--text2)" }}
       >
         <ArrowLeft size={15} aria-hidden="true" /> Contract
@@ -161,7 +161,7 @@ export default function ContractHistoryPage() {
                     <Link
                       href={`/contracts/${encodeURIComponent(series.id)}/versions/${encodeURIComponent(version.id)}`}
                       prefetch={false}
-                      className="focus-ring mt-3 flex min-h-10 items-center text-sm font-semibold"
+                      className="focus-ring mt-3 flex min-h-11 items-center text-sm font-semibold"
                       style={{ color: "var(--text)" }}
                     >
                       {completeModernDocument ? "Getekende PDF bekijken" : "Historische versie bekijken"}

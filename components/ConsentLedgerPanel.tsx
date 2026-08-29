@@ -87,7 +87,7 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
             <p className="text-sm mb-3" style={{ color: "var(--text2)", lineHeight: 1.6 }}>
               Leg vast welke profielversies, activiteiten, intensiteiten, notities en welk safeword nu gelden. Latere wijzigingen worden toegevoegd en overschrijven deze versie niet.
             </p>
-            <button onClick={lockNow} disabled={busy} className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
+            <button onClick={lockNow} disabled={busy} className="focus-ring min-h-11 w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
               {busy ? "Vastzetten…" : "Afspraken nu vastzetten"}
             </button>
           </>
@@ -140,8 +140,8 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
                 )}
                 <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Wat veranderde? (optioneel)" className="w-full rounded-lg px-3 py-2 text-sm mb-2" style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }} />
                 <div className="flex gap-2">
-                  <button onClick={() => append("changed")} disabled={busy} className="focus-ring flex-1 py-2 rounded-lg text-sm font-semibold border disabled:opacity-50" style={{ borderColor: "var(--border-accent)", color: "var(--accent)" }}>Wijziging bevestigen</button>
-                  <button onClick={() => append("withdrawn")} disabled={busy} className="focus-ring flex-1 py-2 rounded-lg text-sm font-semibold border disabled:opacity-50" style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}>Toestemming intrekken</button>
+                  <button onClick={() => append("changed")} disabled={busy} className="focus-ring min-h-11 flex-1 py-2 rounded-lg text-sm font-semibold border disabled:opacity-50" style={{ borderColor: "var(--border-accent)", color: "var(--accent)" }}>Wijziging bevestigen</button>
+                  <button onClick={() => append("withdrawn")} disabled={busy} className="focus-ring min-h-11 flex-1 py-2 rounded-lg text-sm font-semibold border disabled:opacity-50" style={{ borderColor: "var(--hard-no)", color: "var(--hard-no)" }}>Toestemming intrekken</button>
                 </div>
               </div>
             )}

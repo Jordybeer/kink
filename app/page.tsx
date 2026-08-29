@@ -22,7 +22,7 @@ import PinFlowSheet from "@/components/sheets/PinFlowSheet";
 import DestroyAllSheet from "@/components/sheets/DestroyAllSheet";
 import { EncryptedExportSheet, EncryptedImportSheet } from "@/components/sheets/EncryptedBackupSheets";
 import { backupFileSizeAllowed } from "@/lib/importLimits";
-import Sheet from "@/components/ui/Sheet";
+import Sheet from "@/components/Sheet";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 
@@ -217,7 +217,7 @@ function HomeContent() {
 
       <PageShell width="2xl" className="lg:max-w-4xl">
         <div className="mb-6 pt-3 text-center">
-          <h1 className="text-6xl"><Wordmark /></h1>
+          <h1 data-home-wordmark className="text-6xl"><Wordmark /></h1>
           <div className="ks-gradient-rule mx-auto my-4" />
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
             Verken grenzen. Samen.
@@ -475,7 +475,7 @@ function HomeContent() {
             type="button"
             onClick={() => setScanError(null)}
             aria-label="Sluit foutmelding"
-            className="focus-ring p-1 rounded-lg flex-none"
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-lg"
           >
             <X size={16} aria-hidden="true" />
           </button>

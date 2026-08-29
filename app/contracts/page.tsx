@@ -124,7 +124,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}`}
           prefetch={false}
-          className="focus-ring inline-flex min-h-10 items-center gap-1.5 px-2 text-sm font-semibold"
+          className="focus-ring inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold"
           style={{ color: "var(--text)" }}
         >
           Open contract
@@ -133,7 +133,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring ml-auto inline-flex min-h-10 items-center px-2 text-sm font-medium"
+          className="focus-ring ml-auto inline-flex min-h-11 items-center px-2 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           Verloop
@@ -193,7 +193,7 @@ function ContractsContent() {
       {personId && (
         <Link
           href="/contracts"
-          className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-sm"
+          className="focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm"
           style={{ color: "var(--text2)", background: "var(--surface2)" }}
         >
           <X size={12} aria-hidden="true" />

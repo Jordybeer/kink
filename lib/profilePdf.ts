@@ -42,8 +42,11 @@ export async function buildProfilePdf(
 
   doc.setProperties({
     title: `KinkSync profiel: ${profile.name}`,
+    subject: "Privé kinkprofiel. Een voorkeur of overlap is geen toestemming.",
+    keywords: "KinkSync, kinkprofiel, grenzen, communicatie, toestemming",
     creator: "KinkSync (kinksync.be)",
   });
+  doc.setLanguage("nl-BE");
 
   const sections: ExportSection[] = CATEGORIES.map((category) => ({
     label: kinkCategoryLabel(category),
@@ -285,6 +288,7 @@ export async function buildProfilePdf(
     doc.setFontSize(7.2);
     doc.setTextColor(...muted);
     doc.text(`Privé · ${profile.name}`, margin, H - 9);
+    doc.text("Voorkeur is geen toestemming", W / 2, H - 9, { align: "center" });
     doc.text(`${page} / ${pageCount}`, W - margin, H - 9, { align: "right" });
   }
 

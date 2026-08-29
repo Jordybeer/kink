@@ -180,7 +180,6 @@ export default function ProfilePage({ params }: Props) {
         && currentProfile.entries[kink.id]?.privateResponse !== true,
     ).length,
   })).filter((segment) => segment.count > 0);
-
   const overviewCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
   const ratedByCategory = overviewCategories.map((category) => ({
     category,
@@ -415,6 +414,7 @@ export default function ProfilePage({ params }: Props) {
                         kinks={kinks}
                         entries={currentProfile.entries}
                         onEdit={setEditKink}
+                        onChooseCategory={() => setCategoriesOpen(true)}
                         openByDefault={catalogCategoryFilter === category}
                       />
                     );
@@ -444,7 +444,7 @@ export default function ProfilePage({ params }: Props) {
                                 type="button"
                                 onClick={() => removeCustomKink(currentProfile.id, custom.id)}
                                 aria-label={`${custom.name} verwijderen`}
-                                className="focus-ring w-10 h-10 rounded-full"
+                                className="focus-ring h-11 w-11 rounded-full"
                                 style={{ color: "var(--hard-no)" }}
                               >
                                 ×
@@ -610,7 +610,10 @@ export default function ProfilePage({ params }: Props) {
 
               {!shared && totalRated > 0 && (
                 <section className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-                  <h3 className="text-sm italic mb-2" style={{ color: "var(--text2)" }}>Download dit profiel</h3>
+                  <h3 className="mb-1 text-sm font-semibold" style={{ color: "var(--text)" }}>Download dit profiel</h3>
+                  <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                    Tekst is screenreader-vriendelijk; PDF is opgemaakt voor scherm en A4-print.
+                  </p>
                   {hasPrivateResponses(currentProfile.entries) && (
                     <label className="flex items-center gap-2 text-xs mb-2" style={{ color: "var(--text2)" }}>
                       <input
@@ -625,6 +628,7 @@ export default function ProfilePage({ params }: Props) {
                     <button
                       type="button"
                       onClick={downloadText}
+                      aria-label="Download toegankelijke tekstexport"
                       className="focus-ring min-h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
                       style={{ border: "1px solid var(--border)", color: "var(--text)" }}
                     >

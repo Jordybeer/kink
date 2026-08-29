@@ -3,6 +3,7 @@
 import { ChatCircle, Check, ShieldWarning } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
+import { COMPARE_FACT_LABEL, compactComparisonName } from "@/lib/comparePresentation";
 import type { CompareFactKind } from "@/lib/compareV2";
 import type { KinkEntry, Profile } from "@/types";
 
@@ -26,30 +27,11 @@ interface Props {
   onCommentB?: (comment: string) => void;
 }
 
-const FACT_LABEL: Record<CompareFactKind, string> = {
-  shared: "Zelfde interesse",
-  complementary: "Past bij elkaar",
-  discuss: "Even bespreken",
-  soft: "Verschil in enthousiasme",
-  conflict: "Botst met harde grens",
-  limit: "Harde grens",
-};
-
 function factBorder(kind: CompareFactKind): string {
   if (kind === "shared" || kind === "complementary") return "var(--yes)";
   if (kind === "soft") return "var(--maybe)";
   if (kind === "conflict" || kind === "limit") return "var(--hard-no)";
   return "var(--conflict)";
-}
-
-function compactDirectionName(name: string): string {
-  const directional = name.match(/^(.+?) — (?:geven ↔ ontvangen|ontvangen ↔ geven) ↔ \1 — (?:geven ↔ ontvangen|ontvangen ↔ geven)$/);
-  if (directional) return directional[1];
-
-  const complementary = name.match(/^(.+?) — ([^↔]+) ↔ \1 — ([^↔]+)$/);
-  if (complementary) return complementary[1];
-
-  return name;
 }
 
 export default function CompareKinkRow({
@@ -70,7 +52,7 @@ export default function CompareKinkRow({
   onCommentB,
 }: Props) {
   const [notesOpen, setNotesOpen] = useState(false);
-  const displayName = compactDirectionName(name);
+  const displayName = compactComparisonName(name);
   const accessibleName = directionNote ? `${displayName}, ${directionNote}` : displayName;
 
   useEffect(() => {
@@ -121,7 +103,7 @@ export default function CompareKinkRow({
           style={{ color: semanticColour }}
         >
           {isBoundary && <ShieldWarning size={15} weight="duotone" aria-hidden="true" />}
-          {FACT_LABEL[factKind]}
+          {COMPARE_FACT_LABEL[factKind]}
         </span>
         {directionNote && (
           <span style={{ color: "var(--text2)" }}>{directionNote}</span>

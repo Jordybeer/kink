@@ -526,7 +526,7 @@ function ScenePage() {
             </div>
             <Link
               href={`/contract?a=${profileA.id}&b=${profileB.id}`}
-              className="focus-ring inline-flex min-h-10 flex-none items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold"
+              className="focus-ring inline-flex min-h-11 flex-none items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold"
               style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
             >
               Contract opstellen

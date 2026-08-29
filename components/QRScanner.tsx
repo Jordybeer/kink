@@ -316,14 +316,14 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             <button
               onClick={handlePasteSubmit}
               disabled={!pasteInput.trim()}
-              className="focus-ring w-full py-2.5 rounded-xl text-sm font-semibold mb-2 disabled:opacity-40 transition-opacity"
+              className="focus-ring min-h-11 w-full py-2.5 rounded-xl text-sm font-semibold mb-2 disabled:opacity-40 transition-opacity"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {assembly || bundleProgress ? "Voeg QR-deel toe" : "Importeer"}
             </button>
             <button
               onClick={handleClose}
-              className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"
+              className="focus-ring min-h-11 w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
               Annuleer
@@ -360,14 +360,14 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             </p>
             <button
               onClick={() => { stopCamera(); setPartError(null); setPasteMode(true); }}
-              className="focus-ring block mx-auto mb-3 text-sm underline-offset-2 hover:underline"
+              className="focus-ring mx-auto mb-3 flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
               Geen camera? Plak een link
             </button>
             <button
               onClick={handleClose}
-              className="focus-ring w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"
+              className="focus-ring min-h-11 w-full py-2.5 rounded-xl text-sm font-medium border transition-colors"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
               Annuleer

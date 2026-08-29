@@ -2,21 +2,21 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowsLeftRight, FileText } from "@phosphor-icons/react";
+import { ArrowsLeftRight, FileText, Printer } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import CompareProfileHeader from "@/components/compare/CompareProfileHeader";
 import CompareResults from "@/components/compare/CompareResults";
 import CompareScoreSummary from "@/components/compare/CompareScoreSummary";
 import CompareToolbar from "@/components/compare/CompareToolbar";
+import ComparePrintDocument from "@/components/compare/ComparePrintDocument";
 import ProfileSelectorSheet from "@/components/compare/ProfileSelectorSheet";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import useCompareProfiles from "@/hooks/useCompareProfiles";
 import {
   cleanCompareParam,
-  getCompareCategoryScores,
-  getCompareSummary,
   type CompareResultFilter,
 } from "@/lib/compare";
+import { buildCompareModel } from "@/lib/compareV2";
 import { useHasHydrated, useStore } from "@/lib/store";
 import type { KinkCategoryId } from "@/types";
 
@@ -84,6 +84,14 @@ function ComparePage() {
       placement: "secondary",
       disabled: !hasPair,
     },
+    {
+      id: "print-compare",
+      label: "Vergelijking afdrukken",
+      icon: <Printer size={18} aria-hidden="true" />,
+      onClick: () => window.print(),
+      placement: "overflow",
+      disabled: !hasPair,
+    },
   ], [aId, bId, hasPair, router, swapProfiles]);
   useTopNavActions(navActions);
 
@@ -95,8 +103,12 @@ function ComparePage() {
     setEntry(profileId, kinkId, { comment });
   }, [setEntry]);
 
-  const summary = getCompareSummary(profileA, profileB);
-  const categoryScores = getCompareCategoryScores(profileA, profileB);
+  const compareModel = useMemo(() => buildCompareModel(profileA, profileB), [profileA, profileB]);
+  const summary = useMemo(() => ({
+    ...compareModel.summary,
+    match: compareModel.summary.shared + compareModel.summary.complementary,
+  }), [compareModel]);
+  const categoryScores = compareModel.categories;
 
   if (!hasHydrated) return <PageShell loading width="5xl" />;
 
@@ -140,6 +152,7 @@ function ComparePage() {
         selectedCategories={selectedCategories}
         discussed={discussed}
         hideDiscussed={hideDiscussed}
+        model={compareModel}
         onToggleDiscussed={toggleDiscussed}
         onComment={updateComment}
       />
@@ -164,6 +177,8 @@ function ComparePage() {
         pinnedProfileId={pinnedProfileId}
         onSelect={setBId}
       />
+
+      {profileA && profileB && !samePairError && <ComparePrintDocument profileA={profileA} profileB={profileB} model={compareModel} />}
     </PageShell>
   );
 }

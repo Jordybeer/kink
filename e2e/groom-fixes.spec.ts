@@ -139,11 +139,12 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(row).toContainText("Klassiek en heerlijk");
   });
 
-  test("compare print media removes app chrome and interactive controls", async ({ page }) => {
+  test("compare print media uses the print-native document without app chrome", async ({ page }) => {
     await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
     await page.emulateMedia({ media: "print" });
 
-    await expect(page.locator(".compare-kink-row").first()).toBeVisible();
+    await expect(page.getByTestId("compare-print-document")).toBeVisible();
+    await expect(page.locator(".compare-kink-row").first()).toBeHidden();
     await expect(page.locator(".ks-ambient-glow")).toBeHidden();
     await expect(page.locator(".compare-toolbar")).toBeHidden();
     await expect(page.locator(".compare-page-actions")).toBeHidden();

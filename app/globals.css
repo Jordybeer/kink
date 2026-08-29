@@ -162,7 +162,7 @@ html, body {
 }
 
 /* ── z-index ladder (keep this order sacred) ──────────────────────────────
-   151  sheet panels (components/ui/Sheet — framer-motion drag-to-dismiss)
+   151  sheet panels (shared Sheet — portal, focus trap and drag-to-dismiss)
    150  sheet backdrops
    400  export/import password modals (above sheets)
     50  FABs, floating actions
@@ -437,6 +437,15 @@ span[class~="mr-auto"][class~="text-xs"] {
 .ks-card {
   background: var(--surface);
   border: 1px solid var(--border);
+}
+
+/* Preserve the confident Home wordmark in normal portrait use, but stop it
+   consuming the first viewport on short landscape browser windows. */
+@media (max-height: 520px) and (orientation: landscape) {
+  [data-home-wordmark] {
+    font-size: 3rem !important;
+    line-height: 1;
+  }
 }
 
 :root { --bottom-nav-h: calc(env(safe-area-inset-bottom) + 3.5rem); }
