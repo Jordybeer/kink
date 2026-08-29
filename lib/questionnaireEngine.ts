@@ -423,17 +423,6 @@ export function selectConversationQuestion(
       return candidates[0] ?? null;
     }
 
-    if (context.lastKinkId) {
-      const last = catalog.find((kink) => kink.id === context.lastKinkId);
-      if (last) {
-        const differentTopic = candidates.find((item) =>
-          !isConversationContinuation(item, context.lastKinkId)
-          && !sharesTopic(last, item.kink),
-        );
-        if (differentTopic) return differentTopic;
-      }
-    }
-
     if (
       (context.phase === "preferComplement" || context.phase === "preferContinuation")
       && context.lastKinkId
@@ -442,6 +431,7 @@ export function selectConversationQuestion(
       const sibling = siblingId
         ? candidates.find((item) => item.kink.id === siblingId)
         : undefined;
+      if (sibling) return sibling;
 
       if (context.phase === "preferContinuation") {
         const canonicalProbe = candidates.find((item) =>
@@ -452,8 +442,17 @@ export function selectConversationQuestion(
         );
         if (canonicalProbe) return canonicalProbe;
       }
+    }
 
-      if (sibling) return sibling;
+    if (context.lastKinkId) {
+      const last = catalog.find((kink) => kink.id === context.lastKinkId);
+      if (last) {
+        const differentTopic = candidates.find((item) =>
+          !isConversationContinuation(item, context.lastKinkId)
+          && !sharesTopic(last, item.kink),
+        );
+        if (differentTopic) return differentTopic;
+      }
     }
 
     return candidates[0] ?? null;

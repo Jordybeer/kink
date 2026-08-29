@@ -19,7 +19,6 @@ export const QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS = [
   "masseur_client",
   "erotic_teasing",
   "oral_sex_give",
-  "oral_sex_receive",
   "aftercare_physical",
 ] as const;
 

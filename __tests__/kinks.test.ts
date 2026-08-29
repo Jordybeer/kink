@@ -38,6 +38,20 @@ const RELEASE_A_IDS = [
   "creampie",
 ] as const;
 
+const REVIEWED_TAXONOMY_EXPANSION_IDS = [
+  "kissing_making_out",
+  "intense_eye_contact",
+  "sexual_sounds_auralism",
+  "erotic_teasing",
+  "slow_sensual_sex",
+  "anticipation_suspense",
+  "play_fighting",
+  "oral_sex_give",
+  "oral_sex_receive",
+  "manual_stimulation_give",
+  "manual_stimulation_receive",
+] as const;
+
 const DIRECTIONAL_RELEASE_IDS = [
   "pegging_give", "pegging_receive",
   "anal_sex_give", "anal_sex_receive",
@@ -91,20 +105,6 @@ const DIRECTIONAL_RELEASE_IDS = [
   "pet_training_give", "pet_training_receive",
   "pet_grooming_give", "pet_grooming_receive",
   "diaper_changing_give", "diaper_changing_receive",
-] as const;
-
-const TAXONOMY_REFINEMENT_IDS = [
-  "kissing_making_out",
-  "intense_eye_contact",
-  "sexual_sounds_auralism",
-  "erotic_teasing",
-  "slow_sensual_sex",
-  "anticipation_suspense",
-  "play_fighting",
-  "oral_sex_give",
-  "oral_sex_receive",
-  "manual_stimulation_give",
-  "manual_stimulation_receive",
 ] as const;
 
 const RETIRED_COMPOSITE_OR_DUPLICATE_IDS = [
@@ -218,12 +218,12 @@ describe("kink database integrity", () => {
     }
   });
 
-  it("lands Release A plus explicit pegging directionality without deciding auto-masturbation", () => {
+  it("lands reviewed catalog additions without deciding auto-masturbation", () => {
     const ids = new Set(KINKS.map((kink) => kink.id));
     expect(RELEASE_A_IDS.filter((id) => !ids.has(id))).toEqual([]);
     expect(DIRECTIONAL_RELEASE_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(TAXONOMY_REFINEMENT_IDS.filter((id) => !ids.has(id))).toEqual([]);
-    expect(KINKS).toHaveLength(355);
+    expect(REVIEWED_TAXONOMY_EXPANSION_IDS.filter((id) => !ids.has(id))).toEqual([]);
+    expect(KINKS).toHaveLength(344 + REVIEWED_TAXONOMY_EXPANSION_IDS.length);
 
     expect(ids.has("pegging")).toBe(false);
     expect([...ids].some((id) => id.includes("auto_masturb"))).toBe(false);
@@ -258,8 +258,8 @@ describe("kink database integrity", () => {
     expect(added).toEqual([
       ...RELEASE_A_IDS,
       ...DIRECTIONAL_RELEASE_IDS,
-      ...TAXONOMY_REFINEMENT_IDS,
       "diaper_partner_wearing",
+      ...REVIEWED_TAXONOMY_EXPANSION_IDS,
     ].sort());
   });
 
@@ -342,7 +342,7 @@ describe("intensity ordering (juli 2026 uitbreiding)", () => {
     expect(CATEGORIES).toContain("discipline");
     expect(CATEGORIES).toContain("rituals");
     expect(kinkCategoryLabel("discipline")).toBe("Discipline & Correction");
-    expect(kinkCategoryLabel("rituals")).toBe("Protocols & Rituals");
+    expect(kinkCategoryLabel("rituals")).toBe("Rituals & Protocols");
     // the umbrella entries moved into their new homes, ids intact
     expect(KINKS.find((k) => k.id === "punishment")?.category).toBe("discipline");
     expect(KINKS.find((k) => k.id === "collaring")?.category).toBe("rituals");
