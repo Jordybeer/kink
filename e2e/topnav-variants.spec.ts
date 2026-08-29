@@ -11,25 +11,30 @@ test("TopNav keeps Home compact and content chrome quiet with accessible command
   await expect(homeNav).toHaveAttribute("data-top-nav-variant", "home");
   const homeSettings = homeNav.getByTestId("home-topnav-settings");
   const homeActions = homeNav.getByTestId("home-topnav-actions");
+  const homeMore = homeNav.getByRole("button", { name: "Meer opties" });
   await expect(homeSettings).toBeVisible();
   await expect(homeActions).toBeVisible();
+  await expect(homeMore).toBeVisible();
 
-  const [homeNavBox, homeSettingsBox, homeActionsBox] = await Promise.all([
+  const [homeNavBox, homeSettingsBox, homeActionsBox, homeMoreBox] = await Promise.all([
     homeNav.boundingBox(),
     homeSettings.boundingBox(),
     homeActions.boundingBox(),
+    homeMore.boundingBox(),
   ]);
   expect(homeNavBox).not.toBeNull();
   expect(homeSettingsBox).not.toBeNull();
   expect(homeActionsBox).not.toBeNull();
+  expect(homeMoreBox).not.toBeNull();
   expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
   expect(homeNavBox!.height).toBeLessThanOrEqual(57);
   expect(homeSettingsBox!.width + homeActionsBox!.width).toBeLessThan(homeNavBox!.width * 0.7);
   expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(15);
   expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(17);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeGreaterThanOrEqual(15);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeLessThanOrEqual(17);
-  for (const utilityBox of [homeSettingsBox!, homeActionsBox!]) {
+  expect(homeMoreBox!.x - (homeSettingsBox!.x + homeSettingsBox!.width)).toBeGreaterThanOrEqual(7);
+  expect(homeMoreBox!.x - (homeSettingsBox!.x + homeSettingsBox!.width)).toBeLessThanOrEqual(9);
+  expect(homeMoreBox!.x + homeMoreBox!.width).toBeLessThan(homeNavBox!.x + homeNavBox!.width / 2);
+  for (const utilityBox of [homeSettingsBox!, homeMoreBox!]) {
     expect(utilityBox.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
     expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(6);
     expect(utilityBox.y + utilityBox.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
@@ -54,7 +59,7 @@ test("TopNav keeps Home compact and content chrome quiet with accessible command
     pointerEvents: "none",
   });
 
-  await homeNav.getByRole("button", { name: "Meer opties" }).click();
+  await homeMore.click();
   const homeMenu = page.getByRole("menu");
   await expect(homeMenu).toBeVisible();
   const homeMenuBox = await homeMenu.boundingBox();
