@@ -192,13 +192,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
     const activeFilter = page.getByRole("button", { name: /^Bondage\b/ }).first();
     await expect(activeFilter).toBeVisible();
-    const search = page.getByPlaceholder("Zoek in Bondage & Restraint…");
+    const search = page.getByPlaceholder("Zoek in Bondage…");
     await search.fill("spanking");
 
     await expect(activeFilter).toBeVisible();
     await expect(page.getByText("Geen onderwerpen gevonden.")).toBeVisible();
 
-    await page.getByRole("button", { name: "Filter Bondage & Restraint wissen" }).click();
+    await page.getByRole("button", { name: "Filter Bondage wissen" }).click();
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveValue("spanking");
     await expect(page.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
