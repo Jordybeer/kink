@@ -16,7 +16,7 @@ const AGREEMENTS = [
 
 const CATEGORY_ACCENT: Record<Kink["category"], string> = {
   impact: "#c77a68", bondage: "#8774c9", power: "#9a70c4", rituals: "#7768b7", discipline: "#a26c7d",
-  roleplay: "#a26d9c", sensation: "#6e85c8", exhibition: "#986d9d", media: "#6676b0", group_partner: "#7f70ac",
+  roleplay: "#a26d9c", interaction: "#8d72b0", sensation: "#6e85c8", sexual_acts: "#a4718c", exhibition: "#986d9d", media: "#6676b0", group_partner: "#7f70ac",
   body_focus: "#9575ae", materials_scent: "#897493", pet_play: "#9d718b", fluids: "#836b90", toys: "#6c79c4",
   penetration: "#a36e7f", aftercare: "#638fa3", appearance: "#9174a6", adult_ageplay: "#956f8b", custom: "#8170bd",
 };
