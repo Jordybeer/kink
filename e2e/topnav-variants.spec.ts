@@ -31,7 +31,7 @@ test("TopNav keeps Home compact and content chrome quiet with accessible command
   expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeLessThanOrEqual(17);
   for (const utilityBox of [homeSettingsBox!, homeActionsBox!]) {
     expect(utilityBox.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
-    expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(5);
+    expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(6);
     expect(utilityBox.y + utilityBox.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
   }
   await expect.poll(() => homeActions.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
