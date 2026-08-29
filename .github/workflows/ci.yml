@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   test-and-build:
-    name: Lint, test and build
+    name: Static verification
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -118,3 +118,26 @@ jobs:
             test-results
           if-no-files-found: warn
           retention-days: 14
+
+  # Branch protection already requires the historical "Lint, test and build"
+  # context. Keep that context as the final candidate gate so a green static
+  # suite can no longer mask a red browser, launch, print, or offline rehearsal.
+  release-gate:
+    name: Lint, test and build
+    if: ${{ always() }}
+    needs: [test-and-build, scene-rehearsal, pwa-rehearsal]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every release-candidate lane
+        env:
+          STATIC_RESULT: ${{ needs.test-and-build.result }}
+          BROWSER_RESULT: ${{ needs.scene-rehearsal.result }}
+          OFFLINE_RESULT: ${{ needs.pwa-rehearsal.result }}
+        run: |
+          echo "Static verification: $STATIC_RESULT"
+          echo "Browser/device/launch/print: $BROWSER_RESULT"
+          echo "Offline web: $OFFLINE_RESULT"
+          test "$STATIC_RESULT" = "success"
+          test "$BROWSER_RESULT" = "success"
+          test "$OFFLINE_RESULT" = "success"
