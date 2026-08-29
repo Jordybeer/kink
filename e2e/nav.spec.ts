@@ -32,6 +32,31 @@ test("hub keeps navigation and secondary product info in the shared context menu
   await expect(page).toHaveURL(/\/intimacy$/);
 });
 
+test("Home overflow follows the ARIA menu keyboard contract", async ({ page }) => {
+  await seedAndGo(page, "/", PROFILES);
+  const more = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer opties" });
+  await more.focus();
+  await page.keyboard.press("Enter");
+
+  const menu = page.getByRole("menu");
+  const agenda = menu.getByRole("menuitem", { name: "Agenda" });
+  const about = menu.getByRole("menuitem", { name: "Over KinkSync" });
+  const security = menu.getByRole("menuitem", { name: "Security & privacy" });
+
+  await expect(agenda).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(about).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(security).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(agenda).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(security).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(more).toBeFocused();
+});
+
 test("subpages show back chevron pointing at the right parent", async ({ page }) => {
   const cases: Array<[string, string]> = [
     ["/compare?a=pw-alex-001&b=pw-sam-002", "/"],
