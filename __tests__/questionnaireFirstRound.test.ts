@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { KINKS } from "@/lib/kinks";
-import { getQuestionnaireRuntime, questionnaireCoverage } from "@/lib/questionnaire";
+import { getQuestionnaireRuntime } from "@/lib/questionnaire";
 import {
   QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS,
   buildQuestionnaireFirstRoundPlan,
@@ -55,18 +55,17 @@ describe("compact Dynamic first round", () => {
     expect(submissive.anchorIds).not.toContain("handcuffs_give");
   });
 
-  it("counts explicit answers only and exposes the same coverage to profile UI", () => {
+  it("counts explicit first-round answers while a Later/null answer stays open", () => {
     const current = profile();
     const plan = buildQuestionnaireFirstRoundPlan([], "dominant");
 
     current.entries[plan.anchorIds[0]] = entry("maybe");
     current.entries[plan.anchorIds[1]] = { status: null, comment: "later" };
 
-    const runtime = getQuestionnaireRuntime(current);
-    const firstRound = getDynamicFirstRound(current, runtime);
+    const firstRound = getDynamicFirstRound(current, getQuestionnaireRuntime(current));
     expect(firstRound.coverage.answered).toBe(1);
     expect(firstRound.coverage.total).toBe(8);
-    expect(questionnaireCoverage(current)).toEqual(firstRound.coverage);
+    expect(firstRound.coverage.complete).toBe(false);
   });
 
   it("opens only the pinned local probe after an explicit positive anchor answer", () => {
