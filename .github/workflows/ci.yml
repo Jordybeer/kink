@@ -86,10 +86,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  # Offline/PWA behavior needs a real production build. Keep it as a separate
+  # Offline web resilience needs a real production build. Keep it as a separate
   # gate, but serialize it with the regular browser rehearsal for this candidate.
   pwa-rehearsal:
-    name: Production PWA and offline rehearsal
+    name: Production offline web rehearsal
     runs-on: ubuntu-latest
     timeout-minutes: 40
     concurrency:
