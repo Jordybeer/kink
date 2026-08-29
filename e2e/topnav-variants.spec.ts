@@ -3,7 +3,7 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("TopNav keeps Home inset left and content chrome quiet without changing the command contract", async ({ page }) => {
+test("TopNav keeps Home compact and content chrome quiet with accessible commands", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", PROFILES);
 
@@ -25,10 +25,10 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
   expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
   expect(homeNavBox!.height).toBeLessThanOrEqual(57);
   expect(homeSettingsBox!.width + homeActionsBox!.width).toBeLessThan(homeNavBox!.width * 0.7);
-  expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(20);
-  expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(30);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeGreaterThanOrEqual(20);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeLessThanOrEqual(30);
+  expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(15);
+  expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(17);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeGreaterThanOrEqual(15);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeLessThanOrEqual(17);
   for (const utilityBox of [homeSettingsBox!, homeActionsBox!]) {
     expect(utilityBox.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
     expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(5);
@@ -54,7 +54,7 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
     pointerEvents: "none",
   });
 
-  await homeNav.getByRole("button", { name: "Meer over KinkSync" }).click();
+  await homeNav.getByRole("button", { name: "Meer opties" }).click();
   const homeMenu = page.getByRole("menu");
   await expect(homeMenu).toBeVisible();
   const homeMenuBox = await homeMenu.boundingBox();
