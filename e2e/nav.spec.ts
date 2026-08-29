@@ -12,11 +12,12 @@ test("hub keeps navigation and secondary product info in the shared context menu
   await expect(nav.getByText("Hoe het werkt", { exact: true })).toHaveCount(0);
   const settings = nav.getByRole("button", { name: "Instellingen openen" });
   await expect(settings).toBeVisible();
-  await expect(settings).toContainText("Instellingen");
+  await expect(settings).toHaveText("");
+  await expect(settings).toHaveAttribute("title", "Instellingen");
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
   await expect(nav.getByText("KinkSync", { exact: true })).toHaveCount(0);
 
-  const more = nav.getByRole("button", { name: "Meer over KinkSync" });
+  const more = nav.getByRole("button", { name: "Meer opties" });
   await expect(more).toBeVisible();
   await expect(more).toHaveText("");
   await more.click();
