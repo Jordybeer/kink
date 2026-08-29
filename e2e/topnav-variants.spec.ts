@@ -3,7 +3,7 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("TopNav keeps Home compact and content chrome quiet with accessible commands", async ({ page }) => {
+test("TopNav keeps Home branded, centered and accessible while content chrome stays quiet", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", PROFILES);
 
@@ -12,29 +12,39 @@ test("TopNav keeps Home compact and content chrome quiet with accessible command
   const homeSettings = homeNav.getByTestId("home-topnav-settings");
   const homeActions = homeNav.getByTestId("home-topnav-actions");
   const homeMore = homeNav.getByRole("button", { name: "Meer opties" });
+  const homeWordmark = homeNav.locator("[data-home-nav-wordmark]");
   await expect(homeSettings).toBeVisible();
   await expect(homeActions).toBeVisible();
   await expect(homeMore).toBeVisible();
+  await expect(homeWordmark).toHaveText("KinkSync");
 
-  const [homeNavBox, homeSettingsBox, homeActionsBox, homeMoreBox] = await Promise.all([
+  const [homeNavBox, homeSettingsBox, homeActionsBox, homeMoreBox, homeWordmarkBox] = await Promise.all([
     homeNav.boundingBox(),
     homeSettings.boundingBox(),
     homeActions.boundingBox(),
     homeMore.boundingBox(),
+    homeWordmark.boundingBox(),
   ]);
   expect(homeNavBox).not.toBeNull();
   expect(homeSettingsBox).not.toBeNull();
   expect(homeActionsBox).not.toBeNull();
   expect(homeMoreBox).not.toBeNull();
+  expect(homeWordmarkBox).not.toBeNull();
   expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
   expect(homeNavBox!.height).toBeLessThanOrEqual(57);
-  expect(homeSettingsBox!.width + homeActionsBox!.width).toBeLessThan(homeNavBox!.width * 0.7);
   expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(15);
   expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(17);
-  expect(homeMoreBox!.x - (homeSettingsBox!.x + homeSettingsBox!.width)).toBeGreaterThanOrEqual(7);
-  expect(homeMoreBox!.x - (homeSettingsBox!.x + homeSettingsBox!.width)).toBeLessThanOrEqual(9);
-  expect(homeMoreBox!.x + homeMoreBox!.width).toBeLessThan(homeNavBox!.x + homeNavBox!.width / 2);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeGreaterThanOrEqual(15);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeLessThanOrEqual(17);
+  expect(Math.abs(
+    homeWordmarkBox!.x + homeWordmarkBox!.width / 2
+      - (homeNavBox!.x + homeNavBox!.width / 2),
+  )).toBeLessThanOrEqual(1);
+  expect(homeSettingsBox!.x + homeSettingsBox!.width).toBeLessThan(homeWordmarkBox!.x);
+  expect(homeWordmarkBox!.x + homeWordmarkBox!.width).toBeLessThan(homeActionsBox!.x);
   for (const utilityBox of [homeSettingsBox!, homeMoreBox!]) {
+    expect(utilityBox.width).toBeGreaterThanOrEqual(43);
+    expect(utilityBox.height).toBeGreaterThanOrEqual(43);
     expect(utilityBox.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
     expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(6);
     expect(utilityBox.y + utilityBox.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);

@@ -13,7 +13,6 @@ import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profile
 import { profileConsentAlias } from "@/lib/consentProof";
 import Onboarding from "@/components/Onboarding";
 import PageShell from "@/components/PageShell";
-import Wordmark from "@/components/Wordmark";
 import ProfileList from "@/components/ProfileList";
 import ProfileCreateSheet from "@/components/ProfileCreateSheet";
 import SettingsSheet from "@/components/sheets/SettingsSheet";
@@ -181,9 +180,7 @@ function HomeContent() {
       `}</style>
 
       <PageShell width="2xl" className="lg:max-w-4xl">
-        <div className="mb-6 pt-3 text-center">
-          <h1 data-home-wordmark className="text-6xl"><Wordmark /></h1>
-          <div className="ks-gradient-rule mx-auto my-4" />
+        <div className="mb-5 text-center">
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
             Verken grenzen. Samen.
           </p>

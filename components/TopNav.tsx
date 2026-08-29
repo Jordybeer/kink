@@ -8,6 +8,7 @@ import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 import ContextMenu from "@/components/ui/ContextMenu";
+import Wordmark from "@/components/Wordmark";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
 
 const MotionLink = motion.create(Link);
@@ -107,65 +108,62 @@ export default function TopNav() {
     ];
 
     return (
-      <>
-        <style>{`
-          [data-home-wordmark] {
-            font-size: clamp(3rem, 11vw, 3.35rem) !important;
-            line-height: 0.98;
-          }
-          @media (max-height: 520px) and (orientation: landscape) {
-            [data-home-wordmark] {
-              font-size: 2.85rem !important;
-              line-height: 0.96;
-            }
-          }
-        `}</style>
-        <header className="sticky top-0 z-40" style={safeAreaShell}>
-          <nav
-            className="mx-auto flex h-14 max-w-2xl items-center px-4 lg:max-w-4xl"
-            aria-label="Hoofdnavigatie"
-            data-top-nav-variant="home"
+      <header className="sticky top-0 z-40" style={safeAreaShell}>
+        <nav
+          className="mx-auto grid h-14 max-w-2xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 lg:max-w-4xl"
+          aria-label="Hoofdnavigatie"
+          data-top-nav-variant="home"
+        >
+          <button
+            type="button"
+            data-testid="home-topnav-settings"
+            onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+            aria-label="Instellingen openen"
+            title="Instellingen"
+            className="focus-ring flex h-11 w-11 flex-none justify-self-start items-center justify-center rounded-full border"
+            style={{ ...homeUtilitySurface, color: "var(--text2)" }}
           >
-            <div className="flex items-center gap-2" style={{ pointerEvents: "auto" }}>
+            <GearSix size={18} aria-hidden="true" />
+          </button>
+
+          <h1
+            data-home-nav-wordmark
+            className="serif-safe min-w-0 justify-self-center whitespace-nowrap"
+            style={{
+              fontFamily: "var(--font-display, Georgia, serif)",
+              fontSize: "clamp(1.6rem, 8vw, 1.75rem)",
+              fontWeight: 500,
+              lineHeight: 1,
+            }}
+          >
+            <Wordmark />
+          </h1>
+
+          <div
+            data-testid="home-topnav-actions"
+            className="flex items-center justify-self-end gap-2"
+            style={{ pointerEvents: "auto" }}
+          >
+            <OfflineStatus />
+            <ContextMenu
+              open={overflowOpen}
+              onClose={() => setOverflowOpen(false)}
+              items={homeMenuItems}
+            >
               <button
                 type="button"
-                data-testid="home-topnav-settings"
-                onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-                aria-label="Instellingen openen"
-                title="Instellingen"
+                onClick={() => setOverflowOpen((open) => !open)}
+                aria-label="Meer opties"
+                aria-expanded={overflowOpen}
                 className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
                 style={{ ...homeUtilitySurface, color: "var(--text2)" }}
               >
-                <GearSix size={18} aria-hidden="true" />
+                <DotsThree size={22} weight="bold" aria-hidden="true" />
               </button>
-
-              <div
-                data-testid="home-topnav-actions"
-                className="flex items-center gap-2"
-                style={{ pointerEvents: "auto" }}
-              >
-                <ContextMenu
-                  open={overflowOpen}
-                  onClose={() => setOverflowOpen(false)}
-                  items={homeMenuItems}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOverflowOpen((open) => !open)}
-                    aria-label="Meer opties"
-                    aria-expanded={overflowOpen}
-                    className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
-                    style={{ ...homeUtilitySurface, color: "var(--text2)" }}
-                  >
-                    <DotsThree size={22} weight="bold" aria-hidden="true" />
-                  </button>
-                </ContextMenu>
-                <OfflineStatus />
-              </div>
-            </div>
-          </nav>
-        </header>
-      </>
+            </ContextMenu>
+          </div>
+        </nav>
+      </header>
     );
   }
 

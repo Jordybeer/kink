@@ -3,7 +3,7 @@ import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("hub keeps navigation and secondary product info in the shared context menu", async ({ page }) => {
+test("hub keeps navigation, brand and secondary product info in the shared context menu", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
@@ -15,7 +15,7 @@ test("hub keeps navigation and secondary product info in the shared context menu
   await expect(settings).toHaveText("");
   await expect(settings).toHaveAttribute("title", "Instellingen");
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
-  await expect(nav.getByText("KinkSync", { exact: true })).toHaveCount(0);
+  await expect(nav.getByText("KinkSync", { exact: true })).toBeVisible();
 
   const more = nav.getByRole("button", { name: "Meer opties" });
   await expect(more).toBeVisible();
