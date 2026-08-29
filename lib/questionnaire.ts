@@ -13,6 +13,7 @@ import {
   QUESTIONNAIRE_CORE_ANCHOR_IDS,
   QUESTIONNAIRE_INTEREST_ANCHOR_IDS,
 } from "@/lib/questionnaireMetadata";
+import { buildQuestionnaireFirstRoundPlan } from "@/lib/questionnaireFirstRound";
 import { defaultQuestionnaireSetup } from "@/lib/questionnaireSetup";
 import type {
   Kink,
@@ -165,9 +166,14 @@ function questionnairePerspective(profile: Profile): ProfilePerspective | undefi
   return role === "dominant" || role === "submissive" ? role : undefined;
 }
 
+/**
+ * Without an explicit plan this is the user-facing first-round coverage. The
+ * legacy runtime always passes its own fixed plan explicitly, preserving that
+ * compatibility contract while profile UI and Dynamic completion agree.
+ */
 export function questionnaireCoverage(
   profile: Profile,
-  plan: QuestionnaireCoveragePlan = buildQuestionnaireCoveragePlan(
+  plan: QuestionnaireCoveragePlan = buildQuestionnaireFirstRoundPlan(
     profile.questionnaireSetup?.interests ?? [],
     questionnairePerspective(profile),
   ),
