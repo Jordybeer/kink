@@ -3,7 +3,6 @@ import { Fraunces, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import "./design-role-tokens.css";
 import "./print.css";
-import InstallPromptBridge from "@/components/InstallPromptBridge";
 import VisualViewportBridge from "@/components/VisualViewportBridge";
 import DevTestToolsBootstrap from "@/components/DevTestToolsBootstrap";
 import TopNav from "@/components/TopNav";
@@ -40,11 +39,6 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "KinkSync",
-  },
 };
 
 export const viewport: Viewport = {
@@ -60,13 +54,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}
       style={{ scrollPaddingTop: "var(--nav-h)" }}
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__installPrompt=e;});`,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col antialiased">
         <MotionPolicy>
           <VisualViewportBridge />
@@ -74,7 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AmbientGlow />
           <AppLockGate>
             <OnboardingRouteGate>
-              <InstallPromptBridge />
               <OfflineCacheWarmup />
               <TopNavProvider>
                 <TopNav />
