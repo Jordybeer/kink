@@ -17,40 +17,60 @@ async function expectCenteredWithin(
   )).toBeLessThanOrEqual(tolerance);
 }
 
-test("Home wordmark stays centered when offline status changes the right cluster", async ({ page }) => {
-  for (const width of [320, 430]) {
-    await page.setViewportSize({ width, height: 740 });
+test("Home wordmark stays centered across compact, landscape, tablet and offline states", async ({ page }) => {
+  const viewports = [
+    { width: 320, height: 740, offline: true },
+    { width: 430, height: 740, offline: true },
+    { width: 844, height: 390, offline: false },
+    { width: 768, height: 1024, offline: false },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await seedAndGo(page, "/", PROFILES);
 
     const nav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
     const wordmark = nav.locator("[data-home-nav-wordmark]");
     const settings = nav.getByRole("button", { name: "Instellingen openen" });
-    const more = nav.getByRole("button", { name: "Meer opties" });
+    const actions = nav.getByTestId("home-topnav-actions");
 
     await expectCenteredWithin(nav, wordmark, 1);
+
+    let [settingsBox, wordmarkBox, actionsBox] = await Promise.all([
+      settings.boundingBox(),
+      wordmark.boundingBox(),
+      actions.boundingBox(),
+    ]);
+    expect(settingsBox).not.toBeNull();
+    expect(wordmarkBox).not.toBeNull();
+    expect(actionsBox).not.toBeNull();
+    expect(settingsBox!.x + settingsBox!.width).toBeLessThan(wordmarkBox!.x);
+    expect(wordmarkBox!.x + wordmarkBox!.width).toBeLessThan(actionsBox!.x);
+
+    if (!viewport.offline) continue;
 
     await page.context().setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event("offline")));
     await expect(nav.getByRole("status", { name: "Offline" })).toBeVisible();
     await expectCenteredWithin(nav, wordmark, 1);
 
-    const [settingsBox, wordmarkBox, moreBox] = await Promise.all([
+    [settingsBox, wordmarkBox, actionsBox] = await Promise.all([
       settings.boundingBox(),
       wordmark.boundingBox(),
-      more.boundingBox(),
+      actions.boundingBox(),
     ]);
     expect(settingsBox).not.toBeNull();
     expect(wordmarkBox).not.toBeNull();
-    expect(moreBox).not.toBeNull();
+    expect(actionsBox).not.toBeNull();
     expect(settingsBox!.x + settingsBox!.width).toBeLessThan(wordmarkBox!.x);
-    expect(wordmarkBox!.x + wordmarkBox!.width).toBeLessThan(moreBox!.x);
+    expect(wordmarkBox!.x + wordmarkBox!.width).toBeLessThan(actionsBox!.x);
 
     await page.context().setOffline(false);
     await page.evaluate(() => window.dispatchEvent(new Event("online")));
   }
 });
 
-test("Settings uses a stable utility surface on mobile and a contained panel on desktop", async ({ page }) => {
+test("Settings uses a stable utility surface on mobile and a contained panel from tablet upward", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", PROFILES);
 
@@ -68,14 +88,20 @@ test("Settings uses a stable utility surface on mobile and a contained panel on 
   await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
   await expect(trigger).toBeFocused();
 
-  await page.setViewportSize({ width: 1024, height: 900 });
-  await trigger.click();
-  dialog = page.getByRole("dialog", { name: "Instellingen" });
-  const desktopBox = await dialog.boundingBox();
-  expect(desktopBox).not.toBeNull();
-  expect(desktopBox!.width).toBeLessThanOrEqual(577);
-  expect(Math.abs(desktopBox!.x + desktopBox!.width / 2 - 512)).toBeLessThanOrEqual(2);
-  expect(desktopBox!.y).toBeGreaterThan(20);
+  for (const viewport of [
+    { width: 768, height: 900 },
+    { width: 1024, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await trigger.click();
+    dialog = page.getByRole("dialog", { name: "Instellingen" });
+    const box = await dialog.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeLessThanOrEqual(577);
+    expect(Math.abs(box!.x + box!.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(2);
+    expect(box!.y).toBeGreaterThan(20);
+    await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
+  }
 });
 
 test("kink edit uses the focused task presentation without a false drag affordance", async ({ page }) => {
