@@ -137,11 +137,42 @@ export default function TopNav() {
   } as const;
 
   if (path === "/") {
+    const homeMenuItems = [
+      ...(installAvailable
+        ? [{
+            label: "KinkSync installeren",
+            icon: <DownloadSimple size={17} aria-hidden="true" />,
+            onClick: () => setInstallGuideOpen(true),
+          }]
+        : []),
+      {
+        label: "Agenda",
+        icon: <CalendarDots size={17} aria-hidden="true" />,
+        onClick: () => router.push("/intimacy"),
+      },
+      {
+        label: "Over KinkSync",
+        icon: <Info size={17} aria-hidden="true" />,
+        onClick: () => router.push("/about"),
+      },
+      {
+        label: "Security & privacy",
+        icon: <ShieldCheck size={17} aria-hidden="true" />,
+        onClick: () => router.push("/security"),
+      },
+    ];
+
     return (
       <>
+        <style>{`
+          [data-home-wordmark] {
+            font-size: clamp(3rem, 11vw, 3.35rem) !important;
+            line-height: 0.98;
+          }
+        `}</style>
         <header className="sticky top-0 z-40" style={safeAreaShell}>
           <nav
-            className="mx-auto flex h-14 max-w-2xl items-start justify-between px-6 pt-1 lg:max-w-4xl"
+            className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4 lg:max-w-4xl"
             aria-label="Hoofdnavigatie"
             data-top-nav-variant="home"
           >
@@ -150,12 +181,11 @@ export default function TopNav() {
               data-testid="home-topnav-settings"
               onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
               aria-label="Instellingen openen"
-              title="Instellingen openen"
-              className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full px-1.5 text-sm font-medium"
-              style={{ color: "var(--text2)", pointerEvents: "auto" }}
+              title="Instellingen"
+              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
+              style={{ ...homeUtilitySurface, color: "var(--text2)" }}
             >
-              <GearSix size={17} aria-hidden="true" />
-              <span>Instellingen</span>
+              <GearSix size={18} aria-hidden="true" />
             </button>
 
             <div
@@ -164,44 +194,15 @@ export default function TopNav() {
               style={{ pointerEvents: "auto" }}
             >
               <OfflineStatus />
-              {installAvailable && (
-                <button
-                  type="button"
-                  onClick={() => setInstallGuideOpen(true)}
-                  aria-label="KinkSync installeren"
-                  title="KinkSync installeren"
-                  className="focus-ring inline-flex h-11 min-w-11 flex-none items-center gap-2 rounded-full border px-3 text-sm font-medium"
-                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
-                >
-                  <DownloadSimple size={17} aria-hidden="true" />
-                  <span className="hidden min-[360px]:inline">Installeren</span>
-                </button>
-              )}
               <ContextMenu
                 open={overflowOpen}
                 onClose={() => setOverflowOpen(false)}
-                items={[
-                  {
-                    label: "Agenda",
-                    icon: <CalendarDots size={17} aria-hidden="true" />,
-                    onClick: () => router.push("/intimacy"),
-                  },
-                  {
-                    label: "Over KinkSync",
-                    icon: <Info size={17} aria-hidden="true" />,
-                    onClick: () => router.push("/about"),
-                  },
-                  {
-                    label: "Security & privacy",
-                    icon: <ShieldCheck size={17} aria-hidden="true" />,
-                    onClick: () => router.push("/security"),
-                  },
-                ]}
+                items={homeMenuItems}
               >
                 <button
                   type="button"
                   onClick={() => setOverflowOpen((open) => !open)}
-                  aria-label="Meer over KinkSync"
+                  aria-label="Meer opties"
                   aria-expanded={overflowOpen}
                   className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
                   style={{ ...homeUtilitySurface, color: "var(--text2)" }}
