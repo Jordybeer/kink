@@ -241,14 +241,12 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             </div>
           </Link>
         ) : (
-          <div
-            className="rounded-2xl p-5 lg:col-span-2"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          <p
+            className="px-1 py-2 text-sm leading-relaxed lg:col-span-2"
+            style={{ color: "var(--text2)" }}
           >
-            <p className="text-sm" style={{ color: "var(--text2)" }}>
-              Voeg een profiel van een andere persoon toe om te vergelijken.
-            </p>
-          </div>
+            Voeg een profiel van een andere persoon toe om te vergelijken.
+          </p>
         )}
 
         <div className="flex flex-col gap-1.5 lg:col-span-2">
