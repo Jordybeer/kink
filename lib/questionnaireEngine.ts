@@ -423,17 +423,6 @@ export function selectConversationQuestion(
       return candidates[0] ?? null;
     }
 
-    if (context.lastKinkId) {
-      const last = catalog.find((kink) => kink.id === context.lastKinkId);
-      if (last) {
-        const differentTopic = candidates.find((item) =>
-          !isConversationContinuation(item, context.lastKinkId)
-          && !sharesTopic(last, item.kink),
-        );
-        if (differentTopic) return differentTopic;
-      }
-    }
-
     if (
       (context.phase === "preferComplement" || context.phase === "preferContinuation")
       && context.lastKinkId
@@ -452,6 +441,17 @@ export function selectConversationQuestion(
           ),
         );
         if (canonicalProbe) return canonicalProbe;
+      }
+    }
+
+    if (context.lastKinkId) {
+      const last = catalog.find((kink) => kink.id === context.lastKinkId);
+      if (last) {
+        const differentTopic = candidates.find((item) =>
+          !isConversationContinuation(item, context.lastKinkId)
+          && !sharesTopic(last, item.kink),
+        );
+        if (differentTopic) return differentTopic;
       }
     }
 
