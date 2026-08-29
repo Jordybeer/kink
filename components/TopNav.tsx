@@ -169,6 +169,12 @@ export default function TopNav() {
             font-size: clamp(3rem, 11vw, 3.35rem) !important;
             line-height: 0.98;
           }
+          @media (max-height: 520px) and (orientation: landscape) {
+            [data-home-wordmark] {
+              font-size: 2.85rem !important;
+              line-height: 0.96;
+            }
+          }
         `}</style>
         <header className="sticky top-0 z-40" style={safeAreaShell}>
           <nav
