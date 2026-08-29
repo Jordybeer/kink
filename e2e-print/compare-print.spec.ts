@@ -39,7 +39,7 @@ test("print-native vergelijking blijft volledig en artefactvrij", async ({ page 
   await expect(printDocument.getByRole("heading", { name: /Te bespreken/ })).toBeVisible();
   await expect(printDocument.getByRole("heading", { name: /Verschillen/ })).toBeVisible();
   await expect(printDocument.getByRole("heading", { name: /Overlap/ })).toBeVisible();
-  await expect(printDocument.locator("button, textarea, input, [role=dialog]")).toHaveCount(0);
+  await expect(page.locator("button:visible, textarea:visible, input:visible, [role=dialog]:visible")).toHaveCount(0);
   expect(await printDocument.locator("tbody tr").count()).toBeGreaterThan(50);
 
   const sectionTops = await printDocument.locator(".compare-print-section").evaluateAll((sections) =>

@@ -93,6 +93,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           const attention = toast.variant === "attention";
           return (
           <motion.div
+            data-print-hide="true"
             initial={{ y: modalOpen ? -40 : 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: modalOpen ? -40 : 40, opacity: 0 }}
