@@ -61,7 +61,7 @@ describe("directionele kinkvragen", () => {
       { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
       { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
     ]);
-    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(55);
+    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(53);
     const affinityPairs = DIRECTIONAL_KINK_PAIRS.filter((pair) => "questionnaireAffinity" in pair);
     expect(affinityPairs).toHaveLength(34);
     for (const pair of affinityPairs) {
@@ -97,7 +97,7 @@ describe("directionele kinkvragen", () => {
   it("keeps neutral pairs role-independent while compact Dynamic aligns strong role-affinity anchors", () => {
     for (const perspective of ["dominant", "submissive"] as const) {
       const plan = buildQuestionnaireCoveragePlan([], perspective);
-      expect(plan.anchorIds).toHaveLength(48);
+      expect(plan.anchorIds).toHaveLength(45);
       expect(plan.anchorIds).toContain("pegging_give");
       expect(plan.anchorIds).toContain("pegging_receive");
       expect(plan.anchorIds).toContain(perspective === "dominant" ? "spanking_hand_give" : "spanking_hand_receive");
@@ -164,8 +164,6 @@ describe("directionele kinkvragen", () => {
     expect(partnerDirectionalKinkId("body_worship_give")).toBe("body_worship_receive");
     expect(partnerDirectionalKinkId("prostate_massage_receive")).toBe("prostate_massage_give");
     expect(partnerDirectionalKinkId("diaper_changing_give")).toBe("diaper_changing_receive");
-    expect(partnerDirectionalKinkId("oral_sex_give")).toBe("oral_sex_receive");
-    expect(partnerDirectionalKinkId("manual_stimulation_receive")).toBe("manual_stimulation_give");
   });
 
   it("searches both variants through the shared concept vocabulary", () => {
@@ -242,7 +240,6 @@ describe("directionele kinkvragen", () => {
       "laarzen_aanbidding_give", "laarzen_aanbidding_receive", "erotic_massage_give", "erotic_massage_receive",
       "prostate_massage_give", "prostate_massage_receive", "pet_training_give", "pet_training_receive",
       "pet_grooming_give", "pet_grooming_receive", "diaper_changing_give", "diaper_changing_receive",
-      "oral_sex_give", "oral_sex_receive", "manual_stimulation_give", "manual_stimulation_receive",
     ];
     for (const id of ids) {
       expect(QUESTIONNAIRE_FOLLOW_UPS[id]).toBeUndefined();
