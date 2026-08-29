@@ -122,44 +122,46 @@ export default function TopNav() {
         `}</style>
         <header className="sticky top-0 z-40" style={safeAreaShell}>
           <nav
-            className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4 lg:max-w-4xl"
+            className="mx-auto flex h-14 max-w-2xl items-center px-4 lg:max-w-4xl"
             aria-label="Hoofdnavigatie"
             data-top-nav-variant="home"
           >
-            <button
-              type="button"
-              data-testid="home-topnav-settings"
-              onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-              aria-label="Instellingen openen"
-              title="Instellingen"
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
-              style={{ ...homeUtilitySurface, color: "var(--text2)" }}
-            >
-              <GearSix size={18} aria-hidden="true" />
-            </button>
-
-            <div
-              data-testid="home-topnav-actions"
-              className="flex items-center gap-2"
-              style={{ pointerEvents: "auto" }}
-            >
-              <OfflineStatus />
-              <ContextMenu
-                open={overflowOpen}
-                onClose={() => setOverflowOpen(false)}
-                items={homeMenuItems}
+            <div className="flex items-center gap-2" style={{ pointerEvents: "auto" }}>
+              <button
+                type="button"
+                data-testid="home-topnav-settings"
+                onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
+                aria-label="Instellingen openen"
+                title="Instellingen"
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
+                style={{ ...homeUtilitySurface, color: "var(--text2)" }}
               >
-                <button
-                  type="button"
-                  onClick={() => setOverflowOpen((open) => !open)}
-                  aria-label="Meer opties"
-                  aria-expanded={overflowOpen}
-                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
-                  style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                <GearSix size={18} aria-hidden="true" />
+              </button>
+
+              <div
+                data-testid="home-topnav-actions"
+                className="flex items-center gap-2"
+                style={{ pointerEvents: "auto" }}
+              >
+                <ContextMenu
+                  open={overflowOpen}
+                  onClose={() => setOverflowOpen(false)}
+                  items={homeMenuItems}
                 >
-                  <DotsThree size={22} weight="bold" aria-hidden="true" />
-                </button>
-              </ContextMenu>
+                  <button
+                    type="button"
+                    onClick={() => setOverflowOpen((open) => !open)}
+                    aria-label="Meer opties"
+                    aria-expanded={overflowOpen}
+                    className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
+                    style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                  >
+                    <DotsThree size={22} weight="bold" aria-hidden="true" />
+                  </button>
+                </ContextMenu>
+                <OfflineStatus />
+              </div>
             </div>
           </nav>
         </header>

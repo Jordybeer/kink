@@ -3,7 +3,7 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("TopNav keeps Home inset left and content chrome quiet without changing the command contract", async ({ page }) => {
+test("TopNav keeps Home compact and content chrome quiet with accessible commands", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", PROFILES);
 
@@ -11,27 +11,32 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
   await expect(homeNav).toHaveAttribute("data-top-nav-variant", "home");
   const homeSettings = homeNav.getByTestId("home-topnav-settings");
   const homeActions = homeNav.getByTestId("home-topnav-actions");
+  const homeMore = homeNav.getByRole("button", { name: "Meer opties" });
   await expect(homeSettings).toBeVisible();
   await expect(homeActions).toBeVisible();
+  await expect(homeMore).toBeVisible();
 
-  const [homeNavBox, homeSettingsBox, homeActionsBox] = await Promise.all([
+  const [homeNavBox, homeSettingsBox, homeActionsBox, homeMoreBox] = await Promise.all([
     homeNav.boundingBox(),
     homeSettings.boundingBox(),
     homeActions.boundingBox(),
+    homeMore.boundingBox(),
   ]);
   expect(homeNavBox).not.toBeNull();
   expect(homeSettingsBox).not.toBeNull();
   expect(homeActionsBox).not.toBeNull();
+  expect(homeMoreBox).not.toBeNull();
   expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
   expect(homeNavBox!.height).toBeLessThanOrEqual(57);
   expect(homeSettingsBox!.width + homeActionsBox!.width).toBeLessThan(homeNavBox!.width * 0.7);
-  expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(20);
-  expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(30);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeGreaterThanOrEqual(20);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeActionsBox!.x + homeActionsBox!.width)).toBeLessThanOrEqual(30);
-  for (const utilityBox of [homeSettingsBox!, homeActionsBox!]) {
+  expect(homeSettingsBox!.x - homeNavBox!.x).toBeGreaterThanOrEqual(15);
+  expect(homeSettingsBox!.x - homeNavBox!.x).toBeLessThanOrEqual(17);
+  expect(homeMoreBox!.x - (homeSettingsBox!.x + homeSettingsBox!.width)).toBeGreaterThanOrEqual(7);
+  expect(homeMoreBox!.x - (homeSettingsBox!.x + homeSettingsBox!.width)).toBeLessThanOrEqual(9);
+  expect(homeMoreBox!.x + homeMoreBox!.width).toBeLessThan(homeNavBox!.x + homeNavBox!.width / 2);
+  for (const utilityBox of [homeSettingsBox!, homeMoreBox!]) {
     expect(utilityBox.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
-    expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(5);
+    expect(utilityBox.y - homeNavBox!.y).toBeLessThanOrEqual(6);
     expect(utilityBox.y + utilityBox.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
   }
   await expect.poll(() => homeActions.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
@@ -54,7 +59,7 @@ test("TopNav keeps Home inset left and content chrome quiet without changing the
     pointerEvents: "none",
   });
 
-  await homeNav.getByRole("button", { name: "Meer over KinkSync" }).click();
+  await homeMore.click();
   const homeMenu = page.getByRole("menu");
   await expect(homeMenu).toBeVisible();
   const homeMenuBox = await homeMenu.boundingBox();

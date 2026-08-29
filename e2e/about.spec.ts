@@ -6,7 +6,7 @@ test("home opens a compact human-first KinkSync story", async ({ page }) => {
   await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
 
   const nav = page.getByLabel("Hoofdnavigatie");
-  await nav.getByRole("button", { name: "Meer over KinkSync" }).click();
+  await nav.getByRole("button", { name: "Meer opties" }).click();
   await page.getByRole("menuitem", { name: "Over KinkSync" }).click();
 
   await expect(page).toHaveURL(/\/about$/);
