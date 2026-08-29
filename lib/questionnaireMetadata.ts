@@ -18,11 +18,14 @@ export const QUESTIONNAIRE_CATEGORY_CLUSTERS: Record<KinkCategoryId, readonly Qu
   rituals: ["power"],
   discipline: ["power", "impact"],
   roleplay: ["role_expression"],
+  interaction: ["sexual_social", "role_expression"],
   sensation: ["sensation"],
+  sexual_acts: ["sexual_social"],
   exhibition: ["sexual_social"],
   media: ["sexual_social"],
   group_partner: ["sexual_social"],
   body_focus: ["role_expression", "power"],
+  // Legacy only: live catalog items are migrated out of this retired category.
   materials_scent: ["sensation"],
   pet_play: ["role_expression", "power"],
   fluids: ["sexual_social"],
@@ -58,7 +61,7 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "whipping_give", "whipping_receive", "belt_give", "belt_receive",
     "slapping_face_give", "slapping_face_receive", "punching_give", "punching_receive",
     "trampling_give", "trampling_receive", "over_de_knie",
-    "rubber_zweep_slapper", "fire_flogger", "bullwhip", "body_slapping", "strafspanking",
+    "rubber_zweep_slapper", "fire_flogger", "bullwhip", "body_slapping", "strafspanking", "ballbusting",
   ],
   rope: [
     "rope_bondage_give", "rope_bondage_receive", "shibari_give", "shibari_receive",
@@ -79,13 +82,24 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
   ],
   protocols: [
     "rules_protocols", "rituelen_protocols", "toestemmingsprotocol", "spraakprotocol",
-    "hoog_protocol",
+    "hoog_protocol", "kleding_commando", "verplicht_nudisme_prive", "verplicht_nudisme_publiek",
   ],
   orgasm_control: [
     "chastity", "forced_orgasm", "orgasm_denial", "orgasm_control", "orgasme_uitstel_straf",
     "orgasme_op_commando",
   ],
-  exhibition: ["exhibitionism", "being_watched", "public_play", "dogging", "webcam", "remote_toy_publiek"],
+  interaction_chemistry: [
+    "kissing_making_out", "intense_eye_contact", "sexual_sounds_auralism", "erotic_teasing",
+    "slow_sensual_sex", "anticipation_suspense", "play_fighting", "dirty_talk", "rough_sex",
+    "erotisch_dansen_prive",
+  ],
+  sexual_acts: [
+    "oral_sex_give", "oral_sex_receive", "manual_stimulation_give", "manual_stimulation_receive",
+    "deep_throat_give", "deep_throat_receive", "mutual_masturbation", "partner_masturbation_watch",
+    "erotic_massage_give", "erotic_massage_receive", "facesitting", "footjob_give", "footjob_receive",
+    "rimming_give", "rimming_receive",
+  ],
+  exhibition: ["exhibitionism", "being_watched", "public_play", "dogging", "webcam", "remote_toy_publiek", "erotisch_dansen_publiek"],
   voyeurism: ["voyeurism", "watching_others"],
   media_capture: ["nude_photography", "recording", "webcam", "adult_content_creation"],
   masturbation: ["mutual_masturbation", "partner_masturbation_watch", "joi"],
@@ -106,6 +120,10 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "laarzen_aanbidding_give", "laarzen_aanbidding_receive",
   ],
   scent: ["geur_scent_fetish", "voetgeur", "panty_sniffing"],
+  fetishwear: [
+    "leather", "latex_rubber", "lingerie", "kniekousen_fetish", "wetlook", "hoge_hakken_dragen",
+    "hoge_hakken_aanbidding", "stocking_worship", "laarzen_aanbidding_give", "laarzen_aanbidding_receive",
+  ],
   little_ageplay: [
     "little_speelgoed", "ddlg_mdlb_dynamiek", "little_space", "baby_infantiliteit",
     "fopspeen_fles",
@@ -115,7 +133,7 @@ export const QUESTIONNAIRE_TOPIC_IDS = {
     "diaper_changing_give", "diaper_changing_receive",
   ],
   pet_play: [
-    "furry", "petplay_collar_id", "petplay_puppy", "petplay_kitten", "petplay_pony",
+    "petplay_collar_id", "petplay_puppy", "petplay_kitten", "petplay_pony",
     "petplay_harnas", "petplay_oortjes", "petplay_leiband", "petplay_geluiden", "petplay_kom",
     "fox_tail_plug", "petplay_kooi", "petplay_kattenbak",
     "pet_training_give", "pet_training_receive", "pet_grooming_give", "pet_grooming_receive",
@@ -157,18 +175,21 @@ export const QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
   rituals: ["rules_protocols"],
   discipline: ["punishment"],
   roleplay: ["masseur_client", "cnc"],
-  sensation: ["ice_play", "tickling", "choking"],
+  interaction: ["erotic_teasing", "sexual_sounds_auralism"],
+  sensation: ["ice_play", "tickling", "choking", "geur_scent_fetish"],
+  sexual_acts: ["oral_sex_give", "oral_sex_receive"],
   exhibition: ["exhibitionism", "voyeurism"],
   media: ["nude_photography", "recording"],
-  group_partner: ["partner_masturbation_watch", "trio_groepsseks"],
+  group_partner: ["voyeur_sharing", "trio_groepsseks"],
   body_focus: ["thigh_focus", "feet"],
-  materials_scent: ["lingerie", "geur_scent_fetish"],
+  // Retired category kept empty for compile/data compatibility only.
+  materials_scent: [],
   pet_play: ["petplay_collar_id", "petplay_puppy"],
   fluids: ["cum_play", "drool_play", "spitting"],
   toys: ["vibration_play", "remote_toy"],
   penetration: ["butt_plug", "pegging_give", "pegging_receive"],
   aftercare: ["aftercare_physical", "aftercare_alone", "next_day_check_in"],
-  appearance: ["hoge_hakken_dragen", "smeared_makeup"],
+  appearance: ["lingerie", "hoge_hakken_dragen"],
   adult_ageplay: ["little_speelgoed", "ddlg_mdlb_dynamiek", "luiers_dragen"],
 } as const satisfies Record<KinkCategoryId, readonly string[]>;
 
@@ -192,7 +213,7 @@ export const QUESTIONNAIRE_INTEREST_ANCHOR_IDS: Record<QuestionnaireInterest, re
   bondage: ["handcuffs_give", "rope_bondage_give", "gag_ball_give"],
   sensation: ["ice_play", "tickling", "geur_scent_fetish"],
   humiliation: ["humiliation_verbal", "service"],
-  sexual_social: ["being_watched", "voyeur_sharing", "butt_plug"],
+  sexual_social: ["being_watched", "voyeur_sharing", "oral_sex_give"],
 };
 
 /**
@@ -223,7 +244,6 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["aftercare_verbal", "next_day_check_in"],
   ["blindfold_give", "sound_deprivation_give"],
   ["blindfold_receive", "sound_deprivation_receive"],
-
   ["being_watched", "public_play"],
   ["remote_toy", "remote_toy_publiek"],
   ["nude_photography", "recording"],
@@ -232,6 +252,12 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
   ["luiers_dragen", "diaper_partner_wearing"],
   ["luiers_dragen", "diaper_wetting"],
   ["breeding_fantasy", "creampie"],
+  ["kissing_making_out", "slow_sensual_sex"],
+  ["erotic_teasing", "anticipation_suspense"],
+  ["erotic_teasing", "intense_eye_contact"],
+  ["play_fighting", "rough_sex"],
+  ["oral_sex_give", "deep_throat_give"],
+  ["oral_sex_receive", "deep_throat_receive"],
 ] as const satisfies readonly (readonly [string, string])[];
 
 /**
