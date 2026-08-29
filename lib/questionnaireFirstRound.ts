@@ -2,7 +2,7 @@ import { KINKS } from "@/lib/kinks";
 import { questionnaireParticipationKinkIdForPerspective } from "@/lib/participation";
 import { rankQuestionnaireQueueItems, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import { QUESTIONNAIRE_CORE_ANCHOR_IDS, QUESTIONNAIRE_INTEREST_ANCHOR_IDS } from "@/lib/questionnaireMetadata";
-import type { Profile, ProfilePerspective, QuestionnaireInterest } from "@/types";
+import type { Kink, Profile, ProfilePerspective, QuestionnaireInterest } from "@/types";
 import type { QuestionnaireCoverage, QuestionnaireCoveragePlan, QuestionnaireRuntime } from "@/lib/questionnaire";
 
 /**
@@ -26,6 +26,7 @@ export interface DynamicFirstRound {
   plan: QuestionnaireCoveragePlan;
   coverage: QuestionnaireCoverage;
   queue: QuestionnaireQueueItem[];
+  visibleKinks: Kink[];
   complete: boolean;
 }
 
@@ -131,10 +132,16 @@ export function getDynamicFirstRound(
       };
     });
 
+  const visibleIds = new Set([...plan.anchorIds, ...pendingProbes.map((probe) => probe.targetKinkId)]);
+  const visibleKinks = KINKS.filter((kink) =>
+    visibleIds.has(kink.id) || profile.entries[kink.id]?.status != null,
+  );
+
   return {
     plan,
     coverage,
     queue: rankQuestionnaireQueueItems(items, KINKS, profile.entries),
+    visibleKinks,
     complete: coverage.complete && pendingProbes.length === 0,
   };
 }
