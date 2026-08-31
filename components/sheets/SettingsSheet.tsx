@@ -125,7 +125,7 @@ function ThemeSelector() {
                 value={option.value}
                 checked={active}
                 onChange={() => setPreference(option.value)}
-                className="peer sr-only"
+                className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
               />
               <span
                 className="flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]"

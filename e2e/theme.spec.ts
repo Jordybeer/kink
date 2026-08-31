@@ -14,8 +14,11 @@ async function readContrastPairs(page: Page) {
     const styles = getComputedStyle(document.documentElement);
     const read = (name: string) => styles.getPropertyValue(name).trim();
     const rgb = (value: string) => {
-      const hex = value.replace("#", "");
-      if (!/^[0-9a-f]{6}$/i.test(hex)) throw new Error(`Expected six-digit hex, got ${value}`);
+      const raw = value.replace("#", "");
+      const hex = /^[0-9a-f]{3}$/i.test(raw)
+        ? raw.split("").map((channel) => channel.repeat(2)).join("")
+        : raw;
+      if (!/^[0-9a-f]{6}$/i.test(hex)) throw new Error(`Expected a hex colour, got ${value}`);
       return [0, 2, 4].map((index) => Number.parseInt(hex.slice(index, index + 2), 16));
     };
     const luminance = (value: string) => rgb(value)
