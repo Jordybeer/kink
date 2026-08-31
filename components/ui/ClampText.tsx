@@ -102,7 +102,7 @@ export default function ClampText({ text, className = "", style }: Props) {
               maxHeight: "min(45vh, calc(var(--visual-viewport-height, 100dvh) - var(--nav-h) - 1.5rem))",
               background: "var(--surface2)",
               border: "1px solid var(--border-accent)",
-              boxShadow: "0 10px 28px rgba(0,0,0,0.45)",
+              boxShadow: "0 10px 28px var(--deep-shadow)",
               color: "var(--text)",
             }}
           >

@@ -115,7 +115,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
               type="button"
               onClick={() => deleteQuarantinedProfile(record.profile.id)}
               className="focus-ring min-h-11 flex-1 rounded-xl text-sm font-semibold"
-              style={{ background: "var(--hard-no)", color: "white" }}
+              style={{ background: "var(--danger-fill)", color: "var(--on-danger-fill)" }}
             >
               Definitief verwijderen
             </button>

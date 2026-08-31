@@ -30,7 +30,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // Explicit loopback avoids Next trying to enumerate host interfaces in
+    // restricted CI/container runners before the test server can become ready.
+    command: "npm run dev -- --hostname 127.0.0.1",
     url: "http://localhost:3000",
     // Local dev may reuse a running server; a gate-keeping run (CI=1) must
     // own its own — a stale server once green-lit code that never ran

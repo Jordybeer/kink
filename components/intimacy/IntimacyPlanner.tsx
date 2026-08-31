@@ -395,7 +395,7 @@ export default function IntimacyPlanner() {
               style={{
                 background: active ? "var(--surface)" : "transparent",
                 color: active ? "var(--text)" : "var(--text2)",
-                boxShadow: active ? "0 1px 0 rgba(255,255,255,0.04)" : "none",
+                boxShadow: active ? "0 1px 0 var(--inset-highlight)" : "none",
               }}
             >
               {label}

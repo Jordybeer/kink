@@ -22,6 +22,7 @@ import {
 } from "@/lib/profileSnapshot";
 import { KINKS } from "@/lib/kinks";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
+import { useTheme } from "@/components/ThemeProvider";
 
 ChartJS.register(
   LineController,
@@ -49,6 +50,7 @@ interface ResolvedTokens {
   maybe: string;
   no: string;
   hardNo: string;
+  text: string;
   text2: string;
   surface2: string;
   border: string;
@@ -57,14 +59,15 @@ interface ResolvedTokens {
 }
 
 const FALLBACK_TOKENS: ResolvedTokens = {
-  yes: "#f97316",
-  willing: "#84cc16",
-  maybe: "#fbbf24",
-  no: "#818cf8",
-  hardNo: "#ef4444",
-  text2: "#9d9ab8",
-  surface2: "#181824",
-  border: "rgba(255,255,255,0.08)",
+  yes: "transparent",
+  willing: "transparent",
+  maybe: "transparent",
+  no: "transparent",
+  hardNo: "transparent",
+  text: "currentColor",
+  text2: "currentColor",
+  surface2: "transparent",
+  border: "transparent",
   fontSans: "system-ui, -apple-system, sans-serif",
   fontDisplay: "Georgia, serif",
 };
@@ -75,6 +78,7 @@ interface Props {
 }
 
 export function ProfileTrendsChart({ snapshots, currentEntries }: Props) {
+  const { resolvedTheme } = useTheme();
   const [hidden, setHidden] = useState<Record<CountKey, boolean>>({
     yes: false, willing: false, maybe: false, no: false, hard_no: false,
   });
@@ -88,13 +92,14 @@ export function ProfileTrendsChart({ snapshots, currentEntries }: Props) {
       maybe: readVar("--maybe", FALLBACK_TOKENS.maybe),
       no: readVar("--no", FALLBACK_TOKENS.no),
       hardNo: readVar("--hard-no", FALLBACK_TOKENS.hardNo),
+      text: readVar("--text", FALLBACK_TOKENS.text),
       text2: readVar("--text2", FALLBACK_TOKENS.text2),
       surface2: readVar("--surface2", FALLBACK_TOKENS.surface2),
       border: readVar("--border", FALLBACK_TOKENS.border),
       fontSans: readVar("--font-sans", FALLBACK_TOKENS.fontSans),
       fontDisplay: readVar("--font-display", FALLBACK_TOKENS.fontDisplay),
     });
-  }, []);
+  }, [resolvedTheme]);
 
   const prep = useMemo(
     () => prepareProfileTrendData(snapshots, currentEntries),
@@ -151,7 +156,7 @@ export function ProfileTrendsChart({ snapshots, currentEntries }: Props) {
         padding: 10,
         titleColor: tokens.text2,
         titleFont: { family: tokens.fontDisplay, size: 13, style: "italic", weight: 400 },
-        bodyColor: "#ffffff",
+        bodyColor: tokens.text,
         bodyFont: { family: tokens.fontSans, size: 12 },
         bodySpacing: 4,
         cornerRadius: 6,

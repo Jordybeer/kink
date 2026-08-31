@@ -18,10 +18,11 @@ export default function TabBar<T extends string>({ tabs, value, onChange }: Prop
     <nav
       className="flex justify-between rounded-[28px] px-3 py-2"
       style={{
-        background: "rgba(20,20,20,0.85)",
+        background: "var(--floating-surface)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid var(--floating-border)",
+        boxShadow: "var(--floating-shadow)",
       }}
       aria-label="Main navigation"
     >
@@ -38,7 +39,7 @@ export default function TabBar<T extends string>({ tabs, value, onChange }: Prop
             style={{
               background: "transparent",
               border: "none",
-              color: active ? "white" : "var(--text2)",
+              color: active ? "var(--text)" : "var(--text2)",
             }}
           >
             <span

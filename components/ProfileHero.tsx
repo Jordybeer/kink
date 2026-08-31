@@ -276,7 +276,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               <span
                 aria-hidden="true"
                 className="profile-fetlife-mark flex h-6 w-6 flex-none items-center justify-center rounded-full"
-                style={{ color: "#fff", background: "#c62838", border: "1px solid #000" }}
+                style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)", border: "1px solid color-mix(in srgb, var(--danger-fill) 72%, var(--text))" }}
               >
                 <FetLifeMark className="h-[15px] w-[15px]" />
               </span>

@@ -521,7 +521,7 @@ function ContractPage() {
             transition={{ duration: 0.18 }}
             onClick={() => setWhyOpen(false)}
             className="fixed inset-0 z-[220] flex items-center justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-            style={{ background: "rgba(0,0,0,0.65)" }}
+            style={{ background: "var(--scrim)" }}
           >
             <motion.div
               key="why-panel"

@@ -19,6 +19,8 @@ import MotionPolicy from "@/components/MotionPolicy";
 import OnboardingRouteGate from "@/components/OnboardingRouteGate";
 import { TopNavProvider } from "@/components/nav/TopNavContext";
 import IntimacyReminderRunner from "@/components/intimacy/IntimacyReminderRunner";
+import ThemeProvider from "@/components/ThemeProvider";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -42,7 +44,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#D4527C",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBF8FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#09070D" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -51,33 +56,40 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="nl"
+      data-theme="dark"
+      suppressHydrationWarning
       className={`h-full ${instrumentSans.variable} ${fraunces.variable}`}
       style={{ scrollPaddingTop: "var(--nav-h)" }}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col antialiased">
-        <MotionPolicy>
-          <VisualViewportBridge />
-          <DevTestToolsBootstrap />
-          <AmbientGlow />
-          <AppLockGate>
-            <OnboardingRouteGate>
-              <OfflineCacheWarmup />
-              <TopNavProvider>
-                <TopNav />
-                <BottomNav />
-                <ToastProvider>
-                  <ImportedProfileIntegrityGate>
-                    {children}
-                    <IntimacyReminderRunner />
-                    <UpdateBanner />
-                    <NotificationPrompt />
-                    <StorageFullNotice />
-                  </ImportedProfileIntegrityGate>
-                </ToastProvider>
-              </TopNavProvider>
-            </OnboardingRouteGate>
-          </AppLockGate>
-        </MotionPolicy>
+        <ThemeProvider>
+          <MotionPolicy>
+            <VisualViewportBridge />
+            <DevTestToolsBootstrap />
+            <AmbientGlow />
+            <AppLockGate>
+              <OnboardingRouteGate>
+                <OfflineCacheWarmup />
+                <TopNavProvider>
+                  <TopNav />
+                  <BottomNav />
+                  <ToastProvider>
+                    <ImportedProfileIntegrityGate>
+                      {children}
+                      <IntimacyReminderRunner />
+                      <UpdateBanner />
+                      <NotificationPrompt />
+                      <StorageFullNotice />
+                    </ImportedProfileIntegrityGate>
+                  </ToastProvider>
+                </TopNavProvider>
+              </OnboardingRouteGate>
+            </AppLockGate>
+          </MotionPolicy>
+        </ThemeProvider>
       </body>
     </html>
   );

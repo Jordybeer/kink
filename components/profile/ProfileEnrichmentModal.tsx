@@ -183,7 +183,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         aria-hidden="true"
         onMouseDown={onClose}
         className="absolute inset-0"
-        style={{ background: "rgba(5, 3, 12, 0.76)", backdropFilter: "blur(8px)" }}
+        style={{ background: "var(--scrim-strong)", backdropFilter: "blur(8px)" }}
       />
 
       <div

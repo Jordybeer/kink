@@ -14,6 +14,7 @@ import {
   type ChartData,
 } from "chart.js";
 import type { ContractSnapshot } from "@/types";
+import { useTheme } from "@/components/ThemeProvider";
 
 ChartJS.register(
   LineController,
@@ -86,6 +87,7 @@ interface ResolvedTokens {
   maybe: string;
   no: string;
   hardNo: string;
+  text: string;
   text2: string;
   surface2: string;
   border: string;
@@ -94,13 +96,14 @@ interface ResolvedTokens {
 }
 
 const FALLBACK_TOKENS: ResolvedTokens = {
-  yes: "#4ade80",
-  maybe: "#fbbf24",
-  no: "#fb923c",
-  hardNo: "#ef4444",
-  text2: "#9d9ab8",
-  surface2: "#181824",
-  border: "rgba(255,255,255,0.08)",
+  yes: "transparent",
+  maybe: "transparent",
+  no: "transparent",
+  hardNo: "transparent",
+  text: "currentColor",
+  text2: "currentColor",
+  surface2: "transparent",
+  border: "transparent",
   fontSans: "system-ui, -apple-system, sans-serif",
   fontDisplay: "Georgia, serif",
 };
@@ -110,6 +113,7 @@ interface Props {
 }
 
 export function ContractTrendsChart({ contracts }: Props) {
+  const { resolvedTheme } = useTheme();
   const [hidden, setHidden] = useState<Record<SeriesKey, boolean>>({
     matchCount: false,
     discussCount: false,
@@ -125,13 +129,14 @@ export function ContractTrendsChart({ contracts }: Props) {
       maybe: readVar("--maybe", FALLBACK_TOKENS.maybe),
       no: readVar("--no", FALLBACK_TOKENS.no),
       hardNo: readVar("--hard-no", FALLBACK_TOKENS.hardNo),
+      text: readVar("--text", FALLBACK_TOKENS.text),
       text2: readVar("--text2", FALLBACK_TOKENS.text2),
       surface2: readVar("--surface2", FALLBACK_TOKENS.surface2),
       border: readVar("--border", FALLBACK_TOKENS.border),
       fontSans: readVar("--font-sans", FALLBACK_TOKENS.fontSans),
       fontDisplay: readVar("--font-display", FALLBACK_TOKENS.fontDisplay),
     });
-  }, []);
+  }, [resolvedTheme]);
 
   const prep = useMemo(() => prepareTrendData(contracts), [contracts]);
 
@@ -189,7 +194,7 @@ export function ContractTrendsChart({ contracts }: Props) {
           style: "italic",
           weight: 400,
         },
-        bodyColor: "#ffffff",
+        bodyColor: tokens.text,
         bodyFont: { family: tokens.fontSans, size: 12 },
         bodySpacing: 4,
         cornerRadius: 6,

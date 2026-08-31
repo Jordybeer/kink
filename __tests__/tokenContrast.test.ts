@@ -1,22 +1,21 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const globalsCss = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 const roleCss = readFileSync(new URL("../app/design-role-tokens.css", import.meta.url), "utf8");
 
-function rootHexTokens(source: string): Record<string, string> {
-  const rootBlock = source.match(/^:root\s*\{([\s\S]*?)\}/m)?.[1] ?? "";
+function selectorHexTokens(selector: RegExp): Record<string, string> {
+  const block = roleCss.match(selector)?.[1] ?? "";
   const tokens: Record<string, string> = {};
-  for (const match of rootBlock.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\b/g)) {
+  for (const match of block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\b/g)) {
     tokens[`--${match[1]}`] = match[2].toLowerCase();
   }
   return tokens;
 }
 
-const TOKENS = {
-  ...rootHexTokens(globalsCss),
-  ...rootHexTokens(roleCss),
-};
+const PALETTES = {
+  dark: selectorHexTokens(/:root,\s*:root\[data-theme="dark"\]\s*\{([\s\S]*?)\}/m),
+  light: selectorHexTokens(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\}/m),
+} as const;
 
 function rgb(hex: string): [number, number, number] {
   const value = Number.parseInt(hex.slice(1), 16);
@@ -45,20 +44,20 @@ const STATUS_TOKENS = [
   "--yes", "--willing", "--curious", "--maybe", "--no", "--hard-no", "--conflict",
 ] as const;
 
-function assertPair(foreground: string, background: string, minimum: number) {
-  const foregroundHex = TOKENS[foreground];
-  const backgroundHex = TOKENS[background];
-  expect(foregroundHex, `${foreground} missing from fixed palette`).toBeDefined();
-  expect(backgroundHex, `${background} missing from fixed palette`).toBeDefined();
-  const ratio = contrast(foregroundHex, backgroundHex);
-  expect(
-    ratio,
-    `${foreground} ${foregroundHex} on ${background} ${backgroundHex}`,
-  ).toBeGreaterThanOrEqual(minimum);
-}
+describe.each(Object.entries(PALETTES))("tokenContrast — %s palette", (mode, tokens) => {
+  function assertPair(foreground: string, background: string, minimum: number) {
+    const foregroundHex = tokens[foreground];
+    const backgroundHex = tokens[background];
+    expect(foregroundHex, `${mode} ${foreground} missing`).toBeDefined();
+    expect(backgroundHex, `${mode} ${background} missing`).toBeDefined();
+    const ratio = contrast(foregroundHex, backgroundHex);
+    expect(
+      ratio,
+      `${mode} ${foreground} ${foregroundHex} on ${background} ${backgroundHex}`,
+    ).toBeGreaterThanOrEqual(minimum);
+  }
 
-describe("tokenContrast — the fixed dark room holds its ratios", () => {
-  it("parses the base wardrobe and semantic text roles", () => {
+  it("parses the complete semantic wardrobe", () => {
     for (const token of [
       ...SURFACES,
       ...STATUS_TOKENS,
@@ -70,13 +69,17 @@ describe("tokenContrast — the fixed dark room holds its ratios", () => {
       "--accent2-text",
       "--hard-no-text",
       "--on-accent",
+      "--accent-fill",
+      "--on-accent-fill",
+      "--danger-fill",
+      "--on-danger-fill",
       "--pwa-nav-surface",
       "--pwa-nav-surface-deep",
       "--pwa-nav-active",
       "--pwa-nav-icon",
       "--pwa-nav-icon-active",
     ]) {
-      expect(TOKENS[token], `${token} not found in fixed palette`).toMatch(/^#[0-9a-f]{6}$/);
+      expect(tokens[token], `${mode} ${token} not found`).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
 
@@ -84,38 +87,34 @@ describe("tokenContrast — the fixed dark room holds its ratios", () => {
     for (const background of SURFACES) assertPair("--text", background, 7);
   });
 
-  it("muted text still whispers legibly on common surfaces (≥ 4.5:1)", () => {
+  it("muted text remains AA on common surfaces", () => {
     for (const background of ["--bg", "--surface", "--surface2"]) {
       assertPair("--text2", background, 4.5);
     }
   });
 
   it("brand, profile B and destructive text hold AA on the highest surface", () => {
+    assertPair("--accent", "--surface3", 4.5);
     assertPair("--accent-text", "--surface3", 4.5);
     assertPair("--accent2-text", "--surface3", 4.5);
     assertPair("--hard-no-text", "--surface3", 4.5);
   });
 
-  it("every raw verdict colour remains readable on the base surfaces", () => {
+  it("every verdict colour remains readable on base surfaces", () => {
     for (const status of STATUS_TOKENS) {
       for (const background of ["--bg", "--surface"]) assertPair(status, background, 4.5);
     }
   });
 
-  it("on-accent ink holds on both identity accents", () => {
+  it("identity and filled action ink hold AA", () => {
     assertPair("--on-accent", "--accent", 4.5);
     assertPair("--on-accent", "--accent2", 4.5);
+    assertPair("--on-accent-fill", "--accent-fill", 4.5);
+    assertPair("--on-danger-fill", "--danger-fill", 4.5);
   });
 
   it("PWA dock icons and mini labels keep AA contrast in both states", () => {
     assertPair("--pwa-nav-icon", "--pwa-nav-surface", 4.5);
     assertPair("--pwa-nav-icon-active", "--pwa-nav-active", 4.5);
-  });
-
-  // Gevulde knoppen dragen een diepere vulling zodat er wit op kan. Zou iemand
-  // --accent-fill later oplichten richting --accent, dan zakt wit door AA en
-  // valt deze test om — precies de fout die corrections.md al een keer ving.
-  it("witte knoptekst houdt stand op de diepere knopvulling", () => {
-    assertPair("--on-accent-fill", "--accent-fill", 4.5);
   });
 });

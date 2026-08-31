@@ -27,7 +27,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
           <HeartStraight size={40} weight="fill" aria-hidden="true" />
         </div>
 
-        <h2 className="text-xl font-semibold text-white mb-2">
+        <h2 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>
           {profileName ? `Hoe voel je je nu, ${profileName}?` : "Hoe voel je je nu?"}
         </h2>
         <p className="text-sm mb-8" style={{ color: "var(--text2)" }}>

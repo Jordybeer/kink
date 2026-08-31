@@ -2,23 +2,20 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { STATUS_ORDER } from "@/lib/statusLabels";
 
-/**
- * De harde grens was het slechtst leesbare label van de zes: 4,04:1 waar AA er
- * 4,5 vraagt. Uitgerekend de status die het zwaarst weegt.
- *
- * Deze test leest de tokens uit globals.css zelf in plaats van ze hier te
- * herhalen. Een tweede kopie zou precies de drift opleveren die dit probleem
- * veroorzaakte: de danger-variant kreeg ooit een eigen mengpercentage en niemand
- * rekende na wat dat met het contrast deed.
- */
+const CSS = readFileSync(new URL("../app/design-role-tokens.css", import.meta.url), "utf8");
 
-const CSS = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-
-function token(name: string): string {
-  const match = CSS.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`));
-  if (!match) throw new Error(`token --${name} niet gevonden in globals.css`);
-  return match[1];
+function palette(selector: RegExp): Record<string, string> {
+  const block = CSS.match(selector)?.[1] ?? "";
+  return Object.fromEntries(
+    [...block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\b/g)]
+      .map((match) => [match[1], match[2]]),
+  );
 }
+
+const PALETTES = {
+  dark: palette(/:root,\s*:root\[data-theme="dark"\]\s*\{([\s\S]*?)\}/m),
+  light: palette(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\}/m),
+} as const;
 
 function rgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
@@ -39,35 +36,40 @@ function contrast(fg: [number, number, number], bg: [number, number, number]): n
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** color-mix(in srgb, <colour> <pct>%, var(--surface2)) zoals StatusOptionRows het doet. */
-function mix(colour: string, pct: number): [number, number, number] {
-  const c = rgb(colour);
-  const bg = rgb(token("surface2"));
-  return [0, 1, 2].map((i) => pct * c[i] + (1 - pct) * bg[i]) as [number, number, number];
-}
+describe.each(Object.entries(PALETTES))("status labels — %s palette", (mode, tokens) => {
+  function token(name: string): string {
+    const value = tokens[name];
+    if (!value) throw new Error(`${mode} token --${name} niet gevonden`);
+    return value;
+  }
 
-// Spiegelt StatusOptionRows: danger mengt op 17%, de rest op 19%, en het label
-// van de harde grens leest uit --hard-no-text.
-const ROWS = STATUS_ORDER.map((status) => {
-  const danger = status === "hard_no";
-  return {
-    status,
-    label: danger ? token("hard-no-text") : token(status),
-    fill: danger ? token("hard-no") : token(status),
-    pct: danger ? 0.17 : 0.19,
-  };
-});
+  function mix(colour: string, pct: number): [number, number, number] {
+    const foreground = rgb(colour);
+    const background = rgb(token("surface2"));
+    return [0, 1, 2].map((index) => (
+      pct * foreground[index] + (1 - pct) * background[index]
+    )) as [number, number, number];
+  }
 
-describe("statuslabels halen AA op hun eigen achtergrond", () => {
-  for (const row of ROWS) {
+  const rows = STATUS_ORDER.map((status) => {
+    const danger = status === "hard_no";
+    return {
+      status,
+      label: danger ? token("hard-no-text") : token(status),
+      fill: danger ? token("hard-no") : token(status),
+      pct: danger ? 0.17 : 0.19,
+    };
+  });
+
+  for (const row of rows) {
     it(`${row.status} haalt minstens 4,5:1`, () => {
       const ratio = contrast(rgb(row.label), mix(row.fill, row.pct));
-      expect(ratio).toBeGreaterThanOrEqual(4.5);
+      expect(ratio, `${mode} ${row.status}`).toBeGreaterThanOrEqual(4.5);
     });
   }
 
-  it("de harde grens is niet langer het slechtst leesbare label", () => {
-    const ratios = ROWS.map((row) => ({
+  it("de harde grens is niet het slechtst leesbare label", () => {
+    const ratios = rows.map((row) => ({
       status: row.status,
       ratio: contrast(rgb(row.label), mix(row.fill, row.pct)),
     }));

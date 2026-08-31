@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  Check,
   CaretRight,
   DownloadSimple,
   Fingerprint,
   Key,
   LockKey,
+  PaintBrush,
   Sparkle,
   Trash,
   UploadSimple,
@@ -16,6 +18,8 @@ import Sheet from "@/components/Sheet";
 import Switch from "@/components/ui/Switch";
 import { useStore } from "@/lib/store";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
+import { useTheme } from "@/components/ThemeProvider";
+import type { ThemePreference } from "@/lib/theme";
 
 interface SettingsSheetProps {
   open: boolean;
@@ -95,6 +99,54 @@ const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
 const SETTINGS_ROW_CLASS = "focus-ring flex min-h-14 w-full items-center gap-3 px-3.5 py-2.5 text-left";
 const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-14 w-full items-center gap-3 px-3.5 py-2";
 
+const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
+  { value: "system", label: "Systeem" },
+  { value: "light", label: "Licht" },
+  { value: "dark", label: "Donker" },
+];
+
+function ThemeSelector() {
+  const { preference, setPreference } = useTheme();
+
+  return (
+    <fieldset className="px-3.5 pb-3">
+      <legend className="sr-only">Kleurmodus</legend>
+      <div
+        className="grid grid-cols-3 gap-1 rounded-xl p-1"
+        style={{ background: "var(--surface3)", border: "1px solid var(--border)" }}
+      >
+        {THEME_OPTIONS.map((option) => {
+          const active = preference === option.value;
+          return (
+            <label key={option.value} className="relative cursor-pointer">
+              <input
+                type="radio"
+                name="kleurmodus"
+                value={option.value}
+                checked={active}
+                onChange={() => setPreference(option.value)}
+                className="peer sr-only"
+              />
+              <span
+                className="flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]"
+                style={{
+                  background: active ? "var(--surface)" : "transparent",
+                  borderColor: active ? "var(--border-accent)" : "transparent",
+                  color: active ? "var(--text)" : "var(--text2)",
+                  boxShadow: active ? "var(--shadow-control)" : "none",
+                }}
+              >
+                {active && <Check size={14} weight="bold" aria-hidden="true" />}
+                {option.label}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 export default function SettingsSheet({
   open,
   onClose,
@@ -143,6 +195,20 @@ export default function SettingsSheet({
       aria-label="Instellingen"
     >
       <div className="grid gap-4 pb-0.5">
+        <section>
+          <SectionTitle>Weergave</SectionTitle>
+          <SettingsGroup>
+            <div className={SETTINGS_SWITCH_ROW_CLASS}>
+              <RowContent
+                icon={<PaintBrush size={19} aria-hidden="true" />}
+                title="Kleurmodus"
+                description="Gebruik je toestelvoorkeur of kies zelf"
+              />
+            </div>
+            <ThemeSelector />
+          </SettingsGroup>
+        </section>
+
         <section>
           <SectionTitle>Gegevens</SectionTitle>
           <SettingsGroup>

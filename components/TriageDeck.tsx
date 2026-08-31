@@ -129,7 +129,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
     <>
       <div aria-live="polite" className="h-full min-h-0">
         {current ? (
-          <div data-tour="kink-card" className="relative isolate h-full min-h-0 overflow-y-auto overscroll-contain rounded-[1.75rem] p-4" style={{ background: "color-mix(in srgb, var(--surface) 94%, #180f20)", border: "1px solid color-mix(in srgb, var(--border) 88%, var(--text2))", boxShadow: "0 18px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.035)" }}>
+          <div data-tour="kink-card" className="relative isolate h-full min-h-0 overflow-y-auto overscroll-contain rounded-[1.75rem] p-4" style={{ background: "color-mix(in srgb, var(--surface) 94%, var(--surface-tint))", border: "1px solid color-mix(in srgb, var(--border) 88%, var(--text2))", boxShadow: "0 18px 42px var(--deep-shadow), inset 0 1px 0 var(--inset-highlight)" }}>
             <div aria-hidden="true" data-testid="question-ambient-glow" className="pointer-events-none absolute inset-x-0 top-0 h-36 rounded-[1.75rem]" style={{ background: `radial-gradient(circle at 18% 0%, color-mix(in srgb, ${categoryAccent} 12%, transparent), transparent 64%)` }} />
             <div data-testid="question-content" className="relative z-[1] grid min-h-full min-w-0 gap-1" style={{ gridTemplateRows: "44px 56px 60px 48px minmax(14.75rem, 1fr) 92px 44px" }}>
               <div className="flex min-h-0 min-w-0 items-center gap-2">

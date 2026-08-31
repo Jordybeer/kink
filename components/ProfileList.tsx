@@ -127,7 +127,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             style={{
               background: "var(--surface2)",
               border: "1px solid var(--border)",
-              boxShadow: "0 8px 22px rgba(0,0,0,0.20)",
+              boxShadow: "0 8px 22px var(--deep-shadow)",
             }}
           >
             {isPerspectiveGroup && (
@@ -519,7 +519,7 @@ function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "n
       aria-hidden="true"
       style={{
         border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.22)",
+        boxShadow: "0 4px 12px var(--deep-shadow)",
       }}
     >
       {profile.avatarDataUrl ? (
@@ -541,8 +541,8 @@ function CompareCoin({ profile, overlap }: { profile: Profile; overlap?: boolean
       style={{
         border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
         boxShadow: overlap
-          ? "0 0 0 1px var(--surface), 0 5px 14px rgba(0,0,0,0.26)"
-          : "0 5px 14px rgba(0,0,0,0.26)",
+          ? "0 0 0 1px var(--surface), 0 5px 14px var(--deep-shadow)"
+          : "0 5px 14px var(--deep-shadow)",
       }}
     >
       {profile.avatarDataUrl ? (
