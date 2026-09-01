@@ -17,29 +17,26 @@ test.describe("Home page — profielen aanwezig", () => {
     await seedProfiles(page, [PROFILE_ALEX, SHARED_SAM]);
   });
 
-  test("scheidt eigen en gedeelde profielen zonder verborgen profielmetadata te bewaren", async ({ page }) => {
-    const mine = page.getByRole("button", { name: "Mijn profielen 1" });
-    const shared = page.getByRole("button", { name: "Gedeeld met mij 1" });
+  test("scheidt eigen en gedeelde profielen in stabiele secties zonder UI-state te bewaren", async ({ page }) => {
+    const mine = page.getByRole("heading", { name: "Mijn profielen" });
+    const shared = page.getByRole("heading", { name: "Gedeeld met mij" });
 
-    await expect(mine).toHaveAttribute("aria-expanded", "true");
-    await expect(shared).toHaveAttribute("aria-expanded", "false");
+    await expect(mine).toBeVisible();
+    await expect(shared).toBeVisible();
     await expect(page.getByText("Alex", { exact: true })).toBeVisible();
-    await expect(page.getByText("Sam", { exact: true })).toBeHidden();
-
-    await shared.click();
     await expect(page.getByText("Sam", { exact: true })).toBeVisible();
-    await mine.click();
-    await expect(page.getByText("Alex", { exact: true })).toBeHidden();
+    await expect(page.getByRole("button", { name: /Mijn profielen/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Gedeeld met mij/ })).toHaveCount(0);
 
     const stored = await page.evaluate(() => sessionStorage.getItem("kinksync-home-profile-disclosures"));
-    expect(stored).toBe('{"mine":false,"shared":true}');
-    expect(stored).not.toContain(PROFILE_ALEX.id);
-    expect(stored).not.toContain(PROFILE_SAM.id);
+    expect(stored).toBeNull();
 
     await page.goto("/about");
     await page.goBack();
-    await expect(mine).toHaveAttribute("aria-expanded", "false");
-    await expect(shared).toHaveAttribute("aria-expanded", "true");
+    await expect(mine).toBeVisible();
+    await expect(shared).toBeVisible();
+    await expect(page.getByText("Alex", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sam", { exact: true })).toBeVisible();
   });
 
   test("navigeert naar profielpagina via link op profiel", async ({ page }) => {

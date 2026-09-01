@@ -66,13 +66,12 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await seedProfiles(page, MANY_PROFILES, { pinnedProfileId: PROFILE_ALEX.id });
 
-  const mineDisclosure = page.getByRole("button", { name: "Mijn profielen 9" });
-  const sharedDisclosure = page.getByRole("button", { name: "Gedeeld met mij 9" });
-  await expect(mineDisclosure).toHaveAttribute("aria-expanded", "true");
-  await expect(sharedDisclosure).toHaveAttribute("aria-expanded", "false");
-  await sharedDisclosure.click();
+  const mineHeading = page.getByRole("heading", { name: "Mijn profielen" });
+  const sharedHeading = page.getByRole("heading", { name: "Gedeeld met mij" });
+  await expect(mineHeading).toBeVisible();
+  await expect(sharedHeading).toBeVisible();
   await expect(page.getByRole("link", { name: "Gedeeld 08 Submissive openen" })).toBeVisible();
-  await sharedDisclosure.scrollIntoViewIfNeeded();
+  await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
 
   const settingsTrigger = page.getByRole("button", { name: "Instellingen openen" });
@@ -221,7 +220,6 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
       return [key, sessionStorage.getItem(key)];
     }),
   ));
-  const disclosureState = sessionValues["kinksync-home-profile-disclosures"];
-  expect(disclosureState).toBe('{"shared":true}');
+  expect(sessionValues["kinksync-home-profile-disclosures"]).toBeUndefined();
   expect(JSON.stringify(sessionValues)).not.toMatch(/pw-alex|pw-sam|owned-|shared-|Eigen|Gedeeld/);
 });

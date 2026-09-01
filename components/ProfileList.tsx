@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
-  CaretDown,
   CaretRight,
   DotsThree,
   FileText,
@@ -26,8 +25,6 @@ import type { Profile } from "@/types";
 interface ProfileListProps {
   onPromptDelete: (id: string) => void;
 }
-
-const HOME_PROFILE_DISCLOSURES = "kinksync-home-profile-disclosures";
 
 interface ProfileGroup {
   key: string;
@@ -184,24 +181,14 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   return (
     <>
       {ownership.mine.length > 0 && (
-        <ProfileDisclosure
-          id="mine"
-          label="Mijn profielen"
-          count={ownership.mine.length}
-          defaultOpen
-        >
+        <ProfileSection label="Mijn profielen" count={ownership.mine.length}>
           {renderGroups(mineGroups)}
-        </ProfileDisclosure>
+        </ProfileSection>
       )}
       {ownership.shared.length > 0 && (
-        <ProfileDisclosure
-          id="shared"
-          label="Gedeeld met mij"
-          count={ownership.shared.length}
-          defaultOpen={ownership.mine.length === 0}
-        >
+        <ProfileSection label="Gedeeld met mij" count={ownership.shared.length}>
           {renderGroups(sharedGroups)}
-        </ProfileDisclosure>
+        </ProfileSection>
       )}
 
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
@@ -315,75 +302,22 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   );
 }
 
-function ProfileDisclosure({
-  id,
-  label,
-  count,
-  defaultOpen,
-  children,
-}: {
-  id: "mine" | "shared";
-  label: string;
-  count: number;
-  defaultOpen: boolean;
-  children: ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  const panelId = `home-${id}-profiles`;
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(HOME_PROFILE_DISCLOSURES);
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as Partial<Record<"mine" | "shared", unknown>>;
-      if (typeof parsed[id] === "boolean") setOpen(parsed[id]);
-    } catch {
-      // UI-only preference: malformed state is ignored and never touches profile data.
-    }
-  }, [id]);
-
-  function toggle() {
-    setOpen((current) => {
-      const next = !current;
-      try {
-        const stored = sessionStorage.getItem(HOME_PROFILE_DISCLOSURES);
-        const parsed = stored ? JSON.parse(stored) as Record<string, unknown> : {};
-        sessionStorage.setItem(HOME_PROFILE_DISCLOSURES, JSON.stringify({
-          mine: typeof parsed.mine === "boolean" ? parsed.mine : undefined,
-          shared: typeof parsed.shared === "boolean" ? parsed.shared : undefined,
-          [id]: next,
-        }));
-      } catch {
-        // The disclosure still works when storage is unavailable.
-      }
-      return next;
-    });
-  }
-
+function ProfileSection({ label, count, children }: { label: string; count: number; children: ReactNode }) {
   return (
-    <section className="mb-4" aria-labelledby={`${panelId}-label`}>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-controls={panelId}
-        className="focus-ring mb-2 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      >
-        <span id={`${panelId}-label`} className="flex-1 text-sm font-semibold">
+    <section className="mb-5" aria-labelledby={`home-${label.toLowerCase().replaceAll(" ", "-")}-label`}>
+      <div className="mb-2 flex min-h-8 items-center gap-3 px-1">
+        <h2
+          id={`home-${label.toLowerCase().replaceAll(" ", "-")}-label`}
+          className="flex-1 text-sm font-semibold"
+          style={{ color: "var(--text)" }}
+        >
           {label}
-        </span>
+        </h2>
         <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
           {count}
         </span>
-        <CaretDown
-          size={15}
-          aria-hidden="true"
-          className="transition-transform"
-          style={{ color: "var(--text2)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-        />
-      </button>
-      {open && <div id={panelId}>{children}</div>}
+      </div>
+      {children}
     </section>
   );
 }
@@ -511,6 +445,7 @@ function ProfileRow({
     </div>
   );
 }
+
 function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "normal" }) {
   const sizeClass = size === "small" ? "w-9 h-9" : "w-12 h-12";
   return (
