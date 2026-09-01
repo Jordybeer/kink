@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PROFILE_ALEX, seedProfiles } from "./fixtures";
+import { PROFILE_ALEX, PROFILE_SAM, seedProfiles } from "./fixtures";
 
 const THEME_STORAGE_KEY = "kinksync-color-theme";
 
@@ -76,20 +76,37 @@ test("system mode follows the device while explicit choices persist", async ({ p
   await expect(system).toBeChecked();
 });
 
-test("both palettes keep core text and controls at WCAG AA contrast", async ({ page }) => {
+test("both palettes keep core text and controls at WCAG AA contrast", async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
+  await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM], { pinnedProfileId: PROFILE_ALEX.id });
 
   for (const theme of ["light", "dark"] as const) {
     await page.evaluate(({ key, theme: nextTheme }) => localStorage.setItem(key, nextTheme), {
       key: THEME_STORAGE_KEY,
       theme,
     });
-    await page.reload();
+    await page.goto("/");
     await expectTheme(page, theme);
     const pairs = await readContrastPairs(page);
     for (const [name, ratio] of Object.entries(pairs)) {
       expect(ratio, `${theme} ${name}`).toBeGreaterThanOrEqual(4.5);
     }
+
+    await page.evaluate(async () => { await document.fonts.ready; });
+    await page.screenshot({
+      path: `test-results/device-screenshots/${testInfo.project.name}/theme-${theme}-home.png`,
+      fullPage: true,
+    });
+
+    await page.goto(`/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`);
+    await expectTheme(page, theme);
+    const dateControl = page.locator('input[type="date"]').first();
+    await expect(dateControl).toBeVisible();
+    await expect.poll(() => dateControl.evaluate((element) => getComputedStyle(element).colorScheme))
+      .toBe(theme);
+    await page.screenshot({
+      path: `test-results/device-screenshots/${testInfo.project.name}/theme-${theme}-scene.png`,
+      fullPage: false,
+    });
   }
 });

@@ -479,7 +479,7 @@ export default function IntimacyPlanner() {
                   value={date}
                   onChange={(event) => setDate(event.target.value)}
                   className="focus-ring mt-1.5 h-11 w-full rounded-xl px-3 text-base focus:outline-none"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", colorScheme: "dark" }}
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
               </label>
               <label className="text-sm font-medium" style={{ color: "var(--text2)" }}>
@@ -491,7 +491,7 @@ export default function IntimacyPlanner() {
                     value={time}
                     onChange={(event) => setTime(event.target.value)}
                     className="focus-ring h-11 w-full rounded-xl pl-9 pr-2 text-base focus:outline-none"
-                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", colorScheme: "dark" }}
+                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                   />
                 </div>
               </label>

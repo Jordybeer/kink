@@ -472,7 +472,7 @@ function ScenePage() {
             onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             className="focus-ring flex-1 rounded-lg px-2 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, colorScheme: "dark", maxWidth: 180 }}
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, maxWidth: 180 }}
           />
           <TimePicker
             value={sceneTime}
