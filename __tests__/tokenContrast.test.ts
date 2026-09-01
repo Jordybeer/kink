@@ -39,6 +39,15 @@ function contrast(foreground: string, background: string): number {
     / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
 }
 
+function mix(foreground: string, background: string, amount: number): string {
+  const foregroundRgb = rgb(foreground);
+  const backgroundRgb = rgb(background);
+  const mixed = foregroundRgb.map((channel, index) => (
+    Math.round(channel * amount + backgroundRgb[index] * (1 - amount))
+  ));
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
 const SURFACES = ["--bg", "--surface", "--surface2", "--surface3"] as const;
 const STATUS_TOKENS = [
   "--yes", "--willing", "--curious", "--maybe", "--no", "--hard-no", "--conflict",
@@ -98,6 +107,15 @@ describe.each(Object.entries(PALETTES))("tokenContrast — %s palette", (mode, t
     assertPair("--accent-text", "--surface3", 4.5);
     assertPair("--accent2-text", "--surface3", 4.5);
     assertPair("--hard-no-text", "--surface3", 4.5);
+  });
+
+  it("accent text remains AA on the strongest shared accent tint", () => {
+    const foreground = tokens["--accent-text"];
+    const background = mix(tokens["--accent"], tokens["--surface2"], 0.20);
+    expect(
+      contrast(foreground, background),
+      `${mode} ${foreground} on 20% accent tint ${background}`,
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
   it("every verdict colour remains readable on base surfaces", () => {

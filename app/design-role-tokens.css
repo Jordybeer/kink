@@ -31,14 +31,16 @@
   --border-bright: rgba(255, 255, 255, 0.18);
   --text: #F1EAF0;
   --text2: #A198A4;
-  --accent: #DB648B;
+  /* Matte salmon carries identity and focus; filled actions use the same hue
+     at a deeper value so their white label still clears WCAG AA. */
+  --accent: #DD968E;
   --accent2: #9D8BC2;
-  --accent-text: #DB648B;
+  --accent-text: #DD968E;
   --accent2-text: #9D8BC2;
-  --border-accent: rgba(219, 100, 139, 0.38);
-  --accent-glow: rgba(219, 100, 139, 0.13);
+  --border-accent: rgba(221, 150, 142, 0.38);
+  --accent-glow: rgba(221, 150, 142, 0.12);
   --on-accent: #181225;
-  --accent-fill: #BD416B;
+  --accent-fill: #B64D44;
   --on-accent-fill: #FFFFFF;
   --hard-no: #F26D6D;
   --hard-no-text: #F26D6D;

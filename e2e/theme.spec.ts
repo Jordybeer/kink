@@ -98,6 +98,39 @@ test("both palettes keep core text and controls at WCAG AA contrast", async ({ p
       fullPage: true,
     });
 
+    if (theme === "dark") {
+      await page.getByRole("button", { name: "Instellingen openen" }).click();
+      const settings = page.getByRole("dialog", { name: "Instellingen" });
+      await expect(settings).toBeVisible();
+      await page.screenshot({
+        path: `screenshots/theme-rehearsal/${testInfo.project.name}/theme-dark-settings.png`,
+        fullPage: false,
+      });
+      await settings.getByRole("button", { name: "Instellingen sluiten" }).click();
+
+      for (const route of [
+        { slug: "profile", url: `/profile/${PROFILE_ALEX.id}` },
+        { slug: "questions", url: `/profile/${PROFILE_ALEX.id}/questions` },
+        { slug: "compare", url: `/compare?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}` },
+      ]) {
+        await page.goto(route.url);
+        await expectTheme(page, "dark");
+        await page.waitForLoadState("networkidle");
+        if (route.slug === "profile") {
+          await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();
+        } else if (route.slug === "questions") {
+          await expect(page.getByTestId("questions-screen")).toBeVisible();
+        } else {
+          await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toBeVisible();
+        }
+        await page.evaluate(async () => { await document.fonts.ready; });
+        await page.screenshot({
+          path: `screenshots/theme-rehearsal/${testInfo.project.name}/theme-dark-${route.slug}.png`,
+          fullPage: true,
+        });
+      }
+    }
+
     await page.goto(`/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`);
     await expectTheme(page, theme);
     const dateControl = page.locator('input[type="date"]').first();
