@@ -91,6 +91,16 @@ export default function TopNav() {
   if (path === "/") {
     const homeMenuItems = [
       {
+        label: "Instellingen",
+        icon: <GearSix size={17} aria-hidden="true" />,
+        onClick: () => {
+          window.requestAnimationFrame(() => {
+            document.querySelector<HTMLButtonElement>('[data-testid="home-topnav-more"]')?.focus();
+            window.dispatchEvent(new CustomEvent("ks:open-settings"));
+          });
+        },
+      },
+      {
         label: "Agenda",
         icon: <CalendarDots size={17} aria-hidden="true" />,
         onClick: () => router.push("/intimacy"),
@@ -110,38 +120,13 @@ export default function TopNav() {
     return (
       <header className="sticky top-0 z-40" style={safeAreaShell}>
         <nav
-          className="mx-auto grid h-14 max-w-2xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 lg:max-w-4xl"
+          className="mx-auto flex h-14 max-w-2xl items-center justify-end px-4 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
-          <button
-            type="button"
-            data-testid="home-topnav-settings"
-            onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-            aria-label="Instellingen openen"
-            title="Instellingen"
-            className="focus-ring flex h-11 w-11 flex-none justify-self-start items-center justify-center rounded-full border"
-            style={{ ...homeUtilitySurface, color: "var(--text2)" }}
-          >
-            <GearSix size={18} aria-hidden="true" />
-          </button>
-
-          <h1
-            data-home-nav-wordmark
-            className="serif-safe min-w-0 justify-self-center whitespace-nowrap"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontSize: "clamp(1.6rem, 8vw, 1.75rem)",
-              fontWeight: 500,
-              lineHeight: 1,
-            }}
-          >
-            <Wordmark />
-          </h1>
-
           <div
             data-testid="home-topnav-actions"
-            className="flex items-center justify-self-end gap-2"
+            className="flex items-center gap-2"
             style={{ pointerEvents: "auto" }}
           >
             <OfflineStatus />
@@ -152,6 +137,7 @@ export default function TopNav() {
             >
               <button
                 type="button"
+                data-testid="home-topnav-more"
                 onClick={() => setOverflowOpen((open) => !open)}
                 aria-label="Meer opties"
                 aria-expanded={overflowOpen}
@@ -163,6 +149,35 @@ export default function TopNav() {
             </ContextMenu>
           </div>
         </nav>
+
+        <div
+          data-home-identity
+          className="mx-auto max-w-2xl px-4 pt-3 text-center lg:max-w-4xl"
+        >
+          <h1
+            data-home-nav-wordmark
+            className="serif-safe whitespace-nowrap"
+            style={{
+              fontFamily: "var(--font-display, Georgia, serif)",
+              fontSize: "clamp(1.8rem, 9vw, 2rem)",
+              fontWeight: 500,
+              lineHeight: 1,
+            }}
+          >
+            <Wordmark />
+          </h1>
+        </div>
+
+        <style>{`
+          body:has([data-top-nav-variant="home"]) main > div:first-child {
+            margin-bottom: 1.5rem;
+          }
+
+          body:has([data-top-nav-variant="home"]) main > div:first-child > p {
+            font-size: 1rem;
+            line-height: 1.5rem;
+          }
+        `}</style>
       </header>
     );
   }

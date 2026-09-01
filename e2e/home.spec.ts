@@ -82,8 +82,9 @@ test.describe("Home page — profielen aanwezig", () => {
 
   test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 480 });
-    const trigger = page.getByRole("button", { name: "Instellingen openen" });
-    await trigger.click();
+    const more = page.getByRole("button", { name: "Meer opties" });
+    await more.click();
+    await page.getByRole("menuitem", { name: "Instellingen" }).click();
 
     const dialog = page.getByRole("dialog", { name: "Instellingen" });
     const title = dialog.getByRole("heading", { name: "Instellingen" });
@@ -110,7 +111,7 @@ test.describe("Home page — profielen aanwezig", () => {
 
     await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
     await expect(dialog).toBeHidden();
-    await expect(trigger).toBeFocused();
+    await expect(more).toBeFocused();
   });
 
   test("geen horizontale overflow op mobiel (390px)", async ({ page }) => {

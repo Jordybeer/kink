@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { PROFILE_ALEX, seedProfiles } from "./fixtures";
 
 async function overflowsVertically(locator: import("@playwright/test").Locator) {
@@ -9,6 +9,13 @@ async function overflowsHorizontally(locator: import("@playwright/test").Locator
   return locator.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
 }
 
+async function openSettings(page: Page) {
+  const more = page.getByRole("button", { name: "Meer opties" });
+  await more.click();
+  await page.getByRole("menuitem", { name: "Instellingen" }).click();
+  return more;
+}
+
 test("settings blijft compact en web-installatie is verwijderd", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
@@ -16,20 +23,17 @@ test("settings blijft compact en web-installatie is verwijderd", async ({ page }
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
   const contextAction = page.getByRole("button", { name: "Meer opties" });
   const installAction = page.getByRole("button", { name: "KinkSync installeren" });
-  const settingsAction = page.getByRole("button", { name: "Instellingen openen" });
   await expect(contextAction).toBeVisible();
-  await expect(settingsAction).toBeVisible();
+  await expect(page.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);
   await expect(installAction).toHaveCount(0);
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
-  for (const action of [contextAction, settingsAction]) {
-    const box = await action.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.width).toBeGreaterThanOrEqual(44);
-    expect(box!.height).toBeGreaterThanOrEqual(44);
-  }
+  const contextBox = await contextAction.boundingBox();
+  expect(contextBox).not.toBeNull();
+  expect(contextBox!.width).toBeGreaterThanOrEqual(44);
+  expect(contextBox!.height).toBeGreaterThanOrEqual(44);
 
-  await settingsAction.click();
+  await openSettings(page);
   const settings = page.getByRole("dialog", { name: "Instellingen" });
   const scrollBody = settings.getByTestId("sheet-scroll-body");
   await expect(settings).toBeVisible();
@@ -71,12 +75,12 @@ test("settings blijft compact en web-installatie is verwijderd", async ({ page }
 
   await page.setViewportSize({ width: 320, height: 568 });
   await expect(contextAction).toBeVisible();
-  await expect(settingsAction).toBeVisible();
+  await expect(page.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);
   await expect(installAction).toHaveCount(0);
   expect(await overflowsHorizontally(homeNav)).toBe(false);
 
   await page.setViewportSize({ width: 390, height: 430 });
-  await settingsAction.click();
+  await openSettings(page);
   await expect.poll(() => overflowsVertically(scrollBody)).toBe(true);
   await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await expect(settings.getByRole("button", { name: /Alle data verwijderen/ })).toBeVisible();

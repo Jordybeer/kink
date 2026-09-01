@@ -74,8 +74,9 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
 
-  const settingsTrigger = page.getByRole("button", { name: "Instellingen openen" });
+  const settingsTrigger = page.getByRole("button", { name: "Meer opties" });
   await settingsTrigger.click();
+  await page.getByRole("menuitem", { name: "Instellingen" }).click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
   const settingsTitle = settings.getByRole("heading", { name: "Instellingen" });
   const settingsScroll = settings.getByTestId("sheet-scroll-body");
