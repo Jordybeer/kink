@@ -94,7 +94,7 @@ test("both palettes keep core text and controls at WCAG AA contrast", async ({ p
 
     await page.evaluate(async () => { await document.fonts.ready; });
     await page.screenshot({
-      path: `test-results/device-screenshots/${testInfo.project.name}/theme-${theme}-home.png`,
+      path: `screenshots/theme-rehearsal/${testInfo.project.name}/theme-${theme}-home.png`,
       fullPage: true,
     });
 
@@ -105,7 +105,7 @@ test("both palettes keep core text and controls at WCAG AA contrast", async ({ p
     await expect.poll(() => dateControl.evaluate((element) => getComputedStyle(element).colorScheme))
       .toBe(theme);
     await page.screenshot({
-      path: `test-results/device-screenshots/${testInfo.project.name}/theme-${theme}-scene.png`,
+      path: `screenshots/theme-rehearsal/${testInfo.project.name}/theme-${theme}-scene.png`,
       fullPage: false,
     });
   }

@@ -71,6 +71,7 @@ jobs:
         with:
           name: visual-rehearsal-screenshots
           path: |
+            screenshots/theme-rehearsal
             test-results/device-screenshots
             test-results/print-screenshots
           if-no-files-found: ignore
