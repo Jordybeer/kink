@@ -181,12 +181,12 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   return (
     <>
       {ownership.mine.length > 0 && (
-        <ProfileSection label="Mijn profielen" count={ownership.mine.length}>
+        <ProfileSection id="mine" label="Mijn profielen" count={ownership.mine.length}>
           {renderGroups(mineGroups)}
         </ProfileSection>
       )}
       {ownership.shared.length > 0 && (
-        <ProfileSection label="Gedeeld met mij" count={ownership.shared.length}>
+        <ProfileSection id="shared" label="Gedeeld met mij" count={ownership.shared.length}>
           {renderGroups(sharedGroups)}
         </ProfileSection>
       )}
@@ -302,15 +302,23 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   );
 }
 
-function ProfileSection({ label, count, children }: { label: string; count: number; children: ReactNode }) {
+function ProfileSection({
+  id,
+  label,
+  count,
+  children,
+}: {
+  id: "mine" | "shared";
+  label: string;
+  count: number;
+  children: ReactNode;
+}) {
+  const labelId = `home-${id}-profiles-label`;
+
   return (
-    <section className="mb-5" aria-labelledby={`home-${label.toLowerCase().replaceAll(" ", "-")}-label`}>
+    <section className="mb-5" aria-labelledby={labelId}>
       <div className="mb-2 flex min-h-8 items-center gap-3 px-1">
-        <h2
-          id={`home-${label.toLowerCase().replaceAll(" ", "-")}-label`}
-          className="flex-1 text-sm font-semibold"
-          style={{ color: "var(--text)" }}
-        >
+        <h2 id={labelId} className="flex-1 text-sm font-semibold" style={{ color: "var(--text)" }}>
           {label}
         </h2>
         <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
