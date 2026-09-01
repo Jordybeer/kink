@@ -77,7 +77,7 @@ test("system mode follows the device while explicit choices persist", async ({ p
 });
 
 test("both palettes keep core text and controls at WCAG AA contrast", async ({ page }, testInfo) => {
-  await page.emulateMedia({ colorScheme: "light" });
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM], { pinnedProfileId: PROFILE_ALEX.id });
 
   for (const theme of ["light", "dark"] as const) {
