@@ -9,6 +9,12 @@ async function expectTheme(page: Page, theme: "light" | "dark") {
     .toBe(theme);
 }
 
+async function openSettings(page: Page) {
+  await page.getByRole("button", { name: "Meer opties" }).click();
+  await page.getByRole("menuitem", { name: "Instellingen" }).click();
+  return page.getByRole("dialog", { name: "Instellingen" });
+}
+
 async function readContrastPairs(page: Page) {
   return page.evaluate(() => {
     const styles = getComputedStyle(document.documentElement);
@@ -50,8 +56,7 @@ test("system mode follows the device while explicit choices persist", async ({ p
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
   await expectTheme(page, "light");
 
-  await page.getByRole("button", { name: "Instellingen openen" }).click();
-  const settings = page.getByRole("dialog", { name: "Instellingen" });
+  const settings = await openSettings(page);
   const system = settings.getByRole("radio", { name: "Systeem" });
   const light = settings.getByRole("radio", { name: "Licht" });
   const dark = settings.getByRole("radio", { name: "Donker" });
@@ -64,7 +69,7 @@ test("system mode follows the device while explicit choices persist", async ({ p
   await page.reload();
   await expectTheme(page, "dark");
 
-  await page.getByRole("button", { name: "Instellingen openen" }).click();
+  await openSettings(page);
   await light.check();
   await page.emulateMedia({ colorScheme: "dark" });
   await expectTheme(page, "light");
@@ -99,8 +104,7 @@ test("both palettes keep core text and controls at WCAG AA contrast", async ({ p
     });
 
     if (theme === "dark") {
-      await page.getByRole("button", { name: "Instellingen openen" }).click();
-      const settings = page.getByRole("dialog", { name: "Instellingen" });
+      const settings = await openSettings(page);
       await expect(settings).toBeVisible();
       await page.screenshot({
         path: `screenshots/theme-rehearsal/${testInfo.project.name}/theme-dark-settings.png`,
