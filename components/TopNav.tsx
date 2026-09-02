@@ -14,20 +14,16 @@ import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
 const MotionLink = motion.create(Link);
 
 const homeUtilitySurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--surface) 38%, transparent)",
-  borderColor: "var(--identity-border)",
-  backdropFilter: "blur(12px) saturate(120%)",
-  WebkitBackdropFilter: "blur(12px) saturate(120%)",
-  boxShadow: "0 8px 24px color-mix(in srgb, var(--bg) 20%, transparent)",
+  background: "color-mix(in srgb, var(--surface) 24%, transparent)",
+  backdropFilter: "blur(12px) saturate(118%)",
+  WebkitBackdropFilter: "blur(12px) saturate(118%)",
   pointerEvents: "auto",
 };
 
 const contentHeaderSurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--bg) 86%, transparent)",
-  borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
-  backdropFilter: "blur(16px) saturate(128%)",
-  WebkitBackdropFilter: "blur(16px) saturate(128%)",
-  boxShadow: "0 6px 18px color-mix(in srgb, var(--bg) 12%, transparent)",
+  background: "color-mix(in srgb, var(--surface) 46%, transparent)",
+  backdropFilter: "blur(18px) saturate(126%)",
+  WebkitBackdropFilter: "blur(18px) saturate(126%)",
   pointerEvents: "none",
 };
 
@@ -122,13 +118,28 @@ export default function TopNav() {
     return (
       <header className="relative z-40" style={safeAreaShell}>
         <nav
-          className="mx-auto flex h-14 max-w-2xl items-start justify-end px-[var(--page-gutter)] pt-1 sm:items-center sm:pt-0 lg:max-w-4xl"
+          className="relative mx-auto max-w-2xl px-[var(--page-gutter)] pb-1 pt-4 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
+          <div data-home-identity className="px-12 text-center">
+            <h1
+              data-home-nav-wordmark
+              className="serif-safe whitespace-nowrap"
+              style={{
+                fontFamily: "var(--font-display, Georgia, serif)",
+                fontSize: "clamp(2rem, 9.5vw, 2.25rem)",
+                fontWeight: 500,
+                lineHeight: 1,
+              }}
+            >
+              <Wordmark />
+            </h1>
+          </div>
+
           <div
             data-testid="home-topnav-actions"
-            className="flex items-center gap-2"
+            className="absolute right-[var(--page-gutter)] top-2 flex items-center gap-2 sm:right-[var(--page-gutter-wide)]"
             style={{ pointerEvents: "auto" }}
           >
             <OfflineStatus />
@@ -143,32 +154,14 @@ export default function TopNav() {
                 onClick={() => setOverflowOpen((open) => !open)}
                 aria-label="Meer opties"
                 aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
-                style={{ ...homeUtilitySurface, color: "var(--identity-a)" }}
+                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                style={{ ...homeUtilitySurface, color: "var(--text2)" }}
               >
                 <DotsThree size={22} weight="bold" aria-hidden="true" />
               </button>
             </ContextMenu>
           </div>
         </nav>
-
-        <div
-          data-home-identity
-          className="mx-auto max-w-2xl px-[var(--page-gutter)] pt-3 text-center lg:max-w-4xl"
-        >
-          <h1
-            data-home-nav-wordmark
-            className="serif-safe whitespace-nowrap"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontSize: "clamp(2rem, 9.5vw, 2.25rem)",
-              fontWeight: 500,
-              lineHeight: 1,
-            }}
-          >
-            <Wordmark />
-          </h1>
-        </div>
 
         <style>{`
           body:has([data-top-nav-variant="home"]) main > div:first-child {
@@ -226,29 +219,34 @@ export default function TopNav() {
             <CaretLeft aria-hidden="true" size={20} />
           </MotionLink>
           <span
-            className="serif-safe min-w-0 flex-1 truncate text-base italic transition-opacity"
+            className="serif-safe flex min-w-0 flex-1 items-baseline gap-1.5 text-base italic"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
               fontWeight: 500,
               color: "var(--text)",
-              opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
             }}
           >
-            {questionTitle ? (
-              <>
-                <span>{questionTitle[0]}</span>
-                <span> · {questionTitle[1]}</span>
-              </>
-            ) : title}
+            <span className="min-w-0 truncate">
+              {questionTitle ? (
+                <>
+                  <span>{questionTitle[0]}</span>
+                  <span> · {questionTitle[1]}</span>
+                </>
+              ) : title}
+            </span>
+            {saveFeedbackRoute && (
+              <span
+                aria-hidden="true"
+                className="flex-none text-[11px] not-italic font-semibold transition-opacity"
+                style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
+              >
+                ✓
+              </span>
+            )}
           </span>
           {saveFeedbackRoute && (
-            <span
-              role="status"
-              aria-live="polite"
-              className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-opacity"
-              style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
-            >
-              Opgeslagen ✓
+            <span role="status" aria-live="polite" className="sr-only">
+              {savedVisible ? "Opgeslagen" : ""}
             </span>
           )}
           {primary && <TopNavActionButton action={primary} emphasis="primary" />}

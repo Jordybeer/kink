@@ -25,7 +25,7 @@ describe("shared layout roles", () => {
 
   it("makes PageShell and both TopNav variants consume the same page gutter", () => {
     expect(pageShell).toContain("px-[var(--page-gutter)]");
-    expect(topNav.match(/px-\[var\(--page-gutter\)\]/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(topNav.match(/px-\[var\(--page-gutter\)\]/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 
   it("keeps profile and questionnaire route gutters on the shared page role", () => {

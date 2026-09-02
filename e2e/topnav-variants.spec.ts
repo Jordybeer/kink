@@ -30,19 +30,24 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
   expect(homeActionsBox).not.toBeNull();
   expect(homeMoreBox).not.toBeNull();
   expect(homeWordmarkBox).not.toBeNull();
-  expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
-  expect(homeNavBox!.height).toBeLessThanOrEqual(57);
+  expect(homeNavBox!.height).toBeGreaterThanOrEqual(52);
+  expect(homeNavBox!.height).toBeLessThanOrEqual(72);
   expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeGreaterThanOrEqual(19);
   expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeLessThanOrEqual(21);
-  expect(homeIdentityBox!.y).toBeGreaterThanOrEqual(homeNavBox!.y + homeNavBox!.height);
+  expect(homeIdentityBox!.y).toBeGreaterThanOrEqual(homeNavBox!.y);
+  expect(homeIdentityBox!.y + homeIdentityBox!.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 1);
   expect(Math.abs(
     homeWordmarkBox!.x + homeWordmarkBox!.width / 2
-      - (homeIdentityBox!.x + homeIdentityBox!.width / 2),
+      - (homeNavBox!.x + homeNavBox!.width / 2),
   )).toBeLessThanOrEqual(1);
+  expect(Math.abs(
+    homeMoreBox!.y + homeMoreBox!.height / 2
+      - (homeWordmarkBox!.y + homeWordmarkBox!.height / 2),
+  )).toBeLessThanOrEqual(8);
   expect(homeMoreBox!.width).toBeGreaterThanOrEqual(43);
   expect(homeMoreBox!.height).toBeGreaterThanOrEqual(43);
-  expect(homeMoreBox!.y - homeNavBox!.y).toBeGreaterThanOrEqual(3);
-  expect(homeMoreBox!.y - homeNavBox!.y).toBeLessThanOrEqual(6);
+  expect(homeMoreBox!.y - homeNavBox!.y).toBeGreaterThanOrEqual(7);
+  expect(homeMoreBox!.y - homeNavBox!.y).toBeLessThanOrEqual(10);
   expect(homeMoreBox!.y + homeMoreBox!.height).toBeLessThanOrEqual(homeNavBox!.y + homeNavBox!.height + 2);
   await expect.poll(() => homeActions.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
 
@@ -143,12 +148,14 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
     return {
       position: style.position,
       borderBottomWidth: style.borderBottomWidth,
+      boxShadow: style.boxShadow,
       pointerEvents: style.pointerEvents,
     };
   });
   expect(contentHeader).toEqual({
     position: "sticky",
-    borderBottomWidth: "1px",
+    borderBottomWidth: "0px",
+    boxShadow: "none",
     pointerEvents: "none",
   });
 });
