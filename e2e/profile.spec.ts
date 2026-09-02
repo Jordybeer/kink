@@ -95,6 +95,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const nameInput = dialog.getByLabel("Naam of alias");
 
     await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Relatiestatus", { exact: true })).toHaveCount(0);
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
@@ -236,7 +237,7 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
     await expect(profileTour).toBeVisible({ timeout: 3000 });
     await profileTour.getByRole("button", { name: "Volgende" }).click();
 
-    const enrichmentTour = page.getByRole("dialog", { name: "Maak je profiel wat completer" });
+    const enrichmentTour = page.getByRole("dialog", { name: "Beheer je profielinfo" });
     await expect(enrichmentTour).toBeVisible();
     await enrichmentTour.getByRole("button", { name: "Begrepen" }).click();
 
