@@ -192,9 +192,8 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         aria-modal="true"
         aria-labelledby="profile-enrichment-title"
         tabIndex={-1}
-        className="relative z-10 flex w-full flex-col overflow-hidden rounded-t-[24px] text-pretty shadow-2xl sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
+        className="relative z-10 flex max-h-[calc(var(--visual-viewport-height,100dvh)-var(--sheet-edge-clearance))] w-full flex-col overflow-hidden rounded-t-[24px] text-pretty shadow-2xl sm:max-h-[min(calc(var(--visual-viewport-height,100dvh)-3rem),42rem)] sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
         style={{
-          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 0.75rem), 42rem)",
           background: "var(--surface)",
           border: "1px solid var(--border)",
         }}
