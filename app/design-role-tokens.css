@@ -4,6 +4,10 @@
   --radius-control: 0.75rem;
   --radius-card: 1rem;
   --radius-hero: 1.5rem;
+  --page-gutter: 1.25rem;
+  --sheet-gutter: 1.25rem;
+  --reading-measure: 42rem;
+  --sheet-edge-clearance: 0.75rem;
 
   /* 76px base = 56px tab + 6px top air + 14px lift above the iPhone corner/home-indicator zone. */
   --bottom-nav-base-h: 4.75rem;
@@ -14,6 +18,13 @@
 
   /* Shared sticky stacks. */
   --compare-subnav-h: 4.75rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: 1.5rem;
+    --sheet-gutter: 1.5rem;
+  }
 }
 
 /* Dark is the resilient no-JS fallback. The bootstrap in app/layout.tsx
@@ -78,13 +89,13 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #FBF8FA;
-  --surface: #FFFFFF;
-  --surface2: #F7F1F5;
-  --surface3: #EDE4EA;
-  --surface-tint: #F4EDF2;
-  --border: #D8CBD3;
-  --border-bright: rgba(72, 47, 61, 0.28);
+  --bg: #FAF7FA;
+  --surface: #FFFDFE;
+  --surface2: #F3ECF2;
+  --surface3: #E7DCE6;
+  --surface-tint: #F1E8EF;
+  --border: #D3C3CE;
+  --border-bright: rgba(72, 47, 61, 0.30);
   --text: #291F27;
   --text2: #6B5D66;
   --accent: #A72B53;
@@ -93,8 +104,8 @@
   --accent2-text: #5B456F;
   --border-accent: rgba(167, 43, 83, 0.36);
   --accent-glow: rgba(167, 43, 83, 0.10);
-  --identity-border: rgba(102, 80, 123, 0.28);
-  --identity-glow: rgba(102, 80, 123, 0.08);
+  --identity-border: rgba(102, 80, 123, 0.32);
+  --identity-glow: rgba(102, 80, 123, 0.10);
   --on-accent: #FFFFFF;
   --accent-fill: #972047;
   --on-accent-fill: #FFFFFF;

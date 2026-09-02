@@ -23,9 +23,11 @@ const homeUtilitySurface: React.CSSProperties = {
 };
 
 const contentHeaderSurface: React.CSSProperties = {
-  background: "linear-gradient(to bottom, color-mix(in srgb, var(--surface) 34%, transparent) 0%, color-mix(in srgb, var(--bg) 16%, transparent) 72%, transparent 100%)",
-  backdropFilter: "blur(18px) saturate(135%)",
-  WebkitBackdropFilter: "blur(18px) saturate(135%)",
+  background: "color-mix(in srgb, var(--bg) 86%, transparent)",
+  borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
+  backdropFilter: "blur(16px) saturate(128%)",
+  WebkitBackdropFilter: "blur(16px) saturate(128%)",
+  boxShadow: "0 6px 18px color-mix(in srgb, var(--bg) 12%, transparent)",
   pointerEvents: "none",
 };
 
@@ -118,9 +120,9 @@ export default function TopNav() {
     ];
 
     return (
-      <header className="sticky top-0 z-40" style={safeAreaShell}>
+      <header className="relative z-40" style={safeAreaShell}>
         <nav
-          className="mx-auto flex h-14 max-w-2xl items-start justify-end pl-4 pr-5 pt-1 sm:items-center sm:px-4 sm:pt-0 lg:max-w-4xl"
+          className="mx-auto flex h-14 max-w-2xl items-start justify-end px-[var(--page-gutter)] pt-1 sm:items-center sm:pt-0 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
@@ -152,7 +154,7 @@ export default function TopNav() {
 
         <div
           data-home-identity
-          className="mx-auto max-w-2xl px-4 pt-3 text-center lg:max-w-4xl"
+          className="mx-auto max-w-2xl px-[var(--page-gutter)] pt-3 text-center lg:max-w-4xl"
         >
           <h1
             data-home-nav-wordmark
@@ -205,7 +207,7 @@ export default function TopNav() {
       style={{ ...safeAreaShell, ...contentHeaderSurface }}
     >
       <nav
-        className={`mx-auto flex h-14 ${navWidth} items-center px-4`}
+        className={`mx-auto flex h-14 ${navWidth} items-center px-[var(--page-gutter)]`}
         aria-label="Hoofdnavigatie"
         data-top-nav-variant="content"
       >

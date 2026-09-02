@@ -31,7 +31,7 @@ interface SheetContentProps {
 /** Standardized quick-sheet content wrapper: surface bg, border and optional drag handle. */
 export function SheetContent({
   children,
-  className = "px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-6 sm:pt-4",
+  className = "px-[var(--sheet-gutter)] pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 sm:pb-6 sm:pt-4",
   showHandle = true,
   style,
   "data-testid": dataTestId,
@@ -40,12 +40,12 @@ export function SheetContent({
     <div
       className={`min-w-0 max-w-full overflow-x-clip rounded-t-2xl text-pretty ${className}`}
       style={{
-        maxHeight: "calc(var(--visual-viewport-height, 100dvh) - 0.75rem)",
+        maxHeight: "calc(var(--visual-viewport-height, 100dvh) - var(--sheet-edge-clearance))",
         background: "var(--surface)",
         border: "1px solid var(--border)",
         borderBottom: "none",
         ...style,
-        maxBlockSize: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - 0.75rem)",
+        maxBlockSize: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance))",
       }}
       data-testid={dataTestId}
     >
@@ -90,11 +90,11 @@ function TitledSheetFrame({
 
   const frameClassName = quickSheet
     ? scrollable
-      ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-0.75rem)] flex-col overflow-hidden rounded-t-3xl px-5 pt-3 sm:px-6"
-      : "rounded-t-3xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6"
+      ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
+      : "rounded-t-3xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
     : surface
-      ? "flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-0.75rem)] max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-0.75rem)] flex-col overflow-hidden rounded-t-xl border border-b-0 px-5 pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-6 sm:pt-3"
-      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-5 pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-6";
+      ? "flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[var(--sheet-gutter)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:pt-3"
+      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
 
   return (
     <div
@@ -109,7 +109,7 @@ function TitledSheetFrame({
         </div>
       )}
       <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 items-center gap-2 px-1`}>
-        <h2 className="min-w-0 flex-1 text-lg font-bold">{title}</h2>
+        <h2 className="min-w-0 flex-1 text-balance text-lg font-bold">{title}</h2>
         <button
           type="button"
           onClick={onClose}
@@ -135,7 +135,7 @@ function TitledSheetFrame({
 function TaskSheetFrame({ children }: { children: ReactNode }) {
   return (
     <div
-      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-6"
+      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b"
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       data-testid="sheet-scroll-body"
     >

@@ -58,7 +58,7 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
     };
   });
   expect(homeHeader).toEqual({
-    position: "static",
+    position: "relative",
     backgroundColor: "rgba(0, 0, 0, 0)",
     borderBottomWidth: "0px",
     pointerEvents: "none",
@@ -101,12 +101,16 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
   await expect(primaryAction).toBeVisible();
   await expect(primaryAction).toHaveText("Scan QR");
 
-  const [backBox, primaryActionBox] = await Promise.all([
+  const [contentNavBox, backBox, primaryActionBox] = await Promise.all([
+    contentNav.boundingBox(),
     back.boundingBox(),
     primaryAction.boundingBox(),
   ]);
+  expect(contentNavBox).not.toBeNull();
   expect(backBox).not.toBeNull();
   expect(primaryActionBox).not.toBeNull();
+  expect(backBox!.x - contentNavBox!.x).toBeGreaterThanOrEqual(19);
+  expect(backBox!.x - contentNavBox!.x).toBeLessThanOrEqual(21);
   expect(backBox!.width).toBeGreaterThanOrEqual(43);
   expect(backBox!.width).toBeLessThanOrEqual(45);
   expect(backBox!.height).toBeGreaterThanOrEqual(43);
@@ -144,7 +148,7 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
   });
   expect(contentHeader).toEqual({
     position: "sticky",
-    borderBottomWidth: "0px",
+    borderBottomWidth: "1px",
     pointerEvents: "none",
   });
 });
