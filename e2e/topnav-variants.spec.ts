@@ -58,7 +58,7 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
     };
   });
   expect(homeHeader).toEqual({
-    position: "relative",
+    position: "static",
     backgroundColor: "rgba(0, 0, 0, 0)",
     borderBottomWidth: "0px",
     pointerEvents: "none",
