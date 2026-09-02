@@ -206,12 +206,11 @@ function HomeContent() {
                 <UserPlus size={19} weight="bold" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">Nieuw profiel</span>
+                <span className="block whitespace-nowrap text-sm font-semibold">Nieuw profiel</span>
                 <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
                   Perspectief en startlijst
                 </span>
               </span>
-              <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--action-primary)" }} />
             </button>
 
             {!importPreview && (
@@ -237,12 +236,11 @@ function HomeContent() {
                   <Camera size={19} aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold">Scan profiel</span>
+                  <span className="block whitespace-nowrap text-sm font-semibold">Scan profiel</span>
                   <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
                     Voeg je partner toe
                   </span>
                 </span>
-                <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--identity-a)" }} />
               </button>
             )}
           </div>

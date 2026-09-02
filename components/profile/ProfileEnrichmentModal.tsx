@@ -171,7 +171,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
   return createPortal(
     <div
-      className="fixed left-0 right-0 z-[360] flex items-center justify-center p-4 sm:p-6"
+      className="fixed left-0 right-0 z-[360] flex items-end justify-center sm:items-center sm:p-6"
       role="presentation"
       data-testid="profile-enrichment-viewport"
       style={{
@@ -192,14 +192,18 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         aria-modal="true"
         aria-labelledby="profile-enrichment-title"
         tabIndex={-1}
-        className="relative z-10 flex w-[min(92vw,34rem)] flex-col overflow-hidden rounded-[24px] shadow-2xl"
+        className="relative z-10 flex w-full flex-col overflow-hidden rounded-t-[24px] shadow-2xl sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
         style={{
-          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 2rem), 42rem)",
+          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 0.5rem), 42rem)",
           background: "var(--surface)",
           border: "1px solid var(--border)",
         }}
       >
-        <div className="flex flex-none items-start gap-3 p-5 pb-0 sm:p-6 sm:pb-0" data-testid="profile-enrichment-header">
+        <div
+          className="flex flex-none items-start gap-3 px-5 pb-4 pt-5 sm:px-6 sm:pt-6"
+          data-testid="profile-enrichment-header"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
           <span
             className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl"
             style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))" }}
@@ -228,7 +232,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
         <div
           ref={scrollBodyRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-1 pt-5 sm:px-6"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6"
           data-testid="profile-enrichment-scroll-body"
         >
           <section className="rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
@@ -324,7 +328,11 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
           </section>
         </div>
 
-        <div className="flex-none px-5 pb-5 pt-4 sm:px-6 sm:pb-6" data-testid="profile-enrichment-footer">
+        <div
+          className="flex-none px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-6"
+          data-testid="profile-enrichment-footer"
+          style={{ borderTop: "1px solid var(--border)" }}
+        >
           {error && (
             <p className="mb-3 rounded-xl px-3 py-2.5 text-sm" role="alert" style={{ color: "var(--hard-no-text)", background: "color-mix(in srgb, var(--hard-no) 7%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--hard-no) 22%, var(--border))" }}>
               {error}

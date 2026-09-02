@@ -8,7 +8,7 @@ test.describe("Profiel aanvullen", () => {
     await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM], { profileTourComplete: true });
   });
 
-  test("opent als centered dialog en houdt focus binnen de modal", async ({ page }) => {
+  test("opent mobiel als bottom sheet en houdt focus binnen de modal", async ({ page }) => {
     const trigger = page.getByRole("button", { name: "Profielinfo aanvullen" });
     await expect(trigger).toBeVisible();
     await trigger.click();
@@ -46,6 +46,11 @@ test.describe("Profiel aanvullen", () => {
       const frame = element.parentElement?.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
       return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
+    })).toBeLessThanOrEqual(1);
+    await expect.poll(() => dialog.evaluate((element) => {
+      const frame = element.parentElement?.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      return frame ? Math.abs(frame.bottom - rect.bottom) : Number.POSITIVE_INFINITY;
     })).toBeLessThanOrEqual(1);
 
     await dialog.getByRole("button", { name: "Annuleer" }).click();

@@ -48,5 +48,11 @@ test.describe("Editorial spacing regressions", () => {
     expect(Math.abs(MOBILE.width - (box!.x + box!.width) - 20)).toBeLessThan(2);
     expect(box!.y).toBeGreaterThanOrEqual(3);
     expect(box!.y).toBeLessThanOrEqual(5);
+
+    for (const label of ["Nieuw profiel", "Scan profiel"] as const) {
+      const title = page.getByText(label, { exact: true });
+      await expect.poll(() => title.evaluate((element) => getComputedStyle(element).whiteSpace)).toBe("nowrap");
+    }
+    expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 });

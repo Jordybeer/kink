@@ -101,6 +101,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
       return Math.max(0, -rect.top, rect.bottom - visibleHeight);
     })).toBeLessThanOrEqual(1);
     await expect(header).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Profiel bewerken sluiten" })).toBeVisible();
     await expect(footer).toBeVisible();
     await expect.poll(() => nameInput.evaluate((element) =>
       Number.parseFloat(getComputedStyle(element).fontSize),

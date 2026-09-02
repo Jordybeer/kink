@@ -151,7 +151,7 @@ test("profile edit gives every kink status pill the same width", async ({ page }
   expect(widths).toEqual(["120px"]);
 });
 
-test("dense profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {
+test("dense profile share keeps a fixed header and scrolls inside the iPhone visual viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
@@ -160,13 +160,33 @@ test("dense profile share keeps its primary controls inside an iPhone viewport",
   await expect(dialog).toBeVisible();
   await expect(dialog.getByTestId("profile-share-qr")).toBeVisible({ timeout: 15_000 });
   await expect(dialog.getByText(/Profiel QR \d+ van \d+/)).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Kopieer volledige link" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Sluit" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Profiel delen sluiten" })).toBeVisible();
 
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty("--visual-viewport-height", "420px");
+    document.documentElement.style.setProperty("--visual-viewport-offset-top", "80px");
+  });
+
+  const viewportFrame = page.getByTestId("sheet-visual-viewport");
   const sheet = dialog.getByTestId("profile-share-sheet");
-  const dimensions = await sheet.evaluate((node) => ({
-    clientHeight: node.clientHeight,
-    scrollHeight: node.scrollHeight,
-  }));
-  expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.clientHeight + 2);
+  const header = dialog.getByTestId("profile-share-header");
+  const scrollBody = dialog.getByTestId("profile-share-scroll-body");
+  await expect.poll(() => viewportFrame.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { top: Math.round(rect.top), height: Math.round(rect.height) };
+  })).toEqual({ top: 80, height: 420 });
+
+  const headerBefore = await header.boundingBox();
+  await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const headerAfter = await header.boundingBox();
+  expect(headerBefore).not.toBeNull();
+  expect(headerAfter!.y).toBeCloseTo(headerBefore!.y, 0);
+
+  await expect(dialog.getByRole("button", { name: "Kopieer volledige link" })).toBeVisible();
+  await expect.poll(() => sheet.evaluate((element) => {
+    const frame = element.parentElement?.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
+  })).toBeLessThanOrEqual(1);
 });

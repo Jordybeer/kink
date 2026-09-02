@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, CopySimple } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Check, CopySimple, X } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { Profile } from "@/types";
@@ -263,24 +263,43 @@ export default function QRModal({ profile, onClose }: Props) {
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
       <SheetContent
         showHandle={false}
-        className="overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
+        className="flex flex-col overflow-hidden px-0 pb-0 pt-0"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
         data-testid="profile-share-sheet"
       >
-        <div className="text-center">
-          <h2 className="text-base font-bold">Deel profiel</h2>
-          {profile && (
-            <p className="mt-0.5 text-sm" style={{ color: "var(--accent-text)" }}>
-              {profile.name}{proofConfirmed ? <span className="ml-1.5 text-sm" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
-            </p>
-          )}
+        <div
+          className="flex flex-none items-center gap-3 border-b px-5 py-2.5"
+          data-testid="profile-share-header"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-bold">Deel profiel</h2>
+            {profile && (
+              <p className="mt-0.5 truncate text-sm" style={{ color: "var(--accent-text)" }}>
+                {profile.name}{proofConfirmed ? <span className="ml-1.5 text-sm" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Profiel delen sluiten"
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
+          >
+            <X aria-hidden="true" size={20} />
+          </button>
         </div>
 
-        {multi && currentFrame && (
-          <p className="mt-2 text-center text-sm font-semibold" style={{ color: "var(--text2)" }}>
-            {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
-          </p>
-        )}
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
+          data-testid="profile-share-scroll-body"
+        >
+          {multi && currentFrame && (
+            <p className="text-center text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
+            </p>
+          )}
 
         {qrTooLarge ? (
           <div
@@ -355,8 +374,11 @@ export default function QRModal({ profile, onClose }: Props) {
         {avatarInQrSequence && <p className="mt-1 text-center text-sm" style={{ color: "var(--yes)" }}>De bevestigde profielfoto reist mee.</p>}
         {avatarLinkOnly && <p className="mt-1 text-center text-sm" style={{ color: "var(--maybe)" }} role="status">De foto past niet betrouwbaar in de QR-reeks. De volledige link bevat ze wel.</p>}
 
-        {(canShareAvatar || profile?.fetLifeUsername || hasBdsmtest) && (
-          <div className="mt-2 grid gap-1">
+          {(canShareAvatar || profile?.fetLifeUsername || hasBdsmtest) && (
+          <div
+            className="mt-2 grid gap-1 rounded-xl p-1"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+          >
             {canShareAvatar && (
               <label className="focus-within:ring-2 focus-within:ring-[var(--focus)] flex min-h-11 cursor-pointer select-none items-center gap-2 rounded-xl px-2 text-sm">
                 <span className="flex h-5 w-5 flex-none items-center justify-center rounded border transition-colors" style={includeAvatar ? { background: "var(--action-primary)", borderColor: "var(--accent)" } : { borderColor: "var(--border)" }} aria-hidden="true">
@@ -409,7 +431,7 @@ export default function QRModal({ profile, onClose }: Props) {
           <ArrowRight size={13} aria-hidden="true" />
         </Link>
 
-        <button onClick={onClose} className="focus-ring mt-1 w-full min-h-11 rounded-xl text-sm font-medium border transition-colors" style={{ borderColor: "var(--border)", color: "var(--text2)" }}>Sluit</button>
+        </div>
       </SheetContent>
     </Sheet>
   );

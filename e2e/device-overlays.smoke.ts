@@ -177,10 +177,11 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await expect(qr).toBeVisible({ timeout: 15000 });
   await expectWithinVisualViewport(qr);
   await saveScreenshot(page, testInfo, "profile-share-qr");
-  const closeShare = shareDialog.getByRole("button", { name: "Sluit" });
-  await closeShare.scrollIntoViewIfNeeded();
-  await expectWithinVisualViewport(closeShare);
+  const shareBody = shareDialog.getByTestId("profile-share-scroll-body");
+  await shareBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await saveScreenshot(page, testInfo, "profile-share-bottom");
+  const closeShare = shareDialog.getByRole("button", { name: "Profiel delen sluiten" });
+  await expectWithinVisualViewport(closeShare);
   await closeShare.click();
   await expect(shareTrigger).toBeFocused();
 

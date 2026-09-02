@@ -179,7 +179,12 @@ export default function Sheet({
           />
 
           <div
-            className={`pointer-events-none fixed inset-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
+            className={`pointer-events-none fixed left-0 right-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
+            data-testid="sheet-visual-viewport"
+            style={{
+              top: "var(--visual-viewport-offset-top, 0px)",
+              height: "var(--visual-viewport-height, 100dvh)",
+            }}
           >
             <motion.div
               ref={sheetRef}

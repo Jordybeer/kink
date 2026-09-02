@@ -9,6 +9,7 @@ import {
   PencilSimple,
   Sparkle,
   UsersThree,
+  X,
 } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import { useStore } from "@/lib/store";
@@ -119,7 +120,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         className="flex flex-col overflow-hidden px-0 pb-0 pt-3"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >
-        <div className="flex flex-none items-center gap-3 px-5 pb-4" data-testid="profile-edit-header">
+        <div
+          className="flex flex-none items-center gap-3 px-5 pb-3"
+          data-testid="profile-edit-header"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
           <div
             className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl"
             style={{
@@ -130,7 +135,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           >
             <PencilSimple aria-hidden="true" size={21} weight="duotone" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text2)" }}>
               Profiel
             </p>
@@ -141,9 +146,18 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               Profiel bijwerken
             </h2>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Profiel bewerken sluiten"
+            className="focus-ring ml-auto flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
+          >
+            <X aria-hidden="true" size={20} />
+          </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-5" data-testid="profile-edit-scroll-body">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-5 pt-4" data-testid="profile-edit-scroll-body">
           <section
             className="rounded-2xl p-4"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
