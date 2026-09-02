@@ -122,8 +122,21 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-end justify-center p-4 sm:items-center" style={{ background: "var(--scrim)" }}>
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <div
+      className="fixed inset-x-0 z-[400] flex items-end justify-center p-4 sm:items-center"
+      style={{
+        top: "var(--visual-viewport-offset-top, 0px)",
+        height: "var(--visual-viewport-height, 100dvh)",
+        background: "var(--scrim)",
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="encrypted-export-title"
+        className="max-h-full w-full max-w-sm overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
         <AnimatePresence mode="wait" initial={false}>
           {step === 0 ? (
             <motion.div
@@ -132,7 +145,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               transition={t.slide}
               className="flex flex-col gap-4 p-6"
             >
-              <h2 className="text-base font-bold">Backup versleutelen</h2>
+              <h2 id="encrypted-export-title" className="text-base font-bold">Backup versleutelen</h2>
               <div className="flex flex-col gap-3 rounded-xl p-4 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen.</p>
                 <p>De versleutelde backup bevat ook private eigendomssleutels, de geverifieerde contractinhoud, handgeschreven handtekeningen en je lokale intimiteitslogboek. PDF-bestanden zelf worden niet als vertrouwde backupdata meegenomen; KinkSync maakt ze na herstel opnieuw uit de getekende contractversie.</p>
@@ -149,7 +162,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               transition={t.slide}
               className="flex flex-col gap-4 p-6"
             >
-              <h2 className="text-base font-bold">Kies een wachtwoord</h2>
+              <h2 id="encrypted-export-title" className="text-base font-bold">Kies een wachtwoord</h2>
               {[{ value: pw, setter: setPw, placeholder: "Wachtwoord (min. 8 tekens)", label: "Back-upwachtwoord, minimaal 8 tekens" }, { value: pwConfirm, setter: setPwConfirm, placeholder: "Herhaal wachtwoord", label: "Herhaal het back-upwachtwoord" }].map((field, index) => (
                 <div className="relative" key={field.label}>
                   <input
@@ -168,7 +181,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                   </button>
                 </div>
               ))}
-              {pwError && <p className="text-xs" role="alert" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
+              {pwError && <p className="text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
               <button onClick={() => void handlePrepareExport()} disabled={loading} className="w-full rounded-xl py-3 text-sm font-semibold disabled:opacity-60" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>{loading ? "Versleutelen…" : "Versleutelen"}</button>
               <button onClick={() => setStep(0)} className="inline-flex w-full items-center justify-center gap-1 rounded-xl py-3 text-sm" style={{ color: "var(--text2)" }}><ArrowLeft size={14} aria-hidden="true" /> Terug</button>
             </motion.div>
@@ -179,9 +192,9 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               transition={t.slide}
               className="flex flex-col gap-4 p-6"
             >
-              <h2 className="text-base font-bold">Back-up klaar</h2>
+              <h2 id="encrypted-export-title" className="text-base font-bold">Back-up klaar</h2>
               <p className="text-sm leading-relaxed" style={{ color: "var(--text2)" }}>Je back-up is versleuteld. Tik nog één keer om het bestand veilig op je toestel te bewaren.</p>
-              {saveError && <p className="text-xs" role="alert" style={{ color: "var(--hard-no)" }}>{saveError}</p>}
+              {saveError && <p className="text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{saveError}</p>}
               <button onClick={() => void handleSaveExport()} disabled={saving || !preparedExport} className="w-full rounded-xl py-3 text-sm font-semibold disabled:opacity-60" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 {saving ? "Openen…" : <span className="inline-flex items-center justify-center gap-1.5"><DownloadSimple size={15} aria-hidden="true" />Back-up bewaren</span>}
               </button>
@@ -303,37 +316,46 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
         key="import-backdrop"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={t.fast}
-        className="fixed inset-0 z-[400] flex items-end justify-center p-4 sm:items-center"
-        style={{ background: "var(--scrim)" }}
+        className="fixed inset-x-0 z-[400] flex items-end justify-center p-4 sm:items-center"
+        style={{
+          top: "var(--visual-viewport-offset-top, 0px)",
+          height: "var(--visual-viewport-height, 100dvh)",
+          background: "var(--scrim)",
+        }}
       >
         <motion.div
           key="import-card"
           initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }}
           transition={t.fast}
-          className="flex w-full max-w-sm flex-col gap-4 rounded-2xl p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="encrypted-import-title"
+          className="max-h-full w-full max-w-sm overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
-          <h2 className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
-          <p className="text-xs" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
-          <div className="relative">
-            <input
-              type={pwShow ? "text" : "password"}
-              placeholder="Wachtwoord"
-              aria-label="Wachtwoord van deze versleutelde back-up"
-              value={pw}
-              onChange={(event) => setPw(event.target.value)}
-              onKeyDown={(event) => { if (event.key === "Enter") void handleDecrypt(); }}
-              className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
-              autoFocus
-            />
-            <button type="button" onClick={() => setPwShow((value) => !value)} aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"} className="focus-ring absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg" style={{ color: "var(--text2)" }}>
-              {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
-            </button>
+          <div className="flex flex-col gap-4 p-6">
+            <h2 id="encrypted-import-title" className="text-base font-bold">Versleutelde backup ontgrendelen</h2>
+            <p className="text-sm leading-6" style={{ color: "var(--text2)" }}>Voer het wachtwoord in waarmee je deze backup hebt beveiligd.</p>
+            <div className="relative">
+              <input
+                type={pwShow ? "text" : "password"}
+                placeholder="Wachtwoord"
+                aria-label="Wachtwoord van deze versleutelde back-up"
+                value={pw}
+                onChange={(event) => setPw(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Enter") void handleDecrypt(); }}
+                className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                autoFocus
+              />
+              <button type="button" onClick={() => setPwShow((value) => !value)} aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"} className="focus-ring absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg" style={{ color: "var(--text2)" }}>
+                {pwShow ? <EyeSlash aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
+              </button>
+            </div>
+            {pwError && <p className="text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
+            <button onClick={() => void handleDecrypt()} disabled={loading} className="w-full rounded-xl py-3 text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>{loading ? "Ontsleutelen…" : "Backup herstellen"}</button>
+            <button onClick={handleClose} className="inline-flex w-full items-center justify-center gap-1 rounded-xl py-3 text-sm" style={{ color: "var(--text2)" }}><ArrowLeft size={14} aria-hidden="true" /> Annuleer</button>
           </div>
-          {pwError && <p className="text-xs" style={{ color: "var(--hard-no)" }}>{pwError}</p>}
-          <button onClick={() => void handleDecrypt()} disabled={loading} className="w-full rounded-xl py-3 text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>{loading ? "Ontsleutelen…" : "Backup herstellen"}</button>
-          <button onClick={handleClose} className="inline-flex w-full items-center justify-center gap-1 rounded-xl py-3 text-sm" style={{ color: "var(--text2)" }}><ArrowLeft size={14} aria-hidden="true" /> Annuleer</button>
         </motion.div>
       </motion.div>
     </AnimatePresence>

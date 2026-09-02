@@ -213,7 +213,10 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await expect(explainer).toBeVisible();
   await expectWithinVisualViewport(explainer);
   await saveScreenshot(page, testInfo, "status-explainer");
-  await explainer.getByRole("button", { name: "Sluit" }).click();
+  await explainer
+    .getByTestId("sheet-scroll-body")
+    .getByRole("button", { name: "Sluit", exact: true })
+    .click();
 
   const sessionValues = await page.evaluate(() => Object.fromEntries(
     Array.from({ length: sessionStorage.length }, (_, index) => {
