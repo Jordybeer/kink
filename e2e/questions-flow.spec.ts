@@ -365,7 +365,7 @@ test("questionnaire help stays inside a short visual viewport", async ({ page })
     const box = await dialog.boundingBox();
     return box ? box.y + box.height : Number.POSITIVE_INFINITY;
   }).toBeLessThanOrEqual(visibleHeight + 1);
-  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await dialog.getByTestId("sheet-scroll-body").getByRole("button", { name: "Sluit", exact: true }).click();
 });
 
 test("questionnaire modes live in the context menu", async ({ page }) => {
