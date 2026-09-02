@@ -105,9 +105,9 @@ export default function CompareScoreSummary({
         >
           {stats.map(({ key, count, label, color, icon: Icon }) => (
             <div key={key} className="min-w-0 px-3 py-4 text-center sm:px-4 sm:py-5" style={{ background: "var(--surface2)" }}>
-              <Icon size={18} weight="duotone" className="mx-auto mb-2" aria-hidden="true" style={{ color }} />
-              <div className="text-3xl font-semibold leading-none tabular-nums" style={{ color }}>
-                {count}
+              <div className="flex items-center justify-center gap-1.5" style={{ color }}>
+                <Icon size={18} weight="duotone" className="shrink-0" aria-hidden="true" />
+                <span className="text-3xl font-semibold leading-none tabular-nums">{count}</span>
               </div>
               <div className="mt-2 text-sm font-semibold leading-tight" style={{ color: "var(--text)" }}>
                 {label}
