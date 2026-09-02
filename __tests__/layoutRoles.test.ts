@@ -6,6 +6,8 @@ const pageShell = readFileSync(new URL("../components/PageShell.tsx", import.met
 const topNav = readFileSync(new URL("../components/TopNav.tsx", import.meta.url), "utf8");
 const sheet = readFileSync(new URL("../components/Sheet.tsx", import.meta.url), "utf8");
 const editorialHeading = readFileSync(new URL("../components/ui/EditorialHeading.tsx", import.meta.url), "utf8");
+const profileScreen = readFileSync(new URL("../components/profile/ProfileScreen.tsx", import.meta.url), "utf8");
+const questionsScreen = readFileSync(new URL("../components/profile/QuestionsScreen.tsx", import.meta.url), "utf8");
 
 describe("shared layout roles", () => {
   it("keeps page and sheet insets in one semantic geometry layer", () => {
@@ -24,6 +26,13 @@ describe("shared layout roles", () => {
   it("makes PageShell and both TopNav variants consume the same page gutter", () => {
     expect(pageShell).toContain("px-[var(--page-gutter)]");
     expect(topNav.match(/px-\[var\(--page-gutter\)\]/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it("keeps profile and questionnaire route gutters on the shared page role", () => {
+    expect(profileScreen.match(/var\(--page-gutter\)/g)?.length ?? 0).toBeGreaterThanOrEqual(7);
+    expect(profileScreen.match(/var\(--page-gutter-wide\)/g)?.length ?? 0).toBeGreaterThanOrEqual(7);
+    expect(questionsScreen).toContain("px-[var(--page-gutter)]");
+    expect(questionsScreen).toContain("sm:px-[var(--page-gutter-wide)]");
   });
 
   it("keeps sheet geometry centralized instead of reintroducing per-sheet mobile gutters", () => {
