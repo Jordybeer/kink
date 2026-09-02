@@ -159,7 +159,7 @@ export default function TopNav() {
             className="serif-safe whitespace-nowrap"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
-              fontSize: "clamp(1.8rem, 9vw, 2rem)",
+              fontSize: "clamp(2rem, 9.5vw, 2.25rem)",
               fontWeight: 500,
               lineHeight: 1,
             }}
@@ -174,8 +174,8 @@ export default function TopNav() {
           }
 
           body:has([data-top-nav-variant="home"]) main > div:first-child > p {
-            font-size: 1rem;
-            line-height: 1.5rem;
+            font-size: 1.0625rem;
+            line-height: 1.625rem;
           }
         `}</style>
       </header>
