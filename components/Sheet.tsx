@@ -45,6 +45,7 @@ export function SheetContent({
         border: "1px solid var(--border)",
         borderBottom: "none",
         ...style,
+        maxBlockSize: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - 0.75rem)",
       }}
       data-testid={dataTestId}
     >
