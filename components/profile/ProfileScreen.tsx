@@ -260,7 +260,7 @@ export default function ProfilePage({ params }: Props) {
       <h1 className="sr-only">{currentProfile.name}</h1>
       <div
         data-testid="profile-summary"
-        className="mx-4 mb-3 rounded-[24px]"
+        className="mx-[var(--page-gutter)] mb-3 rounded-[24px] sm:mx-[var(--page-gutter-wide)]"
         style={{
           background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
           border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
@@ -311,7 +311,7 @@ export default function ProfilePage({ params }: Props) {
       </div>
 
       {!shared && activeTab && (
-        <div className="mx-4 mb-3">
+        <div className="mx-[var(--page-gutter)] mb-3 sm:mx-[var(--page-gutter-wide)]">
           <SegmentedPill
             segments={[
               { value: "overzicht", label: "Overzicht" },
@@ -324,7 +324,7 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       {effectiveTab && (effectiveTab === "bewerken" || totalRated > 0) && (
-        <div className="px-4 mb-3" data-testid="profile-catalog-controls">
+        <div className="mb-3 px-[var(--page-gutter)] sm:px-[var(--page-gutter-wide)]" data-testid="profile-catalog-controls">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -383,7 +383,7 @@ export default function ProfilePage({ params }: Props) {
         <div
           role="img"
           aria-label={statusSegments.map((segment) => `${segment.count} ${STATUS_LABEL[segment.status]}`).join(", ")}
-          className="mx-4 mb-3 h-1.5 rounded-full overflow-hidden flex"
+          className="mx-[var(--page-gutter)] mb-3 flex h-1.5 overflow-hidden rounded-full sm:mx-[var(--page-gutter-wide)]"
           style={{ background: "var(--surface2)" }}
         >
           {statusSegments.map((segment) => (
@@ -410,7 +410,7 @@ export default function ProfilePage({ params }: Props) {
               className="pb-5"
             >
               {!searchTerm ? (
-                <div className="px-4">
+                <div className="px-[var(--page-gutter)] sm:px-[var(--page-gutter-wide)]">
                   {catalogCategories.map((category) => {
                     const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
                     if (!kinks.length) return null;
@@ -480,7 +480,7 @@ export default function ProfilePage({ params }: Props) {
                   )}
                 </div>
               ) : (
-                <div className="px-4">
+                <div className="px-[var(--page-gutter)] sm:px-[var(--page-gutter-wide)]">
                   <div className="flex flex-col">
                     {searchResults.map((kink) => (
                       <KinkListRow
@@ -510,7 +510,7 @@ export default function ProfilePage({ params }: Props) {
               animate="center"
               exit="exit"
               transition={transition.fast}
-              className="px-4 pt-3 pb-5"
+              className="px-[var(--page-gutter)] pt-3 pb-5 sm:px-[var(--page-gutter-wide)]"
             >
               {totalRated === 0 ? (
                 <div className="text-center py-8">
