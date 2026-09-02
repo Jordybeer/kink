@@ -36,9 +36,10 @@ interface ProfileHeroProps {
   onAvatarChange?: (dataUrl: string | undefined) => void;
   onError?: (message: string) => void;
   profileType?: ProfileType;
+  embedded?: boolean;
 }
 
-export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, onError, profileType }: ProfileHeroProps) {
+export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, onError, profileType, embedded = false }: ProfileHeroProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shareRef = useRef(onShare);
   const editRef = useRef(onEdit);
@@ -132,12 +133,17 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   return (
     <>
       <section
-        className="ks-fade-in relative mx-4 rounded-[24px] px-4 pb-4 pt-4"
+        className={`ks-fade-in relative px-4 pb-4 pt-4 ${embedded ? "" : "mx-4 rounded-[24px]"}`}
         style={{
           zIndex: menuOpen ? 30 : undefined,
-          background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
-          border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-          boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
+          ...(embedded
+            ? {}
+            : {
+                background:
+                  "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
+                border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+                boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
+              }),
         }}
       >
         <div className="flex items-start gap-3.5">
@@ -259,57 +265,65 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               Contract
             </Link>
           )}
-
-          {profile.fetLifeUsername && (
-            <a
-              href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-              className="profile-fetlife-link focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
-              style={{
-                color: "var(--text)",
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                className="profile-fetlife-mark flex h-6 w-6 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)", border: "1px solid color-mix(in srgb, var(--danger-fill) 72%, var(--text))" }}
-              >
-                <FetLifeMark className="h-[15px] w-[15px]" />
-              </span>
-              <span>FetLife</span>
-              <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
-            </a>
-          )}
-
-          {profile.bdsmtestUrl && (
-            <a
-              href={profile.bdsmtestUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open het opgeslagen BDSMTest-resultaat"
-              className="profile-bdsmtest-link focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-1.5 pr-2.5 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
-              style={{
-                color: "var(--text)",
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--accent-text)", background: "color-mix(in srgb, var(--accent) 12%, var(--surface))", border: "1px solid var(--border-accent)" }}
-              >
-                <BdsmtestMark className="h-[16px] w-[16px]" />
-              </span>
-              <span>BDSMTest</span>
-              <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
-            </a>
-          )}
         </div>
+
+        {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
+          <div
+            className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-1.5 border-t pt-2"
+            style={{ borderColor: "var(--border)" }}
+            aria-label="Gekoppelde profielen"
+          >
+            {profile.fetLifeUsername && (
+              <a
+                href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
+                className="profile-fetlife-link focus-ring inline-flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg px-2 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+                style={{ color: "var(--text2)", border: "1px solid transparent" }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="profile-fetlife-mark flex h-6 w-6 flex-none items-center justify-center rounded-full"
+                  style={{
+                    color: "var(--on-danger-fill)",
+                    background: "var(--danger-fill)",
+                    border: "1px solid color-mix(in srgb, var(--danger-fill) 72%, var(--text))",
+                  }}
+                >
+                  <FetLifeMark className="h-[15px] w-[15px]" />
+                </span>
+                <span className="truncate">FetLife</span>
+                <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
+              </a>
+            )}
+
+            {profile.bdsmtestUrl && (
+              <a
+                href={profile.bdsmtestUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open het opgeslagen BDSMTest-resultaat"
+                className="profile-bdsmtest-link focus-ring inline-flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg px-2 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+                style={{ color: "var(--text2)", border: "1px solid transparent" }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
+                  style={{
+                    color: "var(--on-accent-fill)",
+                    background: "var(--accent-fill)",
+                    border: "1px solid var(--border-accent)",
+                  }}
+                >
+                  <BdsmtestMark className="h-[16px] w-[16px]" />
+                </span>
+                <span className="truncate">BDSMTest</span>
+                <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
+              </a>
+            )}
+          </div>
+        )}
 
         {profile.privateNote && (
           <p

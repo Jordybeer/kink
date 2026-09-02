@@ -4,6 +4,7 @@
   /* JS keeps this in lockstep with iOS visualViewport; 100dvh is the no-JS fallback. */
   --visual-viewport-height: 100dvh;
   --visual-viewport-offset-top: 0px;
+  --status-pill-width: 7.5rem;
   --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
   /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */

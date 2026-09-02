@@ -258,7 +258,15 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       <h1 className="sr-only">{currentProfile.name}</h1>
-      <div>
+      <div
+        data-testid="profile-summary"
+        className="mx-4 mb-3 rounded-[24px]"
+        style={{
+          background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
+          border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+          boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
+        }}
+      >
         <ProfileHero
           profile={currentProfile}
           onShare={shared ? undefined : () => setShareOpen(true)}
@@ -269,21 +277,20 @@ export default function ProfilePage({ params }: Props) {
             window.setTimeout(() => setErrorMessage(null), 5000);
           }}
           profileType={getProfileType(currentProfile, pinnedProfileId)}
+          embedded
         />
-      </div>
 
-      {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
-        <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} />
-      )}
+        {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
+          <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} embedded />
+        )}
 
-      {!shared && (
-        <div className="mx-4 mb-3">
+        {!shared && (
           <Link
             href={`/profile/${currentProfile.id}/questions`}
-            className="focus-ring flex min-h-12 items-center gap-3 rounded-2xl px-3.5 py-3"
+            className="focus-ring flex min-h-[68px] items-center gap-3 rounded-b-[24px] border-t px-4 py-3"
             style={{
-              background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
-              border: "1px solid var(--border-accent)",
+              background: "color-mix(in srgb, var(--accent) 5%, transparent)",
+              borderColor: "var(--border)",
             }}
           >
             <div className="min-w-0 flex-1">
@@ -300,8 +307,8 @@ export default function ProfilePage({ params }: Props) {
             </div>
             <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
           </Link>
-        </div>
-      )}
+        )}
+      </div>
 
       {!shared && activeTab && (
         <div className="mx-4 mb-3">

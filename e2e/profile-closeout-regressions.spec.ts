@@ -37,6 +37,18 @@ const PROFILE_WITH_BDSMTEST: Profile = {
   ],
 };
 
+const PROFILE_WITH_MIXED_STATUSES: Profile = {
+  ...EMPTY_PROFILE,
+  id: "pw-profile-equal-status-pills",
+  name: "Equal status pills",
+  entries: Object.fromEntries(
+    (["yes", "willing", "maybe", "no", "hard_no"] as const).map((status, index) => [
+      KINKS[index].id,
+      { status, score: null, comment: "" },
+    ]),
+  ),
+};
+
 test("profile keeps catalog search and category filtering available from Overview without duplicate answer help", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
@@ -105,8 +117,11 @@ test("BDSMTest stays readable below the profile hero across both tabs", async ({
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
   const summary = page.getByTestId("bdsmtest-summary");
+  const profileSummary = page.getByTestId("profile-summary");
   const lastCategory = page.getByRole("heading", { name: "Sensation Play" });
+  await expect(profileSummary).toBeVisible();
   await expect(summary).toBeVisible();
+  await expect(profileSummary.getByTestId("bdsmtest-summary")).toBeVisible();
   await expect(lastCategory).toBeVisible();
   expect(await lastCategory.evaluate((heading, selector) => {
     const target = document.querySelector(selector);
@@ -123,6 +138,17 @@ test("BDSMTest stays readable below the profile hero across both tabs", async ({
 
   await page.getByRole("tab", { name: "Bewerken" }).click();
   await expect(summary).toBeVisible();
+});
+
+test("profile edit gives every kink status pill the same width", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
+
+  await page.getByRole("tab", { name: "Bewerken" }).click();
+  const widths = await page.getByTestId("kink-status-pill").evaluateAll((elements) =>
+    [...new Set(elements.map((element) => getComputedStyle(element).width))],
+  );
+  expect(widths).toEqual(["120px"]);
 });
 
 test("dense profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {

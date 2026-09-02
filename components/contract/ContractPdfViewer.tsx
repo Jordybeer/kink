@@ -6,6 +6,7 @@ import type { ContractSeries, ContractVersion } from "@/lib/contractLifecycle";
 import { artifactForContractVersion } from "@/lib/contractDocument";
 import { contractPdfBlob, type ContractPdfArtifact } from "@/lib/contractArtifacts";
 import ContractCanonicalPreview from "@/components/contract/ContractCanonicalPreview";
+import { shouldUseCanonicalPdfPreview } from "@/lib/pdfPreview";
 
 export default function ContractPdfViewer({ series, version }: {
   series: ContractSeries;
@@ -14,6 +15,15 @@ export default function ContractPdfViewer({ series, version }: {
   const [artifact, setArtifact] = useState<ContractPdfArtifact | null>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [canonicalPreview, setCanonicalPreview] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setCanonicalPreview(shouldUseCanonicalPdfPreview({
+      userAgent: window.navigator.userAgent,
+      platform: window.navigator.platform,
+      maxTouchPoints: window.navigator.maxTouchPoints,
+    }));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +100,20 @@ export default function ContractPdfViewer({ series, version }: {
           <FilePdf size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
           <span className="truncate">{artifact.filename}</span>
         </div>
-        <iframe src={objectUrl} title="Getekende contract-PDF" className="h-[68dvh] min-h-[480px] w-full bg-white" />
+        {canonicalPreview === null ? (
+          <p className="px-4 py-8 text-center text-sm" style={{ color: "var(--text2)" }}>
+            Voorvertoning voorbereiden…
+          </p>
+        ) : canonicalPreview && version.content ? (
+          <div className="p-4" data-testid="contract-pdf-canonical-fallback">
+            <p className="mb-4 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+              Op dit toestel tonen we de getekende inhoud direct. Met PDF openen bekijk je het originele bestand.
+            </p>
+            <ContractCanonicalPreview content={version.content} eyebrow="Getekende inhoud" />
+          </div>
+        ) : (
+          <iframe src={objectUrl} title="Getekende contract-PDF" className="h-[68dvh] min-h-[480px] w-full" style={{ background: "var(--surface2)" }} />
+        )}
       </div>
     </section>
   );

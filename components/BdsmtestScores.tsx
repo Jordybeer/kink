@@ -10,6 +10,7 @@ const PREVIEW_COUNT = 3;
 interface Props {
   scores: BdsmtestScore[];
   url?: string;
+  embedded?: boolean;
 }
 
 function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compact?: boolean }) {
@@ -50,7 +51,7 @@ function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compa
   );
 }
 
-export default function BdsmtestScores({ scores }: Props) {
+export default function BdsmtestScores({ scores, embedded = false }: Props) {
   const [open, setOpen] = useState(false);
   if (!scores.length) return null;
 
@@ -59,8 +60,10 @@ export default function BdsmtestScores({ scores }: Props) {
   return (
     <>
       <section
-        className="mx-4 mb-3 rounded-xl px-3 py-2.5"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        className={embedded ? "border-t px-4 py-2.5" : "mx-4 mb-3 rounded-xl px-3 py-2.5"}
+        style={embedded
+          ? { borderColor: "var(--border)" }
+          : { background: "var(--surface)", border: "1px solid var(--border)" }}
         data-testid="bdsmtest-summary"
       >
         <button
