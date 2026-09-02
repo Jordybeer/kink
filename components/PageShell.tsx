@@ -9,7 +9,7 @@ const WIDTH = {
 } as const;
 
 const GUTTER = {
-  standard: "px-4",
+  standard: "px-5 sm:px-6",
   editorial: "px-5 sm:px-6",
 } as const;
 

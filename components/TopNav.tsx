@@ -23,9 +23,9 @@ const homeUtilitySurface: React.CSSProperties = {
 };
 
 const contentHeaderSurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--bg) 72%, transparent)",
-  backdropFilter: "blur(14px) saturate(120%)",
-  WebkitBackdropFilter: "blur(14px) saturate(120%)",
+  background: "linear-gradient(to bottom, color-mix(in srgb, var(--surface) 34%, transparent) 0%, color-mix(in srgb, var(--bg) 16%, transparent) 72%, transparent 100%)",
+  backdropFilter: "blur(18px) saturate(135%)",
+  WebkitBackdropFilter: "blur(18px) saturate(135%)",
   pointerEvents: "none",
 };
 
