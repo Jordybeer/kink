@@ -1,19 +1,19 @@
 interface Props {
-  /** Top glow colour. Defaults to var(--accent). */
+  /** Top glow colour. Defaults to the lavender identity hue. */
   topColor?: string;
-  /** Bottom glow colour. Defaults to var(--accent2). */
+  /** Bottom glow colour. Defaults to the warm action hue. */
   bottomColor?: string;
-  /** Top glow opacity (0–1). Default 0.15. */
+  /** Top glow opacity (0–1). Default 0.10. */
   topOpacity?: number;
-  /** Bottom glow opacity (0–1). Default 0.08. */
+  /** Bottom glow opacity (0–1). Default 0.05. */
   bottomOpacity?: number;
 }
 
 export default function AmbientGlow({
-  topColor = "var(--accent)",
-  bottomColor = "var(--accent2)",
-  topOpacity = 0.15,
-  bottomOpacity = 0.08,
+  topColor = "var(--identity-a)",
+  bottomColor = "var(--identity-b)",
+  topOpacity = 0.10,
+  bottomOpacity = 0.05,
 }: Props) {
   return (
     <div aria-hidden="true" className="ks-ambient-glow pointer-events-none">

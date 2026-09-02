@@ -15,7 +15,7 @@ const MotionLink = motion.create(Link);
 
 const homeUtilitySurface: React.CSSProperties = {
   background: "color-mix(in srgb, var(--surface) 38%, transparent)",
-  borderColor: "color-mix(in srgb, var(--border-accent) 38%, var(--border))",
+  borderColor: "var(--identity-border)",
   backdropFilter: "blur(12px) saturate(120%)",
   WebkitBackdropFilter: "blur(12px) saturate(120%)",
   boxShadow: "0 8px 24px color-mix(in srgb, var(--bg) 20%, transparent)",
@@ -142,7 +142,7 @@ export default function TopNav() {
                 aria-label="Meer opties"
                 aria-expanded={overflowOpen}
                 className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
-                style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                style={{ ...homeUtilitySurface, color: "var(--identity-a)" }}
               >
                 <DotsThree size={22} weight="bold" aria-hidden="true" />
               </button>
@@ -170,7 +170,7 @@ export default function TopNav() {
 
         <style>{`
           body:has([data-top-nav-variant="home"]) main > div:first-child {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
           }
 
           body:has([data-top-nav-variant="home"]) main > div:first-child > p {

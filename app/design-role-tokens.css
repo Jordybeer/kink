@@ -22,23 +22,25 @@
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #09070D;
-  --surface: #120E16;
-  --surface2: #19131E;
-  --surface3: #241C2A;
-  --surface-tint: #180F20;
-  --border: #302635;
+  --bg: #07060B;
+  --surface: #110D16;
+  --surface2: #191320;
+  --surface3: #251D2D;
+  --surface-tint: #17101F;
+  --border: #34283B;
   --border-bright: rgba(255, 255, 255, 0.18);
   --text: #F1EAF0;
   --text2: #A198A4;
-  /* Matte rose-salmon carries identity and focus; filled actions use the same
-     hue at a deeper value so their white label still clears WCAG AA. */
+  /* Matte rose-salmon carries action and progress. Lavender carries identity
+     and focus; filled actions keep the deeper rose value required for AA. */
   --accent: #E18A94;
   --accent2: #9D8BC2;
   --accent-text: #E18A94;
   --accent2-text: #9D8BC2;
   --border-accent: rgba(225, 138, 148, 0.38);
   --accent-glow: rgba(225, 138, 148, 0.12);
+  --identity-border: rgba(157, 139, 194, 0.34);
+  --identity-glow: rgba(157, 139, 194, 0.10);
   --on-accent: #181225;
   --accent-fill: #B44A57;
   --on-accent-fill: #FFFFFF;
@@ -64,7 +66,7 @@
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.10) inset;
   --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
   --shadow-control: 0 1px 3px rgba(0, 0, 0, 0.34), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
-  --wordmark-highlight: #F1EAF0;
+  --wordmark-highlight: #D8D1E8;
   --tour-outline: rgba(255, 255, 255, 0.25);
   --tour-scrim: rgba(0, 0, 0, 0.78);
   --pwa-nav-surface: #181225;
@@ -91,6 +93,8 @@
   --accent2-text: #5B456F;
   --border-accent: rgba(167, 43, 83, 0.36);
   --accent-glow: rgba(167, 43, 83, 0.10);
+  --identity-border: rgba(102, 80, 123, 0.28);
+  --identity-glow: rgba(102, 80, 123, 0.08);
   --on-accent: #FFFFFF;
   --accent-fill: #972047;
   --on-accent-fill: #FFFFFF;
@@ -116,7 +120,7 @@
   --shadow: 0 8px 28px rgba(52, 32, 44, 0.12), 0 1px 0 rgba(255, 255, 255, 0.92) inset;
   --shadow-lg: 0 16px 48px rgba(52, 32, 44, 0.16), 0 1px 0 rgba(255, 255, 255, 0.96) inset;
   --shadow-control: 0 1px 3px rgba(52, 32, 44, 0.18), 0 1px 0 rgba(255, 255, 255, 0.92) inset;
-  --wordmark-highlight: #E8B8C9;
+  --wordmark-highlight: #DCCFE4;
   --tour-outline: rgba(255, 255, 255, 0.78);
   --tour-scrim: rgba(41, 31, 39, 0.68);
   --pwa-nav-surface: #F1E7ED;
@@ -129,10 +133,10 @@
 :root {
   /* Semantic aliases keep component intent independent from the palette. */
   --action-primary: var(--accent);
-  --identity-a: var(--accent);
-  --identity-b: var(--accent2);
-  --focus: var(--accent);
-  --decorative-glow: var(--accent-glow);
+  --identity-a: var(--accent2);
+  --identity-b: var(--accent);
+  --focus: var(--accent2);
+  --decorative-glow: var(--identity-glow);
 }
 
 @media (display-mode: standalone) {
@@ -144,5 +148,5 @@
 /* Home alone can sit a little closer to its utility nav. The selector only
    matches once onboarding is complete and the home TopNav is actually present. */
 body:has([data-top-nav-variant="home"]) main {
-  padding-top: 0.75rem;
+  padding-top: 0.5rem;
 }

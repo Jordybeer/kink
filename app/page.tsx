@@ -189,19 +189,19 @@ function HomeContent() {
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
         {profiles.length > 0 ? (
-          <div className={`grid ${importPreview ? "grid-cols-1" : "grid-cols-2"} gap-2 mt-6 mb-5`}>
+          <div className={`grid ${importPreview ? "grid-cols-1" : "grid-cols-2"} gap-2 mt-5 mb-5`}>
             <button
               type="button"
               onClick={() => setFormOpen(true)}
               className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
               style={{
-                background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+                background: "color-mix(in srgb, var(--action-primary) 7%, var(--surface2))",
                 border: "1px solid var(--border-accent)",
               }}
             >
               <span
                 className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
-                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
               >
                 <UserPlus size={19} weight="bold" aria-hidden="true" />
               </span>
@@ -211,7 +211,7 @@ function HomeContent() {
                   Perspectief en startlijst
                 </span>
               </span>
-              <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
+              <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--action-primary)" }} />
             </button>
 
             {!importPreview && (
@@ -222,11 +222,17 @@ function HomeContent() {
                   setScanOpen(true);
                 }}
                 className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                style={{
+                  background: "color-mix(in srgb, var(--identity-a) 5%, var(--surface2))",
+                  border: "1px solid var(--identity-border)",
+                }}
               >
                 <span
                   className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
-                  style={{ background: "var(--surface3)", color: "var(--text2)" }}
+                  style={{
+                    background: "color-mix(in srgb, var(--identity-a) 11%, var(--surface3))",
+                    color: "var(--identity-a)",
+                  }}
                 >
                   <Camera size={19} aria-hidden="true" />
                 </span>
@@ -236,7 +242,7 @@ function HomeContent() {
                     Voeg je partner toe
                   </span>
                 </span>
-                <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+                <ArrowRight size={15} aria-hidden="true" className="flex-none" style={{ color: "var(--identity-a)" }} />
               </button>
             )}
           </div>

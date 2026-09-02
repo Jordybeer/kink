@@ -109,7 +109,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
 
   const renderGroups = (visibleGroups: ProfileGroup[]) => (
     <motion.div
-      className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start"
+      className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start"
       initial={reduceMotion ? false : "hidden"}
       animate="show"
       variants={STAGGER_CHILDREN}
@@ -196,9 +196,9 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           <Link
             href={`/compare?a=${comparePair[0].id}&b=${comparePair[1].id}`}
             prefetch={false}
-            className="focus-ring block rounded-2xl p-5 transition-opacity hover:opacity-90 lg:col-span-2"
+            className="focus-ring block rounded-2xl p-4 transition-opacity hover:opacity-90 lg:col-span-2"
             style={{
-              background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
+              background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 6%, var(--surface)), color-mix(in srgb, var(--action-primary) 6%, var(--surface)))",
               border: "1px solid var(--border-accent)",
               boxShadow: "0 10px 26px color-mix(in srgb, var(--accent) 12%, transparent)",
             }}
@@ -247,7 +247,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
               className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3"
               style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
-              <Icon size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
+              <Icon size={16} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <span className="flex-1 text-sm font-medium">{label}</span>
               <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
             </Link>
@@ -316,7 +316,7 @@ function ProfileSection({
   const labelId = `home-${id}-profiles-label`;
 
   return (
-    <section className="mb-5" aria-labelledby={labelId}>
+    <section className="mb-4" aria-labelledby={labelId}>
       <div className="mb-2 flex min-h-8 items-center gap-3 px-1">
         <h2 id={labelId} className="flex-1 text-sm font-semibold" style={{ color: "var(--text)" }}>
           {label}
@@ -357,7 +357,7 @@ function ProfileRow({
 
   return (
     <div
-      className="px-3 py-3"
+      className="px-3 py-2.5"
       style={divider ? { borderTop: "1px solid var(--border)" } : undefined}
     >
       <div className="flex items-center gap-1">

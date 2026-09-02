@@ -44,6 +44,7 @@ async function readContrastPairs(page: Page) {
       primaryText: contrast(read("--text"), read("--bg")),
       secondaryText: contrast(read("--text2"), read("--surface")),
       accentText: contrast(read("--accent"), read("--surface3")),
+      identityText: contrast(read("--accent2-text"), read("--surface3")),
       accentButton: contrast(read("--on-accent"), read("--accent")),
       filledButton: contrast(read("--on-accent-fill"), read("--accent-fill")),
       dangerButton: contrast(read("--on-danger-fill"), read("--danger-fill")),
