@@ -192,15 +192,15 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         aria-modal="true"
         aria-labelledby="profile-enrichment-title"
         tabIndex={-1}
-        className="relative z-10 flex w-full flex-col overflow-hidden rounded-t-[24px] shadow-2xl sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
+        className="relative z-10 flex w-full flex-col overflow-hidden rounded-t-[24px] text-pretty shadow-2xl sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
         style={{
-          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 0.5rem), 42rem)",
+          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 0.75rem), 42rem)",
           background: "var(--surface)",
           border: "1px solid var(--border)",
         }}
       >
         <div
-          className="flex flex-none items-start gap-3 px-5 pb-4 pt-5 sm:px-6 sm:pt-6"
+          className="flex flex-none items-start gap-3 px-5 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-6"
           data-testid="profile-enrichment-header"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
@@ -212,10 +212,10 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>Profiel</p>
-            <h2 id="profile-enrichment-title" className="mt-1 text-xl font-semibold" style={{ color: "var(--text)" }}>
+            <h2 id="profile-enrichment-title" className="mt-0.5 text-xl font-semibold leading-tight" style={{ color: "var(--text)" }}>
               Profiel aanvullen
             </h2>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 max-w-[24rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
               Voeg je BDSMTest of FetLife toe wanneer je dat zelf wilt.
             </p>
           </div>
@@ -232,7 +232,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
         <div
           ref={scrollBodyRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-3 sm:px-6 sm:py-4"
           data-testid="profile-enrichment-scroll-body"
         >
           <section className="rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
@@ -240,7 +240,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-semibold">FetLife</h3>
             </div>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
               Alleen je gebruikersnaam. KinkSync maakt daar lokaal de profiel-link van.
             </p>
             <input
@@ -263,7 +263,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               <Sparkle size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-semibold">BDSMTest</h3>
             </div>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
               Gebruik op bdsmtest.org de optie Copy all en plak hier alles in één keer.
             </p>
 
@@ -274,13 +274,16 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
                 setRemoveBdsmtest(false);
                 setError(null);
               }}
-              rows={5}
+              onFocus={(event) => {
+                window.requestAnimationFrame(() => event.currentTarget.scrollIntoView({ block: "nearest" }));
+              }}
+              rows={4}
               maxLength={BDSMTEST_INPUT_MAX_CHARS}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
               placeholder="Plak hier de resultaatlink en resultaten"
-              className="focus-ring mt-3 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
+              className="focus-ring mt-3 max-h-36 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
 
@@ -329,7 +332,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         </div>
 
         <div
-          className="flex-none px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-6"
+          className="flex-none px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-6 sm:pt-3"
           data-testid="profile-enrichment-footer"
           style={{ borderTop: "1px solid var(--border)" }}
         >
@@ -339,7 +342,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={onClose}
