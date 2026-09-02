@@ -32,8 +32,8 @@ test("TopNav keeps Home branded, centered and accessible while content chrome st
   expect(homeWordmarkBox).not.toBeNull();
   expect(homeNavBox!.height).toBeGreaterThanOrEqual(55);
   expect(homeNavBox!.height).toBeLessThanOrEqual(57);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeGreaterThanOrEqual(15);
-  expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeLessThanOrEqual(17);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeGreaterThanOrEqual(19);
+  expect(homeNavBox!.x + homeNavBox!.width - (homeMoreBox!.x + homeMoreBox!.width)).toBeLessThanOrEqual(21);
   expect(homeIdentityBox!.y).toBeGreaterThanOrEqual(homeNavBox!.y + homeNavBox!.height);
   expect(Math.abs(
     homeWordmarkBox!.x + homeWordmarkBox!.width / 2

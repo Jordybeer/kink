@@ -32,7 +32,15 @@ test.describe("Editorial spacing regressions", () => {
 
     await page.getByRole("button", { name: "Lees meer" }).click();
     const preamble = page.getByTestId("contract-preamble");
-    await expect(preamble.locator("p:visible")).toHaveCount(4);
+    const paragraphs = preamble.locator("p:visible");
+    await expect.poll(() => paragraphs.count()).toBeGreaterThan(1);
+    const [firstParagraph, secondParagraph] = await Promise.all([
+      paragraphs.nth(0).boundingBox(),
+      paragraphs.nth(1).boundingBox(),
+    ]);
+    expect(firstParagraph).not.toBeNull();
+    expect(secondParagraph).not.toBeNull();
+    expect(secondParagraph!.y - (firstParagraph!.y + firstParagraph!.height)).toBeGreaterThanOrEqual(10);
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 

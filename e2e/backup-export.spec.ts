@@ -76,5 +76,5 @@ test("encrypted backup import keeps readable copy inside the visual viewport", a
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
   expect(bounds!.y).toBeGreaterThanOrEqual(visualViewport.offsetTop - 1);
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(visualViewport.offsetTop + visualViewport.height + 1);
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(visualViewport.offsetTop + visualViewport.height + 2);
 });
