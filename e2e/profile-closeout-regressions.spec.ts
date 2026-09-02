@@ -49,30 +49,35 @@ const PROFILE_WITH_MIXED_STATUSES: Profile = {
   ),
 };
 
-test("profile keeps catalog search and category filtering available from Overview without duplicate answer help", async ({ page }) => {
+test("profile keeps the read-view quiet and exposes search/filter only through Onderwerpen beheren", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
 
-  await expect(page.getByRole("tab", { name: "Overzicht" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+  await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveCount(0);
+  const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+  await expect(manage).toBeVisible();
+  const manageBox = await manage.boundingBox();
+  expect(manageBox).not.toBeNull();
+  expect(manageBox!.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByRole("button", { name: "Wat betekenen deze keuzes?" })).toHaveCount(0);
+
+  await manage.click();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
-  const search = page.getByRole("textbox", { name: "Profiel doorzoeken" });
+  const search = page.getByRole("textbox", { name: "Volledige catalogus doorzoeken" });
   await expect(search).toBeVisible();
-  await expect(page.getByRole("button", { name: "Alle categorieën" })).toBeVisible();
-  for (const control of [search, page.getByRole("button", { name: "Alle categorieën" }), page.getByRole("button", { name: /notities/i })]) {
+  const categories = page.getByRole("button", { name: "Alle categorieën" });
+  await expect(categories).toBeVisible();
+  for (const control of [search, categories]) {
     const box = await control.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.height).toBeGreaterThanOrEqual(44);
   }
-  await expect(page.getByRole("button", { name: "Wat betekenen deze keuzes?" })).toHaveCount(0);
-  await expect(page.getByText(/\d+ beoordeeld/, { exact: false })).toHaveCount(0);
 
   await search.fill("spanking");
   await expect(page.getByText(/spanking/i).first()).toBeVisible();
   await search.fill("");
 
-  await page.getByRole("tab", { name: "Bewerken" }).click();
-  await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
-  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
   await expect.poll(() => page.getByTestId("profile-category-header").first().evaluate((element) =>
     getComputedStyle(element).top,
   )).toBe("56px");
@@ -90,11 +95,12 @@ test("profile keeps catalog search and category filtering available from Overvie
   await expect(page.locator('button[aria-controls="category-impact-content"]')).toHaveAttribute("aria-expanded", "true");
 });
 
-test("empty profile keeps the full catalog searchable from Edit", async ({ page }) => {
+test("empty profile keeps the full catalog available behind the explicit manager", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${EMPTY_PROFILE.id}`, [EMPTY_PROFILE]);
 
-  await expect(page.getByRole("tab", { name: "Bewerken" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
   const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
   await expect(search).toBeVisible();
@@ -112,7 +118,7 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).not.toContainText(/100%/);
 });
 
-test("BDSMTest stays readable below the profile hero across both tabs", async ({ page }) => {
+test("BDSMTest stays readable below the profile hero in read-view and catalog manager", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
@@ -136,15 +142,15 @@ test("BDSMTest stays readable below the profile hero across both tabs", async ({
     Number.parseFloat(getComputedStyle(element).fontSize),
   )).toBeGreaterThanOrEqual(12);
 
-  await page.getByRole("tab", { name: "Bewerken" }).click();
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await expect(summary).toBeVisible();
 });
 
-test("profile edit gives every kink status pill the same width", async ({ page }) => {
+test("profile catalog manager gives every kink status pill the same width", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
 
-  await page.getByRole("tab", { name: "Bewerken" }).click();
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   const widths = await page.getByTestId("kink-status-pill").evaluateAll((elements) =>
     [...new Set(elements.map((element) => getComputedStyle(element).width))],
   );

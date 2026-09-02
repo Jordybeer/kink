@@ -15,7 +15,7 @@ test.describe("Profielinfo", () => {
 
     const dialog = page.getByRole("dialog", { name: "Profielinfo" });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("group", { name: "Relatiestatus" })).toBeVisible();
+    await expect(dialog.getByLabel("Relatiestatus")).toBeVisible();
     await expect.poll(() => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
@@ -153,7 +153,7 @@ test.describe("Profielinfo", () => {
 
     await page.getByRole("button", { name: "Profielinfo" }).click();
     const dialog = page.getByRole("dialog", { name: "Profielinfo" });
-    await dialog.getByRole("button", { name: "Getrouwd", exact: true }).click();
+    await dialog.getByLabel("Relatiestatus").selectOption("Getrouwd");
     await dialog.getByPlaceholder("Gebruikersnaam").fill("alexOnFet");
     await dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten").fill(
       "https://bdsmtest.org/r/switchResult\n100% Switch",

@@ -110,7 +110,9 @@ export default function TopNav() {
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
-          <span aria-hidden="true" />
+          <div className="justify-self-start" style={{ pointerEvents: "auto" }}>
+            <OfflineStatus compact />
+          </div>
           <div data-home-identity className="min-w-0 text-center">
             <h1
               data-home-nav-wordmark
@@ -309,7 +311,7 @@ function TopNavActionButton({
   );
 }
 
-function OfflineStatus() {
+function OfflineStatus({ compact = false }: { compact?: boolean }) {
   const [online, setOnline] = useState(true);
 
   useEffect(() => {
@@ -330,11 +332,13 @@ function OfflineStatus() {
       role="status"
       aria-live="polite"
       aria-label="Offline"
-      className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-xs font-medium"
+      className={compact
+        ? "inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium"
+        : "inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-xs font-medium"}
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
       <WifiSlash size={15} aria-hidden="true" />
-      <span className="hidden min-[400px]:inline">Offline</span>
+      {!compact && <span className="hidden min-[400px]:inline">Offline</span>}
     </span>
   );
 }

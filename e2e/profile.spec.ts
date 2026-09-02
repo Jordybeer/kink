@@ -127,13 +127,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("statusbalk blijft bij het overzicht en niet bij bewerken", async ({ page }) => {
+  test("statusbalk hoort bij de rustige read-view en verdwijnt in catalogusbeheer", async ({ page }) => {
     const statusBar = page.getByRole("img", {
       name: "6 Heel graag, 2 Ja, 1 Voor hen, 1 Harde grens",
       exact: true,
     });
     await expect(statusBar).toBeVisible();
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     await expect(statusBar).toHaveCount(0);
   });
 
@@ -143,7 +143,6 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("geen horizontale overflow", async ({ page }) => {
-    // De tab glijdt 8px binnen — poll tot de entrance-animatie is uitgehijgd
     await expect
       .poll(() => page.evaluate(() => document.body.scrollWidth > document.body.clientWidth), { timeout: 3000 })
       .toBe(false);
@@ -157,13 +156,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     expect(overflow).toBe(false);
   });
 
-  test("Impact Play categorie is zichtbaar in de bewerkmodus", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+  test("Impact Play categorie is zichtbaar wanneer onderwerpen bewust worden beheerd", async ({ page }) => {
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     await expect(page.getByText("Impact Play", { exact: true }).first()).toBeVisible();
   });
 
   test("gesloten categorieën zijn inert tot ze geopend worden", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     const content = page.locator("#category-impact-content");
 
     await expect(content).toHaveAttribute("aria-hidden", "true");
@@ -175,9 +174,11 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(content.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
 
-  test("tabblad 'Bewerken' is een cataloguseditor zonder ingebouwde vragenkaart", async ({ page }) => {
-    const editTab = page.getByRole("tab", { name: "Bewerken" });
-    await editTab.click();
+  test("onderwerpen beheren is een expliciete cataloguseditor zonder permanente filterchrome", async ({ page }) => {
+    await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+    await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveCount(0);
+
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
 
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
     await expect(page.getByRole("button", { name: /Alle categorieën/ })).toBeVisible();
@@ -185,7 +186,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("categoriefilter blijft zichtbaar en wijzigbaar tijdens zoeken", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     await page.getByRole("button", { name: /Alle categorieën/ }).click();
 
     const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
@@ -209,9 +210,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
-    const editTab = page.getByRole("tab", { name: "Bewerken" });
-    if (await editTab.count() > 0) await editTab.first().click();
-
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
     await search.fill("spanking");
 
@@ -301,8 +300,8 @@ test.describe("Gedeeld profiel", () => {
     await expect(page.getByText("Sam", { exact: true }).first()).toBeVisible();
   });
 
-  test("bewerken-tab is niet aanwezig", async ({ page }) => {
-    await expect(page.getByRole("tab", { name: "Bewerken" })).toHaveCount(0);
+  test("catalogusbeheer is niet aanwezig", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toHaveCount(0);
   });
 
   test("gedeeld profiel kan niet opnieuw gedeeld worden", async ({ page }) => {

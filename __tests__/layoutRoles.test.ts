@@ -28,11 +28,12 @@ describe("shared layout roles", () => {
     expect(topNav.match(/px-\[var\(--page-gutter\)\]/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 
-  it("keeps profile and questionnaire route gutters on the shared page role", () => {
-    expect(profileScreen.match(/var\(--page-gutter\)/g)?.length ?? 0).toBeGreaterThanOrEqual(7);
-    expect(profileScreen.match(/var\(--page-gutter-wide\)/g)?.length ?? 0).toBeGreaterThanOrEqual(7);
+  it("keeps profile and questionnaire route gutters on the single responsive page role", () => {
+    expect(profileScreen).toContain("mx-[var(--page-gutter)]");
+    expect(profileScreen).toContain("px-[var(--page-gutter)]");
+    expect(profileScreen).not.toContain("page-gutter-wide");
     expect(questionsScreen).toContain("px-[var(--page-gutter)]");
-    expect(questionsScreen).toContain("sm:px-[var(--page-gutter-wide)]");
+    expect(questionsScreen).not.toContain("page-gutter-wide");
   });
 
   it("keeps sheet geometry centralized instead of reintroducing per-sheet mobile gutters", () => {
