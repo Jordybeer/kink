@@ -13,6 +13,12 @@ test.describe("Intimiteitsagenda", () => {
     await page.getByRole("button", { name: "Moment plannen" }).first().click();
 
     const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
+    await expect(planDialog).toBeVisible();
+    const viewportWidth = page.viewportSize()!.width;
+    const planDialogBox = await planDialog.boundingBox();
+    expect(planDialogBox?.x).toBeGreaterThanOrEqual(0);
+    expect((planDialogBox?.x ?? 0) + (planDialogBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth + 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewportWidth);
     await planDialog.getByLabel("Datum").fill("2026-08-30");
     await planDialog.getByLabel("Tijd").fill("20:30");
     await planDialog.getByLabel("Titel (optioneel)").fill("Date night");

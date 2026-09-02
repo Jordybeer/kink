@@ -38,7 +38,7 @@ export function SheetContent({
 }: SheetContentProps) {
   return (
     <div
-      className={`rounded-t-2xl ${className}`}
+      className={`min-w-0 max-w-full overflow-x-clip rounded-t-2xl ${className}`}
       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none", ...style }}
       data-testid={dataTestId}
     >
@@ -179,7 +179,7 @@ export default function Sheet({
           />
 
           <div
-            className={`pointer-events-none fixed inset-0 z-[151] flex justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
+            className={`pointer-events-none fixed inset-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
           >
             <motion.div
               ref={sheetRef}
@@ -187,7 +187,7 @@ export default function Sheet({
               aria-modal="true"
               aria-label={ariaLabel ?? title}
               data-sheet-variant={variant}
-              className={`pointer-events-auto w-full ${variant === "task" ? "sm:max-w-lg" : variant === "surface" ? "sm:max-w-xl" : ""}`}
+              className={`pointer-events-auto min-w-0 w-full max-w-full ${variant === "task" ? "sm:max-w-lg" : variant === "surface" ? "sm:max-w-xl" : ""}`}
               style={quickSheet
                 ? { y, touchAction: scrollable ? "auto" : "none" }
                 : { touchAction: "auto" }}

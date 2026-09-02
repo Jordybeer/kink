@@ -20,6 +20,8 @@ html, body {
   min-height: 100vh;
 }
 
+body { isolation: isolate; }
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -387,6 +389,69 @@ span[class~="mr-auto"][class~="text-xs"] {
 .ks-card {
   background: var(--surface);
   border: 1px solid var(--border);
+}
+
+/* Viewport-contained identity light. Unequal slow paths keep the ambience alive
+   without reading as an effect or destabilising long iOS screenshots. */
+.ks-ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  contain: strict;
+}
+
+.ks-ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.ks-ambient-orb-top {
+  top: -18rem;
+  left: calc(50% - min(23rem, 74vw));
+  width: min(46rem, 148vw);
+  aspect-ratio: 1;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-top-color) var(--ambient-top-opacity), transparent) 0%,
+    transparent 69%
+  );
+  animation: ks-ambient-drift-top 34s ease-in-out infinite alternate;
+}
+
+.ks-ambient-orb-bottom {
+  right: -17rem;
+  bottom: -18rem;
+  width: min(43rem, 142vw);
+  aspect-ratio: 1;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-bottom-color) var(--ambient-bottom-opacity), transparent) 0%,
+    transparent 70%
+  );
+  animation: ks-ambient-drift-bottom 41s ease-in-out infinite alternate;
+}
+
+@keyframes ks-ambient-drift-top {
+  from { transform: translate3d(-2.5%, -1.5%, 0) scale(0.98); }
+  to { transform: translate3d(5%, 4%, 0) scale(1.04); }
+}
+
+@keyframes ks-ambient-drift-bottom {
+  from { transform: translate3d(2%, 2%, 0) scale(1.03); }
+  to { transform: translate3d(-7%, -4%, 0) scale(0.97); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-ambient-orb {
+    animation: none;
+    will-change: auto;
+  }
 }
 
 /* Preserve the confident Home wordmark in normal portrait use, but stop it

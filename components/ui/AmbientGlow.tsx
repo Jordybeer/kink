@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 interface Props {
   /** Top glow colour. Defaults to the lavender identity hue. */
   topColor?: string;
@@ -15,22 +17,17 @@ export default function AmbientGlow({
   topOpacity = 0.10,
   bottomOpacity = 0.05,
 }: Props) {
+  const glowStyle = {
+    "--ambient-top-color": topColor,
+    "--ambient-bottom-color": bottomColor,
+    "--ambient-top-opacity": `${Math.round(topOpacity * 100)}%`,
+    "--ambient-bottom-opacity": `${Math.round(bottomOpacity * 100)}%`,
+  } as CSSProperties;
+
   return (
-    <div aria-hidden="true" className="ks-ambient-glow pointer-events-none">
-      <div
-        className="fixed top-0 left-0 right-0 z-0"
-        style={{
-          height: 300,
-          background: `radial-gradient(ellipse at 50% 0%, color-mix(in srgb, ${topColor} ${Math.round(topOpacity * 100)}%, transparent) 0%, transparent 70%)`,
-        }}
-      />
-      <div
-        className="fixed bottom-0 left-0 right-0 z-0"
-        style={{
-          height: 400,
-          background: `radial-gradient(ellipse at 50% 100%, color-mix(in srgb, ${bottomColor} ${Math.round(bottomOpacity * 100)}%, transparent) 0%, transparent 70%)`,
-        }}
-      />
+    <div aria-hidden="true" className="ks-ambient-glow pointer-events-none" style={glowStyle}>
+      <div className="ks-ambient-orb ks-ambient-orb-top" />
+      <div className="ks-ambient-orb ks-ambient-orb-bottom" />
     </div>
   );
 }
