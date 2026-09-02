@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle, LinkSimple, Sparkle, Trash, X } from "@phosphor-icons/react";
+import { CheckCircle, Heart, LinkSimple, PencilSimple, Sparkle, Trash, X } from "@phosphor-icons/react";
 import {
   MAX_BDSMTEST_COPY_CHARS,
   parseBdsmtestCopyAll,
   type BdsmtestCopyAllError,
 } from "@/lib/parseBdsmtest";
+import { RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useStore } from "@/lib/store";
 import type { Profile } from "@/types";
@@ -40,6 +41,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const scrollBodyRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [relationshipStatus, setRelationshipStatus] = useState("");
   const [fetLife, setFetLife] = useState("");
   const [bdsmPaste, setBdsmPaste] = useState("");
   const [removeBdsmtest, setRemoveBdsmtest] = useState(false);
@@ -74,6 +76,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
     body.style.left = `-${previousScroll.x}px`;
     body.style.width = "100%";
 
+    setRelationshipStatus(profile.relationshipStatus ?? "");
     setFetLife(profile.fetLifeUsername ?? "");
     setBdsmPaste("");
     setRemoveBdsmtest(false);
@@ -101,7 +104,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
       body.style.width = previousDocumentStyles.bodyWidth;
       window.scrollTo(previousScroll.x, previousScroll.y);
     };
-  }, [onClose, open, profile.fetLifeUsername]);
+  }, [onClose, open, profile.fetLifeUsername, profile.relationshipStatus]);
 
   const parsed = useMemo(() => {
     if (!bdsmPaste.trim()) return null;
@@ -137,6 +140,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
           const personLevel = {
             ...candidate,
+            relationshipStatus: relationshipStatus || undefined,
             fetLifeUsername: cleanFetLife || undefined,
             updatedAt: now,
           };
@@ -205,23 +209,23 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         >
           <span
             className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl"
-            style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))" }}
+            style={{ color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
-            <Sparkle size={20} weight="duotone" aria-hidden="true" />
+            <PencilSimple size={19} weight="regular" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>Profiel</p>
             <h2 id="profile-enrichment-title" className="mt-0.5 text-xl font-semibold leading-tight" style={{ color: "var(--text)" }}>
-              Profiel aanvullen
+              Profielinfo
             </h2>
             <p className="mt-1 max-w-[24rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
-              Voeg je BDSMTest of FetLife toe wanneer je dat zelf wilt.
+              Beheer optionele profielgegevens en gekoppelde profielen.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Sluit profiel aanvullen"
+            aria-label="Sluit profielinfo"
             className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
           >
@@ -235,6 +239,35 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
           data-testid="profile-enrichment-scroll-body"
         >
           <section className="rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+            <div className="flex items-center gap-2">
+              <Heart size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <h3 className="text-sm font-semibold">Relatiestatus</h3>
+            </div>
+            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+              Optioneel. Laat leeg wanneer je dit niet op je profiel wilt tonen.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Relatiestatus">
+              {RELATIONSHIP_STATUSES.map((status) => {
+                const active = relationshipStatus === status;
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setRelationshipStatus(active ? "" : status)}
+                    aria-pressed={active}
+                    className="focus-ring min-h-11 rounded-full px-3 text-sm font-semibold"
+                    style={active
+                      ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
+                      : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                  >
+                    {status}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
             <div className="flex items-center gap-2">
               <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-semibold">FetLife</h3>
