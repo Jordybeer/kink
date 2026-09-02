@@ -4,11 +4,23 @@ import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
 
 test.describe("Home page — leeg", () => {
-  test("laadt zonder overflow en toont onboarding of lege staat", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+  test("laadt zonder overflow en houdt de lege compositie verticaal in balans", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
+
     const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
     expect(overflow).toBe(false);
+
+    const emptyHeading = page.getByRole("heading", { name: "Maak je eerste profiel" });
+    await expect(emptyHeading).toBeVisible();
+    const emptySection = emptyHeading.locator("xpath=ancestor::section");
+    const sectionBox = await emptySection.boundingBox();
+    expect(sectionBox).not.toBeNull();
+
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    const sectionBottom = sectionBox!.y + sectionBox!.height;
+    expect(sectionBottom).toBeGreaterThan(viewportHeight * 0.58);
+    expect(sectionBottom).toBeLessThan(viewportHeight * 0.9);
   });
 });
 
