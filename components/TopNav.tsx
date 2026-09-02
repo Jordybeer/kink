@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDots, CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -13,17 +13,10 @@ import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
 
 const MotionLink = motion.create(Link);
 
-const homeUtilitySurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--surface) 24%, transparent)",
-  backdropFilter: "blur(12px) saturate(118%)",
-  WebkitBackdropFilter: "blur(12px) saturate(118%)",
-  pointerEvents: "auto",
-};
-
 const contentHeaderSurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--surface) 46%, transparent)",
-  backdropFilter: "blur(18px) saturate(126%)",
-  WebkitBackdropFilter: "blur(18px) saturate(126%)",
+  background: "color-mix(in srgb, var(--bg) 66%, transparent)",
+  backdropFilter: "blur(18px) saturate(120%)",
+  WebkitBackdropFilter: "blur(18px) saturate(120%)",
   pointerEvents: "none",
 };
 
@@ -99,11 +92,6 @@ export default function TopNav() {
         },
       },
       {
-        label: "Agenda",
-        icon: <CalendarDots size={17} aria-hidden="true" />,
-        onClick: () => router.push("/intimacy"),
-      },
-      {
         label: "Over KinkSync",
         icon: <Info size={17} aria-hidden="true" />,
         onClick: () => router.push("/about"),
@@ -118,11 +106,12 @@ export default function TopNav() {
     return (
       <header className="relative z-40" style={safeAreaShell}>
         <nav
-          className="relative mx-auto max-w-2xl px-[var(--page-gutter)] pb-1 pt-4 lg:max-w-4xl"
+          className="mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] pb-1 pt-4 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
-          <div data-home-identity className="px-12 text-center">
+          <span aria-hidden="true" />
+          <div data-home-identity className="min-w-0 text-center">
             <h1
               data-home-nav-wordmark
               className="serif-safe whitespace-nowrap"
@@ -139,10 +128,9 @@ export default function TopNav() {
 
           <div
             data-testid="home-topnav-actions"
-            className="absolute right-[var(--page-gutter)] top-2 flex items-center gap-2 sm:right-[var(--page-gutter-wide)]"
+            className="justify-self-end"
             style={{ pointerEvents: "auto" }}
           >
-            <OfflineStatus />
             <ContextMenu
               open={overflowOpen}
               onClose={() => setOverflowOpen(false)}
@@ -154,8 +142,8 @@ export default function TopNav() {
                 onClick={() => setOverflowOpen((open) => !open)}
                 aria-label="Meer opties"
                 aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
+                style={{ color: "var(--text2)" }}
               >
                 <DotsThree size={22} weight="bold" aria-hidden="true" />
               </button>
@@ -200,26 +188,26 @@ export default function TopNav() {
       style={{ ...safeAreaShell, ...contentHeaderSurface }}
     >
       <nav
-        className={`mx-auto flex h-14 ${navWidth} items-center px-[var(--page-gutter)]`}
+        className={`mx-auto h-14 ${navWidth} px-[var(--page-gutter)]`}
         aria-label="Hoofdnavigatie"
         data-top-nav-variant="content"
       >
         <div
           data-testid="content-topnav-row"
-          className="relative flex h-14 w-full items-center gap-1"
+          className="grid h-14 w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-1"
           style={contentNavRow}
         >
           <MotionLink
             href={route.back}
             whileTap={t.tap}
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
             aria-label="Terug"
           >
             <CaretLeft aria-hidden="true" size={20} />
           </MotionLink>
           <span
-            className="serif-safe flex min-w-0 flex-1 items-baseline gap-1.5 text-base italic"
+            className="serif-safe flex min-w-0 items-baseline gap-1.5 overflow-hidden text-base italic"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
               fontWeight: 500,
@@ -249,36 +237,38 @@ export default function TopNav() {
               {savedVisible ? "Opgeslagen" : ""}
             </span>
           )}
-          {primary && <TopNavActionButton action={primary} emphasis="primary" />}
-          {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
-          {overflowActions.length > 0 && (
-            <ContextMenu
-              open={overflowOpen}
-              onClose={() => setOverflowOpen(false)}
-              items={overflowActions
-                .filter((action) => !action.disabled)
-                .map((action) => ({
-                  label: action.label,
-                  icon: action.icon,
-                  danger: action.danger,
-                  selected: action.selected,
-                  onClick: action.onClick,
-                }))}
-            >
-              <button
-                type="button"
-                data-tour={questionTitle ? "questionnaire-menu" : undefined}
-                onClick={() => setOverflowOpen((open) => !open)}
-                aria-label="Meer acties"
-                aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--text2)" }}
+          <div className="flex items-center justify-end gap-1">
+            {primary && <TopNavActionButton action={primary} emphasis="primary" />}
+            {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
+            {overflowActions.length > 0 && (
+              <ContextMenu
+                open={overflowOpen}
+                onClose={() => setOverflowOpen(false)}
+                items={overflowActions
+                  .filter((action) => !action.disabled)
+                  .map((action) => ({
+                    label: action.label,
+                    icon: action.icon,
+                    danger: action.danger,
+                    selected: action.selected,
+                    onClick: action.onClick,
+                  }))}
               >
-                <DotsThree size={22} weight="bold" aria-hidden="true" />
-              </button>
-            </ContextMenu>
-          )}
-          <OfflineStatus />
+                <button
+                  type="button"
+                  data-tour={questionTitle ? "questionnaire-menu" : undefined}
+                  onClick={() => setOverflowOpen((open) => !open)}
+                  aria-label="Meer acties"
+                  aria-expanded={overflowOpen}
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <DotsThree size={22} weight="bold" aria-hidden="true" />
+                </button>
+              </ContextMenu>
+            )}
+            <OfflineStatus />
+          </div>
         </div>
       </nav>
     </header>

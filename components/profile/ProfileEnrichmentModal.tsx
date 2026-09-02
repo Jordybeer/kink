@@ -198,7 +198,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         tabIndex={-1}
         className="relative z-10 flex max-h-[calc(var(--visual-viewport-height,100dvh)-var(--sheet-edge-clearance))] w-full flex-col overflow-hidden rounded-t-[24px] text-pretty shadow-2xl sm:max-h-[min(calc(var(--visual-viewport-height,100dvh)-3rem),42rem)] sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
         style={{
-          background: "var(--surface)",
+          background: "var(--bg)",
           border: "1px solid var(--border)",
         }}
       >
@@ -209,7 +209,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         >
           <span
             className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl"
-            style={{ color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)" }}
+            style={{ color: "var(--identity-a)", background: "var(--surface2)", border: "1px solid var(--identity-border)" }}
           >
             <PencilSimple size={19} weight="regular" aria-hidden="true" />
           </span>
@@ -238,38 +238,32 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-3 sm:px-6 sm:py-4"
           data-testid="profile-enrichment-scroll-body"
         >
-          <section className="rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <section className="rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex items-center gap-2">
-              <Heart size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <Heart size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">Relatiestatus</h3>
             </div>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
-              Optioneel. Laat leeg wanneer je dit niet op je profiel wilt tonen.
+            <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
+              Optioneel. Kies alleen wat je op je profiel wilt tonen.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Relatiestatus">
-              {RELATIONSHIP_STATUSES.map((status) => {
-                const active = relationshipStatus === status;
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => setRelationshipStatus(active ? "" : status)}
-                    aria-pressed={active}
-                    className="focus-ring min-h-11 rounded-full px-3 text-sm font-semibold"
-                    style={active
-                      ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
-                      : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                  >
-                    {status}
-                  </button>
-                );
-              })}
-            </div>
+            <label htmlFor="profile-relationship-status" className="sr-only">Relatiestatus</label>
+            <select
+              id="profile-relationship-status"
+              value={relationshipStatus}
+              onChange={(event) => setRelationshipStatus(event.target.value)}
+              className="ks-select focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
+              style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: relationshipStatus ? "var(--text)" : "var(--text2)" }}
+            >
+              <option value="">Niet tonen</option>
+              {RELATIONSHIP_STATUSES.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
           </section>
 
-          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex items-center gap-2">
-              <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">FetLife</h3>
             </div>
             <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
@@ -286,13 +280,13 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               spellCheck={false}
               placeholder="Gebruikersnaam"
               className="focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
           </section>
 
-          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="flex items-center gap-2">
-              <Sparkle size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <Sparkle size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">BDSMTest</h3>
             </div>
             <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
@@ -316,7 +310,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               spellCheck={false}
               placeholder="Plak hier de resultaatlink en resultaten"
               className="focus-ring mt-3 max-h-36 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
 
             {parsed?.ok && (
@@ -337,7 +331,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             )}
 
             {hasStoredBdsmtest && !bdsmPaste.trim() && !removeBdsmtest && (
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl px-3 py-2.5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                 <p className="text-xs" style={{ color: "var(--text2)" }}>
                   {profile.bdsmtestScores?.length ?? 0} resultaten opgeslagen
                 </p>
@@ -369,7 +363,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
           style={{ borderTop: "1px solid var(--border)" }}
         >
           {error && (
-            <p className="mb-3 rounded-xl px-3 py-2.5 text-sm" role="alert" style={{ color: "var(--hard-no-text)", background: "color-mix(in srgb, var(--hard-no) 7%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--hard-no) 22%, var(--border))" }}>
+            <p className="mb-3 rounded-xl px-3 py-2.5 text-sm" role="alert" style={{ color: "var(--hard-no-text)", background: "color-mix(in srgb, var(--hard-no) 7%, var(--surface))", border: "1px solid color-mix(in srgb, var(--hard-no) 22%, var(--border))" }}>
               {error}
             </p>
           )}

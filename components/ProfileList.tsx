@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
+  CalendarDots,
   CaretRight,
   DotsThree,
   FileText,
@@ -240,6 +241,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           {[
             { href: "/contracts", label: "Contracten", icon: FileText },
             { href: "/scenes", label: "Scènes", icon: FilmSlate },
+            { href: "/intimacy", label: "Agenda", icon: CalendarDots },
           ].map(({ href, label, icon: Icon }) => (
             <Link
               key={href}

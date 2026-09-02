@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import "./design-role-tokens.css";
+import "./scrollbar.css";
 import "./print.css";
 import VisualViewportBridge from "@/components/VisualViewportBridge";
 import DevTestToolsBootstrap from "@/components/DevTestToolsBootstrap";

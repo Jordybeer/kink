@@ -24,8 +24,6 @@ function uid() {
   return crypto.randomUUID();
 }
 
-// ─── Arc bar ────────────────────────────────────────────────────────────────
-
 function SceneArcBar({ items }: { items: SceneItem[] }) {
   if (items.length === 0) return null;
   const counts = { zacht: 0, midden: 0, intens: 0 };
@@ -392,6 +390,7 @@ function ScenePage() {
   if (!_hasHydrated) return <PageShell loading width="2xl" flush />;
 
   const isCompleted = currentScene?.status === "completed";
+  const showEditorBar = !isCompleted && !isConsentLocked;
   const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
@@ -435,19 +434,19 @@ function ScenePage() {
     <>
       <main
         className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-4"
-        style={{ paddingTop: 20, paddingBottom: 120 }}
+        style={{ paddingTop: 20, paddingBottom: showEditorBar ? 120 : 32 }}
       >
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-3 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-2">
           <Link
             href={backHref}
             prefetch={false}
             aria-label="Terug"
-            className="focus-ring flex h-11 w-11 flex-none items-center rounded-lg"
+            className="focus-ring flex h-11 w-11 items-center rounded-lg"
             style={{ color: "var(--text2)", fontSize: 13 }}
           >
             <ArrowRight size={16} className="rotate-180" aria-hidden="true" />
           </Link>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <input
               type="text"
               value={sceneTitle}
@@ -463,6 +462,16 @@ function ScenePage() {
               </p>
             )}
           </div>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={items.length === 0}
+            className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-35"
+            style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
+            aria-label="Exporteer scène als PDF"
+          >
+            PDF
+          </button>
         </div>
 
         <div className="mb-3 flex items-center gap-1.5">
@@ -601,18 +610,18 @@ function ScenePage() {
         </div>
       </main>
 
-      <div
-        className="fixed bottom-0 left-0 right-0 z-40"
-        style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
-      >
-        {saveError && (
-          <div className="mx-auto mb-2 max-w-3xl">
-            <p role="alert" className="text-xs ks-fade-in" style={{ color: "var(--hard-no)" }}>{saveError}</p>
-          </div>
-        )}
-        <div className="mx-auto flex max-w-3xl flex-wrap gap-2">
-          {!isCompleted && !isConsentLocked && (
-            <div className="flex w-full gap-2 sm:w-auto sm:flex-1">
+      {showEditorBar && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40"
+          style={{ background: "color-mix(in srgb, var(--bg) 92%, transparent)", backdropFilter: "blur(18px)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
+        >
+          {saveError && (
+            <div className="mx-auto mb-2 max-w-3xl">
+              <p role="alert" className="text-xs ks-fade-in" style={{ color: "var(--hard-no)" }}>{saveError}</p>
+            </div>
+          )}
+          <div className="mx-auto max-w-3xl">
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={newItemName}
@@ -631,40 +640,29 @@ function ScenePage() {
                 <Plus size={20} aria-hidden="true" />
               </button>
             </div>
-          )}
 
-          <button
-            onClick={handleExport}
-            disabled={items.length === 0}
-            className="focus-ring h-11 flex-1 rounded-xl px-3 text-xs font-bold disabled:opacity-40 sm:flex-none"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", minWidth: 52 }}
-            aria-label="Exporteer als PDF"
-          >
-            PDF
-          </button>
-
-          {!isCompleted && !isConsentLocked && (
-            <>
+            <div className="mt-2 grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2">
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-xl px-3 text-xs font-bold disabled:opacity-40 sm:flex-none"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "draft" ? "var(--accent)" : "var(--text)" }}
+                className="focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-bold disabled:opacity-40"
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
-                {savedStatus === "draft" ? <><Check size={13} aria-hidden="true" /> Concept</> : "Opslaan"}
+                {savedStatus === "draft" ? <><Check size={14} aria-hidden="true" /> Opgeslagen</> : "Opslaan"}
               </button>
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring inline-flex h-11 flex-1 items-center justify-center gap-1 rounded-xl px-3 text-xs font-bold disabled:opacity-40 sm:flex-none"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)" }}
+                className="focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold disabled:opacity-40"
+                style={{ background: "var(--surface)", border: "1px solid var(--border-accent)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)" }}
+                aria-label="Afspraken vastzetten"
               >
-                {savedStatus === "planned" ? <><Check size={13} aria-hidden="true" /> Gepland</> : "Plannen"}
+                {savedStatus === "planned" ? <><Check size={14} aria-hidden="true" /> Vastgezet</> : "Vastzetten"}
               </button>
-            </>
-          )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <Sheet open={drawerOpen} onClose={() => setDrawerOpen(false)} aria-label="Kinks toevoegen">
         <div className="rounded-t-2xl px-4 pt-5 pb-8" style={{ background: "var(--surface)", maxHeight: "70vh", overflowY: "auto" }}>
