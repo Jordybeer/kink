@@ -10,7 +10,6 @@ import {
   FileText,
   Lock,
   PencilSimple,
-  Sparkle,
   Trash,
 } from "@phosphor-icons/react";
 import ContextMenu from "@/components/ui/ContextMenu";
@@ -224,15 +223,15 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               type="button"
               data-tour="profile-enrichment"
               onClick={() => setEnrichmentOpen(true)}
-              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium transition-colors active:opacity-70"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-xs font-normal transition-colors active:opacity-70"
               style={{
-                color: "var(--accent-text)",
-                background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
-                border: "1px solid var(--border-accent)",
+                color: "var(--text2)",
+                background: "var(--surface2)",
+                border: "1px solid var(--border)",
               }}
             >
-              <Sparkle size={14} weight="duotone" aria-hidden="true" />
-              Profielinfo aanvullen
+              <PencilSimple size={13} weight="regular" aria-hidden="true" />
+              Profielinfo
             </button>
           )}
 
