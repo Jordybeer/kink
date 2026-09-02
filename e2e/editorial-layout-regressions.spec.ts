@@ -18,6 +18,28 @@ test.describe("Editorial spacing regressions", () => {
     }
   });
 
+  test("profile and questionnaire consume the same shared mobile page gutter", async ({ page }) => {
+    await page.setViewportSize(MOBILE);
+    await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX, PROFILE_SAM]);
+
+    const summary = page.getByTestId("profile-summary");
+    const summaryBox = await summary.boundingBox();
+    expect(summaryBox).not.toBeNull();
+    expect(summaryBox!.x).toBeGreaterThanOrEqual(19);
+    expect(summaryBox!.x).toBeLessThanOrEqual(21);
+
+    const catalogControls = page.getByTestId("profile-catalog-controls");
+    if (await catalogControls.count()) {
+      await expect.poll(() => catalogControls.evaluate((element) => getComputedStyle(element).paddingLeft)).toBe("20px");
+    }
+
+    await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX, PROFILE_SAM]);
+    const questions = page.getByTestId("questions-screen");
+    await expect(questions).toBeVisible();
+    await expect.poll(() => questions.evaluate((element) => getComputedStyle(element).paddingLeft)).toBe("20px");
+    expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
+  });
+
   test("contract editor centers only its masthead and gives expanded copy real breathing room", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await seedAndGo(page, "/contract?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
