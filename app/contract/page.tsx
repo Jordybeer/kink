@@ -30,6 +30,17 @@ const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tij
 type ContractNoteSide = "a" | "b";
 type ContractNotes = Record<string, { a?: string; b?: string }>;
 
+function readablePreamble(text: string): { firstSentence: string; paragraphs: string[] } {
+  const sentences = text.match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g)?.map((sentence) => sentence.trim()).filter(Boolean) ?? [];
+  if (sentences.length === 0) return { firstSentence: text, paragraphs: [text] };
+
+  const paragraphs: string[] = [];
+  for (let index = 0; index < sentences.length; index += 2) {
+    paragraphs.push(sentences.slice(index, index + 2).join(" "));
+  }
+  return { firstSentence: sentences[0], paragraphs };
+}
+
 function ContractPage() {
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
@@ -181,6 +192,7 @@ function ContractPage() {
     realNameA: useRealNames ? trimmedRealNameA : undefined,
     realNameB: useRealNames ? trimmedRealNameB : undefined,
   });
+  const preambleLayout = readablePreamble(preamble);
 
   function noteKey(scope: string, itemName: string): string {
     return `${scope}\u0000${itemName}`;
@@ -287,26 +299,26 @@ function ContractPage() {
   return (
     <>
       <PageShell width="3xl" className="contract-print">
-        <section className="mb-5 print:hidden" aria-labelledby="contract-editor-title">
+        <section className="mx-auto mb-7 max-w-2xl text-center print:hidden" aria-labelledby="contract-editor-title">
           <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
             Contract opstellen
           </p>
           <h1
             id="contract-editor-title"
-            className="mt-2 truncate text-3xl italic sm:text-4xl"
+            className="serif-safe mt-2 text-balance text-3xl italic leading-tight sm:text-4xl"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
             <span style={{ color: COLOUR_A }}>{profileA.name}</span>
             <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
             <span style={{ color: COLOUR_B }}>{profileB.name}</span>
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-6" style={{ color: "var(--text2)" }}>
             Stel de afspraken samen; het ondertekende document blijft de formele weergave.
           </p>
         </section>
 
         <div
-          className="mb-6 rounded-2xl p-4 sm:p-6"
+          className="mb-6 rounded-2xl p-5 sm:p-6"
           style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
         >
           <div className="mb-6 flex flex-wrap items-end justify-between gap-2 border-b pb-4" style={{ borderColor: "var(--border)" }}>
@@ -321,11 +333,15 @@ function ContractPage() {
             <p className="text-xs" style={{ color: "var(--text2)" }}>Opgesteld op {today}</p>
           </div>
 
-          <div className="mb-6 border-l-[3px] pl-4" style={{ borderColor: "var(--border-accent)" }}>
-            <p className="text-sm italic leading-relaxed print:hidden" style={{ color: "var(--text2)" }}>
-              {preambleOpen ? preamble : preamble.slice(0, preamble.indexOf(". ") + 1)}
-            </p>
-            <p className="hidden text-sm italic leading-relaxed print:block" style={{ color: "var(--text2)" }}>{preamble}</p>
+          <div data-testid="contract-preamble" className="mb-6 border-l-[3px] py-1 pl-4 sm:pl-5" style={{ borderColor: "var(--border-accent)" }}>
+            <div className="space-y-3 text-sm italic leading-7 print:hidden" style={{ color: "var(--text2)" }}>
+              {preambleOpen
+                ? preambleLayout.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+                : <p>{preambleLayout.firstSentence}</p>}
+            </div>
+            <div className="hidden space-y-3 text-sm italic leading-relaxed print:block" style={{ color: "var(--text2)" }}>
+              {preambleLayout.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            </div>
             <button
               type="button"
               onClick={() => setPreambleOpen((value) => !value)}

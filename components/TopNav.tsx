@@ -120,7 +120,7 @@ export default function TopNav() {
     return (
       <header className="sticky top-0 z-40" style={safeAreaShell}>
         <nav
-          className="mx-auto flex h-14 max-w-2xl items-center justify-end px-4 lg:max-w-4xl"
+          className="mx-auto flex h-14 max-w-2xl items-start justify-end pl-4 pr-5 pt-1 sm:items-center sm:px-4 sm:pt-0 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
