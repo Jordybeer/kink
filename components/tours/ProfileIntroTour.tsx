@@ -14,8 +14,8 @@ const PROFILE_STEPS: readonly SpotlightStep[] = [
   },
   {
     selector: '[data-tour="profile-enrichment"]',
-    title: "Maak je profiel wat completer",
-    body: "Gebruik je BDSMTest of FetLife? Via Profielinfo aanvullen kun je ze hier toevoegen.",
+    title: "Beheer je profielinfo",
+    body: "Relatiestatus, BDSMTest of FetLife? Via Profielinfo beheer je deze optionele gegevens hier.",
     pad: 8,
   },
 ];
