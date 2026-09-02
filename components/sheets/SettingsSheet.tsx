@@ -32,7 +32,7 @@ interface SettingsSheetProps {
   importSuccess: string | null;
 }
 
-const SETTINGS_ICON_TONE = "color-mix(in srgb, var(--accent) 72%, var(--text2))";
+const SETTINGS_ICON_TONE = "color-mix(in srgb, var(--accent) 64%, var(--text2))";
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
@@ -49,7 +49,7 @@ function SettingsGroup({ children }: { children: ReactNode }) {
   return (
     <div
       className="overflow-hidden rounded-2xl"
-      style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
       {children}
     </div>
@@ -96,8 +96,8 @@ function RowContent({
 }
 
 const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
-const SETTINGS_ROW_CLASS = "focus-ring flex min-h-14 w-full items-center gap-3 px-3.5 py-2.5 text-left";
-const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-14 w-full items-center gap-3 px-3.5 py-2";
+const SETTINGS_ROW_CLASS = "focus-ring flex min-h-[52px] w-full items-center gap-3 px-3.5 py-2 text-left";
+const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-3 px-3.5 py-2";
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
   { value: "system", label: "Systeem" },
@@ -113,7 +113,7 @@ function ThemeSelector() {
       <legend className="sr-only">Kleurmodus</legend>
       <div
         className="grid grid-cols-3 gap-1 rounded-xl p-1"
-        style={{ background: "var(--surface3)", border: "1px solid var(--border)" }}
+        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
       >
         {THEME_OPTIONS.map((option) => {
           const active = preference === option.value;
@@ -130,7 +130,7 @@ function ThemeSelector() {
               <span
                 className="flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]"
                 style={{
-                  background: active ? "var(--surface)" : "transparent",
+                  background: active ? "var(--surface3)" : "transparent",
                   borderColor: active ? "var(--border-accent)" : "transparent",
                   color: active ? "var(--text)" : "var(--text2)",
                   boxShadow: active ? "var(--shadow-control)" : "none",
@@ -194,7 +194,7 @@ export default function SettingsSheet({
       variant="surface"
       aria-label="Instellingen"
     >
-      <div className="grid gap-4 pb-0.5">
+      <div className="grid gap-3 pb-0.5">
         <section>
           <SectionTitle>Weergave</SectionTitle>
           <SettingsGroup>
@@ -226,7 +226,7 @@ export default function SettingsSheet({
             </button>
 
             <label
-              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-14 w-full cursor-pointer items-center gap-3 px-3.5 py-2.5 text-left"
+              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-3 px-3.5 py-2 text-left"
               style={DIVIDER_STYLE}
             >
               <input

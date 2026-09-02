@@ -11,7 +11,6 @@ import {
   Lock,
   Star,
   UserMinus,
-  X,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
@@ -130,9 +129,6 @@ export default function ProfilePage({ params }: Props) {
   const catalogCategoryFilterLabel = catalogCategoryFilter
     ? kinkCategoryLabel(catalogCategoryFilter)
     : "Alle categorieën";
-  const catalogFilterKinks = catalogCategoryFilter
-    ? CATALOG_KINKS_BY_CATEGORY.get(catalogCategoryFilter) ?? EMPTY_KINKS
-    : KINKS;
   const catalogCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
   const categoryFilterOptions = visibleCategories.map((category) => {
     const categoryKinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? EMPTY_KINKS;
@@ -148,7 +144,6 @@ export default function ProfilePage({ params }: Props) {
         (kink) => catalogCategoryFilter === null || kink.category === catalogCategoryFilter,
       )
     : [];
-  const activeCatalogKinks = searchTerm ? searchResults : catalogFilterKinks;
 
   const statusSegments = STATUS_ORDER.map((status) => ({
     status,
@@ -193,6 +188,13 @@ export default function ProfilePage({ params }: Props) {
     setCustomInput("");
   }
 
+  function closeCatalogManager() {
+    setCatalogOpen(false);
+    setCategoriesOpen(false);
+    setSearch("");
+    setCatalogCategoryFilter(null);
+  }
+
   function downloadText() {
     const text = buildProfileTextExport(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
@@ -214,11 +216,11 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="max-w-3xl mx-auto w-full pt-6">
+    <main className="mx-auto w-full max-w-3xl pt-6">
       {errorMessage && (
         <div
           role="alert"
-          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-[300] px-4 py-3 rounded-xl text-sm shadow-lg"
+          className="fixed left-4 right-4 top-4 z-[300] mx-auto max-w-md rounded-xl px-4 py-3 text-sm shadow-lg"
           style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
         >
           {errorMessage}
@@ -278,38 +280,49 @@ export default function ProfilePage({ params }: Props) {
         )}
       </div>
 
-      {!shared && (
+      {!shared && !catalogOpen && (
         <div className="mx-[var(--page-gutter)] mb-4">
           <button
             type="button"
-            onClick={() => {
-              setCatalogOpen((open) => !open);
-              if (catalogOpen) {
-                setSearch("");
-                setCatalogCategoryFilter(null);
-              }
-            }}
-            aria-expanded={catalogOpen}
+            onClick={() => setCatalogOpen(true)}
+            aria-expanded="false"
             aria-controls="profile-catalog-manager"
             className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 text-left"
-            style={{
-              background: catalogOpen ? "var(--surface2)" : "var(--surface)",
-              border: catalogOpen ? "1px solid var(--border-accent)" : "1px solid var(--border)",
-            }}
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{catalogOpen ? "Terug naar profiel" : "Onderwerpen beheren"}</span>
+              <span className="block text-sm font-semibold">Onderwerpen beheren</span>
               <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>
-                {catalogOpen ? "Sluit de volledige catalogus" : `${catalogRated} van ${KINKS.length} beoordeeld`}
+                {catalogRated} van {KINKS.length} beoordeeld
               </span>
             </span>
-            <ArrowRight size={15} className={catalogOpen ? "rotate-180" : ""} aria-hidden="true" style={{ color: "var(--text2)" }} />
+            <ArrowRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
           </button>
         </div>
       )}
 
       {catalogOpen && !shared ? (
         <section id="profile-catalog-manager" className="pb-5" aria-label="Onderwerpen beheren">
+          <div
+            data-testid="profile-catalog-manager-header"
+            className="mb-3 flex items-center gap-3 px-[var(--page-gutter)]"
+          >
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold">Onderwerpen beheren</h2>
+              <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                {catalogRated} van {KINKS.length} beoordeeld
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={closeCatalogManager}
+              className="focus-ring min-h-11 rounded-lg px-2.5 text-sm font-semibold"
+              style={{ color: "var(--accent-text)" }}
+            >
+              Gereed
+            </button>
+          </div>
+
           <div className="mb-3 px-[var(--page-gutter)]" data-testid="profile-catalog-controls">
             <input
               value={search}
@@ -317,35 +330,22 @@ export default function ProfilePage({ params }: Props) {
               aria-label="Volledige catalogus doorzoeken"
               placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
               className="focus-ring min-h-11 w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
 
-            <div className="mt-2 flex min-w-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setCategoriesOpen(true)}
-                aria-haspopup="dialog"
-                aria-expanded={categoriesOpen}
-                className="focus-ring inline-flex min-h-11 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-                style={catalogCategoryFilter
-                  ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-                  : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-              >
-                <span className="truncate">{catalogCategoryFilterLabel}</span>
-                <CaretDown size={11} className="flex-none" aria-hidden="true" />
-              </button>
-              {catalogCategoryFilter && (
-                <button
-                  type="button"
-                  onClick={() => setCatalogCategoryFilter(null)}
-                  aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
-                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                  style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                >
-                  <X size={13} weight="bold" aria-hidden="true" />
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => setCategoriesOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={categoriesOpen}
+              className="focus-ring mt-2 inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold"
+              style={catalogCategoryFilter
+                ? { background: "color-mix(in srgb, var(--accent) 6%, var(--surface))", color: "var(--text)", border: "1px solid var(--border-accent)" }
+                : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
+            >
+              <span className="truncate">{catalogCategoryFilterLabel}</span>
+              <CaretDown size={11} className="flex-none" aria-hidden="true" />
+            </button>
           </div>
 
           {!searchTerm ? (
@@ -367,9 +367,9 @@ export default function ProfilePage({ params }: Props) {
               })}
 
               {!catalogCategoryFilter && (
-                <section className="rounded-xl mt-3 p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                  <h3 className="text-sm font-semibold mb-2">Eigen onderwerpen</h3>
-                  <div className="flex flex-col gap-1 mb-3">
+                <section className="mt-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                  <h3 className="mb-2 text-sm font-semibold">Eigen onderwerpen</h3>
+                  <div className="mb-3 flex flex-col gap-1">
                     {customKinks.map((custom) => {
                       const customAsKink: Kink = {
                         id: custom.id,
@@ -404,12 +404,12 @@ export default function ProfilePage({ params }: Props) {
                       value={customInput}
                       onChange={(event) => setCustomInput(event.target.value)}
                       placeholder="Voeg iets eigens toe…"
-                      className="focus-ring flex-1 min-h-11 rounded-xl px-3 text-sm focus:outline-none"
+                      className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm focus:outline-none"
                       style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                     />
                     <button
                       type="submit"
-                      className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
+                      className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold"
                       style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                     >
                       Toevoegen
@@ -431,7 +431,7 @@ export default function ProfilePage({ params }: Props) {
                 ))}
               </div>
               {searchResults.length === 0 && (
-                <p className="text-center text-sm py-8" style={{ color: "var(--text2)" }}>
+                <p className="py-8 text-center text-sm" style={{ color: "var(--text2)" }}>
                   Geen onderwerpen gevonden.
                 </p>
               )}
@@ -458,8 +458,8 @@ export default function ProfilePage({ params }: Props) {
           )}
 
           {totalRated === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
+            <div className="py-8 text-center">
+              <p className="mb-3 text-sm" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
               {!shared && (
                 <Link
                   href={`/profile/${currentProfile.id}/questions`}
@@ -474,7 +474,7 @@ export default function ProfilePage({ params }: Props) {
             ratedByCategory.map(({ category, kinks }) => (
               <section key={category} className="mb-4">
                 <h3
-                  className="text-base italic mb-2"
+                  className="mb-2 text-base italic"
                   style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
                 >
                   {kinkCategoryLabel(category)}
@@ -495,7 +495,7 @@ export default function ProfilePage({ params }: Props) {
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-sm flex-1">{kink.name}</span>
+                          <span className="flex-1 text-sm">{kink.name}</span>
                           {!concealed && entry.curious && <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />}
                           <PrivateResponseStatus
                             status={status}
@@ -507,12 +507,12 @@ export default function ProfilePage({ params }: Props) {
                           />
                         </div>
                         {!concealed && entry.comment && (
-                          <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>{entry.comment}</p>
+                          <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{entry.comment}</p>
                         )}
                         {!concealed && (entry.tags?.length ?? 0) > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1.5">
+                          <div className="mt-1.5 flex flex-wrap gap-1">
                             {entry.tags!.map((tag) => (
-                              <span key={tag} className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--tag-muted)", color: "var(--text2)" }}>
+                              <span key={tag} className="rounded-full px-2 py-0.5 text-xs" style={{ background: "var(--tag-muted)", color: "var(--text2)" }}>
                                 {tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag}
                               </span>
                             ))}
@@ -528,7 +528,7 @@ export default function ProfilePage({ params }: Props) {
 
           {shared && (
             <section className="mt-4">
-              <label className="block text-sm italic mb-1.5" style={{ color: "var(--text2)" }}>
+              <label className="mb-1.5 block text-sm italic" style={{ color: "var(--text2)" }}>
                 Persoonlijke notitie
               </label>
               <textarea
@@ -536,10 +536,10 @@ export default function ProfilePage({ params }: Props) {
                 onChange={(event) => updatePrivateNote(currentProfile.id, event.target.value)}
                 rows={3}
                 placeholder="Wanneer ontmoet, indrukken…"
-                className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm resize-none"
+                className="focus-ring w-full resize-none rounded-xl px-3 py-2.5 text-sm"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
-              <p className="text-xs mt-2 flex items-center justify-center gap-1.5" style={{ color: "var(--text2)" }}>
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
                 <Lock size={12} aria-hidden="true" /> Gedeeld profiel. Bewerken en opnieuw delen zijn uitgeschakeld.
               </p>
             </section>
@@ -561,7 +561,7 @@ export default function ProfilePage({ params }: Props) {
                 Tekst is screenreader-vriendelijk; PDF is opgemaakt voor scherm en A4-print.
               </p>
               {hasPrivateResponses(currentProfile.entries) && (
-                <label className="flex items-center gap-2 text-xs mb-2" style={{ color: "var(--text2)" }}>
+                <label className="mb-2 flex items-center gap-2 text-xs" style={{ color: "var(--text2)" }}>
                   <input
                     type="checkbox"
                     checked={includePrivateExports}
@@ -575,7 +575,7 @@ export default function ProfilePage({ params }: Props) {
                   type="button"
                   onClick={downloadText}
                   aria-label="Download toegankelijke tekstexport"
-                  className="focus-ring min-h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
+                  className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
                   style={{ border: "1px solid var(--border)", color: "var(--text)" }}
                 >
                   <FileText aria-hidden="true" size={16} /> Tekst
@@ -583,7 +583,7 @@ export default function ProfilePage({ params }: Props) {
                 <button
                   type="button"
                   onClick={downloadPdf}
-                  className="focus-ring min-h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
+                  className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
                   style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                 >
                   <FileArrowDown aria-hidden="true" size={16} /> PDF

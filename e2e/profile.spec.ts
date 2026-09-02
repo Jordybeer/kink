@@ -180,9 +180,16 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
     await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
 
+    await expect(page.getByTestId("profile-catalog-manager-header")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Gereed", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Terug naar profiel/ })).toHaveCount(0);
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
     await expect(page.getByRole("button", { name: /Alle categorieën/ })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Gereed", exact: true }).click();
+    await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toBeVisible();
   });
 
   test("categoriefilter blijft zichtbaar en wijzigbaar tijdens zoeken", async ({ page }) => {
@@ -201,7 +208,9 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(activeFilter).toBeVisible();
     await expect(page.getByText("Geen onderwerpen gevonden.")).toBeVisible();
 
-    await page.getByRole("button", { name: "Filter Bondage wissen" }).click();
+    await activeFilter.click();
+    const resetDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
+    await resetDialog.getByRole("button", { name: /^Alle categorieën\b/ }).click();
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveValue("spanking");
     await expect(page.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });

@@ -173,12 +173,6 @@ function HomeContent() {
 
   return (
     <>
-      <style>{`
-        header:has([data-top-nav-variant="home"]) {
-          position: static !important;
-        }
-      `}</style>
-
       <PageShell width="2xl" className="lg:max-w-4xl">
         <div className="mb-5 text-center">
           <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>

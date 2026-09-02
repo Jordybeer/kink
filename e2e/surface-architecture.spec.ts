@@ -24,7 +24,7 @@ async function openSettings(page: Page) {
   return trigger;
 }
 
-test("Home identity stays centered below compact utilities across viewport and offline states", async ({ page }) => {
+test("Home identity stays centered in its stable masthead slots across viewport and offline states", async ({ page }) => {
   const viewports = [
     { width: 320, height: 740, offline: true },
     { width: 430, height: 740, offline: true },
@@ -57,7 +57,8 @@ test("Home identity stays centered below compact utilities across viewport and o
     expect(wordmarkBox).not.toBeNull();
     expect(actionsBox).not.toBeNull();
     expect(moreBox).not.toBeNull();
-    expect(identityBox!.y).toBeGreaterThanOrEqual(navBox!.y + navBox!.height);
+    expect(identityBox!.y).toBeGreaterThanOrEqual(navBox!.y - 1);
+    expect(identityBox!.y + identityBox!.height).toBeLessThanOrEqual(navBox!.y + navBox!.height + 1);
     expect(moreBox!.x + moreBox!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width);
 
     if (!viewport.offline) continue;
@@ -79,7 +80,8 @@ test("Home identity stays centered below compact utilities across viewport and o
     expect(wordmarkBox).not.toBeNull();
     expect(actionsBox).not.toBeNull();
     expect(moreBox).not.toBeNull();
-    expect(identityBox!.y).toBeGreaterThanOrEqual(navBox!.y + navBox!.height);
+    expect(identityBox!.y).toBeGreaterThanOrEqual(navBox!.y - 1);
+    expect(identityBox!.y + identityBox!.height).toBeLessThanOrEqual(navBox!.y + navBox!.height + 1);
     expect(moreBox!.x + moreBox!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width);
 
     await page.context().setOffline(false);
@@ -130,8 +132,7 @@ test("kink edit uses the focused task presentation without a false drag affordan
   await page.setViewportSize({ width: 1024, height: 900 });
   await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
-  const editTab = page.getByRole("tab", { name: "Bewerken" });
-  if (await editTab.count() > 0) await editTab.first().click();
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await page.getByPlaceholder("Zoek in de volledige catalogus…").fill("spanking");
 
   const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*=", bewerken"]').first();

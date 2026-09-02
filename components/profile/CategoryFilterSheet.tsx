@@ -39,11 +39,11 @@ export default function CategoryFilterSheet({
     <Sheet open={open} onClose={onClose} scrollable aria-label="Categorie kiezen">
       <SheetContent
         showHandle={false}
-        className="max-h-[82dvh] overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4"
+        className="max-h-[82dvh] overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4"
       >
-        <div className="px-1 pb-3">
+        <div className="pb-3">
           <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>Categorieën</h3>
-          <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+          <p className="mt-1 max-w-sm text-sm leading-5" style={{ color: "var(--text2)" }}>
             Kies wat je in de catalogus wilt bekijken.
           </p>
         </div>
@@ -52,10 +52,10 @@ export default function CategoryFilterSheet({
           type="button"
           onClick={() => choose(null)}
           aria-pressed={selected === null}
-          className="focus-ring mb-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
+          className="focus-ring mb-1.5 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
           style={selected === null
-            ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
-            : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+            ? { background: "color-mix(in srgb, var(--accent) 7%, var(--surface))", border: "1px solid var(--border-accent)" }
+            : { background: "var(--surface)", border: "1px solid var(--border)" }}
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Alle categorieën</p>
@@ -63,10 +63,10 @@ export default function CategoryFilterSheet({
               {totalRated} van {totalCount} beoordeeld
             </p>
           </div>
-          {selected === null && <Check size={17} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />}
+          {selected === null && <Check size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />}
         </button>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
           {categories.map((category) => {
             const active = selected === category.id;
             return (
@@ -75,18 +75,18 @@ export default function CategoryFilterSheet({
                 type="button"
                 onClick={() => choose(category.id)}
                 aria-pressed={active}
-                className="focus-ring min-h-16 rounded-xl px-3 py-2.5 text-left"
+                className="focus-ring min-h-14 rounded-xl px-3 py-2 text-left"
                 style={active
-                  ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
-                  : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                  ? { background: "color-mix(in srgb, var(--accent) 7%, var(--surface))", border: "1px solid var(--border-accent)" }
+                  : { background: "var(--surface)", border: "1px solid var(--border)" }}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-1.5">
                   <span className="min-w-0 flex-1 text-sm font-semibold leading-snug" style={{ color: active ? "var(--accent-text)" : "var(--text)" }}>
                     {category.label}
                   </span>
-                  {active && <Check size={14} weight="bold" className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />}
+                  {active && <Check size={13} weight="bold" className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />}
                 </div>
-                <span className="mt-1 block text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                <span className="mt-0.5 block text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                   {category.rated} / {category.total} beoordeeld
                 </span>
               </button>

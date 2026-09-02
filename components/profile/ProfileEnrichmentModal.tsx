@@ -28,8 +28,6 @@ const ERROR_COPY: Record<BdsmtestCopyAllError, string> = {
   "invalid-results": "Een of meer BDSMTest-resultaten hebben een ongeldig formaat.",
 };
 
-// Keep one sentinel character so an oversized paste cannot look like valid input
-// after the browser applies maxLength.
 const BDSMTEST_INPUT_MAX_CHARS = MAX_BDSMTEST_COPY_CHARS + 1;
 
 function validFetLifeUsername(value: string): boolean {
@@ -198,7 +196,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         tabIndex={-1}
         className="relative z-10 flex max-h-[calc(var(--visual-viewport-height,100dvh)-var(--sheet-edge-clearance))] w-full flex-col overflow-hidden rounded-t-[24px] text-pretty shadow-2xl sm:max-h-[min(calc(var(--visual-viewport-height,100dvh)-3rem),42rem)] sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
         style={{
-          background: "var(--bg)",
+          background: "var(--surface)",
           border: "1px solid var(--border)",
         }}
       >
@@ -219,7 +217,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               Profielinfo
             </h2>
             <p className="mt-1 max-w-[24rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
-              Beheer optionele profielgegevens en gekoppelde profielen.
+              Optionele gegevens die je zelf kiest om te tonen of te koppelen.
             </p>
           </div>
           <button
@@ -235,10 +233,10 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
         <div
           ref={scrollBodyRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-3 sm:px-6 sm:py-4"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-6"
           data-testid="profile-enrichment-scroll-body"
         >
-          <section className="rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <section className="py-4">
             <div className="flex items-center gap-2">
               <Heart size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">Relatiestatus</h3>
@@ -261,7 +259,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             </select>
           </section>
 
-          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <section className="border-t py-4" style={{ borderColor: "var(--border)" }}>
             <div className="flex items-center gap-2">
               <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">FetLife</h3>
@@ -284,7 +282,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             />
           </section>
 
-          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <section className="border-t py-4" style={{ borderColor: "var(--border)" }}>
             <div className="flex items-center gap-2">
               <Sparkle size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">BDSMTest</h3>
@@ -331,7 +329,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             )}
 
             {hasStoredBdsmtest && !bdsmPaste.trim() && !removeBdsmtest && (
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl px-3 py-2.5" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+              <div className="mt-3 flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
                 <p className="text-xs" style={{ color: "var(--text2)" }}>
                   {profile.bdsmtestScores?.length ?? 0} resultaten opgeslagen
                 </p>
