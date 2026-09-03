@@ -1,5 +1,5 @@
 "use client";
-import { Check, Eye, EyeSlash, Star } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import { STATUS_LABEL } from "@/lib/statusLabels";
@@ -20,20 +20,17 @@ const CONDITION_TAGS = [
   },
   {
     value: "scène specifiek",
-    label: "Alleen afgesproken",
+    label: "Alleen na afspraak",
     description: "Alleen wanneer dit vooraf voor de scène is afgesproken.",
   },
 ] as const;
-
-type RowIcon = "check" | "star" | "privacy";
 
 function ChoiceRow({
   label,
   description,
   active,
   onClick,
-  icon = "check",
-  tone = "accent",
+  divider = false,
   dataTour,
   ariaLabel,
 }: {
@@ -41,12 +38,10 @@ function ChoiceRow({
   description: string;
   active: boolean;
   onClick: () => void;
-  icon?: RowIcon;
-  tone?: "accent" | "curious";
+  divider?: boolean;
   dataTour?: string;
   ariaLabel?: string;
 }) {
-  const colour = tone === "curious" ? "var(--curious)" : "var(--accent)";
   return (
     <button
       type="button"
@@ -54,27 +49,26 @@ function ChoiceRow({
       onClick={onClick}
       aria-pressed={active}
       aria-label={ariaLabel}
-      className="focus-ring flex min-h-[56px] w-full items-center gap-3 rounded-lg px-1.5 py-2.5 text-left transition-colors duration-150"
-      style={{ background: active ? `color-mix(in srgb, ${colour} 6%, transparent)` : "transparent" }}
+      className="focus-ring flex min-h-12 w-full items-center gap-3 px-1 py-2 text-left transition-colors duration-150"
+      style={{
+        borderTop: divider ? "1px solid color-mix(in srgb, var(--border) 72%, transparent)" : undefined,
+        background: active ? "color-mix(in srgb, var(--accent) 5%, transparent)" : "transparent",
+      }}
     >
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold leading-5" style={{ color: "var(--text)" }}>{label}</span>
-        <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>{description}</span>
+      <span className="min-w-0 flex-1 text-sm font-medium leading-5" style={{ color: "var(--text)" }}>
+        {label}
+        <span className="sr-only">. {description}</span>
       </span>
       <span
         aria-hidden="true"
-        className="flex h-7 w-7 flex-none items-center justify-center rounded-full"
+        className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
         style={{
-          color: active ? colour : "var(--text2)",
-          background: active ? `color-mix(in srgb, ${colour} 12%, transparent)` : "transparent",
-          border: `1px solid ${active ? colour : "var(--border-bright)"}`,
+          color: active ? "var(--on-accent)" : "transparent",
+          background: active ? "var(--accent)" : "transparent",
+          border: `1px solid ${active ? "var(--accent)" : "var(--border-bright)"}`,
         }}
       >
-        {icon === "star"
-          ? <Star size={13} weight={active ? "fill" : "regular"} />
-          : icon === "privacy"
-            ? active ? <EyeSlash size={14} weight="bold" /> : <Eye size={14} />
-            : active ? <Check size={13} weight="bold" /> : null}
+        {active && <Check size={12} weight="bold" />}
       </span>
     </button>
   );
@@ -125,7 +119,7 @@ export default function KinkEditSheet({
 
       {kink?.safetyNote && (
         <aside
-          className="mb-5 ml-1 border-l-2 pl-3 text-sm leading-5"
+          className="mb-4 ml-1 border-l-2 pl-3 text-sm leading-5"
           style={{ borderColor: "var(--border-accent)", color: "var(--text2)" }}
         >
           <p className="font-semibold" style={{ color: "var(--text)" }}>Veiligheid</p>
@@ -155,24 +149,29 @@ export default function KinkEditSheet({
         <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
       </section>
 
-      <section className="mt-5" aria-labelledby="kink-conditions-heading">
-        <h3 id="kink-conditions-heading" className="mb-1 px-1 text-sm font-semibold">Voorwaarden</h3>
-        <div className="space-y-0.5">
-          {CONDITION_TAGS.map((item) => (
+      <section className="mt-4 border-t pt-4" aria-labelledby="kink-conditions-heading" style={{ borderColor: "var(--border)" }}>
+        <h3 id="kink-conditions-heading" className="mb-1 px-1 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+          Voorwaarden
+        </h3>
+        <div className="border-y" style={{ borderColor: "var(--border)" }}>
+          {CONDITION_TAGS.map((item, index) => (
             <ChoiceRow
               key={item.value}
               label={item.label}
               description={item.description}
               active={tags.includes(item.value)}
               onClick={() => toggleTag(item.value)}
+              divider={index > 0}
             />
           ))}
         </div>
       </section>
 
-      <section className="mt-5" aria-labelledby="kink-experience-heading">
-        <h3 id="kink-experience-heading" className="mb-1 px-1 text-sm font-semibold">Ervaring &amp; interesse</h3>
-        <div className="space-y-0.5">
+      <section className="mt-4" aria-labelledby="kink-experience-heading">
+        <h3 id="kink-experience-heading" className="mb-1 px-1 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+          Ervaring &amp; interesse
+        </h3>
+        <div className="border-y" style={{ borderColor: "var(--border)" }}>
           <ChoiceRow
             label="Weinig ervaring"
             description="Hier heb ik nog geen of weinig praktijkervaring mee."
@@ -184,23 +183,25 @@ export default function KinkEditSheet({
             description="Ik wil dit verder verkennen."
             active={!!entry.curious}
             onClick={() => onCuriousChange(!entry.curious)}
-            icon="star"
-            tone="curious"
+            divider
           />
         </div>
       </section>
 
-      <section className="mt-5 pb-1" aria-labelledby="kink-visibility-heading">
-        <h3 id="kink-visibility-heading" className="mb-1 px-1 text-sm font-semibold">Zichtbaarheid</h3>
-        <ChoiceRow
-          label="Privé antwoord"
-          description="Verberg mijn antwoord wanneer dit profiel wordt bekeken."
-          active={!!entry.privateResponse}
-          onClick={() => onPrivateChange(!entry.privateResponse)}
-          icon="privacy"
-          dataTour="private"
-          ariaLabel={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
-        />
+      <section className="mt-4 pb-1" aria-labelledby="kink-visibility-heading">
+        <h3 id="kink-visibility-heading" className="mb-1 px-1 text-xs font-semibold" style={{ color: "var(--text2)" }}>
+          Zichtbaarheid
+        </h3>
+        <div className="border-y" style={{ borderColor: "var(--border)" }}>
+          <ChoiceRow
+            label="Privé antwoord"
+            description="Verberg mijn antwoord wanneer dit profiel wordt bekeken."
+            active={!!entry.privateResponse}
+            onClick={() => onPrivateChange(!entry.privateResponse)}
+            dataTour="private"
+            ariaLabel={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
+          />
+        </div>
       </section>
     </Sheet>
   );
