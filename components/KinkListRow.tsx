@@ -1,5 +1,5 @@
 "use client";
-import { CaretRight, Star, WarningCircle } from "@phosphor-icons/react";
+import { EyeSlash, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry } from "@/types";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import StatusGlyph from "./StatusGlyph";
@@ -10,71 +10,72 @@ interface Props {
   onOpen: () => void;
 }
 
+const TAG_LABELS: Record<string, string> = {
+  "vraag eerst": "Eerst vragen",
+  "alleen privé": "Alleen privé",
+  "scène specifiek": "Alleen afgesproken",
+  "eerste keer": "Weinig ervaring",
+};
+
 export default function KinkListRow({ kink, entry, onOpen }: Props) {
   const status = entry.status;
-  const colour = status ? STATUS_VAR[status] : "var(--border)";
-  const askFirst = entry.tags?.includes("vraag eerst") ?? false;
-  const firstTime = entry.tags?.includes("eerste keer") ?? false;
-  const tagSpeech = [askFirst ? "eerst vragen" : null, firstTime ? "eerste keer" : null]
-    .filter(Boolean)
-    .join(", ");
+  const colour = status ? STATUS_VAR[status] : "var(--text2)";
+  const contextLabels = (entry.tags ?? [])
+    .map((tag) => TAG_LABELS[tag])
+    .filter((label): label is string => Boolean(label));
+  if (entry.privateResponse) contextLabels.push("Privé");
+
+  const contextSpeech = contextLabels.join(", ");
 
   return (
     <button
+      type="button"
       onClick={onOpen}
-      aria-label={`${kink.name}, ${status ? STATUS_LABEL[status] : "nog niet beoordeeld"}${tagSpeech ? `, ${tagSpeech}` : ""}, bewerken`}
-      className="focus-ring w-full min-h-12 rounded-xl mb-1 px-3 py-2.5 flex items-center gap-2 text-left transition-colors"
-      style={{
-        background: status
-          ? `color-mix(in srgb, ${colour} 5%, var(--surface))`
-          : "var(--surface)",
-        border: "1px solid var(--border)",
-        borderLeft: `3px solid ${colour}`,
-      }}
+      aria-label={`${kink.name}, ${status ? STATUS_LABEL[status] : "nog niet beoordeeld"}${contextSpeech ? `, ${contextSpeech}` : ""}, bewerken`}
+      className="focus-ring grid min-h-[54px] w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t px-1 py-2.5 text-left transition-colors"
+      style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
     >
-      <span className="flex-1 min-w-0">
-        <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-sm font-medium truncate">{kink.name}</span>
+      <span className="min-w-0">
+        <span className="flex min-w-0 items-start gap-1.5">
+          <span className="min-w-0 text-sm font-medium leading-5 [overflow-wrap:anywhere]">{kink.name}</span>
           {entry.curious && (
-            <Star size={12} weight="fill" aria-label="Nieuwsgierig" className="flex-none" style={{ color: "var(--curious)" }} />
+            <Star
+              size={12}
+              weight="fill"
+              aria-label="Nieuwsgierig"
+              className="mt-1 flex-none"
+              style={{ color: "var(--curious)" }}
+            />
           )}
         </span>
 
-        {(askFirst || firstTime) && (
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm leading-tight">
-            {askFirst && (
-              <span className="inline-flex items-center gap-1 font-semibold" style={{ color: "var(--accent)" }}>
-                <WarningCircle size={10} weight="fill" aria-hidden="true" />
-                Eerst vragen
+        {contextLabels.length > 0 && (
+          <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] leading-4" style={{ color: "var(--text2)" }}>
+            {contextLabels.map((label, index) => (
+              <span key={`${label}-${index}`} className="inline-flex items-center gap-1">
+                {index > 0 && <span aria-hidden="true">·</span>}
+                {label === "Privé" && <EyeSlash size={11} aria-hidden="true" />}
+                <span>{label}</span>
               </span>
-            )}
-            {askFirst && firstTime && (
-              <span aria-hidden="true" style={{ color: "var(--text2)" }}>·</span>
-            )}
-            {firstTime && (
-              <span style={{ color: "var(--text2)" }}>Eerste keer</span>
-            )}
+            ))}
           </span>
         )}
       </span>
 
-      {status ? (
-        <span
-          data-testid="kink-status-pill"
-          className="flex-none w-[var(--status-pill-width)] text-sm px-2 py-0.5 rounded-full border whitespace-nowrap text-center inline-flex items-center justify-center gap-1"
-          style={status === "hard_no"
-            ? { color: colour, borderColor: colour, borderStyle: "dashed" }
-            : { color: colour, borderColor: `color-mix(in srgb, ${colour} 45%, transparent)`, background: `color-mix(in srgb, ${colour} 12%, transparent)` }}
-        >
-          <StatusGlyph status={status} />
-          {STATUS_LABEL[status]}
-        </span>
-      ) : (
-        <span data-testid="kink-status-pill" className="flex-none w-[var(--status-pill-width)] text-sm text-center" style={{ color: "var(--text2)" }}>
-          beoordeel
-        </span>
-      )}
-      <CaretRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+      <span
+        data-testid="kink-status-pill"
+        className="inline-flex max-w-[8.5rem] flex-none items-center justify-end gap-1.5 text-right text-sm font-medium leading-5"
+        style={{ color: colour }}
+      >
+        {status ? (
+          <>
+            <StatusGlyph status={status} />
+            <span>{STATUS_LABEL[status]}</span>
+          </>
+        ) : (
+          <span style={{ color: "var(--text2)" }}>Onbeoordeeld</span>
+        )}
+      </span>
     </button>
   );
 }
