@@ -111,7 +111,7 @@ export default function TopNav() {
         data-home-empty={homeEmpty ? "true" : undefined}
       >
         <nav
-          className={`mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] lg:max-w-4xl ${homeEmpty ? "py-[clamp(1.375rem,4.5svh,2.5rem)]" : "py-2.5"}`}
+          className={`mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] pb-0 lg:max-w-4xl ${homeEmpty ? "pt-[clamp(1.5rem,3.5svh,2.25rem)]" : "pt-3.5"}`}
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
@@ -124,7 +124,7 @@ export default function TopNav() {
               className="serif-safe whitespace-nowrap"
               style={{
                 fontFamily: "var(--font-display, Georgia, serif)",
-                fontSize: "clamp(2.125rem, 10vw, 2.375rem)",
+                fontSize: "clamp(2.25rem, 10.5vw, 2.5rem)",
                 fontWeight: 500,
                 lineHeight: 1,
               }}
@@ -159,21 +159,23 @@ export default function TopNav() {
         </nav>
 
         <style>{`
+          body:has([data-top-nav-variant="home"]) main {
+            padding-top: 0;
+          }
+
           body:has([data-top-nav-variant="home"]) main > div:first-child {
-            margin-bottom: 1rem;
+            margin-bottom: 0;
+            padding-top: 0.375rem;
+            padding-bottom: 0.875rem;
           }
 
           body:has([data-top-nav-variant="home"]) main > div:first-child > p {
-            font-size: 0.9375rem;
-            line-height: 1.375rem;
-          }
-
-          body:has([data-home-empty="true"]) main {
-            padding-top: clamp(0.75rem, 1.8svh, 1.25rem);
+            font-size: 0.875rem;
+            line-height: 1.25rem;
           }
 
           body:has([data-home-empty="true"]) main > div:first-child {
-            margin-bottom: clamp(0.75rem, 1.6svh, 1.25rem);
+            padding-bottom: clamp(1.5rem, 3.5svh, 2.25rem);
           }
         `}</style>
       </header>
