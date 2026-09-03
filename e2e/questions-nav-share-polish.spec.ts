@@ -16,16 +16,13 @@ test("Home keeps one brand statement and moves product explanation into the shar
   await expect(page.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
 });
 
-test("profile notes toggle says what it will do", async ({ page }) => {
+test("profile notes stay readable inline without a global visibility mode", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, PROFILES);
 
-  const hide = page.getByRole("button", { name: "Verberg notities" });
-  await expect(hide).toBeVisible();
-  await hide.click();
-  const show = page.getByRole("button", { name: "Toon notities" });
-  await expect(show).toBeVisible();
-  await show.click();
-  await expect(page.getByRole("button", { name: "Verberg notities" })).toBeVisible();
+  await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Verberg notities" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Toon notities" })).toHaveCount(0);
 });
 
 test("sharing keeps local-only warning and links to the trust explanation", async ({ page }) => {
