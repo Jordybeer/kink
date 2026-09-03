@@ -128,3 +128,35 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   expect(contentHeader?.pointerEvents).toBe("none");
   expect(contentHeader?.backgroundColor).not.toBe("rgb(7, 6, 11)");
 });
+
+test("Home masthead owns its subtitle and keeps symmetric breathing room", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  for (const profiles of [PROFILES, []]) {
+    await seedAndGo(page, "/", profiles);
+    const masthead = page.locator("[data-home-masthead]");
+    const wordmark = masthead.locator("[data-home-nav-wordmark]");
+    const subtitle = masthead.locator("[data-home-subtitle]");
+
+    await expect(wordmark).toHaveText("KinkSync");
+    await expect(subtitle).toHaveText("Verken grenzen. Samen.");
+    await expect(page.locator("main").getByText("Verken grenzen. Samen.", { exact: true })).toBeHidden();
+
+    const metrics = await masthead.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        paddingTop: parseFloat(style.paddingTop),
+        paddingBottom: parseFloat(style.paddingBottom),
+      };
+    });
+    const [wordmarkSize, subtitleSize] = await Promise.all([
+      wordmark.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+      subtitle.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+    ]);
+
+    expect(Math.abs(metrics.paddingTop - metrics.paddingBottom)).toBeLessThanOrEqual(0.5);
+    expect(wordmarkSize).toBeGreaterThanOrEqual(38);
+    expect(subtitleSize).toBeLessThanOrEqual(14.5);
+    expect(wordmarkSize - subtitleSize).toBeGreaterThanOrEqual(23);
+  }
+});
