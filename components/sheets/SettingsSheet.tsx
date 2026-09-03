@@ -45,11 +45,13 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-function SettingsGroup({ children }: { children: ReactNode }) {
+function SettingsList({ children }: { children: ReactNode }) {
   return (
     <div
-      className="overflow-hidden rounded-2xl"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      style={{
+        borderTop: "1px solid var(--border)",
+        borderBottom: "1px solid var(--border)",
+      }}
     >
       {children}
     </div>
@@ -96,8 +98,8 @@ function RowContent({
 }
 
 const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
-const SETTINGS_ROW_CLASS = "focus-ring flex min-h-[52px] w-full items-center gap-3 px-3.5 py-2 text-left";
-const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-3 px-3.5 py-2";
+const SETTINGS_ROW_CLASS = "focus-ring flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 text-left sm:px-2";
+const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 sm:px-2";
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
   { value: "system", label: "Systeem" },
@@ -109,7 +111,7 @@ function ThemeSelector() {
   const { preference, setPreference } = useTheme();
 
   return (
-    <fieldset className="px-3.5 pb-3">
+    <fieldset className="px-1.5 pb-3 sm:px-2">
       <legend className="sr-only">Kleurmodus</legend>
       <div
         className="grid grid-cols-3 gap-1 rounded-xl p-1"
@@ -194,10 +196,10 @@ export default function SettingsSheet({
       variant="surface"
       aria-label="Instellingen"
     >
-      <div className="grid gap-3 pb-0.5">
+      <div className="grid gap-4 pb-0.5">
         <section>
           <SectionTitle>Weergave</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <div className={SETTINGS_SWITCH_ROW_CLASS}>
               <RowContent
                 icon={<PaintBrush size={19} aria-hidden="true" />}
@@ -206,12 +208,12 @@ export default function SettingsSheet({
               />
             </div>
             <ThemeSelector />
-          </SettingsGroup>
+          </SettingsList>
         </section>
 
         <section>
           <SectionTitle>Gegevens</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <button
               type="button"
               onClick={onExportBackup}
@@ -226,7 +228,7 @@ export default function SettingsSheet({
             </button>
 
             <label
-              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-3 px-3.5 py-2 text-left"
+              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-3 px-1.5 py-2 text-left sm:px-2"
               style={DIVIDER_STYLE}
             >
               <input
@@ -242,7 +244,7 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </label>
-          </SettingsGroup>
+          </SettingsList>
           {importError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {importError}
@@ -257,7 +259,7 @@ export default function SettingsSheet({
 
         <section>
           <SectionTitle>Beveiliging</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <button
               type="button"
               onClick={() => onOpenPinFlow(0)}
@@ -311,7 +313,7 @@ export default function SettingsSheet({
                 />
               </button>
             )}
-          </SettingsGroup>
+          </SettingsList>
           {bioError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {bioError}
@@ -321,7 +323,7 @@ export default function SettingsSheet({
 
         <section>
           <SectionTitle>KinkSync</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <Link
               href="/about"
               onClick={onClose}
@@ -334,12 +336,12 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </Link>
-          </SettingsGroup>
+          </SettingsList>
         </section>
 
         <section>
           <SectionTitle>Geavanceerd</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <button
               type="button"
               onClick={() => {
@@ -356,7 +358,7 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--hard-no)" }} />}
               />
             </button>
-          </SettingsGroup>
+          </SettingsList>
         </section>
       </div>
     </Sheet>
