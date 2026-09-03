@@ -13,6 +13,38 @@ async function openFirstSpankingEditor(page: import("@playwright/test").Page) {
   return dialog;
 }
 
+async function renderedContrastRatio(locator: import("@playwright/test").Locator) {
+  return locator.evaluate((element) => {
+    function rgb(value: string): [number, number, number] {
+      const modern = value.match(/^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/[^)]*)?\)$/);
+      if (modern) return [Number(modern[1]) * 255, Number(modern[2]) * 255, Number(modern[3]) * 255];
+
+      const legacy = value.match(/^rgba?\(\s*([\d.]+)[, ]+\s*([\d.]+)[, ]+\s*([\d.]+)/);
+      if (legacy) return [Number(legacy[1]), Number(legacy[2]), Number(legacy[3])];
+
+      throw new Error(`Unsupported computed colour: ${value}`);
+    }
+
+    function luminance([r, g, b]: [number, number, number]) {
+      const channel = (value: number) => {
+        const normalized = value / 255;
+        return normalized <= 0.04045
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    }
+
+    const foreground = luminance(rgb(getComputedStyle(element).color));
+    const button = element.closest("button");
+    if (!button) throw new Error("Status hint is not inside a button");
+    const background = luminance(rgb(getComputedStyle(button).backgroundColor));
+    const lighter = Math.max(foreground, background);
+    const darker = Math.min(foreground, background);
+    return (lighter + 0.05) / (darker + 0.05);
+  });
+}
+
 test.describe("Edit Kinks cohesion", () => {
   test.beforeEach(async ({ page }) => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
@@ -64,5 +96,20 @@ test.describe("Edit Kinks cohesion", () => {
 
     await close.click();
     await expect(dialog).toBeHidden();
+  });
+
+  test("geselecteerde status-hints houden AA contrast in light en dark", async ({ page }) => {
+    const dialog = await openFirstSpankingEditor(page);
+    const statusGroup = dialog.getByRole("group", { name: "Status kiezen" });
+    const yes = statusGroup.getByRole("button", { name: /Heel graag/ });
+    const hint = statusGroup.locator('[data-status-hint="yes"]');
+
+    await yes.click();
+    await expect(yes).toHaveAttribute("aria-pressed", "true");
+
+    for (const theme of ["light", "dark"] as const) {
+      await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
+      await expect.poll(() => renderedContrastRatio(hint)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
