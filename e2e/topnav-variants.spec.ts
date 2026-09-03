@@ -129,7 +129,7 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   expect(contentHeader?.backgroundColor).not.toBe("rgb(7, 6, 11)");
 });
 
-test("Home masthead keeps equal breathing room and clear type hierarchy", async ({ page }) => {
+test("Home masthead balances the full logo and subtitle stack", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
   for (const profiles of [PROFILES, []]) {
@@ -137,11 +137,13 @@ test("Home masthead keeps equal breathing room and clear type hierarchy", async 
     const nav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
     const wordmark = nav.locator("[data-home-nav-wordmark]");
     const subtitle = page.getByText("Verken grenzen. Samen.", { exact: true });
+    const subtitleWrap = page.locator("main > div:first-child");
+    const main = page.locator("main");
 
     await expect(wordmark).toBeVisible();
     await expect(subtitle).toBeVisible();
 
-    const metrics = await nav.evaluate((element) => {
+    const navMetrics = await nav.evaluate((element) => {
       const style = getComputedStyle(element);
       const wordmark = element.querySelector<HTMLElement>("[data-home-nav-wordmark]");
       return {
@@ -150,11 +152,22 @@ test("Home masthead keeps equal breathing room and clear type hierarchy", async 
         wordmarkSize: wordmark ? parseFloat(getComputedStyle(wordmark).fontSize) : 0,
       };
     });
+    const subtitleMetrics = await subtitleWrap.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        paddingTop: parseFloat(style.paddingTop),
+        paddingBottom: parseFloat(style.paddingBottom),
+      };
+    });
     const subtitleSize = await subtitle.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    const mainPaddingTop = await main.evaluate((element) => parseFloat(getComputedStyle(element).paddingTop));
 
-    expect(Math.abs(metrics.paddingTop - metrics.paddingBottom)).toBeLessThanOrEqual(0.5);
-    expect(metrics.wordmarkSize).toBeGreaterThanOrEqual(34);
-    expect(subtitleSize).toBeGreaterThanOrEqual(14);
-    expect(subtitleSize).toBeLessThanOrEqual(15.5);
+    expect(navMetrics.paddingBottom).toBeLessThanOrEqual(0.5);
+    expect(mainPaddingTop).toBeLessThanOrEqual(0.5);
+    expect(subtitleMetrics.paddingTop).toBeGreaterThanOrEqual(5);
+    expect(Math.abs(navMetrics.paddingTop - subtitleMetrics.paddingBottom)).toBeLessThanOrEqual(0.5);
+    expect(navMetrics.wordmarkSize).toBeGreaterThanOrEqual(39.5);
+    expect(subtitleSize).toBeGreaterThanOrEqual(13.5);
+    expect(subtitleSize).toBeLessThanOrEqual(14.5);
   }
 });
