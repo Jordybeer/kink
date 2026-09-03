@@ -46,18 +46,11 @@ const shareBoundaries = [
 export default function SecurityPage() {
   return (
     <PageShell width="3xl" className="lg:max-w-4xl">
-      <header
-        className="relative isolate overflow-hidden rounded-[28px] px-5 py-6 sm:px-8 sm:py-9"
-        style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface)) 0%, var(--surface) 58%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--identity-a) 24%, var(--border))",
-        }}
-      >
+      <header className="relative isolate px-1 pb-2 pt-2 sm:px-0 sm:pb-3 sm:pt-4">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--identity-a) 12%, transparent)" }}
+          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl"
+          style={{ background: "color-mix(in srgb, var(--identity-a) 9%, transparent)" }}
         />
         <div className="relative z-10 max-w-3xl">
           <EditorialHeading
@@ -216,20 +209,12 @@ export default function SecurityPage() {
 
       <section className="mt-10" aria-labelledby="report-title">
         <SectionHeading eyebrow="09 · Responsible disclosure" title="Een security- of privacyprobleem melden" id="report-title" />
-        <div
-          className="overflow-hidden rounded-[28px]"
-          style={{
-            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface))",
-            border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
-          }}
-        >
-          <div className="p-5 sm:p-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-              <EnvelopeSimple size={22} aria-hidden="true" />
-            </div>
-            <p className="mt-4 text-[15px] leading-6" style={{ color: "var(--text2)" }}>
-              Meld vermoedelijke kwetsbaarheden privé via:
-            </p>
+        <div className="mt-4 border-t pt-5 sm:grid sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4" style={{ borderColor: "var(--border)" }}>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
+            <EnvelopeSimple size={19} aria-hidden="true" />
+          </div>
+          <div className="mt-3 max-w-3xl text-[15px] leading-6 sm:mt-0" style={{ color: "var(--text2)" }}>
+            <p>Meld vermoedelijke kwetsbaarheden privé via:</p>
             <a
               href="mailto:security@jordy.dev"
               className="focus-ring mt-3 inline-flex min-h-11 items-center rounded-xl px-3 text-base font-semibold"
@@ -238,30 +223,28 @@ export default function SecurityPage() {
               security@jordy.dev
             </a>
 
-            <p className="mt-5 text-sm font-semibold">Vermeld bij voorkeur:</p>
+            <p className="mt-5 font-semibold" style={{ color: "var(--text)" }}>Vermeld bij voorkeur:</p>
             <ul className="mt-3 space-y-2.5">
               {reportDetails.map((detail) => <CheckRow key={detail}>{detail}</CheckRow>)}
             </ul>
-          </div>
-          <div className="border-t px-5 py-4 sm:px-6" style={{ borderColor: "var(--border)", background: "var(--surface2)" }}>
-            <p className="text-[15px] leading-6" style={{ color: "var(--text2)" }}>
-              Probeer geen gegevens van andere mensen te bekijken, veranderen of exporteren. Publiceer gevoelige technische details niet voordat er een redelijke kans is geweest om het probleem te onderzoeken.
-            </p>
+
+            <div className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+              <p>
+                Probeer geen gegevens van andere mensen te bekijken, veranderen of exporteren. Publiceer gevoelige technische details niet voordat er een redelijke kans is geweest om het probleem te onderzoeken.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       <section
-        className="mt-4 rounded-2xl p-5 sm:p-6"
-        style={{
-          background: "color-mix(in srgb, var(--maybe) 7%, var(--surface))",
-          border: "1px solid color-mix(in srgb, var(--maybe) 26%, var(--border))",
-        }}
+        className="mt-8 border-t pt-5"
+        style={{ borderColor: "var(--border)" }}
         aria-labelledby="guarantee-title"
       >
         <div className="flex items-start gap-3">
           <WarningCircle size={20} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--maybe)" }} />
-          <div>
+          <div className="max-w-3xl">
             <h2 id="guarantee-title" className="text-base font-semibold">Securitymodel, geen certificaat</h2>
             <p className="mt-1.5 text-[15px] leading-6" style={{ color: "var(--text2)" }}>
               Deze pagina beschrijft de huidige ontwerp- en implementatiegrenzen. Ze is geen belofte van absolute veiligheid en geen vervanging voor zorgvuldig toestel-, browser-, back-up- en deelbeheer.
@@ -301,22 +284,22 @@ function TechnicalCard({
     <div
       className={quiet
         ? "mt-4 border-t pt-5 sm:grid sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4"
-        : "mt-4 rounded-[28px] p-5 sm:p-6"}
+        : "mt-4 rounded-[24px] p-5 sm:p-6"}
       style={{
         background: quiet
           ? "transparent"
           : accent
-            ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface))"
+            ? "linear-gradient(135deg, color-mix(in srgb, var(--identity-a) 5%, var(--surface)), var(--surface))"
             : "var(--surface)",
         borderColor: "var(--border)",
         ...(!quiet ? { border: "1px solid var(--border)" } : {}),
       }}
     >
       <div
-        className={`flex items-center justify-center ${quiet ? "h-9 w-9 rounded-xl" : "h-11 w-11 rounded-2xl"}`}
+        className={`flex items-center justify-center ${quiet ? "h-9 w-9 rounded-xl" : "h-10 w-10 rounded-xl"}`}
         style={{ background: "var(--surface2)", color: "var(--accent)" }}
       >
-        <Icon size={quiet ? 19 : 22} aria-hidden="true" />
+        <Icon size={quiet ? 19 : 20} aria-hidden="true" />
       </div>
       <div className={`${quiet ? "mt-3 sm:mt-0" : "mt-4"} max-w-3xl text-[15px] leading-6`} style={{ color: "var(--text2)" }}>
         {children}
