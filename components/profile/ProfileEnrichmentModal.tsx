@@ -299,7 +299,10 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
                 setError(null);
               }}
               onFocus={(event) => {
-                window.requestAnimationFrame(() => event.currentTarget.scrollIntoView({ block: "nearest" }));
+                const target = event.currentTarget;
+                window.requestAnimationFrame(() => {
+                  if (target.isConnected) target.scrollIntoView({ block: "nearest" });
+                });
               }}
               rows={4}
               maxLength={BDSMTEST_INPUT_MAX_CHARS}

@@ -260,7 +260,7 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
       return raw ? JSON.parse(raw).state?.questionnaireTourSeen === true : false;
     })).toBe(false);
 
-    await page.getByRole("link", { name: /Start met vragen|Verder invullen|Verder ontdekken/i }).click();
+    await page.getByTestId("profile-summary").getByRole("link", { name: /Start met vragen|Verder invullen|Verder ontdekken/i }).click();
     await expect(page).toHaveURL(/\/profile\/pw-alex-001\/questions$/);
 
     const questionTour = page.getByRole("dialog", { name: "Beoordeel de volledige kink" });

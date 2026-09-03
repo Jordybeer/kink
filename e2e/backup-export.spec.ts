@@ -64,7 +64,6 @@ test("encrypted backup import keeps readable copy inside the visual viewport", a
   const copy = dialog.getByText("Voer het wachtwoord in waarmee je deze backup hebt beveiligd.");
   await expect(copy).toHaveCSS("font-size", "14px");
 
-  const bounds = await dialog.boundingBox();
   const visualViewport = await page.evaluate(() => {
     const styles = getComputedStyle(document.documentElement);
     return {
@@ -72,9 +71,19 @@ test("encrypted backup import keeps readable copy inside the visual viewport", a
       offsetTop: Number.parseFloat(styles.getPropertyValue("--visual-viewport-offset-top")),
     };
   });
+  const viewportBottom = visualViewport.offsetTop + visualViewport.height;
+
+  // The sheet enters with a short Framer Motion transition. Keep the viewport
+  // contract strict, but observe it after the real rendered geometry settles.
+  await expect.poll(async () => {
+    const bounds = await dialog.boundingBox();
+    return bounds ? bounds.y + bounds.height : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(viewportBottom + 2);
+
+  const bounds = await dialog.boundingBox();
   expect(bounds).not.toBeNull();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
   expect(bounds!.y).toBeGreaterThanOrEqual(visualViewport.offsetTop - 1);
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(visualViewport.offsetTop + visualViewport.height + 2);
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewportBottom + 2);
 });

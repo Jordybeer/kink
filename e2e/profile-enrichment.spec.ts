@@ -8,7 +8,10 @@ test.describe("Profielinfo", () => {
     await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM], { profileTourComplete: true });
   });
 
-  test("opent mobiel als bottom sheet en houdt focus binnen de modal", async ({ page }) => {
+  test("past zich aan de visual viewport aan en houdt focus binnen de modal", async ({ page }) => {
+    const pageErrors: Error[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
     const trigger = page.getByRole("button", { name: "Profielinfo" });
     await expect(trigger).toBeVisible();
     await trigger.click();
@@ -48,11 +51,18 @@ test.describe("Profielinfo", () => {
       const rect = element.getBoundingClientRect();
       return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
     })).toBeLessThanOrEqual(1);
-    await expect.poll(() => dialog.evaluate((element) => {
+
+    const expectedBottomInset = await page.evaluate(() => matchMedia("(min-width: 640px)").matches ? 24 : 0);
+    await expect.poll(() => dialog.evaluate((element, expectedInset) => {
       const frame = element.parentElement?.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
-      return frame ? Math.abs(frame.bottom - rect.bottom) : Number.POSITIVE_INFINITY;
-    })).toBeLessThanOrEqual(1);
+      return frame ? Math.abs((frame.bottom - rect.bottom) - expectedInset) : Number.POSITIVE_INFINITY;
+    }, expectedBottomInset)).toBeLessThanOrEqual(1);
+
+    const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
+    await paste.focus();
+    await page.waitForTimeout(50);
+    expect(pageErrors).toEqual([]);
 
     await dialog.getByRole("button", { name: "Annuleer" }).click();
     await expect(dialog).toBeHidden();

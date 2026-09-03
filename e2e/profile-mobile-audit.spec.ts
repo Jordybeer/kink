@@ -8,8 +8,9 @@ test.use({
   viewport: { width: 375, height: pixel7.viewport.height },
 });
 
-test("profile hero — mobile overview tab", async ({ page }) => {
+test("profile hero — mobile read view", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
+  await expect(page.getByTestId("profile-summary")).toBeVisible();
   await page.screenshot({ path: "screenshots/profile-hero-overview.png", fullPage: false });
 });
 
@@ -19,43 +20,36 @@ test("profile hero — scroll below fold", async ({ page }) => {
   await page.screenshot({ path: "screenshots/profile-hero-scroll.png", fullPage: false });
 });
 
-test("profile edit tab", async ({ page }) => {
+test("profile catalog manager", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
-  await page.getByRole("tab", { name: "Bewerken", exact: true }).click();
-  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await expect(page.getByTestId("profile-catalog-manager-header")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Volledige catalogus doorzoeken" })).toBeVisible();
   await page.screenshot({ path: "screenshots/profile-edit-tab.png", fullPage: false });
 });
 
-test("profile tabs support roving keyboard focus", async ({ page }) => {
+test("profile manager supports keyboard entry and an explicit return to read view", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
 
-  const overview = page.getByRole("tab", { name: "Overzicht" });
-  const edit = page.getByRole("tab", { name: "Bewerken" });
+  const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+  await expect(manage).toBeVisible();
+  await manage.focus();
+  await expect(manage).toBeFocused();
+  await page.keyboard.press("Enter");
 
-  await expect(overview).toBeVisible();
-  await overview.focus();
+  const done = page.getByRole("button", { name: "Gereed" });
+  await expect(done).toBeVisible();
+  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+  await done.click();
 
-  await page.keyboard.press("ArrowLeft");
-  await expect(edit).toBeFocused();
-  await expect(edit).toHaveAttribute("aria-selected", "true");
-
-  await page.keyboard.press("ArrowRight");
-  await expect(overview).toBeFocused();
-  await expect(overview).toHaveAttribute("aria-selected", "true");
-
-  await page.keyboard.press("End");
-  await expect(edit).toBeFocused();
-  await expect(edit).toHaveAttribute("aria-selected", "true");
-
-  await page.keyboard.press("Home");
-  await expect(overview).toBeFocused();
-  await expect(overview).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+  await expect(page.getByTestId("profile-summary")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toBeVisible();
 });
 
-test("profile edit tab — scroll kink list", async ({ page }) => {
+test("profile catalog manager — scroll kink list", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
-  await page.getByRole("tab", { name: "Bewerken", exact: true }).click();
-  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await page.evaluate(() => window.scrollTo(0, 600));
   await page.screenshot({ path: "screenshots/profile-edit-kinkrow.png", fullPage: false });
 });
@@ -65,9 +59,8 @@ test("profile full page scroll", async ({ page }) => {
   await page.screenshot({ path: "screenshots/profile-fullpage.png", fullPage: true });
 });
 
-test("profile edit tab full page", async ({ page }) => {
+test("profile catalog manager full page", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
-  await page.getByRole("tab", { name: "Bewerken", exact: true }).click();
-  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await page.screenshot({ path: "screenshots/profile-edit-fullpage.png", fullPage: true });
 });

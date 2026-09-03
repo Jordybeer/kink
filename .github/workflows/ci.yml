@@ -56,7 +56,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
-      - run: npm run test:e2e
+      - name: Run browser E2E with compact diagnostics
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee e2e-console.log
         env:
           CI: "1"
       - run: npm run test:e2e:launch
@@ -75,6 +79,14 @@ jobs:
             test-results/device-screenshots
             test-results/print-screenshots
           if-no-files-found: ignore
+          retention-days: 14
+      - name: Keep compact browser failure log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-failure-summary
+          path: e2e-console.log
+          if-no-files-found: warn
           retention-days: 14
       - name: Keep Playwright failure diagnostics
         if: failure()
