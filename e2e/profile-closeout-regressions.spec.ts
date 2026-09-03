@@ -118,7 +118,7 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).not.toContainText(/100%/);
 });
 
-test("BDSMTest stays readable below the profile hero in read-view and catalog manager", async ({ page }) => {
+test("BDSMTest stays readable in read-view and yields to focused catalog management", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
@@ -143,6 +143,12 @@ test("BDSMTest stays readable below the profile hero in read-view and catalog ma
   )).toBeGreaterThanOrEqual(12);
 
   await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await expect(profileSummary).toHaveCount(0);
+  await expect(summary).toHaveCount(0);
+  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+
+  await page.getByRole("button", { name: "Gereed" }).click();
+  await expect(profileSummary).toBeVisible();
   await expect(summary).toBeVisible();
 });
 

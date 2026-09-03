@@ -69,20 +69,8 @@ const communityPlaces = [
 export default function AboutPage() {
   return (
     <PageShell width="3xl" className="lg:max-w-4xl">
-      <header
-        className="relative isolate overflow-hidden rounded-[28px] px-5 py-6 sm:px-8 sm:py-9"
-        style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface)) 0%, var(--surface) 58%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--identity-a) 24%, var(--border))",
-        }}
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--identity-a) 12%, transparent)" }}
-        />
-        <div className="relative z-10 max-w-3xl">
+      <header className="border-b py-4 sm:py-6" style={{ borderColor: "var(--border)" }}>
+        <div className="max-w-3xl">
           <EditorialHeading
             level={1}
             size="hero"
@@ -95,19 +83,19 @@ export default function AboutPage() {
 
           <div
             data-testid="about-promises"
-            className="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-2xl"
-            style={{ background: "var(--border)", border: "1px solid var(--border)" }}
+            className="mt-6 grid grid-cols-3 border-y"
+            style={{ borderColor: "var(--border)" }}
             aria-label="Kernfuncties"
           >
             {[
               ["Verkennen", "Ontdek wat bij je past"],
               ["Vergelijken", "Zie waar het klikt"],
               ["Afspraken", "Leg samen vast"],
-            ].map(([title, text]) => (
+            ].map(([title, text], index) => (
               <div
                 key={title}
                 className="min-w-0 px-2.5 py-3 sm:px-4 sm:py-3.5"
-                style={{ background: "color-mix(in srgb, var(--surface) 96%, transparent)" }}
+                style={{ borderLeft: index > 0 ? "1px solid var(--border)" : undefined }}
               >
                 <p className="text-xs font-semibold leading-4 sm:text-sm">{title}</p>
                 <p className="mt-1 text-[11px] leading-4 sm:text-xs sm:leading-5" style={{ color: "var(--text2)" }}>{text}</p>
@@ -117,7 +105,7 @@ export default function AboutPage() {
         </div>
       </header>
 
-      <section className="mt-10" aria-labelledby="rules-title">
+      <section className="mt-9" aria-labelledby="rules-title">
         <SectionHeading eyebrow="De basis" title="Drie regels sturen het hele product" id="rules-title" />
         <div className="mt-5 grid md:grid-cols-3">
           {rules.map((rule) => (
@@ -134,27 +122,22 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mt-10" aria-labelledby="journey-title">
+      <section className="mt-9" aria-labelledby="journey-title">
         <SectionHeading
           eyebrow="Van profiel tot afspraak"
           title="Verkennen, vergelijken en verder praten"
           id="journey-title"
         />
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid md:grid-cols-3">
           {journey.map(({ icon: Icon, eyebrow, title, text }, index) => (
             <article
               key={title}
-              className="relative rounded-2xl p-5"
-              style={{
-                background: index === 1
-                  ? "color-mix(in srgb, var(--accent) 5%, var(--surface))"
-                  : "var(--surface)",
-                border: "1px solid var(--border)",
-              }}
+              className="border-t py-5 md:px-5 md:first:pl-0 md:last:pr-0"
+              style={{ borderColor: "var(--border)" }}
             >
               <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-                  <Icon size={20} aria-hidden="true" />
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--identity-a)" }}>
+                  <Icon size={18} aria-hidden="true" />
                 </span>
                 <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text2)" }}>0{index + 1}</span>
               </div>
@@ -166,7 +149,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mt-10" aria-labelledby="limits-title">
+      <section className="mt-9" aria-labelledby="limits-title">
         <SectionHeading eyebrow="Waar de app stopt" title="KinkSync helpt praten, niet beslissen" id="limits-title" />
         <div className="mt-5 divide-y" style={{ borderColor: "var(--border)" }}>
           <Limit title="Een match is een gesprekstarter">
@@ -179,60 +162,54 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="relative mt-10 overflow-hidden rounded-[28px] p-5 sm:p-6"
-        style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 7%, var(--surface)) 0%, var(--surface) 70%, color-mix(in srgb, var(--accent) 4%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--identity-a) 22%, var(--border))",
-        }}
+        className="mt-9 border-t pt-7"
+        style={{ borderColor: "var(--border)" }}
         aria-labelledby="community-title"
       >
-        <div className="relative z-10">
-          <EditorialHeading
-            level={2}
-            size="section"
-            eyebrow="Community in België"
-            icon={<MapPin size={16} weight="fill" aria-hidden="true" />}
-            title="Kink gebeurt ook buiten je scherm"
-            id="community-title"
-            description="KinkSync kan het gesprek openen. Wil je daarna tussen echte mensen staan, dan zijn dit twee Belgische plekken om zelf verder te ontdekken."
-          />
+        <EditorialHeading
+          level={2}
+          size="section"
+          eyebrow="Community in België"
+          icon={<MapPin size={16} weight="fill" aria-hidden="true" />}
+          title="Kink gebeurt ook buiten je scherm"
+          id="community-title"
+          description="KinkSync kan het gesprek openen. Wil je daarna tussen echte mensen staan, dan zijn dit twee Belgische plekken om zelf verder te ontdekken."
+        />
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {communityPlaces.map((place) => (
-              <a
-                key={place.name}
-                href={place.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="focus-ring group flex items-center gap-3 rounded-2xl p-4 transition-transform active:scale-[0.99]"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                }}
-                aria-label={`${place.name} in ${place.city} openen in Google Maps`}
-              >
-                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--identity-a)" }}>
-                  <MapPin size={20} aria-hidden="true" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-semibold leading-6">{place.name}</h3>
-                  <p className="text-sm" style={{ color: "var(--text2)" }}>{place.city}</p>
-                </div>
-                <ArrowSquareOut size={17} className="flex-none" weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
-              </a>
-            ))}
-          </div>
-
-          <p className="mt-4 text-xs leading-5" style={{ color: "var(--text2)" }}>
-            Geen betaalde plaatsingen of officiële partners.
-          </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {communityPlaces.map((place) => (
+            <a
+              key={place.name}
+              href={place.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="focus-ring group flex items-center gap-3 rounded-2xl p-4 transition-transform active:scale-[0.99]"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+              }}
+              aria-label={`${place.name} in ${place.city} openen in Google Maps`}
+            >
+              <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--identity-a)" }}>
+                <MapPin size={20} aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold leading-6">{place.name}</h3>
+                <p className="text-sm" style={{ color: "var(--text2)" }}>{place.city}</p>
+              </div>
+              <ArrowSquareOut size={17} className="flex-none" weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
+            </a>
+          ))}
         </div>
+
+        <p className="mt-4 text-xs leading-5" style={{ color: "var(--text2)" }}>
+          Geen betaalde plaatsingen of officiële partners.
+        </p>
       </section>
 
       <section
-        className="mt-4 rounded-2xl p-5 sm:p-6"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        className="mt-9 border-t pt-6"
+        style={{ borderColor: "var(--border)" }}
         aria-labelledby="technical-title"
       >
         <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>Technische verdieping</p>
@@ -251,8 +228,8 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-4 py-3 text-sm"
-        style={{ background: "color-mix(in srgb, var(--surface2) 64%, transparent)", color: "var(--text2)" }}
+        className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 border-t py-4 text-sm"
+        style={{ borderColor: "var(--border)", color: "var(--text2)" }}
         aria-label="Contact"
       >
         <span className="font-medium">Vragen of suggesties?</span>

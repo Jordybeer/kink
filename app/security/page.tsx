@@ -46,20 +46,8 @@ const shareBoundaries = [
 export default function SecurityPage() {
   return (
     <PageShell width="3xl" className="lg:max-w-4xl">
-      <header
-        className="relative isolate overflow-hidden rounded-[28px] px-5 py-6 sm:px-8 sm:py-9"
-        style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface)) 0%, var(--surface) 58%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--identity-a) 24%, var(--border))",
-        }}
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--identity-a) 12%, transparent)" }}
-        />
-        <div className="relative z-10 max-w-3xl">
+      <header className="border-b py-4 sm:py-6" style={{ borderColor: "var(--border)" }}>
+        <div className="max-w-3xl">
           <EditorialHeading
             level={1}
             size="hero"
@@ -72,7 +60,7 @@ export default function SecurityPage() {
         </div>
       </header>
 
-      <section className="mt-10" aria-labelledby="storage-title">
+      <section className="mt-9" aria-labelledby="storage-title">
         <SectionHeading eyebrow="01 · Opslagmodel" title="Local-first betekent browseropslag, geen beveiligde enclave" id="storage-title" />
         <TechnicalCard icon={Database}>
           <p>
@@ -100,7 +88,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="backup-title">
+      <section className="mt-9" aria-labelledby="backup-title">
         <SectionHeading eyebrow="02 · Back-up" title="AES-GCM met een wachtwoord-afgeleide sleutel" id="backup-title" />
         <TechnicalCard icon={LockKey} accent>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -123,7 +111,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="signing-title">
+      <section className="mt-9" aria-labelledby="signing-title">
         <SectionHeading eyebrow="03 · Ondertekening" title="ECDSA P-256 over canonieke payloads" id="signing-title" />
         <TechnicalCard icon={Fingerprint}>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -144,7 +132,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="sharing-title">
+      <section className="mt-9" aria-labelledby="sharing-title">
         <SectionHeading eyebrow="04 · Delen en import" title="Private data wordt vóór profieltransport afgesneden" id="sharing-title" />
         <TechnicalCard icon={QrCode}>
           <ul className="space-y-2.5">
@@ -160,7 +148,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="contracts-title">
+      <section className="mt-9" aria-labelledby="contracts-title">
         <SectionHeading eyebrow="05 · Contractdata" title="Versies, signatures en hash-gekoppelde historiek zijn verschillende lagen" id="contracts-title" />
         <TechnicalCard icon={Key} quiet>
           <p>
@@ -175,7 +163,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="restore-title">
+      <section className="mt-9" aria-labelledby="restore-title">
         <SectionHeading eyebrow="06 · Restore boundary" title="Herstel valideert data, maar tijd en context blijven betekenis houden" id="restore-title" />
         <TechnicalCard icon={ShieldCheck} quiet>
           <p>
@@ -190,7 +178,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="browser-title">
+      <section className="mt-9" aria-labelledby="browser-title">
         <SectionHeading eyebrow="07 · Browser en PWA" title="De storage boundary volgt de browsercontext" id="browser-title" />
         <TechnicalCard icon={Database} quiet>
           <p>
@@ -202,7 +190,7 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="app-lock-title">
+      <section className="mt-9" aria-labelledby="app-lock-title">
         <SectionHeading eyebrow="08 · App lock" title="Een lokale toegangspoort, geen encryptie-at-rest" id="app-lock-title" />
         <TechnicalCard icon={LockKey} quiet>
           <p>
@@ -214,14 +202,11 @@ export default function SecurityPage() {
         </TechnicalCard>
       </section>
 
-      <section className="mt-10" aria-labelledby="report-title">
+      <section className="mt-9" aria-labelledby="report-title">
         <SectionHeading eyebrow="09 · Responsible disclosure" title="Een security- of privacyprobleem melden" id="report-title" />
         <div
-          className="overflow-hidden rounded-[28px]"
-          style={{
-            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface))",
-            border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
-          }}
+          className="overflow-hidden rounded-2xl"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
           <div className="p-5 sm:p-6">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
@@ -243,7 +228,7 @@ export default function SecurityPage() {
               {reportDetails.map((detail) => <CheckRow key={detail}>{detail}</CheckRow>)}
             </ul>
           </div>
-          <div className="border-t px-5 py-4 sm:px-6" style={{ borderColor: "var(--border)", background: "var(--surface2)" }}>
+          <div className="border-t px-5 py-4 sm:px-6" style={{ borderColor: "var(--border)" }}>
             <p className="text-[15px] leading-6" style={{ color: "var(--text2)" }}>
               Probeer geen gegevens van andere mensen te bekijken, veranderen of exporteren. Publiceer gevoelige technische details niet voordat er een redelijke kans is geweest om het probleem te onderzoeken.
             </p>
@@ -252,11 +237,8 @@ export default function SecurityPage() {
       </section>
 
       <section
-        className="mt-4 rounded-2xl p-5 sm:p-6"
-        style={{
-          background: "color-mix(in srgb, var(--maybe) 7%, var(--surface))",
-          border: "1px solid color-mix(in srgb, var(--maybe) 26%, var(--border))",
-        }}
+        className="mt-5 border-t pt-5"
+        style={{ borderColor: "var(--border)" }}
         aria-labelledby="guarantee-title"
       >
         <div className="flex items-start gap-3">
@@ -297,28 +279,27 @@ function TechnicalCard({
   accent?: boolean;
   quiet?: boolean;
 }) {
+  const framed = accent && !quiet;
+
   return (
     <div
-      className={quiet
-        ? "mt-4 border-t pt-5 sm:grid sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4"
-        : "mt-4 rounded-[28px] p-5 sm:p-6"}
-      style={{
-        background: quiet
-          ? "transparent"
-          : accent
-            ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface))"
-            : "var(--surface)",
-        borderColor: "var(--border)",
-        ...(!quiet ? { border: "1px solid var(--border)" } : {}),
-      }}
+      className={framed
+        ? "mt-4 rounded-2xl p-5 sm:p-6"
+        : "mt-4 border-t pt-5 sm:grid sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4"}
+      style={framed
+        ? {
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, var(--surface)), var(--surface))",
+            border: "1px solid var(--border)",
+          }
+        : { borderColor: "var(--border)" }}
     >
       <div
-        className={`flex items-center justify-center ${quiet ? "h-9 w-9 rounded-xl" : "h-11 w-11 rounded-2xl"}`}
+        className={`flex items-center justify-center ${framed ? "h-11 w-11 rounded-2xl" : "h-9 w-9 rounded-xl"}`}
         style={{ background: "var(--surface2)", color: "var(--accent)" }}
       >
-        <Icon size={quiet ? 19 : 22} aria-hidden="true" />
+        <Icon size={framed ? 22 : 19} aria-hidden="true" />
       </div>
-      <div className={`${quiet ? "mt-3 sm:mt-0" : "mt-4"} max-w-3xl text-[15px] leading-6`} style={{ color: "var(--text2)" }}>
+      <div className={`${framed ? "mt-4" : "mt-3 sm:mt-0"} max-w-3xl text-[15px] leading-6`} style={{ color: "var(--text2)" }}>
         {children}
       </div>
     </div>

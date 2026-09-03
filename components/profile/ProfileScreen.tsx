@@ -77,6 +77,8 @@ export default function ProfilePage({ params }: Props) {
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const editQueryConsumed = useRef(false);
+  const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreCatalogFocus = useRef(false);
 
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
@@ -87,7 +89,14 @@ export default function ProfilePage({ params }: Props) {
     setCatalogCategoryFilter(null);
     setSearch("");
     editQueryConsumed.current = false;
+    restoreCatalogFocus.current = false;
   }, [id]);
+
+  useEffect(() => {
+    if (catalogOpen || !restoreCatalogFocus.current) return;
+    restoreCatalogFocus.current = false;
+    manageTriggerRef.current?.focus();
+  }, [catalogOpen]);
 
   useEffect(() => {
     if (!hydrated || !profile || profile.origin === "shared" || profile.isImported) return;
@@ -189,6 +198,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   function closeCatalogManager() {
+    restoreCatalogFocus.current = true;
     setCatalogOpen(false);
     setCategoriesOpen(false);
     setSearch("");
@@ -228,69 +238,73 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       <h1 className="sr-only">{currentProfile.name}</h1>
-      <div
-        data-testid="profile-summary"
-        className="mx-[var(--page-gutter)] mb-4 rounded-[24px]"
-        style={{
-          background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
-          border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-          boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
-        }}
-      >
-        <ProfileHero
-          profile={currentProfile}
-          onShare={shared ? undefined : () => setShareOpen(true)}
-          onEdit={shared ? undefined : () => setEditing(true)}
-          onAvatarChange={(dataUrl) => setProfileAvatar(currentProfile.id, dataUrl)}
-          onError={(message) => {
-            setErrorMessage(message);
-            window.setTimeout(() => setErrorMessage(null), 5000);
+
+      {!catalogOpen && (
+        <div
+          data-testid="profile-summary"
+          className="mx-[var(--page-gutter)] mb-4 rounded-[24px]"
+          style={{
+            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
+            border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+            boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
           }}
-          profileType={getProfileType(currentProfile, pinnedProfileId)}
-          embedded
-        />
-
-        {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
-          <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} embedded />
-        )}
-
-        {!shared && (
-          <Link
-            href={`/profile/${currentProfile.id}/questions`}
-            className="focus-ring flex min-h-[68px] items-center gap-3 rounded-b-[24px] border-t px-4 py-3"
-            style={{
-              background: "color-mix(in srgb, var(--accent) 5%, transparent)",
-              borderColor: "var(--border)",
+        >
+          <ProfileHero
+            profile={currentProfile}
+            onShare={shared ? undefined : () => setShareOpen(true)}
+            onEdit={shared ? undefined : () => setEditing(true)}
+            onAvatarChange={(dataUrl) => setProfileAvatar(currentProfile.id, dataUrl)}
+            onError={(message) => {
+              setErrorMessage(message);
+              window.setTimeout(() => setErrorMessage(null), 5000);
             }}
-          >
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                {coverage.complete
-                  ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
-                  : totalRated > 0
-                    ? "Ga verder waar je gebleven bent."
-                    : "Beantwoord vragen in je eigen tempo."}
-              </p>
-            </div>
-            <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
-          </Link>
-        )}
-      </div>
+            profileType={getProfileType(currentProfile, pinnedProfileId)}
+            embedded
+          />
+
+          {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
+            <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} embedded />
+          )}
+
+          {!shared && (
+            <Link
+              href={`/profile/${currentProfile.id}/questions`}
+              className="focus-ring flex min-h-[68px] items-center gap-3 rounded-b-[24px] border-t px-4 py-3"
+              style={{
+                background: "color-mix(in srgb, var(--accent) 5%, transparent)",
+                borderColor: "var(--border)",
+              }}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                  {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                  {coverage.complete
+                    ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
+                    : totalRated > 0
+                      ? "Ga verder waar je gebleven bent."
+                      : "Beantwoord vragen in je eigen tempo."}
+                </p>
+              </div>
+              <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
+            </Link>
+          )}
+        </div>
+      )}
 
       {!shared && !catalogOpen && (
         <div className="mx-[var(--page-gutter)] mb-4">
           <button
+            ref={manageTriggerRef}
             type="button"
             onClick={() => setCatalogOpen(true)}
             aria-expanded="false"
             aria-controls="profile-catalog-manager"
-            className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 text-left"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+            className="focus-ring flex min-h-12 w-full items-center gap-3 border-y px-1 text-left"
+            style={{ borderColor: "var(--border)" }}
           >
-            <span className="min-w-0 flex-1">
+            <span className="min-w-0 flex-1 py-2">
               <span className="block text-sm font-semibold">Onderwerpen beheren</span>
               <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>
                 {catalogRated} van {KINKS.length} beoordeeld
@@ -305,7 +319,8 @@ export default function ProfilePage({ params }: Props) {
         <section id="profile-catalog-manager" className="pb-5" aria-label="Onderwerpen beheren">
           <div
             data-testid="profile-catalog-manager-header"
-            className="mb-3 flex items-center gap-3 px-[var(--page-gutter)]"
+            className="mb-3 flex items-center gap-3 border-b px-[var(--page-gutter)] pb-3"
+            style={{ borderColor: "var(--border)" }}
           >
             <div className="min-w-0 flex-1">
               <h2 className="text-base font-semibold">Onderwerpen beheren</h2>
