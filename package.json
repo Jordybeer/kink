@@ -33,6 +33,7 @@
     "zustand": "^5.0.13"
   },
   "overrides": {
+    "browserslist": "4.28.8",
     "postcss": "^8.5.15"
   },
   "devDependencies": {

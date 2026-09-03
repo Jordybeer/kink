@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
-  CaretDown,
+  CalendarDots,
   CaretRight,
   DotsThree,
   FileText,
@@ -26,8 +26,6 @@ import type { Profile } from "@/types";
 interface ProfileListProps {
   onPromptDelete: (id: string) => void;
 }
-
-const HOME_PROFILE_DISCLOSURES = "kinksync-home-profile-disclosures";
 
 interface ProfileGroup {
   key: string;
@@ -112,7 +110,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
 
   const renderGroups = (visibleGroups: ProfileGroup[]) => (
     <motion.div
-      className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start"
+      className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start"
       initial={reduceMotion ? false : "hidden"}
       animate="show"
       variants={STAGGER_CHILDREN}
@@ -127,7 +125,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             style={{
               background: "var(--surface2)",
               border: "1px solid var(--border)",
-              boxShadow: "0 8px 22px rgba(0,0,0,0.20)",
+              boxShadow: "0 8px 22px var(--deep-shadow)",
             }}
           >
             {isPerspectiveGroup && (
@@ -184,24 +182,14 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   return (
     <>
       {ownership.mine.length > 0 && (
-        <ProfileDisclosure
-          id="mine"
-          label="Mijn profielen"
-          count={ownership.mine.length}
-          defaultOpen
-        >
+        <ProfileSection id="mine" label="Mijn profielen" count={ownership.mine.length}>
           {renderGroups(mineGroups)}
-        </ProfileDisclosure>
+        </ProfileSection>
       )}
       {ownership.shared.length > 0 && (
-        <ProfileDisclosure
-          id="shared"
-          label="Gedeeld met mij"
-          count={ownership.shared.length}
-          defaultOpen={ownership.mine.length === 0}
-        >
+        <ProfileSection id="shared" label="Gedeeld met mij" count={ownership.shared.length}>
           {renderGroups(sharedGroups)}
-        </ProfileDisclosure>
+        </ProfileSection>
       )}
 
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
@@ -209,9 +197,9 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           <Link
             href={`/compare?a=${comparePair[0].id}&b=${comparePair[1].id}`}
             prefetch={false}
-            className="focus-ring block rounded-2xl p-5 transition-opacity hover:opacity-90 lg:col-span-2"
+            className="focus-ring block rounded-2xl p-4 transition-opacity hover:opacity-90 lg:col-span-2"
             style={{
-              background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface))",
+              background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 6%, var(--surface)), color-mix(in srgb, var(--action-primary) 6%, var(--surface)))",
               border: "1px solid var(--border-accent)",
               boxShadow: "0 10px 26px color-mix(in srgb, var(--accent) 12%, transparent)",
             }}
@@ -253,6 +241,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           {[
             { href: "/contracts", label: "Contracten", icon: FileText },
             { href: "/scenes", label: "Scènes", icon: FilmSlate },
+            { href: "/intimacy", label: "Agenda", icon: CalendarDots },
           ].map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -260,7 +249,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
               className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3"
               style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
-              <Icon size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
+              <Icon size={16} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <span className="flex-1 text-sm font-medium">{label}</span>
               <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
             </Link>
@@ -315,75 +304,30 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   );
 }
 
-function ProfileDisclosure({
+function ProfileSection({
   id,
   label,
   count,
-  defaultOpen,
   children,
 }: {
   id: "mine" | "shared";
   label: string;
   count: number;
-  defaultOpen: boolean;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const panelId = `home-${id}-profiles`;
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(HOME_PROFILE_DISCLOSURES);
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as Partial<Record<"mine" | "shared", unknown>>;
-      if (typeof parsed[id] === "boolean") setOpen(parsed[id]);
-    } catch {
-      // UI-only preference: malformed state is ignored and never touches profile data.
-    }
-  }, [id]);
-
-  function toggle() {
-    setOpen((current) => {
-      const next = !current;
-      try {
-        const stored = sessionStorage.getItem(HOME_PROFILE_DISCLOSURES);
-        const parsed = stored ? JSON.parse(stored) as Record<string, unknown> : {};
-        sessionStorage.setItem(HOME_PROFILE_DISCLOSURES, JSON.stringify({
-          mine: typeof parsed.mine === "boolean" ? parsed.mine : undefined,
-          shared: typeof parsed.shared === "boolean" ? parsed.shared : undefined,
-          [id]: next,
-        }));
-      } catch {
-        // The disclosure still works when storage is unavailable.
-      }
-      return next;
-    });
-  }
+  const labelId = `home-${id}-profiles-label`;
 
   return (
-    <section className="mb-4" aria-labelledby={`${panelId}-label`}>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-controls={panelId}
-        className="focus-ring mb-2 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      >
-        <span id={`${panelId}-label`} className="flex-1 text-sm font-semibold">
+    <section className="mb-4" aria-labelledby={labelId}>
+      <div className="mb-2 flex min-h-8 items-center gap-3 px-1">
+        <h2 id={labelId} className="flex-1 text-sm font-semibold" style={{ color: "var(--text)" }}>
           {label}
-        </span>
+        </h2>
         <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
           {count}
         </span>
-        <CaretDown
-          size={15}
-          aria-hidden="true"
-          className="transition-transform"
-          style={{ color: "var(--text2)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-        />
-      </button>
-      {open && <div id={panelId}>{children}</div>}
+      </div>
+      {children}
     </section>
   );
 }
@@ -415,7 +359,7 @@ function ProfileRow({
 
   return (
     <div
-      className="px-3 py-3"
+      className="px-3 py-2.5"
       style={divider ? { borderTop: "1px solid var(--border)" } : undefined}
     >
       <div className="flex items-center gap-1">
@@ -511,6 +455,7 @@ function ProfileRow({
     </div>
   );
 }
+
 function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "normal" }) {
   const sizeClass = size === "small" ? "w-9 h-9" : "w-12 h-12";
   return (
@@ -519,7 +464,7 @@ function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "n
       aria-hidden="true"
       style={{
         border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.22)",
+        boxShadow: "0 4px 12px var(--deep-shadow)",
       }}
     >
       {profile.avatarDataUrl ? (
@@ -541,8 +486,8 @@ function CompareCoin({ profile, overlap }: { profile: Profile; overlap?: boolean
       style={{
         border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
         boxShadow: overlap
-          ? "0 0 0 1px var(--surface), 0 5px 14px rgba(0,0,0,0.26)"
-          : "0 5px 14px rgba(0,0,0,0.26)",
+          ? "0 0 0 1px var(--surface), 0 5px 14px var(--deep-shadow)"
+          : "0 5px 14px var(--deep-shadow)",
       }}
     >
       {profile.avatarDataUrl ? (

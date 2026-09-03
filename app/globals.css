@@ -4,55 +4,11 @@
   /* JS keeps this in lockstep with iOS visualViewport; 100dvh is the no-JS fallback. */
   --visual-viewport-height: 100dvh;
   --visual-viewport-offset-top: 0px;
-  --bg: #09080E;
-  --surface: #110F19;
-  --surface2: #16141F;
-  --surface3: #26222E;
-  --border: #221F2C;
-  --scrim: rgba(0, 0, 0, 0.6);
-  --scrim-strong: rgba(0, 0, 0, 0.92);
+  --status-pill-width: 7.5rem;
   --tag-muted: color-mix(in srgb, var(--accent) 6%, var(--surface2));
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
-  --border-accent: rgba(217, 70, 175, 0.25);
-  --text: #ede8f5;
-  --text2: #9d9ab8;
-  --accent: #D946AF;
-  --accent2: #D4527C;
-  --accent-glow: rgba(217, 70, 175, 0.18);
-  /* Plumzwart in plaats van blauwzwart: deelt de hue van het accent, zodat vette
-     letters er niet meer tegenaan trillen. 5,02:1 op --accent en 4,89:1 op
-     --accent2, beide ruim boven AA. Wit zou hier op 3,86:1 zakken.
-     Nog in gebruik voor kleine accentvlakken: avatarinitialen, badges. */
-  --on-accent: #1A0714;
-
-  /* Gevulde knoppen dragen niet --accent maar deze diepere variant, zodat er
-     witte tekst op kan (6,04:1; op --accent zelf zou wit op 3,86:1 zakken).
-     --accent blijft #D946AF voor randen, gloed, iconen en tekst. */
-  --accent-fill: #a93187;
-  --on-accent-fill: #ffffff;
-  --yes: #f97316;
-  --willing: #10b981;
-  --curious: #eab308;
-  --maybe: #38bdf8;
-  --no: #818cf8;
-  --hard-no: #ef4444;
-  /* De harde grens als tekst op zijn eigen getinte achtergrond.
-     --hard-no zelf haalt daar 4,04:1 en zakt dus onder AA, juist bij de status
-     die het zwaarst weegt. Dat kwam ergens vandaan: de danger-variant krijgt
-     minder kleurmenging (17% waar de rest 19% krijgt) en #ef4444 heeft van de
-     zes de laagste luminantie. Meer mengen maakt het erger, want dan kruipt de
-     achtergrond naar de tekst toe. Oplichten is de enige richting die werkt.
-     Deze tint haalt 4,9:1 en oogt zachter, niet alarmerender. Overal waar
-     --hard-no al ruim boven AA zat (safeword, intrekken, fouttekst) blijft hij
-     ongemoeid. */
-  --hard-no-text: #f26d6d;
-  --conflict: #f59e0b;
   /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */
   --nav-h: calc(env(safe-area-inset-top) + 3.5rem);
-  /* Liquid glass — depth shadow, brighter hover border, accent glow (theme-aware via --accent-glow) */
-  --border-bright: rgba(255, 255, 255, 0.18);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.10) inset;
-  --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
   --glow-accent: 0 0 32px var(--accent-glow);
 }
 
@@ -64,6 +20,8 @@ html, body {
   font-family: var(--font-sans, system-ui), -apple-system, sans-serif;
   min-height: 100vh;
 }
+
+body { isolation: isolate; }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -77,7 +35,7 @@ html, body {
 
 .focus-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
 }
 
 .btn-accent {
@@ -93,10 +51,14 @@ html, body {
 .ks-select {
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23ffffff' stroke-opacity='0.55' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text2) 50%),
+    linear-gradient(135deg, var(--text2) 50%, transparent 50%);
   background-repeat: no-repeat;
-  background-position: right 0.8rem center;
-  background-size: 12px 8px;
+  background-position:
+    calc(100% - 1rem) calc(50% + 1px),
+    calc(100% - 0.72rem) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
   padding-right: 2.4rem !important;
 }
 
@@ -196,33 +158,24 @@ html, body {
 .ks-icon-pop { animation: ksIconPop 400ms cubic-bezier(0.34,1.56,0.64,1) both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
-/* Brand wordmark — Fraunces display, gradient letters, slow sheen sweep */
+/* Brand wordmark — a stable lavender identity warming into rose-salmon. */
 .ks-wordmark {
   font-family: var(--font-display, Georgia, "Times New Roman", serif);
   font-weight: 400;
   letter-spacing: -0.02em;
   background-image: linear-gradient(
     110deg,
-    var(--accent) 0%,
-    var(--accent2) 38%,
-    color-mix(in srgb, var(--accent2) 35%, #fff) 50%,
-    var(--accent2) 62%,
-    var(--accent) 100%
+    var(--identity-a) 0%,
+    var(--identity-a) 36%,
+    color-mix(in srgb, var(--identity-a) 62%, var(--wordmark-highlight)) 58%,
+    var(--identity-b) 100%
   );
-  background-size: 220% 100%;
-  background-position: 130% 0;
+  background-size: 100% 100%;
+  background-position: 50% 0;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: ks-shimmer 5.5s ease-in-out infinite;
-}
-@keyframes ks-shimmer {
-  0%        { background-position: 130% 0; }
-  22%, 100% { background-position: -30% 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ks-wordmark { animation: none; background-position: 50% 0; }
 }
 
 /* Gradient rule — editorial divider used in hero */
@@ -437,6 +390,69 @@ span[class~="mr-auto"][class~="text-xs"] {
 .ks-card {
   background: var(--surface);
   border: 1px solid var(--border);
+}
+
+/* Viewport-contained identity light. Unequal slow paths keep the ambience alive
+   without reading as an effect or destabilising long iOS screenshots. */
+.ks-ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  contain: strict;
+}
+
+.ks-ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.ks-ambient-orb-top {
+  top: -18rem;
+  left: calc(50% - min(23rem, 74vw));
+  width: min(46rem, 148vw);
+  aspect-ratio: 1;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-top-color) var(--ambient-top-opacity), transparent) 0%,
+    transparent 69%
+  );
+  animation: ks-ambient-drift-top 34s ease-in-out infinite alternate;
+}
+
+.ks-ambient-orb-bottom {
+  right: -17rem;
+  bottom: -18rem;
+  width: min(43rem, 142vw);
+  aspect-ratio: 1;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-bottom-color) var(--ambient-bottom-opacity), transparent) 0%,
+    transparent 70%
+  );
+  animation: ks-ambient-drift-bottom 41s ease-in-out infinite alternate;
+}
+
+@keyframes ks-ambient-drift-top {
+  from { transform: translate3d(-2.5%, -1.5%, 0) scale(0.98); }
+  to { transform: translate3d(5%, 4%, 0) scale(1.04); }
+}
+
+@keyframes ks-ambient-drift-bottom {
+  from { transform: translate3d(2%, 2%, 0) scale(1.03); }
+  to { transform: translate3d(-7%, -4%, 0) scale(0.97); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-ambient-orb {
+    animation: none;
+    will-change: auto;
+  }
 }
 
 /* Preserve the confident Home wordmark in normal portrait use, but stop it

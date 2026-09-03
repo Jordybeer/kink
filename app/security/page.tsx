@@ -50,14 +50,14 @@ export default function SecurityPage() {
         className="relative isolate overflow-hidden rounded-[28px] px-5 py-6 sm:px-8 sm:py-9"
         style={{
           background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%, var(--surface) 52%, color-mix(in srgb, var(--maybe) 7%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--accent) 22%, var(--border))",
+            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface)) 0%, var(--surface) 58%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%)",
+          border: "1px solid color-mix(in srgb, var(--identity-a) 24%, var(--border))",
         }}
       >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)" }}
+          style={{ background: "color-mix(in srgb, var(--identity-a) 12%, transparent)" }}
         />
         <div className="relative z-10 max-w-3xl">
           <EditorialHeading
@@ -219,8 +219,8 @@ export default function SecurityPage() {
         <div
           className="overflow-hidden rounded-[28px]"
           style={{
-            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface))",
-            border: "1px solid color-mix(in srgb, var(--accent) 26%, var(--border))",
+            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface))",
+            border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
           }}
         >
           <div className="p-5 sm:p-6">
@@ -306,7 +306,7 @@ function TechnicalCard({
         background: quiet
           ? "transparent"
           : accent
-            ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface))"
+            ? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface))"
             : "var(--surface)",
         borderColor: "var(--border)",
         ...(!quiet ? { border: "1px solid var(--border)" } : {}),

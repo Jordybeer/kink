@@ -66,17 +66,17 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await seedProfiles(page, MANY_PROFILES, { pinnedProfileId: PROFILE_ALEX.id });
 
-  const mineDisclosure = page.getByRole("button", { name: "Mijn profielen 9" });
-  const sharedDisclosure = page.getByRole("button", { name: "Gedeeld met mij 9" });
-  await expect(mineDisclosure).toHaveAttribute("aria-expanded", "true");
-  await expect(sharedDisclosure).toHaveAttribute("aria-expanded", "false");
-  await sharedDisclosure.click();
+  const mineHeading = page.getByRole("heading", { name: "Mijn profielen" });
+  const sharedHeading = page.getByRole("heading", { name: "Gedeeld met mij" });
+  await expect(mineHeading).toBeVisible();
+  await expect(sharedHeading).toBeVisible();
   await expect(page.getByRole("link", { name: "Gedeeld 08 Submissive openen" })).toBeVisible();
-  await sharedDisclosure.scrollIntoViewIfNeeded();
+  await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
 
-  const settingsTrigger = page.getByRole("button", { name: "Instellingen openen" });
+  const settingsTrigger = page.getByRole("button", { name: "Meer opties" });
   await settingsTrigger.click();
+  await page.getByRole("menuitem", { name: "Instellingen" }).click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
   const settingsTitle = settings.getByRole("heading", { name: "Instellingen" });
   const settingsScroll = settings.getByTestId("sheet-scroll-body");
@@ -177,10 +177,11 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await expect(qr).toBeVisible({ timeout: 15000 });
   await expectWithinVisualViewport(qr);
   await saveScreenshot(page, testInfo, "profile-share-qr");
-  const closeShare = shareDialog.getByRole("button", { name: "Sluit" });
-  await closeShare.scrollIntoViewIfNeeded();
-  await expectWithinVisualViewport(closeShare);
+  const shareBody = shareDialog.getByTestId("profile-share-scroll-body");
+  await shareBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await saveScreenshot(page, testInfo, "profile-share-bottom");
+  const closeShare = shareDialog.getByRole("button", { name: "Profiel delen sluiten" });
+  await expectWithinVisualViewport(closeShare);
   await closeShare.click();
   await expect(shareTrigger).toBeFocused();
 
@@ -213,7 +214,10 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await expect(explainer).toBeVisible();
   await expectWithinVisualViewport(explainer);
   await saveScreenshot(page, testInfo, "status-explainer");
-  await explainer.getByRole("button", { name: "Sluit" }).click();
+  await explainer
+    .getByTestId("sheet-scroll-body")
+    .getByRole("button", { name: "Sluit", exact: true })
+    .click();
 
   const sessionValues = await page.evaluate(() => Object.fromEntries(
     Array.from({ length: sessionStorage.length }, (_, index) => {
@@ -221,7 +225,6 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
       return [key, sessionStorage.getItem(key)];
     }),
   ));
-  const disclosureState = sessionValues["kinksync-home-profile-disclosures"];
-  expect(disclosureState).toBe('{"shared":true}');
+  expect(sessionValues["kinksync-home-profile-disclosures"]).toBeUndefined();
   expect(JSON.stringify(sessionValues)).not.toMatch(/pw-alex|pw-sam|owned-|shared-|Eigen|Gedeeld/);
 });

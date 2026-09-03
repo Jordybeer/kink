@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDots, CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -13,19 +13,10 @@ import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
 
 const MotionLink = motion.create(Link);
 
-const homeUtilitySurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--surface) 38%, transparent)",
-  borderColor: "color-mix(in srgb, var(--border-accent) 38%, var(--border))",
-  backdropFilter: "blur(12px) saturate(120%)",
-  WebkitBackdropFilter: "blur(12px) saturate(120%)",
-  boxShadow: "0 8px 24px color-mix(in srgb, var(--bg) 20%, transparent)",
-  pointerEvents: "auto",
-};
-
 const contentHeaderSurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--bg) 72%, transparent)",
-  backdropFilter: "blur(14px) saturate(120%)",
-  WebkitBackdropFilter: "blur(14px) saturate(120%)",
+  background: "color-mix(in srgb, var(--bg) 66%, transparent)",
+  backdropFilter: "blur(18px) saturate(120%)",
+  WebkitBackdropFilter: "blur(18px) saturate(120%)",
   pointerEvents: "none",
 };
 
@@ -89,11 +80,17 @@ export default function TopNav() {
   } as const;
 
   if (path === "/") {
+    const homeEmpty = profiles.length === 0;
     const homeMenuItems = [
       {
-        label: "Agenda",
-        icon: <CalendarDots size={17} aria-hidden="true" />,
-        onClick: () => router.push("/intimacy"),
+        label: "Instellingen",
+        icon: <GearSix size={17} aria-hidden="true" />,
+        onClick: () => {
+          window.requestAnimationFrame(() => {
+            document.querySelector<HTMLButtonElement>('[data-testid="home-topnav-more"]')?.focus();
+            window.dispatchEvent(new CustomEvent("ks:open-settings"));
+          });
+        },
       },
       {
         label: "Over KinkSync",
@@ -108,43 +105,39 @@ export default function TopNav() {
     ];
 
     return (
-      <header className="sticky top-0 z-40" style={safeAreaShell}>
+      <header
+        className="relative z-40"
+        style={safeAreaShell}
+        data-home-empty={homeEmpty ? "true" : undefined}
+      >
         <nav
-          className="mx-auto grid h-14 max-w-2xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 lg:max-w-4xl"
+          className={`mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] pb-1 lg:max-w-4xl ${homeEmpty ? "pt-[clamp(2.5rem,8svh,4.75rem)]" : "pt-4"}`}
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
-          <button
-            type="button"
-            data-testid="home-topnav-settings"
-            onClick={() => window.dispatchEvent(new CustomEvent("ks:open-settings"))}
-            aria-label="Instellingen openen"
-            title="Instellingen"
-            className="focus-ring flex h-11 w-11 flex-none justify-self-start items-center justify-center rounded-full border"
-            style={{ ...homeUtilitySurface, color: "var(--text2)" }}
-          >
-            <GearSix size={18} aria-hidden="true" />
-          </button>
-
-          <h1
-            data-home-nav-wordmark
-            className="serif-safe min-w-0 justify-self-center whitespace-nowrap"
-            style={{
-              fontFamily: "var(--font-display, Georgia, serif)",
-              fontSize: "clamp(1.6rem, 8vw, 1.75rem)",
-              fontWeight: 500,
-              lineHeight: 1,
-            }}
-          >
-            <Wordmark />
-          </h1>
+          <div className="justify-self-start" style={{ pointerEvents: "auto" }}>
+            <OfflineStatus compact />
+          </div>
+          <div data-home-identity className="min-w-0 text-center">
+            <h1
+              data-home-nav-wordmark
+              className="serif-safe whitespace-nowrap"
+              style={{
+                fontFamily: "var(--font-display, Georgia, serif)",
+                fontSize: "clamp(2rem, 9.5vw, 2.25rem)",
+                fontWeight: 500,
+                lineHeight: 1,
+              }}
+            >
+              <Wordmark />
+            </h1>
+          </div>
 
           <div
             data-testid="home-topnav-actions"
-            className="flex items-center justify-self-end gap-2"
+            className="justify-self-end"
             style={{ pointerEvents: "auto" }}
           >
-            <OfflineStatus />
             <ContextMenu
               open={overflowOpen}
               onClose={() => setOverflowOpen(false)}
@@ -152,17 +145,37 @@ export default function TopNav() {
             >
               <button
                 type="button"
+                data-testid="home-topnav-more"
                 onClick={() => setOverflowOpen((open) => !open)}
                 aria-label="Meer opties"
                 aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full border"
-                style={{ ...homeUtilitySurface, color: "var(--text2)" }}
+                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
+                style={{ color: "var(--text2)" }}
               >
                 <DotsThree size={22} weight="bold" aria-hidden="true" />
               </button>
             </ContextMenu>
           </div>
         </nav>
+
+        <style>{`
+          body:has([data-top-nav-variant="home"]) main > div:first-child {
+            margin-bottom: 1rem;
+          }
+
+          body:has([data-top-nav-variant="home"]) main > div:first-child > p {
+            font-size: 1.0625rem;
+            line-height: 1.625rem;
+          }
+
+          body:has([data-home-empty="true"]) main {
+            padding-top: clamp(0.75rem, 1.8svh, 1.25rem);
+          }
+
+          body:has([data-home-empty="true"]) main > div:first-child {
+            margin-bottom: clamp(0.75rem, 1.6svh, 1.25rem);
+          }
+        `}</style>
       </header>
     );
   }
@@ -190,80 +203,87 @@ export default function TopNav() {
       style={{ ...safeAreaShell, ...contentHeaderSurface }}
     >
       <nav
-        className={`mx-auto flex h-14 ${navWidth} items-center px-4`}
+        className={`mx-auto h-14 ${navWidth} px-[var(--page-gutter)]`}
         aria-label="Hoofdnavigatie"
         data-top-nav-variant="content"
       >
         <div
           data-testid="content-topnav-row"
-          className="relative flex h-14 w-full items-center gap-1"
+          className="grid h-14 w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-1"
           style={contentNavRow}
         >
           <MotionLink
             href={route.back}
             whileTap={t.tap}
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
             aria-label="Terug"
           >
             <CaretLeft aria-hidden="true" size={20} />
           </MotionLink>
           <span
-            className="serif-safe min-w-0 flex-1 truncate text-base italic transition-opacity"
+            className="serif-safe flex min-w-0 items-baseline gap-1.5 overflow-hidden text-base italic"
             style={{
               fontFamily: "var(--font-display, Georgia, serif)",
               fontWeight: 500,
               color: "var(--text)",
-              opacity: savedVisible && saveFeedbackRoute ? 0 : 1,
             }}
           >
-            {questionTitle ? (
-              <>
-                <span>{questionTitle[0]}</span>
-                <span> · {questionTitle[1]}</span>
-              </>
-            ) : title}
+            <span className="min-w-0 truncate">
+              {questionTitle ? (
+                <>
+                  <span>{questionTitle[0]}</span>
+                  <span> · {questionTitle[1]}</span>
+                </>
+              ) : title}
+            </span>
+            {saveFeedbackRoute && (
+              <span
+                aria-hidden="true"
+                className="flex-none text-[11px] not-italic font-semibold transition-opacity"
+                style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
+              >
+                ✓
+              </span>
+            )}
           </span>
           {saveFeedbackRoute && (
-            <span
-              role="status"
-              aria-live="polite"
-              className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold transition-opacity"
-              style={{ color: "var(--accent)", opacity: savedVisible ? 1 : 0 }}
-            >
-              Opgeslagen ✓
+            <span role="status" aria-live="polite" className="sr-only">
+              {savedVisible ? "Opgeslagen" : ""}
             </span>
           )}
-          {primary && <TopNavActionButton action={primary} emphasis="primary" />}
-          {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
-          {overflowActions.length > 0 && (
-            <ContextMenu
-              open={overflowOpen}
-              onClose={() => setOverflowOpen(false)}
-              items={overflowActions
-                .filter((action) => !action.disabled)
-                .map((action) => ({
-                  label: action.label,
-                  icon: action.icon,
-                  danger: action.danger,
-                  selected: action.selected,
-                  onClick: action.onClick,
-                }))}
-            >
-              <button
-                type="button"
-                data-tour={questionTitle ? "questionnaire-menu" : undefined}
-                onClick={() => setOverflowOpen((open) => !open)}
-                aria-label="Meer acties"
-                aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
-                style={{ color: "var(--text2)" }}
+          <div className="flex items-center justify-end gap-1">
+            {primary && <TopNavActionButton action={primary} emphasis="primary" />}
+            {secondary && <TopNavActionButton action={secondary} emphasis="secondary" />}
+            {overflowActions.length > 0 && (
+              <ContextMenu
+                open={overflowOpen}
+                onClose={() => setOverflowOpen(false)}
+                items={overflowActions
+                  .filter((action) => !action.disabled)
+                  .map((action) => ({
+                    label: action.label,
+                    icon: action.icon,
+                    danger: action.danger,
+                    selected: action.selected,
+                    onClick: action.onClick,
+                  }))}
               >
-                <DotsThree size={22} weight="bold" aria-hidden="true" />
-              </button>
-            </ContextMenu>
-          )}
-          <OfflineStatus />
+                <button
+                  type="button"
+                  data-tour={questionTitle ? "questionnaire-menu" : undefined}
+                  onClick={() => setOverflowOpen((open) => !open)}
+                  aria-label="Meer acties"
+                  aria-expanded={overflowOpen}
+                  className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <DotsThree size={22} weight="bold" aria-hidden="true" />
+                </button>
+              </ContextMenu>
+            )}
+            <OfflineStatus />
+          </div>
         </div>
       </nav>
     </header>
@@ -304,7 +324,7 @@ function TopNavActionButton({
   );
 }
 
-function OfflineStatus() {
+function OfflineStatus({ compact = false }: { compact?: boolean }) {
   const [online, setOnline] = useState(true);
 
   useEffect(() => {
@@ -325,11 +345,13 @@ function OfflineStatus() {
       role="status"
       aria-live="polite"
       aria-label="Offline"
-      className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-xs font-medium"
+      className={compact
+        ? "inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium"
+        : "inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-xs font-medium"}
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >
       <WifiSlash size={15} aria-hidden="true" />
-      <span className="hidden min-[400px]:inline">Offline</span>
+      {!compact && <span className="hidden min-[400px]:inline">Offline</span>}
     </span>
   );
 }

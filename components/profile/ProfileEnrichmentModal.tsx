@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle, LinkSimple, Sparkle, Trash, X } from "@phosphor-icons/react";
+import { CheckCircle, Heart, LinkSimple, PencilSimple, Sparkle, Trash, X } from "@phosphor-icons/react";
 import {
   MAX_BDSMTEST_COPY_CHARS,
   parseBdsmtestCopyAll,
   type BdsmtestCopyAllError,
 } from "@/lib/parseBdsmtest";
+import { RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useStore } from "@/lib/store";
 import type { Profile } from "@/types";
@@ -27,8 +28,6 @@ const ERROR_COPY: Record<BdsmtestCopyAllError, string> = {
   "invalid-results": "Een of meer BDSMTest-resultaten hebben een ongeldig formaat.",
 };
 
-// Keep one sentinel character so an oversized paste cannot look like valid input
-// after the browser applies maxLength.
 const BDSMTEST_INPUT_MAX_CHARS = MAX_BDSMTEST_COPY_CHARS + 1;
 
 function validFetLifeUsername(value: string): boolean {
@@ -40,6 +39,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const scrollBodyRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [relationshipStatus, setRelationshipStatus] = useState("");
   const [fetLife, setFetLife] = useState("");
   const [bdsmPaste, setBdsmPaste] = useState("");
   const [removeBdsmtest, setRemoveBdsmtest] = useState(false);
@@ -74,6 +74,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
     body.style.left = `-${previousScroll.x}px`;
     body.style.width = "100%";
 
+    setRelationshipStatus(profile.relationshipStatus ?? "");
     setFetLife(profile.fetLifeUsername ?? "");
     setBdsmPaste("");
     setRemoveBdsmtest(false);
@@ -101,7 +102,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
       body.style.width = previousDocumentStyles.bodyWidth;
       window.scrollTo(previousScroll.x, previousScroll.y);
     };
-  }, [onClose, open, profile.fetLifeUsername]);
+  }, [onClose, open, profile.fetLifeUsername, profile.relationshipStatus]);
 
   const parsed = useMemo(() => {
     if (!bdsmPaste.trim()) return null;
@@ -137,6 +138,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
           const personLevel = {
             ...candidate,
+            relationshipStatus: relationshipStatus || undefined,
             fetLifeUsername: cleanFetLife || undefined,
             updatedAt: now,
           };
@@ -171,7 +173,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
   return createPortal(
     <div
-      className="fixed left-0 right-0 z-[360] flex items-center justify-center p-4 sm:p-6"
+      className="fixed left-0 right-0 z-[360] flex items-end justify-center sm:items-center sm:p-6"
       role="presentation"
       data-testid="profile-enrichment-viewport"
       style={{
@@ -183,7 +185,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         aria-hidden="true"
         onMouseDown={onClose}
         className="absolute inset-0"
-        style={{ background: "rgba(5, 3, 12, 0.76)", backdropFilter: "blur(8px)" }}
+        style={{ background: "var(--scrim-strong)", backdropFilter: "blur(8px)" }}
       />
 
       <div
@@ -192,33 +194,36 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
         aria-modal="true"
         aria-labelledby="profile-enrichment-title"
         tabIndex={-1}
-        className="relative z-10 flex w-[min(92vw,34rem)] flex-col overflow-hidden rounded-[24px] shadow-2xl"
+        className="relative z-10 flex max-h-[calc(var(--visual-viewport-height,100dvh)-var(--sheet-edge-clearance))] w-full flex-col overflow-hidden rounded-t-[24px] text-pretty shadow-2xl sm:max-h-[min(calc(var(--visual-viewport-height,100dvh)-3rem),42rem)] sm:w-[min(92vw,34rem)] sm:rounded-[24px]"
         style={{
-          maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 2rem), 42rem)",
           background: "var(--surface)",
           border: "1px solid var(--border)",
         }}
       >
-        <div className="flex flex-none items-start gap-3 p-5 pb-0 sm:p-6 sm:pb-0" data-testid="profile-enrichment-header">
+        <div
+          className="flex flex-none items-start gap-3 px-5 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-6"
+          data-testid="profile-enrichment-header"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
           <span
             className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl"
-            style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))" }}
+            style={{ color: "var(--identity-a)", background: "var(--surface2)", border: "1px solid var(--identity-border)" }}
           >
-            <Sparkle size={20} weight="duotone" aria-hidden="true" />
+            <PencilSimple size={19} weight="regular" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--text2)" }}>Profiel</p>
-            <h2 id="profile-enrichment-title" className="mt-1 text-xl font-semibold" style={{ color: "var(--text)" }}>
-              Profiel aanvullen
+            <h2 id="profile-enrichment-title" className="mt-0.5 text-xl font-semibold leading-tight" style={{ color: "var(--text)" }}>
+              Profielinfo
             </h2>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
-              Voeg je BDSMTest of FetLife toe wanneer je dat zelf wilt.
+            <p className="mt-1 max-w-[24rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
+              Optionele gegevens die je zelf kiest om te tonen of te koppelen.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Sluit profiel aanvullen"
+            aria-label="Sluit profielinfo"
             className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
           >
@@ -228,15 +233,38 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
 
         <div
           ref={scrollBodyRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-1 pt-5 sm:px-6"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-6"
           data-testid="profile-enrichment-scroll-body"
         >
-          <section className="rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <section className="py-4">
             <div className="flex items-center gap-2">
-              <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <Heart size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
+              <h3 className="text-sm font-semibold">Relatiestatus</h3>
+            </div>
+            <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
+              Optioneel. Kies alleen wat je op je profiel wilt tonen.
+            </p>
+            <label htmlFor="profile-relationship-status" className="sr-only">Relatiestatus</label>
+            <select
+              id="profile-relationship-status"
+              value={relationshipStatus}
+              onChange={(event) => setRelationshipStatus(event.target.value)}
+              className="ks-select focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
+              style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: relationshipStatus ? "var(--text)" : "var(--text2)" }}
+            >
+              <option value="">Niet tonen</option>
+              {RELATIONSHIP_STATUSES.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </section>
+
+          <section className="border-t py-4" style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center gap-2">
+              <LinkSimple size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">FetLife</h3>
             </div>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
               Alleen je gebruikersnaam. KinkSync maakt daar lokaal de profiel-link van.
             </p>
             <input
@@ -250,16 +278,16 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               spellCheck={false}
               placeholder="Gebruikersnaam"
               className="focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
           </section>
 
-          <section className="mt-3 rounded-2xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <section className="border-t py-4" style={{ borderColor: "var(--border)" }}>
             <div className="flex items-center gap-2">
-              <Sparkle size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <Sparkle size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <h3 className="text-sm font-semibold">BDSMTest</h3>
             </div>
-            <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 max-w-[28rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
               Gebruik op bdsmtest.org de optie Copy all en plak hier alles in één keer.
             </p>
 
@@ -270,14 +298,17 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
                 setRemoveBdsmtest(false);
                 setError(null);
               }}
-              rows={5}
+              onFocus={(event) => {
+                window.requestAnimationFrame(() => event.currentTarget.scrollIntoView({ block: "nearest" }));
+              }}
+              rows={4}
               maxLength={BDSMTEST_INPUT_MAX_CHARS}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
               placeholder="Plak hier de resultaatlink en resultaten"
-              className="focus-ring mt-3 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              className="focus-ring mt-3 max-h-36 w-full resize-none rounded-xl px-3 py-2.5 text-base leading-6 focus:outline-none"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
 
             {parsed?.ok && (
@@ -298,7 +329,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
             )}
 
             {hasStoredBdsmtest && !bdsmPaste.trim() && !removeBdsmtest && (
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl px-3 py-2.5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <div className="mt-3 flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
                 <p className="text-xs" style={{ color: "var(--text2)" }}>
                   {profile.bdsmtestScores?.length ?? 0} resultaten opgeslagen
                 </p>
@@ -324,14 +355,18 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
           </section>
         </div>
 
-        <div className="flex-none px-5 pb-5 pt-4 sm:px-6 sm:pb-6" data-testid="profile-enrichment-footer">
+        <div
+          className="flex-none px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:pb-6 sm:pt-3"
+          data-testid="profile-enrichment-footer"
+          style={{ borderTop: "1px solid var(--border)" }}
+        >
           {error && (
-            <p className="mb-3 rounded-xl px-3 py-2.5 text-sm" role="alert" style={{ color: "var(--hard-no-text)", background: "color-mix(in srgb, var(--hard-no) 7%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--hard-no) 22%, var(--border))" }}>
+            <p className="mb-3 rounded-xl px-3 py-2.5 text-sm" role="alert" style={{ color: "var(--hard-no-text)", background: "color-mix(in srgb, var(--hard-no) 7%, var(--surface))", border: "1px solid color-mix(in srgb, var(--hard-no) 22%, var(--border))" }}>
               {error}
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={onClose}

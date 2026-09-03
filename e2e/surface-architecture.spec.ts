@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
@@ -17,7 +17,14 @@ async function expectCenteredWithin(
   )).toBeLessThanOrEqual(tolerance);
 }
 
-test("Home wordmark stays centered across compact, landscape, tablet and offline states", async ({ page }) => {
+async function openSettings(page: Page) {
+  const trigger = page.getByRole("button", { name: "Meer opties" });
+  await trigger.click();
+  await page.getByRole("menuitem", { name: "Instellingen" }).click();
+  return trigger;
+}
+
+test("Home identity stays centered in its stable masthead slots across viewport and offline states", async ({ page }) => {
   const viewports = [
     { width: 320, height: 740, offline: true },
     { width: 430, height: 740, offline: true },
@@ -30,40 +37,52 @@ test("Home wordmark stays centered across compact, landscape, tablet and offline
     await seedAndGo(page, "/", PROFILES);
 
     const nav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
-    const wordmark = nav.locator("[data-home-nav-wordmark]");
-    const settings = nav.getByRole("button", { name: "Instellingen openen" });
+    const identity = page.locator("[data-home-identity]");
+    const wordmark = identity.locator("[data-home-nav-wordmark]");
     const actions = nav.getByTestId("home-topnav-actions");
+    const more = nav.getByRole("button", { name: "Meer opties" });
 
-    await expectCenteredWithin(nav, wordmark, 1);
+    await expect(nav.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);
+    await expectCenteredWithin(identity, wordmark, 1);
 
-    let [settingsBox, wordmarkBox, actionsBox] = await Promise.all([
-      settings.boundingBox(),
+    let [navBox, identityBox, wordmarkBox, actionsBox, moreBox] = await Promise.all([
+      nav.boundingBox(),
+      identity.boundingBox(),
       wordmark.boundingBox(),
       actions.boundingBox(),
+      more.boundingBox(),
     ]);
-    expect(settingsBox).not.toBeNull();
+    expect(navBox).not.toBeNull();
+    expect(identityBox).not.toBeNull();
     expect(wordmarkBox).not.toBeNull();
     expect(actionsBox).not.toBeNull();
-    expect(settingsBox!.x + settingsBox!.width).toBeLessThan(wordmarkBox!.x);
-    expect(wordmarkBox!.x + wordmarkBox!.width).toBeLessThan(actionsBox!.x);
+    expect(moreBox).not.toBeNull();
+    expect(identityBox!.y).toBeGreaterThanOrEqual(navBox!.y - 1);
+    expect(identityBox!.y + identityBox!.height).toBeLessThanOrEqual(navBox!.y + navBox!.height + 1);
+    expect(moreBox!.x + moreBox!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width);
 
     if (!viewport.offline) continue;
 
     await page.context().setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event("offline")));
     await expect(nav.getByRole("status", { name: "Offline" })).toBeVisible();
-    await expectCenteredWithin(nav, wordmark, 1);
+    await expectCenteredWithin(identity, wordmark, 1);
 
-    [settingsBox, wordmarkBox, actionsBox] = await Promise.all([
-      settings.boundingBox(),
+    [navBox, identityBox, wordmarkBox, actionsBox, moreBox] = await Promise.all([
+      nav.boundingBox(),
+      identity.boundingBox(),
       wordmark.boundingBox(),
       actions.boundingBox(),
+      more.boundingBox(),
     ]);
-    expect(settingsBox).not.toBeNull();
+    expect(navBox).not.toBeNull();
+    expect(identityBox).not.toBeNull();
     expect(wordmarkBox).not.toBeNull();
     expect(actionsBox).not.toBeNull();
-    expect(settingsBox!.x + settingsBox!.width).toBeLessThan(wordmarkBox!.x);
-    expect(wordmarkBox!.x + wordmarkBox!.width).toBeLessThan(actionsBox!.x);
+    expect(moreBox).not.toBeNull();
+    expect(identityBox!.y).toBeGreaterThanOrEqual(navBox!.y - 1);
+    expect(identityBox!.y + identityBox!.height).toBeLessThanOrEqual(navBox!.y + navBox!.height + 1);
+    expect(moreBox!.x + moreBox!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width);
 
     await page.context().setOffline(false);
     await page.evaluate(() => window.dispatchEvent(new Event("online")));
@@ -74,18 +93,20 @@ test("Settings uses a stable utility surface on mobile and a contained panel fro
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", PROFILES);
 
-  const trigger = page.getByRole("button", { name: "Instellingen openen" });
-  await trigger.click();
+  const trigger = await openSettings(page);
   let dialog = page.getByRole("dialog", { name: "Instellingen" });
   await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
   await expect(dialog.locator("[data-sheet-handle]")).toHaveCount(0);
 
   await expect.poll(async () => (await dialog.boundingBox())?.y ?? Number.POSITIVE_INFINITY)
-    .toBeLessThanOrEqual(10);
+    .toBeGreaterThanOrEqual(11);
+  await expect.poll(async () => (await dialog.boundingBox())?.y ?? Number.NEGATIVE_INFINITY)
+    .toBeLessThanOrEqual(13);
   const mobileBox = await dialog.boundingBox();
   expect(mobileBox).not.toBeNull();
   expect(mobileBox!.height).toBeGreaterThan(844 * 0.9);
-  expect(mobileBox!.y).toBeLessThanOrEqual(10);
+  expect(mobileBox!.y).toBeGreaterThanOrEqual(11);
+  expect(mobileBox!.y).toBeLessThanOrEqual(13);
 
   await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
   await expect(trigger).toBeFocused();
@@ -95,7 +116,7 @@ test("Settings uses a stable utility surface on mobile and a contained panel fro
     { width: 1024, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
-    await trigger.click();
+    await openSettings(page);
     dialog = page.getByRole("dialog", { name: "Instellingen" });
     const box = await dialog.boundingBox();
     expect(box).not.toBeNull();
@@ -111,8 +132,7 @@ test("kink edit uses the focused task presentation without a false drag affordan
   await page.setViewportSize({ width: 1024, height: 900 });
   await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
-  const editTab = page.getByRole("tab", { name: "Bewerken" });
-  if (await editTab.count() > 0) await editTab.first().click();
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await page.getByPlaceholder("Zoek in de volledige catalogus…").fill("spanking");
 
   const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*=", bewerken"]').first();

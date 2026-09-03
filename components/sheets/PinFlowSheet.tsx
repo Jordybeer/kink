@@ -131,7 +131,7 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
               </p>
               <button onClick={handleRemovePin}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "var(--hard-no)", color: "var(--on-accent)" }}>
+                style={{ background: "var(--danger-fill)", color: "var(--on-danger-fill)" }}>
                 Ja, verwijder PIN
               </button>
               <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>

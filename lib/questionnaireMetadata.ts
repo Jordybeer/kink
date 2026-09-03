@@ -161,9 +161,8 @@ export function questionnaireTopicsFor(kink: Kink): readonly QuestionnaireTopic[
 }
 
 /**
- * Category anchors document broad browse coverage. The live set deliberately
- * stays at the historical 45-question compatibility budget; the compact
- * user-facing first round lives in questionnaireFirstRound.ts.
+ * Category anchors define the maintained broad first-round coverage. The live
+ * set deliberately stays at the historical 45-question compatibility budget.
  */
 const LIVE_QUESTIONNAIRE_CATEGORY_ANCHOR_IDS = {
   impact: ["spanking_hand_give", "flogging_give"],

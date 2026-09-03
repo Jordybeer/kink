@@ -195,10 +195,10 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
           background: "radial-gradient(circle at 36% 30%, var(--surface), var(--surface2) 54%, var(--surface3))",
           borderColor: armed || done ? "var(--accent)" : "var(--border-accent)",
           boxShadow: done
-            ? "inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent), 0 18px 44px color-mix(in srgb, var(--accent) 22%, transparent)"
+            ? "inset 0 1px 0 var(--inset-highlight), 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent), 0 18px 44px color-mix(in srgb, var(--accent) 22%, transparent)"
             : armed
-              ? "inset 0 1px 0 rgba(255,255,255,0.09), 0 14px 38px color-mix(in srgb, var(--accent) 16%, transparent)"
-              : "inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(0,0,0,0.28)",
+              ? "inset 0 1px 0 var(--inset-highlight), 0 14px 38px color-mix(in srgb, var(--accent) 16%, transparent)"
+              : "inset 0 1px 0 var(--inset-highlight), 0 14px 34px var(--deep-shadow)",
           cursor: dragging ? "grabbing" : "grab",
           transition: reduceMotion ? "none" : "border-color 180ms ease, box-shadow 220ms ease",
         }}
@@ -291,8 +291,8 @@ export default function TurnDial({ onComplete }: TurnDialProps) {
             color: done ? "var(--on-accent)" : armed ? "var(--accent)" : "var(--text)",
             border: `1px solid ${done ? "var(--accent)" : "var(--border)"}`,
             boxShadow: done
-              ? "inset 0 -5px 14px color-mix(in srgb, black 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.16)"
-              : "inset 0 1px 0 rgba(255,255,255,0.06)",
+              ? "inset 0 -5px 14px var(--dial-inner-shadow), inset 0 1px 0 var(--inset-highlight)"
+              : "inset 0 1px 0 var(--inset-highlight)",
             transform: !reduceMotion && done ? "scale(0.94)" : !reduceMotion && armed ? "scale(1.035)" : "scale(1)",
             transition: reduceMotion ? "none" : "background 180ms ease, color 180ms ease, border-color 180ms ease, transform 150ms ease, box-shadow 180ms ease",
           }}

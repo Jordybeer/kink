@@ -31,22 +31,22 @@ function entry(status: NonNullable<KinkEntry["status"]>): KinkEntry {
   return { status, comment: "" };
 }
 
-describe("compact Dynamic first round", () => {
-  it("pins eight unique real signal anchors", () => {
-    expect(QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS).toHaveLength(8);
-    expect(new Set(QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS).size).toBe(8);
+describe("broad Dynamic first round", () => {
+  it("uses the 45 unique real coverage anchors", () => {
+    expect(QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS).toHaveLength(45);
+    expect(new Set(QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS).size).toBe(45);
 
     const catalogIds = new Set(KINKS.map((kink) => kink.id));
     expect(QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS.filter((id) => !catalogIds.has(id))).toEqual([]);
-    expect(buildQuestionnaireFirstRoundPlan([]).anchorIds).toHaveLength(8);
+    expect(buildQuestionnaireFirstRoundPlan([]).anchorIds).toHaveLength(45);
   });
 
   it("keeps the same breadth while mapping strong role-affinity questions", () => {
     const dominant = buildQuestionnaireFirstRoundPlan([], "dominant");
     const submissive = buildQuestionnaireFirstRoundPlan([], "submissive");
 
-    expect(dominant.anchorIds).toHaveLength(8);
-    expect(submissive.anchorIds).toHaveLength(8);
+    expect(dominant.anchorIds).toHaveLength(45);
+    expect(submissive.anchorIds).toHaveLength(45);
     expect(dominant.anchorIds).toContain("spanking_hand_give");
     expect(dominant.anchorIds).toContain("handcuffs_give");
     expect(submissive.anchorIds).toContain("spanking_hand_receive");
@@ -64,8 +64,18 @@ describe("compact Dynamic first round", () => {
 
     const firstRound = getDynamicFirstRound(current, getQuestionnaireRuntime(current));
     expect(firstRound.coverage.answered).toBe(1);
-    expect(firstRound.coverage.total).toBe(8);
+    expect(firstRound.coverage.total).toBe(45);
     expect(firstRound.coverage.complete).toBe(false);
+  });
+
+  it("does not finish the round after eight explicit answers", () => {
+    const current = profile();
+    const plan = buildQuestionnaireFirstRoundPlan([], "dominant");
+    for (const kinkId of plan.anchorIds.slice(0, 8)) current.entries[kinkId] = entry("maybe");
+
+    const firstRound = getDynamicFirstRound(current, getQuestionnaireRuntime(current));
+    expect(firstRound.coverage).toMatchObject({ answered: 8, total: 45, complete: false });
+    expect(firstRound.complete).toBe(false);
   });
 
   it("opens only the pinned local probe after an explicit positive anchor answer", () => {
@@ -92,14 +102,14 @@ describe("compact Dynamic first round", () => {
     }
   });
 
-  it("ignores historic positives outside the scan instead of ballooning a fresh first round", () => {
-    const current = profile("dominant", { remote_toy: entry("yes") });
+  it("ignores historic positives outside the round instead of ballooning a fresh first round", () => {
+    const current = profile("dominant", { ochtend_avondritueel: entry("yes") });
     const runtime = getQuestionnaireRuntime(current);
-    expect(runtime.pendingProbes.map((probe) => probe.targetKinkId)).toContain("remote_toy_publiek");
+    expect(runtime.pendingProbes.map((probe) => probe.targetKinkId)).toContain("rituelen_protocols");
 
     const firstRound = getDynamicFirstRound(current, runtime);
-    expect(firstRound.queue.map((item) => item.kink.id)).not.toContain("remote_toy_publiek");
-    expect(firstRound.visibleKinks.map((kink) => kink.id)).not.toContain("remote_toy_publiek");
+    expect(firstRound.queue.map((item) => item.kink.id)).not.toContain("rituelen_protocols");
+    expect(firstRound.visibleKinks.map((kink) => kink.id)).not.toContain("rituelen_protocols");
   });
 
   it("keeps every queued card in the first-round visible set", () => {
@@ -119,7 +129,7 @@ describe("compact Dynamic first round", () => {
     expect(plan.anchorIds).toContain("service");
     expect(plan.anchorIds).toContain("rules_protocols");
     expect(plan.anchorIds).toContain("orgasm_control");
-    expect(plan.anchorIds.length).toBeGreaterThan(8);
+    expect(plan.anchorIds.length).toBeGreaterThanOrEqual(45);
 
     getDynamicFirstRound(current, getQuestionnaireRuntime(current));
     expect(current.entries).toEqual(before);

@@ -14,7 +14,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
         const active = current === s;
         const colour = STATUS_VAR[s];
         // De harde grens leest zijn label in een opgelichte tint; zie
-        // --hard-no-text in globals.css. Rand, vulling en glyph blijven op
+        // --hard-no-text in design-role-tokens.css. Rand, vulling en glyph blijven op
         // --hard-no, dus de ingetogen behandeling van principe 10 verandert niet.
         const labelColour = danger ? "var(--hard-no-text)" : colour;
         return (

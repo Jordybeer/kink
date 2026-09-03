@@ -3,18 +3,19 @@ import { buildStore, PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const IOS_URI_ENCODED_COPY_ALL = "https://www.bdsmtest.org/r/qXBN9QWw%0A%0A100%25%20Little%0A93%25%20Switch%0A78%25%20Rope%20bunny%0A0%25%20Primal%20(Prey)";
 
-test.describe("Profiel aanvullen", () => {
+test.describe("Profielinfo", () => {
   test.beforeEach(async ({ page }) => {
     await seedAndGo(page, "/profile/pw-alex-001", [PROFILE_ALEX, PROFILE_SAM], { profileTourComplete: true });
   });
 
-  test("opent als centered dialog en houdt focus binnen de modal", async ({ page }) => {
-    const trigger = page.getByRole("button", { name: "Profielinfo aanvullen" });
+  test("opent mobiel als bottom sheet en houdt focus binnen de modal", async ({ page }) => {
+    const trigger = page.getByRole("button", { name: "Profielinfo" });
     await expect(trigger).toBeVisible();
     await trigger.click();
 
-    const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
+    const dialog = page.getByRole("dialog", { name: "Profielinfo" });
     await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel("Relatiestatus")).toBeVisible();
     await expect.poll(() => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
@@ -47,6 +48,11 @@ test.describe("Profiel aanvullen", () => {
       const rect = element.getBoundingClientRect();
       return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
     })).toBeLessThanOrEqual(1);
+    await expect.poll(() => dialog.evaluate((element) => {
+      const frame = element.parentElement?.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      return frame ? Math.abs(frame.bottom - rect.bottom) : Number.POSITIVE_INFINITY;
+    })).toBeLessThanOrEqual(1);
 
     await dialog.getByRole("button", { name: "Annuleer" }).click();
     await expect(dialog).toBeHidden();
@@ -59,8 +65,8 @@ test.describe("Profiel aanvullen", () => {
   });
 
   test("splitst de URI-encoded iOS Copy all lokaal in een canonical link en resultaten", async ({ page }) => {
-    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
-    const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
+    await page.getByRole("button", { name: "Profielinfo" }).click();
+    const dialog = page.getByRole("dialog", { name: "Profielinfo" });
     const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
     await paste.fill(IOS_URI_ENCODED_COPY_ALL);
 
@@ -95,8 +101,8 @@ test.describe("Profiel aanvullen", () => {
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
-    const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
+    await page.getByRole("button", { name: "Profielinfo" }).click();
+    const dialog = page.getByRole("dialog", { name: "Profielinfo" });
     await dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten").fill(
       "https://bdsmtest.org.evil.example/r/steal\n100% Little",
     );
@@ -113,8 +119,8 @@ test.describe("Profiel aanvullen", () => {
   });
 
   test("weigert een te grote paste zonder een geldige prefix stil af te kappen", async ({ page }) => {
-    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
-    const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
+    await page.getByRole("button", { name: "Profielinfo" }).click();
+    const dialog = page.getByRole("dialog", { name: "Profielinfo" });
     const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
     const validPrefix = "https://bdsmtest.org/r/oversized\n100% Little\n";
 
@@ -126,7 +132,7 @@ test.describe("Profiel aanvullen", () => {
     await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeDisabled();
   });
 
-  test("houdt FetLife op beide Switch-perspectieven maar BDSMTest op het gekozen perspectief", async ({ page }) => {
+  test("houdt relatiestatus en FetLife op beide Switch-perspectieven maar BDSMTest op het gekozen perspectief", async ({ page }) => {
     const dominant = {
       ...PROFILE_ALEX,
       personGroupId: "switch-owner",
@@ -145,8 +151,9 @@ test.describe("Profiel aanvullen", () => {
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: "Profielinfo aanvullen" }).click();
-    const dialog = page.getByRole("dialog", { name: "Profiel aanvullen" });
+    await page.getByRole("button", { name: "Profielinfo" }).click();
+    const dialog = page.getByRole("dialog", { name: "Profielinfo" });
+    await dialog.getByLabel("Relatiestatus").selectOption("Getrouwd");
     await dialog.getByPlaceholder("Gebruikersnaam").fill("alexOnFet");
     await dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten").fill(
       "https://bdsmtest.org/r/switchResult\n100% Switch",
@@ -159,15 +166,17 @@ test.describe("Profiel aanvullen", () => {
     });
     const savedDominant = profiles.find((profile: { id: string }) => profile.id === "pw-alex-001");
     const savedSubmissive = profiles.find((profile: { id: string }) => profile.id === "pw-alex-sub");
+    expect(savedDominant.relationshipStatus).toBe("Getrouwd");
+    expect(savedSubmissive.relationshipStatus).toBe("Getrouwd");
     expect(savedDominant.fetLifeUsername).toBe("alexOnFet");
     expect(savedSubmissive.fetLifeUsername).toBe("alexOnFet");
     expect(savedDominant.bdsmtestUrl).toBe("https://bdsmtest.org/r/switchResult");
     expect(savedSubmissive.bdsmtestUrl).toBeUndefined();
   });
 
-  test("toont de enrichment actie niet op een gedeeld profiel", async ({ page }) => {
+  test("toont profielinfo niet op een gedeeld profiel", async ({ page }) => {
     const shared = { ...PROFILE_SAM, id: "shared-sam", isImported: true, origin: "shared" as const };
     await seedAndGo(page, "/profile/shared-sam", [shared], { profileTourComplete: true });
-    await expect(page.getByRole("button", { name: "Profielinfo aanvullen" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Profielinfo" })).toHaveCount(0);
   });
 });

@@ -1,26 +1,20 @@
 import { KINKS } from "@/lib/kinks";
-import { questionnaireParticipationKinkIdForPerspective } from "@/lib/participation";
 import { rankQuestionnaireQueueItems, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
-import { QUESTIONNAIRE_CORE_ANCHOR_IDS, QUESTIONNAIRE_INTEREST_ANCHOR_IDS } from "@/lib/questionnaireMetadata";
+import { QUESTIONNAIRE_CORE_ANCHOR_IDS, QUESTIONNAIRE_COVERAGE_ANCHOR_IDS } from "@/lib/questionnaireMetadata";
 import type { Kink, Profile, ProfilePerspective, QuestionnaireInterest } from "@/types";
-import type { QuestionnaireCoverage, QuestionnaireCoveragePlan, QuestionnaireRuntime } from "@/lib/questionnaire";
+import {
+  buildQuestionnaireCoveragePlan,
+  type QuestionnaireCoverage,
+  type QuestionnaireCoveragePlan,
+  type QuestionnaireRuntime,
+} from "@/lib/questionnaire";
 
 /**
- * Dynamic starts with a compact signal scan instead of replaying the catalog in
- * miniature. These anchors deliberately sample different broad play rooms. A
- * response never predicts or fills another kink; positive answers may only open
- * the existing explicit local follow-up registered by the questionnaire engine.
+ * Dynamic's first round uses the maintained broad coverage contract. A response
+ * never predicts or fills another kink; positive answers may only open the
+ * existing explicit local follow-up registered by the questionnaire engine.
  */
-export const QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS = [
-  "dominance_submission",
-  "spanking_hand_give",
-  "handcuffs_give",
-  "ice_play",
-  "masseur_client",
-  "erotic_teasing",
-  "oral_sex_give",
-  "aftercare_physical",
-] as const;
+export const QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS = QUESTIONNAIRE_COVERAGE_ANCHOR_IDS;
 
 export interface DynamicFirstRound {
   plan: QuestionnaireCoveragePlan;
@@ -36,47 +30,11 @@ function questionnairePerspective(profile: Profile): ProfilePerspective | undefi
   return role === "dominant" || role === "submissive" ? role : undefined;
 }
 
-function addMappedAnchor(
-  sourceId: string,
-  perspective: ProfilePerspective | undefined,
-  catalogIds: ReadonlySet<string>,
-  seen: Set<string>,
-  target: string[],
-): string | null {
-  const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);
-  if (!catalogIds.has(kinkId)) return null;
-  if (!seen.has(kinkId)) {
-    seen.add(kinkId);
-    target.push(kinkId);
-  }
-  return kinkId;
-}
-
 export function buildQuestionnaireFirstRoundPlan(
   interests: readonly QuestionnaireInterest[],
   perspective?: ProfilePerspective,
 ): QuestionnaireCoveragePlan {
-  const catalogIds = new Set(KINKS.map((kink) => kink.id));
-  const anchorIds: string[] = [];
-  const interestAnchorIds: string[] = [];
-  const seen = new Set<string>();
-
-  for (const sourceId of QUESTIONNAIRE_FIRST_ROUND_ANCHOR_IDS) {
-    addMappedAnchor(sourceId, perspective, catalogIds, seen, anchorIds);
-  }
-
-  for (const interest of interests) {
-    for (const sourceId of QUESTIONNAIRE_INTEREST_ANCHOR_IDS[interest]) {
-      const kinkId = questionnaireParticipationKinkIdForPerspective(sourceId, perspective);
-      if (!catalogIds.has(kinkId)) continue;
-      if (!interestAnchorIds.includes(kinkId)) interestAnchorIds.push(kinkId);
-      if (seen.has(kinkId)) continue;
-      seen.add(kinkId);
-      anchorIds.push(kinkId);
-    }
-  }
-
-  return { anchorIds, interestAnchorIds };
+  return buildQuestionnaireCoveragePlan(interests, perspective);
 }
 
 export function getDynamicFirstRound(
@@ -100,7 +58,7 @@ export function getDynamicFirstRound(
   };
 
   // Historic positives elsewhere in a profile must not make a fresh first round
-  // balloon. Only explicit answers to this scan (or chosen-interest anchors) may
+  // balloon. Only explicit answers in this round (or chosen-interest anchors) may
   // invite one of the engine's existing local follow-ups here.
   const pendingProbes = runtime.pendingProbes.filter((probe) =>
     probe.reasons.some((reason) => anchorIds.has(reason.sourceKinkId)),

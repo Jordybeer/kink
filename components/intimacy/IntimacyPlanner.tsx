@@ -395,7 +395,7 @@ export default function IntimacyPlanner() {
               style={{
                 background: active ? "var(--surface)" : "transparent",
                 color: active ? "var(--text)" : "var(--text2)",
-                boxShadow: active ? "0 1px 0 rgba(255,255,255,0.04)" : "none",
+                boxShadow: active ? "0 1px 0 var(--inset-highlight)" : "none",
               }}
             >
               {label}
@@ -451,7 +451,10 @@ export default function IntimacyPlanner() {
         aria-label={composerMode === "planned" ? "Intiem moment plannen" : "Intiem moment bijhouden"}
         scrollable
       >
-        <SheetContent className="max-h-[82dvh] overflow-y-auto px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-4">
+        <SheetContent
+          className="min-w-0 max-w-full overflow-x-hidden overflow-y-auto px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-4"
+          style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - 1rem)" }}
+        >
           <div className="mb-5 flex items-center gap-3">
             <div
               className="flex h-11 w-11 flex-none items-center justify-center rounded-xl"
@@ -470,28 +473,28 @@ export default function IntimacyPlanner() {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
-              <label className="text-sm font-medium" style={{ color: "var(--text2)" }}>
+          <div className="min-w-0 space-y-4">
+            <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2">
+              <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Datum
                 <input
                   type="date"
                   value={date}
                   onChange={(event) => setDate(event.target.value)}
-                  className="focus-ring mt-1.5 h-11 w-full rounded-xl px-3 text-base focus:outline-none"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", colorScheme: "dark" }}
+                  className="focus-ring mt-1.5 h-11 min-w-0 w-full max-w-full rounded-xl px-3 text-base focus:outline-none"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
               </label>
-              <label className="text-sm font-medium" style={{ color: "var(--text2)" }}>
+              <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Tijd {composerMode === "completed" ? "(optioneel)" : ""}
-                <div className="relative mt-1.5">
+                <div className="relative mt-1.5 min-w-0 max-w-full">
                   <Clock size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text2)" }} />
                   <input
                     type="time"
                     value={time}
                     onChange={(event) => setTime(event.target.value)}
-                    className="focus-ring h-11 w-full rounded-xl pl-9 pr-2 text-base focus:outline-none"
-                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", colorScheme: "dark" }}
+                    className="focus-ring h-11 min-w-0 w-full max-w-full rounded-xl pl-9 pr-2 text-base focus:outline-none"
+                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                   />
                 </div>
               </label>

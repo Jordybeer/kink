@@ -382,7 +382,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 // De stopvariant houdt donkere inkt: wit op --hard-no haalt maar
                 // 3,76:1, de plumzwarte inkt 5,15:1.
                 style={action === "stop"
-                  ? { background: "var(--hard-no)", color: "var(--on-accent)" }
+                  ? { background: "var(--danger-fill)", color: "var(--on-danger-fill)" }
                   : { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 {busy ? "Bevestigen…" : actionLabel(action)}

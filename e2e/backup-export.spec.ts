@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
-import { decryptBackup, type EncryptedBackup } from "../lib/crypto";
+import { decryptBackup, encryptBackup, type EncryptedBackup } from "../lib/crypto";
 import { PROFILE_ALEX, seedProfiles } from "./fixtures";
 
 const BACKUP_PASSWORD = "test-pass-123";
@@ -40,4 +40,41 @@ test("encrypted backup export stays inside an explicit save gesture and excludes
   expect(payload.source).toBe("backup");
   expect(payload.contractSeries).toBeDefined();
   expect(payload).not.toHaveProperty("contractArtifacts");
+});
+
+test("encrypted backup import keeps readable copy inside the visual viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 568 });
+  await seedProfiles(page, [PROFILE_ALEX]);
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty("--visual-viewport-height", "360px");
+    document.documentElement.style.setProperty("--visual-viewport-offset-top", "72px");
+  });
+
+  const encrypted = await encryptBackup(JSON.stringify({ source: "backup", profiles: [] }), BACKUP_PASSWORD);
+  await page.evaluate(() => window.dispatchEvent(new Event("ks:open-settings")));
+  const settings = page.getByRole("dialog", { name: "Instellingen" });
+  await settings.locator('input[type="file"]').setInputFiles({
+    name: "kinksync-backup.enc.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(encrypted)),
+  });
+
+  const dialog = page.getByRole("dialog", { name: "Versleutelde backup ontgrendelen" });
+  await expect(dialog).toBeVisible();
+  const copy = dialog.getByText("Voer het wachtwoord in waarmee je deze backup hebt beveiligd.");
+  await expect(copy).toHaveCSS("font-size", "14px");
+
+  const bounds = await dialog.boundingBox();
+  const visualViewport = await page.evaluate(() => {
+    const styles = getComputedStyle(document.documentElement);
+    return {
+      height: Number.parseFloat(styles.getPropertyValue("--visual-viewport-height")),
+      offsetTop: Number.parseFloat(styles.getPropertyValue("--visual-viewport-offset-top")),
+    };
+  });
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
+  expect(bounds!.y).toBeGreaterThanOrEqual(visualViewport.offsetTop - 1);
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(visualViewport.offsetTop + visualViewport.height + 2);
 });

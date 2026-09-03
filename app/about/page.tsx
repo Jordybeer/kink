@@ -73,14 +73,14 @@ export default function AboutPage() {
         className="relative isolate overflow-hidden rounded-[28px] px-5 py-6 sm:px-8 sm:py-9"
         style={{
           background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%, var(--surface) 52%, color-mix(in srgb, var(--maybe) 7%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--accent) 22%, var(--border))",
+            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface)) 0%, var(--surface) 58%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%)",
+          border: "1px solid color-mix(in srgb, var(--identity-a) 24%, var(--border))",
         }}
       >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)" }}
+          style={{ background: "color-mix(in srgb, var(--identity-a) 12%, transparent)" }}
         />
         <div className="relative z-10 max-w-3xl">
           <EditorialHeading
@@ -107,7 +107,7 @@ export default function AboutPage() {
               <div
                 key={title}
                 className="min-w-0 px-2.5 py-3 sm:px-4 sm:py-3.5"
-                style={{ background: "color-mix(in srgb, var(--surface) 92%, transparent)" }}
+                style={{ background: "color-mix(in srgb, var(--surface) 96%, transparent)" }}
               >
                 <p className="text-xs font-semibold leading-4 sm:text-sm">{title}</p>
                 <p className="mt-1 text-[11px] leading-4 sm:text-xs sm:leading-5" style={{ color: "var(--text2)" }}>{text}</p>
@@ -147,7 +147,7 @@ export default function AboutPage() {
               className="relative rounded-2xl p-5"
               style={{
                 background: index === 1
-                  ? "color-mix(in srgb, var(--accent) 8%, var(--surface))"
+                  ? "color-mix(in srgb, var(--accent) 5%, var(--surface))"
                   : "var(--surface)",
                 border: "1px solid var(--border)",
               }}
@@ -182,8 +182,8 @@ export default function AboutPage() {
         className="relative mt-10 overflow-hidden rounded-[28px] p-5 sm:p-6"
         style={{
           background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--accent) 12%, var(--surface)) 0%, var(--surface) 68%, color-mix(in srgb, var(--maybe) 7%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--accent) 24%, var(--border))",
+            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 7%, var(--surface)) 0%, var(--surface) 70%, color-mix(in srgb, var(--accent) 4%, var(--surface)) 100%)",
+          border: "1px solid color-mix(in srgb, var(--identity-a) 22%, var(--border))",
         }}
         aria-labelledby="community-title"
       >
@@ -207,12 +207,12 @@ export default function AboutPage() {
                 rel="noopener noreferrer"
                 className="focus-ring group flex items-center gap-3 rounded-2xl p-4 transition-transform active:scale-[0.99]"
                 style={{
-                  background: "color-mix(in srgb, var(--surface) 94%, transparent)",
-                  border: "1px solid color-mix(in srgb, var(--accent) 18%, var(--border))",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
                 }}
                 aria-label={`${place.name} in ${place.city} openen in Google Maps`}
               >
-                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--identity-a)" }}>
                   <MapPin size={20} aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">

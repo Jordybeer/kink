@@ -58,17 +58,17 @@ export default function KinkEditSheet({
       variant="task"
       aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}
     >
-      <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>
+      <p className="mb-0.5 text-xs" style={{ color: "var(--text2)" }}>
         {kink ? kinkCategoryLabel(kink.category) : ""}
       </p>
       <h2
-        className="text-xl leading-tight mb-1"
+        className="mb-1 text-xl leading-tight"
         style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
       >
         {kink?.name ?? ""}
       </h2>
       {kink?.description && (
-        <ClampText text={kink.description} className="text-sm mb-4" style={{ color: "var(--text2)" }} />
+        <ClampText text={kink.description} className="mb-4 text-sm" style={{ color: "var(--text2)" }} />
       )}
       {kink?.safetyNote && (
         <aside
@@ -88,13 +88,13 @@ export default function KinkEditSheet({
 
       <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
 
-      <section className="mt-5">
-        <div className="flex items-center gap-2 mb-2">
+      <section className="mt-4">
+        <div className="mb-2 flex items-center gap-2">
           <WarningCircle size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
           <h3 className="text-sm font-semibold">Afspraken</h3>
         </div>
-        <div className="grid gap-2">
-          {AGREEMENTS.map((agreement) => {
+        <div className="overflow-hidden rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          {AGREEMENTS.map((agreement, index) => {
             const active = tags.includes(agreement.value);
             return (
               <button
@@ -102,20 +102,18 @@ export default function KinkEditSheet({
                 key={agreement.value}
                 onClick={() => toggleTag(agreement.value)}
                 aria-pressed={active}
-                className="focus-ring min-h-[62px] rounded-xl px-3 py-2.5 flex items-center gap-3 text-left"
-                style={active
-                  ? {
-                      background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
-                      border: "1px solid var(--accent)",
-                    }
-                  : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                className="focus-ring flex min-h-[60px] w-full items-center gap-3 px-3 py-2.5 text-left"
+                style={{
+                  background: active ? "color-mix(in srgb, var(--accent) 8%, var(--surface2))" : "transparent",
+                  borderTop: index > 0 ? "1px solid var(--border)" : undefined,
+                }}
               >
                 <span
                   aria-hidden="true"
-                  className="w-5 h-5 rounded-full flex items-center justify-center flex-none"
+                  className="flex h-5 w-5 flex-none items-center justify-center rounded-full"
                   style={{
                     background: active ? "var(--accent)" : "transparent",
-                    border: active ? "none" : "1px solid var(--border)",
+                    border: active ? "none" : "1px solid var(--border-bright)",
                     color: active ? "var(--on-accent)" : "transparent",
                   }}
                 >
@@ -123,7 +121,7 @@ export default function KinkEditSheet({
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold">{agreement.label}</span>
-                  <span className="block text-sm mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
+                  <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
                     {agreement.description}
                   </span>
                 </span>
@@ -133,16 +131,16 @@ export default function KinkEditSheet({
         </div>
       </section>
 
-      <section className="mt-5">
-        <h3 className="text-sm font-semibold mb-2">Zichtbaarheid & context</h3>
-        <div className="flex items-center gap-2 flex-wrap">
+      <section className="mt-4">
+        <h3 className="mb-2 text-sm font-semibold">Zichtbaarheid &amp; context</h3>
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => onCuriousChange(!entry.curious)}
             aria-pressed={!!entry.curious}
             className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors"
             style={entry.curious
-              ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
+              ? { background: "color-mix(in srgb, var(--curious) 16%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
               : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
           >
             <Star size={12} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
@@ -156,7 +154,7 @@ export default function KinkEditSheet({
             aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
             className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors"
             style={entry.privateResponse
-              ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
+              ? { background: "color-mix(in srgb, var(--accent) 14%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
               : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
           >
             {entry.privateResponse
@@ -174,7 +172,7 @@ export default function KinkEditSheet({
                 aria-pressed={active}
                 className="focus-ring min-h-11 rounded-full border px-3 text-sm transition-colors"
                 style={{
-                  background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
+                  background: active ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "var(--tag-muted)",
                   borderColor: active ? "var(--accent)" : "var(--border)",
                   color: active ? "var(--accent)" : "var(--text2)",
                 }}
@@ -189,7 +187,7 @@ export default function KinkEditSheet({
       <button
         type="button"
         onClick={onClose}
-        className="focus-ring w-full min-h-12 rounded-xl mt-6 text-sm font-semibold"
+        className="focus-ring mt-5 min-h-12 w-full rounded-xl text-sm font-semibold"
         style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
       >
         Klaar

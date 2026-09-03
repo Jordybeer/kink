@@ -79,11 +79,11 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
             className={`absolute z-[200] w-[196px] overflow-hidden rounded-[18px] ${align === "left" ? "left-0" : "right-0"}`}
             style={{
               top: "calc(100% + 8px)",
-              background: "rgba(20,20,20,0.97)",
+              background: "var(--floating-surface)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+              border: "1px solid var(--floating-border)",
+              boxShadow: "var(--floating-shadow)",
               transformOrigin: align === "left" ? "top left" : "top right",
             }}
             initial={{ scale: 0.92, opacity: 0, y: -6 }}
@@ -129,7 +129,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
                   color: item.danger ? "var(--hard-no)" : "var(--text)",
                   background: item.selected ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                   border: "none",
-                  borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  borderBottom: i < items.length - 1 ? "1px solid var(--floating-divider)" : "none",
                 }}
               >
                 <span>{item.label}</span>

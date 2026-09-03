@@ -7,12 +7,11 @@ import {
   Heart,
   ListChecks,
   PencilSimple,
-  Sparkle,
   UsersThree,
+  X,
 } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import { useStore } from "@/lib/store";
-import { RELATIONSHIP_STATUSES } from "@/lib/roles";
 import {
   QUESTIONNAIRE_INTERESTS,
   QUESTIONNAIRE_MODES,
@@ -51,7 +50,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
 
   const [name, setName] = useState("");
   const [perspective, setPerspective] = useState<ProfilePerspective | null>(null);
-  const [relationshipStatus, setRelationshipStatus] = useState("");
   const [questionnaireMode, setQuestionnaireMode] = useState<QuestionnaireMode>("dynamic");
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +59,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     const setup = profile.questionnaireSetup;
     setName(profile.name);
     setPerspective(inferredPerspective(profile));
-    setRelationshipStatus(profile.relationshipStatus ?? "");
     setQuestionnaireMode(setup?.mode ?? "dynamic");
     setInterests([...(setup?.interests ?? [])]);
     setError(null);
@@ -90,7 +87,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     try {
       updateProfileIdentity(profile.id, {
         name: name.trim(),
-        relationshipStatus: relationshipStatus || undefined,
+        relationshipStatus: profile.relationshipStatus,
         fetLifeUsername: profile.fetLifeUsername,
         bdsmtestUrl: profile.bdsmtestUrl,
       });
@@ -119,7 +116,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         className="flex flex-col overflow-hidden px-0 pb-0 pt-3"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >
-        <div className="flex flex-none items-center gap-3 px-5 pb-4" data-testid="profile-edit-header">
+        <div
+          className="flex flex-none items-center gap-3 px-5 pb-3"
+          data-testid="profile-edit-header"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
           <div
             className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl"
             style={{
@@ -130,7 +131,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           >
             <PencilSimple aria-hidden="true" size={21} weight="duotone" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text2)" }}>
               Profiel
             </p>
@@ -141,9 +142,18 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               Profiel bijwerken
             </h2>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Profiel bewerken sluiten"
+            className="focus-ring ml-auto flex h-11 w-11 flex-none items-center justify-center rounded-full"
+            style={{ color: "var(--text2)" }}
+          >
+            <X aria-hidden="true" size={20} />
+          </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-5" data-testid="profile-edit-scroll-body">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-5 pt-4" data-testid="profile-edit-scroll-body">
           <section
             className="rounded-2xl p-4"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
@@ -302,42 +312,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               {questionnaireMode === "dynamic"
                 ? "Dynamic heeft geen vast aantal: coverage blijft stabiel, expliciete positieve antwoorden kunnen één lokale vervolgdeur openen."
                 : "Deep Dive blijft ordenen, maar laat uiteindelijk geen catalogusonderwerp over."}
-            </p>
-          </section>
-
-          <section
-            className="rounded-2xl p-4"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-          >
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkle aria-hidden="true" size={17} style={{ color: "var(--accent)" }} />
-              <h3 className="text-sm font-semibold">Profielinformatie</h3>
-            </div>
-
-            <p className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
-              Relatiestatus <span className="font-normal opacity-60">(optioneel)</span>
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {RELATIONSHIP_STATUSES.map((status) => {
-                const active = relationshipStatus === status;
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => setRelationshipStatus(active ? "" : status)}
-                    aria-pressed={active}
-                    className="focus-ring min-h-11 rounded-full px-3 text-sm font-semibold"
-                    style={active
-                      ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
-                      : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
-                  >
-                    {status}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-sm leading-5" style={{ color: "var(--text2)" }}>
-              FetLife en BDSMTest beheer je via Profiel aanvullen op je profiel.
             </p>
           </section>
         </div>

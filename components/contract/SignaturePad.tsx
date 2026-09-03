@@ -18,7 +18,8 @@ function useDrawCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 
     const ctx = canvas.getContext("2d")!;
     ctx.scale(dpr, dpr);
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#D4527C";
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+    if (accent) ctx.strokeStyle = accent;
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -175,7 +176,7 @@ export default function SignaturePad({
         <div
           style={{
             position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.75)",
+            background: "var(--scrim-strong)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "1rem",
             paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",

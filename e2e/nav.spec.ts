@@ -3,32 +3,50 @@ import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("hub keeps navigation, brand and secondary product info in the shared context menu", async ({ page }) => {
+test("hub keeps a calm utility nav while brand and settings sit in their proper hierarchy", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
   await expect(nav).toHaveAttribute("data-top-nav-variant", "home");
   await expect(nav.getByRole("link", { name: "Ontdek hoe KinkSync werkt" })).toHaveCount(0);
   await expect(nav.getByText("Hoe het werkt", { exact: true })).toHaveCount(0);
-  const settings = nav.getByRole("button", { name: "Instellingen openen" });
-  await expect(settings).toBeVisible();
-  await expect(settings).toHaveText("");
-  await expect(settings).toHaveAttribute("title", "Instellingen");
+  await expect(nav.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
-  await expect(nav.getByText("KinkSync", { exact: true })).toBeVisible();
 
   const more = nav.getByRole("button", { name: "Meer opties" });
+  const brand = nav.getByRole("heading", { name: "KinkSync", exact: true });
+  const motto = page.getByText("Verken grenzen. Samen.", { exact: true });
   await expect(more).toBeVisible();
   await expect(more).toHaveText("");
-  await more.click();
+  await expect(brand).toBeVisible();
+  await expect(motto).toBeVisible();
+  await expect(page.getByRole("link", { name: "Agenda" })).toBeVisible();
 
+  const [moreBox, brandBox, mottoBox] = await Promise.all([
+    more.boundingBox(),
+    brand.boundingBox(),
+    motto.boundingBox(),
+  ]);
+  expect(moreBox).not.toBeNull();
+  expect(brandBox).not.toBeNull();
+  expect(mottoBox).not.toBeNull();
+  expect(Math.abs(
+    brandBox!.y + brandBox!.height / 2
+      - (moreBox!.y + moreBox!.height / 2),
+  )).toBeLessThanOrEqual(5);
+  expect(mottoBox!.y).toBeGreaterThanOrEqual(brandBox!.y + brandBox!.height);
+
+  await more.click();
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Agenda" })).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Instellingen" })).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Agenda" })).toHaveCount(0);
   await expect(menu.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
 
-  await menu.getByRole("menuitem", { name: "Agenda" }).click();
+  await page.keyboard.press("Escape");
+  await expect(more).toBeFocused();
+  await page.getByRole("link", { name: "Agenda" }).click();
   await expect(page).toHaveURL(/\/intimacy$/);
 });
 
@@ -39,17 +57,19 @@ test("Home overflow follows the ARIA menu keyboard contract", async ({ page }) =
   await page.keyboard.press("Enter");
 
   const menu = page.getByRole("menu");
-  const agenda = menu.getByRole("menuitem", { name: "Agenda" });
+  const settings = menu.getByRole("menuitem", { name: "Instellingen" });
   const about = menu.getByRole("menuitem", { name: "Over KinkSync" });
   const security = menu.getByRole("menuitem", { name: "Security & privacy" });
 
-  await expect(agenda).toBeFocused();
+  await expect(settings).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(about).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(security).toBeFocused();
   await page.keyboard.press("End");
   await expect(security).toBeFocused();
   await page.keyboard.press("Home");
-  await expect(agenda).toBeFocused();
+  await expect(settings).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await expect(security).toBeFocused();
   await page.keyboard.press("Escape");
