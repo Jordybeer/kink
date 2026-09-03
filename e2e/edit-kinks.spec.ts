@@ -51,22 +51,22 @@ test.describe("Edit Kinks cohesion", () => {
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
   });
 
-  test("scheidt antwoord, grenzen, ervaring en zichtbaarheid", async ({ page }) => {
+  test("scheidt antwoord, voorwaarden, ervaring en zichtbaarheid", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const dialog = await openFirstSpankingEditor(page);
 
     await expect(dialog.getByText("Jouw antwoord", { exact: true })).toBeVisible();
-    await expect(dialog.getByText("Grenzen & afspraken", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("Voorwaarden", { exact: true })).toBeVisible();
     await expect(dialog.getByText("Ervaring & interesse", { exact: true })).toBeVisible();
     await expect(dialog.getByText("Zichtbaarheid", { exact: true })).toBeVisible();
 
-    const boundaries = dialog.locator("section").filter({ hasText: "Grenzen & afspraken" });
-    await expect(boundaries.getByRole("button", { name: /Eerst vragen/ })).toBeVisible();
-    await expect(boundaries.getByRole("button", { name: /Alleen in privésfeer/ })).toBeVisible();
-    await expect(boundaries.getByRole("button", { name: /Alleen voor afgesproken scène/ })).toBeVisible();
+    const conditions = dialog.locator("section").filter({ hasText: "Voorwaarden" });
+    await expect(conditions.getByRole("button", { name: /Eerst vragen/ })).toBeVisible();
+    await expect(conditions.getByRole("button", { name: /Alleen privé/ })).toBeVisible();
+    await expect(conditions.getByRole("button", { name: /Alleen afgesproken/ })).toBeVisible();
 
     const experience = dialog.locator("section").filter({ hasText: "Ervaring & interesse" });
-    await expect(experience.getByRole("button", { name: /Eerste keer/ })).toBeVisible();
+    await expect(experience.getByRole("button", { name: /Weinig ervaring/ })).toBeVisible();
     await expect(experience.getByRole("button", { name: /Nieuwsgierig/ })).toBeVisible();
   });
 
@@ -81,13 +81,13 @@ test.describe("Edit Kinks cohesion", () => {
     await yes.click();
     await expect(yes).toHaveAttribute("aria-pressed", "true");
 
-    const clear = dialog.getByRole("button", { name: "Antwoord wissen" });
+    const clear = dialog.getByRole("button", { name: "Wis antwoord" });
     await expect(clear).toBeVisible();
     await clear.click();
     await expect(yes).toHaveAttribute("aria-pressed", "false");
     await expect(clear).toHaveCount(0);
 
-    const close = dialog.getByRole("button", { name: "Kink bewerken sluiten" });
+    const close = dialog.getByRole("button", { name: /sluiten$/ }).first();
     await expect(close).toBeVisible();
     const scrollBody = dialog.getByTestId("sheet-scroll-body");
     await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
@@ -96,6 +96,25 @@ test.describe("Edit Kinks cohesion", () => {
 
     await close.click();
     await expect(dialog).toBeHidden();
+  });
+
+  test("320px houdt de editor binnen de horizontale viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    const dialog = await openFirstSpankingEditor(page);
+    const scrollBody = dialog.getByTestId("sheet-scroll-body");
+
+    await expect.poll(() => scrollBody.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);
+
+    const hints = dialog.locator("[data-status-hint]");
+    for (let index = 0; index < await hints.count(); index += 1) {
+      const hint = hints.nth(index);
+      await expect(hint).toBeVisible();
+      await expect.poll(() => hint.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        const parent = element.closest("button")?.getBoundingClientRect();
+        return parent ? rect.right <= parent.right + 0.5 && rect.left >= parent.left - 0.5 : false;
+      })).toBe(true);
+    }
   });
 
   test("geselecteerde status-hints houden AA contrast in light en dark", async ({ page }) => {
