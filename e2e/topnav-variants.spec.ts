@@ -128,3 +128,33 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   expect(contentHeader?.pointerEvents).toBe("none");
   expect(contentHeader?.backgroundColor).not.toBe("rgb(7, 6, 11)");
 });
+
+test("Home masthead keeps equal breathing room and clear type hierarchy", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  for (const profiles of [PROFILES, []]) {
+    await seedAndGo(page, "/", profiles);
+    const nav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
+    const wordmark = nav.locator("[data-home-nav-wordmark]");
+    const subtitle = page.getByText("Verken grenzen. Samen.", { exact: true });
+
+    await expect(wordmark).toBeVisible();
+    await expect(subtitle).toBeVisible();
+
+    const metrics = await nav.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const wordmark = element.querySelector<HTMLElement>("[data-home-nav-wordmark]");
+      return {
+        paddingTop: parseFloat(style.paddingTop),
+        paddingBottom: parseFloat(style.paddingBottom),
+        wordmarkSize: wordmark ? parseFloat(getComputedStyle(wordmark).fontSize) : 0,
+      };
+    });
+    const subtitleSize = await subtitle.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+
+    expect(Math.abs(metrics.paddingTop - metrics.paddingBottom)).toBeLessThanOrEqual(0.5);
+    expect(metrics.wordmarkSize).toBeGreaterThanOrEqual(34);
+    expect(subtitleSize).toBeGreaterThanOrEqual(14);
+    expect(subtitleSize).toBeLessThanOrEqual(15.5);
+  }
+});
