@@ -155,11 +155,13 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await editDialog.getByRole("button", { name: "Annuleer" }).click();
   await expect(editTrigger).toBeFocused();
 
-  const kinkEditTab = page.getByRole("tab", { name: "Bewerken" });
-  await kinkEditTab.click();
-  const kinkSearch = page.getByPlaceholder("Zoek in de volledige catalogus…");
+  const catalogTrigger = page.getByRole("button", { name: /Onderwerpen beheren/i });
+  await catalogTrigger.click();
+  const catalogManager = page.locator("#profile-catalog-manager");
+  await expect(catalogManager).toBeVisible();
+  const kinkSearch = catalogManager.getByPlaceholder("Zoek in de volledige catalogus…");
   await kinkSearch.fill("spanking");
-  const kinkResult = page.locator('button[aria-label*=", bewerken"]').filter({ hasText: /spanking/i }).first();
+  const kinkResult = catalogManager.locator('button[aria-label*=", bewerken"]').filter({ hasText: /spanking/i }).first();
   await expect(kinkResult).toBeVisible();
   await kinkResult.click();
   const kinkDialog = page.locator('[role="dialog"][data-sheet-variant="task"]');
@@ -169,6 +171,9 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await saveScreenshot(page, testInfo, "kink-edit-task");
   await kinkDialog.getByRole("button", { name: "Klaar" }).click();
   await expect(kinkResult).toBeFocused();
+
+  await catalogManager.getByRole("button", { name: "Gereed" }).click();
+  await expect(catalogManager).toBeHidden();
 
   const shareTrigger = page.getByRole("button", { name: "Profiel delen" });
   await shareTrigger.click();
