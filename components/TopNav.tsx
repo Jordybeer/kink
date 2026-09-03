@@ -168,8 +168,12 @@ export default function TopNav() {
             line-height: 1.625rem;
           }
 
-          body:has([data-home-empty="true"]) main {
-            padding-top: clamp(0.75rem, 1.8svh, 1.25rem);
+          body:has([data-home-empty="true"]) main[data-page-shell] {
+            min-height: calc(100svh - 8rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: clamp(0.5rem, 1svh, 0.75rem);
           }
 
           body:has([data-home-empty="true"]) main > div:first-child {
