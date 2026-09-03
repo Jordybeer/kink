@@ -150,14 +150,20 @@ test.describe("Page cohesion scenes", () => {
 });
 
 test.describe("Page cohesion profile", () => {
-  test("query- en legacy-profielroute delen dezelfde actieve profieltab", async ({ page }) => {
-    const overviewTab = () => page.getByRole("tablist", { name: "Profielweergave" }).getByRole("tab", { name: "Overzicht" });
+  test("query- en canonieke profielroute delen dezelfde rustige read-view", async ({ page }) => {
+    const summary = () => page.getByTestId("profile-summary");
+    const manage = () => page.getByRole("button", { name: /Onderwerpen beheren/ });
+    const legacyTabs = () => page.getByRole("tablist", { name: "Profielweergave" });
 
     await seedAndGo(page, "/profile?id=pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
-    await expect(overviewTab()).toHaveAttribute("aria-selected", "true");
+    await expect(summary()).toBeVisible();
+    await expect(manage()).toBeVisible();
+    await expect(legacyTabs()).toHaveCount(0);
 
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
-    await expect(overviewTab()).toHaveAttribute("aria-selected", "true");
+    await expect(summary()).toBeVisible();
+    await expect(manage()).toBeVisible();
+    await expect(legacyTabs()).toHaveCount(0);
   });
 });
