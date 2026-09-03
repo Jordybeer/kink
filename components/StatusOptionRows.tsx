@@ -22,7 +22,7 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
             key={s}
             type="button"
             data-tour={danger ? "hard-no" : undefined}
-            onClick={() => onSelect(active ? null : s)}
+            onClick={() => { if (!active) onSelect(s); }}
             aria-pressed={active}
             className="focus-ring h-full min-h-11 w-full rounded-xl px-3.5 py-1.5 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.994] motion-reduce:active:scale-100 motion-reduce:transition-none"
             style={{

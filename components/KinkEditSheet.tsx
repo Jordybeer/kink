@@ -7,22 +7,22 @@ import Sheet from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
 import ClampText from "./ui/ClampText";
 
-const AGREEMENTS = [
+const BOUNDARY_TAGS = [
   {
     value: "vraag eerst",
     label: "Eerst vragen",
-    description: "Niet aannemen op basis van dit profiel; vraag het opnieuw in de situatie zelf.",
+    description: "Niet aannemen op basis van dit profiel. Vraag het opnieuw in de situatie zelf.",
   },
   {
-    value: "eerste keer",
-    label: "Eerste keer",
-    description: "Hier is nog geen of weinig praktijkervaring mee.",
+    value: "alleen privé",
+    label: "Alleen in privésfeer",
+    description: "Alleen wanneer de setting echt privé is.",
   },
-] as const;
-
-const CONTEXT_TAGS = [
-  { value: "alleen privé", label: "Alleen in privésfeer" },
-  { value: "scène specifiek", label: "Alleen voor afgesproken scène" },
+  {
+    value: "scène specifiek",
+    label: "Alleen voor afgesproken scène",
+    description: "Geen algemene toestemming. Alleen binnen een vooraf afgesproken scène.",
+  },
 ] as const;
 
 interface Props {
@@ -56,6 +56,7 @@ export default function KinkEditSheet({
       onClose={onClose}
       scrollable
       variant="task"
+      title="Kink bewerken"
       aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}
     >
       <p className="mb-0.5 text-xs" style={{ color: "var(--text2)" }}>
@@ -82,25 +83,43 @@ export default function KinkEditSheet({
       {!kink?.description && !kink?.safetyNote && <div className="mb-3" />}
 
       <div aria-live="polite" className="sr-only">
-        {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
+        {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : "Geen antwoord gekozen."}
         {entry.privateResponse ? " Antwoord is privé." : ""}
       </div>
 
-      <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
+      <section aria-labelledby="kink-answer-heading">
+        <h3 id="kink-answer-heading" className="mb-2 text-sm font-semibold">Jouw antwoord</h3>
+        <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
+        <div className="mt-2 flex min-h-9 items-center justify-between gap-3">
+          <p className="text-xs leading-5" style={{ color: "var(--text2)" }}>
+            Je wijzigingen worden meteen opgeslagen.
+          </p>
+          {entry.status && (
+            <button
+              type="button"
+              onClick={() => onStatusChange(null)}
+              className="focus-ring min-h-9 flex-none rounded-lg px-2 text-xs font-semibold"
+              style={{ color: "var(--text2)" }}
+            >
+              Antwoord wissen
+            </button>
+          )}
+        </div>
+      </section>
 
-      <section className="mt-4">
+      <section className="mt-4" aria-labelledby="kink-boundaries-heading">
         <div className="mb-2 flex items-center gap-2">
           <WarningCircle size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
-          <h3 className="text-sm font-semibold">Afspraken</h3>
+          <h3 id="kink-boundaries-heading" className="text-sm font-semibold">Grenzen &amp; afspraken</h3>
         </div>
         <div className="overflow-hidden rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-          {AGREEMENTS.map((agreement, index) => {
-            const active = tags.includes(agreement.value);
+          {BOUNDARY_TAGS.map((item, index) => {
+            const active = tags.includes(item.value);
             return (
               <button
                 type="button"
-                key={agreement.value}
-                onClick={() => toggleTag(agreement.value)}
+                key={item.value}
+                onClick={() => toggleTag(item.value)}
                 aria-pressed={active}
                 className="focus-ring flex min-h-[60px] w-full items-center gap-3 px-3 py-2.5 text-left"
                 style={{
@@ -120,9 +139,9 @@ export default function KinkEditSheet({
                   {active && <Check size={12} weight="bold" aria-hidden="true" />}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold">{agreement.label}</span>
+                  <span className="block text-sm font-semibold">{item.label}</span>
                   <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
-                    {agreement.description}
+                    {item.description}
                   </span>
                 </span>
               </button>
@@ -131,57 +150,93 @@ export default function KinkEditSheet({
         </div>
       </section>
 
-      <section className="mt-4">
-        <h3 className="mb-2 text-sm font-semibold">Zichtbaarheid &amp; context</h3>
-        <div className="flex flex-wrap items-center gap-2">
+      <section className="mt-4" aria-labelledby="kink-experience-heading">
+        <h3 id="kink-experience-heading" className="mb-2 text-sm font-semibold">Ervaring &amp; interesse</h3>
+        <div className="overflow-hidden rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+          <button
+            type="button"
+            onClick={() => toggleTag("eerste keer")}
+            aria-pressed={tags.includes("eerste keer")}
+            className="focus-ring flex min-h-[60px] w-full items-center gap-3 px-3 py-2.5 text-left"
+            style={{ background: tags.includes("eerste keer") ? "color-mix(in srgb, var(--accent) 8%, var(--surface2))" : "transparent" }}
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-5 w-5 flex-none items-center justify-center rounded-full"
+              style={{
+                background: tags.includes("eerste keer") ? "var(--accent)" : "transparent",
+                border: tags.includes("eerste keer") ? "none" : "1px solid var(--border-bright)",
+                color: tags.includes("eerste keer") ? "var(--on-accent)" : "transparent",
+              }}
+            >
+              {tags.includes("eerste keer") && <Check size={12} weight="bold" aria-hidden="true" />}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Eerste keer</span>
+              <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                Hier heb ik nog geen of weinig praktijkervaring mee.
+              </span>
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => onCuriousChange(!entry.curious)}
             aria-pressed={!!entry.curious}
-            className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors"
-            style={entry.curious
-              ? { background: "color-mix(in srgb, var(--curious) 16%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
-              : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
+            className="focus-ring flex min-h-[60px] w-full items-center gap-3 border-t px-3 py-2.5 text-left"
+            style={{
+              borderColor: "var(--border)",
+              background: entry.curious ? "color-mix(in srgb, var(--curious) 10%, var(--surface2))" : "transparent",
+            }}
           >
-            <Star size={12} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
-            Nieuwsgierig
+            <span
+              aria-hidden="true"
+              className="flex h-5 w-5 flex-none items-center justify-center rounded-full"
+              style={{
+                color: entry.curious ? "var(--curious)" : "var(--text2)",
+                border: entry.curious ? "1px solid var(--curious)" : "1px solid var(--border-bright)",
+                background: entry.curious ? "color-mix(in srgb, var(--curious) 14%, transparent)" : "transparent",
+              }}
+            >
+              <Star size={11} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Nieuwsgierig</span>
+              <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                Markeer interesse zonder je antwoord te veranderen.
+              </span>
+            </span>
           </button>
-          <button
-            type="button"
-            data-tour="private"
-            onClick={() => onPrivateChange(!entry.privateResponse)}
-            aria-pressed={!!entry.privateResponse}
-            aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
-            className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors"
-            style={entry.privateResponse
-              ? { background: "color-mix(in srgb, var(--accent) 14%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
-              : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
-          >
-            {entry.privateResponse
-              ? <EyeSlash size={13} weight="bold" aria-hidden="true" />
-              : <Eye size={13} aria-hidden="true" />}
-            Privé antwoord
-          </button>
-          {CONTEXT_TAGS.map((tag) => {
-            const active = tags.includes(tag.value);
-            return (
-              <button
-                type="button"
-                key={tag.value}
-                onClick={() => toggleTag(tag.value)}
-                aria-pressed={active}
-                className="focus-ring min-h-11 rounded-full border px-3 text-sm transition-colors"
-                style={{
-                  background: active ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "var(--tag-muted)",
-                  borderColor: active ? "var(--accent)" : "var(--border)",
-                  color: active ? "var(--accent)" : "var(--text2)",
-                }}
-              >
-                {tag.label}
-              </button>
-            );
-          })}
         </div>
+      </section>
+
+      <section className="mt-4" aria-labelledby="kink-visibility-heading">
+        <h3 id="kink-visibility-heading" className="mb-2 text-sm font-semibold">Zichtbaarheid</h3>
+        <button
+          type="button"
+          data-tour="private"
+          onClick={() => onPrivateChange(!entry.privateResponse)}
+          aria-pressed={!!entry.privateResponse}
+          aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
+          className="focus-ring flex min-h-[60px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left"
+          style={{
+            background: entry.privateResponse ? "color-mix(in srgb, var(--accent) 8%, var(--surface2))" : "var(--surface2)",
+            border: `1px solid ${entry.privateResponse ? "var(--accent)" : "var(--border)"}`,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
+            style={{ color: entry.privateResponse ? "var(--accent)" : "var(--text2)", background: "var(--tag-muted)" }}
+          >
+            {entry.privateResponse ? <EyeSlash size={15} weight="bold" /> : <Eye size={15} />}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold">Privé antwoord</span>
+            <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+              Verberg je antwoord standaard wanneer dit profiel wordt bekeken.
+            </span>
+          </span>
+        </button>
       </section>
 
       <button
