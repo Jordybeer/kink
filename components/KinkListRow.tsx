@@ -13,7 +13,7 @@ interface Props {
 const TAG_LABELS: Record<string, string> = {
   "vraag eerst": "Eerst vragen",
   "alleen privé": "Alleen privé",
-  "scène specifiek": "Alleen afgesproken",
+  "scène specifiek": "Alleen na afspraak",
   "eerste keer": "Weinig ervaring",
 };
 
