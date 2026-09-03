@@ -80,7 +80,6 @@ export default function TopNav() {
   } as const;
 
   if (path === "/") {
-    const homeEmpty = profiles.length === 0;
     const homeMenuItems = [
       {
         label: "Instellingen",
@@ -108,12 +107,12 @@ export default function TopNav() {
       <header
         className="relative z-40"
         style={safeAreaShell}
-        data-home-empty={homeEmpty ? "true" : undefined}
       >
         <nav
-          className={`mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] pb-1 lg:max-w-4xl ${homeEmpty ? "pt-[clamp(2.5rem,8svh,4.75rem)]" : "pt-4"}`}
+          className="mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] py-3 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
+          data-home-masthead
         >
           <div className="justify-self-start" style={{ pointerEvents: "auto" }}>
             <OfflineStatus compact />
@@ -124,13 +123,20 @@ export default function TopNav() {
               className="serif-safe whitespace-nowrap"
               style={{
                 fontFamily: "var(--font-display, Georgia, serif)",
-                fontSize: "clamp(2rem, 9.5vw, 2.25rem)",
+                fontSize: "clamp(2.125rem, 10vw, 2.5rem)",
                 fontWeight: 500,
                 lineHeight: 1,
               }}
             >
               <Wordmark />
             </h1>
+            <p
+              data-home-subtitle
+              className="mt-1 text-[0.875rem] italic leading-5 tracking-wide"
+              style={{ color: "var(--text2)" }}
+            >
+              Verken grenzen. Samen.
+            </p>
           </div>
 
           <div
@@ -159,21 +165,8 @@ export default function TopNav() {
         </nav>
 
         <style>{`
-          body:has([data-top-nav-variant="home"]) main > div:first-child {
-            margin-bottom: 1rem;
-          }
-
-          body:has([data-top-nav-variant="home"]) main > div:first-child > p {
-            font-size: 1.0625rem;
-            line-height: 1.625rem;
-          }
-
-          body:has([data-home-empty="true"]) main {
-            padding-top: clamp(0.75rem, 1.8svh, 1.25rem);
-          }
-
-          body:has([data-home-empty="true"]) main > div:first-child {
-            margin-bottom: clamp(0.75rem, 1.6svh, 1.25rem);
+          body:has([data-home-masthead]) main > div:first-child:has(> p:first-child:last-child) {
+            display: none;
           }
         `}</style>
       </header>
