@@ -111,7 +111,7 @@ export default function TopNav() {
         data-home-empty={homeEmpty ? "true" : undefined}
       >
         <nav
-          className={`mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] pb-1 lg:max-w-4xl ${homeEmpty ? "pt-[clamp(2.5rem,8svh,4.75rem)]" : "pt-4"}`}
+          className={`mx-auto grid max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center px-[var(--page-gutter)] lg:max-w-4xl ${homeEmpty ? "py-[clamp(1.375rem,4.5svh,2.5rem)]" : "py-2.5"}`}
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
@@ -124,7 +124,7 @@ export default function TopNav() {
               className="serif-safe whitespace-nowrap"
               style={{
                 fontFamily: "var(--font-display, Georgia, serif)",
-                fontSize: "clamp(2rem, 9.5vw, 2.25rem)",
+                fontSize: "clamp(2.125rem, 10vw, 2.375rem)",
                 fontWeight: 500,
                 lineHeight: 1,
               }}
@@ -164,8 +164,8 @@ export default function TopNav() {
           }
 
           body:has([data-top-nav-variant="home"]) main > div:first-child > p {
-            font-size: 1.0625rem;
-            line-height: 1.625rem;
+            font-size: 0.9375rem;
+            line-height: 1.375rem;
           }
 
           body:has([data-home-empty="true"]) main {
