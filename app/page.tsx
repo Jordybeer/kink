@@ -174,12 +174,6 @@ function HomeContent() {
   return (
     <>
       <PageShell width="2xl" className="lg:max-w-4xl">
-        <div className="mb-5 text-center">
-          <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
-            Verken grenzen. Samen.
-          </p>
-        </div>
-
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
         {profiles.length > 0 ? (
