@@ -21,8 +21,8 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
       data-tour="pills"
       role="group"
       aria-label="Status kiezen"
-      className="overflow-hidden rounded-xl border"
-      style={{ background: "var(--surface2)", borderColor: "var(--border)" }}
+      className="border-y"
+      style={{ borderColor: "var(--border)" }}
     >
       {OPTIONS.map(({ status, label, hint, danger }, index) => {
         const active = current === status;
@@ -34,11 +34,11 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
             data-tour={danger ? "hard-no" : undefined}
             onClick={() => { if (!active) onSelect(status); }}
             aria-pressed={active}
-            className="focus-ring flex min-h-12 w-full items-center gap-3 px-3 py-2.5 text-left transition-colors duration-150"
+            className="focus-ring flex min-h-[52px] w-full items-center gap-3 px-1 py-2 text-left transition-colors duration-150"
             style={{
-              borderTop: index > 0 ? "1px solid var(--border)" : undefined,
+              borderTop: index > 0 ? "1px solid color-mix(in srgb, var(--border) 72%, transparent)" : undefined,
               background: active
-                ? `color-mix(in srgb, ${colour} ${danger ? 8 : 10}%, var(--surface2))`
+                ? `color-mix(in srgb, ${colour} ${danger ? 5 : 6}%, var(--surface))`
                 : "transparent",
             }}
           >
@@ -60,20 +60,18 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
             </span>
 
             <span className="min-w-0 flex-1">
-              <span className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <span
-                  className="text-sm font-semibold leading-5"
-                  style={{ color: danger && active ? "var(--hard-no-text)" : "var(--text)" }}
-                >
-                  {label}
-                </span>
-                <span
-                  data-status-hint={status}
-                  className="min-w-0 text-sm leading-5"
-                  style={{ color: active ? "color-mix(in srgb, var(--text) 25%, var(--text2))" : "var(--text2)" }}
-                >
-                  {hint}
-                </span>
+              <span
+                className="block text-sm font-semibold leading-5"
+                style={{ color: danger && active ? "var(--hard-no-text)" : "var(--text)" }}
+              >
+                {label}
+              </span>
+              <span
+                data-status-hint={status}
+                className="mt-0.5 block text-[13px] leading-4"
+                style={{ color: active ? "color-mix(in srgb, var(--text) 25%, var(--text2))" : "var(--text2)" }}
+              >
+                {hint}
               </span>
             </span>
           </button>
