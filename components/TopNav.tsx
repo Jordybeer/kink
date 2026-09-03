@@ -163,12 +163,6 @@ export default function TopNav() {
             </ContextMenu>
           </div>
         </nav>
-
-        <style>{`
-          body:has([data-home-masthead]) main > div:first-child:has(> p:first-child:last-child) {
-            display: none;
-          }
-        `}</style>
       </header>
     );
   }
