@@ -19,7 +19,8 @@ test.describe("Home page — leeg", () => {
 
     const viewportHeight = await page.evaluate(() => window.innerHeight);
     const sectionBottom = sectionBox!.y + sectionBox!.height;
-    expect(sectionBottom).toBeGreaterThan(viewportHeight * 0.58);
+    expect(sectionBox!.y).toBeGreaterThan(viewportHeight * 0.24);
+    expect(sectionBottom).toBeGreaterThan(viewportHeight * 0.68);
     expect(sectionBottom).toBeLessThan(viewportHeight * 0.9);
   });
 });
