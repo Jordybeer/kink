@@ -158,7 +158,9 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
   test("Impact Play categorie is zichtbaar wanneer onderwerpen bewust worden beheerd", async ({ page }) => {
     await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
-    await expect(page.getByText("Impact Play", { exact: true }).first()).toBeVisible();
+    const impactCategory = page.locator('button[aria-controls="category-impact-content"]');
+    await expect(impactCategory).toBeVisible();
+    await expect(impactCategory).toContainText("Impact Play");
   });
 
   test("gesloten categorieën zijn inert tot ze geopend worden", async ({ page }) => {
