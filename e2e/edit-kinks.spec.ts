@@ -63,11 +63,19 @@ test.describe("Edit Kinks cohesion", () => {
     const conditions = dialog.locator("section").filter({ hasText: "Voorwaarden" });
     await expect(conditions.getByRole("button", { name: /Eerst vragen/ })).toBeVisible();
     await expect(conditions.getByRole("button", { name: /Alleen privé/ })).toBeVisible();
-    await expect(conditions.getByRole("button", { name: /Alleen afgesproken/ })).toBeVisible();
+    await expect(conditions.getByRole("button", { name: /Alleen na afspraak/ })).toBeVisible();
 
     const experience = dialog.locator("section").filter({ hasText: "Ervaring & interesse" });
     await expect(experience.getByRole("button", { name: /Weinig ervaring/ })).toBeVisible();
     await expect(experience.getByRole("button", { name: /Nieuwsgierig/ })).toBeVisible();
+  });
+
+  test("secundaire keuzes tonen geen zichtbare uitlegmuur", async ({ page }) => {
+    const dialog = await openFirstSpankingEditor(page);
+
+    await expect(dialog.getByText("Vraag opnieuw voordat dit onderdeel van een scène wordt.", { exact: true })).toHaveCount(0);
+    await expect(dialog.getByText("Alleen in een volledig private setting.", { exact: true })).toHaveCount(0);
+    await expect(dialog.getByText("Hier heb ik nog geen of weinig praktijkervaring mee.", { exact: true })).toHaveCount(0);
   });
 
   test("een gekozen status wist zichzelf niet meer en mobiel sluiten blijft bereikbaar", async ({ page }) => {
