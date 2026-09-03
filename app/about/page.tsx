@@ -69,18 +69,11 @@ const communityPlaces = [
 export default function AboutPage() {
   return (
     <PageShell width="3xl" className="lg:max-w-4xl">
-      <header
-        className="relative isolate overflow-hidden rounded-[28px] px-5 py-6 sm:px-8 sm:py-9"
-        style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface)) 0%, var(--surface) 58%, color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--identity-a) 24%, var(--border))",
-        }}
-      >
+      <header className="relative isolate px-1 pb-2 pt-2 sm:px-0 sm:pb-3 sm:pt-4">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--identity-a) 12%, transparent)" }}
+          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl"
+          style={{ background: "color-mix(in srgb, var(--identity-a) 9%, transparent)" }}
         />
         <div className="relative z-10 max-w-3xl">
           <EditorialHeading
@@ -95,8 +88,8 @@ export default function AboutPage() {
 
           <div
             data-testid="about-promises"
-            className="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-2xl"
-            style={{ background: "var(--border)", border: "1px solid var(--border)" }}
+            className="mt-6 grid grid-cols-3 divide-x overflow-hidden rounded-xl border"
+            style={{ borderColor: "var(--border)", background: "color-mix(in srgb, var(--surface) 72%, transparent)" }}
             aria-label="Kernfuncties"
           >
             {[
@@ -107,7 +100,7 @@ export default function AboutPage() {
               <div
                 key={title}
                 className="min-w-0 px-2.5 py-3 sm:px-4 sm:py-3.5"
-                style={{ background: "color-mix(in srgb, var(--surface) 96%, transparent)" }}
+                style={{ borderColor: "var(--border)" }}
               >
                 <p className="text-xs font-semibold leading-4 sm:text-sm">{title}</p>
                 <p className="mt-1 text-[11px] leading-4 sm:text-xs sm:leading-5" style={{ color: "var(--text2)" }}>{text}</p>
@@ -140,25 +133,22 @@ export default function AboutPage() {
           title="Verkennen, vergelijken en verder praten"
           id="journey-title"
         />
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div
+          className="mt-5 divide-y md:grid md:grid-cols-3 md:divide-x md:divide-y-0"
+          style={{ borderColor: "var(--border)" }}
+        >
           {journey.map(({ icon: Icon, eyebrow, title, text }, index) => (
             <article
               key={title}
-              className="relative rounded-2xl p-5"
-              style={{
-                background: index === 1
-                  ? "color-mix(in srgb, var(--accent) 5%, var(--surface))"
-                  : "var(--surface)",
-                border: "1px solid var(--border)",
-              }}
+              className="py-5 first:pt-0 last:pb-0 md:px-5 md:py-0 md:first:pl-0 md:last:pr-0"
             >
               <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--accent)" }}>
-                  <Icon size={20} aria-hidden="true" />
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--identity-a)" }}>
+                  <Icon size={18} aria-hidden="true" />
                 </span>
                 <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--text2)" }}>0{index + 1}</span>
               </div>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent)" }}>{eyebrow}</p>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent)" }}>{eyebrow}</p>
               <h3 className="mt-1.5 text-base font-semibold">{title}</h3>
               <p className="mt-2 text-[15px] leading-6" style={{ color: "var(--text2)" }}>{text}</p>
             </article>
@@ -179,11 +169,10 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="relative mt-10 overflow-hidden rounded-[28px] p-5 sm:p-6"
+        className="relative mt-10 overflow-hidden rounded-[24px] p-5 sm:p-6"
         style={{
-          background:
-            "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 7%, var(--surface)) 0%, var(--surface) 70%, color-mix(in srgb, var(--accent) 4%, var(--surface)) 100%)",
-          border: "1px solid color-mix(in srgb, var(--identity-a) 22%, var(--border))",
+          background: "var(--surface)",
+          border: "1px solid color-mix(in srgb, var(--identity-a) 18%, var(--border))",
         }}
         aria-labelledby="community-title"
       >
@@ -198,28 +187,28 @@ export default function AboutPage() {
             description="KinkSync kan het gesprek openen. Wil je daarna tussen echte mensen staan, dan zijn dit twee Belgische plekken om zelf verder te ontdekken."
           />
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-5 grid gap-2 sm:grid-cols-2">
             {communityPlaces.map((place) => (
               <a
                 key={place.name}
                 href={place.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="focus-ring group flex items-center gap-3 rounded-2xl p-4 transition-transform active:scale-[0.99]"
+                className="focus-ring group flex items-center gap-3 rounded-xl px-3 py-3.5 transition-transform active:scale-[0.99]"
                 style={{
-                  background: "var(--surface)",
+                  background: "var(--surface2)",
                   border: "1px solid var(--border)",
                 }}
                 aria-label={`${place.name} in ${place.city} openen in Google Maps`}
               >
-                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ background: "var(--surface2)", color: "var(--identity-a)" }}>
-                  <MapPin size={20} aria-hidden="true" />
+                <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg" style={{ background: "var(--surface3)", color: "var(--identity-a)" }}>
+                  <MapPin size={18} aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base font-semibold leading-6">{place.name}</h3>
                   <p className="text-sm" style={{ color: "var(--text2)" }}>{place.city}</p>
                 </div>
-                <ArrowSquareOut size={17} className="flex-none" weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                <ArrowSquareOut size={16} className="flex-none" weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
               </a>
             ))}
           </div>
@@ -231,8 +220,8 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="mt-4 rounded-2xl p-5 sm:p-6"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        className="mt-8 border-t pt-6"
+        style={{ borderColor: "var(--border)" }}
         aria-labelledby="technical-title"
       >
         <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>Technische verdieping</p>
@@ -251,8 +240,8 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-4 py-3 text-sm"
-        style={{ background: "color-mix(in srgb, var(--surface2) 64%, transparent)", color: "var(--text2)" }}
+        className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-4 text-sm"
+        style={{ borderColor: "var(--border)", color: "var(--text2)" }}
         aria-label="Contact"
       >
         <span className="font-medium">Vragen of suggesties?</span>
