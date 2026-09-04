@@ -110,7 +110,7 @@ export default function TopNav() {
         data-home-masthead
       >
         <nav
-          className="mx-auto grid h-[5.5rem] max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] py-3 lg:max-w-4xl"
+          className="mx-auto grid h-[5.5rem] max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] pb-2 pt-4 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
@@ -132,7 +132,7 @@ export default function TopNav() {
             </h1>
             <p
               data-home-subtitle
-              className="mt-1 text-[0.8125rem] italic leading-5 tracking-wide"
+              className="mt-2 text-[0.8125rem] italic leading-5 tracking-wide"
               style={{ color: "var(--text2)" }}
             >
               Verken grenzen. Samen.
