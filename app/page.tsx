@@ -170,16 +170,17 @@ function HomeContent() {
   if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
 
   const deleteTargetProfile = profiles.find((profile) => profile.id === deleteTarget);
+  const emptyHome = profiles.length === 0;
 
   return (
     <>
-      <PageShell width="2xl" className="lg:max-w-4xl">
-        <div className="mb-5 text-center">
-          <p className="text-sm italic tracking-wide" style={{ color: "var(--text2)" }}>
-            Verken grenzen. Samen.
-          </p>
-        </div>
-
+      <PageShell
+        width="2xl"
+        flush={emptyHome}
+        className={emptyHome
+          ? "lg:max-w-4xl flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_5.5rem_-_var(--page-bottom-clearance))] flex-col justify-center py-[clamp(1rem,2svh,1.5rem)]"
+          : "lg:max-w-4xl"}
+      >
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
         {profiles.length > 0 ? (
@@ -240,7 +241,8 @@ function HomeContent() {
           </div>
         ) : (
           <section
-            className="mx-auto max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 sm:px-5 sm:pb-7 sm:pt-5"
+            data-home-empty-card
+            className="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 sm:px-5 sm:pb-7 sm:pt-5"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 7%, var(--surface2)), color-mix(in srgb, var(--accent) 2%, var(--surface)))",
               border: "1px solid color-mix(in srgb, var(--border-accent) 72%, var(--border))",
