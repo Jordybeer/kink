@@ -1,5 +1,5 @@
 "use client";
-import { CSSProperties, ReactNode } from "react";
+import { ReactNode } from "react";
 
 const WIDTH = {
   lg: "max-w-lg",
@@ -23,17 +23,12 @@ export default function PageShell({
 }) {
   const w = WIDTH[width];
   const gutter = "px-[var(--page-gutter)]";
-  const flushStyle = flush
-    ? ({ "--page-bottom-clearance": "0px" } as CSSProperties)
-    : undefined;
-
   if (loading) {
     return (
       <main
         data-page-shell
         data-page-shell-width={width}
         className={`${w} mx-auto ${gutter} pt-16 ${flush ? "" : "pb-[var(--page-bottom-clearance)]"} w-full flex items-start justify-center`}
-        style={flushStyle}
       >
         <span className="ks-spinner" role="status" aria-label="Laden" />
       </main>
@@ -44,7 +39,6 @@ export default function PageShell({
       data-page-shell
       data-page-shell-width={width}
       className={`${w} mx-auto ${gutter} ${flush ? "" : "pt-6 pb-[var(--page-bottom-clearance)]"} w-full ${className}`}
-      style={flushStyle}
     >
       {children}
     </main>
