@@ -36,6 +36,12 @@ function contrast(fg: [number, number, number], bg: [number, number, number]): n
   return (hi + 0.05) / (lo + 0.05);
 }
 
+function mix(foreground: [number, number, number], background: [number, number, number], pct: number): [number, number, number] {
+  return [0, 1, 2].map((index) => (
+    pct * foreground[index] + (1 - pct) * background[index]
+  )) as [number, number, number];
+}
+
 describe.each(Object.entries(PALETTES))("status labels — %s palette", (mode, tokens) => {
   function token(name: string): string {
     const value = tokens[name];
@@ -43,12 +49,8 @@ describe.each(Object.entries(PALETTES))("status labels — %s palette", (mode, t
     return value;
   }
 
-  function mix(colour: string, pct: number): [number, number, number] {
-    const foreground = rgb(colour);
-    const background = rgb(token("surface2"));
-    return [0, 1, 2].map((index) => (
-      pct * foreground[index] + (1 - pct) * background[index]
-    )) as [number, number, number];
+  function mixOverSurface2(colour: string, pct: number): [number, number, number] {
+    return mix(rgb(colour), rgb(token("surface2")), pct);
   }
 
   const rows = STATUS_ORDER.map((status) => {
@@ -63,15 +65,21 @@ describe.each(Object.entries(PALETTES))("status labels — %s palette", (mode, t
 
   for (const row of rows) {
     it(`${row.status} haalt minstens 4,5:1`, () => {
-      const ratio = contrast(rgb(row.label), mix(row.fill, row.pct));
+      const ratio = contrast(rgb(row.label), mixOverSurface2(row.fill, row.pct));
       expect(ratio, `${mode} ${row.status}`).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it(`${row.status} actieve hint haalt minstens 4,5:1`, () => {
+      const hint = mix(rgb(token("text")), rgb(token("text2")), 0.25);
+      const ratio = contrast(hint, mixOverSurface2(row.fill, row.pct));
+      expect(ratio, `${mode} ${row.status} hint`).toBeGreaterThanOrEqual(4.5);
     });
   }
 
   it("de harde grens is niet het slechtst leesbare label", () => {
     const ratios = rows.map((row) => ({
       status: row.status,
-      ratio: contrast(rgb(row.label), mix(row.fill, row.pct)),
+      ratio: contrast(rgb(row.label), mixOverSurface2(row.fill, row.pct)),
     }));
     const worst = ratios.reduce((a, b) => (a.ratio <= b.ratio ? a : b));
     expect(worst.status).not.toBe("hard_no");
