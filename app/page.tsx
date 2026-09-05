@@ -178,7 +178,7 @@ function HomeContent() {
         width="2xl"
         flush={emptyHome}
         className={emptyHome
-          ? "lg:max-w-4xl [--page-bottom-clearance:0px] mt-6 flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_5.5rem_-_1.5rem_-_var(--page-bottom-clearance))] flex-col justify-center"
+          ? "lg:max-w-4xl [--page-bottom-clearance:0px] flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_5.5rem)] flex-col justify-center"
           : "lg:max-w-4xl"}
       >
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
