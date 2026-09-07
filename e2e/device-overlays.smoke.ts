@@ -152,7 +152,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   }
   await expectWithinVisualViewport(editFooter);
   await saveScreenshot(page, testInfo, "profile-edit-scrolled");
-  await editDialog.getByRole("button", { name: "Annuleer" }).click();
+  await editDialog.getByRole("button", { name: "Profiel bewerken sluiten" }).click();
   await expect(editTrigger).toBeFocused();
 
   const catalogTrigger = page.getByRole("button", { name: /Onderwerpen beheren/i });
