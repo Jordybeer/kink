@@ -96,6 +96,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("Relatiestatus", { exact: true })).toHaveCount(0);
+    await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
@@ -122,9 +123,23 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     expect(bodyBox!.y + bodyBox!.height).toBeLessThanOrEqual(footerBox!.y + 1);
     expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
 
-    await dialog.getByRole("button", { name: "Annuleer" }).click();
+    await dialog.getByRole("button", { name: "Profiel bewerken sluiten" }).click();
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
+  });
+
+  test("profielbewerking gebruikt een identiteitsstap en rustige vragenlijstnavigatie", async ({ page }) => {
+    const trigger = page.getByRole("button", { name: "Profiel bewerken" });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
+
+    await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
+    await dialog.getByRole("button", { name: /Volgende/ }).click();
+    await expect(dialog.getByTestId("profile-edit-questionnaire-step")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Interessegebieden/ })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Ervaring/ })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeVisible();
   });
 
   test("statusbalk hoort bij de rustige read-view en verdwijnt in catalogusbeheer", async ({ page }) => {
