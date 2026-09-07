@@ -110,38 +110,37 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
 
   const renderGroups = (visibleGroups: ProfileGroup[]) => (
     <motion.div
-      className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start"
+      data-home-profile-stack
+      className="overflow-hidden rounded-2xl"
+      style={{ background: "color-mix(in srgb, var(--surface2) 46%, transparent)" }}
       initial={reduceMotion ? false : "hidden"}
       animate="show"
       variants={STAGGER_CHILDREN}
     >
-      {visibleGroups.map((group) => {
+      {visibleGroups.map((group, groupIndex) => {
         const isPerspectiveGroup = group.profiles.length > 1;
         return (
           <motion.section
             key={group.key}
             variants={fadeUp(10)}
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: "var(--surface2)",
-              border: "1px solid var(--border)",
-              boxShadow: "0 8px 22px var(--deep-shadow)",
-            }}
+            style={groupIndex > 0
+              ? { borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)" }
+              : undefined}
           >
             {isPerspectiveGroup && (
               <div
-                className="px-3.5 py-3 flex items-center gap-3"
-                style={{ borderBottom: "1px solid var(--border)" }}
+                className="flex items-center gap-3 px-3.5 py-3"
+                style={{ borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)" }}
               >
                 <ProfileAvatar profile={group.profiles[0]} size="small" />
                 <div className="min-w-0 flex-1">
                   <p
-                    className="text-lg italic truncate"
+                    className="truncate text-lg italic"
                     style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
                   >
                     {group.name}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--text2)" }}>
+                  <p className="mt-0.5 text-xs" style={{ color: "var(--text2)" }}>
                     Twee afzonderlijke perspectieven
                   </p>
                 </div>
@@ -149,8 +148,8 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
                   <Link
                     href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
                     prefetch={false}
-                    className="focus-ring inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold"
-                    style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
+                    className="focus-ring inline-flex min-h-11 items-center px-1 text-xs font-semibold"
+                    style={{ color: "var(--accent)" }}
                   >
                     Vergelijk kanten
                   </Link>
@@ -182,12 +181,12 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
   return (
     <>
       {ownership.mine.length > 0 && (
-        <ProfileSection id="mine" label="Mijn profielen" count={ownership.mine.length}>
+        <ProfileSection id="mine" label="Mijn profielen">
           {renderGroups(mineGroups)}
         </ProfileSection>
       )}
       {ownership.shared.length > 0 && (
-        <ProfileSection id="shared" label="Gedeeld met mij" count={ownership.shared.length}>
+        <ProfileSection id="shared" label="Gedeeld met mij">
           {renderGroups(sharedGroups)}
         </ProfileSection>
       )}
@@ -195,33 +194,34 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
         {comparePair ? (
           <Link
+            data-home-compare-feature
             href={`/compare?a=${comparePair[0].id}&b=${comparePair[1].id}`}
             prefetch={false}
             className="focus-ring block rounded-2xl p-4 transition-opacity hover:opacity-90 lg:col-span-2"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 6%, var(--surface)), color-mix(in srgb, var(--action-primary) 6%, var(--surface)))",
               border: "1px solid var(--border-accent)",
-              boxShadow: "0 10px 26px color-mix(in srgb, var(--accent) 12%, transparent)",
+              boxShadow: "0 8px 22px color-mix(in srgb, var(--accent) 9%, transparent)",
             }}
           >
             <div className="flex items-center gap-4">
-              <div className="flex items-center flex-none" aria-hidden="true">
+              <div className="flex flex-none items-center" aria-hidden="true">
                 <CompareCoin profile={comparePair[0]} />
                 <CompareCoin profile={comparePair[1]} overlap />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: "var(--text2)" }}>
+              <div className="min-w-0 flex-1">
+                <p className="mb-0.5 text-xs uppercase tracking-widest" style={{ color: "var(--text2)" }}>
                   Vergelijk
                 </p>
                 <p
-                  className="text-lg italic leading-tight truncate"
+                  className="truncate text-lg italic leading-tight"
                   style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
                 >
                   {comparePair[0].name}
                   <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
                   {comparePair[1].name}
                 </p>
-                <p className="text-sm mt-0.5" style={{ color: "var(--text2)" }}>
+                <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
                   Bekijk overeenkomsten, bespreekpunten en grenzen.
                 </p>
               </div>
@@ -237,19 +237,28 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
           </p>
         )}
 
-        <div className="flex flex-col gap-1.5 lg:col-span-2">
+        <div
+          data-home-utility-list
+          className="flex flex-col lg:col-span-2"
+          style={{
+            borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
+            borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
+          }}
+        >
           {[
             { href: "/contracts", label: "Contracten", icon: FileText },
             { href: "/scenes", label: "Scènes", icon: FilmSlate },
             { href: "/intimacy", label: "Agenda", icon: CalendarDots },
-          ].map(({ href, label, icon: Icon }) => (
+          ].map(({ href, label, icon: Icon }, index) => (
             <Link
               key={href}
               href={href}
-              className="focus-ring flex items-center gap-2.5 min-h-12 rounded-xl px-3"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+              className="focus-ring flex min-h-12 items-center gap-3 px-1"
+              style={index > 0
+                ? { borderTop: "1px solid color-mix(in srgb, var(--border) 58%, transparent)" }
+                : undefined}
             >
-              <Icon size={16} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
+              <Icon size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <span className="flex-1 text-sm font-medium">{label}</span>
               <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
             </Link>
@@ -264,15 +273,15 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
         aria-label="Gekoppeld profiel verwijderen"
       >
         <SheetContent showClose={false} className="px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
-          <h2 className="text-xl font-bold mb-2">Wat wil je verwijderen?</h2>
-          <p className="text-sm mb-5 leading-relaxed" style={{ color: "var(--text2)" }}>
+          <h2 className="mb-2 text-xl font-bold">Wat wil je verwijderen?</h2>
+          <p className="mb-5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
             {groupDeleteTarget?.name} heeft een dominant en submissief profiel met aparte antwoorden.
           </p>
           <div className="grid gap-2">
             <button
               type="button"
               onClick={deleteOnePerspective}
-              className="focus-ring min-h-12 rounded-xl px-4 text-sm font-semibold text-left"
+              className="focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-semibold"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               Alleen {groupDeleteTarget?.role ?? "dit perspectief"} verwijderen
@@ -280,7 +289,7 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
             <button
               type="button"
               onClick={deleteAllPerspectives}
-              className="focus-ring min-h-12 rounded-xl px-4 text-sm font-bold text-left"
+              className="focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-bold"
               style={{
                 background: "color-mix(in srgb, var(--hard-no) 15%, var(--surface2))",
                 border: "1px solid var(--hard-no)",
@@ -307,26 +316,23 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
 function ProfileSection({
   id,
   label,
-  count,
   children,
 }: {
   id: "mine" | "shared";
   label: string;
-  count: number;
   children: ReactNode;
 }) {
   const labelId = `home-${id}-profiles-label`;
 
   return (
-    <section className="mb-4" aria-labelledby={labelId}>
-      <div className="mb-2 flex min-h-8 items-center gap-3 px-1">
-        <h2 id={labelId} className="flex-1 text-sm font-semibold" style={{ color: "var(--text)" }}>
-          {label}
-        </h2>
-        <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-          {count}
-        </span>
-      </div>
+    <section className="mb-5" aria-labelledby={labelId}>
+      <h2
+        id={labelId}
+        className="mb-2 px-1 text-base italic leading-6"
+        style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
+      >
+        {label}
+      </h2>
       {children}
     </section>
   );
@@ -359,8 +365,8 @@ function ProfileRow({
 
   return (
     <div
-      className="px-3 py-2.5"
-      style={divider ? { borderTop: "1px solid var(--border)" } : undefined}
+      className="px-3 py-3"
+      style={divider ? { borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)" } : undefined}
     >
       <div className="flex items-center gap-1">
         <Link
@@ -457,21 +463,21 @@ function ProfileRow({
 }
 
 function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "normal" }) {
-  const sizeClass = size === "small" ? "w-9 h-9" : "w-12 h-12";
+  const sizeClass = size === "small" ? "h-9 w-9" : "h-12 w-12";
   return (
     <div
-      className={`${sizeClass} rounded-full overflow-hidden flex-none`}
+      className={`${sizeClass} flex-none overflow-hidden rounded-full`}
       aria-hidden="true"
       style={{
         border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-        boxShadow: "0 4px 12px var(--deep-shadow)",
+        boxShadow: "0 3px 10px var(--deep-shadow)",
       }}
     >
       {profile.avatarDataUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+        <img src={profile.avatarDataUrl} alt="" className="h-full w-full object-cover" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-base italic" style={avatarStyle(profile.name)}>
+        <div className="flex h-full w-full items-center justify-center text-base italic" style={avatarStyle(profile.name)}>
           {profile.name[0]?.toUpperCase() ?? "?"}
         </div>
       )}
@@ -482,7 +488,7 @@ function ProfileAvatar({ profile, size }: { profile: Profile; size: "small" | "n
 function CompareCoin({ profile, overlap }: { profile: Profile; overlap?: boolean }) {
   return (
     <div
-      className={`w-12 h-12 rounded-full overflow-hidden flex-none ${overlap ? "-ml-3" : ""}`}
+      className={`h-12 w-12 flex-none overflow-hidden rounded-full ${overlap ? "-ml-3" : ""}`}
       style={{
         border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
         boxShadow: overlap
@@ -492,9 +498,9 @@ function CompareCoin({ profile, overlap }: { profile: Profile; overlap?: boolean
     >
       {profile.avatarDataUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={profile.avatarDataUrl} alt="" className="w-full h-full object-cover" />
+        <img src={profile.avatarDataUrl} alt="" className="h-full w-full object-cover" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-lg italic" style={avatarStyle(profile.name)}>
+        <div className="flex h-full w-full items-center justify-center text-lg italic" style={avatarStyle(profile.name)}>
           {profile.name[0]?.toUpperCase() ?? "?"}
         </div>
       )}
