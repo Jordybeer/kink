@@ -95,7 +95,9 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const nameInput = dialog.getByLabel("Naam of alias");
 
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("Relatiestatus", { exact: true })).toHaveCount(0);
+    await expect(dialog.getByLabel("Hoofdperspectief *")).toBeVisible();
+    await expect(dialog.getByLabel(/Relatiestatus/)).toBeVisible();
+    await expect(dialog.getByLabel("Verkenningsmodus")).toBeVisible();
     await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
@@ -138,7 +140,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(dialog.getByTestId("profile-edit-questionnaire-step")).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Interessegebieden/ })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Ervaring/ })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toHaveCount(0);
     await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeVisible();
   });
 
