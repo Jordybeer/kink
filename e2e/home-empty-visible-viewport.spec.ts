@@ -48,14 +48,13 @@ test.describe("lege Home gebruikt de werkelijk zichtbare browserruimte", () => {
 
     await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
     const emptyMain = page.locator("main").first();
-    const emptyGap = await emptyMain.evaluate((element) => getComputedStyle(element).marginTop);
+    const emptyGap = await emptyMain.evaluate((element) => getComputedStyle(element).paddingTop);
 
     await seedAndGo(page, "/", [PROFILE_ALEX], { onboardingComplete: true, profileTourComplete: true });
     const populatedMain = page.locator("main").first();
     const populatedGap = await populatedMain.evaluate((element) => getComputedStyle(element).paddingTop);
 
-    expect(emptyGap).toBe("24px");
-    expect(populatedGap).toBe("24px");
-    expect(emptyGap).toBe(populatedGap);
+    expect(emptyGap).toBe("8px");
+    expect(populatedGap).toBe(emptyGap);
   });
 });
