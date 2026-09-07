@@ -25,7 +25,6 @@ import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
 import ProfileTrust from "@/components/ProfileTrust";
-import BdsmtestScores from "@/components/BdsmtestScores";
 import { useContractStore } from "@/lib/contractStore";
 import { mostRecentReadableContractForProfile } from "@/lib/contractLifecycle";
 import { useLegacyContractMigration } from "@/hooks/useLegacyContractMigration";
@@ -142,7 +141,7 @@ export default function ProfileHero({
     <>
       <section
         data-testid="profile-hero"
-        className={`ks-fade-in relative pb-5 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
+        className={`ks-fade-in relative pb-4 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
         style={{ zIndex: menuOpen ? 30 : undefined }}
       >
         <div className="flex items-start gap-5">
@@ -198,9 +197,7 @@ export default function ProfileHero({
             </h2>
             <p className="mt-3 text-xs" style={{ color: "var(--text2)" }}>Hoofdperspectief</p>
             <p className="mt-0.5 text-sm font-semibold" style={{ color: "var(--text)" }}>{profile.role || "Niet gekozen"}</p>
-            {profile.relationshipStatus && (
-              <p className="mt-2 text-sm" style={{ color: "var(--text2)" }}>{profile.relationshipStatus}</p>
-            )}
+            {profile.relationshipStatus && <p className="mt-2 text-sm" style={{ color: "var(--text2)" }}>{profile.relationshipStatus}</p>}
             {profileType === "partner" && (
               <p className="mt-2 inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
                 <Lock size={12} weight="regular" aria-hidden="true" /> Gedeeld profiel
@@ -242,14 +239,10 @@ export default function ProfileHero({
           )}
         </div>
 
-        {(profile.bdsmtestScores?.length || profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
+        {(profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
           <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
             <h3 className="mb-3 text-sm font-semibold">Gekoppelde bronnen</h3>
             <div className="grid gap-2">
-              {(profile.bdsmtestScores?.length ?? 0) > 0 && (
-                <BdsmtestScores scores={profile.bdsmtestScores!} url={profile.bdsmtestUrl} embedded />
-              )}
-
               {profile.fetLifeUsername && (
                 <a
                   href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
@@ -305,9 +298,7 @@ export default function ProfileHero({
         )}
       </section>
 
-      {canEdit && (
-        <ProfileEnrichmentModal open={enrichmentOpen} profile={profile} onClose={() => setEnrichmentOpen(false)} />
-      )}
+      {canEdit && <ProfileEnrichmentModal open={enrichmentOpen} profile={profile} onClose={() => setEnrichmentOpen(false)} />}
 
       <Sheet open={photoViewerOpen && Boolean(profile.avatarDataUrl)} onClose={() => setPhotoViewerOpen(false)} aria-label={`Profielfoto van ${profile.name}`}>
         <SheetContent showHandle={false} className="max-h-[calc(100dvh-env(safe-area-inset-top))] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
@@ -315,9 +306,7 @@ export default function ProfileHero({
           <div className="flex min-h-[54dvh] max-h-[72dvh] items-center justify-center overflow-hidden rounded-xl" style={{ background: "var(--bg)" }}>
             {profile.avatarDataUrl && <img src={profile.avatarDataUrl} alt={`Profielfoto van ${profile.name}`} className="max-h-[72dvh] max-w-full select-none object-contain" draggable={false} />}
           </div>
-          <button type="button" onClick={() => setPhotoViewerOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-medium" style={{ color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)" }}>
-            Sluit
-          </button>
+          <button type="button" onClick={() => setPhotoViewerOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-medium" style={{ color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)" }}>Sluit</button>
         </SheetContent>
       </Sheet>
     </>
