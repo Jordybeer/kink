@@ -2,26 +2,61 @@ import { test, expect } from "@playwright/test";
 import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
+const EMPTY_HOME_VIEWPORTS = [
+  { width: 320, height: 667 },
+  { width: 375, height: 812 },
+  { width: 390, height: 844 },
+] as const;
 
 test.describe("Home page — leeg", () => {
-  test("laadt zonder overflow en houdt de lege compositie verticaal in balans", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
+  for (const viewport of EMPTY_HOME_VIEWPORTS) {
+    test(`centreert de lege compositie in de bruikbare viewport op ${viewport.width}x${viewport.height}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
-    const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
-    expect(overflow).toBe(false);
+      const horizontalOverflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
+      expect(horizontalOverflow).toBe(false);
 
-    const emptyHeading = page.getByRole("heading", { name: "Maak je eerste profiel" });
-    await expect(emptyHeading).toBeVisible();
-    const emptySection = emptyHeading.locator("xpath=ancestor::section");
-    const sectionBox = await emptySection.boundingBox();
-    expect(sectionBox).not.toBeNull();
+      const masthead = page.locator("[data-home-masthead]");
+      const wordmark = page.locator("[data-home-nav-wordmark]");
+      const subtitle = page.getByText("Verken grenzen. Samen.", { exact: true });
+      const emptyCard = page.locator("[data-home-empty-card]");
+      const stage = emptyCard.locator("xpath=ancestor::main");
 
-    const viewportHeight = await page.evaluate(() => window.innerHeight);
-    const sectionBottom = sectionBox!.y + sectionBox!.height;
-    expect(sectionBottom).toBeGreaterThan(viewportHeight * 0.58);
-    expect(sectionBottom).toBeLessThan(viewportHeight * 0.9);
-  });
+      await expect(masthead).toBeVisible();
+      await expect(wordmark).toBeVisible();
+      await expect(subtitle).toHaveCount(1);
+      await expect(emptyCard).toBeVisible();
+
+      const [mastheadBox, wordmarkBox, subtitleBox, stageBox, cardBox] = await Promise.all([
+        masthead.boundingBox(),
+        wordmark.boundingBox(),
+        subtitle.boundingBox(),
+        stage.boundingBox(),
+        emptyCard.boundingBox(),
+      ]);
+      expect(mastheadBox).not.toBeNull();
+      expect(wordmarkBox).not.toBeNull();
+      expect(subtitleBox).not.toBeNull();
+      expect(stageBox).not.toBeNull();
+      expect(cardBox).not.toBeNull();
+
+      const mastheadBottom = mastheadBox!.y + mastheadBox!.height;
+      const cardBottom = cardBox!.y + cardBox!.height;
+      const stageBottom = stageBox!.y + stageBox!.height;
+      const freeAbove = cardBox!.y - stageBox!.y;
+      const freeBelow = stageBottom - cardBottom;
+
+      expect(subtitleBox!.y).toBeGreaterThan(wordmarkBox!.y);
+      expect(cardBox!.y).toBeGreaterThanOrEqual(mastheadBottom - 1);
+      expect(freeAbove).toBeGreaterThanOrEqual(12);
+      expect(freeBelow).toBeGreaterThanOrEqual(12);
+      expect(Math.abs(freeAbove - freeBelow)).toBeLessThanOrEqual(12);
+
+      const verticalOverflow = await page.evaluate(() => document.body.scrollHeight - window.innerHeight);
+      expect(verticalOverflow).toBeLessThanOrEqual(2);
+    });
+  }
 });
 
 test.describe("Home page — profielen aanwezig", () => {
