@@ -1,4 +1,5 @@
-import type { Profile } from "@/types";
+import type { Profile, ProfileIdentityAnchor } from "@/types";
+import { matchProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
 
 const PROFILE_CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const PROFILE_CODE_BODY_LENGTH = 12;
@@ -111,4 +112,92 @@ export function classifyProfileImport(
   if (sameNameRole) return { kind: "same-name-role", profile: sameNameRole, code };
 
   return { kind: "new", code };
+}
+
+export type ProfileImportIdentityConflictReason =
+  | "profile-id"
+  | "verification-code"
+  | "key-id"
+  | "fingerprint"
+  | "lineage";
+
+export type AnchoredProfileImportIdentity =
+  | { kind: "new-unanchored"; code: string; profile?: Profile }
+  | { kind: "anchored-update"; code: string; profile: Profile; anchor: ProfileIdentityAnchor }
+  | {
+      kind: "identity-conflict";
+      code: string;
+      profile?: Profile;
+      anchor: ProfileIdentityAnchor;
+      reason: ProfileImportIdentityConflictReason;
+    }
+  | { kind: "legacy-unverified"; code: string; profile?: Profile };
+
+function relatedProfile(classification: ProfileImportIdentity): Profile | undefined {
+  return classification.kind === "new" ? undefined : classification.profile;
+}
+
+function findRelevantIdentityAnchor(
+  incoming: Profile,
+  code: string,
+  anchors: readonly ProfileIdentityAnchor[],
+): ProfileIdentityAnchor | undefined {
+  const keyId = incoming.consentProof?.keyId;
+  return anchors.find((anchor) =>
+    anchor.profileId === incoming.id
+    || anchor.verificationCode === code
+    || (!!keyId && anchor.keyId === keyId),
+  );
+}
+
+/**
+ * Anchor-aware classification layered on top of the existing import classifier.
+ *
+ * The old code/key continuity rules stay authoritative for deciding whether a
+ * signed payload is actually a chained update. The independent identity anchor
+ * only decides whether that otherwise-valid lineage is trusted as the known
+ * human contact. Callers can pass anchors read from the phase-2 local registry;
+ * this module deliberately does not read storage itself, keeping classification
+ * deterministic and avoiding a store/security dependency cycle.
+ */
+export function classifyProfileImportWithIdentityAnchor(
+  existingProfiles: Profile[],
+  incoming: Profile,
+  anchors: readonly ProfileIdentityAnchor[],
+): AnchoredProfileImportIdentity {
+  const classification = classifyProfileImport(existingProfiles, incoming);
+  const code = classification.code;
+  const profile = relatedProfile(classification);
+
+  if (!incoming.consentProof) {
+    return { kind: "legacy-unverified", code, ...(profile ? { profile } : {}) };
+  }
+
+  const anchor = findRelevantIdentityAnchor(incoming, code, anchors);
+  if (!anchor) {
+    return { kind: "new-unanchored", code, ...(profile ? { profile } : {}) };
+  }
+
+  const match = matchProfileIdentityAnchor(incoming, anchor);
+  if (!match.matches) {
+    return {
+      kind: "identity-conflict",
+      code,
+      ...(profile ? { profile } : {}),
+      anchor,
+      reason: match.reason,
+    };
+  }
+
+  if (classification.kind === "signed-update") {
+    return { kind: "anchored-update", code, profile: classification.profile, anchor };
+  }
+
+  return {
+    kind: "identity-conflict",
+    code,
+    ...(profile ? { profile } : {}),
+    anchor,
+    reason: "lineage",
+  };
 }
