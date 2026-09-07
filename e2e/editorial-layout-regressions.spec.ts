@@ -76,8 +76,8 @@ test.describe("Editorial spacing regressions", () => {
     expect(box!.width).toBeGreaterThanOrEqual(44);
     expect(box!.height).toBeGreaterThanOrEqual(44);
     expect(Math.abs(MOBILE.width - (box!.x + box!.width) - 20)).toBeLessThan(2);
-    expect(box!.y).toBeGreaterThanOrEqual(15);
-    expect(box!.y).toBeLessThanOrEqual(17);
+    expect(box!.y).toBeGreaterThanOrEqual(31);
+    expect(box!.y).toBeLessThanOrEqual(33);
 
     for (const label of ["Nieuw profiel", "Scan profiel"] as const) {
       const title = page.getByText(label, { exact: true });
