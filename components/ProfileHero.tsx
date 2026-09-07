@@ -132,7 +132,8 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
   return (
     <>
       <section
-        className={`ks-fade-in relative px-4 pb-4 pt-4 ${embedded ? "" : "mx-4 rounded-[24px]"}`}
+        data-testid="profile-hero"
+        className={`ks-fade-in relative ${embedded ? "px-1 pb-3 pt-2" : "mx-4 rounded-[24px] px-4 pb-4 pt-4"}`}
         style={{
           zIndex: menuOpen ? 30 : undefined,
           ...(embedded
@@ -145,7 +146,7 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
               }),
         }}
       >
-        <div className="flex items-start gap-3.5">
+        <div className="flex items-start gap-4">
           <div className="relative flex-none">
             <ContextMenu
               open={menuOpen && avatarMenuItems.length > 0}
@@ -164,14 +165,18 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                   }
                 }}
                 disabled={!profile.avatarDataUrl && !onAvatarChange}
-                className="ks-icon-pop focus-ring relative h-14 w-14 overflow-hidden rounded-full disabled:cursor-default"
+                className="ks-icon-pop focus-ring relative h-16 w-16 overflow-hidden rounded-full disabled:cursor-default"
+                style={{
+                  border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
+                  boxShadow: "0 5px 16px var(--deep-shadow)",
+                }}
                 aria-label={profile.avatarDataUrl ? "Profielfoto-opties" : "Profielfoto uploaden"}
               >
                 {profile.avatarDataUrl ? (
                   <img src={profile.avatarDataUrl} alt={profile.name} className="h-full w-full object-cover" />
                 ) : (
                   <div
-                    className="flex h-full w-full items-center justify-center text-xl italic"
+                    className="flex h-full w-full items-center justify-center text-2xl italic"
                     style={avatarStyle(profile.name)}
                   >
                     {initial}
@@ -197,103 +202,80 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 fontFamily: "var(--font-display, Georgia, serif)",
                 fontStyle: "italic",
                 fontWeight: 600,
-                fontSize: "1.65rem",
-                lineHeight: 1.05,
-                letterSpacing: "-0.015em",
+                fontSize: "2rem",
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
                 color: "var(--text)",
               }}
             >
               {profile.name}
             </h2>
-            <p className="mt-1.5 flex flex-wrap items-center gap-1 text-sm leading-snug" style={{ color: "var(--text2)" }}>
-              {profile.role && <span style={{ color: "var(--text)", fontWeight: 500 }}>{profile.role}</span>}
+            <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm leading-snug" style={{ color: "var(--text2)" }}>
+              {profile.role && <span style={{ color: "var(--text)", fontWeight: 600 }}>{profile.role}</span>}
               {profile.role && <span aria-hidden="true">·</span>}
               <span>{expLevel}</span>
               {profile.relationshipStatus && <><span aria-hidden="true">·</span><span>{profile.relationshipStatus}</span></>}
               {profileType === "partner" && <Lock size={11} weight="regular" aria-hidden="true" className="shrink-0" />}
             </p>
+
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0" aria-label="Profielinformatie">
+              <ProfileTrust profile={profile} quiet />
+
+              {canEdit && (
+                <button
+                  type="button"
+                  data-tour="profile-enrichment"
+                  onClick={() => setEnrichmentOpen(true)}
+                  className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-xs font-normal transition-colors active:opacity-70"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <PencilSimple size={13} weight="regular" aria-hidden="true" />
+                  Profielinfo
+                </button>
+              )}
+
+              {profileType === "partner" && profile.lockedAt && (
+                <span className="inline-flex min-h-8 items-center text-xs" style={{ color: "var(--text2)" }}>
+                  Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
+                </span>
+              )}
+
+              {profileType === "partner" && latestContract && (
+                <Link
+                  href={`/contracts/${encodeURIComponent(latestContract.id)}`}
+                  prefetch={false}
+                  aria-label={`Open het meest recente contract met ${profile.name}`}
+                  className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-xs font-normal"
+                  style={{ color: "var(--text2)" }}
+                >
+                  <FileText size={13} weight="regular" aria-hidden="true" />
+                  Contract
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Profielinformatie">
-          <ProfileTrust profile={profile} />
-
-          {canEdit && (
-            <button
-              type="button"
-              data-tour="profile-enrichment"
-              onClick={() => setEnrichmentOpen(true)}
-              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-xs font-normal transition-colors active:opacity-70"
-              style={{
-                color: "var(--text2)",
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <PencilSimple size={13} weight="regular" aria-hidden="true" />
-              Profielinfo
-            </button>
-          )}
-
-          {profileType === "partner" && profile.lockedAt && (
-            <span
-              className="inline-flex min-h-8 items-center rounded-full px-2.5 text-xs font-normal"
-              style={{
-                color: "var(--text2)",
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
-            </span>
-          )}
-
-          {profileType === "partner" && latestContract && (
-            <Link
-              href={`/contracts/${encodeURIComponent(latestContract.id)}`}
-              prefetch={false}
-              aria-label={`Open het meest recente contract met ${profile.name}`}
-              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-xs font-normal"
-              style={{
-                color: "var(--text2)",
-                background: "var(--surface2)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <FileText size={13} weight="regular" aria-hidden="true" />
-              Contract
-            </Link>
-          )}
-        </div>
-
         {(profile.fetLifeUsername || profile.bdsmtestUrl) && (
-          <div
-            className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-1.5 border-t pt-2"
-            style={{ borderColor: "var(--border)" }}
-            aria-label="Gekoppelde profielen"
-          >
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-0" aria-label="Gekoppelde profielen">
             {profile.fetLifeUsername && (
               <a
                 href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-                className="profile-fetlife-link focus-ring inline-flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg px-2 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
-                style={{ color: "var(--text2)", border: "1px solid transparent" }}
+                className="profile-fetlife-link focus-ring inline-flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg px-1 text-xs font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+                style={{ color: "var(--text2)" }}
               >
                 <span
                   aria-hidden="true"
-                  className="profile-fetlife-mark flex h-6 w-6 flex-none items-center justify-center rounded-full"
-                  style={{
-                    color: "var(--on-danger-fill)",
-                    background: "var(--danger-fill)",
-                    border: "1px solid color-mix(in srgb, var(--danger-fill) 72%, var(--text))",
-                  }}
+                  className="profile-fetlife-mark flex h-5 w-5 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }}
                 >
-                  <FetLifeMark className="h-[15px] w-[15px]" />
+                  <FetLifeMark className="h-[13px] w-[13px]" />
                 </span>
                 <span className="truncate">FetLife</span>
-                <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
+                <ArrowSquareOut size={10} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
               </a>
             )}
 
@@ -303,46 +285,30 @@ export default function ProfileHero({ profile, onShare, onEdit, onAvatarChange, 
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Open het opgeslagen BDSMTest-resultaat"
-                className="profile-bdsmtest-link focus-ring inline-flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg px-2 text-sm font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
-                style={{ color: "var(--text2)", border: "1px solid transparent" }}
+                className="profile-bdsmtest-link focus-ring inline-flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg px-1 text-xs font-normal underline-offset-4 transition-colors hover:underline focus-visible:underline active:opacity-70"
+                style={{ color: "var(--text2)" }}
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
-                  style={{
-                    color: "var(--on-accent-fill)",
-                    background: "var(--accent-fill)",
-                    border: "1px solid var(--border-accent)",
-                  }}
+                  className="flex h-5 w-5 flex-none items-center justify-center rounded-full"
+                  style={{ color: "var(--on-accent-fill)", background: "var(--accent-fill)" }}
                 >
-                  <BdsmtestMark className="h-[16px] w-[16px]" />
+                  <BdsmtestMark className="h-[14px] w-[14px]" />
                 </span>
                 <span className="truncate">BDSMTest</span>
-                <ArrowSquareOut size={11} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
+                <ArrowSquareOut size={10} weight="regular" style={{ color: "var(--text2)" }} aria-hidden="true" />
               </a>
             )}
           </div>
         )}
 
         {profile.privateNote && (
-          <p
-            className="mt-3 border-t pt-3 text-sm italic leading-snug"
-            style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-          >
+          <p className="mt-1 text-sm italic leading-snug" style={{ color: "var(--text2)" }}>
             {profile.privateNote.length > 120
               ? profile.privateNote.slice(0, 120) + "…"
               : profile.privateNote}
           </p>
         )}
-
-        <style jsx>{`
-          .profile-fetlife-link:hover,
-          .profile-fetlife-link:focus-visible,
-          .profile-bdsmtest-link:hover,
-          .profile-bdsmtest-link:focus-visible {
-            border-color: color-mix(in srgb, var(--text2) 45%, var(--border));
-          }
-        `}</style>
       </section>
 
       {canEdit && (

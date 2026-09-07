@@ -7,7 +7,7 @@ import { profileConsentAlias, verifyProfileConsent, type ConsentVerification } f
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import Sheet, { SheetContent } from "@/components/Sheet";
 
-export default function ProfileTrust({ profile }: { profile: Profile }) {
+export default function ProfileTrust({ profile, quiet = false }: { profile: Profile; quiet?: boolean }) {
   const [open, setOpen] = useState(false);
   const [verification, setVerification] = useState<ConsentVerification>({ status: "unsigned" });
   const [checking, setChecking] = useState(true);
@@ -78,8 +78,10 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${label}. Bekijk bron en toestemming`}
-        className="focus-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"
-        style={{ color, background, border: `1px solid ${borderColor}` }}
+        className={quiet
+          ? "focus-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-lg px-1 text-xs font-normal transition-colors active:opacity-70"
+          : "focus-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"}
+        style={quiet ? { color } : { color, background, border: `1px solid ${borderColor}` }}
       >
         {checking
           ? <ArrowsClockwise size={12.5} weight="regular" aria-hidden="true" className="shrink-0 animate-spin motion-reduce:animate-none" />
