@@ -8,7 +8,6 @@ import {
   Check,
   Heart,
   ListChecks,
-  Lock,
 } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import { avatarStyle } from "@/lib/avatar";
@@ -37,7 +36,7 @@ interface ProfileEditSheetProps {
 }
 
 type Step = 1 | 2;
-type QuestionnairePanel = "interests" | "flow" | "privacy" | null;
+type QuestionnairePanel = "interests" | "flow" | null;
 
 const EXPERIENCE_OPTIONS: Array<{ value: ExperienceLevel; label: string }> = [
   { value: "beginner", label: "Beginner" },
@@ -355,7 +354,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                         type="button"
                         onClick={() => setExperienceLevel(option.value)}
                         aria-pressed={active}
-                        className="focus-ring min-h-11 rounded-xl px-1 text-[0.72rem] font-semibold sm:text-sm"
+                        className="focus-ring min-h-11 rounded-xl px-1 text-xs font-semibold sm:text-sm"
                         style={active
                           ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                           : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -448,18 +447,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 })}
               </div>
             </section>
-          ) : panel === "privacy" ? (
-            <section data-testid="profile-edit-privacy-panel">
-              <button type="button" onClick={() => setPanel(null)} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
-                <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
-              </button>
-              <h3 className="text-xl font-semibold">Privacy &amp; grenzen</h3>
-              <p className="mt-1 max-w-[32rem] text-sm leading-6" style={{ color: "var(--text2)" }}>Privé antwoorden en grenzen beheer je per onderwerp. Deze editor verandert die keuzes niet.</p>
-              <div className="mt-5 rounded-xl p-4" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                <p className="text-sm font-semibold">Per onderwerp, bewust gekozen</p>
-                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>Open een onderwerp op je profiel om status, context en privacy te beheren.</p>
-              </div>
-            </section>
           ) : (
             <section data-testid="profile-edit-questionnaire-step">
               <h3
@@ -497,20 +484,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Ervaring</span>
                     <span className="mt-0.5 block text-sm" style={{ color: "var(--text2)" }}>{experienceLevel} · {modeLabel}</span>
-                  </span>
-                  <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPanel("privacy")}
-                  className="focus-ring flex min-h-[76px] items-center gap-3 rounded-xl px-3.5 text-left"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-                >
-                  <Lock size={27} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">Privacy &amp; grenzen</span>
-                    <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>Wat zijn je harde en zachte grenzen?</span>
                   </span>
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </button>
