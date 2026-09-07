@@ -65,6 +65,7 @@ export default function ProfileHero({
   const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
+  const hasBdsmtest = (profile.bdsmtestScores?.length ?? 0) > 0;
 
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
@@ -141,7 +142,7 @@ export default function ProfileHero({
     <>
       <section
         data-testid="profile-hero"
-        className={`ks-fade-in relative pb-4 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
+        className={`ks-fade-in relative ${hasBdsmtest ? "pb-2" : "pb-4"} pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
         style={{ zIndex: menuOpen ? 30 : undefined }}
       >
         <div className="flex items-start gap-5">
@@ -171,6 +172,15 @@ export default function ProfileHero({
                 )}
               </button>
             </ContextMenu>
+            {onAvatarChange && (
+              <span
+                className="pointer-events-none absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                aria-hidden="true"
+              >
+                <CameraPlus size={16} weight="regular" />
+              </span>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -239,7 +249,7 @@ export default function ProfileHero({
           )}
         </div>
 
-        {(profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
+        {(hasBdsmtest || profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
           <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
             <h3 className="mb-3 text-sm font-semibold">Gekoppelde bronnen</h3>
             <div className="grid gap-2">
