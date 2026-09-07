@@ -104,3 +104,66 @@ The user explicitly requires the KinkSync UI principles to be used **always, wit
 - Essential decision, consent, safety, or privacy context may not be hidden to gain cleaner visuals, tighter density, more stable geometry, or a faster flow.
 - KinkSync must keep character: intimate by default; many hues with few visual weights; expressive in colour but restrained in structure; organised by hierarchy; mobile-native; reflective, not clinical or rushed.
 - Existing patterns, design trends, screenshots, `frontend-design`, or prior code do not overrule `UI-principles.md`.
+
+## Serial UI/UX programme — user-approved 2026-09-07
+
+The user approved an autonomous but gated serial redesign programme. This authorization is cross-session and remains active until the sequence is completed or the user changes it.
+
+### Branch sequence
+
+Each branch starts only from the newly merged `dev` after the previous branch passed its gate:
+
+1. Empty Home composition — **DONE**, PR #456 merged to `dev` as `e756ce877048543f6c3d8719b583824c76c51429`.
+2. Design governance / Impeccable context.
+3. Populated Home hierarchy.
+4. Profile Hero.
+5. Profile Edit.
+6. Discover rationalisation / remove Deep Dive without making topics unreachable.
+7. Empty-Home backup restore utility.
+
+Do not parallelise these visual foundation branches. A later branch must not inherit a branch that is merely "mostly good".
+
+### Gate after every branch
+
+Before merge, review:
+
+- scope;
+- whether UX is actually better, not just different;
+- relevant iPhone/mobile geometry, browser and installed-PWA behaviour;
+- semantics and behaviour preservation unless intentionally changed;
+- accessibility, contrast and overflow;
+- selector hacks, duplicated chrome, unnecessary cards/pills and container nesting;
+- complete relevant regression-test surface;
+- diff against current `dev`;
+- CI and visual/device rehearsal evidence.
+
+Only PASS may merge. Fix or discard a weak foundation.
+
+### E2E authorization
+
+For this named serial UI/UX programme the user has already authorized the relevant Playwright/browser/device/offline quality gate. **Do not re-ask before every branch.** Run the appropriate gate autonomously and stop only when a material human visual decision is genuinely needed.
+
+A Vercel build-rate-limit is an infrastructure quota, not a code failure. Do not spend rate quota merely to obtain redundant previews when GitHub CI, build and screenshot artifacts provide the needed evidence. Still treat an actual Vercel build/deploy error as a real signal.
+
+## Impeccable design methodology — approved 2026-09-07
+
+The user approved Impeccable as an additional design lens across conversations and agents.
+
+- Native skill availability is optional. If the skill/CLI is unavailable, apply its methodology manually.
+- KinkSync authority remains: `PRODUCT.md` → `UI-principles.md` → `DESIGN.md` → incumbent evidence.
+- Default meaningful UI workflow: `shape → implement → critique → audit → distill when needed → bounded polish`.
+- Impeccable may not override the KinkSync brief or consent/privacy semantics.
+- Avoid open-ended polishing loops.
+
+## Locked Home/Profile directions — user-approved 2026-09-07
+
+The detailed design contract now lives in `DESIGN.md`; do not rely on chat history alone.
+
+Key locked points:
+
+- populated Home must shed redundant visual weight: no useless right-aligned profile count, profiles read as people/content rather than a pile of equal cards, Compare may keep focal weight, utilities stay quiet;
+- do not solve hierarchy with container-on-container/pill-on-card patterns;
+- Profile Hero should be person-first and much flatter, with ownership/edit/trust metadata quieter than identity;
+- Profile Edit targets two clear stages: identity, then questionnaire;
+- empty Home will later expose existing backup restore as a **tertiary utility below `Scan partnerprofiel`**, not as a third equal action card; preferred wording is `Heb je al een back-up?` + `Importeer back-up`;
+- when Deep Dive is removed, Discover must intentionally inherit any required exhaustive reachability so no explicit topic becomes unreachable.
