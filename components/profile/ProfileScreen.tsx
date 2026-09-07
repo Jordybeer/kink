@@ -226,7 +226,13 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pt-6">
+    <main
+      className="mx-auto w-full max-w-3xl pt-6"
+      style={{
+        backgroundImage: "radial-gradient(ellipse 90% 28rem at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 72%)",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       {errorMessage && (
         <div
           role="alert"
@@ -240,15 +246,7 @@ export default function ProfilePage({ params }: Props) {
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
-        <div
-          data-testid="profile-summary"
-          className="mx-[var(--page-gutter)] mb-4 rounded-[24px]"
-          style={{
-            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
-            border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-            boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
-          }}
-        >
+        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-4">
           <ProfileHero
             profile={currentProfile}
             onShare={shared ? undefined : () => setShareOpen(true)}
@@ -269,17 +267,14 @@ export default function ProfilePage({ params }: Props) {
           {!shared && (
             <Link
               href={`/profile/${currentProfile.id}/questions`}
-              className="focus-ring flex min-h-[68px] items-center gap-3 rounded-b-[24px] border-t px-4 py-3"
-              style={{
-                background: "color-mix(in srgb, var(--accent) 5%, transparent)",
-                borderColor: "var(--border)",
-              }}
+              className="focus-ring flex min-h-[72px] items-center gap-3 border-b py-3"
+              style={{ borderColor: "var(--border)" }}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
                   {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
                 </p>
-                <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                <p className="mt-0.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                   {coverage.complete
                     ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
                     : totalRated > 0
@@ -287,7 +282,7 @@ export default function ProfilePage({ params }: Props) {
                       : "Beantwoord vragen in je eigen tempo."}
                 </p>
               </div>
-              <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <ArrowRight size={19} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
             </Link>
           )}
         </div>
@@ -301,7 +296,7 @@ export default function ProfilePage({ params }: Props) {
             onClick={() => setCatalogOpen(true)}
             aria-expanded="false"
             aria-controls="profile-catalog-manager"
-            className="focus-ring flex min-h-12 w-full items-center gap-3 border-y px-1 text-left"
+            className="focus-ring flex min-h-12 w-full items-center gap-3 border-b px-1 text-left"
             style={{ borderColor: "var(--border)" }}
           >
             <span className="min-w-0 flex-1 py-2">
@@ -463,11 +458,7 @@ export default function ProfilePage({ params }: Props) {
               style={{ background: "var(--surface2)" }}
             >
               {statusSegments.map((segment) => (
-                <div
-                  key={segment.status}
-                  className="h-full"
-                  style={{ flex: segment.count, background: STATUS_VAR[segment.status] }}
-                />
+                <div key={segment.status} className="h-full" style={{ flex: segment.count, background: STATUS_VAR[segment.status] }} />
               ))}
             </div>
           )}
@@ -488,10 +479,7 @@ export default function ProfilePage({ params }: Props) {
           ) : (
             ratedByCategory.map(({ category, kinks }) => (
               <section key={category} className="mb-4">
-                <h3
-                  className="mb-2 text-base italic"
-                  style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-                >
+                <h3 className="mb-2 text-base italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
                   {kinkCategoryLabel(category)}
                 </h3>
                 <div className="flex flex-col gap-1.5">
