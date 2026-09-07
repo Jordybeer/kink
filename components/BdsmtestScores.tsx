@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CaretRight } from "@phosphor-icons/react";
 import type { BdsmtestScore } from "@/types";
 import Sheet, { SheetContent } from "@/components/Sheet";
+import BdsmtestMark from "@/components/brand/BdsmtestMark";
 
 const PREVIEW_COUNT = 3;
 
@@ -21,9 +22,7 @@ function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compa
           key={`${role}-${pct}`}
           className={`grid grid-cols-[minmax(0,6.5rem)_1fr_2.5rem] items-center gap-2 ${compact ? "min-h-7" : "min-h-8"}`}
         >
-          <span className="truncate text-sm" style={{ color: "var(--text)" }}>
-            {role}
-          </span>
+          <span className="truncate text-sm" style={{ color: "var(--text)" }}>{role}</span>
           <div
             role="progressbar"
             aria-label={`${role}: ${pct}%`}
@@ -38,9 +37,7 @@ function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compa
               style={{ width: `${pct}%`, background: "var(--accent)", transition: "width 250ms ease-out" }}
             />
           </div>
-          <span className="text-right text-sm tabular-nums" style={{ color: "var(--text2)" }}>
-            {pct}%
-          </span>
+          <span className="text-right text-sm tabular-nums" style={{ color: "var(--text2)" }}>{pct}%</span>
         </div>
       ))}
     </div>
@@ -55,40 +52,54 @@ export default function BdsmtestScores({ scores, embedded = false }: Props) {
 
   return (
     <>
-      <section
-        className={embedded ? "border-t py-4" : "mx-4 mb-3 rounded-xl px-3 py-2.5"}
-        style={embedded
-          ? { borderColor: "var(--border)" }
-          : { background: "var(--surface)", border: "1px solid var(--border)" }}
-        data-testid="bdsmtest-summary"
-      >
+      {embedded ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-haspopup="dialog"
-          className="focus-ring mb-2 flex min-h-11 w-full items-center justify-between gap-3 text-left"
+          data-testid="bdsmtest-summary"
+          className="focus-ring flex min-h-[64px] w-full items-center gap-3 rounded-xl px-3 text-left"
+          style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
         >
           <span
-            className="text-xl font-semibold"
-            style={{ color: "var(--text)", fontFamily: "var(--font-display, Georgia, serif)" }}
+            className="flex h-9 w-9 flex-none items-center justify-center rounded-lg"
+            style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
+            aria-hidden="true"
           >
-            BDSMTest
+            <BdsmtestMark className="h-[18px] w-[18px]" />
           </span>
-          <span className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: "var(--accent)" }}>
-            Bekijk alle {scores.length}
-            <CaretRight size={12} aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">BDSMTest</span>
+            <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>{scores.length} resultaten gekoppeld</span>
           </span>
+          <CaretRight size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
         </button>
-
-        <ScoreRows scores={preview} compact />
-      </section>
+      ) : (
+        <section
+          className="mx-4 mb-3 rounded-xl px-3 py-2.5"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          data-testid="bdsmtest-summary"
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-haspopup="dialog"
+            className="focus-ring mb-2 flex min-h-11 w-full items-center justify-between gap-3 text-left"
+          >
+            <span className="text-xl font-semibold" style={{ color: "var(--text)", fontFamily: "var(--font-display, Georgia, serif)" }}>BDSMTest</span>
+            <span className="inline-flex items-center gap-1 text-sm font-medium" style={{ color: "var(--accent)" }}>
+              Bekijk alle {scores.length}
+              <CaretRight size={12} aria-hidden="true" />
+            </span>
+          </button>
+          <ScoreRows scores={preview} compact />
+        </section>
+      )}
 
       <Sheet open={open} onClose={() => setOpen(false)} scrollable aria-label="Alle BDSMTest-resultaten">
         <SheetContent className="max-h-[80dvh] overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
           <h2 className="mb-4 px-1 text-lg font-bold">BDSMTest-resultaten</h2>
-          <div className="px-1 pb-2">
-            <ScoreRows scores={scores} />
-          </div>
+          <div className="px-1 pb-2"><ScoreRows scores={scores} /></div>
           <button
             type="button"
             onClick={() => setOpen(false)}
