@@ -13,19 +13,16 @@ import {
   X,
 } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
-import { useStore } from "@/lib/store";
-import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
-import {
-  QUESTIONNAIRE_INTERESTS,
-  QUESTIONNAIRE_MODES,
-} from "@/lib/questionnaire";
+import { resizeImage } from "@/lib/imageUtils";
 import {
   adoptProfilePerspective,
   getProfileSiblings,
   updateProfileIdentity,
   updateProfileQuestionnaire,
 } from "@/lib/profilePerspectives";
+import { QUESTIONNAIRE_INTERESTS, QUESTIONNAIRE_MODES } from "@/lib/questionnaire";
+import { useStore } from "@/lib/store";
 import type {
   Profile,
   ProfilePerspective,
@@ -68,7 +65,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const [perspective, setPerspective] = useState<ProfilePerspective | null>(null);
   const [questionnaireMode, setQuestionnaireMode] = useState<QuestionnaireMode>("dynamic");
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
-  const [avatarDataUrl, setAvatarDataUrl] = useState<string | undefined>(undefined);
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -170,9 +167,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     <Sheet open={open} onClose={onClose} scrollable aria-label="Profiel bewerken">
       <SheetContent
         showClose={false}
-        className="flex flex-col overflow-hidden px-0 pb-0 pt-0"
+        className="flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden px-0 pb-0 pt-0 sm:h-auto sm:min-h-[34rem] sm:max-h-[min(46rem,calc(100dvh-3rem))]"
         style={{
-          maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))",
           backgroundImage: "radial-gradient(ellipse 92% 25rem at 50% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 74%)",
           backgroundRepeat: "no-repeat",
         }}
@@ -203,7 +199,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3" aria-label="Stappen">
             <button
               type="button"
-              onClick={() => { setStep(1); setPanel(null); setError(null); }}
+              onClick={() => {
+                setStep(1);
+                setPanel(null);
+                setError(null);
+              }}
               className="focus-ring flex min-h-11 items-center gap-2 text-left"
               aria-current={step === 1 ? "step" : undefined}
             >
@@ -219,7 +219,9 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 Identiteit
               </span>
             </button>
+
             <span className="h-px w-10" style={{ background: "var(--border)" }} aria-hidden="true" />
+
             <button
               type="button"
               onClick={goNext}
@@ -246,7 +248,9 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <section data-testid="profile-edit-identity-step">
               <div className="mb-5">
                 <h3 className="text-lg font-semibold">Jij in dit profiel</h3>
-                <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>Dit is hoe je hier getoond wordt.</p>
+                <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
+                  Dit is hoe je hier getoond wordt.
+                </p>
               </div>
 
               <div className="mb-5 flex items-center gap-4">
@@ -268,9 +272,12 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     <CameraPlus size={16} aria-hidden="true" />
                   </span>
                 </div>
+
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">Foto</p>
-                  <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>Verander je profielfoto.</p>
+                  <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
+                    Verander je profielfoto.
+                  </p>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -290,18 +297,29 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 </div>
               </div>
 
-              <label htmlFor="profile-edit-name" className="mb-1.5 block text-sm font-semibold">Naam of alias</label>
+              <label htmlFor="profile-edit-name" className="mb-1.5 block text-sm font-semibold">
+                Naam of alias
+              </label>
               <input
                 id="profile-edit-name"
                 value={name}
-                onChange={(event) => { setName(event.target.value); setError(null); }}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setError(null);
+                }}
                 placeholder="Naam of alias"
                 autoComplete="off"
                 spellCheck={false}
                 className="focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-                style={{ background: "color-mix(in srgb, var(--surface2) 72%, transparent)", border: "1px solid var(--border)", color: "var(--text)" }}
+                style={{
+                  background: "color-mix(in srgb, var(--surface2) 72%, transparent)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
               />
-              <p className="mt-1.5 text-sm" style={{ color: "var(--text2)" }}>Dit is de naam die in de app getoond wordt.</p>
+              <p className="mt-1.5 text-sm" style={{ color: "var(--text2)" }}>
+                Dit is de naam die in de app getoond wordt.
+              </p>
 
               <fieldset className="mt-5 border-0 p-0">
                 <legend className="mb-2 text-sm font-semibold">Jouw richting</legend>
@@ -316,7 +334,10 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       <button
                         key={value}
                         type="button"
-                        onClick={() => { if (!unavailable) setPerspective(value); setError(null); }}
+                        onClick={() => {
+                          if (!unavailable) setPerspective(value);
+                          setError(null);
+                        }}
                         aria-pressed={active}
                         disabled={unavailable}
                         className="focus-ring flex min-h-[58px] items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold disabled:opacity-45"
@@ -331,10 +352,14 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   })}
                 </div>
                 <p className="mt-2 text-sm" style={{ color: "var(--text2)" }}>
-                  {paired ? "Gekoppelde perspectieven behouden ieder hun eigen richting." : "Je kunt dit later altijd aanpassen."}
+                  {paired
+                    ? "Gekoppelde perspectieven behouden ieder hun eigen richting."
+                    : "Je kunt dit later altijd aanpassen."}
                 </p>
                 {profile.legacyRole && (
-                  <p className="mt-1 text-xs" style={{ color: "var(--accent)" }}>Eerdere rol: {profile.legacyRole}</p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--accent)" }}>
+                    Eerdere rol: {profile.legacyRole}
+                  </p>
                 )}
               </fieldset>
 
@@ -344,7 +369,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
                     Dit profiel is gekoppeld aan andere perspectieven. Deze koppeling kan hier niet gewijzigd worden.
                   </p>
-                  <div className="mt-3 overflow-hidden rounded-xl" style={{ border: "1px solid var(--border)", background: "color-mix(in srgb, var(--surface2) 54%, transparent)" }}>
+                  <div className="mt-3 overflow-hidden rounded-xl" style={{ border: "1px solid var(--border)" }}>
                     {siblings.map((sibling, index) => (
                       <div
                         key={sibling.id}
@@ -429,13 +454,15 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       className="focus-ring min-h-[70px] rounded-xl px-3.5 py-3 text-left"
                       style={active
                         ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--accent)" }
-                        : { background: "color-mix(in srgb, var(--surface2) 50%, transparent)", border: "1px solid var(--border)" }}
+                        : { border: "1px solid var(--border)" }}
                     >
                       <span className="flex items-center justify-between gap-2">
                         <span className="text-sm font-semibold">{option.label}</span>
                         {active && <Check size={15} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />}
                       </span>
-                      <span className="mt-1 block text-sm leading-5" style={{ color: "var(--text2)" }}>{option.description}</span>
+                      <span className="mt-1 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                        {option.description}
+                      </span>
                     </button>
                   );
                 })}
@@ -452,35 +479,37 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
               </button>
               <h3 className="text-xl font-semibold">Privacy &amp; grenzen</h3>
-              <p className="mt-1 text-sm leading-6" style={{ color: "var(--text2)" }}>
-                Privé antwoorden en grenzen stel je per onderwerp in. Deze editor verandert die keuzes niet en bewaart je bestaande antwoorden.
+              <p className="mt-1 max-w-[32rem] text-sm leading-6" style={{ color: "var(--text2)" }}>
+                Privé antwoorden en grenzen beheer je per onderwerp. Deze editor verandert die keuzes niet.
               </p>
-              <div className="mt-5 border-y py-4" style={{ borderColor: "var(--border)" }}>
+              <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border)" }}>
                 <p className="text-sm font-semibold">Per onderwerp, bewust gekozen</p>
-                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
-                  Open een onderwerp op je profiel om de status, context en privacy van dat antwoord te beheren.
+                <p className="mt-1 max-w-[32rem] text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  Open een onderwerp op je profiel om status, context en privacy te beheren.
                 </p>
               </div>
             </section>
           ) : (
             <section data-testid="profile-edit-questionnaire-step">
-              <div className="mb-5">
-                <h3 className="text-xl font-semibold">Wat wil je verkennen?</h3>
-                <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>Beheer je kink-interesses, ervaring en voorkeuren.</p>
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold">Jouw vragenlijst</h3>
+                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  Kies waar Dynamic begint en hoe je door onbeantwoorde onderwerpen gaat.
+                </p>
               </div>
 
-              <div className="grid gap-2">
+              <div className="border-t" style={{ borderColor: "var(--border)" }}>
                 <button
                   type="button"
                   onClick={() => setPanel("interests")}
-                  className="focus-ring flex min-h-[76px] items-center gap-3 rounded-xl px-3.5 text-left"
-                  style={{ background: "color-mix(in srgb, var(--surface2) 52%, transparent)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[82px] w-full items-center gap-3 border-b py-3 text-left"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  <Heart size={28} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <Heart size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Interessegebieden</span>
-                    <span className="mt-0.5 block truncate text-sm" style={{ color: "var(--text2)" }}>
-                      {interests.length} gekozen
+                    <span className="mt-1 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                      {interests.length > 0 ? `${interests.length} gekozen` : "Nog niets gekozen"}
                     </span>
                   </span>
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
@@ -489,13 +518,13 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <button
                   type="button"
                   onClick={() => setPanel("flow")}
-                  className="focus-ring flex min-h-[76px] items-center gap-3 rounded-xl px-3.5 text-left"
-                  style={{ background: "color-mix(in srgb, var(--surface2) 52%, transparent)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[82px] w-full items-center gap-3 border-b py-3 text-left"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  <ListChecks size={28} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <ListChecks size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">Ervaring</span>
-                    <span className="mt-0.5 block truncate text-sm" style={{ color: "var(--text2)" }}>
+                    <span className="block text-sm font-semibold">Ervaring &amp; flow</span>
+                    <span className="mt-1 block text-sm leading-5" style={{ color: "var(--text2)" }}>
                       {profile.experienceLevel} · {modeLabel}
                     </span>
                   </span>
@@ -505,14 +534,14 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <button
                   type="button"
                   onClick={() => setPanel("privacy")}
-                  className="focus-ring flex min-h-[76px] items-center gap-3 rounded-xl px-3.5 text-left"
-                  style={{ background: "color-mix(in srgb, var(--surface2) 52%, transparent)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[86px] w-full items-center gap-3 border-b py-3 text-left"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  <Lock size={28} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <Lock size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Privacy &amp; grenzen</span>
-                    <span className="mt-0.5 block truncate text-sm" style={{ color: "var(--text2)" }}>
-                      Per onderwerp, zonder bestaande antwoorden te wijzigen
+                    <span className="mt-1 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                      Antwoorden en grenzen blijven per onderwerp beheerd.
                     </span>
                   </span>
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
@@ -525,9 +554,16 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         <footer
           className="flex-none px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
           data-testid="profile-edit-footer"
-          style={{ background: "color-mix(in srgb, var(--surface) 94%, transparent)", borderTop: "1px solid var(--border)" }}
+          style={{
+            background: "color-mix(in srgb, var(--surface) 94%, transparent)",
+            borderTop: "1px solid var(--border)",
+          }}
         >
-          {error && <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          {error && (
+            <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>
+              {error}
+            </p>
+          )}
 
           {step === 1 ? (
             <button
@@ -542,7 +578,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <div className="grid grid-cols-[0.82fr_1.18fr] gap-2">
               <button
                 type="button"
-                onClick={() => { if (panel) setPanel(null); else setStep(1); setError(null); }}
+                onClick={() => {
+                  if (panel) setPanel(null);
+                  else setStep(1);
+                  setError(null);
+                }}
                 className="focus-ring min-h-12 rounded-full text-sm font-semibold"
                 style={{ color: "var(--text)", border: "1px solid var(--border)" }}
               >
