@@ -7,8 +7,6 @@ import {
   ArrowsOutSimple,
   CameraPlus,
   CaretRight,
-  ChartBar,
-  Compass,
   FileText,
   Lock,
   PencilSimple,
@@ -68,6 +66,7 @@ export default function ProfileHero({
   const canEdit = Boolean(onEdit);
   const hasBdsmtest = (profile.bdsmtestScores?.length ?? 0) > 0;
   const hasLinkedSources = hasBdsmtest || Boolean(profile.fetLifeUsername) || (profileType === "partner" && Boolean(latestContract));
+  const showSourceSection = hasLinkedSources || canEdit;
 
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
@@ -93,8 +92,6 @@ export default function ProfileHero({
   }, [canEdit, canShare]);
   useTopNavActions(navActions);
 
-  const expLevel = profile.experienceLevel ?? "beginner";
-  const explorationMode = profile.questionnaireSetup?.mode === "deepDive" ? "Deep Dive" : "Dynamic";
   const initial = profile.name.charAt(0).toUpperCase();
   const avatarMenuItems = profile.avatarDataUrl
     ? [
@@ -218,88 +215,82 @@ export default function ProfileHero({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3" aria-label="Profielkenmerken">
-          <div className="flex min-w-0 items-start gap-2.5 pr-3" style={{ borderRight: "1px solid var(--border)" }}>
-            <ChartBar size={20} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
-            <div className="min-w-0">
-              <p className="text-xs" style={{ color: "var(--text2)" }}>Ervaring</p>
-              <p className="mt-0.5 truncate text-sm font-medium capitalize">{expLevel}</p>
-            </div>
+        {profileType === "partner" && (
+          <div className="mt-3 flex justify-start">
+            <ProfileTrust profile={profile} quiet />
           </div>
-          <div className="flex min-w-0 items-start gap-2.5 pl-1">
-            <Compass size={20} weight="regular" aria-hidden="true" style={{ color: "var(--accent2)" }} />
-            <div className="min-w-0">
-              <p className="text-xs" style={{ color: "var(--text2)" }}>Verkenningsmodus</p>
-              <p className="mt-0.5 truncate text-sm font-medium">{explorationMode}</p>
-            </div>
-          </div>
-        </div>
+        )}
 
-        <div className="mt-4 grid grid-cols-2 gap-3" aria-label="Profielinformatie">
-          <ProfileTrust profile={profile} quiet />
-          {canEdit && (
-            <button
-              type="button"
-              data-tour="profile-enrichment"
-              onClick={() => setEnrichmentOpen(true)}
-              className="focus-ring inline-flex min-h-11 min-w-0 items-center justify-center gap-2 text-sm font-medium active:opacity-70"
-              style={{ color: "var(--text2)" }}
-            >
-              <PencilSimple size={16} weight="regular" aria-hidden="true" />
-              <span className="truncate">Profielinfo</span>
-            </button>
-          )}
-        </div>
-
-        {hasLinkedSources && (
-          <div data-testid="profile-linked-sources" className="mt-5">
-            <h3 className="mb-2 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
-            <div className="grid gap-0.5">
-              {hasBdsmtest && (
-                <BdsmtestScores
-                  scores={profile.bdsmtestScores!}
-                  url={profile.bdsmtestUrl}
-                  embedded
-                />
-              )}
-
-              {profile.fetLifeUsername && (
-                <a
-                  href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
+        {showSourceSection && (
+          <div data-testid="profile-linked-sources" className="mt-6">
+            <div className="mb-2 flex min-h-11 items-center justify-between gap-3">
+              <h3 className="text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
+              {canEdit && (
+                <button
+                  type="button"
+                  data-tour="profile-enrichment"
+                  onClick={() => setEnrichmentOpen(true)}
+                  className="focus-ring inline-flex min-h-11 items-center gap-1.5 px-1 text-xs font-medium active:opacity-70"
+                  style={{ color: "var(--text2)" }}
                 >
-                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
-                    <FetLifeMark className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">FetLife</span>
-                    <span className="mt-0.5 block truncate text-xs" style={{ color: "var(--text2)" }}>@{profile.fetLifeUsername}</span>
-                  </span>
-                  <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
-                </a>
-              )}
-
-              {profileType === "partner" && latestContract && (
-                <Link
-                  href={`/contracts/${encodeURIComponent(latestContract.id)}`}
-                  prefetch={false}
-                  aria-label={`Open het meest recente contract met ${profile.name}`}
-                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
-                >
-                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
-                    <FileText size={16} weight="regular" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">Contract</span>
-                    <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Meest recente afspraak</span>
-                  </span>
-                  <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
-                </Link>
+                  <PencilSimple size={14} weight="regular" aria-hidden="true" />
+                  <span>Profielinfo</span>
+                </button>
               )}
             </div>
+
+            {hasLinkedSources ? (
+              <div className="grid gap-0.5">
+                {hasBdsmtest && (
+                  <BdsmtestScores
+                    scores={profile.bdsmtestScores!}
+                    url={profile.bdsmtestUrl}
+                    embedded
+                  />
+                )}
+
+                {profile.fetLifeUsername && (
+                  <a
+                    href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
+                    className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
+                  >
+                    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
+                      <FetLifeMark className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">FetLife</span>
+                      <span className="mt-0.5 block truncate text-xs" style={{ color: "var(--text2)" }}>@{profile.fetLifeUsername}</span>
+                    </span>
+                    <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                  </a>
+                )}
+
+                {profileType === "partner" && latestContract && (
+                  <Link
+                    href={`/contracts/${encodeURIComponent(latestContract.id)}`}
+                    prefetch={false}
+                    aria-label={`Open het meest recente contract met ${profile.name}`}
+                    className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
+                  >
+                    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
+                      <FileText size={16} weight="regular" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">Contract</span>
+                      <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Meest recente afspraak</span>
+                    </span>
+                    <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <p className="py-2 text-sm" style={{ color: "var(--text2)" }}>
+                Voeg BDSMTest of FetLife toe om externe profielcontext hier terug te vinden.
+              </p>
+            )}
           </div>
         )}
 
