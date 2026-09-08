@@ -251,15 +251,17 @@ export default function ProfileHero({
         </div>
 
         {(hasBdsmtest || profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
-          <div data-testid="profile-linked-sources" className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
-            <h3 className="mb-3 text-sm font-semibold">Gekoppelde bronnen</h3>
-            <div className="grid gap-2">
+          <div data-testid="profile-linked-sources" className="mt-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+            <h3 className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
+            <div>
               {hasBdsmtest && (
-                <BdsmtestScores
-                  scores={profile.bdsmtestScores!}
-                  url={profile.bdsmtestUrl}
-                  embedded
-                />
+                <div className="border-b" style={{ borderColor: "var(--border)" }}>
+                  <BdsmtestScores
+                    scores={profile.bdsmtestScores!}
+                    url={profile.bdsmtestUrl}
+                    embedded
+                  />
+                </div>
               )}
 
               {profile.fetLifeUsername && (
@@ -268,17 +270,17 @@ export default function ProfileHero({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-                  className="focus-ring flex min-h-[64px] items-center gap-3 rounded-xl px-3 text-left"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[60px] items-center gap-3 border-b px-1 text-left"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
-                    <FetLifeMark className="h-[18px] w-[18px]" />
+                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
+                    <FetLifeMark className="h-4 w-4" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">FetLife</span>
                     <span className="mt-0.5 block truncate text-xs" style={{ color: "var(--text2)" }}>@{profile.fetLifeUsername}</span>
                   </span>
-                  <CaretRight size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                  <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </a>
               )}
 
@@ -287,17 +289,17 @@ export default function ProfileHero({
                   href={`/contracts/${encodeURIComponent(latestContract.id)}`}
                   prefetch={false}
                   aria-label={`Open het meest recente contract met ${profile.name}`}
-                  className="focus-ring flex min-h-[64px] items-center gap-3 rounded-xl px-3 text-left"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[60px] items-center gap-3 border-b px-1 text-left"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}>
-                    <FileText size={18} weight="regular" aria-hidden="true" />
+                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
+                    <FileText size={16} weight="regular" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Contract</span>
                     <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Meest recente afspraak</span>
                   </span>
-                  <CaretRight size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                  <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </Link>
               )}
             </div>
