@@ -64,7 +64,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
         label: "Profiel delen",
         icon: <PlatformShareIcon size={18} weight="regular" aria-hidden="true" />,
         onClick: () => shareRef.current?.(),
-        placement: "overflow",
+        placement: canEdit ? "overflow" : "primary",
       });
     }
     return next;
@@ -133,9 +133,18 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
           <div className="relative mt-3 flex justify-start"><ProfileTrust profile={profile} quiet /></div>
         )}
 
+        {profile.privateNote && (
+          <p className="relative mt-4 max-w-[34rem] text-sm italic leading-relaxed" style={{ color: "var(--text2)" }}>
+            {profile.privateNote.length > 120 ? profile.privateNote.slice(0, 120) + "…" : profile.privateNote}
+          </p>
+        )}
+
         {hasLinkedSources && (
-          <div data-testid="profile-linked-sources" className="relative mt-7">
-            <h3 className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
+          <div data-testid="profile-linked-sources" className="relative mt-6">
+            <h3 className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>
+              <span aria-hidden="true">Meer over {profile.name}</span>
+              <span className="sr-only">Gekoppelde bronnen</span>
+            </h3>
             <div className="grid gap-0.5">
               {hasBdsmtestScores ? (
                 <BdsmtestScores scores={profile.bdsmtestScores!} url={profile.bdsmtestUrl} embedded />
@@ -205,12 +214,6 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
         {profileType === "partner" && profile.lockedAt && (
           <p className="relative mt-3 text-xs" style={{ color: "var(--text2)" }}>
             Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
-          </p>
-        )}
-
-        {profile.privateNote && (
-          <p className="relative mt-4 border-t pt-3 text-sm italic leading-snug" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
-            {profile.privateNote.length > 120 ? profile.privateNote.slice(0, 120) + "…" : profile.privateNote}
           </p>
         )}
       </section>
