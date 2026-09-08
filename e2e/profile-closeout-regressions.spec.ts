@@ -176,7 +176,8 @@ test("dense profile share keeps a fixed header and scrolls inside the iPhone vis
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
-  await page.getByRole("button", { name: "Profiel delen" }).click();
+  await page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" }).click();
+  await page.getByRole("menuitem", { name: "Profiel delen" }).click();
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByTestId("profile-share-qr")).toBeVisible({ timeout: 15_000 });
