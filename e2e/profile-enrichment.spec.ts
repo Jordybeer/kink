@@ -86,7 +86,9 @@ test.describe("Profielinfo", () => {
 
     const bdsmLink = page.getByRole("link", { name: "Open het opgeslagen BDSMTest-resultaat" });
     await expect(bdsmLink).toHaveAttribute("href", "https://bdsmtest.org/r/qXBN9QWw");
-    await expect(page.getByText("Little", { exact: true }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Bekijk alle 4 BDSMTest-resultaten" }).click();
+    const scoresDialog = page.getByRole("dialog", { name: "Alle BDSMTest-resultaten" });
+    await expect(scoresDialog.getByText("Little", { exact: true })).toBeVisible();
 
     const stored = await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");

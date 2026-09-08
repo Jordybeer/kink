@@ -200,7 +200,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               type="button"
               onClick={onClose}
               aria-label="Profiel bewerken sluiten"
-              className="focus-ring justify-self-end min-h-11 px-1 text-sm font-medium"
+              className="focus-ring min-h-11 justify-self-end px-1 text-sm font-medium"
               style={{ color: "var(--text2)" }}
             >
               Annuleren
@@ -377,17 +377,6 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <option value="">Niet tonen</option>
                 {RELATIONSHIP_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
               </select>
-
-              <label htmlFor="profile-edit-mode" className="mb-1.5 mt-4 block text-sm font-semibold">Verkenningsmodus</label>
-              <select
-                id="profile-edit-mode"
-                value={questionnaireMode}
-                onChange={(event) => setQuestionnaireMode(event.target.value as QuestionnaireMode)}
-                className="ks-select focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-              >
-                {QUESTIONNAIRE_MODES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select>
             </section>
           ) : panel === "interests" ? (
             <section data-testid="profile-edit-interests-panel">
@@ -421,7 +410,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <button type="button" onClick={() => setPanel(null)} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
               </button>
-              <h3 className="text-xl font-semibold">Ervaring &amp; flow</h3>
+              <h3 className="text-xl font-semibold">Verkenningsmodus</h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>Hoe wil je door onbeantwoorde onderwerpen gaan?</p>
               <div className="mt-4 grid gap-2">
                 {QUESTIONNAIRE_MODES.map((option) => {
@@ -459,14 +448,16 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 Deze onderdelen helpen je profiel verder in te vullen. Je kunt dit later altijd aanpassen.
               </p>
 
-              <div className="mt-4 grid gap-2">
+              <div
+                className="mt-4 divide-y"
+                style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}
+              >
                 <button
                   type="button"
                   onClick={() => setPanel("interests")}
-                  className="focus-ring flex min-h-[76px] items-center gap-3 rounded-xl px-3.5 text-left"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left"
                 >
-                  <Heart size={27} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <Heart size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Interessegebieden</span>
                     <span className="mt-0.5 block text-sm" style={{ color: "var(--text2)" }}>{interests.length > 0 ? `${interests.length} gekozen` : "Wat trekt je aan?"}</span>
@@ -477,13 +468,12 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <button
                   type="button"
                   onClick={() => setPanel("flow")}
-                  className="focus-ring flex min-h-[76px] items-center gap-3 rounded-xl px-3.5 text-left"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                  className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left"
                 >
-                  <ListChecks size={27} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <ListChecks size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">Ervaring</span>
-                    <span className="mt-0.5 block text-sm" style={{ color: "var(--text2)" }}>{experienceLevel} · {modeLabel}</span>
+                    <span className="block text-sm font-semibold">Verkenningsmodus</span>
+                    <span className="mt-0.5 block text-sm" style={{ color: "var(--text2)" }}>{modeLabel}</span>
                   </span>
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </button>

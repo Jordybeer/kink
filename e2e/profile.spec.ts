@@ -97,7 +97,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel("Hoofdperspectief *")).toBeVisible();
     await expect(dialog.getByLabel(/Relatiestatus/)).toBeVisible();
-    await expect(dialog.getByLabel("Verkenningsmodus")).toBeVisible();
+    await expect(dialog.getByLabel("Verkenningsmodus")).toHaveCount(0);
     await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
@@ -139,9 +139,14 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await dialog.getByRole("button", { name: /Volgende/ }).click();
     await expect(dialog.getByTestId("profile-edit-questionnaire-step")).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Interessegebieden/ })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /Ervaring/ })).toBeVisible();
+    const mode = dialog.getByRole("button", { name: /Verkenningsmodus/ });
+    await expect(mode).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toHaveCount(0);
     await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeVisible();
+
+    await mode.click();
+    await expect(dialog.getByTestId("profile-edit-flow-panel")).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Verkenningsmodus" })).toBeVisible();
   });
 
   test("statusbalk hoort bij de rustige read-view en verdwijnt in catalogusbeheer", async ({ page }) => {
