@@ -25,7 +25,6 @@ import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
-import BdsmtestScores from "@/components/BdsmtestScores";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import CategorySection from "@/components/CategorySection";
 import KinkListRow from "@/components/KinkListRow";
@@ -259,10 +258,6 @@ export default function ProfilePage({ params }: Props) {
             profileType={getProfileType(currentProfile, pinnedProfileId)}
             embedded
           />
-
-          {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
-            <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} embedded />
-          )}
 
           {!shared && (
             <Link

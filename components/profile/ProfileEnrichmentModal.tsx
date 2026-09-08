@@ -318,7 +318,7 @@ export default function ProfileEnrichmentModal({ open, profile, onClose }: Props
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              placeholder="Plak resultaatlink en resultaten"
+              placeholder="Plak hier de resultaatlink en resultaten"
               className="focus-ring mt-3 max-h-36 w-full resize-none rounded-xl px-3.5 py-3 text-base leading-6 focus:outline-none"
               style={{
                 background: "color-mix(in srgb, var(--surface2) 72%, transparent)",

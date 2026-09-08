@@ -18,6 +18,7 @@ import ContextMenu from "@/components/ui/ContextMenu";
 import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
+import BdsmtestScores from "@/components/BdsmtestScores";
 import ProfileEnrichmentModal from "@/components/profile/ProfileEnrichmentModal";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { Profile } from "@/types";
@@ -250,9 +251,17 @@ export default function ProfileHero({
         </div>
 
         {(hasBdsmtest || profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
-          <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+          <div data-testid="profile-linked-sources" className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
             <h3 className="mb-3 text-sm font-semibold">Gekoppelde bronnen</h3>
             <div className="grid gap-2">
+              {hasBdsmtest && (
+                <BdsmtestScores
+                  scores={profile.bdsmtestScores!}
+                  url={profile.bdsmtestUrl}
+                  embedded
+                />
+              )}
+
               {profile.fetLifeUsername && (
                 <a
                   href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
