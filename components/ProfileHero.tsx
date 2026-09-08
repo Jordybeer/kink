@@ -3,16 +3,10 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowsClockwise,
-  ArrowsOutSimple,
-  CameraPlus,
   CaretRight,
   FileText,
   Lock,
-  PencilSimple,
-  Trash,
 } from "@phosphor-icons/react";
-import ContextMenu from "@/components/ui/ContextMenu";
 import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
@@ -20,7 +14,6 @@ import BdsmtestScores from "@/components/BdsmtestScores";
 import ProfileEnrichmentModal from "@/components/profile/ProfileEnrichmentModal";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { Profile } from "@/types";
-import { resizeImage } from "@/lib/imageUtils";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
 import ProfileTrust from "@/components/ProfileTrust";
@@ -42,12 +35,9 @@ export default function ProfileHero({
   profile,
   onShare,
   onEdit,
-  onAvatarChange,
-  onError,
   profileType,
   embedded = false,
 }: ProfileHeroProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const shareRef = useRef(onShare);
   const editRef = useRef(onEdit);
 
@@ -56,7 +46,6 @@ export default function ProfileHero({
     editRef.current = onEdit;
   }, [onEdit, onShare]);
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const [enrichmentOpen, setEnrichmentOpen] = useState(false);
   useLegacyContractMigration();
@@ -70,22 +59,23 @@ export default function ProfileHero({
 
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
+    if (canEdit) {
+      next.push({
+        id: "edit-profile",
+        label: "Profiel bewerken",
+        shortLabel: "Bewerk",
+        icon: null,
+        onClick: () => editRef.current?.(),
+        placement: "primary",
+      });
+    }
     if (canShare) {
       next.push({
         id: "share-profile",
         label: "Profiel delen",
         icon: <PlatformShareIcon size={18} weight="regular" aria-hidden="true" />,
         onClick: () => shareRef.current?.(),
-        placement: "primary",
-      });
-    }
-    if (canEdit) {
-      next.push({
-        id: "edit-profile",
-        label: "Profiel bewerken",
-        icon: <PencilSimple size={17} weight="regular" aria-hidden="true" />,
-        onClick: () => editRef.current?.(),
-        placement: "secondary",
+        placement: "overflow",
       });
     }
     return next;
@@ -93,102 +83,32 @@ export default function ProfileHero({
   useTopNavActions(navActions);
 
   const initial = profile.name.charAt(0).toUpperCase();
-  const avatarMenuItems = profile.avatarDataUrl
-    ? [
-        {
-          label: "Foto bekijken",
-          icon: <ArrowsOutSimple size={14} weight="regular" aria-hidden="true" />,
-          onClick: () => setPhotoViewerOpen(true),
-        },
-        ...(onAvatarChange
-          ? [
-              {
-                label: "Foto bijwerken",
-                icon: <ArrowsClockwise size={14} weight="regular" aria-hidden="true" />,
-                onClick: () => fileInputRef.current?.click(),
-              },
-              {
-                label: "Foto verwijderen",
-                icon: <Trash size={14} weight="regular" aria-hidden="true" />,
-                danger: true,
-                onClick: () => onAvatarChange(undefined),
-              },
-            ]
-          : []),
-      ]
-    : onAvatarChange
-      ? [{
-          label: "Upload foto",
-          icon: <CameraPlus size={14} weight="regular" aria-hidden="true" />,
-          onClick: () => fileInputRef.current?.click(),
-        }]
-      : [];
-
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const dataUrl = await resizeImage(file);
-      onAvatarChange?.(dataUrl);
-    } catch (err) {
-      console.error("Avatar upload failed:", err);
-      onError?.("Afbeelding kon niet worden verwerkt. Probeer een andere afbeelding.");
-    }
-    e.target.value = "";
-  }
 
   return (
     <>
       <section
         data-testid="profile-hero"
         className={`ks-fade-in relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
-        style={{ zIndex: menuOpen ? 30 : undefined }}
       >
         <div className="flex items-start gap-5">
           <div className="relative flex-none">
-            <ContextMenu
-              open={menuOpen && avatarMenuItems.length > 0}
-              onClose={() => setMenuOpen(false)}
-              align="left"
-              items={avatarMenuItems}
+            <button
+              type="button"
+              data-tour="avatar"
+              onClick={() => {
+                if (profile.avatarDataUrl) setPhotoViewerOpen(true);
+              }}
+              disabled={!profile.avatarDataUrl}
+              className="focus-ring relative h-[6.6rem] w-[6.6rem] overflow-hidden rounded-full disabled:cursor-default"
+              style={{ border: "1px solid var(--border-accent)", background: "var(--surface2)" }}
+              aria-label={profile.avatarDataUrl ? "Profielfoto bekijken" : `Geen profielfoto voor ${profile.name}`}
             >
-              <button
-                type="button"
-                data-tour="avatar"
-                onClick={() => {
-                  if (profile.avatarDataUrl) setMenuOpen(true);
-                  else if (onAvatarChange) fileInputRef.current?.click();
-                }}
-                disabled={!profile.avatarDataUrl && !onAvatarChange}
-                className="focus-ring relative h-[6.6rem] w-[6.6rem] overflow-hidden rounded-full disabled:cursor-default"
-                style={{ border: "1px solid var(--border-accent)", background: "var(--surface2)" }}
-                aria-label={profile.avatarDataUrl ? "Profielfoto-opties" : "Profielfoto uploaden"}
-              >
-                {profile.avatarDataUrl ? (
-                  <img src={profile.avatarDataUrl} alt={profile.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-3xl italic" style={avatarStyle(profile.name)}>{initial}</div>
-                )}
-              </button>
-            </ContextMenu>
-            {onAvatarChange && (
-              <span
-                className="pointer-events-none absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-                aria-hidden="true"
-              >
-                <CameraPlus size={16} weight="regular" />
-              </span>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0"
-              onChange={handleAvatarUpload}
-              aria-hidden="true"
-              tabIndex={-1}
-            />
+              {profile.avatarDataUrl ? (
+                <img src={profile.avatarDataUrl} alt={profile.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-3xl italic" style={avatarStyle(profile.name)}>{initial}</div>
+              )}
+            </button>
           </div>
 
           <div className="min-w-0 flex-1 pt-1">
@@ -204,9 +124,16 @@ export default function ProfileHero({
             >
               {profile.name}
             </h2>
-            <p className="mt-3 text-xs" style={{ color: "var(--text2)" }}>Hoofdperspectief</p>
-            <p className="mt-0.5 text-sm font-semibold" style={{ color: "var(--text)" }}>{profile.role || "Niet gekozen"}</p>
-            {profile.relationshipStatus && <p className="mt-2 text-sm" style={{ color: "var(--text2)" }}>{profile.relationshipStatus}</p>}
+            <p className="mt-3 text-base font-semibold" style={{ color: "var(--text)" }}>
+              <span className="sr-only">Hoofdperspectief: </span>
+              {profile.role || "Perspectief nog niet gekozen"}
+            </p>
+            {profile.relationshipStatus && (
+              <p className="mt-1.5 text-sm" style={{ color: "var(--text2)" }}>
+                <span className="sr-only">Relatiestatus: </span>
+                {profile.relationshipStatus}
+              </p>
+            )}
             {profileType === "partner" && (
               <p className="mt-2 inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
                 <Lock size={12} weight="regular" aria-hidden="true" /> Gedeeld profiel
@@ -230,11 +157,11 @@ export default function ProfileHero({
                   type="button"
                   data-tour="profile-enrichment"
                   onClick={() => setEnrichmentOpen(true)}
-                  className="focus-ring inline-flex min-h-11 items-center gap-1.5 px-1 text-xs font-medium active:opacity-70"
+                  aria-label="Gekoppelde bronnen en profielinfo beheren"
+                  className="focus-ring min-h-11 px-1 text-xs font-semibold active:opacity-70"
                   style={{ color: "var(--text2)" }}
                 >
-                  <PencilSimple size={14} weight="regular" aria-hidden="true" />
-                  <span>Profielinfo</span>
+                  Beheer
                 </button>
               )}
             </div>
