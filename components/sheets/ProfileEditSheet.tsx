@@ -1,17 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CameraPlus,
   CaretLeft,
   CaretRight,
   Check,
+  CheckCircle,
   Heart,
+  LinkSimple,
   ListChecks,
+  Sparkle,
+  Trash,
 } from "@phosphor-icons/react";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import { avatarStyle } from "@/lib/avatar";
 import { resizeImage } from "@/lib/imageUtils";
+import {
+  MAX_BDSMTEST_COPY_CHARS,
+  parseBdsmtestCopyAll,
+  type BdsmtestCopyAllError,
+} from "@/lib/parseBdsmtest";
 import {
   adoptProfilePerspective,
   getProfileSiblings,
@@ -36,7 +45,7 @@ interface ProfileEditSheetProps {
 }
 
 type Step = 1 | 2;
-type QuestionnairePanel = "interests" | "flow" | null;
+type EditPanel = "sources" | "interests" | "flow" | null;
 
 const EXPERIENCE_OPTIONS: Array<{ value: ExperienceLevel; label: string }> = [
   { value: "beginner", label: "Beginner" },
@@ -44,6 +53,22 @@ const EXPERIENCE_OPTIONS: Array<{ value: ExperienceLevel; label: string }> = [
   { value: "ervaren", label: "Ervaren" },
   { value: "diepgaand", label: "Diepgaand" },
 ];
+
+const ERROR_COPY: Record<BdsmtestCopyAllError, string> = {
+  "too-large": "Deze plaktekst is te groot om veilig te verwerken.",
+  "missing-url": "Geen geldige BDSMTest-resultaatlink gevonden.",
+  "multiple-urls": "Deze plaktekst bevat meer dan één resultaatlink.",
+  "invalid-url": "De resultaatlink lijkt niet van bdsmtest.org te komen.",
+  "missing-results": "Geen herkenbare BDSMTest-resultaten gevonden.",
+  "invalid-results": "Een of meer BDSMTest-resultaten hebben een ongeldig formaat.",
+};
+
+const BDSMTEST_INPUT_MAX_CHARS = MAX_BDSMTEST_COPY_CHARS + 1;
+
+function validFetLifeUsername(value: string): boolean {
+  const clean = value.trim();
+  return !clean || (!clean.includes("://") && !clean.includes("<") && !clean.includes(">") && clean.length <= 200);
+}
 
 function inferredPerspective(profile: Profile): ProfilePerspective | null {
   if (profile.perspective) return profile.perspective;
@@ -66,7 +91,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>(1);
-  const [panel, setPanel] = useState<QuestionnairePanel>(null);
+  const [panel, setPanel] = useState<EditPanel>(null);
   const [name, setName] = useState("");
   const [perspective, setPerspective] = useState<ProfilePerspective | null>(null);
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("beginner");
@@ -74,6 +99,9 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const [questionnaireMode, setQuestionnaireMode] = useState<QuestionnaireMode>("dynamic");
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | undefined>();
+  const [fetLife, setFetLife] = useState("");
+  const [bdsmPaste, setBdsmPaste] = useState("");
+  const [removeBdsmtest, setRemoveBdsmtest] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,10 +116,21 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     setQuestionnaireMode(setup?.mode ?? "dynamic");
     setInterests([...(setup?.interests ?? [])]);
     setAvatarDataUrl(profile.avatarDataUrl);
+    setFetLife(profile.fetLifeUsername ?? "");
+    setBdsmPaste("");
+    setRemoveBdsmtest(false);
     setError(null);
     // Reset when this sheet opens for a profile, not after every store mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, profile.id]);
+
+  const parsedBdsmtest = useMemo(() => {
+    if (!bdsmPaste.trim()) return null;
+    return parseBdsmtestCopyAll(bdsmPaste);
+  }, [bdsmPaste]);
+
+  const sourcesValid = validFetLifeUsername(fetLife)
+    && (!bdsmPaste.trim() || parsedBdsmtest?.ok === true);
 
   function toggleInterest(interest: QuestionnaireInterest) {
     setInterests((current) =>
@@ -113,8 +152,27 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     return true;
   }
 
+  function validateSources(): boolean {
+    if (!validFetLifeUsername(fetLife)) {
+      setError("Vul bij FetLife alleen je gebruikersnaam in.");
+      return false;
+    }
+    if (bdsmPaste.trim() && (!parsedBdsmtest || !parsedBdsmtest.ok)) {
+      setError(parsedBdsmtest && !parsedBdsmtest.ok ? ERROR_COPY[parsedBdsmtest.error] : "BDSMTest kon niet worden verwerkt.");
+      return false;
+    }
+    return true;
+  }
+
   function goNext() {
-    if (!validateIdentity()) return;
+    if (!validateIdentity()) {
+      setPanel(null);
+      return;
+    }
+    if (!validateSources()) {
+      setPanel("sources");
+      return;
+    }
     setError(null);
     setStep(2);
     setPanel(null);
@@ -139,13 +197,25 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
       setPanel(null);
       return;
     }
+    if (!validateSources()) {
+      setStep(1);
+      setPanel("sources");
+      return;
+    }
 
     try {
+      const cleanFetLife = fetLife.trim();
+      const nextBdsmtestUrl = removeBdsmtest
+        ? undefined
+        : parsedBdsmtest?.ok
+          ? parsedBdsmtest.url
+          : profile.bdsmtestUrl;
+
       updateProfileIdentity(profile.id, {
         name: name.trim(),
         relationshipStatus: relationshipStatus || undefined,
-        fetLifeUsername: profile.fetLifeUsername,
-        bdsmtestUrl: profile.bdsmtestUrl,
+        fetLifeUsername: cleanFetLife || undefined,
+        bdsmtestUrl: nextBdsmtestUrl,
       });
 
       if (profile.perspective !== perspective) {
@@ -159,11 +229,20 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
       });
 
       useStore.setState((state) => ({
-        profiles: state.profiles.map((candidate) =>
-          candidate.id === profile.id
-            ? { ...candidate, experienceLevel, updatedAt: Date.now() }
-            : candidate,
-        ),
+        profiles: state.profiles.map((candidate) => {
+          if (candidate.id !== profile.id) return candidate;
+          const sourcePatch = removeBdsmtest
+            ? { bdsmtestUrl: undefined, bdsmtestScores: undefined }
+            : parsedBdsmtest?.ok
+              ? { bdsmtestUrl: parsedBdsmtest.url, bdsmtestScores: parsedBdsmtest.scores }
+              : {};
+          return {
+            ...candidate,
+            ...sourcePatch,
+            experienceLevel,
+            updatedAt: Date.now(),
+          };
+        }),
       }));
 
       if (avatarDataUrl !== profile.avatarDataUrl) {
@@ -180,6 +259,10 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const initial = name.trim().charAt(0).toUpperCase() || profile.name.charAt(0).toUpperCase();
   const modeLabel = QUESTIONNAIRE_MODES.find((option) => option.value === questionnaireMode)?.label ?? "Dynamic";
   const siblingPerspectives = new Set(siblings.map(perspectiveForProfile).filter(Boolean));
+  const hasStoredBdsmtest = Boolean(profile.bdsmtestUrl || profile.bdsmtestScores?.length);
+  const hasDraftBdsmtest = removeBdsmtest ? false : Boolean(parsedBdsmtest?.ok || hasStoredBdsmtest);
+  const sourceLabels = [fetLife.trim() ? "FetLife" : null, hasDraftBdsmtest ? "BDSMTest" : null].filter(Boolean);
+  const sourceSummary = sourceLabels.length ? sourceLabels.join(" · ") : "Niet gekoppeld";
 
   return (
     <Sheet open={open} onClose={onClose} scrollable variant="surface" aria-label="Profiel bewerken">
@@ -188,7 +271,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         showHandle={false}
         className="flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-[24px] px-0 pb-0 pt-0 sm:h-auto sm:min-h-[42rem] sm:max-h-[min(48rem,calc(100dvh-3rem))] sm:rounded-[24px]"
         style={{
-          backgroundImage: "radial-gradient(ellipse 88% 24rem at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 76%)",
+          backgroundImage: "radial-gradient(ellipse 88% 24rem at 50% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 76%)",
           backgroundRepeat: "no-repeat",
         }}
       >
@@ -239,12 +322,118 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-4" data-testid="profile-edit-scroll-body">
-          {step === 1 ? (
-            <section data-testid="profile-edit-identity-step">
-              <h3
-                className="text-2xl leading-tight"
-                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
+          {step === 1 && panel === "sources" ? (
+            <section data-testid="profile-edit-sources-panel">
+              <button
+                type="button"
+                onClick={() => {
+                  setPanel(null);
+                  setError(null);
+                }}
+                className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+                style={{ color: "var(--text2)" }}
               >
+                <CaretLeft size={16} aria-hidden="true" /> Identiteit
+              </button>
+              <h3 className="text-xl font-semibold">Gekoppelde bronnen</h3>
+              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                Optionele externe profielcontext. Alles blijft lokaal opgeslagen.
+              </p>
+
+              <section className="mt-5">
+                <div className="flex items-center gap-2">
+                  <LinkSimple size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <h4 className="text-sm font-semibold">FetLife</h4>
+                </div>
+                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  Vul alleen je gebruikersnaam in. De link wordt lokaal opgebouwd.
+                </p>
+                <input
+                  value={fetLife}
+                  onChange={(event) => {
+                    setFetLife(event.target.value);
+                    setError(null);
+                  }}
+                  maxLength={200}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="Gebruikersnaam"
+                  className="focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                />
+              </section>
+
+              <section className="mt-5 border-t pt-5" style={{ borderColor: "var(--border)" }}>
+                <div className="flex items-center gap-2">
+                  <Sparkle size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
+                  <h4 className="text-sm font-semibold">BDSMTest</h4>
+                </div>
+                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  Kies op bdsmtest.org Copy all en plak het resultaat hier in één keer.
+                </p>
+                <textarea
+                  value={bdsmPaste}
+                  onChange={(event) => {
+                    setBdsmPaste(event.target.value);
+                    setRemoveBdsmtest(false);
+                    setError(null);
+                  }}
+                  rows={4}
+                  maxLength={BDSMTEST_INPUT_MAX_CHARS}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="Plak hier de resultaatlink en resultaten"
+                  className="focus-ring mt-3 max-h-36 w-full resize-none rounded-xl px-3.5 py-3 text-base leading-6 focus:outline-none"
+                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                />
+
+                {parsedBdsmtest?.ok && (
+                  <div className="mt-3 flex flex-wrap gap-2" role="status">
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm" style={{ color: "var(--yes)", border: "1px solid color-mix(in srgb, var(--yes) 30%, var(--border))" }}>
+                      <CheckCircle size={14} weight="fill" aria-hidden="true" /> Resultaatlink gevonden
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm" style={{ color: "var(--yes)", border: "1px solid color-mix(in srgb, var(--yes) 30%, var(--border))" }}>
+                      <CheckCircle size={14} weight="fill" aria-hidden="true" /> {parsedBdsmtest.scores.length} resultaten gevonden
+                    </span>
+                  </div>
+                )}
+
+                {parsedBdsmtest && !parsedBdsmtest.ok && (
+                  <p className="mt-2 text-sm leading-5" role="status" style={{ color: "var(--hard-no-text)" }}>
+                    {ERROR_COPY[parsedBdsmtest.error]}
+                  </p>
+                )}
+
+                {hasStoredBdsmtest && !bdsmPaste.trim() && !removeBdsmtest && (
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                    <p className="text-sm" style={{ color: "var(--text2)" }}>
+                      {profile.bdsmtestScores?.length ?? 0} resultaten opgeslagen
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRemoveBdsmtest(true);
+                        setError(null);
+                      }}
+                      className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
+                      style={{ color: "var(--hard-no-text)", border: "1px solid var(--border)" }}
+                    >
+                      <Trash size={14} aria-hidden="true" /> Verwijder
+                    </button>
+                  </div>
+                )}
+
+                {removeBdsmtest && (
+                  <p className="mt-3 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                    De opgeslagen BDSMTest-link en resultaten worden verwijderd wanneer je opslaat.
+                  </p>
+                )}
+              </section>
+            </section>
+          ) : step === 1 ? (
+            <section data-testid="profile-edit-identity-step">
+              <h3 className="text-2xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
                 Identiteit
               </h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
@@ -252,43 +441,23 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               </p>
 
               <div className="mt-4 flex items-center gap-4">
-                <div
-                  className="relative flex h-[5.5rem] w-[5.5rem] flex-none items-center justify-center overflow-hidden rounded-full"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}
-                >
+                <div className="relative flex h-[5.5rem] w-[5.5rem] flex-none items-center justify-center overflow-hidden rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}>
                   {avatarDataUrl ? (
                     <img src={avatarDataUrl} alt="Nieuwe profielfoto" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl italic" style={avatarStyle(name || profile.name)}>
-                      {initial}
-                    </div>
+                    <div className="flex h-full w-full items-center justify-center text-2xl italic" style={avatarStyle(name || profile.name)}>{initial}</div>
                   )}
-                  <span
-                    className="pointer-events-none absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full"
-                    style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
-                  >
+                  <span className="pointer-events-none absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
                     <CameraPlus size={16} aria-hidden="true" />
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">Profielfoto</p>
                   <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>Verander je profielfoto.</p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="focus-ring mt-2 min-h-11 rounded-xl px-3 text-sm font-semibold"
-                    style={{ border: "1px solid var(--border)" }}
-                  >
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="focus-ring mt-2 min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ border: "1px solid var(--border)" }}>
                     Foto wijzigen
                   </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="sr-only"
-                    aria-label="Nieuwe profielfoto kiezen"
-                  />
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="sr-only" aria-label="Nieuwe profielfoto kiezen" />
                 </div>
               </div>
 
@@ -328,14 +497,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <p className="mb-1.5 text-sm font-semibold">Andere perspectieven</p>
                   <div className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--border)", background: "var(--surface2)" }}>
                     {siblings.map((sibling, index) => (
-                      <div
-                        key={sibling.id}
-                        className="flex min-h-12 items-center gap-3 px-3"
-                        style={index > 0 ? { borderTop: "1px solid var(--border)" } : undefined}
-                      >
-                        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-xs font-semibold" style={avatarStyle(sibling.name)}>
-                          {sibling.name.charAt(0).toUpperCase()}
-                        </span>
+                      <div key={sibling.id} className="flex min-h-12 items-center gap-3 px-3" style={index > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
+                        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-xs font-semibold" style={avatarStyle(sibling.name)}>{sibling.name.charAt(0).toUpperCase()}</span>
                         <span className="min-w-0 flex-1 truncate text-sm">{sibling.role}</span>
                       </div>
                     ))}
@@ -377,6 +540,24 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <option value="">Niet tonen</option>
                 {RELATIONSHIP_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
               </select>
+
+              <button
+                type="button"
+                data-tour="profile-enrichment"
+                onClick={() => {
+                  setPanel("sources");
+                  setError(null);
+                }}
+                className="focus-ring mt-5 flex min-h-[68px] w-full items-center gap-3 border-y px-1 py-3 text-left"
+                style={{ borderColor: "var(--border)" }}
+              >
+                <LinkSimple size={22} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">Gekoppelde bronnen</span>
+                  <span className="mt-0.5 block text-sm" style={{ color: "var(--text2)" }}>{sourceSummary}</span>
+                </span>
+                <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
+              </button>
             </section>
           ) : panel === "interests" ? (
             <section data-testid="profile-edit-interests-panel">
@@ -438,25 +619,15 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : (
             <section data-testid="profile-edit-questionnaire-step">
-              <h3
-                className="text-2xl leading-tight"
-                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
-              >
+              <h3 className="text-2xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
                 Vragenlijst
               </h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
                 Deze onderdelen helpen je profiel verder in te vullen. Je kunt dit later altijd aanpassen.
               </p>
 
-              <div
-                className="mt-4 divide-y"
-                style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setPanel("interests")}
-                  className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left"
-                >
+              <div className="mt-4 divide-y" style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+                <button type="button" onClick={() => setPanel("interests")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left">
                   <Heart size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Interessegebieden</span>
@@ -465,11 +636,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setPanel("flow")}
-                  className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left"
-                >
+                <button type="button" onClick={() => setPanel("flow")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left">
                   <ListChecks size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Verkenningsmodus</span>
@@ -489,7 +656,13 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         >
           {error && <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{error}</p>}
           {step === 1 ? (
-            <button type="button" onClick={goNext} className="focus-ring min-h-12 w-full rounded-full text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!sourcesValid}
+              className="focus-ring min-h-12 w-full rounded-full text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+            >
               Volgende <CaretRight size={15} className="ml-1 inline" aria-hidden="true" />
             </button>
           ) : (
@@ -506,7 +679,13 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               >
                 <CaretLeft size={15} className="mr-1 inline" aria-hidden="true" /> Vorige
               </button>
-              <button type="button" onClick={save} className="focus-ring min-h-12 rounded-full text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
+              <button
+                type="button"
+                onClick={save}
+                disabled={!sourcesValid}
+                className="focus-ring min-h-12 rounded-full text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+              >
                 Opslaan
               </button>
             </div>

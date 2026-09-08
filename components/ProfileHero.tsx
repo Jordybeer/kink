@@ -7,7 +7,6 @@ import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
 import BdsmtestScores from "@/components/BdsmtestScores";
-import ProfileEnrichmentModal from "@/components/profile/ProfileEnrichmentModal";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { Profile } from "@/types";
 import { avatarStyle } from "@/lib/avatar";
@@ -37,7 +36,6 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
   }, [onEdit, onShare]);
 
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
-  const [enrichmentOpen, setEnrichmentOpen] = useState(false);
   useLegacyContractMigration();
   const contractSeries = useContractStore((state) => state.series);
   const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
@@ -57,13 +55,6 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
         onClick: () => editRef.current?.(),
         placement: "primary",
       });
-      next.push({
-        id: "profile-sources",
-        label: "Gekoppelde bronnen",
-        icon: <FileText size={18} weight="regular" aria-hidden="true" />,
-        onClick: () => setEnrichmentOpen(true),
-        placement: "overflow",
-      });
     }
     if (canShare) {
       next.push({
@@ -82,7 +73,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
 
   return (
     <>
-      <section data-testid="profile-hero" className={`ks-fade-in relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}>
+      <section data-testid="profile-hero" data-tour="profile-enrichment" className={`ks-fade-in relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}>
         <div
           className="pointer-events-none absolute -left-[var(--page-gutter)] -right-[var(--page-gutter)] -top-20 h-[19rem]"
           style={{
@@ -198,8 +189,6 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
           </p>
         )}
       </section>
-
-      {canEdit && <ProfileEnrichmentModal open={enrichmentOpen} profile={profile} onClose={() => setEnrichmentOpen(false)} />}
 
       <Sheet open={photoViewerOpen && Boolean(profile.avatarDataUrl)} onClose={() => setPhotoViewerOpen(false)} aria-label={`Profielfoto van ${profile.name}`}>
         <SheetContent showHandle={false} className="max-h-[calc(100dvh-env(safe-area-inset-top))] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
