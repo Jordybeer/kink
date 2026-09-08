@@ -135,12 +135,13 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
     return Boolean(target && (target.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING));
   }, '[data-testid="bdsmtest-summary"]')).toBe(true);
 
-  const disclosureBox = await summary.boundingBox();
+  const disclosure = summary.getByRole("button", { name: "Bekijk alle 3 BDSMTest-resultaten" });
+  const disclosureBox = await disclosure.boundingBox();
   expect(disclosureBox).not.toBeNull();
-  expect(disclosureBox!.height).toBeGreaterThanOrEqual(64);
+  expect(disclosureBox!.height).toBeGreaterThanOrEqual(44);
   await expect(summary).toContainText("3 resultaten gekoppeld");
 
-  await summary.click();
+  await disclosure.click();
   const resultsDialog = page.getByRole("dialog", { name: "Alle BDSMTest-resultaten" });
   await expect(resultsDialog).toBeVisible();
   await expect(resultsDialog.getByText("Dominant", { exact: true })).toBeVisible();

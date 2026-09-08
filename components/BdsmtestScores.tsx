@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CaretRight } from "@phosphor-icons/react";
+import { ArrowSquareOut, CaretRight } from "@phosphor-icons/react";
 import type { BdsmtestScore } from "@/types";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import BdsmtestMark from "@/components/brand/BdsmtestMark";
@@ -44,7 +44,7 @@ function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compa
   );
 }
 
-export default function BdsmtestScores({ scores, embedded = false }: Props) {
+export default function BdsmtestScores({ scores, url, embedded = false }: Props) {
   const [open, setOpen] = useState(false);
   if (!scores.length) return null;
 
@@ -53,27 +53,44 @@ export default function BdsmtestScores({ scores, embedded = false }: Props) {
   return (
     <>
       {embedded ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-haspopup="dialog"
+        <div
           data-testid="bdsmtest-summary"
-          className="focus-ring flex min-h-[64px] w-full items-center gap-3 rounded-xl px-3 text-left"
+          className="flex min-h-[64px] w-full items-center rounded-xl"
           style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
         >
-          <span
-            className="flex h-9 w-9 flex-none items-center justify-center rounded-lg"
-            style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
-            aria-hidden="true"
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-haspopup="dialog"
+            aria-label={`Bekijk alle ${scores.length} BDSMTest-resultaten`}
+            className="focus-ring flex min-h-[62px] min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-left"
           >
-            <BdsmtestMark className="h-[18px] w-[18px]" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">BDSMTest</span>
-            <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>{scores.length} resultaten gekoppeld</span>
-          </span>
-          <CaretRight size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
-        </button>
+            <span
+              className="flex h-9 w-9 flex-none items-center justify-center rounded-lg"
+              style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
+              aria-hidden="true"
+            >
+              <BdsmtestMark className="h-[18px] w-[18px]" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">BDSMTest</span>
+              <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>{scores.length} resultaten gekoppeld</span>
+            </span>
+            <CaretRight size={16} aria-hidden="true" style={{ color: "var(--text2)" }} />
+          </button>
+          {url && (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open het opgeslagen BDSMTest-resultaat"
+              className="focus-ring mr-2 flex h-11 w-11 flex-none items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
+            >
+              <ArrowSquareOut size={17} aria-hidden="true" />
+            </a>
+          )}
+        </div>
       ) : (
         <section
           className="mx-4 mb-3 rounded-xl px-3 py-2.5"
