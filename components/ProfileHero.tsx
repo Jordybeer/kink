@@ -2,10 +2,11 @@
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { CaretRight, FileText, Lock } from "@phosphor-icons/react";
+import { ArrowSquareOut, CaretRight, FileText, Lock } from "@phosphor-icons/react";
 import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
+import BdsmtestMark from "@/components/brand/BdsmtestMark";
 import BdsmtestScores from "@/components/BdsmtestScores";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { Profile } from "@/types";
@@ -41,7 +42,8 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
   const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
-  const hasBdsmtest = (profile.bdsmtestScores?.length ?? 0) > 0;
+  const hasBdsmtestScores = (profile.bdsmtestScores?.length ?? 0) > 0;
+  const hasBdsmtest = hasBdsmtestScores || Boolean(profile.bdsmtestUrl);
   const hasLinkedSources = hasBdsmtest || Boolean(profile.fetLifeUsername) || (profileType === "partner" && Boolean(latestContract));
 
   const navActions = useMemo<TopNavAction[]>(() => {
@@ -135,7 +137,30 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
           <div data-testid="profile-linked-sources" className="relative mt-7">
             <h3 className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
             <div className="grid gap-0.5">
-              {hasBdsmtest && <BdsmtestScores scores={profile.bdsmtestScores!} url={profile.bdsmtestUrl} embedded />}
+              {hasBdsmtestScores ? (
+                <BdsmtestScores scores={profile.bdsmtestScores!} url={profile.bdsmtestUrl} embedded />
+              ) : profile.bdsmtestUrl ? (
+                <a
+                  href={profile.bdsmtestUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open het opgeslagen BDSMTest-resultaat"
+                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
+                >
+                  <span
+                    className="flex h-8 w-8 flex-none items-center justify-center rounded-lg"
+                    style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}
+                    aria-hidden="true"
+                  >
+                    <BdsmtestMark className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">BDSMTest</span>
+                    <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Resultaatlink gekoppeld</span>
+                  </span>
+                  <ArrowSquareOut size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                </a>
+              ) : null}
 
               {profile.fetLifeUsername && (
                 <a

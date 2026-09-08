@@ -90,6 +90,21 @@ test.describe("Gekoppelde bronnen in profielbewerking", () => {
     ]);
   });
 
+  test("behoudt een legacy BDSMTest-link ook zonder lokaal opgeslagen scores", async ({ page }) => {
+    const legacy = {
+      ...PROFILE_ALEX,
+      bdsmtestUrl: "https://bdsmtest.org/r/legacyResult",
+      bdsmtestScores: undefined,
+    };
+    await seedAndGo(page, "/profile/pw-alex-001", [legacy, PROFILE_SAM], { profileTourComplete: true });
+
+    const link = page.getByRole("link", { name: "Open het opgeslagen BDSMTest-resultaat" });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", "https://bdsmtest.org/r/legacyResult");
+    await expect(page.getByText("Resultaatlink gekoppeld", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Bekijk alle .* BDSMTest-resultaten/ })).toHaveCount(0);
+  });
+
   test("weigert een look-alike URL zonder bestaande data te overschrijven", async ({ page }) => {
     const existing = {
       ...PROFILE_ALEX,
