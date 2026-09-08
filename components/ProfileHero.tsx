@@ -2,11 +2,7 @@
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  CaretRight,
-  FileText,
-  Lock,
-} from "@phosphor-icons/react";
+import { CaretRight, FileText, Lock } from "@phosphor-icons/react";
 import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
@@ -31,13 +27,7 @@ interface ProfileHeroProps {
   embedded?: boolean;
 }
 
-export default function ProfileHero({
-  profile,
-  onShare,
-  onEdit,
-  profileType,
-  embedded = false,
-}: ProfileHeroProps) {
+export default function ProfileHero({ profile, onShare, onEdit, profileType, embedded = false }: ProfileHeroProps) {
   const shareRef = useRef(onShare);
   const editRef = useRef(onEdit);
 
@@ -55,7 +45,6 @@ export default function ProfileHero({
   const canEdit = Boolean(onEdit);
   const hasBdsmtest = (profile.bdsmtestScores?.length ?? 0) > 0;
   const hasLinkedSources = hasBdsmtest || Boolean(profile.fetLifeUsername) || (profileType === "partner" && Boolean(latestContract));
-  const showSourceSection = hasLinkedSources || canEdit;
 
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
@@ -67,6 +56,13 @@ export default function ProfileHero({
         icon: null,
         onClick: () => editRef.current?.(),
         placement: "primary",
+      });
+      next.push({
+        id: "profile-sources",
+        label: "Gekoppelde bronnen",
+        icon: <FileText size={18} weight="regular" aria-hidden="true" />,
+        onClick: () => setEnrichmentOpen(true),
+        placement: "overflow",
       });
     }
     if (canShare) {
@@ -86,18 +82,23 @@ export default function ProfileHero({
 
   return (
     <>
-      <section
-        data-testid="profile-hero"
-        className={`ks-fade-in relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
-      >
-        <div className="flex items-start gap-5">
+      <section data-testid="profile-hero" className={`ks-fade-in relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}>
+        <div
+          className="pointer-events-none absolute -left-[var(--page-gutter)] -right-[var(--page-gutter)] -top-20 h-[19rem]"
+          style={{
+            background: "radial-gradient(ellipse 72% 68% at 38% 32%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%)",
+            filter: "blur(10px)",
+            opacity: 0.78,
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="relative flex items-start gap-5">
           <div className="relative flex-none">
             <button
               type="button"
               data-tour="avatar"
-              onClick={() => {
-                if (profile.avatarDataUrl) setPhotoViewerOpen(true);
-              }}
+              onClick={() => { if (profile.avatarDataUrl) setPhotoViewerOpen(true); }}
               disabled={!profile.avatarDataUrl}
               className="focus-ring relative h-[6.6rem] w-[6.6rem] overflow-hidden rounded-full disabled:cursor-default"
               style={{ border: "1px solid var(--border-accent)", background: "var(--surface2)" }}
@@ -114,13 +115,7 @@ export default function ProfileHero({
           <div className="min-w-0 flex-1 pt-1">
             <h2
               className="serif-safe truncate text-[clamp(2rem,9vw,2.55rem)] leading-none"
-              style={{
-                fontFamily: "var(--font-display, Georgia, serif)",
-                fontStyle: "italic",
-                fontWeight: 600,
-                letterSpacing: "-0.025em",
-                color: "var(--text)",
-              }}
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 600, letterSpacing: "-0.025em", color: "var(--text)" }}
             >
               {profile.name}
             </h2>
@@ -130,8 +125,7 @@ export default function ProfileHero({
             </p>
             {profile.relationshipStatus && (
               <p className="mt-1.5 text-sm" style={{ color: "var(--text2)" }}>
-                <span className="sr-only">Relatiestatus: </span>
-                {profile.relationshipStatus}
+                <span className="sr-only">Relatiestatus: </span>{profile.relationshipStatus}
               </p>
             )}
             {profileType === "partner" && (
@@ -143,92 +137,63 @@ export default function ProfileHero({
         </div>
 
         {profileType === "partner" && (
-          <div className="mt-3 flex justify-start">
-            <ProfileTrust profile={profile} quiet />
-          </div>
+          <div className="relative mt-3 flex justify-start"><ProfileTrust profile={profile} quiet /></div>
         )}
 
-        {showSourceSection && (
-          <div data-testid="profile-linked-sources" className="mt-6">
-            <div className="mb-2 flex min-h-11 items-center justify-between gap-3">
-              <h3 className="text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
-              {canEdit && (
-                <button
-                  type="button"
-                  data-tour="profile-enrichment"
-                  onClick={() => setEnrichmentOpen(true)}
-                  aria-label="Gekoppelde bronnen en profielinfo beheren"
-                  className="focus-ring min-h-11 px-1 text-xs font-semibold active:opacity-70"
-                  style={{ color: "var(--text2)" }}
+        {hasLinkedSources && (
+          <div data-testid="profile-linked-sources" className="relative mt-7">
+            <h3 className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
+            <div className="grid gap-0.5">
+              {hasBdsmtest && <BdsmtestScores scores={profile.bdsmtestScores!} url={profile.bdsmtestUrl} embedded />}
+
+              {profile.fetLifeUsername && (
+                <a
+                  href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
+                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
                 >
-                  Beheer
-                </button>
+                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
+                    <FetLifeMark className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">FetLife</span>
+                    <span className="mt-0.5 block truncate text-xs" style={{ color: "var(--text2)" }}>@{profile.fetLifeUsername}</span>
+                  </span>
+                  <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                </a>
+              )}
+
+              {profileType === "partner" && latestContract && (
+                <Link
+                  href={`/contracts/${encodeURIComponent(latestContract.id)}`}
+                  prefetch={false}
+                  aria-label={`Open het meest recente contract met ${profile.name}`}
+                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
+                >
+                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
+                    <FileText size={16} weight="regular" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">Contract</span>
+                    <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Meest recente afspraak</span>
+                  </span>
+                  <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+                </Link>
               )}
             </div>
-
-            {hasLinkedSources ? (
-              <div className="grid gap-0.5">
-                {hasBdsmtest && (
-                  <BdsmtestScores
-                    scores={profile.bdsmtestScores!}
-                    url={profile.bdsmtestUrl}
-                    embedded
-                  />
-                )}
-
-                {profile.fetLifeUsername && (
-                  <a
-                    href={`https://fetlife.com/${encodeURIComponent(profile.fetLifeUsername)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-                    className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
-                  >
-                    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
-                      <FetLifeMark className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold">FetLife</span>
-                      <span className="mt-0.5 block truncate text-xs" style={{ color: "var(--text2)" }}>@{profile.fetLifeUsername}</span>
-                    </span>
-                    <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
-                  </a>
-                )}
-
-                {profileType === "partner" && latestContract && (
-                  <Link
-                    href={`/contracts/${encodeURIComponent(latestContract.id)}`}
-                    prefetch={false}
-                    aria-label={`Open het meest recente contract met ${profile.name}`}
-                    className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
-                  >
-                    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
-                      <FileText size={16} weight="regular" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold">Contract</span>
-                      <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Meest recente afspraak</span>
-                    </span>
-                    <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <p className="py-2 text-sm" style={{ color: "var(--text2)" }}>
-                Voeg BDSMTest of FetLife toe om externe profielcontext hier terug te vinden.
-              </p>
-            )}
           </div>
         )}
 
         {profileType === "partner" && profile.lockedAt && (
-          <p className="mt-3 text-xs" style={{ color: "var(--text2)" }}>
+          <p className="relative mt-3 text-xs" style={{ color: "var(--text2)" }}>
             Geïmporteerd {new Date(profile.lockedAt).toLocaleDateString("nl-NL", { month: "short", year: "numeric" })}
           </p>
         )}
 
         {profile.privateNote && (
-          <p className="mt-4 border-t pt-3 text-sm italic leading-snug" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
+          <p className="relative mt-4 border-t pt-3 text-sm italic leading-snug" style={{ color: "var(--text2)", borderColor: "var(--border)" }}>
             {profile.privateNote.length > 120 ? profile.privateNote.slice(0, 120) + "…" : profile.privateNote}
           </p>
         )}
