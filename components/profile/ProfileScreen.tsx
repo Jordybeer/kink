@@ -245,7 +245,7 @@ export default function ProfilePage({ params }: Props) {
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
-        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-4">
+        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-1">
           <ProfileHero
             profile={currentProfile}
             onShare={shared ? undefined : () => setShareOpen(true)}
@@ -262,14 +262,14 @@ export default function ProfilePage({ params }: Props) {
           {!shared && (
             <Link
               href={`/profile/${currentProfile.id}/questions`}
-              className="focus-ring flex min-h-[72px] items-center gap-3 border-b py-3"
-              style={{ borderColor: "var(--border)" }}
+              className="focus-ring mt-5 flex min-h-[78px] items-center gap-4 py-3"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
+                <p className="mb-1 text-xs font-medium" style={{ color: "var(--accent)" }}>Volgende stap</p>
+                <p className="text-lg font-semibold" style={{ color: "var(--text)" }}>
                   {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
                 </p>
-                <p className="mt-0.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+                <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
                   {coverage.complete
                     ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
                     : totalRated > 0
@@ -277,30 +277,35 @@ export default function ProfilePage({ params }: Props) {
                       : "Beantwoord vragen in je eigen tempo."}
                 </p>
               </div>
-              <ArrowRight size={19} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
+              <span
+                className="flex h-9 w-9 flex-none items-center justify-center rounded-full"
+                style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent)" }}
+                aria-hidden="true"
+              >
+                <ArrowRight size={18} weight="regular" />
+              </span>
             </Link>
           )}
         </div>
       )}
 
       {!shared && !catalogOpen && (
-        <div className="mx-[var(--page-gutter)] mb-4">
+        <div className="mx-[var(--page-gutter)] mb-6">
           <button
             ref={manageTriggerRef}
             type="button"
             onClick={() => setCatalogOpen(true)}
             aria-expanded="false"
             aria-controls="profile-catalog-manager"
-            className="focus-ring flex min-h-12 w-full items-center gap-3 border-b px-1 text-left"
-            style={{ borderColor: "var(--border)" }}
+            className="focus-ring flex min-h-11 w-full items-center gap-3 px-1 text-left"
           >
-            <span className="min-w-0 flex-1 py-2">
-              <span className="block text-sm font-semibold">Onderwerpen beheren</span>
+            <span className="min-w-0 flex-1 py-1.5">
+              <span className="block text-sm font-medium">Onderwerpen beheren</span>
               <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>
                 {catalogRated} van {KINKS.length} beoordeeld
               </span>
             </span>
-            <ArrowRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+            <ArrowRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
           </button>
         </div>
       )}

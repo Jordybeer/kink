@@ -67,6 +67,7 @@ export default function ProfileHero({
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
   const hasBdsmtest = (profile.bdsmtestScores?.length ?? 0) > 0;
+  const hasLinkedSources = hasBdsmtest || Boolean(profile.fetLifeUsername) || (profileType === "partner" && Boolean(latestContract));
 
   const navActions = useMemo<TopNavAction[]>(() => {
     const next: TopNavAction[] = [];
@@ -143,7 +144,7 @@ export default function ProfileHero({
     <>
       <section
         data-testid="profile-hero"
-        className={`ks-fade-in relative ${hasBdsmtest ? "pb-2" : "pb-4"} pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
+        className={`ks-fade-in relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}
         style={{ zIndex: menuOpen ? 30 : undefined }}
       >
         <div className="flex items-start gap-5">
@@ -217,7 +218,7 @@ export default function ProfileHero({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 border-b pb-5" style={{ borderColor: "var(--border)" }} aria-label="Profielkenmerken">
+        <div className="mt-5 grid grid-cols-2 gap-3" aria-label="Profielkenmerken">
           <div className="flex min-w-0 items-start gap-2.5 pr-3" style={{ borderRight: "1px solid var(--border)" }}>
             <ChartBar size={20} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
             <div className="min-w-0">
@@ -234,7 +235,7 @@ export default function ProfileHero({
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3" aria-label="Profielinformatie">
+        <div className="mt-4 grid grid-cols-2 gap-3" aria-label="Profielinformatie">
           <ProfileTrust profile={profile} quiet />
           {canEdit && (
             <button
@@ -250,18 +251,16 @@ export default function ProfileHero({
           )}
         </div>
 
-        {(hasBdsmtest || profile.fetLifeUsername || (profileType === "partner" && latestContract)) && (
-          <div data-testid="profile-linked-sources" className="mt-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-            <h3 className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
-            <div>
+        {hasLinkedSources && (
+          <div data-testid="profile-linked-sources" className="mt-5">
+            <h3 className="mb-2 text-xs font-medium" style={{ color: "var(--text2)" }}>Gekoppelde bronnen</h3>
+            <div className="grid gap-0.5">
               {hasBdsmtest && (
-                <div className="border-b" style={{ borderColor: "var(--border)" }}>
-                  <BdsmtestScores
-                    scores={profile.bdsmtestScores!}
-                    url={profile.bdsmtestUrl}
-                    embedded
-                  />
-                </div>
+                <BdsmtestScores
+                  scores={profile.bdsmtestScores!}
+                  url={profile.bdsmtestUrl}
+                  embedded
+                />
               )}
 
               {profile.fetLifeUsername && (
@@ -270,8 +269,7 @@ export default function ProfileHero({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Open het FetLife-profiel van ${profile.fetLifeUsername}`}
-                  className="focus-ring flex min-h-[60px] items-center gap-3 border-b px-1 text-left"
-                  style={{ borderColor: "var(--border)" }}
+                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
                 >
                   <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--on-danger-fill)", background: "var(--danger-fill)" }} aria-hidden="true">
                     <FetLifeMark className="h-4 w-4" />
@@ -289,8 +287,7 @@ export default function ProfileHero({
                   href={`/contracts/${encodeURIComponent(latestContract.id)}`}
                   prefetch={false}
                   aria-label={`Open het meest recente contract met ${profile.name}`}
-                  className="focus-ring flex min-h-[60px] items-center gap-3 border-b px-1 text-left"
-                  style={{ borderColor: "var(--border)" }}
+                  className="focus-ring flex min-h-[60px] items-center gap-3 rounded-lg px-1 text-left"
                 >
                   <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg" style={{ color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
                     <FileText size={16} weight="regular" aria-hidden="true" />
