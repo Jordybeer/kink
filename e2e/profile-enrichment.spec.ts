@@ -62,6 +62,26 @@ test.describe("Gekoppelde bronnen in profielbewerking", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("labelt bronvelden en brengt een verborgen validatiefout terug in beeld", async ({ page }) => {
+    const { dialog } = await openSources(page);
+    const fetLife = dialog.getByLabel("FetLife", { exact: true });
+    const bdsmtest = dialog.getByLabel("BDSMTest-resultaten", { exact: true });
+
+    await expect(fetLife).toBeVisible();
+    await expect(bdsmtest).toBeVisible();
+    await fetLife.fill("https://fetlife.com/alex");
+    await expect(fetLife).toHaveAttribute("aria-invalid", "true");
+
+    await dialog.getByRole("button", { name: /Identiteit/ }).click();
+    const next = dialog.getByRole("button", { name: /Volgende/ });
+    await expect(next).toBeEnabled();
+    await next.click();
+
+    await expect(dialog.getByTestId("profile-edit-sources-panel")).toBeVisible();
+    await expect(fetLife).toBeFocused();
+    await expect(fetLife).toHaveAccessibleDescription(/zonder volledige link/i);
+  });
+
   test("splitst de URI-encoded iOS Copy all lokaal in een canonical link en resultaten", async ({ page }) => {
     const { dialog } = await openSources(page);
     const paste = dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten");
@@ -120,7 +140,10 @@ test.describe("Gekoppelde bronnen in profielbewerking", () => {
       "https://bdsmtest.org.evil.example/r/steal\n100% Little",
     );
     await expect(dialog.getByText("De resultaatlink lijkt niet van bdsmtest.org te komen.")).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /Volgende/ })).toBeDisabled();
+    const next = dialog.getByRole("button", { name: /Volgende/ });
+    await expect(next).toBeEnabled();
+    await next.click();
+    await expect(dialog.getByPlaceholder("Plak hier de resultaatlink en resultaten")).toBeFocused();
 
     const stored = await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
@@ -140,7 +163,10 @@ test.describe("Gekoppelde bronnen in profielbewerking", () => {
 
     await expect(dialog.getByText("Deze plaktekst is te groot om veilig te verwerken.")).toBeVisible();
     await expect.poll(async () => (await paste.inputValue()).length).toBe(16_385);
-    await expect(dialog.getByRole("button", { name: /Volgende/ })).toBeDisabled();
+    const next = dialog.getByRole("button", { name: /Volgende/ });
+    await expect(next).toBeEnabled();
+    await next.click();
+    await expect(paste).toBeFocused();
   });
 
   test("houdt relatiestatus en FetLife op beide Switch-perspectieven maar BDSMTest op het gekozen perspectief", async ({ page }) => {

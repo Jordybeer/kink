@@ -180,6 +180,7 @@ test.describe("Profiel aanmaken via UI", () => {
     await expect(page.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
     await page.getByLabel("Naam of alias").fill("TestPersoon");
     await page.getByRole("button", { name: /^Dominant/ }).click();
+    await page.getByLabel("Ervaringsniveau").selectOption("ervaren");
     await page.getByRole("button", { name: "Verder" }).click();
     await expect(page.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Start vragen" }).click();
@@ -189,12 +190,13 @@ test.describe("Profiel aanmaken via UI", () => {
     await expect(page.getByText("Vragenlijst", { exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 
-    const entries = await page.evaluate(() => {
+    const savedProfile = await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
       if (!raw) return null;
-      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; entries?: unknown }> } };
-      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon")?.entries ?? null;
+      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; experienceLevel?: string; entries?: unknown }> } };
+      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon") ?? null;
     });
-    expect(entries).toEqual({});
+    expect(savedProfile?.entries).toEqual({});
+    expect(savedProfile?.experienceLevel).toBe("ervaren");
   });
 });

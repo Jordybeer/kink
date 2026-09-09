@@ -20,6 +20,7 @@ import PinFlowSheet from "@/components/sheets/PinFlowSheet";
 import DestroyAllSheet from "@/components/sheets/DestroyAllSheet";
 import { EncryptedExportSheet, EncryptedImportSheet } from "@/components/sheets/EncryptedBackupSheets";
 import { backupFileSizeAllowed } from "@/lib/importLimits";
+import { experienceLevelLabel } from "@/lib/roles";
 import Sheet from "@/components/Sheet";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
@@ -469,7 +470,7 @@ function HomeContent() {
                   {isSwitchImport ? "Switch" : importPreview.role}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}>
-                  {importPreview.experienceLevel}
+                  {experienceLevelLabel(importPreview.experienceLevel)}
                 </span>
               </div>
               <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text2)" }}>

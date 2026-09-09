@@ -5,6 +5,7 @@ import {
   comparisonDirectionNote,
 } from "@/lib/comparePresentation";
 import { STATUS_LABEL } from "@/lib/statusLabels";
+import { experienceLevelLabel } from "@/lib/roles";
 import type { Profile } from "@/types";
 
 interface Props {
@@ -101,11 +102,11 @@ export default function ComparePrintDocument({ profileA, profileB, model }: Prop
         <div className="compare-print-identities">
           <div>
             <strong>{profileA.name}</strong>
-            <span>{[profileA.role, profileA.experienceLevel].filter(Boolean).join(" · ")}</span>
+            <span>{[profileA.role, experienceLevelLabel(profileA.experienceLevel)].filter(Boolean).join(" · ")}</span>
           </div>
           <div>
             <strong>{profileB.name}</strong>
-            <span>{[profileB.role, profileB.experienceLevel].filter(Boolean).join(" · ")}</span>
+            <span>{[profileB.role, experienceLevelLabel(profileB.experienceLevel)].filter(Boolean).join(" · ")}</span>
           </div>
         </div>
         <p className="compare-print-consent">

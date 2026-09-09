@@ -4,6 +4,7 @@ import { CATEGORIES, getKinksByCategoryAndLevel, kinkCategoryLabel } from "@/lib
 import { STATUS_LABEL } from "@/lib/statusLabels";
 import { profileExportResponse, type ProfileExportResponse } from "@/lib/privateResponses";
 import { hexToRgb, PDF_PAPER_PALETTE, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
+import { experienceLevelLabel } from "@/lib/roles";
 
 interface ProfilePdfOptions {
   includePrivateResponses?: boolean;
@@ -107,7 +108,7 @@ export async function buildProfilePdf(
     doc.text(titleLines, margin, headerY);
     headerY += titleLines.length * 7.6 + 1.5;
 
-    const identity = [profile.role, profile.experienceLevel, profile.relationshipStatus]
+    const identity = [profile.role, experienceLevelLabel(profile.experienceLevel), profile.relationshipStatus]
       .filter((value): value is string => Boolean(value?.trim()));
     if (identity.length > 0) {
       doc.setFont("body", "normal");

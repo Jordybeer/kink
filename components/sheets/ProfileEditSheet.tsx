@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   CameraPlus,
   CaretLeft,
@@ -28,7 +28,7 @@ import {
   updateProfileQuestionnaire,
 } from "@/lib/profilePerspectives";
 import { QUESTIONNAIRE_INTERESTS, QUESTIONNAIRE_MODES } from "@/lib/questionnaire";
-import { RELATIONSHIP_STATUSES } from "@/lib/roles";
+import { EXPERIENCE_LEVELS, RELATIONSHIP_STATUSES } from "@/lib/roles";
 import { useStore } from "@/lib/store";
 import type {
   ExperienceLevel,
@@ -46,13 +46,7 @@ interface ProfileEditSheetProps {
 
 type Step = 1 | 2;
 type EditPanel = "sources" | "interests" | "flow" | null;
-
-const EXPERIENCE_OPTIONS: Array<{ value: ExperienceLevel; label: string }> = [
-  { value: "beginner", label: "Beginner" },
-  { value: "gevorderd", label: "Gevorderd" },
-  { value: "ervaren", label: "Ervaren" },
-  { value: "diepgaand", label: "Diepgaand" },
-];
+type ErrorField = "name" | "perspective" | "fetlife" | "bdsmtest" | null;
 
 const ERROR_COPY: Record<BdsmtestCopyAllError, string> = {
   "too-large": "Deze plaktekst is te groot om veilig te verwerken.",
@@ -89,6 +83,26 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const siblings = getProfileSiblings(profile, profiles);
   const paired = siblings.length > 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
+  const panelHeadingRef = useRef<HTMLHeadingElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const perspectiveRef = useRef<HTMLSelectElement>(null);
+  const fetLifeRef = useRef<HTMLInputElement>(null);
+  const bdsmtestRef = useRef<HTMLTextAreaElement>(null);
+  const experienceOptionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const modeOptionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const previousViewRef = useRef<string | null>(null);
+  const nameErrorId = useId();
+  const perspectiveErrorId = useId();
+  const experienceLegendId = useId();
+  const experienceHintId = useId();
+  const fetLifeId = useId();
+  const fetLifeHintId = useId();
+  const fetLifeErrorId = useId();
+  const bdsmtestId = useId();
+  const bdsmtestHintId = useId();
+  const bdsmtestErrorId = useId();
+  const flowHeadingId = useId();
 
   const [step, setStep] = useState<Step>(1);
   const [panel, setPanel] = useState<EditPanel>(null);
@@ -103,6 +117,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const [bdsmPaste, setBdsmPaste] = useState("");
   const [removeBdsmtest, setRemoveBdsmtest] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<ErrorField>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -120,17 +135,57 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     setBdsmPaste("");
     setRemoveBdsmtest(false);
     setError(null);
+    setErrorField(null);
+    previousViewRef.current = null;
     // Reset when this sheet opens for a profile, not after every store mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, profile.id]);
+
+  useEffect(() => {
+    if (!open) return;
+    const view = `${step}:${panel ?? "root"}`;
+    const viewChanged = previousViewRef.current !== null && previousViewRef.current !== view;
+    previousViewRef.current = view;
+
+    const target = errorField === "name"
+      ? nameRef.current
+      : errorField === "perspective"
+        ? perspectiveRef.current
+        : errorField === "fetlife"
+          ? fetLifeRef.current
+          : errorField === "bdsmtest"
+            ? bdsmtestRef.current
+            : null;
+
+    if (!viewChanged && !target) return;
+    const frame = window.requestAnimationFrame(() => {
+      if (viewChanged) scrollBodyRef.current?.scrollTo({ top: 0 });
+      const mountedTarget = errorField === "name"
+        ? nameRef.current
+        : errorField === "perspective"
+          ? perspectiveRef.current
+          : errorField === "fetlife"
+            ? fetLifeRef.current
+            : errorField === "bdsmtest"
+              ? bdsmtestRef.current
+              : null;
+      if (mountedTarget) mountedTarget.focus({ preventScroll: false });
+      else panelHeadingRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [errorField, open, panel, step]);
 
   const parsedBdsmtest = useMemo(() => {
     if (!bdsmPaste.trim()) return null;
     return parseBdsmtestCopyAll(bdsmPaste);
   }, [bdsmPaste]);
 
-  const sourcesValid = validFetLifeUsername(fetLife)
-    && (!bdsmPaste.trim() || parsedBdsmtest?.ok === true);
+  const fetLifeInvalid = !validFetLifeUsername(fetLife);
+
+  function clearError() {
+    setError(null);
+    setErrorField(null);
+  }
 
   function toggleInterest(interest: QuestionnaireInterest) {
     setInterests((current) =>
@@ -143,10 +198,12 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   function validateIdentity(): boolean {
     if (!name.trim()) {
       setError("Vul een naam of alias in.");
+      setErrorField("name");
       return false;
     }
     if (!perspective) {
       setError("Kies eerst Dominant of Submissive voor dit profiel.");
+      setErrorField("perspective");
       return false;
     }
     return true;
@@ -155,10 +212,12 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   function validateSources(): boolean {
     if (!validFetLifeUsername(fetLife)) {
       setError("Vul bij FetLife alleen je gebruikersnaam in.");
+      setErrorField("fetlife");
       return false;
     }
     if (bdsmPaste.trim() && (!parsedBdsmtest || !parsedBdsmtest.ok)) {
       setError(parsedBdsmtest && !parsedBdsmtest.ok ? ERROR_COPY[parsedBdsmtest.error] : "BDSMTest kon niet worden verwerkt.");
+      setErrorField("bdsmtest");
       return false;
     }
     return true;
@@ -173,7 +232,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
       setPanel("sources");
       return;
     }
-    setError(null);
+    clearError();
     setStep(2);
     setPanel(null);
   }
@@ -183,10 +242,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
     if (!file) return;
     try {
       setAvatarDataUrl(await resizeImage(file));
-      setError(null);
+      clearError();
     } catch (caught) {
       console.error("Avatar upload failed:", caught);
       setError("Afbeelding kon niet worden verwerkt. Probeer een andere afbeelding.");
+      setErrorField(null);
     }
     event.target.value = "";
   }
@@ -249,11 +309,46 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
         useStore.getState().setProfileAvatar(profile.id, avatarDataUrl);
       }
 
-      setError(null);
+      clearError();
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Profiel kon niet worden opgeslagen.");
+      setErrorField(caught instanceof Error && caught.message.includes("naam") ? "name" : null);
     }
+  }
+
+  function moveExperienceSelection(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
+    const direction = event.key === "ArrowRight" || event.key === "ArrowDown"
+      ? 1
+      : event.key === "ArrowLeft" || event.key === "ArrowUp"
+        ? -1
+        : 0;
+    if (!direction && event.key !== "Home" && event.key !== "End") return;
+    event.preventDefault();
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? EXPERIENCE_LEVELS.length - 1
+        : (index + direction + EXPERIENCE_LEVELS.length) % EXPERIENCE_LEVELS.length;
+    setExperienceLevel(EXPERIENCE_LEVELS[nextIndex].value);
+    experienceOptionRefs.current[nextIndex]?.focus();
+  }
+
+  function moveModeSelection(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
+    const direction = event.key === "ArrowRight" || event.key === "ArrowDown"
+      ? 1
+      : event.key === "ArrowLeft" || event.key === "ArrowUp"
+        ? -1
+        : 0;
+    if (!direction && event.key !== "Home" && event.key !== "End") return;
+    event.preventDefault();
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? QUESTIONNAIRE_MODES.length - 1
+        : (index + direction + QUESTIONNAIRE_MODES.length) % QUESTIONNAIRE_MODES.length;
+    setQuestionnaireMode(QUESTIONNAIRE_MODES[nextIndex].value);
+    modeOptionRefs.current[nextIndex]?.focus();
   }
 
   const initial = name.trim().charAt(0).toUpperCase() || profile.name.charAt(0).toUpperCase();
@@ -290,15 +385,16 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </button>
           </div>
 
-          <div className="mx-auto mt-2 flex max-w-[12rem] items-center gap-3" aria-label="Stappen">
+          <nav className="mx-auto mt-2 flex max-w-[12rem] items-center gap-3" aria-label="Profielstappen">
             <button
               type="button"
               onClick={() => {
                 setStep(1);
                 setPanel(null);
-                setError(null);
+                clearError();
               }}
-              className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              aria-label={step === 1 ? "Stap 1 van 2: Identiteit, huidig" : "Stap 1 van 2: Identiteit, voltooid"}
               aria-current={step === 1 ? "step" : undefined}
               style={step === 1
                 ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
@@ -310,7 +406,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <button
               type="button"
               onClick={goNext}
-              className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              aria-label={step === 2 ? "Stap 2 van 2: Vragenlijst, huidig" : "Stap 2 van 2: Vragenlijst"}
               aria-current={step === 2 ? "step" : undefined}
               style={step === 2
                 ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
@@ -318,24 +415,24 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             >
               2
             </button>
-          </div>
+          </nav>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-4" data-testid="profile-edit-scroll-body">
+        <div ref={scrollBodyRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-4" data-testid="profile-edit-scroll-body">
           {step === 1 && panel === "sources" ? (
             <section data-testid="profile-edit-sources-panel">
               <button
                 type="button"
                 onClick={() => {
                   setPanel(null);
-                  setError(null);
+                  clearError();
                 }}
                 className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
                 style={{ color: "var(--text2)" }}
               >
                 <CaretLeft size={16} aria-hidden="true" /> Identiteit
               </button>
-              <h3 className="text-xl font-semibold">Gekoppelde bronnen</h3>
+              <h3 ref={panelHeadingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">Gekoppelde bronnen</h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
                 Optionele externe profielcontext. Alles blijft lokaal opgeslagen.
               </p>
@@ -343,17 +440,21 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <section className="mt-5">
                 <div className="flex items-center gap-2">
                   <LinkSimple size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
-                  <h4 className="text-sm font-semibold">FetLife</h4>
+                  <label htmlFor={fetLifeId} className="text-sm font-semibold">FetLife</label>
                 </div>
-                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                <p id={fetLifeHintId} className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
                   Vul alleen je gebruikersnaam in. De link wordt lokaal opgebouwd.
                 </p>
                 <input
+                  ref={fetLifeRef}
+                  id={fetLifeId}
                   value={fetLife}
                   onChange={(event) => {
                     setFetLife(event.target.value);
-                    setError(null);
+                    clearError();
                   }}
+                  aria-invalid={fetLifeInvalid}
+                  aria-describedby={`${fetLifeHintId}${fetLifeInvalid ? ` ${fetLifeErrorId}` : ""}`}
                   maxLength={200}
                   autoComplete="off"
                   spellCheck={false}
@@ -361,23 +462,32 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   className="focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 />
+                {fetLifeInvalid && (
+                  <p id={fetLifeErrorId} className="mt-2 text-sm leading-5" role="alert" style={{ color: "var(--hard-no-text)" }}>
+                    Vul alleen je gebruikersnaam in, zonder volledige link.
+                  </p>
+                )}
               </section>
 
               <section className="mt-5 border-t pt-5" style={{ borderColor: "var(--border)" }}>
                 <div className="flex items-center gap-2">
                   <Sparkle size={18} aria-hidden="true" style={{ color: "var(--accent)" }} />
-                  <h4 className="text-sm font-semibold">BDSMTest</h4>
+                  <label htmlFor={bdsmtestId} className="text-sm font-semibold">BDSMTest-resultaten</label>
                 </div>
-                <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                <p id={bdsmtestHintId} className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
                   Kies op bdsmtest.org Copy all en plak het resultaat hier in één keer.
                 </p>
                 <textarea
+                  ref={bdsmtestRef}
+                  id={bdsmtestId}
                   value={bdsmPaste}
                   onChange={(event) => {
                     setBdsmPaste(event.target.value);
                     setRemoveBdsmtest(false);
-                    setError(null);
+                    clearError();
                   }}
+                  aria-invalid={Boolean(parsedBdsmtest && !parsedBdsmtest.ok)}
+                  aria-describedby={`${bdsmtestHintId}${parsedBdsmtest && !parsedBdsmtest.ok ? ` ${bdsmtestErrorId}` : ""}`}
                   rows={4}
                   maxLength={BDSMTEST_INPUT_MAX_CHARS}
                   autoCapitalize="off"
@@ -400,7 +510,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 )}
 
                 {parsedBdsmtest && !parsedBdsmtest.ok && (
-                  <p className="mt-2 text-sm leading-5" role="status" style={{ color: "var(--hard-no-text)" }}>
+                  <p id={bdsmtestErrorId} className="mt-2 text-sm leading-5" role="status" style={{ color: "var(--hard-no-text)" }}>
                     {ERROR_COPY[parsedBdsmtest.error]}
                   </p>
                 )}
@@ -414,7 +524,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       type="button"
                       onClick={() => {
                         setRemoveBdsmtest(true);
-                        setError(null);
+                        clearError();
                       }}
                       className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
                       style={{ color: "var(--hard-no-text)", border: "1px solid var(--border)" }}
@@ -433,7 +543,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : step === 1 ? (
             <section data-testid="profile-edit-identity-step">
-              <h3 className="text-2xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
+              <h3 ref={panelHeadingRef} tabIndex={-1} className="text-2xl leading-tight focus:outline-none" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
                 Identiteit
               </h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
@@ -443,7 +553,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <div className="mt-4 flex items-center gap-4">
                 <div className="relative flex h-[5.5rem] w-[5.5rem] flex-none items-center justify-center overflow-hidden rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}>
                   {avatarDataUrl ? (
-                    <img src={avatarDataUrl} alt="Nieuwe profielfoto" className="h-full w-full object-cover" />
+                    <img src={avatarDataUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-2xl italic" style={avatarStyle(name || profile.name)}>{initial}</div>
                   )}
@@ -461,29 +571,44 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 </div>
               </div>
 
-              <label htmlFor="profile-edit-name" className="mb-1.5 mt-5 block text-sm font-semibold">Naam of alias *</label>
+              <label htmlFor="profile-edit-name" className="mb-1.5 mt-5 block text-sm font-semibold">
+                Naam of alias <span aria-hidden="true">*</span><span className="sr-only"> (verplicht)</span>
+              </label>
               <input
+                ref={nameRef}
                 id="profile-edit-name"
                 value={name}
                 onChange={(event) => {
                   setName(event.target.value);
-                  setError(null);
+                  clearError();
                 }}
+                required
+                aria-invalid={errorField === "name"}
+                aria-describedby={errorField === "name" ? nameErrorId : undefined}
                 placeholder="Naam of alias"
                 autoComplete="off"
                 spellCheck={false}
                 className="focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
+              {errorField === "name" && error && (
+                <p id={nameErrorId} className="mt-1.5 text-sm leading-5" role="alert" style={{ color: "var(--hard-no-text)" }}>{error}</p>
+              )}
 
-              <label htmlFor="profile-edit-perspective" className="mb-1.5 mt-4 block text-sm font-semibold">Hoofdperspectief *</label>
+              <label htmlFor="profile-edit-perspective" className="mb-1.5 mt-4 block text-sm font-semibold">
+                Hoofdperspectief <span aria-hidden="true">*</span><span className="sr-only"> (verplicht)</span>
+              </label>
               <select
+                ref={perspectiveRef}
                 id="profile-edit-perspective"
                 value={perspective ?? ""}
                 onChange={(event) => {
                   setPerspective(event.target.value as ProfilePerspective);
-                  setError(null);
+                  clearError();
                 }}
+                required
+                aria-invalid={errorField === "perspective"}
+                aria-describedby={errorField === "perspective" ? perspectiveErrorId : undefined}
                 className="ks-select focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
                 style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               >
@@ -491,6 +616,9 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <option value="dominant" disabled={paired && perspective !== "dominant" && siblingPerspectives.has("dominant")}>Dominant</option>
                 <option value="submissive" disabled={paired && perspective !== "submissive" && siblingPerspectives.has("submissive")}>Submissive</option>
               </select>
+              {errorField === "perspective" && error && (
+                <p id={perspectiveErrorId} className="mt-1.5 text-sm leading-5" role="alert" style={{ color: "var(--hard-no-text)" }}>{error}</p>
+              )}
 
               {paired && (
                 <div className="mt-4">
@@ -506,18 +634,22 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 </div>
               )}
 
-              <fieldset className="mt-4 border-0 p-0">
-                <legend className="mb-1.5 text-sm font-semibold">Ervaring</legend>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {EXPERIENCE_OPTIONS.map((option) => {
+              <fieldset className="mt-4 border-0 p-0" role="radiogroup" aria-labelledby={experienceLegendId} aria-describedby={experienceHintId}>
+                <legend id={experienceLegendId} className="mb-1.5 text-sm font-semibold">Ervaringsniveau</legend>
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  {EXPERIENCE_LEVELS.map((option, index) => {
                     const active = experienceLevel === option.value;
                     return (
                       <button
+                        ref={(node) => { experienceOptionRefs.current[index] = node; }}
                         key={option.value}
                         type="button"
+                        role="radio"
                         onClick={() => setExperienceLevel(option.value)}
-                        aria-pressed={active}
-                        className="focus-ring min-h-11 rounded-xl px-1 text-xs font-semibold sm:text-sm"
+                        onKeyDown={(event) => moveExperienceSelection(event, index)}
+                        aria-checked={active}
+                        tabIndex={active ? 0 : -1}
+                        className="focus-ring min-h-11 rounded-xl px-2 text-sm font-semibold"
                         style={active
                           ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                           : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
@@ -527,6 +659,9 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                     );
                   })}
                 </div>
+                <p id={experienceHintId} className="mt-1.5 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  Je eigen inschatting. Dit bepaalt niet welke vragen je krijgt.
+                </p>
               </fieldset>
 
               <label htmlFor="profile-edit-relationship" className="mb-1.5 mt-4 block text-sm font-semibold">Relatiestatus <span style={{ color: "var(--text2)" }}>(optioneel)</span></label>
@@ -546,7 +681,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 data-tour="profile-enrichment"
                 onClick={() => {
                   setPanel("sources");
-                  setError(null);
+                  clearError();
                 }}
                 className="focus-ring mt-5 flex min-h-[68px] w-full items-center gap-3 border-y px-1 py-3 text-left"
                 style={{ borderColor: "var(--border)" }}
@@ -561,11 +696,11 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : panel === "interests" ? (
             <section data-testid="profile-edit-interests-panel">
-              <button type="button" onClick={() => setPanel(null)} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              <button type="button" onClick={() => { setPanel(null); clearError(); }} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
               </button>
-              <h3 className="text-xl font-semibold">Interessegebieden</h3>
-              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>Wat trekt je aan? Kies wat Dynamic als eerste mag meenemen.</p>
+              <h3 ref={panelHeadingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">Interessegebieden</h3>
+              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>Kies welke onderwerpen eerder verschijnen. Je antwoorden worden nooit voorspeld of ingevuld.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {QUESTIONNAIRE_INTERESTS.map((interest) => {
                   const active = interests.includes(interest.value);
@@ -588,20 +723,24 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : panel === "flow" ? (
             <section data-testid="profile-edit-flow-panel">
-              <button type="button" onClick={() => setPanel(null)} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              <button type="button" onClick={() => { setPanel(null); clearError(); }} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
               </button>
-              <h3 className="text-xl font-semibold">Verkenningsmodus</h3>
-              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>Hoe wil je door onbeantwoorde onderwerpen gaan?</p>
-              <div className="mt-4 grid gap-2">
-                {QUESTIONNAIRE_MODES.map((option) => {
+              <h3 id={flowHeadingId} ref={panelHeadingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">Verkenningsmodus</h3>
+              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>Kies de volgorde en omvang van je vragenlijst. Dit verandert je ervaringsniveau niet.</p>
+              <div className="mt-4 grid gap-2" role="radiogroup" aria-labelledby={flowHeadingId}>
+                {QUESTIONNAIRE_MODES.map((option, index) => {
                   const active = questionnaireMode === option.value;
                   return (
                     <button
+                      ref={(node) => { modeOptionRefs.current[index] = node; }}
                       key={option.value}
                       type="button"
+                      role="radio"
                       onClick={() => setQuestionnaireMode(option.value)}
-                      aria-pressed={active}
+                      onKeyDown={(event) => moveModeSelection(event, index)}
+                      aria-checked={active}
+                      tabIndex={active ? 0 : -1}
                       className="focus-ring min-h-[70px] rounded-xl px-3.5 py-3 text-left"
                       style={active
                         ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--accent)" }
@@ -619,7 +758,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : (
             <section data-testid="profile-edit-questionnaire-step">
-              <h3 className="text-2xl leading-tight" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
+              <h3 ref={panelHeadingRef} tabIndex={-1} className="text-2xl leading-tight focus:outline-none" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
                 Vragenlijst
               </h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
@@ -654,13 +793,12 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           data-testid="profile-edit-footer"
           style={{ borderTop: "1px solid var(--border)", background: "color-mix(in srgb, var(--surface) 96%, transparent)" }}
         >
-          {error && <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          {error && !errorField && <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{error}</p>}
           {step === 1 ? (
             <button
               type="button"
               onClick={goNext}
-              disabled={!sourcesValid}
-              className="focus-ring min-h-12 w-full rounded-full text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-ring min-h-12 w-full rounded-full text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Volgende <CaretRight size={15} className="ml-1 inline" aria-hidden="true" />
@@ -672,7 +810,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 onClick={() => {
                   if (panel) setPanel(null);
                   else setStep(1);
-                  setError(null);
+                  clearError();
                 }}
                 className="focus-ring min-h-12 rounded-full text-sm font-semibold"
                 style={{ color: "var(--text)", border: "1px solid var(--border)" }}
@@ -682,8 +820,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <button
                 type="button"
                 onClick={save}
-                disabled={!sourcesValid}
-                className="focus-ring min-h-12 rounded-full text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                className="focus-ring min-h-12 rounded-full text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Opslaan

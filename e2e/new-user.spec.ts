@@ -139,6 +139,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
     await page.getByLabel("Naam of alias").fill("Testmeester");
     await page.getByRole("button", { name: /^Dominant/ }).click();
+    await page.getByLabel("Ervaringsniveau").selectOption("beginner");
     await page.getByRole("button", { name: "Verder" }).click();
     await page.getByRole("button", { name: "Start vragen" }).click();
     await page.waitForLoadState("networkidle");

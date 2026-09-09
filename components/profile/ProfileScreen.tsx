@@ -56,7 +56,6 @@ export default function ProfilePage({ params }: Props) {
     setEntry,
     addCustomKink,
     removeCustomKink,
-    setProfileAvatar,
     updatePrivateNote,
     pinnedProfileId,
     profileSnapshots,
@@ -74,7 +73,6 @@ export default function ProfilePage({ params }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
@@ -232,16 +230,6 @@ export default function ProfilePage({ params }: Props) {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {errorMessage && (
-        <div
-          role="alert"
-          className="fixed left-4 right-4 top-4 z-[300] mx-auto max-w-md rounded-xl px-4 py-3 text-sm shadow-lg"
-          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
-        >
-          {errorMessage}
-        </div>
-      )}
-
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
@@ -250,11 +238,6 @@ export default function ProfilePage({ params }: Props) {
             profile={currentProfile}
             onShare={shared ? undefined : () => setShareOpen(true)}
             onEdit={shared ? undefined : () => setEditing(true)}
-            onAvatarChange={(dataUrl) => setProfileAvatar(currentProfile.id, dataUrl)}
-            onError={(message) => {
-              setErrorMessage(message);
-              window.setTimeout(() => setErrorMessage(null), 5000);
-            }}
             profileType={getProfileType(currentProfile, pinnedProfileId)}
             embedded
           />
@@ -413,6 +396,7 @@ export default function ProfilePage({ params }: Props) {
                     <input
                       value={customInput}
                       onChange={(event) => setCustomInput(event.target.value)}
+                      aria-label="Eigen onderwerp toevoegen"
                       placeholder="Voeg iets eigens toe…"
                       className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm focus:outline-none"
                       style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
@@ -522,10 +506,11 @@ export default function ProfilePage({ params }: Props) {
 
           {shared && (
             <section className="mt-4">
-              <label className="mb-1.5 block text-sm italic" style={{ color: "var(--text2)" }}>
+              <label htmlFor="profile-private-note" className="mb-1.5 block text-sm italic" style={{ color: "var(--text2)" }}>
                 Persoonlijke notitie
               </label>
               <textarea
+                id="profile-private-note"
                 value={currentProfile.privateNote ?? ""}
                 onChange={(event) => updatePrivateNote(currentProfile.id, event.target.value)}
                 rows={3}
@@ -555,9 +540,10 @@ export default function ProfilePage({ params }: Props) {
                 Tekst is screenreader-vriendelijk; PDF is opgemaakt voor scherm en A4-print.
               </p>
               {hasPrivateResponses(currentProfile.entries) && (
-                <label className="mb-2 flex items-center gap-2 text-xs" style={{ color: "var(--text2)" }}>
+                <label className="mb-2 flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--text2)" }}>
                   <input
                     type="checkbox"
+                    className="h-5 w-5 flex-none"
                     checked={includePrivateExports}
                     onChange={(event) => setIncludePrivateExports(event.target.checked)}
                   />

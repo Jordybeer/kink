@@ -12,6 +12,7 @@ import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavCont
 import type { Profile } from "@/types";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
+import { experienceLevelLabel } from "@/lib/roles";
 import ProfileTrust from "@/components/ProfileTrust";
 import { useContractStore } from "@/lib/contractStore";
 import { mostRecentReadableContractForProfile } from "@/lib/contractLifecycle";
@@ -21,8 +22,6 @@ interface ProfileHeroProps {
   profile: Profile;
   onShare?: () => void;
   onEdit?: () => void;
-  onAvatarChange?: (dataUrl: string | undefined) => void;
-  onError?: (message: string) => void;
   profileType?: ProfileType;
   embedded?: boolean;
 }
@@ -107,7 +106,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
 
           <div className="min-w-0 flex-1 pt-1">
             <h2
-              className="serif-safe truncate text-[clamp(2rem,9vw,2.55rem)] leading-none"
+              className="serif-safe break-words text-[clamp(2rem,9vw,2.55rem)] leading-[0.98]"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 600, letterSpacing: "-0.025em", color: "var(--text)" }}
             >
               {profile.name}
@@ -116,11 +115,15 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
               <span className="sr-only">Hoofdperspectief: </span>
               {profile.role || "Perspectief nog niet gekozen"}
             </p>
-            {profile.relationshipStatus && (
-              <p className="mt-1.5 text-sm" style={{ color: "var(--text2)" }}>
-                <span className="sr-only">Relatiestatus: </span>{profile.relationshipStatus}
-              </p>
-            )}
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-sm" style={{ color: "var(--text2)" }}>
+              <span><span className="sr-only">Ervaringsniveau: </span>{experienceLevelLabel(profile.experienceLevel)}</span>
+              {profile.relationshipStatus && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span><span className="sr-only">Relatiestatus: </span>{profile.relationshipStatus}</span>
+                </>
+              )}
+            </p>
             {profileType === "partner" && (
               <p className="mt-2 inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
                 <Lock size={12} weight="regular" aria-hidden="true" /> Gedeeld profiel
