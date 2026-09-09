@@ -112,7 +112,10 @@ export default function ProfileList({ onPromptDelete }: ProfileListProps) {
     <motion.div
       data-home-profile-stack
       className="overflow-hidden rounded-2xl"
-      style={{ background: "color-mix(in srgb, var(--surface2) 46%, transparent)" }}
+      style={{
+        background: "var(--profile-stack-surface)",
+        boxShadow: "inset 0 0 0 1px var(--profile-stack-border)",
+      }}
       initial={reduceMotion ? false : "hidden"}
       animate="show"
       variants={STAGGER_CHILDREN}

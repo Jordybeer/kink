@@ -78,7 +78,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
         <div
           className="pointer-events-none absolute -left-[var(--page-gutter)] -right-[var(--page-gutter)] -top-20 h-[19rem]"
           style={{
-            background: "radial-gradient(ellipse 72% 68% at 38% 32%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%)",
+            background: "var(--profile-hero-glow)",
             filter: "blur(10px)",
             opacity: 0.78,
           }}

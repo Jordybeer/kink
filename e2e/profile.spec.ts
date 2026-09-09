@@ -155,11 +155,14 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("profielbewerking gebruikt een identiteitsstap en rustige vragenlijstnavigatie", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
     const trigger = page.getByRole("button", { name: "Profiel bewerken" });
     await trigger.click();
     const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
 
     await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
+    const identityBox = await dialog.boundingBox();
+    expect(identityBox).not.toBeNull();
     await dialog.getByRole("button", { name: /Volgende/ }).click();
     await expect(dialog.getByTestId("profile-edit-questionnaire-step")).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "Vragenlijst" })).toBeFocused();
@@ -170,6 +173,10 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(mode).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toHaveCount(0);
     await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeVisible();
+    const questionnaireBox = await dialog.boundingBox();
+    expect(questionnaireBox).not.toBeNull();
+    expect(questionnaireBox!.height).toBeLessThan(identityBox!.height - 80);
+    expect(questionnaireBox!.y + questionnaireBox!.height).toBeLessThanOrEqual(667);
 
     await mode.click();
     await expect(dialog.getByTestId("profile-edit-flow-panel")).toBeVisible();

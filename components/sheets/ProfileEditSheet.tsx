@@ -358,15 +358,21 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const hasDraftBdsmtest = removeBdsmtest ? false : Boolean(parsedBdsmtest?.ok || hasStoredBdsmtest);
   const sourceLabels = [fetLife.trim() ? "FetLife" : null, hasDraftBdsmtest ? "BDSMTest" : null].filter(Boolean);
   const sourceSummary = sourceLabels.length ? sourceLabels.join(" · ") : "Niet gekoppeld";
+  const compactQuestionnaireOverview = step === 2 && panel === null;
 
   return (
     <Sheet open={open} onClose={onClose} scrollable variant="surface" aria-label="Profiel bewerken">
       <SheetContent
         showClose={false}
         showHandle={false}
-        className="flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-[24px] px-0 pb-0 pt-0 sm:h-auto sm:min-h-[42rem] sm:max-h-[min(48rem,calc(100dvh-3rem))] sm:rounded-[24px]"
+        className={`flex flex-col overflow-hidden rounded-t-[24px] px-0 pb-0 pt-0 sm:h-auto sm:rounded-[24px] ${compactQuestionnaireOverview
+          ? "h-auto sm:min-h-0"
+          : "h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] sm:min-h-[42rem] sm:max-h-[min(48rem,calc(100dvh-3rem))]"}`}
         style={{
-          backgroundImage: "radial-gradient(ellipse 88% 24rem at 50% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 76%)",
+          maxHeight: compactQuestionnaireOverview
+            ? "min(34rem, calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance)))"
+            : "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance))",
+          backgroundImage: "var(--profile-edit-glow)",
           backgroundRepeat: "no-repeat",
         }}
       >

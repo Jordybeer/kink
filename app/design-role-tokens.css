@@ -41,6 +41,13 @@
   --status-option-surface: var(--surface2);
   --status-option-idle-tint: 6%;
   --status-option-idle-border: 12%;
+  --ambient-layer-opacity: 1;
+  --profile-stack-surface: color-mix(in srgb, var(--surface2) 46%, transparent);
+  --profile-stack-border: transparent;
+  --question-utility-surface: color-mix(in srgb, var(--surface2) 66%, transparent);
+  --profile-page-glow: radial-gradient(ellipse 72% 18rem at 50% 0%, color-mix(in srgb, var(--accent2) 7%, transparent), transparent 70%);
+  --profile-hero-glow: radial-gradient(ellipse 72% 68% at 38% 32%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%);
+  --profile-edit-glow: radial-gradient(ellipse 88% 24rem at 50% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 76%);
   --border: #34283B;
   --border-bright: rgba(255, 255, 255, 0.18);
   --text: #F1EAF0;
@@ -92,15 +99,22 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #FBF8F4;
+  --bg: #F7F3F1;
   --surface: #FFFDFC;
-  --surface2: #F4EFF5;
-  --surface3: #E8DDE9;
-  --surface-tint: #F2EBF1;
+  --surface2: #EEE8EF;
+  --surface3: #DED4E0;
+  --surface-tint: #F0E8EE;
   --status-option-surface: var(--surface);
   --status-option-idle-tint: 8%;
   --status-option-idle-border: 22%;
-  --border: #D6C8D1;
+  --ambient-layer-opacity: 0.56;
+  --profile-stack-surface: color-mix(in srgb, var(--surface2) 82%, var(--surface));
+  --profile-stack-border: color-mix(in srgb, var(--border) 62%, transparent);
+  --question-utility-surface: color-mix(in srgb, var(--surface2) 88%, var(--surface));
+  --profile-page-glow: radial-gradient(ellipse 58% 13rem at 45% 0%, color-mix(in srgb, var(--accent2) 4%, transparent), transparent 68%);
+  --profile-hero-glow: radial-gradient(ellipse 58% 54% at 32% 28%, color-mix(in srgb, var(--accent2) 6%, transparent), transparent 70%);
+  --profile-edit-glow: radial-gradient(ellipse 72% 17rem at 50% 0%, color-mix(in srgb, var(--accent2) 5%, transparent), transparent 72%);
+  --border: #C8BAC5;
   --border-bright: rgba(72, 47, 61, 0.30);
   --text: #291F27;
   --text2: #6B5D66;

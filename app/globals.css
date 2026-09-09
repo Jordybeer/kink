@@ -424,6 +424,7 @@ span[class~="mr-auto"][class~="text-xs"] {
   height: 100svh;
   overflow: hidden;
   contain: strict;
+  opacity: var(--ambient-layer-opacity);
 }
 
 .ks-ambient-orb {
