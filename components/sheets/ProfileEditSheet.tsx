@@ -370,7 +370,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           backgroundRepeat: "no-repeat",
         }}
       >
-        <header className="flex-none px-5 pb-3 pt-4" data-testid="profile-edit-header">
+        <header className="flex-none px-5 pb-2 pt-3" data-testid="profile-edit-header">
           <div className="grid min-h-11 grid-cols-[1fr_auto_1fr] items-center gap-2">
             <span aria-hidden="true" />
             <h2 className="text-base font-semibold">Profiel bewerken</h2>
@@ -385,7 +385,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </button>
           </div>
 
-          <nav className="mx-auto mt-2 flex max-w-[12rem] items-center gap-3" aria-label="Profielstappen">
+          <nav className="mx-auto mt-1 flex max-w-[12rem] items-center gap-3" aria-label="Profielstappen">
             <button
               type="button"
               onClick={() => {
@@ -418,7 +418,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
           </nav>
         </header>
 
-        <div ref={scrollBodyRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-4" data-testid="profile-edit-scroll-body">
+        <div ref={scrollBodyRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-3" data-testid="profile-edit-scroll-body">
           {step === 1 && panel === "sources" ? (
             <section data-testid="profile-edit-sources-panel">
               <button
@@ -550,8 +550,8 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 Dit helpt om je profiel goed te begrijpen. Je antwoorden blijven privé.
               </p>
 
-              <div className="mt-4 flex items-center gap-4">
-                <div className="relative flex h-[5.5rem] w-[5.5rem] flex-none items-center justify-center overflow-hidden rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}>
+              <div className="mt-3 flex items-center gap-4">
+                <div className="relative flex h-20 w-20 flex-none items-center justify-center overflow-hidden rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)" }}>
                   {avatarDataUrl ? (
                     <img src={avatarDataUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
@@ -571,7 +571,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 </div>
               </div>
 
-              <label htmlFor="profile-edit-name" className="mb-1.5 mt-5 block text-sm font-semibold">
+              <label htmlFor="profile-edit-name" className="mb-1.5 mt-4 block text-sm font-semibold">
                 Naam of alias <span aria-hidden="true">*</span><span className="sr-only"> (verplicht)</span>
               </label>
               <input
@@ -765,7 +765,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 Deze onderdelen helpen je profiel verder in te vullen. Je kunt dit later altijd aanpassen.
               </p>
 
-              <div className="mt-4 divide-y" style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+              <div className="mt-4" style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
                 <button type="button" onClick={() => setPanel("interests")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left">
                   <Heart size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
@@ -775,7 +775,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </button>
 
-                <button type="button" onClick={() => setPanel("flow")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left">
+                <button type="button" onClick={() => setPanel("flow")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left" style={{ borderTop: "1px solid var(--border)" }}>
                   <ListChecks size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Verkenningsmodus</span>
