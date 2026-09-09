@@ -38,6 +38,9 @@
   --surface2: #191320;
   --surface3: #251D2D;
   --surface-tint: #17101F;
+  --status-option-surface: var(--surface2);
+  --status-option-idle-tint: 6%;
+  --status-option-idle-border: 12%;
   --border: #34283B;
   --border-bright: rgba(255, 255, 255, 0.18);
   --text: #F1EAF0;
@@ -89,12 +92,15 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #FAF7FA;
-  --surface: #FFFDFE;
-  --surface2: #F3ECF2;
-  --surface3: #E7DCE6;
-  --surface-tint: #F1E8EF;
-  --border: #D3C3CE;
+  --bg: #FBF8F4;
+  --surface: #FFFDFC;
+  --surface2: #F4EFF5;
+  --surface3: #E8DDE9;
+  --surface-tint: #F2EBF1;
+  --status-option-surface: var(--surface);
+  --status-option-idle-tint: 8%;
+  --status-option-idle-border: 22%;
+  --border: #D6C8D1;
   --border-bright: rgba(72, 47, 61, 0.30);
   --text: #291F27;
   --text2: #6B5D66;

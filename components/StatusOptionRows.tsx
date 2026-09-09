@@ -13,6 +13,8 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
       {OPTIONS.map(({ status: s, label, hint, danger }) => {
         const active = current === s;
         const colour = STATUS_VAR[s];
+        const idleTint = danger ? "5%" : "var(--status-option-idle-tint)";
+        const idleBorder = danger ? "20%" : "var(--status-option-idle-border)";
         // De harde grens leest zijn label in een opgelichte tint; zie
         // --hard-no-text in design-role-tokens.css. Rand, vulling en glyph blijven op
         // --hard-no, dus de ingetogen behandeling van principe 10 verandert niet.
@@ -29,10 +31,10 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
               color: "var(--text)",
               background: active
                 ? `color-mix(in srgb, ${colour} ${danger ? 17 : 19}%, var(--surface2))`
-                : `color-mix(in srgb, ${colour} ${danger ? 5 : 6}%, var(--surface2))`,
+                : `color-mix(in srgb, ${colour} ${idleTint}, var(--status-option-surface))`,
               border: `1px ${danger ? "dashed" : "solid"} ${active
                 ? `color-mix(in srgb, ${colour} ${danger ? 46 : 52}%, var(--border))`
-                : `color-mix(in srgb, ${colour} ${danger ? 20 : 12}%, var(--border))`}`,
+                : `color-mix(in srgb, ${colour} ${idleBorder}, var(--border))`}`,
               boxShadow: active
                 ? `inset 0 1px 0 color-mix(in srgb, ${colour} 22%, transparent), 0 8px 24px color-mix(in srgb, ${colour} ${danger ? 8 : 13}%, transparent)`
                 : `inset 0 1px 0 color-mix(in srgb, ${colour} 8%, transparent)`,

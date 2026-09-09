@@ -226,7 +226,7 @@ export default function ProfilePage({ params }: Props) {
     <main
       className="mx-auto w-full max-w-3xl pt-6"
       style={{
-        backgroundImage: "radial-gradient(ellipse 90% 28rem at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 72%)",
+        backgroundImage: "radial-gradient(ellipse 72% 18rem at 50% 0%, color-mix(in srgb, var(--accent2) 7%, transparent), transparent 70%)",
         backgroundRepeat: "no-repeat",
       }}
     >

@@ -392,6 +392,27 @@ span[class~="mr-auto"][class~="text-xs"] {
   border: 1px solid var(--border);
 }
 
+/* On phones the questionnaire is the page, not a card inside the page.
+   Wider layouts regain a bounded reading surface once the extra frame earns
+   its space. */
+.questionnaire-stage {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (min-width: 640px) {
+  .questionnaire-stage {
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, var(--text2));
+    border-radius: 1.75rem;
+    background: color-mix(in srgb, var(--surface) 94%, var(--surface-tint));
+    box-shadow: 0 18px 42px var(--deep-shadow), inset 0 1px 0 var(--inset-highlight);
+  }
+}
+
 /* Viewport-contained identity light. Unequal slow paths keep the ambience alive
    without reading as an effect or destabilising long iOS screenshots. */
 .ks-ambient-glow {

@@ -120,6 +120,9 @@ test("questionnaire width stays intimate in portrait and grows on landscape and 
   const portrait = await card.boundingBox();
   expect(portrait).not.toBeNull();
   expect(portrait!.width).toBeLessThanOrEqual(370);
+  await expect(card).toHaveCSS("border-top-width", "0px");
+  await expect(card).toHaveCSS("box-shadow", "none");
+  await expect(card).toHaveCSS("padding-left", "0px");
 
   await page.setViewportSize({ width: 844, height: 390 });
   const landscape = await card.boundingBox();
@@ -128,6 +131,9 @@ test("questionnaire width stays intimate in portrait and grows on landscape and 
 
   await page.setViewportSize({ width: 1024, height: 768 });
   const tablet = await card.boundingBox();
+  await expect(card).toHaveCSS("border-top-width", "1px");
+  expect(await card.evaluate((node) => getComputedStyle(node).boxShadow)).not.toBe("none");
+  await expect(card).toHaveCSS("padding-left", "16px");
   expect(tablet).not.toBeNull();
   expect(tablet!.width).toBeGreaterThanOrEqual(820);
   expect(tablet!.width).toBeLessThanOrEqual(900);
