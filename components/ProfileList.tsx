@@ -392,7 +392,7 @@ function Disclosure({
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className="focus-ring -mt-1 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
+      className="focus-ring mt-0 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
       style={{ color: "var(--text2)" }}
     >
       <span className="flex-1">{label}</span>
