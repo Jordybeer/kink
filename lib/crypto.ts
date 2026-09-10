@@ -1,7 +1,19 @@
 const ITERATIONS = 310_000;
+const BASE64_CHUNK_SIZE = 0x8000;
+
+function bytesView(buf: ArrayBuffer | Uint8Array): Uint8Array {
+  return buf instanceof ArrayBuffer
+    ? new Uint8Array(buf)
+    : new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+}
 
 function b64(buf: ArrayBuffer | Uint8Array): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
+  const bytes = bytesView(buf);
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK_SIZE) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + BASE64_CHUNK_SIZE));
+  }
+  return btoa(binary);
 }
 
 function unb64(s: string): ArrayBuffer {
