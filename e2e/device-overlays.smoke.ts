@@ -70,6 +70,10 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const sharedHeading = page.getByRole("heading", { name: "Gedeeld met mij" });
   await expect(mineHeading).toBeVisible();
   await expect(sharedHeading).toBeVisible();
+  await expect(page.getByRole("link", { name: "Gedeeld 08 Submissive openen" })).toHaveCount(0);
+  const sharedDisclosure = page.getByRole("button", { name: "Alle gedeelde profielen · 9" });
+  await expect(sharedDisclosure).toBeVisible();
+  await sharedDisclosure.click();
   await expect(page.getByRole("link", { name: "Gedeeld 08 Submissive openen" })).toBeVisible();
   await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
@@ -175,8 +179,11 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await catalogManager.getByRole("button", { name: "Gereed" }).click();
   await expect(catalogManager).toBeHidden();
 
-  const shareTrigger = page.getByRole("button", { name: "Profiel delen" });
-  await shareTrigger.click();
+  const profileOptions = page.getByRole("button", { name: "Meer opties" });
+  await profileOptions.click();
+  const shareMenuItem = page.getByRole("menuitem", { name: "Profiel delen" });
+  await expect(shareMenuItem).toBeVisible();
+  await shareMenuItem.click();
   const shareDialog = page.getByRole("dialog", { name: "Profiel delen" });
   const qr = shareDialog.getByTestId("profile-share-qr");
   await expect(qr).toBeVisible({ timeout: 15000 });
@@ -188,7 +195,8 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const closeShare = shareDialog.getByRole("button", { name: "Profiel delen sluiten" });
   await expectWithinVisualViewport(closeShare);
   await closeShare.click();
-  await expect(shareTrigger).toBeFocused();
+  await expect(shareDialog).toBeHidden();
+  await expect(profileOptions).toBeVisible();
 
   await page.goto("/compare?a=" + PROFILE_ALEX.id + "&b=" + PROFILE_SAM.id);
   await page.waitForLoadState("networkidle");
