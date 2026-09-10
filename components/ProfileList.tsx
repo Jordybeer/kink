@@ -15,6 +15,8 @@ import {
   PushPinSlash,
   Trash,
 } from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "framer-motion";
+import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { splitProfilesByOwnership } from "@/lib/profileType";
 import { avatarStyle } from "@/lib/avatar";
@@ -73,6 +75,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
   const [allMine, setAllMine] = useState(false);
   const [allShared, setAllShared] = useState(false);
   const [groupDelete, setGroupDelete] = useState<Profile | null>(null);
+  const reduced = useReducedMotion();
 
   const ownership = splitProfilesByOwnership(profiles, pinnedId);
   const mine = groupsOf(ownership.mine, pinnedId);
@@ -83,12 +86,19 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
     : [];
 
   const renderGroups = (groups: Group[], owned: boolean) => (
-    <div data-home-profile-stack className="flex flex-col">
+    <motion.div
+      data-home-profile-stack
+      className="flex flex-col"
+      initial={reduced ? false : "hidden"}
+      animate="show"
+      variants={STAGGER_CHILDREN}
+    >
       {groups.map((group, groupIndex) => {
         const paired = group.profiles.length > 1;
         return (
-          <section
+          <motion.section
             key={group.key}
+            variants={fadeUp(8)}
             style={groupIndex
               ? { borderTop: "1px solid color-mix(in srgb, var(--border) 58%, transparent)" }
               : undefined}
@@ -114,7 +124,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
                   <Link
                     href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
                     prefetch={false}
-                    className="focus-ring inline-flex min-h-11 items-center px-1 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-75"
+                    className="focus-ring inline-flex min-h-11 items-center px-1 text-xs font-semibold"
                     style={{ color: "var(--accent)" }}
                   >
                     Vergelijk kanten
@@ -137,10 +147,10 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
                   : undefined}
               />
             ))}
-          </section>
+          </motion.section>
         );
       })}
-    </div>
+    </motion.div>
   );
 
   return (
@@ -178,7 +188,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             href={`/compare?a=${pair[0].id}&b=${pair[1].id}`}
             prefetch={false}
             aria-label={`Vergelijk ${pair[0].name} en ${pair[1].name}`}
-            className="focus-ring block rounded-2xl p-3.5 transition-opacity hover:opacity-90 active:opacity-80 lg:col-span-2"
+            className="focus-ring block rounded-2xl p-3.5 transition-opacity hover:opacity-90 lg:col-span-2"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 6%, var(--surface)), color-mix(in srgb, var(--action-primary) 6%, var(--surface)))",
               border: "1px solid var(--border-accent)",
@@ -191,12 +201,8 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
               </div>
               <div className="min-w-0 flex-1">
                 <p
-                  className="text-lg italic leading-tight"
-                  style={{
-                    fontFamily: "var(--font-display, Georgia, serif)",
-                    fontWeight: 500,
-                    overflowWrap: "anywhere",
-                  }}
+                  className="truncate text-lg italic leading-tight"
+                  style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
                 >
                   {pair[0].name}
                   <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
@@ -231,14 +237,14 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             <Link
               key={href}
               href={href}
-              className="focus-ring flex min-h-12 items-center gap-3 px-1 transition-opacity hover:opacity-90 active:opacity-75"
+              className="focus-ring flex min-h-12 items-center gap-3 px-1"
               style={index
                 ? { borderTop: "1px solid color-mix(in srgb, var(--border) 58%, transparent)" }
                 : undefined}
             >
-              <Icon size={18} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
+              <Icon size={17} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
               <span className="flex-1 text-sm font-medium">{label}</span>
-              <CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
+              <CaretRight size={14} aria-hidden="true" style={{ color: "var(--text2)" }} />
             </Link>
           ))}
         </div>
@@ -322,7 +328,7 @@ function Disclosure({ expanded, label, onClick }: { expanded: boolean; label: st
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className="focus-ring mt-0.5 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
+      className="focus-ring mt-0.5 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium"
       style={{ color: "var(--text2)" }}
     >
       <span className="flex-1">{label}</span>
@@ -365,7 +371,7 @@ function ProfileRow({
         <Link
           href={`/profile/${profile.id}`}
           prefetch={false}
-          className="focus-ring flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl transition-opacity hover:opacity-90 active:opacity-75"
+          className="focus-ring flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl"
           aria-label={`${profile.name} ${profile.role} openen`}
         >
           {showName && <Avatar profile={profile} />}
@@ -392,7 +398,7 @@ function ProfileRow({
             aria-label={`Meer acties voor ${profile.name}`}
             aria-haspopup="dialog"
             aria-expanded={actions}
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full transition-opacity hover:opacity-90 active:opacity-70"
+            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}
           >
             <DotsThree aria-hidden="true" size={20} weight="bold" />
