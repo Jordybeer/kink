@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   CalendarDots,
@@ -18,6 +18,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { splitProfilesByOwnership } from "@/lib/profileType";
+import { usePartnerProfileId } from "@/lib/partnerPreference";
 import { avatarStyle } from "@/lib/avatar";
 import { experienceLevelLabel } from "@/lib/roles";
 import Sheet, { SheetContent } from "@/components/Sheet";
@@ -29,7 +30,7 @@ function identity(profile: Profile) {
   return profile.personGroupId ? `person:${profile.personGroupId}` : `profile:${profile.id}`;
 }
 
-function groupsOf(profiles: Profile[], pinnedId: string | null): Group[] {
+function groupsOf(profiles: Profile[], priorityId: string | null): Group[] {
   const map = new Map<string, Group>();
   for (const profile of profiles) {
     const key = identity(profile);
@@ -39,20 +40,34 @@ function groupsOf(profiles: Profile[], pinnedId: string | null): Group[] {
   }
 
   return [...map.values()].sort((a, b) => {
-    const ap = a.profiles.some((profile) => profile.id === pinnedId);
-    const bp = b.profiles.some((profile) => profile.id === pinnedId);
+    const ap = a.profiles.some((profile) => profile.id === priorityId);
+    const bp = b.profiles.some((profile) => profile.id === priorityId);
     if (ap !== bp) return ap ? -1 : 1;
     return a.profiles[0].createdAt - b.profiles[0].createdAt;
   });
 }
 
-function comparePair(profiles: Profile[], pinnedId: string | null): [Profile, Profile] | null {
-  const pinned = profiles.find((profile) => profile.id === pinnedId);
-  if (pinned) {
-    const other = profiles.find(
-      (profile) => profile.id !== pinned.id && identity(profile) !== identity(pinned),
+function comparePair(
+  profiles: Profile[],
+  pinnedId: string | null,
+  partnerId: string | null,
+): [Profile, Profile] | null {
+  const ownership = splitProfilesByOwnership(profiles, pinnedId);
+  const primary = ownership.mine.find((profile) => profile.id === pinnedId) ?? ownership.mine[0];
+  const preferredPartner = ownership.shared.find((profile) => profile.id === partnerId);
+
+  if (primary && preferredPartner && identity(primary) !== identity(preferredPartner)) {
+    return [primary, preferredPartner];
+  }
+
+  if (primary) {
+    const sharedOther = ownership.shared.find((profile) => identity(profile) !== identity(primary));
+    if (sharedOther) return [primary, sharedOther];
+
+    const ownOther = ownership.mine.find(
+      (profile) => profile.id !== primary.id && identity(profile) !== identity(primary),
     );
-    if (other) return [pinned, other];
+    if (ownOther) return [primary, ownOther];
   }
 
   for (let left = 0; left < profiles.length; left += 1) {
@@ -71,18 +86,24 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
   const pin = useStore((state) => state.pinProfile);
   const unpin = useStore((state) => state.unpinProfile);
   const remove = useStore((state) => state.deleteProfile);
+  const [partnerId, setPartnerId] = usePartnerProfileId();
   const [allMine, setAllMine] = useState(false);
   const [allShared, setAllShared] = useState(false);
   const [groupDelete, setGroupDelete] = useState<Profile | null>(null);
   const reduced = useReducedMotion() ?? false;
 
   const ownership = splitProfilesByOwnership(profiles, pinnedId);
+  const partnerExists = partnerId ? ownership.shared.some((profile) => profile.id === partnerId) : true;
   const mine = groupsOf(ownership.mine, pinnedId);
-  const shared = groupsOf(ownership.shared, pinnedId);
-  const pair = comparePair(profiles, pinnedId);
+  const shared = groupsOf(ownership.shared, partnerId);
+  const pair = comparePair(profiles, pinnedId, partnerId);
   const deleteGroup = groupDelete?.personGroupId
     ? profiles.filter((profile) => profile.personGroupId === groupDelete.personGroupId)
     : [];
+
+  useEffect(() => {
+    if (partnerId && !partnerExists) setPartnerId(null);
+  }, [partnerExists, partnerId, setPartnerId]);
 
   const renderGroup = (group: Group, groupIndex: number, owned: boolean) => {
     const paired = group.profiles.length > 1;
