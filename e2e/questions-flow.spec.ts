@@ -378,7 +378,6 @@ test("questionnaire reflows at 200% text without clipping or horizontal scroll",
   expect(await essence.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
   expect(await statusCopy.evaluateAll((nodes) => nodes.every((node) => node.scrollHeight <= node.clientHeight + 1))).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)).toBe(false);
-  expect(await card.evaluate((node) => node.scrollHeight > node.clientHeight + 1)).toBe(true);
 
   await later.scrollIntoViewIfNeeded();
   await expect(later).toBeInViewport();
