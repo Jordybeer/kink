@@ -466,7 +466,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   spellCheck={false}
                   placeholder="Gebruikersnaam"
                   className="focus-ring mt-3 min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                  style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)" }}
                 />
                 {fetLifeInvalid && (
                   <p id={fetLifeErrorId} className="mt-2 text-sm leading-5" role="alert" style={{ color: "var(--hard-no-text)" }}>
@@ -501,7 +501,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   spellCheck={false}
                   placeholder="Plak hier de resultaatlink en resultaten"
                   className="focus-ring mt-3 max-h-36 w-full resize-none rounded-xl px-3.5 py-3 text-base leading-6 focus:outline-none"
-                  style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                  style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)" }}
                 />
 
                 {parsedBdsmtest?.ok && (
@@ -533,7 +533,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                         clearError();
                       }}
                       className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
-                      style={{ color: "var(--hard-no-text)", border: "1px solid var(--border)" }}
+                      style={{ color: "var(--hard-no-text)", border: "1px solid var(--control-border)" }}
                     >
                       <Trash size={14} aria-hidden="true" /> Verwijder
                     </button>
@@ -563,14 +563,14 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-2xl italic" style={avatarStyle(name || profile.name)}>{initial}</div>
                   )}
-                  <span className="pointer-events-none absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                  <span className="pointer-events-none absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--surface2)", border: "1px solid var(--control-border)" }}>
                     <CameraPlus size={16} aria-hidden="true" />
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">Profielfoto</p>
                   <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>Verander je profielfoto.</p>
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="focus-ring mt-2 min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ border: "1px solid var(--border)" }}>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="focus-ring mt-2 min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ border: "1px solid var(--control-border)" }}>
                     Foto wijzigen
                   </button>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="sr-only" aria-label="Nieuwe profielfoto kiezen" />
@@ -595,7 +595,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 autoComplete="off"
                 spellCheck={false}
                 className="focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-                style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)" }}
               />
               {errorField === "name" && error && (
                 <p id={nameErrorId} className="mt-1.5 text-sm leading-5" role="alert" style={{ color: "var(--hard-no-text)" }}>{error}</p>
@@ -616,7 +616,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 aria-invalid={errorField === "perspective"}
                 aria-describedby={errorField === "perspective" ? perspectiveErrorId : undefined}
                 className="ks-select focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)" }}
               >
                 <option value="" disabled>Kies perspectief</option>
                 <option value="dominant" disabled={paired && perspective !== "dominant" && siblingPerspectives.has("dominant")}>Dominant</option>
@@ -658,7 +658,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                         className="focus-ring min-h-11 rounded-xl px-2 text-sm font-semibold"
                         style={active
                           ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
-                          : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                          : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
                       >
                         {option.label}
                       </button>
@@ -676,7 +676,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 value={relationshipStatus}
                 onChange={(event) => setRelationshipStatus(event.target.value)}
                 className="ks-select focus-ring min-h-12 w-full rounded-xl px-3.5 text-base focus:outline-none"
-                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: relationshipStatus ? "var(--text)" : "var(--text2)" }}
+                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--control-border)", color: relationshipStatus ? "var(--text)" : "var(--text2)" }}
               >
                 <option value="">Niet tonen</option>
                 {RELATIONSHIP_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
@@ -719,7 +719,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       className="focus-ring min-h-11 rounded-full px-3.5 text-sm font-semibold"
                       style={active
                         ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
-                        : { color: "var(--text2)", border: "1px solid var(--border)" }}
+                        : { color: "var(--text2)", border: "1px solid var(--control-border)" }}
                     >
                       {interest.label}
                     </button>
@@ -750,7 +750,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       className="focus-ring min-h-[70px] rounded-xl px-3.5 py-3 text-left"
                       style={active
                         ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--accent)" }
-                        : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                        : { background: "var(--surface2)", border: "1px solid var(--control-border)" }}
                     >
                       <span className="flex items-center justify-between gap-2">
                         <span className="text-sm font-semibold">{option.label}</span>
@@ -819,7 +819,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   clearError();
                 }}
                 className="focus-ring min-h-12 rounded-full text-sm font-semibold"
-                style={{ color: "var(--text)", border: "1px solid var(--border)" }}
+                style={{ color: "var(--text)", border: "1px solid var(--control-border)" }}
               >
                 <CaretLeft size={15} className="mr-1 inline" aria-hidden="true" /> Vorige
               </button>

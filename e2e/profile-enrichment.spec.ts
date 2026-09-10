@@ -55,7 +55,7 @@ test.describe("Gekoppelde bronnen in profielbewerking", () => {
     expect(bodyBox!.y + bodyBox!.height).toBeLessThanOrEqual(footerBox!.y + 1);
     expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
 
-    await dialog.getByRole("button", { name: /Identiteit/ }).click();
+    await dialog.getByTestId("profile-edit-sources-panel").getByRole("button", { name: "Identiteit", exact: true }).click();
     await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
     await dialog.getByRole("button", { name: "Profiel bewerken sluiten" }).click();
     await expect(dialog).toBeHidden();
@@ -72,7 +72,7 @@ test.describe("Gekoppelde bronnen in profielbewerking", () => {
     await fetLife.fill("https://fetlife.com/alex");
     await expect(fetLife).toHaveAttribute("aria-invalid", "true");
 
-    await dialog.getByRole("button", { name: /Identiteit/ }).click();
+    await dialog.getByTestId("profile-edit-sources-panel").getByRole("button", { name: "Identiteit", exact: true }).click();
     const next = dialog.getByRole("button", { name: /Volgende/ });
     await expect(next).toBeEnabled();
     await next.click();

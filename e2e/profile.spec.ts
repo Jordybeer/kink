@@ -9,7 +9,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   test("hero toont naam, rol en ervaringsniveau", async ({ page }) => {
     await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Dominant").first()).toBeVisible();
-    await expect(page.getByText("Gevorderd", { exact: true }).first()).toBeVisible();
+    await expect(page.getByTestId("profile-hero").getByText(/Gevorderd/)).toBeVisible();
   });
 
   test("lange profielnaam blijft volledig leesbaar zonder horizontale overflow", async ({ page }) => {
@@ -121,8 +121,8 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const currentExperience = experience.getByRole("radio", { name: "Gevorderd" });
     await currentExperience.focus();
     await currentExperience.press("ArrowRight");
-    await expect(experience.getByRole("radio", { name: "Ervaren" })).toHaveAttribute("aria-checked", "true");
-    await expect(experience.getByRole("radio", { name: "Ervaren" })).toBeFocused();
+    await expect(experience.getByRole("radio", { name: "Ervaren", exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(experience.getByRole("radio", { name: "Ervaren", exact: true })).toBeFocused();
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;

@@ -48,6 +48,8 @@ async function readContrastPairs(page: Page) {
       accentButton: contrast(read("--on-accent"), read("--accent")),
       filledButton: contrast(read("--on-accent-fill"), read("--accent-fill")),
       dangerButton: contrast(read("--on-danger-fill"), read("--danger-fill")),
+      controlBoundaryOnFill: contrast(read("--control-border"), read("--surface2")),
+      controlBoundaryOnSurface: contrast(read("--control-border"), read("--surface")),
     };
   });
 }
@@ -95,7 +97,8 @@ test("both palettes keep core text and controls at WCAG AA contrast", async ({ p
     await expectTheme(page, theme);
     const pairs = await readContrastPairs(page);
     for (const [name, ratio] of Object.entries(pairs)) {
-      expect(ratio, `${theme} ${name}`).toBeGreaterThanOrEqual(4.5);
+      const minimum = name.startsWith("controlBoundary") ? 3 : 4.5;
+      expect(ratio, `${theme} ${name}`).toBeGreaterThanOrEqual(minimum);
     }
 
     await page.evaluate(async () => { await document.fonts.ready; });

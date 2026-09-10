@@ -33,8 +33,8 @@ function ScoreRows({ scores, compact = false }: { scores: BdsmtestScore[]; compa
             style={{ background: "var(--surface2)" }}
           >
             <div
-              className="h-full rounded-full"
-              style={{ width: `${pct}%`, background: "var(--accent)", transition: "width 250ms ease-out" }}
+              className="h-full w-full origin-left rounded-full transition-transform duration-300 ease-out motion-reduce:transition-none"
+              style={{ background: "var(--accent)", transform: `scaleX(${pct / 100})` }}
             />
           </div>
           <span className="text-right text-sm tabular-nums" style={{ color: "var(--text2)" }}>{pct}%</span>

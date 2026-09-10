@@ -26,7 +26,7 @@ test.describe("gevulde Home-hiërarchie", () => {
     await expect(utilities).toBeVisible();
     await expect(utilities.getByRole("link")).toHaveCount(3);
 
-    await expect.poll(() => profileStack.evaluate((element) => getComputedStyle(element).boxShadow)).toBe("none");
+    await expect.poll(() => profileStack.evaluate((element) => getComputedStyle(element).boxShadow)).toContain("inset");
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 });

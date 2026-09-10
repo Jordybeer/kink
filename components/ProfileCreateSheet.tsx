@@ -229,7 +229,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 className="focus-ring w-full min-h-12 rounded-xl px-3.5 text-base mb-5 focus:outline-none placeholder-[color:var(--text2)]"
                 style={{
                   background: "var(--surface2)",
-                  border: `1px solid ${nameError ? "var(--hard-no)" : "var(--border)"}`,
+                  border: `1px solid ${nameError ? "var(--hard-no)" : "var(--control-border)"}`,
                   color: "var(--text)",
                 }}
               />
@@ -256,7 +256,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                               background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
                               border: "1px solid var(--accent)",
                             }
-                          : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                          : { background: "var(--surface2)", border: "1px solid var(--control-border)" }}
                       >
                         <span
                           className="w-11 h-11 rounded-full flex items-center justify-center flex-none"
@@ -292,7 +292,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 }}
                 aria-describedby={experienceHintId}
                 className="ks-select focus-ring w-full min-h-12 rounded-xl px-3.5 text-base focus:outline-none"
-                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--border)", color: experienceLevel ? "var(--text)" : "var(--text2)" }}
+                style={{ backgroundColor: "var(--surface2)", border: "1px solid var(--control-border)", color: experienceLevel ? "var(--text)" : "var(--text2)" }}
               >
                 <option value="" disabled>Kies je ervaringsniveau</option>
                 {EXPERIENCE_LEVELS.map((option) => (
@@ -344,7 +344,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                             background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))",
                             border: "1px solid var(--accent)",
                           }
-                        : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                        : { background: "var(--surface2)", border: "1px solid var(--control-border)" }}
                     >
                       <span
                         aria-hidden="true"
@@ -352,7 +352,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                         style={{
                           background: active ? "var(--accent)" : "var(--surface3)",
                           color: active ? "var(--on-accent)" : "transparent",
-                          border: active ? "none" : "1px solid var(--border)",
+                          border: active ? "none" : "1px solid var(--control-border)",
                         }}
                       >
                         <Check aria-hidden="true" size={13} weight="bold" />
@@ -383,7 +383,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             onClick={step === 0 ? onClose : () => setStep(0)}
             disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-            style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+            style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
           >
             {step === 0 ? "Annuleer" : <><ArrowLeft size={16} aria-hidden="true" /> Terug</>}
           </button>
