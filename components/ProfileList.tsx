@@ -6,7 +6,6 @@ import {
   CalendarDots,
   CaretDown,
   CaretRight,
-  CaretUp,
   DotsThree,
   FileText,
   FilmSlate,
@@ -146,8 +145,8 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
     const preview = groups.slice(0, previewCount);
     const extras = groups.slice(previewCount);
     const surface = owned
-      ? "color-mix(in srgb, var(--surface2) 64%, transparent)"
-      : "color-mix(in srgb, var(--surface2) 48%, transparent)";
+      ? "color-mix(in srgb, var(--surface2) 70%, transparent)"
+      : "color-mix(in srgb, var(--surface2) 44%, transparent)";
 
     return (
       <div
@@ -162,14 +161,26 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             <motion.div
               key="profile-extras"
               initial={reduced ? false : { height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={reduced
-                ? { duration: 0 }
-                : {
-                    height: { duration: 0.24, ease: [0.16, 1, 0.3, 1] },
-                    opacity: { duration: 0.16, ease: "easeOut" },
-                  }}
+              animate={{
+                height: "auto",
+                opacity: 1,
+                transition: reduced
+                  ? { duration: 0 }
+                  : {
+                      height: { duration: 0.24, ease: [0.16, 1, 0.3, 1] },
+                      opacity: { duration: 0.16, ease: "easeOut" },
+                    },
+              }}
+              exit={{
+                height: 0,
+                opacity: 0,
+                transition: reduced
+                  ? { duration: 0 }
+                  : {
+                      height: { duration: 0.18, ease: [0.4, 0, 1, 1] },
+                      opacity: { duration: 0.12, ease: "easeIn" },
+                    },
+              }}
               style={{ overflow: "hidden" }}
             >
               <motion.div
@@ -199,6 +210,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             <Disclosure
               expanded={allMine}
               label={allMine ? "Minder profielen" : `Alle profielen · ${ownership.mine.length}`}
+              reduced={reduced}
               onClick={() => setAllMine((value) => !value)}
             />
           )}
@@ -212,6 +224,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             <Disclosure
               expanded={allShared}
               label={allShared ? "Minder gedeelde profielen" : `Alle gedeelde profielen · ${ownership.shared.length}`}
+              reduced={reduced}
               onClick={() => setAllShared((value) => !value)}
             />
           )}
@@ -363,17 +376,35 @@ function Section({ id, label, children }: { id: "mine" | "shared"; label: string
   );
 }
 
-function Disclosure({ expanded, label, onClick }: { expanded: boolean; label: string; onClick: () => void }) {
+function Disclosure({
+  expanded,
+  label,
+  reduced,
+  onClick,
+}: {
+  expanded: boolean;
+  label: string;
+  reduced: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className="focus-ring mt-0.5 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
+      className="focus-ring -mt-1 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
       style={{ color: "var(--text2)" }}
     >
       <span className="flex-1">{label}</span>
-      {expanded ? <CaretUp size={14} aria-hidden="true" /> : <CaretDown size={14} aria-hidden="true" />}
+      <motion.span
+        className="flex flex-none items-center justify-center"
+        aria-hidden="true"
+        initial={false}
+        animate={{ rotate: expanded ? 180 : 0 }}
+        transition={reduced ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <CaretDown size={14} />
+      </motion.span>
     </button>
   );
 }
