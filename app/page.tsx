@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Camera, Sparkle, UserPlus, X } from "@phosphor-icons/react";
+import { ArrowRight, Camera, Sparkle, UploadSimple, UserPlus, X } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import type { Profile } from "@/types";
 import type { EncryptedBackup } from "@/lib/crypto";
@@ -51,6 +51,7 @@ function HomeContent() {
   const [pendingEncrypted, setPendingEncrypted] = useState<EncryptedBackup | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
 
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -297,13 +298,48 @@ function HomeContent() {
                     <Camera size={18} aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">Scan partnerprofiel</span>
+                    <span className="block text-sm font-semibold">Scan gedeeld profiel</span>
                     <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
-                      Bekijk wat je partner heeft gedeeld
+                      Bekijk wat iemand met je heeft gedeeld
                     </span>
                   </span>
                   <ArrowRight size={16} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
                 </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => backupInputRef.current?.click()}
+                className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 text-left transition-opacity hover:opacity-90 active:opacity-75"
+                style={{
+                  borderTop: "1px solid color-mix(in srgb, var(--border) 62%, transparent)",
+                  color: "var(--text2)",
+                }}
+              >
+                <UploadSimple size={18} aria-hidden="true" className="flex-none" style={{ color: "var(--identity-a)" }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold" style={{ color: "var(--text)" }}>Backup herstellen</span>
+                  <span className="mt-0.5 block text-xs leading-5">Ga verder met een bestaande KinkSync-backup</span>
+                </span>
+                <ArrowRight size={15} aria-hidden="true" className="flex-none" />
+              </button>
+              <input
+                ref={backupInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportFile}
+                aria-label="Kies een backupbestand"
+                className="sr-only"
+              />
+              {importError && (
+                <p className="px-1 text-xs leading-relaxed" role="alert" style={{ color: "var(--hard-no)" }}>
+                  {importError}
+                </p>
+              )}
+              {importSuccess && (
+                <p className="px-1 text-xs leading-relaxed" role="status" style={{ color: "var(--willing)" }}>
+                  {importSuccess}
+                </p>
               )}
             </div>
           </section>
