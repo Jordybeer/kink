@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CaretDown } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
+import { usePartnerProfileId } from "@/lib/partnerPreference";
 import type { Profile } from "@/types";
 
 // The house dropdown for picking a profile — extracted from the scene
@@ -22,9 +23,17 @@ export default function ProfileSelect({
   placeholder: string;
 }) {
   const t = useMotionSafe();
+  const [preferredPartnerId] = usePartnerProfileId();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const selected = profiles.find((p) => p.id === value);
+  const usesPartnerDefault = placeholder === "Geen partner gekozen";
+
+  useEffect(() => {
+    if (!usesPartnerDefault || value || !preferredPartnerId) return;
+    if (!profiles.some((profile) => profile.id === preferredPartnerId)) return;
+    onChange(preferredPartnerId);
+  }, [onChange, preferredPartnerId, profiles, usesPartnerDefault, value]);
 
   useEffect(() => {
     if (!open) return;

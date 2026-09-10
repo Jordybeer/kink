@@ -76,9 +76,10 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
           <motion.div
             role="menu"
             aria-orientation="vertical"
-            className={`absolute z-[200] w-[196px] overflow-hidden rounded-[18px] ${align === "left" ? "left-0" : "right-0"}`}
+            className={`absolute z-[200] w-max min-w-[196px] overflow-hidden rounded-[18px] ${align === "left" ? "left-0" : "right-0"}`}
             style={{
               top: "calc(100% + 8px)",
+              maxWidth: "min(17.5rem, calc(100vw - 2rem))",
               background: "var(--floating-surface)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",

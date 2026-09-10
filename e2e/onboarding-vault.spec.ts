@@ -66,7 +66,7 @@ test.describe("Onboarding vault", () => {
     await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).not.toBeVisible({ timeout: 100 });
     await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible({ timeout: 2500 });
 
-    await expect(page.getByRole("button", { name: /^Scan partnerprofiel\b/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Scan gedeeld profiel\b/ })).toBeVisible();
   });
 
   test("a partial grip stays closed without throwing away the user's progress", async ({ page }) => {
