@@ -185,28 +185,22 @@ function HomeContent() {
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
         {profiles.length > 0 ? (
-          <div className={`grid ${importPreview ? "grid-cols-1" : "grid-cols-2"} gap-2 mt-5 mb-5`}>
+          <div
+            data-home-profile-actions
+            className="mt-4 mb-5 flex flex-col"
+            style={{
+              borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
+              borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
+            }}
+          >
             <button
               type="button"
               onClick={() => setFormOpen(true)}
-              className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
-              style={{
-                background: "color-mix(in srgb, var(--action-primary) 7%, var(--surface2))",
-                border: "1px solid var(--border-accent)",
-              }}
+              className="focus-ring flex min-h-12 w-full items-center gap-3 px-1 text-left"
             >
-              <span
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
-                style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
-              >
-                <UserPlus size={19} weight="bold" aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block whitespace-nowrap text-sm font-semibold">Nieuw profiel</span>
-                <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                  Perspectief en startlijst
-                </span>
-              </span>
+              <UserPlus size={18} weight="bold" aria-hidden="true" style={{ color: "var(--action-primary)" }} />
+              <span className="flex-1 text-sm font-semibold">Nieuw profiel</span>
+              <ArrowRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
             </button>
 
             {!importPreview && (
@@ -216,27 +210,12 @@ function HomeContent() {
                   setScanError(null);
                   setScanOpen(true);
                 }}
-                className="focus-ring min-h-[76px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
-                style={{
-                  background: "color-mix(in srgb, var(--identity-a) 5%, var(--surface2))",
-                  border: "1px solid var(--identity-border)",
-                }}
+                className="focus-ring flex min-h-12 w-full items-center gap-3 px-1 text-left"
+                style={{ borderTop: "1px solid color-mix(in srgb, var(--border) 58%, transparent)" }}
               >
-                <span
-                  className="w-10 h-10 rounded-full flex items-center justify-center flex-none"
-                  style={{
-                    background: "color-mix(in srgb, var(--identity-a) 11%, var(--surface3))",
-                    color: "var(--identity-a)",
-                  }}
-                >
-                  <Camera size={19} aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block whitespace-nowrap text-sm font-semibold">Scan profiel</span>
-                  <span className="block text-xs mt-0.5" style={{ color: "var(--text2)" }}>
-                    Voeg je partner toe
-                  </span>
-                </span>
+                <Camera size={18} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
+                <span className="flex-1 text-sm font-medium">Scan gedeeld profiel</span>
+                <ArrowRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
               </button>
             )}
           </div>
