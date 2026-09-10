@@ -48,6 +48,9 @@
   --profile-page-glow: radial-gradient(ellipse 72% 18rem at 50% 0%, color-mix(in srgb, var(--accent2) 7%, transparent), transparent 70%);
   --profile-hero-glow: radial-gradient(ellipse 72% 68% at 38% 32%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%);
   --profile-edit-glow: radial-gradient(ellipse 88% 24rem at 50% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 76%);
+  --profile-form-surface: #110D16;
+  --profile-form-control-surface: #191320;
+  --profile-form-muted-surface: #251D2D;
   --border: #34283B;
   --control-border: #78697A;
   --border-bright: rgba(255, 255, 255, 0.18);
@@ -136,7 +139,10 @@
   --question-utility-surface: color-mix(in srgb, var(--surface2) 88%, var(--surface));
   --profile-page-glow: radial-gradient(ellipse 58% 13rem at 45% 0%, color-mix(in srgb, var(--accent2) 4%, transparent), transparent 68%);
   --profile-hero-glow: radial-gradient(ellipse 58% 54% at 32% 28%, color-mix(in srgb, var(--accent2) 6%, transparent), transparent 70%);
-  --profile-edit-glow: radial-gradient(ellipse 72% 17rem at 50% 0%, color-mix(in srgb, var(--accent2) 5%, transparent), transparent 72%);
+  --profile-edit-glow: radial-gradient(ellipse 68% 14rem at 50% 0%, color-mix(in srgb, var(--accent) 2%, transparent), transparent 72%);
+  --profile-form-surface: #FCFAF8;
+  --profile-form-control-surface: #F4F0EE;
+  --profile-form-muted-surface: #E4DDDF;
   --border: #C8BAC5;
   --control-border: #82737E;
   --border-bright: rgba(72, 47, 61, 0.30);
