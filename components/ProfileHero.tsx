@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowSquareOut, CaretRight, FileText, Lock } from "@phosphor-icons/react";
+import { ArrowSquareOut, CaretRight, FileText, Heart, Lock } from "@phosphor-icons/react";
 import PlatformShareIcon from "@/components/ui/PlatformShareIcon";
 import Sheet, { SheetContent } from "@/components/Sheet";
 import FetLifeMark from "@/components/brand/FetLifeMark";
@@ -13,6 +13,7 @@ import type { Profile } from "@/types";
 import { avatarStyle } from "@/lib/avatar";
 import type { ProfileType } from "@/lib/profileType";
 import { experienceLevelLabel } from "@/lib/roles";
+import { usePartnerProfileId } from "@/lib/partnerPreference";
 import ProfileTrust from "@/components/ProfileTrust";
 import { useContractStore } from "@/lib/contractStore";
 import { mostRecentReadableContractForProfile } from "@/lib/contractLifecycle";
@@ -29,6 +30,7 @@ interface ProfileHeroProps {
 export default function ProfileHero({ profile, onShare, onEdit, profileType, embedded = false }: ProfileHeroProps) {
   const shareRef = useRef(onShare);
   const editRef = useRef(onEdit);
+  const [partnerProfileId, setPartnerProfileId] = usePartnerProfileId();
 
   useLayoutEffect(() => {
     shareRef.current = onShare;
@@ -41,6 +43,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
   const latestContract = mostRecentReadableContractForProfile(contractSeries, profile);
   const canShare = Boolean(onShare);
   const canEdit = Boolean(onEdit);
+  const isMyPartner = profileType === "partner" && partnerProfileId === profile.id;
   const hasBdsmtestScores = (profile.bdsmtestScores?.length ?? 0) > 0;
   const hasBdsmtest = hasBdsmtestScores || Boolean(profile.bdsmtestUrl);
   const hasLinkedSources = hasBdsmtest || Boolean(profile.fetLifeUsername) || (profileType === "partner" && Boolean(latestContract));
@@ -66,8 +69,18 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
         placement: canEdit ? "overflow" : "primary",
       });
     }
+    if (profileType === "partner") {
+      next.push({
+        id: "my-partner",
+        label: isMyPartner ? "Mijn partner" : "Markeer als mijn partner",
+        icon: <Heart size={18} weight={isMyPartner ? "fill" : "regular"} aria-hidden="true" />,
+        onClick: () => setPartnerProfileId(isMyPartner ? null : profile.id),
+        placement: "overflow",
+        selected: isMyPartner,
+      });
+    }
     return next;
-  }, [canEdit, canShare]);
+  }, [canEdit, canShare, isMyPartner, profile.id, profileType, setPartnerProfileId]);
   useTopNavActions(navActions);
 
   const initial = profile.name.charAt(0).toUpperCase();
@@ -126,7 +139,8 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
             </p>
             {profileType === "partner" && (
               <p className="mt-2 inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
-                <Lock size={12} weight="regular" aria-hidden="true" /> Gedeeld profiel
+                <Lock size={12} weight="regular" aria-hidden="true" />
+                Gedeeld profiel{isMyPartner ? " · Mijn partner" : ""}
               </p>
             )}
           </div>
