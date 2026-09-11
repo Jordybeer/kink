@@ -39,6 +39,10 @@ These are product concepts, not mandatory navigation labels. Future information 
 
 A typical journey may move from Person to Relationship to Agreement or Moment, but the product must not force a linear funnel. Users may return to a profile, compare again, plan a scene without a contract, or use an agreement without treating it as permanent truth.
 
+Compare also carries a small amount of relationship memory. A kink marked **Besproken** is remembered for the exact selected profile pair across sessions. That acknowledgement remains valid until the underlying meaning changes: if either profile changes status for that kink, or a relevant pair-specific agreement for that kink changes through the contract lifecycle, it becomes open for discussion again. Pausing or stopping a contract does not reset every discussed kink by itself; only materially changed items reopen.
+
+Compare is read-only for profile data. It may store pair-scoped relationship context such as **Besproken**, but it must not edit profile answers or profile notes. Changes to a person's stated preferences, limits or notes belong on that profile's own surface.
+
 ## Capabilities and Constraints
 
 KinkSync supports:
@@ -49,6 +53,7 @@ KinkSync supports:
 - exploring relevant or freely chosen topics without the app inventing preferences;
 - deliberate profile sharing through explicit transfer mechanisms such as QR/import flows;
 - comparing two profiles and surfacing overlaps, mismatches, discussion points and limits;
+- remembering pair-scoped discussion state without treating it as permanent truth when underlying statuses or agreements change;
 - planning scenes and recording aftercare;
 - planning or logging intimate moments;
 - creating, confirming and reviewing agreements/contracts;
@@ -63,6 +68,7 @@ Durable technical and trust constraints:
 - private context must not leak into shared outputs unless the flow explicitly says it will;
 - role or profile perspective never silently predicts a concrete act, direction, preference or consent answer;
 - one answer must never be copied into another semantically distinct answer without explicit user action;
+- Compare must not mutate profile answers or profile notes; relationship-scoped state stays separate from person-scoped profile data;
 - hard limits and consent semantics survive compare, sharing, import, scenes and contracts intact;
 - convenience, aesthetics and automation never outrank consent, safety or privacy;
 - desktop and tablet may expand the experience but may not redefine the fundamental interaction model established on mobile.
