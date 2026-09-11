@@ -168,7 +168,10 @@ export default function ProfileSelect({
                     type="button"
                     role="option"
                     aria-selected={p.id === value}
-                    onClick={() => { onChange(p.id); setOpen(false); }}
+                    onClick={() => {
+                      onChange(p.id);
+                      closeAndReturnFocus();
+                    }}
                     className="focus-ring transition-colors"
                     style={{
                       width: "100%",
