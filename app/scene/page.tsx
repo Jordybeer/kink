@@ -15,10 +15,14 @@ import PageShell from "@/components/PageShell";
 import ProfileSelect from "@/components/ProfileSelect";
 import TimePicker from "@/components/TimePicker";
 import DurationStepper from "@/components/DurationStepper";
+import AftercareSheet from "@/components/AftercareSheet";
 import { ArrowRight, CaretDown, CaretRight, CaretUp, Check, ListPlus, Plus, Trash, X } from "@phosphor-icons/react";
 import { moveUp, moveDown } from "@/lib/sceneOrder";
 import { comparableEntry, visibleStatus, visibleUsedInScene } from "@/lib/privateResponses";
 import { directionalCompareLabel, directionalComparisonEntries } from "@/lib/directionality";
+import { splitProfilesByOwnership } from "@/lib/profileType";
+import { readPartnerProfileId } from "@/lib/partnerPreference";
+import { sceneDetailHref } from "@/lib/localRoutes";
 
 function uid() {
   return crypto.randomUUID();
@@ -30,8 +34,8 @@ function SceneArcBar({ items }: { items: SceneItem[] }) {
   for (const it of items) counts[it.intensity]++;
   const total = items.length;
   const segments = [
-    { key: "zacht"  as const, color: "var(--willing)", flex: counts.zacht  / total },
-    { key: "midden" as const, color: "var(--maybe)",   flex: counts.midden / total },
+    { key: "zacht" as const, color: "var(--willing)", flex: counts.zacht / total },
+    { key: "midden" as const, color: "var(--maybe)", flex: counts.midden / total },
     { key: "intens" as const, color: "var(--hard-no)", flex: counts.intens / total },
   ].filter((s) => s.flex > 0);
 
@@ -157,6 +161,7 @@ function SceneItemRow({
               readOnly={locked}
               onChange={(e) => onUpdate(item.id, { note: e.target.value })}
               placeholder="Notitie…"
+              aria-label={`Notitie bij ${item.name}`}
               className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}
             />
@@ -223,7 +228,7 @@ function KinkChip({
 function ScenePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { profiles, scenes, saveScene, lockSceneConsent } = useStore();
+  const { profiles, scenes, saveScene, lockSceneConsent, completeScene, pinnedProfileId } = useStore();
   const contractSeries = useContractStore((state) => state.series);
   const _hasHydrated = useHasHydrated();
 
@@ -242,6 +247,7 @@ function ScenePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [safeword, setSafeword] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showAftercare, setShowAftercare] = useState(false);
 
   const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) ?? null : null;
   const isConsentLocked = !!(
@@ -249,8 +255,15 @@ function ScenePage() {
     || currentScene?.consentSnapshots
     || currentScene?.consentAgreement
   );
-  const resolvedAId = currentScene?.profileAId ?? aId;
-  const resolvedBId = currentScene?.profileBId ?? bId;
+  const ownership = splitProfilesByOwnership(profiles, pinnedProfileId);
+  const preferredOwn = ownership.mine.find((profile) => profile.id === pinnedProfileId) ?? ownership.mine[0];
+  const preferredPartnerId = _hasHydrated ? readPartnerProfileId() : null;
+  const preferredPartner = ownership.shared.find((profile) => profile.id === preferredPartnerId);
+  const canUsePartnerDefault = !sceneIdParam && !aId && !bId && !!preferredOwn && !!preferredPartner;
+  const fallbackAId = canUsePartnerDefault ? preferredOwn?.id ?? "" : "";
+  const fallbackBId = canUsePartnerDefault ? preferredPartner?.id ?? "" : "";
+  const resolvedAId = currentScene?.profileAId ?? (aId || fallbackAId);
+  const resolvedBId = currentScene?.profileBId ?? (bId || fallbackBId);
   const profileA: Profile | undefined = profiles.find((p) => p.id === resolvedAId);
   const profileB: Profile | undefined = profiles.find((p) => p.id === resolvedBId);
 
@@ -279,6 +292,8 @@ function ScenePage() {
   function selectProfile(side: "a" | "b", profileId: string) {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("id");
+    if (resolvedAId) next.set("a", resolvedAId);
+    if (resolvedBId) next.set("b", resolvedBId);
     next.set(side, profileId);
     const otherSide = side === "a" ? "b" : "a";
     if (next.get(otherSide) === profileId) next.delete(otherSide);
@@ -336,7 +351,7 @@ function ScenePage() {
       return;
     }
     if (!profileA || !profileB || profileA.id === profileB.id) {
-      setSaveError("Kies twee verschillende profielen voordat je deze scène vastlegt.");
+      setSaveError("Kies twee verschillende profielen voordat je deze scène opslaat.");
       return;
     }
     setSaveError(null);
@@ -391,6 +406,7 @@ function ScenePage() {
 
   const isCompleted = currentScene?.status === "completed";
   const showEditorBar = !isCompleted && !isConsentLocked;
+  const showPlayBar = currentScene?.status === "planned" && isConsentLocked;
   const backHref = aId && bId ? `/compare?a=${aId}&b=${bId}` : "/scenes";
   const addedKinkIds = new Set(items.map((it) => it.kinkId).filter(Boolean));
 
@@ -434,7 +450,14 @@ function ScenePage() {
     <>
       <main
         className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-4"
-        style={{ paddingTop: 20, paddingBottom: showEditorBar ? 120 : 32 }}
+        style={{
+          paddingTop: 20,
+          paddingBottom: showEditorBar
+            ? "calc(136px + env(safe-area-inset-bottom))"
+            : showPlayBar
+              ? "calc(72px + env(safe-area-inset-bottom))"
+              : 32,
+        }}
       >
         <div className="mb-3 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-2">
           <Link
@@ -447,7 +470,9 @@ function ScenePage() {
             <ArrowRight size={16} className="rotate-180" aria-hidden="true" />
           </Link>
           <div className="min-w-0">
+            <label htmlFor="scene-title" className="sr-only">Naam van scène</label>
             <input
+              id="scene-title"
               type="text"
               value={sceneTitle}
               onChange={(e) => { if (!isConsentLocked) { setSceneTitle(e.target.value); setSaved(false); } }}
@@ -475,7 +500,9 @@ function ScenePage() {
         </div>
 
         <div className="mb-3 flex items-center gap-1.5">
+          <label htmlFor="scene-date" className="sr-only">Datum</label>
           <input
+            id="scene-date"
             type="date"
             value={sceneDate}
             onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
@@ -505,13 +532,13 @@ function ScenePage() {
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <ProfileSelect
                 profiles={profiles}
-                value={aId}
+                value={resolvedAId}
                 onChange={(id) => selectProfile("a", id)}
                 placeholder="Profiel A"
               />
               <ProfileSelect
                 profiles={profiles}
-                value={bId}
+                value={resolvedBId}
                 onChange={(id) => selectProfile("b", id)}
                 placeholder="Profiel B"
               />
@@ -545,8 +572,9 @@ function ScenePage() {
         )}
 
         <div className="mb-3 flex items-center gap-2">
-          <label className="flex-none text-xs font-semibold" style={{ color: "var(--hard-no)", minWidth: 72 }}>Safeword</label>
+          <label htmlFor="scene-safeword" className="flex-none text-xs font-semibold" style={{ color: "var(--hard-no)", minWidth: 72 }}>Safeword</label>
           <input
+            id="scene-safeword"
             type="text"
             value={safeword}
             onChange={(e) => { if (!isConsentLocked) { setSafeword(e.target.value); setSaved(false); } }}
@@ -622,7 +650,9 @@ function ScenePage() {
           )}
           <div className="mx-auto max-w-3xl">
             <div className="flex gap-2">
+              <label htmlFor="scene-own-item" className="sr-only">Eigen item</label>
               <input
+                id="scene-own-item"
                 type="text"
                 value={newItemName}
                 onChange={(e) => setNewItemName(e.target.value)}
@@ -655,13 +685,47 @@ function ScenePage() {
                 disabled={items.length === 0}
                 className="focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold disabled:opacity-40"
                 style={{ background: "var(--surface)", border: "1px solid var(--border-accent)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)" }}
-                aria-label="Afspraken vastzetten"
+                aria-label="Scène inplannen"
+                aria-describedby="scene-plan-lock-note"
               >
-                {savedStatus === "planned" ? <><Check size={14} aria-hidden="true" /> Vastgezet</> : "Vastzetten"}
+                {savedStatus === "planned" ? <><Check size={14} aria-hidden="true" /> Ingepland</> : "Inplannen"}
               </button>
             </div>
+            <p id="scene-plan-lock-note" className="mt-1.5 text-center text-[11px] leading-4" style={{ color: "var(--text2)" }}>
+              Inplannen zet activiteiten, intensiteiten en safeword vast.
+            </p>
           </div>
         </div>
+      )}
+
+      {showPlayBar && currentScene && (
+        <div
+          data-scene-play-bar
+          className="fixed bottom-0 left-0 right-0 z-40"
+          style={{ background: "color-mix(in srgb, var(--bg) 94%, transparent)", backdropFilter: "blur(18px)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto max-w-3xl">
+            <button
+              type="button"
+              onClick={() => setShowAftercare(true)}
+              className="focus-ring min-h-11 w-full rounded-xl px-4 text-sm font-bold"
+              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+            >
+              Scène afronden
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showAftercare && currentScene && (
+        <AftercareSheet
+          onSave={(entry) => {
+            completeScene(currentScene.id, entry);
+            setShowAftercare(false);
+            router.replace(sceneDetailHref(currentScene.id));
+          }}
+          onClose={() => setShowAftercare(false)}
+        />
       )}
 
       <Sheet open={drawerOpen} onClose={() => setDrawerOpen(false)} aria-label="Kinks toevoegen">
