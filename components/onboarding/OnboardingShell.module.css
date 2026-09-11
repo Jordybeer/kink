@@ -26,6 +26,32 @@
   color: var(--text);
 }
 
+/* On a phone, the textual step count already carries orientation. Removing the
+   duplicate bar and small eyebrow labels gives the actual onboarding thought
+   more room without moving the fixed action area or changing the flow. */
+@media (max-width: 639px) {
+  .root > [role="dialog"] > div:first-child:has(> :global(.max-w-sm)) {
+    padding-top: max(0.875rem, env(safe-area-inset-top)) !important;
+  }
+
+  .root > [role="dialog"] > div:first-child:has(> :global(.max-w-sm)) > :global(.max-w-sm):nth-child(2) {
+    display: none;
+  }
+
+  .root > [role="dialog"] > div:nth-child(2):has(> :global(.max-w-sm)) {
+    padding-top: clamp(0.9rem, 2.2dvh, 1.25rem) !important;
+    padding-bottom: clamp(1rem, 2.5dvh, 1.4rem) !important;
+  }
+
+  .root > [role="dialog"] > div:nth-child(2) :global(p.uppercase) {
+    display: none;
+  }
+
+  .root > [role="dialog"] > div:nth-child(2) :global(h2.serif-safe) {
+    margin-top: 0 !important;
+  }
+}
+
 @media (min-width: 768px) {
   .root > :global(div) :global(.max-w-sm) {
     max-width: 27rem;
