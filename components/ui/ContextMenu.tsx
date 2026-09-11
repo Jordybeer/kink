@@ -2,8 +2,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "@phosphor-icons/react";
-
-const SPRING = { type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.22 } as const;
+import { useMotionSafe } from "@/lib/motion";
 
 export interface ContextMenuItem {
   label: string;
@@ -23,6 +22,7 @@ interface Props {
 }
 
 export default function ContextMenu({ open, onClose, items, children, align = "right" }: Props) {
+  const t = useMotionSafe();
   const menuRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -35,7 +35,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
       }
     };
     document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
+    document.addEventListener("touchstart", handler, { passive: true });
     return () => {
       document.removeEventListener("mousedown", handler);
       document.removeEventListener("touchstart", handler);
@@ -67,6 +67,19 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
     window.requestAnimationFrame(() => trigger?.focus());
   }
 
+  function activateItem(item: ContextMenuItem) {
+    const trigger = returnFocusRef.current;
+    item.onClick?.();
+    onClose();
+    window.requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (!trigger || !document.contains(trigger)) return;
+      if (!active || active === document.body || active === document.documentElement) {
+        trigger.focus();
+      }
+    });
+  }
+
   return (
     <div ref={menuRef} className="relative inline-block">
       {children}
@@ -87,10 +100,10 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
               boxShadow: "var(--floating-shadow)",
               transformOrigin: align === "left" ? "top left" : "top right",
             }}
-            initial={{ scale: 0.92, opacity: 0, y: -6 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.92, opacity: 0, y: -6 }}
-            transition={SPRING}
+            initial={t.reduced ? { opacity: 0 } : { scale: 0.92, opacity: 0, y: -6 }}
+            animate={t.reduced ? { opacity: 1 } : { scale: 1, opacity: 1, y: 0 }}
+            exit={t.reduced ? { opacity: 0 } : { scale: 0.92, opacity: 0, y: -6 }}
+            transition={t.fast}
             onKeyDown={(event) => {
               const currentIndex = itemRefs.current.findIndex((item) => item === document.activeElement);
               if (event.key === "ArrowDown") {
@@ -124,8 +137,8 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
                 role={item.selected === undefined ? "menuitem" : "menuitemradio"}
                 aria-checked={item.selected}
                 tabIndex={-1}
-                onClick={() => { item.onClick?.(); onClose(); }}
-                className="w-full flex items-center justify-between px-4 py-[13px] text-sm font-medium text-left transition-colors duration-100 active:scale-[0.97]"
+                onClick={() => activateItem(item)}
+                className="w-full min-h-11 flex items-center justify-between gap-3 px-4 py-[13px] text-sm font-medium text-left transition-colors duration-100 active:scale-[0.97] motion-reduce:active:scale-100 motion-reduce:transition-none"
                 style={{
                   color: item.danger ? "var(--hard-no)" : "var(--text)",
                   background: item.selected ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
@@ -133,7 +146,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
                   borderBottom: i < items.length - 1 ? "1px solid var(--floating-divider)" : "none",
                 }}
               >
-                <span>{item.label}</span>
+                <span className="min-w-0 flex-1 break-words">{item.label}</span>
                 {item.selected ? (
                   <Check size={15} weight="bold" aria-hidden="true" className="shrink-0" style={{ color: "var(--accent)" }} />
                 ) : item.icon ? (
