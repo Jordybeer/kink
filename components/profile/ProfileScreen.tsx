@@ -25,7 +25,6 @@ import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
-import BdsmtestScores from "@/components/BdsmtestScores";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import CategorySection from "@/components/CategorySection";
 import KinkListRow from "@/components/KinkListRow";
@@ -57,7 +56,6 @@ export default function ProfilePage({ params }: Props) {
     setEntry,
     addCustomKink,
     removeCustomKink,
-    setProfileAvatar,
     updatePrivateNote,
     pinnedProfileId,
     profileSnapshots,
@@ -75,7 +73,6 @@ export default function ProfilePage({ params }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
@@ -226,92 +223,73 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pt-6">
-      {errorMessage && (
-        <div
-          role="alert"
-          className="fixed left-4 right-4 top-4 z-[300] mx-auto max-w-md rounded-xl px-4 py-3 text-sm shadow-lg"
-          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
-        >
-          {errorMessage}
-        </div>
-      )}
-
+    <main
+      className="mx-auto w-full max-w-3xl pt-6"
+      style={{
+        backgroundImage: "var(--profile-page-glow)",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
-        <div
-          data-testid="profile-summary"
-          className="mx-[var(--page-gutter)] mb-4 rounded-[24px]"
-          style={{
-            background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, var(--surface2)), color-mix(in srgb, var(--surface) 90%, var(--surface2)))",
-            border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--border))",
-            boxShadow: "0 14px 34px color-mix(in srgb, var(--bg) 35%, transparent)",
-          }}
-        >
+        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-6">
           <ProfileHero
             profile={currentProfile}
             onShare={shared ? undefined : () => setShareOpen(true)}
             onEdit={shared ? undefined : () => setEditing(true)}
-            onAvatarChange={(dataUrl) => setProfileAvatar(currentProfile.id, dataUrl)}
-            onError={(message) => {
-              setErrorMessage(message);
-              window.setTimeout(() => setErrorMessage(null), 5000);
-            }}
             profileType={getProfileType(currentProfile, pinnedProfileId)}
             embedded
           />
 
-          {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
-            <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} embedded />
-          )}
-
           {!shared && (
-            <Link
-              href={`/profile/${currentProfile.id}/questions`}
-              className="focus-ring flex min-h-[68px] items-center gap-3 rounded-b-[24px] border-t px-4 py-3"
-              style={{
-                background: "color-mix(in srgb, var(--accent) 5%, transparent)",
-                borderColor: "var(--border)",
-              }}
+            <section
+              className="mt-6 border-t pt-4"
+              style={{ borderColor: "var(--border)" }}
+              aria-labelledby="profile-questionnaire-title"
             >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                  {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                  {coverage.complete
-                    ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
-                    : totalRated > 0
-                      ? "Ga verder waar je gebleven bent."
-                      : "Beantwoord vragen in je eigen tempo."}
-                </p>
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="profile-questionnaire-title" className="text-xs font-medium" style={{ color: "var(--text2)" }}>
+                  Vragenlijst
+                </h2>
+                <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                  {catalogRated} van {KINKS.length} beoordeeld
+                </span>
               </div>
-              <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
-            </Link>
-          )}
-        </div>
-      )}
 
-      {!shared && !catalogOpen && (
-        <div className="mx-[var(--page-gutter)] mb-4">
-          <button
-            ref={manageTriggerRef}
-            type="button"
-            onClick={() => setCatalogOpen(true)}
-            aria-expanded="false"
-            aria-controls="profile-catalog-manager"
-            className="focus-ring flex min-h-12 w-full items-center gap-3 border-y px-1 text-left"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <span className="min-w-0 flex-1 py-2">
-              <span className="block text-sm font-semibold">Onderwerpen beheren</span>
-              <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>
-                {catalogRated} van {KINKS.length} beoordeeld
-              </span>
-            </span>
-            <ArrowRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />
-          </button>
+              <Link
+                href={`/profile/${currentProfile.id}/questions`}
+                className="focus-ring mt-1 flex min-h-[68px] items-center gap-4 py-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
+                    {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+                    {coverage.complete
+                      ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
+                      : totalRated > 0
+                        ? "Ga verder waar je gebleven bent."
+                        : "Beantwoord vragen in je eigen tempo."}
+                  </p>
+                </div>
+                <ArrowRight size={16} weight="regular" aria-hidden="true" style={{ color: "var(--text2)" }} />
+              </Link>
+
+              <button
+                ref={manageTriggerRef}
+                type="button"
+                onClick={() => setCatalogOpen(true)}
+                aria-expanded="false"
+                aria-controls="profile-catalog-manager"
+                className="focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
+                style={{ color: "var(--text2)" }}
+              >
+                Onderwerpen beheren
+                <ArrowRight size={13} aria-hidden="true" />
+              </button>
+            </section>
+          )}
         </div>
       )}
 
@@ -418,6 +396,7 @@ export default function ProfilePage({ params }: Props) {
                     <input
                       value={customInput}
                       onChange={(event) => setCustomInput(event.target.value)}
+                      aria-label="Eigen onderwerp toevoegen"
                       placeholder="Voeg iets eigens toe…"
                       className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm focus:outline-none"
                       style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
@@ -463,35 +442,19 @@ export default function ProfilePage({ params }: Props) {
               style={{ background: "var(--surface2)" }}
             >
               {statusSegments.map((segment) => (
-                <div
-                  key={segment.status}
-                  className="h-full"
-                  style={{ flex: segment.count, background: STATUS_VAR[segment.status] }}
-                />
+                <div key={segment.status} className="h-full" style={{ flex: segment.count, background: STATUS_VAR[segment.status] }} />
               ))}
             </div>
           )}
 
           {totalRated === 0 ? (
-            <div className="py-8 text-center">
-              <p className="mb-3 text-sm" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
-              {!shared && (
-                <Link
-                  href={`/profile/${currentProfile.id}/questions`}
-                  className="focus-ring inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
-                  style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-                >
-                  Start met vragen
-                </Link>
-              )}
-            </div>
+            <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>
+              Nog geen onderwerpen beoordeeld.
+            </p>
           ) : (
             ratedByCategory.map(({ category, kinks }) => (
               <section key={category} className="mb-4">
-                <h3
-                  className="mb-2 text-base italic"
-                  style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-                >
+                <h3 className="mb-2 text-base italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
                   {kinkCategoryLabel(category)}
                 </h3>
                 <div className="flex flex-col gap-1.5">
@@ -543,10 +506,11 @@ export default function ProfilePage({ params }: Props) {
 
           {shared && (
             <section className="mt-4">
-              <label className="mb-1.5 block text-sm italic" style={{ color: "var(--text2)" }}>
+              <label htmlFor="profile-private-note" className="mb-1.5 block text-sm italic" style={{ color: "var(--text2)" }}>
                 Persoonlijke notitie
               </label>
               <textarea
+                id="profile-private-note"
                 value={currentProfile.privateNote ?? ""}
                 onChange={(event) => updatePrivateNote(currentProfile.id, event.target.value)}
                 rows={3}
@@ -576,9 +540,10 @@ export default function ProfilePage({ params }: Props) {
                 Tekst is screenreader-vriendelijk; PDF is opgemaakt voor scherm en A4-print.
               </p>
               {hasPrivateResponses(currentProfile.entries) && (
-                <label className="mb-2 flex items-center gap-2 text-xs" style={{ color: "var(--text2)" }}>
+                <label className="mb-2 flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--text2)" }}>
                   <input
                     type="checkbox"
+                    className="h-5 w-5 flex-none"
                     checked={includePrivateExports}
                     onChange={(event) => setIncludePrivateExports(event.target.checked)}
                   />

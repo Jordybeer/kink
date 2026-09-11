@@ -63,8 +63,9 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
 
         <div className="flex flex-col gap-3 mt-5">
           <div>
-            <label className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Wat werkte goed?</label>
+            <label htmlFor="aftercare-went-well" className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Wat werkte goed?</label>
             <textarea
+              id="aftercare-went-well"
               rows={2}
               value={wentWell}
               onChange={(event) => setWentWell(event.target.value)}
@@ -74,8 +75,9 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
             />
           </div>
           <div>
-            <label className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer</label>
+            <label htmlFor="aftercare-remember" className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer</label>
             <textarea
+              id="aftercare-remember"
               rows={2}
               value={remember}
               onChange={(event) => setRemember(event.target.value)}

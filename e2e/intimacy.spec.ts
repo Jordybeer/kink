@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
+const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
+
 test.describe("Intimiteitsagenda", () => {
   test("plant, corrigeert en houdt een lokaal moment bij op mobiel", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -43,5 +45,17 @@ test.describe("Intimiteitsagenda", () => {
     expect(persisted).toContain("Date night");
     expect(persisted).toContain("Een dag later was fijner");
     expect(persisted).toContain('"status":"completed"');
+  });
+
+  test("gebruikt Mijn partner als rustige standaard voor een nieuw moment", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("kinksync-my-partner-profile", "pw-sam-002");
+    });
+    await seedAndGo(page, "/intimacy", [PROFILE_ALEX, SHARED_SAM]);
+
+    await page.getByRole("button", { name: "Moment plannen" }).first().click();
+    const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
+    await expect(planDialog).toBeVisible();
+    await expect(planDialog.getByRole("button", { name: "Sam", exact: true })).toBeVisible();
   });
 });

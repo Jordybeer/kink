@@ -11,6 +11,7 @@ export type ProfileDirectionChoice = ProfilePerspective | "both";
 export interface CreatePerspectiveProfilesInput {
   name: string;
   direction: ProfileDirectionChoice;
+  experienceLevel: ExperienceLevel;
   questionnaireSetup: QuestionnaireSetup;
 }
 
@@ -19,13 +20,6 @@ export interface CreatedPerspectiveProfiles {
   primaryId: string;
   profileIds: string[];
 }
-
-const LEVEL_RANK: Record<ExperienceLevel, number> = {
-  beginner: 1,
-  gevorderd: 2,
-  ervaren: 3,
-  diepgaand: 4,
-};
 
 function roleForPerspective(perspective: ProfilePerspective): string {
   return perspective === "dominant" ? "Dominant" : "Submissive";
@@ -37,19 +31,6 @@ function perspectiveForProfile(profile: Profile): ProfilePerspective | undefined
   if (normalizedRole === "dominant") return "dominant";
   if (normalizedRole === "submissive") return "submissive";
   return undefined;
-}
-
-function experienceForQuestionnaire(setup: QuestionnaireSetup): ExperienceLevel {
-  return setup.mode === "deepDive" ? "diepgaand" : "gevorderd";
-}
-
-function widenExperience(
-  current: ExperienceLevel | undefined,
-  setup: QuestionnaireSetup,
-): ExperienceLevel {
-  const derived = experienceForQuestionnaire(setup);
-  if (!current) return derived;
-  return LEVEL_RANK[current] >= LEVEL_RANK[derived] ? current : derived;
 }
 
 function samePerson(left: Profile, right: Profile): boolean {
@@ -65,6 +46,7 @@ function patchProfiles(
   profileIds: string[],
   perspectives: ProfilePerspective[],
   groupId: string,
+  experienceLevel: ExperienceLevel,
   questionnaireSetup: QuestionnaireSetup,
 ) {
   useStore.setState((state) => ({
@@ -77,7 +59,7 @@ function patchProfiles(
         personGroupId: groupId,
         perspective,
         role: roleForPerspective(perspective),
-        experienceLevel: experienceForQuestionnaire(questionnaireSetup),
+        experienceLevel,
         questionnaireSetup: {
           ...questionnaireSetup,
           interests: [...questionnaireSetup.interests],
@@ -109,17 +91,15 @@ export function createPerspectiveProfiles(
   const perspectives: ProfilePerspective[] = input.direction === "both"
     ? ["dominant", "submissive"]
     : [input.direction];
-  const experienceLevel = experienceForQuestionnaire(input.questionnaireSetup);
-
   const profileIds = perspectives.map((perspective) =>
     useStore.getState().createProfile(
       name,
       roleForPerspective(perspective),
-      experienceLevel,
+      input.experienceLevel,
     ),
   );
 
-  patchProfiles(profileIds, perspectives, groupId, input.questionnaireSetup);
+  patchProfiles(profileIds, perspectives, groupId, input.experienceLevel, input.questionnaireSetup);
 
   return {
     groupId,
@@ -144,7 +124,6 @@ export function updateProfileQuestionnaire(
       profile.id === profileId
         ? {
             ...profile,
-            experienceLevel: widenExperience(profile.experienceLevel, questionnaireSetup),
             questionnaireSetup: {
               ...questionnaireSetup,
               interests: [...questionnaireSetup.interests],

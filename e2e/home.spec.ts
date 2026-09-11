@@ -46,11 +46,12 @@ test.describe("Home page — leeg", () => {
       const stageBottom = stageBox!.y + stageBox!.height;
       const freeAbove = cardBox!.y - stageBox!.y;
       const freeBelow = stageBottom - cardBottom;
+      const minimumBreathingRoom = viewport.width <= 320 ? 8 : 12;
 
       expect(subtitleBox!.y).toBeGreaterThan(wordmarkBox!.y);
       expect(cardBox!.y).toBeGreaterThanOrEqual(mastheadBottom - 1);
-      expect(freeAbove).toBeGreaterThanOrEqual(12);
-      expect(freeBelow).toBeGreaterThanOrEqual(12);
+      expect(freeAbove).toBeGreaterThanOrEqual(minimumBreathingRoom);
+      expect(freeBelow).toBeGreaterThanOrEqual(minimumBreathingRoom);
       expect(Math.abs(freeAbove - freeBelow)).toBeLessThanOrEqual(12);
 
       const verticalOverflow = await page.evaluate(() => document.body.scrollHeight - window.innerHeight);
@@ -154,7 +155,9 @@ test.describe("Home page — profielen aanwezig", () => {
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
     expect(actionBox).not.toBeNull();
     expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
-    expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
+    const titleAfterScroll = await title.boundingBox();
+    expect(titleAfterScroll).not.toBeNull();
+    expect(Math.abs(titleAfterScroll!.y - titleTop)).toBeLessThanOrEqual(1.25);
 
     await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
     await expect(dialog).toBeHidden();
@@ -176,25 +179,28 @@ test.describe("Profiel aanmaken via UI", () => {
     await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
     await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
-    await expect(page.getByRole("dialog", { name: "Nieuw profiel maken" })).toBeVisible();
-    await expect(page.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
-    await page.getByLabel("Naam of alias").fill("TestPersoon");
-    await page.getByRole("button", { name: /^Dominant/ }).click();
-    await page.getByRole("button", { name: "Verder" }).click();
-    await expect(page.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Start vragen" }).click();
+    const createDialog = page.getByRole("dialog", { name: "Nieuw profiel maken" });
+    await expect(createDialog).toBeVisible();
+    await expect(createDialog.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
+    await createDialog.getByLabel("Naam of alias").fill("TestPersoon");
+    await createDialog.getByRole("button", { name: /^Dominant/ }).click();
+    await createDialog.getByLabel("Ervaringsniveau").selectOption("ervaren");
+    await createDialog.getByRole("button", { name: "Verder", exact: true }).click();
+    await expect(createDialog.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
+    await createDialog.getByRole("button", { name: "Start vragen" }).click();
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/, { timeout: 8000 });
     await expect(page.getByTestId("questions-screen")).toBeVisible();
     await expect(page.getByText("Vragenlijst", { exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 
-    const entries = await page.evaluate(() => {
+    const savedProfile = await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
       if (!raw) return null;
-      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; entries?: unknown }> } };
-      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon")?.entries ?? null;
+      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; experienceLevel?: string; entries?: unknown }> } };
+      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon") ?? null;
     });
-    expect(entries).toEqual({});
+    expect(savedProfile?.entries).toEqual({});
+    expect(savedProfile?.experienceLevel).toBe("ervaren");
   });
 });

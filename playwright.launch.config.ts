@@ -36,9 +36,20 @@ const galaxyS26Ultra = {
   deviceScaleFactor: 4,
 };
 
+const desktopChrome = {
+  ...devices["Desktop Chrome"],
+  viewport: { width: 1440, height: 900 },
+  screen: { width: 1440, height: 900 },
+};
+
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["device-launch.smoke.ts", "device-overlays.smoke.ts", "not-found-launch.smoke.ts"],
+  testMatch: [
+    "device-launch.smoke.ts",
+    "device-overlays.smoke.ts",
+    "not-found-launch.smoke.ts",
+    "onboarding-launch.smoke.ts",
+  ],
   fullyParallel: false,
   workers: 1,
   retries: 1,
@@ -56,6 +67,7 @@ export default defineConfig({
     { name: "ipad-pro-11", use: iPadPro },
     { name: "ipad-pro-11-landscape", use: iPadProLandscape },
     { name: "galaxy-s26-ultra", use: galaxyS26Ultra },
+    { name: "desktop-chrome", use: desktopChrome },
   ],
   webServer: {
     command: "npm run dev",

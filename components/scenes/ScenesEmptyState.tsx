@@ -5,7 +5,7 @@ export default function ScenesEmptyState() {
   return (
     <section
       aria-labelledby="scenes-empty-title"
-      className="mx-auto -mb-12 flex min-h-[55svh] w-full max-w-xl translate-y-12 items-center py-6 sm:-mb-8 sm:translate-y-8 sm:py-10"
+      className="mx-auto flex min-h-[55svh] w-full max-w-xl items-center py-6 sm:py-10"
     >
       <div
         className="w-full overflow-hidden rounded-3xl p-5 sm:p-7"

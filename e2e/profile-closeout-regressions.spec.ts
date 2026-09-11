@@ -122,25 +122,34 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
-  const summary = page.getByTestId("bdsmtest-summary");
   const profileSummary = page.getByTestId("profile-summary");
+  const linkedSources = profileSummary.getByTestId("profile-linked-sources");
+  const summary = linkedSources.getByTestId("bdsmtest-summary");
   const lastCategory = page.getByRole("heading", { name: "Sensation Play" });
   await expect(profileSummary).toBeVisible();
+  await expect(linkedSources.getByRole("heading", { name: "Gekoppelde bronnen" })).toBeVisible();
   await expect(summary).toBeVisible();
-  await expect(profileSummary.getByTestId("bdsmtest-summary")).toBeVisible();
   await expect(lastCategory).toBeVisible();
   expect(await lastCategory.evaluate((heading, selector) => {
     const target = document.querySelector(selector);
     return Boolean(target && (target.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING));
   }, '[data-testid="bdsmtest-summary"]')).toBe(true);
 
-  const disclosure = summary.getByRole("button", { name: /Bekijk alle 3/ });
+  const disclosure = summary.getByRole("button", { name: "Bekijk alle 3 BDSMTest-resultaten" });
   const disclosureBox = await disclosure.boundingBox();
   expect(disclosureBox).not.toBeNull();
   expect(disclosureBox!.height).toBeGreaterThanOrEqual(44);
-  await expect.poll(() => summary.getByText("Dominant", { exact: true }).evaluate((element) =>
+  await expect(summary).toContainText("3 resultaten gekoppeld");
+
+  await disclosure.click();
+  const resultsDialog = page.getByRole("dialog", { name: "Alle BDSMTest-resultaten" });
+  await expect(resultsDialog).toBeVisible();
+  await expect(resultsDialog.getByText("Dominant", { exact: true })).toBeVisible();
+  await expect.poll(() => resultsDialog.getByText("Dominant", { exact: true }).evaluate((element) =>
     Number.parseFloat(getComputedStyle(element).fontSize),
-  )).toBeGreaterThanOrEqual(12);
+  )).toBeGreaterThanOrEqual(14);
+  await resultsDialog.getByRole("button", { name: "Sluit" }).click();
+  await expect(resultsDialog).toBeHidden();
 
   await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await expect(profileSummary).toHaveCount(0);
@@ -167,7 +176,8 @@ test("dense profile share keeps a fixed header and scrolls inside the iPhone vis
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
-  await page.getByRole("button", { name: "Profiel delen" }).click();
+  await page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" }).click();
+  await page.getByRole("menuitem", { name: "Profiel delen" }).click();
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByTestId("profile-share-qr")).toBeVisible({ timeout: 15_000 });

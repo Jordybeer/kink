@@ -64,8 +64,8 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
           </div>
           <div className="min-w-0 flex-1">
             <h2
-              className="truncate text-lg italic leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+              className="break-words text-lg italic leading-tight"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, overflowWrap: "anywhere" }}
             >
               {a.profileName}
               <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
@@ -225,7 +225,9 @@ function ContractsContent() {
                     className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
-                    <span className="min-w-0 flex-1 truncate">{a.profileName} × {b.profileName}</span>
+                    <span className="min-w-0 flex-1 break-words py-2 leading-5" style={{ overflowWrap: "anywhere" }}>
+                      {a.profileName} × {b.profileName}
+                    </span>
                     <span className="text-xs" style={{ color: "var(--text2)" }}>
                       {item.status === "pending_signature" ? "Wacht op bevestiging" : "Concept"}
                     </span>
