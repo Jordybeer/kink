@@ -1,0 +1,45 @@
+.root {
+  min-height: 0;
+}
+
+.root :global([role="dialog"][aria-label="Welkom bij KinkSync"]) {
+  top: var(--visual-viewport-offset-top, 0px) !important;
+  height: var(--visual-viewport-height, 100dvh) !important;
+  min-height: 0;
+  overscroll-behavior: none;
+  text-wrap: pretty;
+  background:
+    radial-gradient(
+      ellipse 58% 28rem at 50% -9rem,
+      color-mix(in srgb, var(--identity-a) 8%, transparent),
+      transparent 72%
+    ),
+    var(--bg) !important;
+}
+
+.root :global([role="dialog"][aria-label="Welkom bij KinkSync"] button) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.root :global([role="dialog"][aria-label="Welkom bij KinkSync"] ::selection) {
+  background: color-mix(in srgb, var(--accent) 28%, var(--surface2));
+  color: var(--text);
+}
+
+@media (min-width: 768px) {
+  .root :global([role="dialog"][aria-label="Welkom bij KinkSync"] .max-w-sm) {
+    max-width: 27rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .root :global([role="dialog"][aria-label="Welkom bij KinkSync"] .max-w-sm) {
+    max-width: 29rem;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .root :global([role="dialog"][aria-label="Welkom bij KinkSync"]) {
+    background: var(--bg) !important;
+  }
+}
