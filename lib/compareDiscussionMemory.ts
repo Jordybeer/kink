@@ -1,5 +1,6 @@
 import type { ComparisonFact } from "@/lib/compareV2";
 import type { ContractParticipant, ContractSeries } from "@/lib/contractLifecycle";
+import { getProfileVerificationCode } from "@/lib/profileVerification";
 import type { Profile } from "@/types";
 
 const STORAGE_KEY = "kinksync-compare-discussed-v1";
@@ -31,9 +32,7 @@ export function profilePersonKey(profile: Profile): string {
     if (keys.length) return `switch:${keys.join("|")}`;
   }
 
-  if (profile.verificationCode) return `verification:${profile.verificationCode}`;
-  if (profile.consentProof?.keyId) return `key:${profile.consentProof.keyId}`;
-  return `profile:${profile.id}`;
+  return `verification:${getProfileVerificationCode(profile)}`;
 }
 
 function participantPersonKey(participant: ContractParticipant): string {
@@ -53,6 +52,47 @@ function contractPairKey(series: ContractSeries): string {
 
 export function discussionFactKey(fact: ComparisonFact): string {
   return `${fact.custom ? "custom" : "catalog"}:${fact.relation}:${normalize(fact.label)}`;
+}
+
+function canonicalAgreementDetail(
+  content: NonNullable<ContractSeries["versions"][number]["content"]>,
+  detail: {
+    name: string;
+    statusA: unknown;
+    statusB: unknown;
+    commentA?: string;
+    commentB?: string;
+    desireA?: number | null;
+    desireB?: number | null;
+  },
+) {
+  const participants = [
+    {
+      person: participantPersonKey(content.profileA),
+      status: detail.statusA,
+      comment: detail.commentA ?? "",
+      desire: detail.desireA ?? null,
+    },
+    {
+      person: participantPersonKey(content.profileB),
+      status: detail.statusB,
+      comment: detail.commentB ?? "",
+      desire: detail.desireB ?? null,
+    },
+  ].sort((left, right) => left.person.localeCompare(right.person));
+
+  return { name: normalize(detail.name), participants };
+}
+
+function canonicalHardLimitWho(
+  content: NonNullable<ContractSeries["versions"][number]["content"]>,
+  who: string,
+): string {
+  const normalized = normalize(who);
+  if (normalized === "beiden") return "both";
+  if (normalized === normalize(content.profileA.profileName)) return participantPersonKey(content.profileA);
+  if (normalized === normalize(content.profileB.profileName)) return participantPersonKey(content.profileB);
+  return normalized;
 }
 
 function relevantAgreementMeaning(
@@ -77,22 +117,17 @@ function relevantAgreementMeaning(
     ] as const) {
       for (const detail of details) {
         if (normalize(detail.name) !== factLabel) continue;
-        rows.push({
-          bucket,
-          name: normalize(detail.name),
-          statusA: detail.statusA,
-          statusB: detail.statusB,
-          commentA: detail.commentA ?? "",
-          commentB: detail.commentB ?? "",
-          desireA: detail.desireA ?? null,
-          desireB: detail.desireB ?? null,
-        });
+        rows.push({ bucket, ...canonicalAgreementDetail(content, detail) });
       }
     }
 
     for (const limit of content.hardLimits) {
       if (normalize(limit.name) !== factLabel) continue;
-      rows.push({ bucket: "hard-who", name: normalize(limit.name), who: normalize(limit.who) });
+      rows.push({
+        bucket: "hard-who",
+        name: normalize(limit.name),
+        who: canonicalHardLimitWho(content, limit.who),
+      });
     }
   }
 
