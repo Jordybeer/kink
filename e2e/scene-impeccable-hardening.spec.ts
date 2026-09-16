@@ -9,7 +9,7 @@ import {
 const MOBILE = { width: 390, height: 844 } as const;
 
 test.describe("Scene planner hardening", () => {
-  test("kernvelden hebben toegankelijke namen", async ({ page }) => {
+  test("kernvelden en inklapbare details blijven toegankelijk", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await seedAndGo(
       page,
@@ -24,8 +24,14 @@ test.describe("Scene planner hardening", () => {
 
     await page.getByLabel("Eigen item").fill("Check-in");
     await page.getByRole("button", { name: "Item toevoegen" }).click();
-    await page.getByRole("button", { name: "Details" }).click();
-    await expect(page.getByLabel("Notitie bij Check-in")).toBeVisible();
+
+    const details = page.getByRole("button", { name: "Details", exact: true });
+    await expect(details).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("textbox", { name: "Notitie bij Check-in" })).toHaveCount(0);
+
+    await details.click();
+    await expect(page.getByRole("button", { name: "Minder", exact: true })).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("textbox", { name: "Notitie bij Check-in" })).toBeVisible();
   });
 
   test("Mijn partner wordt de standaardcombinatie zonder de terugroute te kapen", async ({ page }) => {
