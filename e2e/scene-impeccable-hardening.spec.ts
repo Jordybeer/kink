@@ -26,12 +26,29 @@ test.describe("Scene planner hardening", () => {
     await page.getByRole("button", { name: "Item toevoegen" }).click();
 
     const details = page.getByRole("button", { name: "Details", exact: true });
+    const note = page.getByRole("textbox", { name: "Notitie bij Check-in" });
     await expect(details).toHaveAttribute("aria-expanded", "false");
-    await expect(page.getByRole("textbox", { name: "Notitie bij Check-in" })).toHaveCount(0);
+    await expect(note).toHaveCount(0);
 
-    await details.click();
-    await expect(page.getByRole("button", { name: "Minder", exact: true })).toHaveAttribute("aria-expanded", "true");
-    await expect(page.getByRole("textbox", { name: "Notitie bij Check-in" })).toBeVisible();
+    // Ingeklapte details mogen geen verborgen route naar bewerken openlaten.
+    await details.focus();
+    await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Eigen item")).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(details).toBeFocused();
+    await page.keyboard.press("Enter");
+    const less = page.getByRole("button", { name: "Minder", exact: true });
+    await expect(less).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "15 min", exact: true })).toBeFocused();
+    await expect(note).toBeVisible();
+    await note.fill("Neem de tijd");
+    await less.focus();
+    await page.keyboard.press("Enter");
+    await expect(details).toBeFocused();
+    await expect(note).toHaveCount(0);
+    await page.keyboard.press("Enter");
+    await expect(note).toHaveValue("Neem de tijd");
   });
 
   test("Mijn partner wordt de standaardcombinatie zonder de terugroute te kapen", async ({ page }) => {
