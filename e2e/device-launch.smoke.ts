@@ -38,6 +38,8 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       const alexProfile = page.getByRole("link", { name: "Alex Dominant openen" });
       const samProfile = page.getByRole("link", { name: "Sam Submissive openen" });
       await expect(alexProfile).toBeVisible();
+      await expect(samProfile).toHaveCount(0);
+      await page.getByRole("button", { name: "Alle profielen · 2" }).click();
       await expect(samProfile).toBeVisible();
       await expect(page.getByRole("link", { name: / openen$/ })).toHaveCount(2);
       await expectEffectivelyOpaque(alexProfile);
