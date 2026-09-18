@@ -32,8 +32,6 @@ function HomeContent() {
     profiles,
     deleteProfile,
     importProfiles,
-    restoreBackupProfiles,
-    restoreContracts,
     onboardingComplete,
     completeOnboarding,
   } = useStore();
@@ -121,18 +119,8 @@ function HomeContent() {
 
   async function restoreFromParsed(parsed: Record<string, unknown>) {
     try {
-      const { prepareBackupRestore } = await import("@/lib/backupRestore");
-      const prepared = await prepareBackupRestore(parsed);
-      if (!prepared.profiles.length && !prepared.contracts.length) {
-        setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
-        return;
-      }
-      if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
-      else importProfiles(prepared.profiles);
-      if (prepared.contracts.length) restoreContracts(prepared.contracts);
-      setImportSuccess(
-        `${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`,
-      );
+      const { restoreLocalBackup } = await import("@/lib/restoreLocalBackup");
+      setImportSuccess(await restoreLocalBackup(parsed));
     } catch {
       setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
     }
@@ -392,7 +380,6 @@ function HomeContent() {
           setPendingEncrypted(null);
         }}
         onSuccess={(message) => setImportSuccess(message)}
-        onError={(message) => setImportError(message)}
       />
 
       <Sheet
