@@ -36,7 +36,7 @@ function toggleSetValue<T>(current: ReadonlySet<T>, value: T): Set<T> {
 function ComparePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profiles, setEntry, pinnedProfileId } = useStore();
+  const { profiles, pinnedProfileId } = useStore();
   const contractSeries = useContractStore((state) => state.series);
   const hasHydrated = useHasHydrated();
   const {
@@ -122,23 +122,11 @@ function ComparePage() {
     const fact = compareModel.facts.find((candidate) => candidate.id === id);
     if (!fact) return;
 
-    setDiscussed((previous) => {
-      const next = toggleSetValue(previous, id);
-      setDiscussedMemory(
-        window.localStorage,
-        profileA,
-        profileB,
-        fact,
-        contractSeries,
-        next.has(id),
-      );
-      return next;
-    });
-  }, [compareModel.facts, contractSeries, profileA, profileB]);
-
-  const updateComment = useCallback((profileId: string, kinkId: string, comment: string) => {
-    setEntry(profileId, kinkId, { comment });
-  }, [setEntry]);
+    const next = toggleSetValue(discussed, id);
+    if (setDiscussedMemory(window.localStorage, profileA, profileB, fact, contractSeries, next.has(id))) {
+      setDiscussed(next);
+    }
+  }, [compareModel.facts, contractSeries, discussed, profileA, profileB]);
 
   const summary = useMemo(() => ({
     ...compareModel.summary,
@@ -190,7 +178,6 @@ function ComparePage() {
         hideDiscussed={hideDiscussed}
         model={compareModel}
         onToggleDiscussed={toggleDiscussed}
-        onComment={updateComment}
       />
 
       <ProfileSelectorSheet

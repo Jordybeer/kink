@@ -1,6 +1,7 @@
 import type { ComparisonFact } from "@/lib/compareV2";
 import type { ContractParticipant, ContractSeries } from "@/lib/contractLifecycle";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
+import { STORAGE_FULL_EVENT } from "@/lib/persistStorage";
 import type { Profile } from "@/types";
 
 const STORAGE_KEY = "kinksync-compare-discussed-v1";
@@ -160,17 +161,27 @@ function readState(storage: Pick<Storage, "getItem">): DiscussionState {
     if (parsed.version !== 1 || !parsed.pairs || typeof parsed.pairs !== "object") {
       return structuredClone(EMPTY_STATE);
     }
-    return { version: 1, pairs: parsed.pairs };
+    const pairs: DiscussionState["pairs"] = {};
+    for (const [key, entries] of Object.entries(parsed.pairs)) {
+      if (!entries || typeof entries !== "object" || Array.isArray(entries)) continue;
+      const valid = Object.entries(entries).filter(([, value]) =>
+        value && typeof value === "object" && typeof value.fingerprint === "string"
+        && typeof value.updatedAt === "number" && Number.isFinite(value.updatedAt));
+      Object.defineProperty(pairs, key, { value: Object.fromEntries(valid), enumerable: true, configurable: true, writable: true });
+    }
+    return { version: 1, pairs };
   } catch {
     return structuredClone(EMPTY_STATE);
   }
 }
 
-function writeState(storage: Pick<Storage, "setItem">, state: DiscussionState): void {
+function writeState(storage: Pick<Storage, "setItem">, state: DiscussionState): boolean {
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch {
-    // Relationship memory is helpful context, never a reason to break Compare.
+    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(STORAGE_FULL_EVENT));
+    return false;
   }
 }
 
@@ -215,7 +226,7 @@ export function setDiscussedMemory(
   fact: ComparisonFact,
   contractSeries: readonly ContractSeries[],
   discussed: boolean,
-): void {
+): boolean {
   const state = readState(storage);
   const pairKey = discussionPairKey(profileA, profileB);
   const pair = state.pairs[pairKey] ?? {};
@@ -233,5 +244,5 @@ export function setDiscussedMemory(
     else delete state.pairs[pairKey];
   }
 
-  writeState(storage, state);
+  return writeState(storage, state);
 }

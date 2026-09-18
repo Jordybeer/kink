@@ -108,6 +108,13 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     const toggle = page.getByRole("button", { name: /Verberg besproken \(\d+\)|Toon alles \(\d+\)/ });
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveText(/Verberg besproken \(1\)|Toon alles \(1\)/);
+    const profilesBefore = await page.evaluate(() => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles);
+    await page.reload();
+    await expect(toggle).toHaveText(/Verberg besproken \(1\)|Toon alles \(1\)/);
+    await page.getByRole("button", { name: "Wissel profielen" }).click();
+    await expect(toggle).toHaveText(/Verberg besproken \(1\)|Toon alles \(1\)/);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles)).toEqual(profilesBefore);
+
   });
 
   test("hard boundaries stay readable and are not framed as a discuss action", async ({ page }) => {
@@ -122,7 +129,7 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(boundary.locator("button[aria-label*='als besproken markeren']")).toHaveCount(0);
   });
 
-  test("compare notes stay readable until editing is requested", async ({ page }) => {
+  test("compare shows profile notes read-only", async ({ page }) => {
     await seedAndGo(page, "/compare?a=pw-alex-001&b=pw-sam-002", [PROFILE_ALEX, PROFILE_SAM]);
 
     const row = page.locator(".compare-kink-row").filter({ hasText: "Klassiek en heerlijk" }).first();
@@ -131,12 +138,8 @@ test.describe("Phase groom — review fixes (mobile)", () => {
     await expect(row).toContainText("Klassiek en heerlijk");
     await expect(row.locator("textarea")).toHaveCount(0);
 
-    await row.getByRole("button", { name: /Notitie bewerken voor/ }).click();
-    await expect(row.locator("textarea").first()).toBeVisible();
-    await row.getByRole("button", { name: "Klaar" }).click();
-
-    await expect(row.locator("textarea")).toHaveCount(0);
-    await expect(row).toContainText("Klassiek en heerlijk");
+    await expect(page.getByRole("button", { name: /Notitie (bewerken|toevoegen)/ })).toHaveCount(0);
+    await expect(page.locator(".compare-kink-row textarea")).toHaveCount(0);
   });
 
   test("compare print media uses the print-native document without app chrome", async ({ page }) => {

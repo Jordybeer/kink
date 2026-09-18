@@ -103,6 +103,16 @@ function contract(status: ContractSeries["status"] = "active", statusB: "willing
 }
 
 describe("Compare discussion memory", () => {
+  it("recovers from malformed stored pairs and reports failed writes", () => {
+    const a = profile("a", "person-a");
+    const b = profile("b", "person-b");
+    const storage = memoryStorage();
+    storage.setItem("kinksync-compare-discussed-v1", JSON.stringify({ version: 1, pairs: { [discussionPairKey(a, b)]: "broken" } }));
+    expect(setDiscussedMemory(storage, a, b, FACT, [], true)).toBe(true);
+    expect(loadValidDiscussed(storage, a, b, [FACT], [])).toEqual(new Set([FACT.id]));
+    expect(setDiscussedMemory({ ...storage, setItem() { throw new Error("quota"); } }, a, b, FACT, [], true)).toBe(false);
+  });
+
   it("scopes memory to people instead of temporary profile ids", () => {
     const aDominant = profile("a-dom", "person-a");
     const aSubmissive = profile("a-sub", "person-a");
