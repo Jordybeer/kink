@@ -49,9 +49,9 @@ export default function RolePicker({ value, onChange }: Props) {
         >
           {/* Grabber */}
           <div aria-hidden="true" className="mx-auto mt-3 mb-1 h-1 w-10 rounded-full" style={{ background: "var(--border)" }} />
-          <div className="flex items-baseline justify-between px-5 pt-2 pb-3">
+          <div className="flex min-h-11 items-center justify-between gap-3 px-5 pt-2 pb-3">
             <Drawer.Title
-              className="text-lg italic"
+              className="min-w-0 flex-1 text-lg italic"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
             >
               Kies een rol
@@ -60,7 +60,7 @@ export default function RolePicker({ value, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => { onChange(""); setOpen(false); }}
-                className="focus-ring text-sm rounded-lg"
+                className="focus-ring inline-flex min-h-11 flex-none items-center rounded-lg px-2 text-sm"
                 style={{ color: "var(--text2)" }}
               >
                 Wis keuze
@@ -70,7 +70,7 @@ export default function RolePicker({ value, onChange }: Props) {
           {/* flex-1 min-h-0 is what lets this list actually scroll inside the
               capped drawer — without it the flex child refuses to shrink and
               the bottom roles dangle off-screen, unreachable. */}
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pb-8">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pb-[max(2rem,env(safe-area-inset-bottom))]">
             {ROLE_GROUPS.map((g) => (
               <div key={g.label} className="mb-2">
                 <p className="text-xs uppercase tracking-widest px-2 mb-1 opacity-60" style={{ color: "var(--text2)" }}>

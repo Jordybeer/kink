@@ -186,6 +186,7 @@ test("a profile born after the network cut opens and reloads immediately", async
   await page.getByRole("button", { name: "Nieuw profiel" }).click();
   await page.getByLabel("Naam of alias").fill("Nova offline");
   await page.getByRole("button", { name: /^Submissive/ }).click();
+  await page.getByLabel("Ervaringsniveau").selectOption("beginner");
   await page.getByRole("button", { name: "Verder" }).click();
   await page.getByRole("button", { name: "Start vragen" }).click();
 

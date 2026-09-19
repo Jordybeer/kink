@@ -21,7 +21,8 @@ const eslintConfig = defineConfig([
       'react-hooks/purity': 'off',
     },
   },
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  // Serwist forges these from app/sw.ts; flog the source, not its minified offspring.
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'public/sw.js', 'public/sw.js.map', 'next-env.d.ts']),
 ])
 
 export default eslintConfig

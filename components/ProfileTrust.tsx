@@ -7,7 +7,12 @@ import { profileConsentAlias, verifyProfileConsent, type ConsentVerification } f
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import Sheet, { SheetContent } from "@/components/Sheet";
 
-export default function ProfileTrust({ profile }: { profile: Profile }) {
+interface Props {
+  profile: Profile;
+  quiet?: boolean;
+}
+
+export default function ProfileTrust({ profile, quiet = false }: Props) {
   const [open, setOpen] = useState(false);
   const [verification, setVerification] = useState<ConsentVerification>({ status: "unsigned" });
   const [checking, setChecking] = useState(true);
@@ -78,17 +83,19 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${label}. Bekijk bron en toestemming`}
-        className="focus-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"
-        style={{ color, background, border: `1px solid ${borderColor}` }}
+        className={quiet
+          ? "focus-ring inline-flex min-h-11 min-w-0 items-center justify-center gap-2 text-sm font-medium transition-colors active:opacity-70"
+          : "focus-ring inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full px-2.5 text-sm font-normal transition-colors active:opacity-70"}
+        style={quiet ? { color } : { color, background, border: `1px solid ${borderColor}` }}
       >
         {checking
-          ? <ArrowsClockwise size={12.5} weight="regular" aria-hidden="true" className="shrink-0 animate-spin motion-reduce:animate-none" />
+          ? <ArrowsClockwise size={quiet ? 16 : 12.5} weight="regular" aria-hidden="true" className="shrink-0 animate-spin motion-reduce:animate-none" />
           : importedInvalid
-            ? <WarningCircle size={12.5} weight="fill" aria-hidden="true" className="shrink-0" />
+            ? <WarningCircle size={quiet ? 16 : 12.5} weight="fill" aria-hidden="true" className="shrink-0" />
             : valid
-              ? <ShieldCheck size={12.5} weight="fill" aria-hidden="true" className="shrink-0" />
+              ? <ShieldCheck size={quiet ? 16 : 12.5} weight="fill" aria-hidden="true" className="shrink-0" />
               : ownDirty
-                ? <ArrowsClockwise size={12.5} weight="regular" aria-hidden="true" className="shrink-0" style={{ color: "var(--text2)" }} />
+                ? <ArrowsClockwise size={quiet ? 16 : 12.5} weight="regular" aria-hidden="true" className="shrink-0" style={{ color: "var(--text2)" }} />
                 : null}
         <span className="truncate">{label}</span>
       </button>
@@ -115,14 +122,9 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
                 type="button"
                 onClick={copyProof}
                 className="focus-ring inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-sm font-medium"
-                style={{
-                  borderColor: copied ? "var(--willing)" : "var(--border)",
-                  color: copied ? "var(--willing)" : "var(--text2)",
-                }}
+                style={{ borderColor: copied ? "var(--willing)" : "var(--border)", color: copied ? "var(--willing)" : "var(--text2)" }}
               >
-                {copied
-                  ? <Check size={13} weight="regular" aria-hidden="true" />
-                  : <CopySimple size={13} weight="regular" aria-hidden="true" />}
+                {copied ? <Check size={13} weight="regular" aria-hidden="true" /> : <CopySimple size={13} weight="regular" aria-hidden="true" />}
                 {copied ? "Gekopieerd" : "Kopieer"}
               </button>
             </div>
@@ -133,9 +135,7 @@ export default function ProfileTrust({ profile }: { profile: Profile }) {
               <p className="mb-1 mt-3 text-xs" style={{ color: "var(--text2)" }}>Technische profielcode</p>
               <p className="break-all font-mono text-xs" style={{ color: "var(--text2)" }}>{verificationCode}</p>
             </div>
-            <span className="sr-only" aria-live="polite">
-              {copied ? "Profielbewijs gekopieerd" : ""}
-            </span>
+            <span className="sr-only" aria-live="polite">{copied ? "Profielbewijs gekopieerd" : ""}</span>
           </div>
 
           {checking ? (

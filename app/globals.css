@@ -144,18 +144,12 @@ body { isolation: isolate; }
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-@keyframes ksIconPop {
-  0%   { opacity: 0; transform: scale(0.6) translateY(12px); }
-  70%  { transform: scale(1.08) translateY(-2px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
 @keyframes ksSlideUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .ks-fade-in  { animation: ksFadeIn  300ms ease-out both; }
-.ks-icon-pop { animation: ksIconPop 400ms cubic-bezier(0.34,1.56,0.64,1) both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
 /* Brand wordmark — a stable lavender identity warming into rose-salmon. */
@@ -226,7 +220,7 @@ span[class~="text-xs"][class~="font-semibold"]:not([class~="uppercase"]):not([cl
 [data-testid="question-essence"],
 [data-testid="question-agreements-label"],
 [data-testid="about-promises"] p,
-[aria-live="polite"] > div[class~="text-center"] > p[class~="text-xs"][class~="tabular-nums"],
+[data-testid="question-finish-state"] > p[class~="text-xs"][class~="tabular-nums"],
 .contract-print label > span[class~="text-xs"],
 .contract-print span[class~="w-32"][class~="text-xs"],
 .contract-print div[class~="text-xs"][class~="font-semibold"],
@@ -327,7 +321,6 @@ span[class~="mr-auto"][class~="text-xs"] {
   }
   .match-pulse,
   .ks-fade-in,
-  .ks-icon-pop,
   .ks-slide-up,
   .ks-glow-yes,
   .ks-glow-willing,
@@ -392,6 +385,61 @@ span[class~="mr-auto"][class~="text-xs"] {
   border: 1px solid var(--border);
 }
 
+/* On phones the questionnaire is the page, not a card inside the page.
+   Wider layouts regain a bounded reading surface once the extra frame earns
+   its space. */
+.questionnaire-stage {
+  container-type: inline-size;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.question-content {
+  grid-template-rows: minmax(44px, auto) minmax(56px, auto) minmax(60px, auto) minmax(48px, auto) minmax(14.75rem, 1fr) minmax(92px, auto) minmax(44px, auto);
+}
+
+@container (max-width: 20rem) {
+  .question-content {
+    grid-template-rows: minmax(44px, auto) minmax(56px, auto) minmax(60px, auto) minmax(48px, auto) minmax(14.75rem, auto) minmax(92px, auto) minmax(44px, auto);
+  }
+
+  .status-option-rows {
+    height: auto;
+    grid-template-rows: repeat(5, auto);
+  }
+
+  .status-option-copy {
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    row-gap: 0.125rem;
+  }
+
+  .status-option-indicator {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .status-option-label,
+  .status-option-hint {
+    grid-column: 2;
+    justify-self: start;
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+@media (min-width: 640px) {
+  .questionnaire-stage {
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, var(--text2));
+    border-radius: 1.75rem;
+    background: color-mix(in srgb, var(--surface) 94%, var(--surface-tint));
+    box-shadow: 0 18px 42px var(--deep-shadow), inset 0 1px 0 var(--inset-highlight);
+  }
+}
+
 /* Viewport-contained identity light. Unequal slow paths keep the ambience alive
    without reading as an effect or destabilising long iOS screenshots. */
 .ks-ambient-glow {
@@ -403,6 +451,7 @@ span[class~="mr-auto"][class~="text-xs"] {
   height: 100svh;
   overflow: hidden;
   contain: strict;
+  opacity: var(--ambient-layer-opacity);
 }
 
 .ks-ambient-orb {

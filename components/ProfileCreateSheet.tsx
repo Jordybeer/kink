@@ -19,7 +19,8 @@ import {
   type ProfileDirectionChoice,
 } from "@/lib/profilePerspectives";
 import { waitForPersistedProfile } from "@/lib/localRoutes";
-import type { QuestionnaireInterest } from "@/types";
+import { EXPERIENCE_LEVELS } from "@/lib/roles";
+import type { ExperienceLevel, QuestionnaireInterest } from "@/types";
 
 interface Props {
   open: boolean;
@@ -57,12 +58,15 @@ const DIRECTIONS: Array<{
 export default function ProfileCreateSheet({ open, onClose }: Props) {
   const router = useRouter();
   const nameId = useId();
+  const experienceId = useId();
+  const experienceHintId = useId();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const createInFlightRef = useRef(false);
   const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [direction, setDirection] = useState<ProfileDirectionChoice | null>(null);
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel | null>(null);
   const [interests, setInterests] = useState<QuestionnaireInterest[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
@@ -73,6 +77,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
     setName("");
     setNameError(null);
     setDirection(null);
+    setExperienceLevel(null);
     setInterests([]);
     setIsCreating(false);
     setPendingProfileId(null);
@@ -100,12 +105,16 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
       setNameError("Kies Dominant, Submissive of Beide kanten.");
       return;
     }
+    if (!experienceLevel) {
+      setNameError("Kies je ervaringsniveau.");
+      return;
+    }
     setNameError(null);
     setStep(1);
   }
 
   async function create() {
-    if (!direction || createInFlightRef.current) return;
+    if (!direction || !experienceLevel || createInFlightRef.current) return;
     createInFlightRef.current = true;
     setIsCreating(true);
     setNameError(null);
@@ -115,6 +124,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         const created = createPerspectiveProfiles({
           name: name.trim(),
           direction,
+          experienceLevel,
           questionnaireSetup: {
             mode: "dynamic",
             interests,
@@ -157,13 +167,14 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
       <SheetContent
         showClose={false}
         className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-hidden px-0 pb-0 pt-3"
+        style={{ background: "var(--profile-form-surface)" }}
       >
         <div className="px-5">
           <div className="flex items-center gap-3 mb-4">
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center flex-none"
               style={{
-                background: "color-mix(in srgb, var(--accent) 14%, var(--surface2))",
+                background: "color-mix(in srgb, var(--accent) 14%, var(--profile-form-control-surface))",
                 color: "var(--accent)",
                 border: "1px solid var(--border-accent)",
               }}
@@ -190,7 +201,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
               <div
                 key={index}
                 className="h-1 rounded-full transition-colors"
-                style={{ background: index <= step ? "var(--accent)" : "var(--surface3)" }}
+                style={{ background: index <= step ? "var(--accent)" : "var(--profile-form-muted-surface)" }}
               />
             ))}
           </div>
@@ -218,8 +229,8 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 autoCapitalize="words"
                 className="focus-ring w-full min-h-12 rounded-xl px-3.5 text-base mb-5 focus:outline-none placeholder-[color:var(--text2)]"
                 style={{
-                  background: "var(--surface2)",
-                  border: `1px solid ${nameError ? "var(--hard-no)" : "var(--border)"}`,
+                  background: "var(--profile-form-control-surface)",
+                  border: `1px solid ${nameError ? "var(--hard-no)" : "var(--control-border)"}`,
                   color: "var(--text)",
                 }}
               />
@@ -243,15 +254,15 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                         className="focus-ring w-full min-h-[78px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
                         style={active
                           ? {
-                              background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
+                              background: "color-mix(in srgb, var(--accent) 11%, var(--profile-form-control-surface))",
                               border: "1px solid var(--accent)",
                             }
-                          : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                          : { background: "var(--profile-form-control-surface)", border: "1px solid var(--control-border)" }}
                       >
                         <span
                           className="w-11 h-11 rounded-full flex items-center justify-center flex-none"
                           style={{
-                            background: active ? "var(--accent)" : "var(--surface3)",
+                            background: active ? "var(--accent)" : "var(--profile-form-muted-surface)",
                             color: active ? "var(--on-accent)" : "var(--text2)",
                           }}
                         >
@@ -270,12 +281,35 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 </div>
               </fieldset>
 
+              <label htmlFor={experienceId} className="block text-sm font-semibold mt-5 mb-1.5" style={{ color: "var(--text2)" }}>
+                Ervaringsniveau
+              </label>
+              <select
+                id={experienceId}
+                value={experienceLevel ?? ""}
+                onChange={(event) => {
+                  setExperienceLevel(event.target.value as ExperienceLevel);
+                  setNameError(null);
+                }}
+                aria-describedby={experienceHintId}
+                className="ks-select focus-ring w-full min-h-12 rounded-xl px-3.5 text-base focus:outline-none"
+                style={{ backgroundColor: "var(--profile-form-control-surface)", border: "1px solid var(--control-border)", color: experienceLevel ? "var(--text)" : "var(--text2)" }}
+              >
+                <option value="" disabled>Kies je ervaringsniveau</option>
+                {EXPERIENCE_LEVELS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+              <p id={experienceHintId} className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+                Je eigen inschatting van je ervaring met kink. Dit bepaalt niet welke vragen je krijgt.
+              </p>
+
               {direction === "both" && (
                 <div
                   className="rounded-xl p-3 mt-3 text-sm leading-relaxed"
                   style={{
                     color: "var(--text2)",
-                    background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
+                    background: "color-mix(in srgb, var(--accent) 7%, var(--profile-form-control-surface))",
                     border: "1px solid var(--border-accent)",
                   }}
                 >
@@ -294,7 +328,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           {step === 1 && (
             <div className="ks-fade-in">
               <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--text2)" }}>
-                Kies wat nu relevant voelt. Dat geeft die gebieden eerder dekking; je antwoorden worden nooit voorspeld of ingevuld.
+                Kies wat nu relevant voelt. Die onderwerpen verschijnen eerder. Je antwoorden worden nooit voorspeld of ingevuld.
               </p>
               <div className="grid gap-2">
                 {QUESTIONNAIRE_INTERESTS.map((interest) => {
@@ -308,18 +342,18 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       className="focus-ring min-h-[66px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
                       style={active
                         ? {
-                            background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))",
+                            background: "color-mix(in srgb, var(--accent) 10%, var(--profile-form-control-surface))",
                             border: "1px solid var(--accent)",
                           }
-                        : { background: "var(--surface2)", border: "1px solid var(--border)" }}
+                        : { background: "var(--profile-form-control-surface)", border: "1px solid var(--control-border)" }}
                     >
                       <span
                         aria-hidden="true"
                         className="w-6 h-6 rounded-full flex items-center justify-center flex-none"
                         style={{
-                          background: active ? "var(--accent)" : "var(--surface3)",
+                          background: active ? "var(--accent)" : "var(--profile-form-muted-surface)",
                           color: active ? "var(--on-accent)" : "transparent",
-                          border: active ? "none" : "1px solid var(--border)",
+                          border: active ? "none" : "1px solid var(--control-border)",
                         }}
                       >
                         <Check aria-hidden="true" size={13} weight="bold" />
@@ -343,14 +377,14 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
 
         <div
           className="grid grid-cols-[auto_1fr] gap-2 px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-          style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
+          style={{ background: "var(--profile-form-surface)", borderTop: "1px solid var(--border)" }}
         >
           <button
             type="button"
             onClick={step === 0 ? onClose : () => setStep(0)}
             disabled={isCreating}
             className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-            style={{ background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+            style={{ background: "var(--profile-form-control-surface)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
           >
             {step === 0 ? "Annuleer" : <><ArrowLeft size={16} aria-hidden="true" /> Terug</>}
           </button>

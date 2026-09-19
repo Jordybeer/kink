@@ -50,7 +50,10 @@ export default function ProfileChip({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] font-semibold truncate leading-tight" style={{ color: "var(--text)" }}>
+        <p
+          className="break-words text-[15px] font-semibold leading-tight"
+          style={{ color: "var(--text)", overflowWrap: "anywhere" }}
+        >
           {profile ? profile.name : "Kies profiel…"}
         </p>
         {profile && roleLabel && (

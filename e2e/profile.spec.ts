@@ -9,6 +9,19 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   test("hero toont naam, rol en ervaringsniveau", async ({ page }) => {
     await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Dominant").first()).toBeVisible();
+    await expect(page.getByTestId("profile-hero").getByText(/Gevorderd/)).toBeVisible();
+  });
+
+  test("lange profielnaam blijft volledig leesbaar zonder horizontale overflow", async ({ page }) => {
+    const longName = "Alexandra-van-de-nachtelijke-verkenningen";
+    await seedAndGo(page, "/profile/pw-alex-001", [{ ...PROFILE_ALEX, name: longName }, PROFILE_SAM]);
+
+    const heading = page.getByTestId("profile-hero").getByRole("heading", { name: longName });
+    await expect(heading).toBeVisible();
+    await expect.poll(() => heading.evaluate((element) => ({
+      textOverflow: getComputedStyle(element).textOverflow,
+      fits: element.scrollWidth <= element.clientWidth + 1,
+    }))).toEqual({ textOverflow: "clip", fits: true });
   });
 
   test("vragenlijst kan vanuit het profiel hervat worden", async ({ page }) => {
@@ -95,7 +108,21 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const nameInput = dialog.getByLabel("Naam of alias");
 
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("Relatiestatus", { exact: true })).toHaveCount(0);
+    await expect(dialog.getByLabel("Hoofdperspectief *")).toBeVisible();
+    await expect(dialog.getByLabel(/Relatiestatus/)).toBeVisible();
+    await expect(nameInput).toHaveAttribute("required", "");
+    await expect(dialog.getByLabel("Hoofdperspectief *")).toHaveAttribute("required", "");
+    const identityStep = dialog.getByRole("button", { name: "Stap 1 van 2: Identiteit, huidig" });
+    await expect(identityStep).toHaveAttribute("aria-current", "step");
+    await expect.poll(async () => (await identityStep.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(dialog.getByLabel("Verkenningsmodus")).toHaveCount(0);
+    await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
+    const experience = dialog.getByRole("radiogroup", { name: "Ervaringsniveau" });
+    const currentExperience = experience.getByRole("radio", { name: "Gevorderd" });
+    await currentExperience.focus();
+    await currentExperience.press("ArrowRight");
+    await expect(experience.getByRole("radio", { name: "Ervaren", exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(experience.getByRole("radio", { name: "Ervaren", exact: true })).toBeFocused();
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
@@ -122,9 +149,45 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     expect(bodyBox!.y + bodyBox!.height).toBeLessThanOrEqual(footerBox!.y + 1);
     expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
 
-    await dialog.getByRole("button", { name: "Annuleer" }).click();
+    await dialog.getByRole("button", { name: "Profiel bewerken sluiten" }).click();
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
+  });
+
+  test("profielbewerking gebruikt een identiteitsstap en rustige vragenlijstnavigatie", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    const trigger = page.getByRole("button", { name: "Profiel bewerken" });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
+
+    await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
+    const identityBox = await dialog.boundingBox();
+    expect(identityBox).not.toBeNull();
+    await dialog.getByRole("button", { name: /Volgende/ }).click();
+    await expect(dialog.getByTestId("profile-edit-questionnaire-step")).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Vragenlijst" })).toBeFocused();
+    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Identiteit, voltooid" })).toHaveAccessibleName("Stap 1 van 2: Identiteit, voltooid");
+    await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Vragenlijst, huidig" })).toHaveAttribute("aria-current", "step");
+    await expect(dialog.getByRole("button", { name: /Interessegebieden/ })).toBeVisible();
+    const mode = dialog.getByRole("button", { name: /Verkenningsmodus/ });
+    await expect(mode).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeVisible();
+    const questionnaireBox = await dialog.boundingBox();
+    expect(questionnaireBox).not.toBeNull();
+    expect(questionnaireBox!.height).toBeLessThan(identityBox!.height - 80);
+    expect(questionnaireBox!.y + questionnaireBox!.height).toBeLessThanOrEqual(667);
+
+    await mode.click();
+    await expect(dialog.getByTestId("profile-edit-flow-panel")).toBeVisible();
+    const flowHeading = dialog.getByRole("heading", { name: "Verkenningsmodus" });
+    await expect(flowHeading).toBeVisible();
+    await expect(flowHeading).toBeFocused();
+    const modeGroup = dialog.getByRole("radiogroup", { name: "Verkenningsmodus" });
+    const dynamicMode = modeGroup.getByRole("radio", { name: /Dynamic/ });
+    await dynamicMode.focus();
+    await dynamicMode.press("ArrowDown");
+    await expect(modeGroup.getByRole("radio", { name: /Deep Dive/ })).toHaveAttribute("aria-checked", "true");
   });
 
   test("statusbalk hoort bij de rustige read-view en verdwijnt in catalogusbeheer", async ({ page }) => {
@@ -320,7 +383,7 @@ test.describe("Gedeeld profiel", () => {
   });
 
   test("persoonlijke notitie blijft lokaal bewerkbaar", async ({ page }) => {
-    const note = page.getByPlaceholder("Wanneer ontmoet, indrukken…");
+    const note = page.getByLabel("Persoonlijke notitie");
     await expect(note).toBeVisible();
     await note.fill("Goede eerste date");
     await expect(note).toHaveValue("Goede eerste date");

@@ -17,6 +17,12 @@ import {
   type CompareResultFilter,
 } from "@/lib/compare";
 import { buildCompareModel } from "@/lib/compareV2";
+import {
+  discussionPairKey,
+  loadValidDiscussed,
+  setDiscussedMemory,
+} from "@/lib/compareDiscussionMemory";
+import { useContractStore } from "@/lib/contractStore";
 import { useHasHydrated, useStore } from "@/lib/store";
 import type { KinkCategoryId } from "@/types";
 
@@ -30,7 +36,8 @@ function toggleSetValue<T>(current: ReadonlySet<T>, value: T): Set<T> {
 function ComparePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profiles, setEntry, pinnedProfileId } = useStore();
+  const { profiles, pinnedProfileId } = useStore();
+  const contractSeries = useContractStore((state) => state.series);
   const hasHydrated = useHasHydrated();
   const {
     aId,
@@ -55,17 +62,32 @@ function ComparePage() {
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
+
+  const compareModel = useMemo(() => buildCompareModel(profileA, profileB), [profileA, profileB]);
   const pairKey = useMemo(
-    () => profileA && profileB ? [profileA.id, profileB.id].sort().join("|") : "",
+    () => profileA && profileB ? discussionPairKey(profileA, profileB) : "",
     [profileA, profileB],
   );
 
   useEffect(() => {
     setSelectedResults(new Set());
     setSelectedCategories(new Set());
-    setDiscussed(new Set());
     setHideDiscussed(false);
   }, [pairKey]);
+
+  useEffect(() => {
+    if (!profileA || !profileB || samePairError || !pairKey) {
+      setDiscussed(new Set());
+      return;
+    }
+    setDiscussed(loadValidDiscussed(
+      window.localStorage,
+      profileA,
+      profileB,
+      compareModel.facts,
+      contractSeries,
+    ));
+  }, [contractSeries, compareModel, pairKey, profileA, profileB, samePairError]);
 
   const navActions = useMemo<TopNavAction[]>(() => [
     {
@@ -96,14 +118,16 @@ function ComparePage() {
   useTopNavActions(navActions);
 
   const toggleDiscussed = useCallback((id: string) => {
-    setDiscussed((previous) => toggleSetValue(previous, id));
-  }, []);
+    if (!profileA || !profileB) return;
+    const fact = compareModel.facts.find((candidate) => candidate.id === id);
+    if (!fact) return;
 
-  const updateComment = useCallback((profileId: string, kinkId: string, comment: string) => {
-    setEntry(profileId, kinkId, { comment });
-  }, [setEntry]);
+    const next = toggleSetValue(discussed, id);
+    if (setDiscussedMemory(window.localStorage, profileA, profileB, fact, contractSeries, next.has(id))) {
+      setDiscussed(next);
+    }
+  }, [compareModel.facts, contractSeries, discussed, profileA, profileB]);
 
-  const compareModel = useMemo(() => buildCompareModel(profileA, profileB), [profileA, profileB]);
   const summary = useMemo(() => ({
     ...compareModel.summary,
     match: compareModel.summary.shared + compareModel.summary.complementary,
@@ -154,7 +178,6 @@ function ComparePage() {
         hideDiscussed={hideDiscussed}
         model={compareModel}
         onToggleDiscussed={toggleDiscussed}
-        onComment={updateComment}
       />
 
       <ProfileSelectorSheet

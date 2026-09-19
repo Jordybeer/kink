@@ -9,13 +9,13 @@ const PROFILE_STEPS: readonly SpotlightStep[] = [
   {
     selector: '[data-tour="avatar"]',
     title: "Maak het profiel herkenbaar",
-    body: "Tik de avatar om een foto toe te voegen.",
+    body: "Via Bewerk kun je een profielfoto, naam en perspectief instellen.",
     pad: 8,
   },
   {
     selector: '[data-tour="profile-enrichment"]',
     title: "Beheer je profielinfo",
-    body: "Relatiestatus, BDSMTest of FetLife? Via Profielinfo beheer je deze optionele gegevens hier.",
+    body: "BDSMTest en FetLife zitten voortaan samen onder Bewerken, naast je andere profielgegevens.",
     pad: 8,
   },
 ];

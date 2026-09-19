@@ -26,6 +26,7 @@ describe("semantic typography floor", () => {
     expect(rule).toContain("font-size: 0.875rem");
     expect(globalsCss).toContain('[data-testid="question-essence"]');
     expect(globalsCss).toContain('[data-testid="question-agreements-label"]');
+    expect(globalsCss).toContain('[data-testid="question-finish-state"]');
     expect(globalsCss).toContain('[data-testid="about-promises"] p');
     expect(globalsCss).toContain('span[class~="text-xs"][class~="font-medium"][class~="rounded-full"]');
     expect(globalsCss).toContain('[class~="text-xs"][class~="leading-relaxed"]');

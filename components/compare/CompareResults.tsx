@@ -20,7 +20,6 @@ interface Props {
   hideDiscussed: boolean;
   model: CompareModel;
   onToggleDiscussed: (id: string) => void;
-  onComment: (profileId: string, kinkId: string, comment: string) => void;
 }
 
 function matchesResultFilter(fact: ComparisonFact, selected: ReadonlySet<CompareResultFilter>): boolean {
@@ -39,7 +38,6 @@ export default function CompareResults({
   hideDiscussed,
   model,
   onToggleDiscussed,
-  onComment,
 }: Props) {
   if (!profileA || !profileB || samePairError) {
     return (
@@ -59,7 +57,6 @@ export default function CompareResults({
   const renderFact = (fact: ComparisonFact) => (
     <CompareKinkRow
       key={fact.id}
-      rowKey={fact.id}
       name={fact.label}
       directionNote={comparisonDirectionNote(fact, profileA, profileB)}
       entryA={profileA.entries[fact.kinkAId]}
@@ -72,8 +69,6 @@ export default function CompareResults({
       custom={fact.custom}
       isDiscussed={discussed.has(fact.id)}
       onToggleDiscussed={() => onToggleDiscussed(fact.id)}
-      onCommentA={!profileA.isImported ? (comment) => onComment(profileA.id, fact.kinkAId, comment) : undefined}
-      onCommentB={!profileB.isImported ? (comment) => onComment(profileB.id, fact.kinkBId, comment) : undefined}
     />
   );
 
