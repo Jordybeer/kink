@@ -39,7 +39,6 @@ export function profilePersonKey(profile: Profile): string {
 function participantPersonKey(participant: ContractParticipant): string {
   if (participant.personGroupId) return `group:${participant.personGroupId}`;
   if (participant.verificationCode) return `verification:${participant.verificationCode}`;
-  if (participant.keyId) return `key:${participant.keyId}`;
   return `profile:${participant.profileId}`;
 }
 
