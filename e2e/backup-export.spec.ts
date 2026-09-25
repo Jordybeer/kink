@@ -122,7 +122,7 @@ for (const encrypted of [false, true]) {
   });
 }
 
-test("valid encryption with malformed JSON data reports an error and allows cancellation", async ({ page }) => {
+test("malformed encrypted backup can be cancelled with Escape after focus leaves the dialog", async ({ page }) => {
   await seedProfiles(page, []);
   const data = await encryptBackup("null", BACKUP_PASSWORD);
   await page.getByLabel("Kies een backupbestand").setInputFiles({ name: "invalid.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(data)) });
@@ -130,6 +130,11 @@ test("valid encryption with malformed JSON data reports an error and allows canc
   await dialog.getByLabel("Wachtwoord van deze versleutelde back-up").fill(BACKUP_PASSWORD);
   await dialog.getByRole("button", { name: "Backup herstellen" }).click();
   await expect(dialog.getByRole("alert")).toContainText("geen geldige KinkSync-backup");
+  await page.locator("body").evaluate((body) => {
+    body.tabIndex = -1;
+    body.focus();
+  });
+  await expect(page.locator("body")).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, DownloadSimple, Eye, EyeSlash, Warning } from "@phosphor-icons/react";
@@ -235,7 +235,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess }: ImportS
   const [loading, setLoading] = useState(false);
   const operation = useRef<AbortController | null>(null);
 
-  function handleClose() {
+  const handleClose = useCallback(() => {
     operation.current?.abort();
     operation.current = null;
     setLoading(false);
@@ -243,7 +243,19 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess }: ImportS
     setPwShow(false);
     setPwError(null);
     onClose();
-  }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      handleClose();
+    }
+    document.addEventListener("keydown", onEscape, true);
+    return () => document.removeEventListener("keydown", onEscape, true);
+  }, [open, handleClose]);
 
   async function handleDecrypt() {
     if (!data || operation.current) return;
@@ -300,7 +312,6 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess }: ImportS
           initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }}
           transition={t.fast}
           ref={dialogRef}
-          onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); handleClose(); } }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="encrypted-import-title"
