@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowsLeftRight, FileText, Printer } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
@@ -19,8 +19,11 @@ import {
 import { buildCompareModel } from "@/lib/compareV2";
 import {
   discussionPairKey,
+  invalidateDiscussedTransition,
   loadValidDiscussed,
   setDiscussedMemory,
+  subscribeDiscussionMemory,
+  type DiscussionContext,
 } from "@/lib/compareDiscussionMemory";
 import { useContractStore } from "@/lib/contractStore";
 import { useHasHydrated, useStore } from "@/lib/store";
@@ -62,6 +65,7 @@ function ComparePage() {
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
+  const previousDiscussion = useRef<DiscussionContext | null>(null);
 
   const compareModel = useMemo(() => buildCompareModel(profileA, profileB), [profileA, profileB]);
   const pairKey = useMemo(
@@ -76,18 +80,25 @@ function ComparePage() {
   }, [pairKey]);
 
   useEffect(() => {
-    if (!profileA || !profileB || samePairError || !pairKey) {
+    if (!hasHydrated || !profileA || !profileB || samePairError || !pairKey) {
+      previousDiscussion.current = null;
       setDiscussed(new Set());
       return;
     }
-    setDiscussed(loadValidDiscussed(
-      window.localStorage,
-      profileA,
-      profileB,
-      compareModel.facts,
-      contractSeries,
-    ));
-  }, [contractSeries, compareModel, pairKey, profileA, profileB, samePairError]);
+    const current = { profileA, profileB, facts: compareModel.facts, contractSeries };
+    const previous = previousDiscussion.current;
+    previousDiscussion.current = current;
+    try {
+      const storage = window.localStorage;
+      if (previous) invalidateDiscussedTransition(storage, previous, current);
+      const refresh = () => setDiscussed(loadValidDiscussed(storage, profileA, profileB, compareModel.facts, contractSeries));
+      const unsubscribe = subscribeDiscussionMemory(window, storage, refresh);
+      refresh();
+      return unsubscribe;
+    } catch {
+      setDiscussed(new Set());
+    }
+  }, [hasHydrated, contractSeries, compareModel, pairKey, profileA, profileB, samePairError]);
 
   const navActions = useMemo<TopNavAction[]>(() => [
     {
@@ -122,9 +133,9 @@ function ComparePage() {
     const fact = compareModel.facts.find((candidate) => candidate.id === id);
     if (!fact) return;
 
-    const next = toggleSetValue(discussed, id);
-    if (setDiscussedMemory(window.localStorage, profileA, profileB, fact, contractSeries, next.has(id))) {
-      setDiscussed(next);
+    const storage = window.localStorage;
+    if (setDiscussedMemory(storage, profileA, profileB, fact, contractSeries, !discussed.has(id))) {
+      setDiscussed(loadValidDiscussed(storage, profileA, profileB, compareModel.facts, contractSeries));
     }
   }, [compareModel.facts, contractSeries, discussed, profileA, profileB]);
 
