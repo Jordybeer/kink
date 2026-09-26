@@ -6,6 +6,20 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-09-26 — De CI-riem bereikte de gestapelde branch niet
+
+**What went wrong:** PR #466 werd op zijn echte parent #460 gericht, maar CI
+luisterde alleen naar PR's richting `dev` en `main`. De PR-beschrijving meldde
+al een lopende volledige gate terwijl GitHub geen run had gestart. Een later
+onderbroken lokale browserrun had bovendien geen eindresultaat.
+
+**Rule:** Controleer na retargeten de workflowfilters en na push het werkelijke
+run-ID voor de nieuwe head. Laat de PR-gate ook gestapelde bases testen. Meld
+een gate pas als lopend of groen wanneer GitHub dat voor die commit bevestigt;
+een onderbroken lokale run telt niet als geslaagd.
+
+---
+
 ## 2026-08-17 — Zichtbaars veranderd zonder te kijken wie het vastpinde
 
 **What went wrong:** Twee keer in één sessie dezelfde fout, allebei pas gevangen
