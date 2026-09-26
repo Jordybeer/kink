@@ -42,6 +42,8 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await page.getByRole("button", { name: "Alle profielen · 2" }).click();
       await expect(samProfile).toBeVisible();
       await expect(page.getByRole("link", { name: / openen$/ })).toHaveCount(2);
+      // Park the pointer so a hover fade cannot mimic unfinished hydration.
+      await page.mouse.move(0, 0);
       await expectEffectivelyOpaque(alexProfile);
       await expectEffectivelyOpaque(samProfile);
       break;

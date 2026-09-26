@@ -6,6 +6,19 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-09-26 — Hover speelde voor half gehydrateerd profiel
+
+**What went wrong:** De desktop-launchtest opende de Home-profielenlijst en
+verwachtte daarna volledige dekking. Onder de stilstaande muis verscheen een
+profielrij met de bedoelde `hover:opacity-90`; de test zag daardoor 0.9 in plaats
+van 1. Dezelfde fout was lokaal reproduceerbaar door de rij bewust te hoveren.
+
+**Rule:** Zet de pointer buiten de gemeten content voordat een readiness-check
+de rusttoestand meet. Behoud de strenge opacity-assertie; verlaag geen drempel om
+een hovertoestand voor voltooide hydratatie te laten doorgaan.
+
+---
+
 ## 2026-09-26 — De CI-riem bereikte de gestapelde branch niet
 
 **What went wrong:** PR #466 werd op zijn echte parent #460 gericht, maar CI
