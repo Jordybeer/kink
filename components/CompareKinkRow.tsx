@@ -1,7 +1,6 @@
 "use client";
 
 import { ChatCircle, Check, ShieldWarning } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import { COMPARE_FACT_LABEL, compactComparisonName } from "@/lib/comparePresentation";
 import type { CompareFactKind } from "@/lib/compareV2";
@@ -10,7 +9,6 @@ import type { KinkEntry, Profile } from "@/types";
 const EMPTY_ENTRY: KinkEntry = { status: null, comment: "" };
 
 interface Props {
-  rowKey: string;
   name: string;
   directionNote?: string;
   entryA?: KinkEntry;
@@ -23,8 +21,6 @@ interface Props {
   custom?: boolean;
   isDiscussed: boolean;
   onToggleDiscussed: () => void;
-  onCommentA?: (comment: string) => void;
-  onCommentB?: (comment: string) => void;
 }
 
 function factBorder(kind: CompareFactKind): string {
@@ -35,7 +31,6 @@ function factBorder(kind: CompareFactKind): string {
 }
 
 export default function CompareKinkRow({
-  rowKey,
   name,
   directionNote,
   entryA = EMPTY_ENTRY,
@@ -48,24 +43,13 @@ export default function CompareKinkRow({
   custom = false,
   isDiscussed,
   onToggleDiscussed,
-  onCommentA,
-  onCommentB,
 }: Props) {
-  const [notesOpen, setNotesOpen] = useState(false);
   const displayName = compactComparisonName(name);
   const accessibleName = directionNote ? `${displayName}, ${directionNote}` : displayName;
 
-  useEffect(() => {
-    setNotesOpen(false);
-  }, [rowKey, profileA.id, profileB.id]);
-
-  const canEditA = !!onCommentA;
-  const canEditB = !!onCommentB;
-  const canEdit = canEditA || canEditB;
   const hasNotes = !!entryA.comment || !!entryB.comment;
-  const hasEditableNotes = (canEditA && !!entryA.comment) || (canEditB && !!entryB.comment);
-  const showPreviewA = !!entryA.comment && (!canEditA || !notesOpen);
-  const showPreviewB = !!entryB.comment && (!canEditB || !notesOpen);
+  const showPreviewA = !!entryA.comment;
+  const showPreviewB = !!entryB.comment;
   const canMarkDiscussed = factKind === "discuss" || factKind === "soft";
   const isBoundary = factKind === "conflict" || factKind === "limit";
   const semanticColour = factBorder(factKind);
@@ -124,7 +108,7 @@ export default function CompareKinkRow({
         </div>
       )}
 
-      {(canMarkDiscussed || (canEdit && !notesOpen)) && (
+      {canMarkDiscussed && (
         <div className="mt-1 flex flex-wrap items-center gap-1" data-print-hide="true">
           {canMarkDiscussed && (
             <button
@@ -142,38 +126,9 @@ export default function CompareKinkRow({
             </button>
           )}
 
-          {canEdit && !notesOpen && (
-            <button
-              type="button"
-              onClick={() => setNotesOpen(true)}
-              aria-label={`${hasEditableNotes ? "Notitie bewerken" : "Notitie toevoegen"} voor ${accessibleName}`}
-              className="focus-ring inline-flex min-h-11 items-center rounded-lg px-2 text-sm transition-colors"
-              style={{ color: "var(--text2)" }}
-            >
-              {hasEditableNotes ? "Notitie bewerken" : "+ Notitie"}
-            </button>
-          )}
         </div>
       )}
 
-      {canEdit && notesOpen && (
-        <div className="mt-2 space-y-2" data-print-hide="true">
-          {canEditA && (
-            <textarea aria-label={`Notitie ${profileA.name} voor ${accessibleName}`} placeholder={`Notitie ${profileA.name}…`} value={entryA.comment} onChange={(event) => onCommentA?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourA} 30%, var(--border))`, color: "var(--text)" }} />
-          )}
-          {canEditB && (
-            <textarea aria-label={`Notitie ${profileB.name} voor ${accessibleName}`} placeholder={`Notitie ${profileB.name}…`} value={entryB.comment} onChange={(event) => onCommentB?.(event.target.value)} rows={1} maxLength={200} className="focus-ring w-full resize-none rounded-lg px-2.5 py-2 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: `1px solid color-mix(in srgb, ${colourB} 30%, var(--border))`, color: "var(--text)" }} />
-          )}
-          <button
-            type="button"
-            onClick={() => setNotesOpen(false)}
-            className="focus-ring min-h-11 rounded-lg px-2 text-sm font-medium"
-            style={{ color: "var(--text2)" }}
-          >
-            Klaar
-          </button>
-        </div>
-      )}
     </div>
   );
 }

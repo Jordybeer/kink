@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, DownloadSimple, Eye, EyeSlash, Warning } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import { useIntimacyStore } from "@/lib/intimacyStore";
-import { sanitizeIntimacyBackupEntries } from "@/lib/intimacyBackup";
 import type { EncryptedBackup } from "@/lib/crypto";
 
 interface ExportSheetProps {
@@ -22,7 +22,9 @@ interface PreparedExport {
 
 export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   const t = useMotionSafe();
-  const { profiles, contracts, profileOwnerKeys } = useStore();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, open);
+  const { profiles, contracts, profileOwnerKeys, scenes, profileSnapshots } = useStore();
   const contractSeries = useContractStore((state) => state.series);
   const intimacyEntries = useIntimacyStore((state) => state.entries);
   const [step, setStep] = useState(0);
@@ -31,6 +33,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
   const [pwShow, setPwShow] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const operation = useRef<AbortController | null>(null);
   const [preparedExport, setPreparedExport] = useState<PreparedExport | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -47,26 +50,31 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
     setSaving(false);
   }
 
-  function handleClose() { reset(); onClose(); }
+  function handleClose() { operation.current?.abort(); operation.current = null; reset(); onClose(); }
 
   async function handlePrepareExport() {
-    if (loading) return;
+    if (operation.current) return;
     if (pw.length < 8) { setPwError("Wachtwoord moet minstens 8 tekens zijn."); return; }
     if (pw !== pwConfirm) { setPwError("Wachtwoorden komen niet overeen."); return; }
+    const controller = new AbortController();
+    operation.current = controller;
     setLoading(true);
     setPwError(null);
     try {
       const plain = JSON.stringify({
-        version: 5,
+        version: 6,
         source: "backup",
         profiles,
         contracts,
         contractSeries,
         profileOwnerKeys,
         intimacyEntries,
+        scenes,
+        profileSnapshots,
       });
       const { encryptBackup } = await import("@/lib/crypto");
       const encrypted = await encryptBackup(plain, pw);
+      if (controller.signal.aborted) return;
       setPreparedExport({
         json: JSON.stringify(encrypted),
         filename: `kinksync-backup-${new Date().toISOString().slice(0, 10)}.enc.json`,
@@ -76,9 +84,10 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
       setPwShow(false);
       setStep(2);
     } catch {
+      if (controller.signal.aborted) return;
       setPwError("De back-up kon niet worden versleuteld. Probeer het opnieuw.");
     } finally {
-      setLoading(false);
+      if (operation.current === controller) { operation.current = null; setLoading(false); }
     }
   }
 
@@ -131,6 +140,8 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
       }}
     >
       <div
+        ref={dialogRef}
+        onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); handleClose(); } }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="encrypted-export-title"
@@ -148,7 +159,7 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
               <h2 id="encrypted-export-title" className="text-base font-bold">Backup versleutelen</h2>
               <div className="flex flex-col gap-3 rounded-xl p-4 text-sm" style={{ background: "color-mix(in srgb, var(--hard-no) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--hard-no) 25%, transparent)", color: "var(--text)" }}>
                 <p><strong>Je staat op het punt gevoelige data te exporteren.</strong> Je kinklijst bevat je grenzen, verlangens en aantekeningen.</p>
-                <p>De versleutelde backup bevat ook private eigendomssleutels, de geverifieerde contractinhoud, handgeschreven handtekeningen en je lokale intimiteitslogboek. PDF-bestanden zelf worden niet als vertrouwde backupdata meegenomen; KinkSync maakt ze na herstel opnieuw uit de getekende contractversie.</p>
+                <p>De versleutelde backup bevat ook private eigendomssleutels, de geverifieerde contractinhoud, handgeschreven handtekeningen, je profielverloop, je lokale intimiteitslogboek en opgeslagen scènes met hun geverifieerde toestemmingsgeschiedenis. PDF-bestanden zelf worden niet als vertrouwde backupdata meegenomen; KinkSync maakt ze na herstel opnieuw uit de getekende contractversie.</p>
                 <p>Met encryptie is het bestand waardeloos zonder jouw wachtwoord. Bewaar bestand en wachtwoord daarom apart en deel geen van beide.</p>
                 <p className="flex items-start gap-1.5 font-semibold" style={{ color: "var(--hard-no)" }}><Warning size={16} weight="fill" className="mt-0.5 flex-none" aria-hidden="true" /><span>Als je dit wachtwoord vergeet, is je backup permanent onleesbaar. Er is geen hersteloptie.</span></p>
               </div>
@@ -172,8 +183,8 @@ export function EncryptedExportSheet({ open, onClose }: ExportSheetProps) {
                     value={field.value}
                     onChange={(event) => field.setter(event.target.value)}
                     onKeyDown={(event) => { if (index === 1 && event.key === "Enter") void handlePrepareExport(); }}
-                    className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
-                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                    className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-base outline-none"
+                    style={{ background: "var(--bg)", border: "1px solid var(--control-border)", color: "var(--text)" }}
                     autoFocus={index === 0}
                   />
                   <button type="button" onClick={() => setPwShow((value) => !value)} aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"} className="focus-ring absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg" style={{ color: "var(--text2)" }}>
@@ -212,99 +223,72 @@ interface ImportSheetProps {
   data: EncryptedBackup | null;
   onClose: () => void;
   onSuccess: (msg: string) => void;
-  onError: (msg: string) => void;
 }
 
-export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }: ImportSheetProps) {
+export function EncryptedImportSheet({ open, data, onClose, onSuccess }: ImportSheetProps) {
   const t = useMotionSafe();
-  const { importProfiles, restoreBackupProfiles, restoreContracts } = useStore();
-  const restoreContractSeries = useContractStore((state) => state.restoreSeries);
-  const restoreIntimacyEntries = useIntimacyStore((state) => state.restoreEntries);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, open);
   const [pw, setPw] = useState("");
   const [pwShow, setPwShow] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const operation = useRef<AbortController | null>(null);
 
-  function handleClose() {
+  const handleClose = useCallback(() => {
+    operation.current?.abort();
+    operation.current = null;
+    setLoading(false);
     setPw("");
     setPwShow(false);
     setPwError(null);
     onClose();
-  }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      handleClose();
+    }
+    document.addEventListener("keydown", onEscape, true);
+    return () => document.removeEventListener("keydown", onEscape, true);
+  }, [open, handleClose]);
 
   async function handleDecrypt() {
-    if (!data) return;
+    if (!data || operation.current) return;
+    const controller = new AbortController();
+    operation.current = controller;
     setLoading(true);
     setPwError(null);
     try {
-      let parsed: Record<string, unknown>;
+      let parsed: unknown;
       try {
         const { decryptBackup } = await import("@/lib/crypto");
         const plain = await decryptBackup(data, pw);
-        parsed = JSON.parse(plain) as Record<string, unknown>;
+        parsed = JSON.parse(plain);
       } catch {
+        if (controller.signal.aborted) return;
         setPwError("Verkeerd wachtwoord of beschadigd versleuteld bestand.");
         return;
       }
 
-      if (!Array.isArray(parsed.profiles)) {
-        handleClose();
-        onError("Ongeldig backupbestand: geen profielen gevonden.");
-        return;
-      }
-
-      const { prepareBackupRestore } = await import("@/lib/backupRestore");
-      let prepared;
-      try {
-        prepared = await prepareBackupRestore(parsed);
-      } catch {
-        handleClose();
-        onError("Het bestand kon worden ontsleuteld, maar bevat geen geldige KinkSync-backup.");
-        return;
-      }
-
-      const intimacyEntries = prepared.source === "backup"
-        ? sanitizeIntimacyBackupEntries(parsed.intimacyEntries)
-        : [];
-
-      if (!prepared.profiles.length && !prepared.contracts.length && !prepared.contractSeries.length && !intimacyEntries.length) {
-        handleClose();
-        onError("De backup bevat geen geldige profielen, contracten of intimiteitsmomenten om te herstellen.");
-        return;
-      }
-
-      const knownContractIds = new Set(useStore.getState().contracts.map((contract) => contract.id));
-      const contractsAdded = prepared.contracts.filter((contract) => !knownContractIds.has(contract.id)).length;
       let message: string;
-
-      if (prepared.source === "backup") {
-        const result = restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
-        if (prepared.contracts.length) restoreContracts(prepared.contracts);
-        const seriesResult = restoreContractSeries(prepared.contractSeries);
-        const intimacyResult = restoreIntimacyEntries(intimacyEntries);
-
-        const profileChanges = result.added + result.updated;
-        const keyChanges = result.ownerKeysAdded + result.ownerKeysUpdated;
-        const seriesChanges = seriesResult.added + seriesResult.updated;
-        const intimacyChanges = intimacyResult.added + intimacyResult.updated;
-
-        if (profileChanges === 0 && keyChanges === 0 && contractsAdded === 0 && seriesChanges === 0 && intimacyChanges === 0) {
-          message = result.conflicts > 0
-            ? `Backup gecontroleerd: niets overschreven; ${result.conflicts} bronconflict(en) veilig overgeslagen.`
-            : "Backup gecontroleerd: de bestaande gegevens waren al even nieuw of nieuwer.";
-        } else {
-          message = `Backup hersteld: ${result.added} profiel(en) toegevoegd, ${result.updated} bijgewerkt, ${result.unchanged} ongewijzigd, ${result.conflicts} bronconflict(en) overgeslagen, ${keyChanges} eigendomssleutel(s), ${contractsAdded} oud(e) contract(en), ${seriesChanges} contractreeks(en) en ${intimacyChanges} intimiteitsmoment(en) toegevoegd of bijgewerkt. Getekende PDF-documenten worden lokaal opnieuw opgebouwd uit de geverifieerde contractversie wanneer je ze opent.`;
-        }
-      } else {
-        importProfiles(prepared.profiles);
-        if (prepared.contracts.length) restoreContracts(prepared.contracts);
-        message = `Import verwerkt: ${prepared.profiles.length} geldig(e) gedeeld(e) profiel(en) en ${contractsAdded} nieuw(e) contract(en).`;
+      try {
+        const { restoreLocalBackup } = await import("@/lib/restoreLocalBackup");
+        message = await restoreLocalBackup(parsed, controller.signal);
+      } catch {
+        if (controller.signal.aborted) return;
+        setPwError("Het bestand kon worden ontsleuteld, maar bevat geen geldige KinkSync-backup.");
+        return;
       }
 
       handleClose();
       onSuccess(message);
     } finally {
-      setLoading(false);
+      if (operation.current === controller) { operation.current = null; setLoading(false); }
     }
   }
 
@@ -327,6 +311,7 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
           key="import-card"
           initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }}
           transition={t.fast}
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="encrypted-import-title"
@@ -344,8 +329,8 @@ export function EncryptedImportSheet({ open, data, onClose, onSuccess, onError }
                 value={pw}
                 onChange={(event) => setPw(event.target.value)}
                 onKeyDown={(event) => { if (event.key === "Enter") void handleDecrypt(); }}
-                className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
+                className="focus-ring w-full rounded-xl px-4 py-3 pr-11 text-base outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--control-border)", color: "var(--text)" }}
                 autoFocus
               />
               <button type="button" onClick={() => setPwShow((value) => !value)} aria-label={pwShow ? "Wachtwoord verbergen" : "Wachtwoord tonen"} className="focus-ring absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg" style={{ color: "var(--text2)" }}>

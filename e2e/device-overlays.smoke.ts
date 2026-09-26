@@ -179,7 +179,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await catalogManager.getByRole("button", { name: "Gereed" }).click();
   await expect(catalogManager).toBeHidden();
 
-  const profileOptions = page.getByRole("button", { name: "Meer opties" });
+  const profileOptions = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" });
   await profileOptions.click();
   const shareMenuItem = page.getByRole("menuitem", { name: "Profiel delen" });
   await expect(shareMenuItem).toBeVisible();

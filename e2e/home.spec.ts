@@ -10,7 +10,7 @@ const EMPTY_HOME_VIEWPORTS = [
 
 test.describe("Home page — leeg", () => {
   for (const viewport of EMPTY_HOME_VIEWPORTS) {
-    test(`centreert de lege compositie in de bruikbare viewport op ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    test(`centreert de lege compositie in de bruikbare viewport op ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
       await page.setViewportSize(viewport);
       await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
@@ -56,6 +56,10 @@ test.describe("Home page — leeg", () => {
 
       const verticalOverflow = await page.evaluate(() => document.body.scrollHeight - window.innerHeight);
       expect(verticalOverflow).toBeLessThanOrEqual(2);
+      await page.screenshot({
+        path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-empty-${viewport.width}.png`,
+        fullPage: false,
+      });
     });
   }
 });

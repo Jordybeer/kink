@@ -9,7 +9,7 @@ import {
 const MOBILE = { width: 390, height: 844 } as const;
 
 test.describe("Scene planner hardening", () => {
-  test("kernvelden hebben toegankelijke namen", async ({ page }) => {
+  test("kernvelden en inklapbare details blijven toegankelijk", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await seedAndGo(
       page,
@@ -24,8 +24,31 @@ test.describe("Scene planner hardening", () => {
 
     await page.getByLabel("Eigen item").fill("Check-in");
     await page.getByRole("button", { name: "Item toevoegen" }).click();
-    await page.getByRole("button", { name: "Details" }).click();
-    await expect(page.getByLabel("Notitie bij Check-in")).toBeVisible();
+
+    const details = page.getByRole("button", { name: "Details", exact: true });
+    const note = page.getByRole("textbox", { name: "Notitie bij Check-in" });
+    await expect(details).toHaveAttribute("aria-expanded", "false");
+    await expect(note).toHaveCount(0);
+
+    // Ingeklapte details mogen geen verborgen route naar bewerken openlaten.
+    await details.focus();
+    await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Eigen item")).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(details).toBeFocused();
+    await page.keyboard.press("Enter");
+    const less = page.getByRole("button", { name: "Minder", exact: true });
+    await expect(less).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "15 min", exact: true })).toBeFocused();
+    await expect(note).toBeVisible();
+    await note.fill("Neem de tijd");
+    await less.focus();
+    await page.keyboard.press("Enter");
+    await expect(details).toBeFocused();
+    await expect(note).toHaveCount(0);
+    await page.keyboard.press("Enter");
+    await expect(note).toHaveValue("Neem de tijd");
   });
 
   test("Mijn partner wordt de standaardcombinatie zonder de terugroute te kapen", async ({ page }) => {

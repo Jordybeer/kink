@@ -32,8 +32,6 @@ function HomeContent() {
     profiles,
     deleteProfile,
     importProfiles,
-    restoreBackupProfiles,
-    restoreContracts,
     onboardingComplete,
     completeOnboarding,
   } = useStore();
@@ -121,18 +119,8 @@ function HomeContent() {
 
   async function restoreFromParsed(parsed: Record<string, unknown>) {
     try {
-      const { prepareBackupRestore } = await import("@/lib/backupRestore");
-      const prepared = await prepareBackupRestore(parsed);
-      if (!prepared.profiles.length && !prepared.contracts.length) {
-        setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
-        return;
-      }
-      if (prepared.source === "backup") restoreBackupProfiles(prepared.profiles, prepared.ownerKeys);
-      else importProfiles(prepared.profiles);
-      if (prepared.contracts.length) restoreContracts(prepared.contracts);
-      setImportSuccess(
-        `${prepared.profiles.length} profiel(en), ${prepared.ownerKeys.length} eigendomssleutel(s) en ${prepared.contracts.length} contract(en) hersteld.`,
-      );
+      const { restoreLocalBackup } = await import("@/lib/restoreLocalBackup");
+      setImportSuccess(await restoreLocalBackup(parsed));
     } catch {
       setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
     }
@@ -180,7 +168,7 @@ function HomeContent() {
         width="2xl"
         flush={emptyHome}
         className={emptyHome
-          ? "lg:max-w-4xl [--page-bottom-clearance:0px] flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_6.5rem)] flex-col justify-center"
+          ? "lg:max-w-4xl [--page-bottom-clearance:0px] pb-2 flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_6.5rem)] flex-col justify-center"
           : "lg:max-w-4xl"}
       >
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
@@ -223,14 +211,14 @@ function HomeContent() {
         ) : (
           <section
             data-home-empty-card
-            className="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 sm:px-5 sm:pb-7 sm:pt-5"
+            className="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-5 sm:pb-7 sm:pt-5"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 7%, var(--surface2)), color-mix(in srgb, var(--accent) 2%, var(--surface)))",
               border: "1px solid color-mix(in srgb, var(--border-accent) 72%, var(--border))",
               boxShadow: "0 18px 44px color-mix(in srgb, var(--accent) 7%, transparent)",
             }}
           >
-            <div className="px-2 pb-8 pt-1 text-center">
+            <div className="px-2 pb-8 pt-1 max-[321px]:pb-7 text-center">
               <span
                 className="mx-auto flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
@@ -392,7 +380,6 @@ function HomeContent() {
           setPendingEncrypted(null);
         }}
         onSuccess={(message) => setImportSuccess(message)}
-        onError={(message) => setImportError(message)}
       />
 
       <Sheet
