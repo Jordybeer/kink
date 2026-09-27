@@ -45,6 +45,19 @@ test.describe("Vergelijkingspagina", () => {
     await expect(summary).not.toContainText("zachte verschillen");
   });
 
+  test("vervangt vier nullen door een rustige lege vergelijking", async ({ page }) => {
+    const alex: Profile = { ...PROFILE_ALEX, entries: {}, customKinks: [] };
+    const sam: Profile = { ...PROFILE_SAM, entries: {}, customKinks: [] };
+    await seedAndGo(page, URL, [alex, sam]);
+
+    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+    await expect(summary).toContainText("Nog niets om te vergelijken");
+    await expect(summary.getByText("Overlap", { exact: true })).toHaveCount(0);
+    await expect(summary.getByText("Bespreekbaar", { exact: true })).toHaveCount(0);
+    await expect(summary.getByText("Verschillen", { exact: true })).toHaveCount(0);
+    await expect(summary.getByText("Grenzen", { exact: true })).toHaveCount(0);
+  });
+
   test("toont de rol van beide gekozen profielen", async ({ page }) => {
     await expect(page.getByRole("button", { name: "Kies profiel A: Alex" })).toContainText("Dominant");
     await expect(page.getByRole("button", { name: "Kies profiel B: Sam" })).toContainText("Submissive");
@@ -163,6 +176,18 @@ test.describe("Vergelijkingspagina", () => {
     expect(overflow).toBe(false);
     await expect(page.getByTestId("compare-results-filter")).toBeVisible();
     await expect(page.getByTestId("compare-categories-filter")).toBeVisible();
+  });
+
+  test("lange namen blijven volledig leesbaar zonder mobiele overflow", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const longA: Profile = { ...PROFILE_ALEX, name: "Gatinho van de Lange Naam" };
+    const longB: Profile = { ...PROFILE_SAM, name: "LaReinaOscuraHeelLang" };
+    await seedAndGo(page, URL, [longA, longB]);
+
+    await expect(page.getByRole("button", { name: "Kies profiel A: Gatinho van de Lange Naam" })).toContainText("Gatinho van de Lange Naam");
+    await expect(page.getByRole("button", { name: "Kies profiel B: LaReinaOscuraHeelLang" })).toContainText("LaReinaOscuraHeelLang");
+    const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
+    expect(overflow).toBe(false);
   });
 
   test("belangrijke vergelijktekst blijft minstens 14px", async ({ page }) => {

@@ -9,14 +9,13 @@ test("catalogusbeheer vervangt de profielhero en herstelt context en focus na Ge
   const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
   await expect(summary).toBeVisible();
   await expect(manage).toBeVisible();
-  await expect(nav.getByRole("button", { name: "Profiel delen" })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Meer acties" })).toBeVisible();
 
   await manage.click();
   await expect(summary).toHaveCount(0);
   await expect(page.getByTestId("profile-catalog-manager-header")).toBeVisible();
   await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
-  await expect(nav.getByRole("button", { name: "Profiel delen" })).toHaveCount(0);
   await expect(nav.getByRole("button", { name: "Profiel bewerken" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Gereed" }).click();
@@ -24,6 +23,6 @@ test("catalogusbeheer vervangt de profielhero en herstelt context en focus na Ge
   await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
   await expect(manage).toBeVisible();
   await expect(manage).toBeFocused();
-  await expect(nav.getByRole("button", { name: "Profiel delen" })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Meer acties" })).toBeVisible();
 });

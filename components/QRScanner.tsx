@@ -28,12 +28,16 @@ interface BundleProgress {
   avatarComplete: boolean;
 }
 
+const QR_DECODE_INTERVAL_MS = 125;
+const QR_DECODE_MAX_EDGE = 640;
+
 export default function QRScanner({ open, onResult, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const cameraGenerationRef = useRef(0);
+  const lastDecodeAtRef = useRef(0);
   const lastRawRef = useRef<{ value: string; at: number } | null>(null);
   const assemblyRef = useRef<ProfileQrAssembly | null>(null);
   const bundleAssemblyRef = useRef<ProfileQrBundleAssembly | null>(null);
@@ -55,6 +59,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     setPasteMode(false);
     setPasteInput("");
     setPasteError(null);
+    lastDecodeAtRef.current = 0;
     lastRawRef.current = null;
     assemblyRef.current = null;
     bundleAssemblyRef.current = null;
@@ -182,26 +187,39 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
     return "invalid";
   }
 
-  function scan(cameraGeneration: number) {
+  function scheduleNextScan(cameraGeneration: number) {
+    rafRef.current = requestAnimationFrame((frameTime) => scan(cameraGeneration, frameTime));
+  }
+
+  function scan(cameraGeneration: number, frameTime = performance.now()) {
     if (cameraGenerationRef.current !== cameraGeneration) return;
     attachCameraStream(cameraGeneration);
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) {
-      rafRef.current = requestAnimationFrame(() => scan(cameraGeneration));
+      scheduleNextScan(cameraGeneration);
       return;
     }
-    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+    if (frameTime - lastDecodeAtRef.current < QR_DECODE_INTERVAL_MS) {
+      scheduleNextScan(cameraGeneration);
+      return;
     }
-    const ctx = canvas.getContext("2d");
+    lastDecodeAtRef.current = frameTime;
+
+    const scale = Math.min(1, QR_DECODE_MAX_EDGE / Math.max(video.videoWidth, video.videoHeight));
+    const scanWidth = Math.max(1, Math.round(video.videoWidth * scale));
+    const scanHeight = Math.max(1, Math.round(video.videoHeight * scale));
+    if (canvas.width !== scanWidth || canvas.height !== scanHeight) {
+      canvas.width = scanWidth;
+      canvas.height = scanHeight;
+    }
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, scanWidth, scanHeight);
+    const imageData = ctx.getImageData(0, 0, scanWidth, scanHeight);
     const result = jsQR(imageData.data, imageData.width, imageData.height);
     if (result?.data && dispatchPayload(result.data) === "complete") return;
-    rafRef.current = requestAnimationFrame(() => scan(cameraGeneration));
+    scheduleNextScan(cameraGeneration);
   }
 
   function handlePasteSubmit() {
@@ -253,7 +271,7 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
               : `Profiel scannen: ${bundleProgress.profileReceived} van ${bundleProgress.profileTotal || "…"}`
             : assembly
               ? `Scan verder: ${received} van ${assembly.total}`
-              : showPaste ? "Plak link of code" : "Scan QR-code"}
+              : showPaste ? "Plak profiel-link of code" : "Scan QR-code"}
         </h2>
 
         {bundleProgress && (
@@ -298,16 +316,24 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
             {error && (
               <p className="text-sm mb-3 text-center" style={{ color: "var(--text2)" }}>{error}</p>
             )}
-            <p className="text-sm mb-2" style={{ color: "var(--text2)" }}>
-              Plak hier de link, code of één deel van een multi-QR.
+            <label htmlFor="profile-share-paste" className="text-sm font-medium" style={{ color: "var(--text)" }}>
+              Profiel-link of code
+            </label>
+            <p id="profile-share-paste-help" className="mt-1 mb-2 text-sm" style={{ color: "var(--text2)" }}>
+              Plak de link, code of één deel van een multi-QR.
             </p>
             <textarea
+              id="profile-share-paste"
+              aria-describedby="profile-share-paste-help"
               value={pasteInput}
               onChange={(e) => setPasteInput(e.target.value)}
               rows={3}
               placeholder="https://… of profielcode"
               className="focus-ring w-full text-sm rounded-lg border px-3 py-2 mb-2 placeholder-[color:var(--text2)] focus:outline-none"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", resize: "none" }}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               autoFocus
             />
             {(pasteError || partError) && (
@@ -356,14 +382,14 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
                   : "Blijf richten. Profiel en foto worden in vaste fasen verzameld."
                 : assembly
                   ? "Blijf richten. Bij handmatig wisselen mag de volgorde verschillen."
-                  : "Richt de camera op de QR-code van je partner."}
+                  : "Richt de camera op de QR-code van het gedeelde profiel."}
             </p>
             <button
               onClick={() => { stopCamera(); setPartError(null); setPasteMode(true); }}
-              className="focus-ring mx-auto mb-3 flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
-              style={{ color: "var(--text2)" }}
+              className="focus-ring mb-3 flex min-h-11 w-full items-center justify-center rounded-xl px-3 text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
+              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
-              Geen camera? Plak een link
+              Profiel-link plakken
             </button>
             <button
               onClick={handleClose}

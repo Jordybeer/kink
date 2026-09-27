@@ -72,6 +72,7 @@ describe.each(Object.entries(PALETTES))("tokenContrast — %s palette", (mode, t
       ...STATUS_TOKENS,
       "--text",
       "--text2",
+      "--control-border",
       "--accent",
       "--accent2",
       "--accent-text",
@@ -99,6 +100,12 @@ describe.each(Object.entries(PALETTES))("tokenContrast — %s palette", (mode, t
   it("muted text remains AA on common surfaces", () => {
     for (const background of ["--bg", "--surface", "--surface2"]) {
       assertPair("--text2", background, 4.5);
+    }
+  });
+
+  it("resting control boundaries remain distinguishable (≥ 3:1)", () => {
+    for (const background of ["--surface", "--surface2"]) {
+      assertPair("--control-border", background, 3);
     }
   });
 

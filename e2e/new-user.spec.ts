@@ -137,10 +137,12 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /kluisschijf.*kinksync/i }).press("Enter");
 
     await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
-    await page.getByLabel("Naam of alias").fill("Testmeester");
-    await page.getByRole("button", { name: /^Dominant/ }).click();
-    await page.getByRole("button", { name: "Verder" }).click();
-    await page.getByRole("button", { name: "Start vragen" }).click();
+    const createDialog = page.getByRole("dialog", { name: "Nieuw profiel maken" });
+    await createDialog.getByLabel("Naam of alias").fill("Testmeester");
+    await createDialog.getByRole("button", { name: /^Dominant/ }).click();
+    await createDialog.getByLabel("Ervaringsniveau").selectOption("beginner");
+    await createDialog.getByRole("button", { name: "Verder", exact: true }).click();
+    await createDialog.getByRole("button", { name: "Start vragen" }).click();
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/);

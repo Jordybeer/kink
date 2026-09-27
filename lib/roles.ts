@@ -9,12 +9,16 @@ export const ROLE_GROUPS: { label: string; roles: string[] }[] = [
   { label: "Overig",        roles: ["Voyeur", "Exhibitionist", "Kinkster", "Vanilla (curious)"] },
 ];
 
-export const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string; sub: string }[] = [
-  { value: "beginner",  label: "Beginner",  sub: "kort" },
-  { value: "gevorderd", label: "Gevorderd", sub: "normaal" },
-  { value: "ervaren",   label: "Ervaren",   sub: "lang" },
-  { value: "diepgaand", label: "Diepgaand", sub: "alles" },
+export const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
+  { value: "beginner",  label: "Beginner" },
+  { value: "gevorderd", label: "Gevorderd" },
+  { value: "ervaren",   label: "Ervaren" },
+  { value: "diepgaand", label: "Zeer ervaren" },
 ];
+
+export function experienceLevelLabel(level: ExperienceLevel): string {
+  return EXPERIENCE_LEVELS.find((option) => option.value === level)?.label ?? level;
+}
 
 export const RELATIONSHIP_STATUSES = [
   "Single", "Taken", "Getrouwd", "Gecollared",

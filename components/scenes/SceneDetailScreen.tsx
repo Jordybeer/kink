@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { MagnifyingGlassMinus, Play } from "@phosphor-icons/react";
+import { MagnifyingGlassMinus, PencilSimple, Play } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
@@ -100,7 +100,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         className="text-sm uppercase tracking-[0.15em] mb-0.5"
         style={{ color: "var(--text2)" }}
       >
-        {scene.profileAName} — {scene.profileBName}
+        {scene.profileAName} &amp; {scene.profileBName}
       </p>
       <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>
         {date}
@@ -127,13 +127,14 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             </h2>
             <button
               onClick={() => setShowAftercare(true)}
-              className="focus-ring min-h-11 rounded-lg px-3 py-1 text-sm"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-1 text-sm"
               style={{
                 color: "var(--accent)",
                 border: "1px solid var(--border-accent)",
               }}
             >
-              ✎ Bewerken
+              <PencilSimple size={14} aria-hidden="true" />
+              Bewerken
             </button>
           </div>
 

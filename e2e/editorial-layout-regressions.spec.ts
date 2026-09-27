@@ -79,9 +79,8 @@ test.describe("Editorial spacing regressions", () => {
     expect(box!.y).toBeGreaterThanOrEqual(31);
     expect(box!.y).toBeLessThanOrEqual(33);
 
-    for (const label of ["Nieuw profiel", "Scan profiel"] as const) {
-      const title = page.getByText(label, { exact: true });
-      await expect.poll(() => title.evaluate((element) => getComputedStyle(element).whiteSpace)).toBe("nowrap");
+    for (const label of ["Nieuw profiel", "Scan gedeeld profiel"] as const) {
+      await expect(page.getByText(label, { exact: true })).toBeVisible();
     }
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });

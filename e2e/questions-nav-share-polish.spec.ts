@@ -27,7 +27,8 @@ test("profile notes stay readable inline without a global visibility mode", asyn
 
 test("sharing keeps local-only warning and links to the trust explanation", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, PROFILES);
-  await page.getByRole("button", { name: "Profiel delen" }).click();
+  await page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" }).click();
+  await page.getByRole("menuitem", { name: "Profiel delen" }).click();
 
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();

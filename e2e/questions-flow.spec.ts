@@ -120,6 +120,9 @@ test("questionnaire width stays intimate in portrait and grows on landscape and 
   const portrait = await card.boundingBox();
   expect(portrait).not.toBeNull();
   expect(portrait!.width).toBeLessThanOrEqual(370);
+  await expect(card).toHaveCSS("border-top-width", "0px");
+  await expect(card).toHaveCSS("box-shadow", "none");
+  await expect(card).toHaveCSS("padding-left", "0px");
 
   await page.setViewportSize({ width: 844, height: 390 });
   const landscape = await card.boundingBox();
@@ -128,6 +131,9 @@ test("questionnaire width stays intimate in portrait and grows on landscape and 
 
   await page.setViewportSize({ width: 1024, height: 768 });
   const tablet = await card.boundingBox();
+  await expect(card).toHaveCSS("border-top-width", "1px");
+  expect(await card.evaluate((node) => getComputedStyle(node).boxShadow)).not.toBe("none");
+  await expect(card).toHaveCSS("padding-left", "16px");
   expect(tablet).not.toBeNull();
   expect(tablet!.width).toBeGreaterThanOrEqual(820);
   expect(tablet!.width).toBeLessThanOrEqual(900);
@@ -166,6 +172,25 @@ test("question change keeps a stable visual shell without a full-content fade", 
   await expect(content).toHaveCSS("opacity", "1");
   await expect(title).not.toHaveText(firstQuestion);
   expect(await content.evaluate((node) => (window as typeof window & { __questionContentNode?: Element }).__questionContentNode === node)).toBe(true);
+});
+
+test("question changes use one concise live announcement outside the controls", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${SELECTION_PROFILE.id}/questions`, [SELECTION_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+  const announcement = page.getByTestId("question-announcement");
+  const firstTitle = await card.getByTestId("question-title").innerText();
+
+  await expect(announcement).toHaveAttribute("role", "status");
+  await expect(announcement).toHaveAttribute("aria-live", "polite");
+  await expect(announcement).toHaveAttribute("aria-atomic", "true");
+  await expect(announcement).toContainText(firstTitle);
+  await expect(card).not.toHaveAttribute("aria-live", /.+/);
+  await expect(announcement.locator("button")).toHaveCount(0);
+
+  await card.getByRole("button", { name: /Heel graag/i }).click();
+  await expect(announcement).not.toContainText(firstTitle);
+  await expect(announcement).toContainText("Nieuwe vraag:");
 });
 
 test("questionnaire keeps repeated controls geometrically fixed across dynamic content", async ({ page }) => {
@@ -293,7 +318,7 @@ test("agreements keep breathing room around their inline optional label", async 
   expect(sectionBox!.y + sectionBox!.height - (buttonBox!.y + buttonBox!.height)).toBeGreaterThanOrEqual(6);
 });
 
-test("question card keeps all primary controls visible with unclipped copy", async ({ page }) => {
+test("flat question stage keeps all primary controls visible with unclipped copy", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
@@ -318,11 +343,9 @@ test("question card keeps all primary controls visible with unclipped copy", asy
   const footerBox = await card.getByTestId("question-progress").boundingBox();
   const laterBox = await card.getByRole("button", { name: /Later/ }).boundingBox();
   expect(cardBox && topControlBox && footerBox && laterBox).toBeTruthy();
-  const topBreathing = topControlBox!.y - cardBox!.y;
-  const bottomBreathing = cardBox!.y + cardBox!.height - Math.max(footerBox!.y + footerBox!.height, laterBox!.y + laterBox!.height);
-  expect(topBreathing).toBeGreaterThanOrEqual(12);
-  expect(bottomBreathing).toBeGreaterThanOrEqual(12);
-  expect(Math.abs(topBreathing - bottomBreathing)).toBeLessThanOrEqual(8);
+  expect(topControlBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1);
+  expect(topControlBox!.y + topControlBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1);
+  expect(Math.max(footerBox!.y + footerBox!.height, laterBox!.y + laterBox!.height)).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1);
   expect(laterBox!.y + laterBox!.height).toBeLessThanOrEqual(await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight) + 1);
   expect(await card.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)).toBe(false);
@@ -334,6 +357,30 @@ test("question card keeps all primary controls visible with unclipped copy", asy
   });
   expect(titleMetrics.lineHeight / titleMetrics.fontSize).toBeGreaterThanOrEqual(1.18);
   expect(titleMetrics.scrollHeight).toBeLessThanOrEqual(titleMetrics.clientHeight + 1);
+});
+
+test("questionnaire reflows at 200% text without clipping or horizontal scroll", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    document.documentElement.style.fontSize = "200%";
+  });
+  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
+  const card = page.locator('[data-tour="kink-card"]');
+  const title = card.getByTestId("question-title");
+  const essence = card.getByTestId("question-essence");
+  const statusCopy = card.locator(".status-option-label, [data-status-hint]");
+  const later = card.getByRole("button", { name: /Later/ });
+
+  await expect(title).toBeVisible();
+  await expect(essence).toBeVisible();
+  await expect(card.getByRole("group", { name: "Status kiezen" }).locator("button")).toHaveCount(5);
+  expect(await title.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
+  expect(await essence.evaluate((node) => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
+  expect(await statusCopy.evaluateAll((nodes) => nodes.every((node) => node.scrollHeight <= node.clientHeight + 1))).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)).toBe(false);
+
+  await later.scrollIntoViewIfNeeded();
+  await expect(later).toBeInViewport();
 });
 
 test("safety guidance keeps its essential stop signal visible before the sheet opens", async ({ page }) => {

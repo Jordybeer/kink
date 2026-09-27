@@ -418,14 +418,16 @@ export default function SpotlightTour({
               {steps.map((_, index) => (
                 <div
                   key={index}
-                  style={{
-                    height: 3,
-                    width: index === step ? 18 : 5,
-                    borderRadius: 999,
-                    background: index === step ? "var(--accent)" : "var(--border)",
-                    transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
-                  }}
-                />
+                  className="h-[3px] w-[18px]"
+                >
+                  <span
+                    className="block h-full w-full rounded-full transition-[transform,background-color] duration-200 ease-out motion-reduce:transition-none"
+                    style={{
+                      background: index === step ? "var(--accent)" : "var(--border)",
+                      transform: `scaleX(${index === step ? 1 : 5 / 18})`,
+                    }}
+                  />
+                </div>
               ))}
             </div>
           )}

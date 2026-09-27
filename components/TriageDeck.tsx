@@ -15,10 +15,10 @@ const AGREEMENTS = [
 ] as const;
 
 const CATEGORY_ACCENT: Record<Kink["category"], string> = {
-  impact: "#c77a68", bondage: "#8774c9", power: "#9a70c4", rituals: "#7768b7", discipline: "#a26c7d",
-  roleplay: "#a26d9c", interaction: "#8d72b0", sensation: "#6e85c8", sexual_acts: "#a4718c", exhibition: "#986d9d", media: "#6676b0", group_partner: "#7f70ac",
-  body_focus: "#9575ae", materials_scent: "#897493", pet_play: "#9d718b", fluids: "#836b90", toys: "#6c79c4",
-  penetration: "#a36e7f", aftercare: "#638fa3", appearance: "#9174a6", adult_ageplay: "#956f8b", custom: "#8170bd",
+  impact: "var(--category-impact)", bondage: "var(--category-bondage)", power: "var(--category-power)", rituals: "var(--category-rituals)", discipline: "var(--category-discipline)",
+  roleplay: "var(--category-roleplay)", interaction: "var(--category-interaction)", sensation: "var(--category-sensation)", sexual_acts: "var(--category-sexual-acts)", exhibition: "var(--category-exhibition)", media: "var(--category-media)", group_partner: "var(--category-group-partner)",
+  body_focus: "var(--category-body-focus)", materials_scent: "var(--category-materials-scent)", pet_play: "var(--category-pet-play)", fluids: "var(--category-fluids)", toys: "var(--category-toys)",
+  penetration: "var(--category-penetration)", aftercare: "var(--category-aftercare)", appearance: "var(--category-appearance)", adult_ageplay: "var(--category-adult-ageplay)", custom: "var(--category-custom)",
 };
 
 const CARD_FEEDBACK_MS = 200;
@@ -120,18 +120,23 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
   const currentEntry = current ? entries[current.id] : undefined;
   const safetyOpen = Boolean(current?.safetyNote && safetyKinkId === current.id);
   const detailOpen = Boolean(current && detailKinkId === current.id);
-  const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "#8170bd";
+  const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "var(--category-custom)";
   const categoryUnseen = Boolean(current && current.category !== "custom" && !seenCategories.has(current.category));
   const presentation = current ? getQuestionnairePresentation(current) : { title: "", essence: "", details: null, hasDetails: false };
   const categoryCopy = categoryDetail ? kinkCategoryExplainer(categoryDetail) : null;
+  const announcement = current
+    ? `Nieuwe vraag: ${presentation.title}. Categorie ${kinkCategoryLabel(current.category)}.`
+    : skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld.";
 
   return (
     <>
-      <div aria-live="polite" className="h-full min-h-0">
+      <p key={current?.id ?? "complete"} data-testid="question-announcement" className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
+      <div className="h-full min-h-0">
         {current ? (
-          <div data-tour="kink-card" className="relative isolate h-full min-h-0 overflow-y-auto overscroll-contain rounded-[1.75rem] p-4" style={{ background: "color-mix(in srgb, var(--surface) 94%, var(--surface-tint))", border: "1px solid color-mix(in srgb, var(--border) 88%, var(--text2))", boxShadow: "0 18px 42px var(--deep-shadow), inset 0 1px 0 var(--inset-highlight)" }}>
-            <div aria-hidden="true" data-testid="question-ambient-glow" className="pointer-events-none absolute inset-x-0 top-0 h-36 rounded-[1.75rem]" style={{ background: `radial-gradient(circle at 18% 0%, color-mix(in srgb, ${categoryAccent} 12%, transparent), transparent 64%)` }} />
-            <div data-testid="question-content" className="relative z-[1] grid min-h-full min-w-0 gap-1" style={{ gridTemplateRows: "44px 56px 60px 48px minmax(14.75rem, 1fr) 92px 44px" }}>
+          <div data-tour="kink-card" className="questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
+            <div data-testid="question-content" className="question-content relative z-[1] grid min-h-full min-w-0 gap-1">
               <div className="flex min-h-0 min-w-0 items-center gap-2">
                 <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
                   <span
@@ -158,12 +163,12 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
                 </div>
               </div>
 
-              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="max-h-14 overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
-              <p data-testid="question-essence" className="h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
+              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
+              <p data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none" style={{ background: "color-mix(in srgb, var(--surface2) 66%, transparent)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>Info & uitleg</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}
-                {current.safetyNote && <button type="button" data-testid="safety-disclosure" aria-haspopup="dialog" aria-expanded={safetyOpen} onClick={() => setSafetyKinkId(current.id)} className="focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none" style={{ background: "color-mix(in srgb, var(--surface2) 66%, transparent)", color: "var(--text2)" }}><ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span><CaretRight size={14} aria-hidden="true" /></button>}
+                {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>Info & uitleg</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}
+                {current.safetyNote && <button type="button" data-testid="safety-disclosure" aria-haspopup="dialog" aria-expanded={safetyOpen} onClick={() => setSafetyKinkId(current.id)} className="focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left transition-[transform,background-color] duration-150 active:scale-[0.995] motion-reduce:active:scale-100 motion-reduce:transition-none" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span><CaretRight size={14} aria-hidden="true" /></button>}
               </div>
 
               <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
@@ -177,7 +182,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl p-5 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}><p className="text-lg italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}>{skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld."}</p><p className="mt-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>{progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}. Tik een kink hieronder om bij te stellen.</p>{skippedUnansweredCount > 0 && <button onClick={() => setSkipped(new Set())} className="focus-ring mt-3 min-h-11 rounded-lg border px-4 text-xs transition-colors" style={{ color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}>{skippedUnansweredCount} overgeslagen. Toon opnieuw</button>}</div>
+          <div data-testid="question-finish-state" className="rounded-2xl p-5 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}><p className="text-lg italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}>{skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld."}</p><p className="mt-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>{progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}. Tik een kink hieronder om bij te stellen.</p>{skippedUnansweredCount > 0 && <button onClick={() => setSkipped(new Set())} className="focus-ring mt-3 min-h-11 rounded-lg border px-4 text-xs transition-colors" style={{ color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}>{skippedUnansweredCount} overgeslagen. Toon opnieuw</button>}</div>
         )}
       </div>
 

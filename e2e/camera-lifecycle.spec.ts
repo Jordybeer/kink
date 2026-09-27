@@ -88,7 +88,7 @@ test("stopt een profielcamera die pas na sluiten beschikbaar komt", async ({ pag
   await installDeferredCamera(page);
   await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
-  await page.getByRole("button", { name: /^Scan partnerprofiel\b/ }).click();
+  await page.getByRole("button", { name: /^Scan gedeeld profiel\b/ }).click();
   await expect(page.getByRole("dialog", { name: "QR-code scannen" })).toBeVisible();
   await page.getByRole("button", { name: "Annuleer" }).click();
   await expect(page.getByRole("dialog", { name: "QR-code scannen" })).toBeHidden();
@@ -108,11 +108,25 @@ test("stopt een contractcamera die pas na sluiten beschikbaar komt", async ({ pa
   await resolveCameraAfterClose(page);
 });
 
+test("profielscanner maakt de plakroute vindbaar en toegankelijk", async ({ page }) => {
+  await installDeferredCamera(page);
+  await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
+
+  await page.getByRole("button", { name: /^Scan gedeeld profiel\b/ }).click();
+  const dialog = page.getByRole("dialog", { name: "QR-code scannen" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Profiel-link plakken" }).click();
+  await expect(dialog.getByLabel("Profiel-link of code")).toBeVisible();
+  await dialog.getByRole("button", { name: "Annuleer" }).click();
+
+  await resolveCameraAfterClose(page);
+});
+
 test("stopt de profielcamera als video afspelen faalt", async ({ page }) => {
   await installPlaybackRejectingCamera(page);
   await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
-  await page.getByRole("button", { name: /^Scan partnerprofiel\b/ }).click();
+  await page.getByRole("button", { name: /^Scan gedeeld profiel\b/ }).click();
   await expectRejectedPlaybackStoppedCamera(page);
 });
 

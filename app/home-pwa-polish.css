@@ -1,0 +1,50 @@
+/* Installed-PWA Home density pass.
+   Keep the browser layout airy, but use the fixed app viewport more deliberately
+   when Home has enough profiles to expose its disclosure controls. */
+@media (display-mode: standalone) and (max-width: 639px) {
+  main[data-page-shell]:has([data-home-profile-stack]) {
+    padding-top: 1rem;
+  }
+
+  section[aria-labelledby="home-mine-profiles-label"],
+  section[aria-labelledby="home-shared-profiles-label"] {
+    margin-bottom: 0.75rem;
+  }
+
+  section[aria-labelledby="home-mine-profiles-label"] > h2,
+  section[aria-labelledby="home-shared-profiles-label"] > h2 {
+    margin-bottom: 0.25rem;
+  }
+
+  /* A large shared collection previews one person in the installed app. The
+     disclosure remains the explicit route to the rest, and expanding it restores
+     the ordinary multi-profile stack. Two-profile collections stay fully visible
+     because they do not have a disclosure to recover a hidden row. */
+  section[aria-labelledby="home-shared-profiles-label"]:has(> button[aria-expanded="false"])
+    [data-home-profile-stack] > section:nth-of-type(2) {
+    display: none;
+  }
+
+  [data-home-profile-stack] [class~="py-2.5"] {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
+  [data-home-compare-feature] {
+    padding: 0.625rem 0.75rem;
+  }
+
+  [data-home-compare-feature] > div {
+    gap: 0.625rem;
+  }
+
+  [data-home-utility-list] > a,
+  [data-home-profile-actions] > button {
+    min-height: var(--touch-target);
+  }
+
+  [data-home-profile-actions] {
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.375rem !important;
+  }
+}

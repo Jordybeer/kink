@@ -96,8 +96,12 @@ test("profile tab uses the offline-safe shell without changing profile UX", asyn
   await seedAndGo(page, "/profile?id=pw-alex-001", PROFILES);
 
   await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Profiel delen" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
+  const profileNav = page.getByLabel("Hoofdnavigatie");
+  await expect(profileNav.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
+  await expect(profileNav.getByRole("button", { name: "Meer acties" })).toBeVisible();
+  await profileNav.getByRole("button", { name: "Meer acties" }).click();
+  await expect(page.getByRole("menuitem", { name: "Profiel delen" })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   const profileTab = page.locator('nav[aria-label="Tabbladen"] a').filter({ hasText: "Profiel" });
   await expect(profileTab).toHaveAttribute("href", "/profile?id=pw-alex-001");
@@ -137,14 +141,15 @@ test("contextual actions stay compact while the ambiguous QR scanner is labelled
 
   await seedAndGo(page, "/profile/pw-alex-001", PROFILES);
   const profileNav = page.getByLabel("Hoofdnavigatie");
-  const share = profileNav.getByRole("button", { name: "Profiel delen" });
   const edit = profileNav.getByRole("button", { name: "Profiel bewerken" });
-  await expect(share).toBeVisible();
+  const more = profileNav.getByRole("button", { name: "Meer acties" });
   await expect(edit).toBeVisible();
-  await expect(share).toHaveText("");
-  await expect(edit).toHaveText("");
-  await expect(page.getByRole("button", { name: "Profiel delen" })).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Profiel bewerken" })).toHaveCount(1);
+  await expect(edit).toHaveText("Bewerk");
+  await expect(more).toBeVisible();
+  await expect(more).toHaveText("");
+  await expect(profileNav.getByRole("button", { name: "Profiel delen" })).toHaveCount(0);
+  await more.click();
+  await expect(page.getByRole("menuitem", { name: "Profiel delen" })).toBeVisible();
 });
 
 test("header stays hidden behind the onboarding curtain", async ({ page }) => {

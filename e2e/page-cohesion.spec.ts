@@ -138,11 +138,11 @@ test.describe("Page cohesion scenes", () => {
     await page.goto("/scene?id=cohesion-scene-1");
     await page.waitForLoadState("networkidle");
 
-    const details = page.getByRole("button", { name: "Duur, notitie en beheer" });
+    const details = page.getByRole("button", { name: "Details", exact: true });
     await expect(details).toHaveAttribute("aria-expanded", "false");
 
     await details.click();
-    await expect(page.getByRole("button", { name: "Details verbergen" })).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("button", { name: "Minder", exact: true })).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByRole("button", { name: "Naar boven verplaatsen" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Naar beneden verplaatsen" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Spanking (hand) verwijderen" })).toBeVisible();

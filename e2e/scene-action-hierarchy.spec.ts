@@ -11,18 +11,19 @@ test("scene separates PDF export, draft save and consent lock into distinct acti
 
   const pdf = page.getByRole("button", { name: "Exporteer scène als PDF" });
   const save = page.getByRole("button", { name: "Opslaan" });
-  const lock = page.getByRole("button", { name: "Afspraken vastzetten" });
+  const plan = page.getByRole("button", { name: "Scène inplannen" });
 
   await expect(pdf).toBeVisible();
   await expect(pdf).toBeDisabled();
   await expect(save).toBeDisabled();
-  await expect(lock).toBeDisabled();
+  await expect(plan).toBeDisabled();
   await expect(page.getByRole("button", { name: "Plannen", exact: true })).toHaveCount(0);
 
-  await page.getByPlaceholder("Eigen item…").fill("Check-in");
+  await page.getByLabel("Eigen item").fill("Check-in");
   await page.getByRole("button", { name: "Item toevoegen" }).click();
 
   await expect(pdf).toBeEnabled();
   await expect(save).toBeEnabled();
-  await expect(lock).toBeEnabled();
+  await expect(plan).toBeEnabled();
+  await expect(page.getByText("Inplannen zet activiteiten, intensiteiten en safeword vast.", { exact: true })).toBeVisible();
 });
