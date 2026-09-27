@@ -39,6 +39,8 @@ test("encrypted backup export stays inside an explicit save gesture and excludes
 
   expect(payload.source).toBe("backup");
   expect(payload.contractSeries).toBeDefined();
+  expect(payload.scenes).toBeDefined();
+  expect(payload.profileSnapshots).toBeDefined();
   expect(payload).not.toHaveProperty("contractArtifacts");
 });
 
@@ -86,4 +88,53 @@ test("encrypted backup import keeps readable copy inside the visual viewport", a
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
   expect(bounds!.y).toBeGreaterThanOrEqual(visualViewport.offsetTop - 1);
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewportBottom + 2);
+});
+
+for (const encrypted of [false, true]) {
+  test(`backup restores scenes and intimacy through the ${encrypted ? "encrypted" : "JSON"} file route`, async ({ page }) => {
+    await seedProfiles(page, []);
+    const payload = {
+      source: "backup", profiles: [],
+      scenes: [{ id: "backup-scene", title: "Hersteld plan", profileAId: "a", profileBId: "b", profileAName: "Alex", profileBName: "Sam", items: [], status: "draft", createdAt: 1, updatedAt: 2 }],
+      intimacyEntries: [{ id: "backup-moment", status: "planned", date: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10), title: "Hersteld moment", createdAt: 1, updatedAt: 2 }],
+    };
+    const data = encrypted ? await encryptBackup(JSON.stringify(payload), BACKUP_PASSWORD) : payload;
+    await page.getByLabel("Kies een backupbestand").setInputFiles({
+      name: "backup.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(data)),
+    });
+    if (encrypted) {
+      const dialog = page.getByRole("dialog", { name: "Versleutelde backup ontgrendelen" });
+      await expect(dialog).toBeFocused();
+      await page.keyboard.press("Shift+Tab");
+      await expect(dialog.getByRole("button", { name: "Annuleer" })).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(dialog.getByLabel("Wachtwoord van deze versleutelde back-up")).toBeFocused();
+      await dialog.getByLabel("Wachtwoord van deze versleutelde back-up").fill(BACKUP_PASSWORD);
+      await dialog.getByRole("button", { name: "Backup herstellen" }).click();
+      await expect(dialog).toBeHidden();
+    }
+    await expect(page.getByText(/Backup hersteld:/)).toBeVisible();
+    await page.reload();
+    await page.goto("/scenes");
+    await expect(page.getByText("Hersteld plan", { exact: true })).toBeVisible();
+    await page.goto("/intimacy");
+    await expect(page.getByText("Hersteld moment", { exact: true })).toBeVisible();
+  });
+}
+
+test("malformed encrypted backup can be cancelled with Escape after focus leaves the dialog", async ({ page }) => {
+  await seedProfiles(page, []);
+  const data = await encryptBackup("null", BACKUP_PASSWORD);
+  await page.getByLabel("Kies een backupbestand").setInputFiles({ name: "invalid.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(data)) });
+  const dialog = page.getByRole("dialog", { name: "Versleutelde backup ontgrendelen" });
+  await dialog.getByLabel("Wachtwoord van deze versleutelde back-up").fill(BACKUP_PASSWORD);
+  await dialog.getByRole("button", { name: "Backup herstellen" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("geen geldige KinkSync-backup");
+  await page.locator("body").evaluate((body) => {
+    body.tabIndex = -1;
+    body.focus();
+  });
+  await expect(page.locator("body")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
 });

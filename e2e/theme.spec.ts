@@ -54,6 +54,30 @@ async function readContrastPairs(page: Page) {
   });
 }
 
+async function readSceneControlGeometry(page: Page) {
+  return page.evaluate(() => {
+    const tokenProbe = document.createElement("span");
+    tokenProbe.style.color = "var(--control-border)";
+    document.body.appendChild(tokenProbe);
+    const expectedBorder = getComputedStyle(tokenProbe).color;
+    tokenProbe.remove();
+
+    const read = (id: string) => {
+      const element = document.getElementById(id);
+      if (!(element instanceof HTMLElement)) throw new Error(`Missing #${id}`);
+      const styles = getComputedStyle(element);
+      return { borderColor: styles.borderColor, height: element.getBoundingClientRect().height };
+    };
+
+    return {
+      expectedBorder,
+      date: read("scene-date"),
+      safeword: read("scene-safeword"),
+      ownItem: read("scene-own-item"),
+    };
+  });
+}
+
 test("system mode follows the device while explicit choices persist", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
@@ -145,6 +169,15 @@ test("both palettes keep core text and controls at WCAG AA contrast", async ({ p
     await expect(dateControl).toBeVisible();
     await expect.poll(() => dateControl.evaluate((element) => getComputedStyle(element).colorScheme))
       .toBe(theme);
+
+    const controls = await readSceneControlGeometry(page);
+    expect(controls.date.borderColor).toBe(controls.expectedBorder);
+    expect(controls.safeword.borderColor).toBe(controls.expectedBorder);
+    expect(controls.ownItem.borderColor).toBe(controls.expectedBorder);
+    expect(controls.date.height).toBeGreaterThanOrEqual(44);
+    expect(controls.safeword.height).toBeGreaterThanOrEqual(44);
+    expect(controls.ownItem.height).toBeGreaterThanOrEqual(44);
+
     await page.screenshot({
       path: `screenshots/theme-rehearsal/${testInfo.project.name}/theme-${theme}-scene.png`,
       fullPage: false,

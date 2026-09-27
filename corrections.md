@@ -6,6 +6,33 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-09-26 — Hover speelde voor half gehydrateerd profiel
+
+**What went wrong:** De desktop-launchtest opende de Home-profielenlijst en
+verwachtte daarna volledige dekking. Onder de stilstaande muis verscheen een
+profielrij met de bedoelde `hover:opacity-90`; de test zag daardoor 0.9 in plaats
+van 1. Dezelfde fout was lokaal reproduceerbaar door de rij bewust te hoveren.
+
+**Rule:** Zet de pointer buiten de gemeten content voordat een readiness-check
+de rusttoestand meet. Behoud de strenge opacity-assertie; verlaag geen drempel om
+een hovertoestand voor voltooide hydratatie te laten doorgaan.
+
+---
+
+## 2026-09-26 — De CI-riem bereikte de gestapelde branch niet
+
+**What went wrong:** PR #466 werd op zijn echte parent #460 gericht, maar CI
+luisterde alleen naar PR's richting `dev` en `main`. De PR-beschrijving meldde
+al een lopende volledige gate terwijl GitHub geen run had gestart. Een later
+onderbroken lokale browserrun had bovendien geen eindresultaat.
+
+**Rule:** Controleer na retargeten de workflowfilters en na push het werkelijke
+run-ID voor de nieuwe head. Laat de PR-gate ook gestapelde bases testen. Meld
+een gate pas als lopend of groen wanneer GitHub dat voor die commit bevestigt;
+een onderbroken lokale run telt niet als geslaagd.
+
+---
+
 ## 2026-08-17 — Zichtbaars veranderd zonder te kijken wie het vastpinde
 
 **What went wrong:** Twee keer in één sessie dezelfde fout, allebei pas gevangen

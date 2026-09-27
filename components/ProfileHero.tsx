@@ -75,7 +75,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
         label: isMyPartner ? "Mijn partner" : "Markeer als mijn partner",
         icon: <Heart size={18} weight={isMyPartner ? "fill" : "regular"} aria-hidden="true" />,
         onClick: () => setPartnerProfileId(isMyPartner ? null : profile.id),
-        placement: "overflow",
+        placement: "primary",
         selected: isMyPartner,
       });
     }

@@ -79,6 +79,7 @@ function SceneItemRow({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const visibleDetails = locked || detailsOpen;
   const color = intensityColor(item.intensity);
+  const detailsId = `scene-item-details-${item.id}`;
 
   return (
     <div
@@ -136,8 +137,8 @@ function SceneItemRow({
           })}
           <button
             onClick={() => setDetailsOpen((o) => !o)}
-            aria-label={visibleDetails ? "Details verbergen" : "Duur, notitie en beheer"}
             aria-expanded={visibleDetails}
+            aria-controls={detailsId}
             className="focus-ring ml-auto min-h-11 rounded-lg px-2 text-xs"
             style={{ color: visibleDetails ? "var(--accent)" : "var(--text2)" }}
           >
@@ -145,7 +146,12 @@ function SceneItemRow({
           </button>
         </div>
 
-        <div className={`accordion-content ${visibleDetails ? "open" : ""}`}>
+        <div
+          id={detailsId}
+          className={`accordion-content ${visibleDetails ? "open" : ""}`}
+          aria-hidden={!visibleDetails}
+          inert={visibleDetails ? undefined : true}
+        >
           <div className="accordion-inner space-y-3 pt-3">
             <div className="flex items-start gap-2">
               <label className="flex-none pt-1 text-xs" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
@@ -163,7 +169,7 @@ function SceneItemRow({
               placeholder="Notitie…"
               aria-label={`Notitie bij ${item.name}`}
               className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}
+              style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14 }}
             />
 
             {!locked && (
@@ -508,7 +514,7 @@ function ScenePage() {
             onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             className="focus-ring flex-1 rounded-lg px-2 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)", fontSize: 12, height: 36, maxWidth: 180 }}
+            style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text2)", fontSize: 12, minHeight: "var(--touch-target)", maxWidth: 180 }}
           />
           <TimePicker
             value={sceneTime}
@@ -581,7 +587,7 @@ function ScenePage() {
             disabled={isConsentLocked}
             placeholder="bijv. rood"
             className="focus-ring flex-1 rounded-lg px-3 focus:outline-none"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14, height: 40 }}
+            style={{ background: "var(--surface)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14, minHeight: "var(--touch-target)" }}
           />
         </div>
 
@@ -659,7 +665,7 @@ function ScenePage() {
                 onKeyDown={(e) => { if (e.key === "Enter") addManualItem(); }}
                 placeholder="Eigen item…"
                 className="focus-ring min-w-0 flex-1 rounded-xl px-3 focus:outline-none"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", fontSize: 14, height: 44 }}
+                style={{ background: "var(--surface)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14, height: 44 }}
               />
               <button
                 onClick={addManualItem}

@@ -45,9 +45,9 @@ test.describe("Home herstel en partner-voorkeur", () => {
       pinnedProfileId: PROFILE_ALEX.id,
     });
 
-    await page.getByRole("button", { name: "Meer acties" }).click();
-    await expect(page.getByText("Markeer als mijn partner", { exact: true })).toBeVisible();
-    await page.getByText("Markeer als mijn partner", { exact: true }).click();
+    const markPartner = page.getByRole("button", { name: "Markeer als mijn partner" });
+    await expect(markPartner).toBeVisible();
+    await markPartner.click();
     await expect(page.getByText("Gedeeld profiel · Mijn partner", { exact: true })).toBeVisible();
 
     await page.goto("/");
@@ -58,7 +58,6 @@ test.describe("Home herstel en partner-voorkeur", () => {
 
     await page.goto(`/profile/${sharedRiley.id}`);
     await page.waitForLoadState("networkidle");
-    await page.getByRole("button", { name: "Meer acties" }).click();
-    await expect(page.getByText("Mijn partner", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mijn partner" })).toBeVisible();
   });
 });
