@@ -8,6 +8,10 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
+### Optional PWA installation [IN REVIEW, 2026-09-28]
+
+Owner-approved restoration: stable manifest identity, existing icons, iOS standalone metadata and a quiet Settings installation entry. Browser invitations require an explicit click; manual guidance and a backup reminder cover other browsers. Existing offline caching and stored profiles stay intact. See `docs/pwa-installation.md` for scope and the physical-device release check.
+
 **Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
 ### Launch-readiness audit 2026-08-17 [L-01 SHIPPED — full verdict in docs/launch-readiness-audit-2026-08-17.md]

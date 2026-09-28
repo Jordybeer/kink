@@ -14,6 +14,8 @@ KinkSync is for consenting adults using the product for real private negotiation
 
 The interface must remain understandable when the subject is intimate, emotionally charged, uncertain or new to the user. Phone use is primary, often one-handed, with iOS Safari and the installed PWA treated as first-class contexts. Offline use is part of the normal product model rather than an exceptional fallback.
 
+Installation is optional and user-initiated from Settings. Keep the manifest, home-screen icons and iOS standalone support; do not restore automatic install promotions. Offline browser use remains first-class. Installation is not backup or cloud sync.
+
 ## Product Purpose
 
 KinkSync helps people articulate what they want, might try, want only for the other person, or consider a limit, then carry that explicit information into comparison, conversation, planning and agreements without the product silently inferring consent.
