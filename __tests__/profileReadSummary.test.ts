@@ -57,6 +57,17 @@ describe("profile category read summary", () => {
     expect(JSON.stringify(summary)).not.toContain("Secret subject");
   });
 
+  it("keeps context snippets compact without splitting emoji", () => {
+    const longComment = `${"x".repeat(108)}🙂extra`;
+    const summary = summarizeProfileCategory(kinks, entries({
+      "yes-one": { comment: longComment },
+      hard: { comment: "" },
+    }));
+
+    expect(summary.context?.text.endsWith("…")).toBe(true);
+    expect(summary.context?.text).not.toContain("�");
+  });
+
   it("reports private answers only as a count", () => {
     const summary = summarizeProfileCategory(kinks, entries());
 
