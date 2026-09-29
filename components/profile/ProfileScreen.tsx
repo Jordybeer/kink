@@ -479,6 +479,8 @@ export default function ProfilePage({ params }: Props) {
               {ratedByCategory.map(({ category, kinks }) => {
                 const expanded = expandedReadCategories.has(category);
                 const contentId = `profile-read-category-${category}-content`;
+                const summaryId = `profile-read-category-${category}-summary`;
+                const categoryLabel = kinkCategoryLabel(category);
                 const summary = summarizeProfileCategory(kinks, currentProfile.entries);
 
                 return (
@@ -494,6 +496,8 @@ export default function ProfilePage({ params }: Props) {
                         onClick={() => toggleReadCategory(category)}
                         aria-expanded={expanded}
                         aria-controls={contentId}
+                        aria-describedby={summaryId}
+                        aria-label={`${categoryLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
                         className="focus-ring flex min-h-14 w-full items-center gap-3 py-2.5 text-left"
                       >
                         <span className="min-w-0 flex-1">
@@ -501,9 +505,10 @@ export default function ProfilePage({ params }: Props) {
                             className="block text-base italic leading-5"
                             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
                           >
-                            {kinkCategoryLabel(category)}
+                            {categoryLabel}
                           </span>
                           <span
+                            id={summaryId}
                             data-testid={`profile-read-category-${category}-summary`}
                             className="mt-1.5 grid gap-1 text-sm leading-5"
                             style={{ color: "var(--text2)" }}
