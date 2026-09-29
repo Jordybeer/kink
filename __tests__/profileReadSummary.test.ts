@@ -5,6 +5,7 @@ import type { Kink, KinkEntry } from "@/types";
 const kinks: Kink[] = [
   { id: "yes-one", name: "Rope", category: "bondage", level: 1 },
   { id: "yes-two", name: "Cuffs", category: "bondage", level: 1 },
+  { id: "yes-three", name: "Harness", category: "bondage", level: 1 },
   { id: "willing", name: "Blindfold", category: "bondage", level: 1 },
   { id: "maybe", name: "Suspension", category: "bondage", level: 1 },
   { id: "hard", name: "Metal restraints", category: "bondage", level: 1 },
@@ -13,11 +14,12 @@ const kinks: Kink[] = [
 
 function entries(overrides: Record<string, Partial<KinkEntry>> = {}): Record<string, KinkEntry> {
   const base: Record<string, KinkEntry> = {
-    "yes-one": { status: "yes", comment: "Slow setup matters." },
+    "yes-one": { status: "yes", comment: "" },
     "yes-two": { status: "yes", comment: "" },
+    "yes-three": { status: "yes", comment: "" },
     willing: { status: "willing", comment: "" },
     maybe: { status: "maybe", comment: "" },
-    hard: { status: "hard_no", comment: "No exceptions." },
+    hard: { status: "hard_no", comment: "" },
     private: { status: "yes", comment: "Never expose this.", privateResponse: true },
   };
 
@@ -28,44 +30,79 @@ function entries(overrides: Record<string, Partial<KinkEntry>> = {}): Record<str
 }
 
 describe("profile category read summary", () => {
-  it("surfaces at most two strongest public interests in status order", () => {
+  it("previews the highest explicit public interest status in stable catalogue order", () => {
     const summary = summarizeProfileCategory(kinks, entries());
 
-    expect(summary.strongest).toEqual([
-      { name: "Rope", status: "yes" },
-      { name: "Cuffs", status: "yes" },
-    ]);
+    expect(summary.preview).toEqual({
+      status: "yes",
+      names: ["Rope", "Cuffs"],
+      remaining: 1,
+    });
   });
 
-  it("keeps public hard boundaries named in the collapsed summary", () => {
-    const summary = summarizeProfileCategory(kinks, entries());
-
-    expect(summary.hardLimits).toEqual(["Metal restraints"]);
-  });
-
-  it("uses useful public context and never private context", () => {
+  it("uses Ja only when there is no public Heel graag answer", () => {
     const summary = summarizeProfileCategory(kinks, entries({
-      "yes-one": { comment: "" },
-      hard: { comment: "No pressure on joints." },
+      "yes-one": { status: "maybe" },
+      "yes-two": { status: "no" },
+      "yes-three": { status: "maybe" },
+    }));
+
+    expect(summary.preview).toEqual({
+      status: "willing",
+      names: ["Blindfold"],
+      remaining: 0,
+    });
+  });
+
+  it("keeps every public hard boundary named and excludes private hard boundaries", () => {
+    const hardKinks = [
+      { id: "hard", name: "Metal restraints" },
+      { id: "hard-two", name: "Needles" },
+      { id: "private-hard", name: "Secret limit" },
+    ];
+    const summary = summarizeProfileCategory(hardKinks, {
+      hard: { status: "hard_no", comment: "" },
+      "hard-two": { status: "hard_no", comment: "" },
+      "private-hard": { status: "hard_no", comment: "Never expose this.", privateResponse: true },
+    });
+
+    expect(summary.hardLimits).toEqual(["Metal restraints", "Needles"]);
+    expect(summary.privateCount).toBe(1);
+    expect(JSON.stringify(summary)).not.toContain("Secret limit");
+    expect(JSON.stringify(summary)).not.toContain("Never expose this.");
+  });
+
+  it("shows the single public note without inventing an importance label", () => {
+    const summary = summarizeProfileCategory(kinks, entries({
+      maybe: { comment: "Alleen als we rustig opbouwen." },
     }));
 
     expect(summary.context).toEqual({
-      subject: "Metal restraints",
-      text: "No pressure on joints.",
+      text: "Alleen als we rustig opbouwen.",
+      subject: null,
     });
-    expect(JSON.stringify(summary)).not.toContain("Never expose this.");
-    expect(JSON.stringify(summary)).not.toContain("Secret subject");
   });
 
-  it("keeps context snippets compact without splitting emoji", () => {
-    const longComment = `${"x".repeat(108)}🙂extra`;
+  it("uses a sole hard-limit note when several public notes exist and keeps attribution factual", () => {
     const summary = summarizeProfileCategory(kinks, entries({
-      "yes-one": { comment: longComment },
+      "yes-one": { comment: "Fun on weekends." },
+      hard: { comment: "No exceptions." },
+    }));
+
+    expect(summary.context).toEqual({
+      text: "No exceptions.",
+      subject: "Metal restraints",
+    });
+  });
+
+  it("omits ambiguous context instead of choosing a note arbitrarily", () => {
+    const summary = summarizeProfileCategory(kinks, entries({
+      "yes-one": { comment: "First note." },
+      willing: { comment: "Second note." },
       hard: { comment: "" },
     }));
 
-    expect(summary.context?.text.endsWith("…")).toBe(true);
-    expect(summary.context?.text).not.toContain("�");
+    expect(summary.context).toBeNull();
   });
 
   it("reports private answers only as a count", () => {
@@ -73,21 +110,31 @@ describe("profile category read summary", () => {
 
     expect(summary.privateCount).toBe(1);
     expect(JSON.stringify(summary)).not.toContain("Secret subject");
+    expect(JSON.stringify(summary)).not.toContain("Never expose this.");
   });
 
-  it("falls back to an exact public status when a category has no strong interest, boundary, or note", () => {
-    const fallbackKinks: Kink[] = [
-      { id: "maybe-only", name: "Wax play", category: "sensation", level: 1 },
-      { id: "partner-only", name: "Massage", category: "sensation", level: 1 },
+  it("falls back to one exact public status when no interest, hard limit or unambiguous note exists", () => {
+    const fallbackKinks = [
+      { id: "maybe-one", name: "Wax play" },
+      { id: "partner-only", name: "Massage" },
     ];
-    const fallbackEntries: Record<string, KinkEntry> = {
-      "maybe-only": { status: "maybe", comment: "" },
+    const summary = summarizeProfileCategory(fallbackKinks, {
+      "maybe-one": { status: "maybe", comment: "" },
       "partner-only": { status: "no", comment: "" },
-    };
+    });
 
-    const summary = summarizeProfileCategory(fallbackKinks, fallbackEntries);
+    expect(summary.fallback).toEqual({ status: "maybe", name: "Wax play" });
+  });
 
-    expect(summary.fallback).toEqual({ name: "Wax play", status: "maybe" });
+  it("keeps context snippets compact without splitting emoji", () => {
+    const longComment = `${"x".repeat(108)}🙂extra`;
+    const summary = summarizeProfileCategory(
+      [{ id: "maybe", name: "Suspension" }],
+      { maybe: { status: "maybe", comment: longComment } },
+    );
+
+    expect(summary.context?.text.endsWith("…")).toBe(true);
+    expect(summary.context?.text).not.toContain("�");
   });
 
   it("shows only a private count when every answer in a category is private", () => {
@@ -97,7 +144,7 @@ describe("profile category read summary", () => {
     );
 
     expect(privateOnly).toEqual({
-      strongest: [],
+      preview: null,
       hardLimits: [],
       context: null,
       privateCount: 1,
