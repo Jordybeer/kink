@@ -81,7 +81,7 @@ describe("profile category read summary", () => {
 
   it("shows only a private count when every answer in a category is private", () => {
     const privateOnly = summarizeProfileCategory(
-      [{ id: "private", name: "Secret subject", category: "bondage", level: 1 }],
+      [{ id: "private", name: "Secret subject" }],
       { private: { status: "hard_no", comment: "Never expose this.", privateResponse: true } },
     );
 
