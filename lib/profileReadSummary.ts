@@ -3,104 +3,79 @@ import type { Kink, KinkEntry, KinkStatus } from "@/types";
 
 type RatedKink = Pick<Kink, "id" | "name">;
 type PublicStatus = NonNullable<KinkStatus>;
-
-export interface ProfileReadInterest {
-  name: string;
-  status: Extract<PublicStatus, "yes" | "willing">;
-}
-
-export interface ProfileReadContext {
-  subject: string;
-  text: string;
-}
-
-export interface ProfileReadFallback {
-  name: string;
-  status: PublicStatus;
-}
+type InterestStatus = Extract<PublicStatus, "yes" | "willing">;
 
 export interface ProfileCategoryReadSummary {
-  strongest: ProfileReadInterest[];
+  preview: { status: InterestStatus; names: string[]; remaining: number } | null;
   hardLimits: string[];
-  context: ProfileReadContext | null;
+  context: { text: string; subject: string | null } | null;
   privateCount: number;
-  fallback: ProfileReadFallback | null;
+  fallback: { status: PublicStatus; name: string } | null;
 }
 
-const INTEREST_RANK: Record<ProfileReadInterest["status"], number> = {
-  yes: 0,
-  willing: 1,
-};
-
-function entryFor(
-  kink: RatedKink,
-  entries: Record<string, KinkEntry>,
-): KinkEntry | null {
-  const entry = entries[kink.id];
-  return entry?.status ? entry : null;
-}
-
-function clippedContext(value: string, max = 110): string {
+function clipContext(value: string, max = 110): string {
   const text = value.trim().replace(/\s+/g, " ");
   const characters = Array.from(text);
-  if (characters.length <= max) return text;
-  return `${characters.slice(0, max - 1).join("").trimEnd()}…`;
+  return characters.length <= max
+    ? text
+    : `${characters.slice(0, max - 1).join("").trimEnd()}…`;
 }
 
 export function summarizeProfileCategory(
   kinks: RatedKink[],
   entries: Record<string, KinkEntry>,
 ): ProfileCategoryReadSummary {
-  const rated = kinks
-    .map((kink) => ({ kink, entry: entryFor(kink, entries) }))
-    .filter((item): item is { kink: RatedKink; entry: KinkEntry & { status: PublicStatus } } =>
-      Boolean(item.entry?.status));
-
+  const rated = kinks.flatMap((kink) => {
+    const entry = entries[kink.id];
+    return entry?.status ? [{ kink, entry: entry as KinkEntry & { status: PublicStatus } }] : [];
+  });
   const publicRated = rated.filter(({ entry }) => entry.privateResponse !== true);
   const privateCount = rated.length - publicRated.length;
 
-  const strongestSources = publicRated
-    .filter(({ entry }) => entry.status === "yes" || entry.status === "willing")
-    .sort((left, right) =>
-      INTEREST_RANK[left.entry.status as ProfileReadInterest["status"]]
-      - INTEREST_RANK[right.entry.status as ProfileReadInterest["status"]])
-    .slice(0, 2);
-
-  const strongest = strongestSources.map(({ kink, entry }) => ({
-    name: kink.name,
-    status: entry.status as ProfileReadInterest["status"],
-  }));
-
-  const hardLimitSources = publicRated.filter(({ entry }) => entry.status === "hard_no");
-  const hardLimits = hardLimitSources.map(({ kink }) => kink.name);
-
-  const preferredContextIds = new Set([
-    ...strongestSources.map(({ kink }) => kink.id),
-    ...hardLimitSources.map(({ kink }) => kink.id),
-  ]);
-
-  const contextSource = publicRated.find(
-    ({ kink, entry }) => preferredContextIds.has(kink.id) && entry.comment.trim().length > 0,
-  ) ?? publicRated.find(({ entry }) => entry.comment.trim().length > 0);
-
-  const context = contextSource
+  const interestStatus: InterestStatus | null = publicRated.some(({ entry }) => entry.status === "yes")
+    ? "yes"
+    : publicRated.some(({ entry }) => entry.status === "willing")
+      ? "willing"
+      : null;
+  const interestItems = interestStatus
+    ? publicRated.filter(({ entry }) => entry.status === interestStatus)
+    : [];
+  const preview = interestStatus
     ? {
-        subject: contextSource.kink.name,
-        text: clippedContext(contextSource.entry.comment),
+        status: interestStatus,
+        names: interestItems.slice(0, 2).map(({ kink }) => kink.name),
+        remaining: Math.max(0, interestItems.length - 2),
       }
     : null;
 
-  const fallbackSource = strongest.length === 0 && hardLimits.length === 0 && context === null
-    ? publicRated[0]
+  const hardLimitItems = publicRated.filter(({ entry }) => entry.status === "hard_no");
+  const hardLimits = hardLimitItems.map(({ kink }) => kink.name);
+
+  const notes = publicRated.filter(({ entry }) => entry.comment.trim().length > 0);
+  const hardLimitNotes = notes.filter(({ entry }) => entry.status === "hard_no");
+  const contextSource = notes.length === 1
+    ? notes[0]
+    : hardLimitNotes.length === 1
+      ? hardLimitNotes[0]
+      : null;
+  const context = contextSource
+    ? {
+        text: clipContext(contextSource.entry.comment),
+        subject: notes.length === 1 ? null : contextSource.kink.name,
+      }
     : null;
 
+  const fallbackSource = preview || hardLimits.length > 0 || context
+    ? null
+    : publicRated[0] ?? null;
+
   return {
-    strongest,
+    preview,
     hardLimits,
     context,
     privateCount,
     fallback: fallbackSource
-      ? { name: fallbackSource.kink.name, status: fallbackSource.entry.status }
+      ? { status: fallbackSource.entry.status, name: fallbackSource.kink.name }
       : null,
   };
 }
