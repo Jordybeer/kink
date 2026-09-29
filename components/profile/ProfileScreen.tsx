@@ -19,7 +19,7 @@ import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
-import { profileReadStatusLabel, summarizeProfileCategory } from "@/lib/profileReadSummary";
+import { summarizeProfileCategory } from "@/lib/profileReadSummary";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
@@ -516,7 +516,7 @@ export default function ProfilePage({ params }: Props) {
                             {summary.preview && (
                               <span>
                                 <span className="font-medium" style={{ color: "var(--text)" }}>
-                                  {profileReadStatusLabel(summary.preview.status)}:
+                                  {STATUS_LABEL[summary.preview.status]}:
                                 </span>{" "}
                                 {summary.preview.names.join(", ")}
                                 {summary.preview.remaining > 0 && (
@@ -524,7 +524,7 @@ export default function ProfilePage({ params }: Props) {
                                     {" "}
                                     <span aria-hidden="true">+{summary.preview.remaining}</span>
                                     <span className="sr-only">
-                                      {" "}en {summary.preview.remaining} meer met status {profileReadStatusLabel(summary.preview.status)}
+                                      {" "}en {summary.preview.remaining} meer met status {STATUS_LABEL[summary.preview.status]}
                                     </span>
                                   </>
                                 )}
@@ -543,15 +543,13 @@ export default function ProfilePage({ params }: Props) {
                                 <span aria-hidden="true">“</span>
                                 <span>{summary.context.text}</span>
                                 <span aria-hidden="true">”</span>
-                                {summary.context.subject && (
-                                  <span className="not-italic"> · {summary.context.subject}</span>
-                                )}
+                                <span className="not-italic"> · {summary.context.subject}</span>
                               </span>
                             )}
                             {summary.fallback && (
                               <span>
                                 <span className="font-medium" style={{ color: "var(--text)" }}>
-                                  {profileReadStatusLabel(summary.fallback.status)}:
+                                  {STATUS_LABEL[summary.fallback.status]}:
                                 </span>{" "}
                                 {summary.fallback.name}
                               </span>
