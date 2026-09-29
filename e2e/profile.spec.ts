@@ -207,13 +207,17 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
     await expect(impact).toBeVisible();
     await expect(impact).toHaveAttribute("aria-expanded", "false");
+    await expect(impact).toHaveAccessibleName("Impact Play. Details tonen");
     await expect(summary).toContainText("Heel graag: Spanking (hand) — giving");
     await expect(summary).toContainText("Klassiek en heerlijk");
     await expect(content).toBeHidden();
 
-    await impact.click();
+    await impact.focus();
+    await expect(impact).toBeFocused();
+    await page.keyboard.press("Enter");
 
     await expect(impact).toHaveAttribute("aria-expanded", "true");
+    await expect(impact).toHaveAccessibleName("Impact Play. Details verbergen");
     await expect(content).toBeVisible();
     await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
   });
