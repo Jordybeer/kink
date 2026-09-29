@@ -11,6 +11,7 @@ import {
   LockKey,
   PaintBrush,
   Sparkle,
+  DeviceMobile,
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
@@ -19,6 +20,7 @@ import Switch from "@/components/ui/Switch";
 import { useStore } from "@/lib/store";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
 import { useTheme } from "@/components/ThemeProvider";
+import { usePwaInstall } from "@/components/PwaInstallProvider";
 import type { ThemePreference } from "@/lib/theme";
 
 interface SettingsSheetProps {
@@ -146,6 +148,44 @@ function ThemeSelector() {
         })}
       </div>
     </fieldset>
+  );
+}
+
+function InstallApp() {
+  const { standalone, ios, canPrompt, busy, message, install } = usePwaInstall();
+  if (standalone) return null;
+
+  return (
+    <details className="group" style={DIVIDER_STYLE}>
+      <summary className={`${SETTINGS_ROW_CLASS} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+        <RowContent
+          icon={<DeviceMobile size={19} aria-hidden="true" />}
+          title="KinkSync installeren"
+          description="Open je eigen plek vanaf het beginscherm"
+          trailing={<CaretRight size={15} aria-hidden="true" className="group-open:rotate-90" style={{ color: "var(--text2)" }} />}
+        />
+      </summary>
+      <div className="space-y-3 px-1.5 pb-3 text-sm leading-relaxed sm:px-2" style={{ color: "var(--text)" }}>
+        <p>Installeren is optioneel. Het KinkSync-icoon wordt zichtbaar op je toestel.</p>
+        {canPrompt || busy ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void install()}
+            className="focus-ring min-h-11 rounded-xl px-4 py-2 font-semibold disabled:opacity-60"
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+          >
+            {busy ? "Installatie openen…" : "Installeer KinkSync"}
+          </button>
+        ) : ios ? (
+          <p>Open KinkSync in Safari. Tik op Delen en kies ‘Zet op beginscherm’. Zet ‘Open als webapp’ aan als die keuze verschijnt.</p>
+        ) : (
+          <p>Open het browsermenu en kies ‘App installeren’ of ‘Toevoegen aan beginscherm’. Ontbreekt die optie? Gebruik een browser die webapps kan installeren, zoals Chrome of Edge.</p>
+        )}
+        {message && <p role="status">{message}</p>}
+        <p style={{ color: "var(--text2)" }}>Maak eerst een back-up als je al profielen hebt. Zie je ze niet in de geïnstalleerde app? Herstel daar je back-up. Installeren is geen back-up.</p>
+      </div>
+    </details>
   );
 }
 
@@ -336,6 +376,7 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </Link>
+            <InstallApp />
           </SettingsList>
         </section>
 

@@ -16,7 +16,7 @@ async function openSettings(page: Page) {
   return more;
 }
 
-test("settings blijft compact en web-installatie is verwijderd", async ({ page }) => {
+test("settings blijft compact met optionele installatie in de instellingen", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
 
@@ -38,7 +38,7 @@ test("settings blijft compact en web-installatie is verwijderd", async ({ page }
   const scrollBody = settings.getByTestId("sheet-scroll-body");
   await expect(settings).toBeVisible();
   expect(await overflowsVertically(scrollBody)).toBe(false);
-  await expect(settings.getByText("KinkSync installeren", { exact: true })).toHaveCount(0);
+  await expect(settings.getByText("KinkSync installeren", { exact: true })).toBeVisible();
   await expect(settings.getByText("Installatievragen", { exact: true })).toHaveCount(0);
 
   const backupIconColor = await settings

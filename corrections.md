@@ -327,3 +327,9 @@ methode:
 
 Punt 2 tweede helft was ook al fout bij `sanitizeBdsmtestUrl`: de importdeur ging
 dicht, de la met oude import bleef open tot de tegen-audit erop wees.
+
+## 2026-09-28 — Installatietest verwachtte een verouderde metanaam
+
+**What went wrong:** De nieuwe PWA-test verwachtte `apple-mobile-web-app-capable`, terwijl Next.js 16.3.4 voor `appleWebApp.capable` bewust `mobile-web-app-capable` uitvoert. De productie-HTML maakte het verschil zichtbaar.
+
+**Rule:** Controleer gegenereerde metadata in de geïnstalleerde frameworkversie en de gebouwde HTML. Test daarnaast de Apple-titel, statusbalk en manifestidentiteit; wijzig de app niet om een verouderde testaanname te bevestigen.

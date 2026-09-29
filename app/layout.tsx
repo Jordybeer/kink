@@ -21,6 +21,7 @@ import MotionPolicy from "@/components/MotionPolicy";
 import OnboardingRouteGate from "@/components/OnboardingRouteGate";
 import { TopNavProvider } from "@/components/nav/TopNavContext";
 import IntimacyReminderRunner from "@/components/intimacy/IntimacyReminderRunner";
+import PwaInstallProvider from "@/components/PwaInstallProvider";
 import ThemeProvider from "@/components/ThemeProvider";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 
@@ -39,6 +40,7 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "KinkSync: BDSM contract builder",
   description: "Verken grenzen samen. Kink negotiation en contracten voor volwassenen. kinksync.be",
+  appleWebApp: { capable: true, title: "KinkSync", statusBarStyle: "default" },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
@@ -68,29 +70,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col antialiased text-pretty">
         <ThemeProvider>
-          <MotionPolicy>
-            <VisualViewportBridge />
-            <DevTestToolsBootstrap />
-            <AmbientGlow />
-            <AppLockGate>
-              <OnboardingRouteGate>
-                <OfflineCacheWarmup />
-                <TopNavProvider>
-                  <TopNav />
-                  <BottomNav />
-                  <ToastProvider>
-                    <ImportedProfileIntegrityGate>
-                      {children}
-                      <IntimacyReminderRunner />
-                      <UpdateBanner />
-                      <NotificationPrompt />
-                      <StorageFullNotice />
-                    </ImportedProfileIntegrityGate>
-                  </ToastProvider>
-                </TopNavProvider>
-              </OnboardingRouteGate>
-            </AppLockGate>
-          </MotionPolicy>
+          <PwaInstallProvider>
+            <MotionPolicy>
+              <VisualViewportBridge />
+              <DevTestToolsBootstrap />
+              <AmbientGlow />
+              <AppLockGate>
+                <OnboardingRouteGate>
+                  <OfflineCacheWarmup />
+                  <TopNavProvider>
+                    <TopNav />
+                    <BottomNav />
+                    <ToastProvider>
+                      <ImportedProfileIntegrityGate>
+                        {children}
+                        <IntimacyReminderRunner />
+                        <UpdateBanner />
+                        <NotificationPrompt />
+                        <StorageFullNotice />
+                      </ImportedProfileIntegrityGate>
+                    </ToastProvider>
+                  </TopNavProvider>
+                </OnboardingRouteGate>
+              </AppLockGate>
+            </MotionPolicy>
+          </PwaInstallProvider>
         </ThemeProvider>
       </body>
     </html>
