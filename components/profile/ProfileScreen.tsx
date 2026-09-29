@@ -19,6 +19,7 @@ import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
+import { profileReadStatusLabel, summarizeProfileCategory } from "@/lib/profileReadSummary";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
@@ -478,26 +479,7 @@ export default function ProfilePage({ params }: Props) {
               {ratedByCategory.map(({ category, kinks }) => {
                 const expanded = expandedReadCategories.has(category);
                 const contentId = `profile-read-category-${category}-content`;
-                const visibleHardLimits = kinks.filter((kink) => {
-                  const entry = currentProfile.entries[kink.id];
-                  return entry?.status === "hard_no" && entry.privateResponse !== true;
-                }).length;
-                const privateCount = kinks.filter(
-                  (kink) => currentProfile.entries[kink.id]?.privateResponse === true,
-                ).length;
-                const details = [
-                  `${kinks.length} beoordeeld`,
-                  visibleHardLimits > 0
-                    ? visibleHardLimits === 1
-                      ? "1 harde grens"
-                      : `${visibleHardLimits} harde grenzen`
-                    : null,
-                  privateCount > 0
-                    ? privateCount === 1
-                      ? "1 privéantwoord"
-                      : `${privateCount} privéantwoorden`
-                    : null,
-                ].filter(Boolean).join(" · ");
+                const summary = summarizeProfileCategory(kinks, currentProfile.entries);
 
                 return (
                   <section
@@ -521,8 +503,40 @@ export default function ProfilePage({ params }: Props) {
                           >
                             {kinkCategoryLabel(category)}
                           </span>
-                          <span className="mt-1 block text-xs leading-4" style={{ color: "var(--text2)" }}>
-                            {details}
+                          <span
+                            data-testid={`profile-read-category-${category}-summary`}
+                            className="mt-1.5 grid gap-1 text-sm leading-5"
+                            style={{ color: "var(--text2)" }}
+                          >
+                            {summary.strongest.length > 0 && (
+                              <span>
+                                {summary.strongest
+                                  .map((item) => `${profileReadStatusLabel(item.status)}: ${item.name}`)
+                                  .join(" · ")}
+                              </span>
+                            )}
+                            {summary.hardLimits.length > 0 && (
+                              <span>
+                                <span className="font-semibold" style={{ color: "var(--hard-no)" }}>Harde grens: </span>
+                                {summary.hardLimits.join(" · ")}
+                              </span>
+                            )}
+                            {summary.context && (
+                              <span>
+                                <span className="font-medium" style={{ color: "var(--text)" }}>Context bij {summary.context.subject}: </span>
+                                {summary.context.text}
+                              </span>
+                            )}
+                            {summary.fallback && (
+                              <span>
+                                {profileReadStatusLabel(summary.fallback.status)}: {summary.fallback.name}
+                              </span>
+                            )}
+                            {summary.privateCount > 0 && (
+                              <span>
+                                {summary.privateCount === 1 ? "1 privéantwoord" : `${summary.privateCount} privéantwoorden`}
+                              </span>
+                            )}
                           </span>
                         </span>
                         <CaretDown
