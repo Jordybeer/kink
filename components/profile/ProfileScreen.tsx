@@ -513,28 +513,47 @@ export default function ProfilePage({ params }: Props) {
                             className="mt-1.5 grid gap-1 text-sm leading-5"
                             style={{ color: "var(--text2)" }}
                           >
-                            {summary.strongest.length > 0 && (
+                            {summary.preview && (
                               <span>
-                                {summary.strongest
-                                  .map((item) => `${profileReadStatusLabel(item.status)}: ${item.name}`)
-                                  .join(" · ")}
+                                <span className="font-medium" style={{ color: "var(--text)" }}>
+                                  {profileReadStatusLabel(summary.preview.status)}:
+                                </span>{" "}
+                                {summary.preview.names.join(", ")}
+                                {summary.preview.remaining > 0 && (
+                                  <>
+                                    {" "}
+                                    <span aria-hidden="true">+{summary.preview.remaining}</span>
+                                    <span className="sr-only">
+                                      {" "}en {summary.preview.remaining} meer met status {profileReadStatusLabel(summary.preview.status)}
+                                    </span>
+                                  </>
+                                )}
                               </span>
                             )}
                             {summary.hardLimits.length > 0 && (
                               <span>
-                                <span className="font-semibold" style={{ color: "var(--hard-no)" }}>Harde grens: </span>
+                                <span className="font-semibold" style={{ color: "var(--hard-no)" }}>
+                                  {summary.hardLimits.length === 1 ? "Harde grens:" : "Harde grenzen:"}
+                                </span>{" "}
                                 {summary.hardLimits.join(" · ")}
                               </span>
                             )}
                             {summary.context && (
-                              <span>
-                                <span className="font-medium" style={{ color: "var(--text)" }}>Context bij {summary.context.subject}: </span>
-                                {summary.context.text}
+                              <span className="italic">
+                                <span aria-hidden="true">“</span>
+                                <span>{summary.context.text}</span>
+                                <span aria-hidden="true">”</span>
+                                {summary.context.subject && (
+                                  <span className="not-italic"> · {summary.context.subject}</span>
+                                )}
                               </span>
                             )}
                             {summary.fallback && (
                               <span>
-                                {profileReadStatusLabel(summary.fallback.status)}: {summary.fallback.name}
+                                <span className="font-medium" style={{ color: "var(--text)" }}>
+                                  {profileReadStatusLabel(summary.fallback.status)}:
+                                </span>{" "}
+                                {summary.fallback.name}
                               </span>
                             )}
                             {summary.privateCount > 0 && (
