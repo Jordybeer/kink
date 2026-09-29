@@ -486,7 +486,7 @@ export default function ProfilePage({ params }: Props) {
                 return (
                   <section
                     key={category}
-                    className="border-t"
+                    className="border-t [overflow-wrap:anywhere]"
                     style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
                   >
                     <h3>
@@ -538,14 +538,14 @@ export default function ProfilePage({ params }: Props) {
                                 {summary.hardLimits.join(" · ")}
                               </span>
                             )}
-                            {summary.context && (
-                              <span className="italic">
+                            {summary.context.map((note) => (
+                              <span key={note.subject} className="italic">
                                 <span aria-hidden="true">“</span>
-                                <span>{summary.context.text}</span>
+                                <span>{note.text}</span>
                                 <span aria-hidden="true">”</span>
-                                <span className="not-italic"> · {summary.context.subject}</span>
+                                <span className="not-italic"> · {note.subject}</span>
                               </span>
-                            )}
+                            ))}
                             {summary.fallback && (
                               <span>
                                 <span className="font-medium" style={{ color: "var(--text)" }}>

@@ -77,10 +77,10 @@ describe("profile category read summary", () => {
       maybe: { comment: "Alleen als we rustig opbouwen." },
     }));
 
-    expect(summary.context).toEqual({
+    expect(summary.context).toEqual([{
       text: "Alleen als we rustig opbouwen.",
       subject: "Suspension",
-    });
+    }]);
   });
 
   it("uses a sole hard-limit note when several public notes exist and keeps attribution factual", () => {
@@ -89,10 +89,10 @@ describe("profile category read summary", () => {
       hard: { comment: "No exceptions." },
     }));
 
-    expect(summary.context).toEqual({
+    expect(summary.context).toEqual([{
       text: "No exceptions.",
       subject: "Metal restraints",
-    });
+    }]);
   });
 
   it("omits ambiguous context instead of choosing a note arbitrarily", () => {
@@ -102,7 +102,7 @@ describe("profile category read summary", () => {
       hard: { comment: "" },
     }));
 
-    expect(summary.context).toBeNull();
+    expect(summary.context).toEqual([]);
   });
 
   it("reports private answers only as a count", () => {
@@ -111,6 +111,38 @@ describe("profile category read summary", () => {
     expect(summary.privateCount).toBe(1);
     expect(JSON.stringify(summary)).not.toContain("Secret subject");
     expect(JSON.stringify(summary)).not.toContain("Never expose this.");
+  });
+
+  it("keeps context for every public boundary without selecting between them", () => {
+    const summary = summarizeProfileCategory(kinks, entries({
+      "yes-one": { comment: "A preference note." },
+      "yes-two": { status: "hard_no", comment: "Do not use cuffs." },
+      hard: { comment: "No metal." },
+      private: { status: "hard_no" },
+    }));
+
+    expect(summary.context).toEqual([
+      { subject: "Cuffs", text: "Do not use cuffs." },
+      { subject: "Metal restraints", text: "No metal." },
+    ]);
+    expect(summary.hardLimits).toEqual(["Cuffs", "Metal restraints"]);
+  });
+
+  it("private content cannot influence a public preview, remainder, note or fallback", () => {
+    const base = entries({ "yes-one": { status: "willing" }, "yes-two": { status: "willing" }, "yes-three": { status: "willing" } });
+    const expected = summarizeProfileCategory(kinks, base);
+    expect(expected.preview).toEqual({ status: "willing", names: ["Rope", "Cuffs"], remaining: 2 });
+
+    for (const status of ["yes", "willing", "maybe", "no", "hard_no"] as const) {
+      const changed = { ...base, private: { status, comment: "Secret context", tags: ["Secret tag"], curious: true, privateResponse: true } };
+      expect(summarizeProfileCategory(kinks, changed)).toEqual(expected);
+    }
+  });
+
+  it("ignores missing and unrated entries, including private drafts", () => {
+    expect(summarizeProfileCategory(kinks, { private: { status: null, comment: "Draft", privateResponse: true } })).toEqual({
+      preview: null, hardLimits: [], context: [], privateCount: 0, fallback: null,
+    });
   });
 
   it("falls back to one exact public status when no interest, hard limit or unambiguous note exists", () => {
@@ -133,8 +165,8 @@ describe("profile category read summary", () => {
       { maybe: { status: "maybe", comment: longComment } },
     );
 
-    expect(summary.context?.text.endsWith("…")).toBe(true);
-    expect(summary.context?.text).not.toContain("�");
+    expect(summary.context[0]?.text.endsWith("…")).toBe(true);
+    expect(summary.context[0]?.text).not.toContain("�");
   });
 
   it("shows only a private count when every answer in a category is private", () => {
@@ -146,7 +178,7 @@ describe("profile category read summary", () => {
     expect(privateOnly).toEqual({
       preview: null,
       hardLimits: [],
-      context: null,
+      context: [],
       privateCount: 1,
       fallback: null,
     });
