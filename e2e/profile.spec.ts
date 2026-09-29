@@ -200,16 +200,18 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(statusBar).toHaveCount(0);
   });
 
-  test("read-view vat betekenis samen en houdt de volledige categorie uitklapbaar", async ({ page }) => {
+  test("read-view toont expliciete previews zonder ambigue context te kiezen", async ({ page }) => {
     const impact = page.getByTestId("profile-read-category-impact");
-    const summary = page.getByTestId("profile-read-category-impact-summary");
+    const impactSummary = page.getByTestId("profile-read-category-impact-summary");
+    const bondageSummary = page.getByTestId("profile-read-category-bondage-summary");
     const content = page.locator("#profile-read-category-impact-content");
 
     await expect(impact).toBeVisible();
     await expect(impact).toHaveAttribute("aria-expanded", "false");
     await expect(impact).toHaveAccessibleName("Impact Play. Details tonen");
-    await expect(summary).toContainText("Heel graag: Spanking (hand) — giving");
-    await expect(summary).toContainText("Klassiek en heerlijk");
+    await expect(impactSummary).toContainText("Heel graag: Spanking (hand) — giving");
+    await expect(impactSummary).not.toContainText("Klassiek en heerlijk");
+    await expect(bondageSummary.getByText("Shibari ook", { exact: true })).toBeVisible();
     await expect(content).toBeHidden();
 
     await impact.focus();
@@ -220,6 +222,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(impact).toHaveAccessibleName("Impact Play. Details verbergen");
     await expect(content).toBeVisible();
     await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
+    await expect(content.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
   });
 
   test("harde grenzen blijven bij naam zichtbaar zonder de categorie te openen", async ({ page }) => {
