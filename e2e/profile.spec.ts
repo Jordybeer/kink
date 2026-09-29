@@ -200,12 +200,15 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(statusBar).toHaveCount(0);
   });
 
-  test("read-view houdt beoordeelde categorieën compact tot de gebruiker details opent", async ({ page }) => {
+  test("read-view vat betekenis samen en houdt de volledige categorie uitklapbaar", async ({ page }) => {
     const impact = page.getByTestId("profile-read-category-impact");
+    const summary = page.getByTestId("profile-read-category-impact-summary");
     const content = page.locator("#profile-read-category-impact-content");
 
     await expect(impact).toBeVisible();
     await expect(impact).toHaveAttribute("aria-expanded", "false");
+    await expect(summary).toContainText("Heel graag: Spanking (hand) — giving");
+    await expect(summary).toContainText("Klassiek en heerlijk");
     await expect(content).toBeHidden();
 
     await impact.click();
@@ -213,6 +216,12 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(impact).toHaveAttribute("aria-expanded", "true");
     await expect(content).toBeVisible();
     await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
+  });
+
+  test("harde grenzen blijven bij naam zichtbaar zonder de categorie te openen", async ({ page }) => {
+    const sensation = page.getByTestId("profile-read-category-sensation-summary");
+
+    await expect(sensation).toContainText("Harde grens: Breath restriction / neck pressure");
   });
 
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
@@ -422,7 +431,10 @@ test.describe("Privé antwoorden op eigen profiel", () => {
     await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
 
     const impact = page.getByTestId("profile-read-category-impact");
-    await expect(impact).toContainText("1 privéantwoord");
+    const summary = page.getByTestId("profile-read-category-impact-summary");
+    await expect(summary).toContainText("1 privéantwoord");
+    await expect(summary).not.toContainText("Spanking (hand) — giving");
+    await expect(summary).not.toContainText("Dit is alleen voor mezelf bedoeld");
     await impact.click();
 
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
