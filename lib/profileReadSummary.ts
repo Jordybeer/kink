@@ -58,24 +58,24 @@ export function summarizeProfileCategory(
   const publicRated = rated.filter(({ entry }) => entry.privateResponse !== true);
   const privateCount = rated.length - publicRated.length;
 
-  const strongest = publicRated
+  const strongestSources = publicRated
     .filter(({ entry }) => entry.status === "yes" || entry.status === "willing")
     .sort((left, right) =>
       INTEREST_RANK[left.entry.status as ProfileReadInterest["status"]]
       - INTEREST_RANK[right.entry.status as ProfileReadInterest["status"]])
-    .slice(0, 2)
-    .map(({ kink, entry }) => ({
-      name: kink.name,
-      status: entry.status as ProfileReadInterest["status"],
-    }));
+    .slice(0, 2);
 
-  const hardLimits = publicRated
-    .filter(({ entry }) => entry.status === "hard_no")
-    .map(({ kink }) => kink.name);
+  const strongest = strongestSources.map(({ kink, entry }) => ({
+    name: kink.name,
+    status: entry.status as ProfileReadInterest["status"],
+  }));
+
+  const hardLimitSources = publicRated.filter(({ entry }) => entry.status === "hard_no");
+  const hardLimits = hardLimitSources.map(({ kink }) => kink.name);
 
   const preferredContextIds = new Set([
-    ...strongest.map((item) => publicRated.find(({ kink }) => kink.name === item.name)?.kink.id).filter(Boolean),
-    ...publicRated.filter(({ entry }) => entry.status === "hard_no").map(({ kink }) => kink.id),
+    ...strongestSources.map(({ kink }) => kink.id),
+    ...hardLimitSources.map(({ kink }) => kink.id),
   ]);
 
   const contextSource = publicRated.find(
