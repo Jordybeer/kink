@@ -1,4 +1,3 @@
-import { STATUS_LABEL } from "@/lib/statusLabels";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 
 type RatedKink = Pick<Kink, "id" | "name">;
@@ -8,7 +7,7 @@ type InterestStatus = Extract<PublicStatus, "yes" | "willing">;
 export interface ProfileCategoryReadSummary {
   preview: { status: InterestStatus; names: string[]; remaining: number } | null;
   hardLimits: string[];
-  context: { text: string; subject: string | null } | null;
+  context: { text: string; subject: string } | null;
   privateCount: number;
   fallback: { status: PublicStatus; name: string } | null;
 }
@@ -61,7 +60,7 @@ export function summarizeProfileCategory(
   const context = contextSource
     ? {
         text: clipContext(contextSource.entry.comment),
-        subject: notes.length === 1 ? null : contextSource.kink.name,
+        subject: contextSource.kink.name,
       }
     : null;
 
@@ -80,6 +79,3 @@ export function summarizeProfileCategory(
   };
 }
 
-export function profileReadStatusLabel(status: PublicStatus): string {
-  return STATUS_LABEL[status];
-}
