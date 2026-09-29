@@ -200,6 +200,21 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(statusBar).toHaveCount(0);
   });
 
+  test("read-view houdt beoordeelde categorieën compact tot de gebruiker details opent", async ({ page }) => {
+    const impact = page.getByTestId("profile-read-category-impact");
+    const content = page.locator("#profile-read-category-impact-content");
+
+    await expect(impact).toBeVisible();
+    await expect(impact).toHaveAttribute("aria-expanded", "false");
+    await expect(content).toBeHidden();
+
+    await impact.click();
+
+    await expect(impact).toHaveAttribute("aria-expanded", "true");
+    await expect(content).toBeVisible();
+    await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
+  });
+
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).not.toContain("★");
@@ -405,6 +420,10 @@ test.describe("Privé antwoorden op eigen profiel", () => {
       },
     };
     await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
+
+    const impact = page.getByTestId("profile-read-category-impact");
+    await expect(impact).toContainText("1 privéantwoord");
+    await impact.click();
 
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
     await expect(secret).toHaveCount(0);
