@@ -21,7 +21,9 @@ test("profile keeps unambiguous notes inline and ambiguous notes in deliberate d
 
   // Bondage has one public note, so showing it in the collapsed summary does not
   // require KinkSync to decide which note matters most.
-  await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
+  await expect(
+    page.getByTestId("profile-read-category-bondage-summary").getByText("Shibari ook", { exact: true }),
+  ).toBeVisible();
 
   // Impact has multiple public notes. The distilled read view deliberately does
   // not choose one on the user's behalf; both remain available in full detail.
