@@ -41,9 +41,10 @@ function entryFor(
 }
 
 function clippedContext(value: string, max = 110): string {
-  const text = value.trim();
-  if (text.length <= max) return text;
-  return `${text.slice(0, max - 1).trimEnd()}…`;
+  const text = value.trim().replace(/\s+/g, " ");
+  const characters = Array.from(text);
+  if (characters.length <= max) return text;
+  return `${characters.slice(0, max - 1).join("").trimEnd()}…`;
 }
 
 export function summarizeProfileCategory(
