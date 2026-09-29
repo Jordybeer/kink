@@ -8,7 +8,11 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
-### Optional PWA installation [IN REVIEW, 2026-09-28]
+### First-run backup recovery [IN REVIEW, 2026-09-29]
+
+Returning users can choose restore before the optional tour/PIN setup, after the existing age and consent information. Reuse validated JSON/encrypted restoration, keep onboarding incomplete on cancellation/failure, and never create a replacement profile. Next: reassess #451, audit the release delta, record physical-device sign-off, then promote the exact verified head.
+
+### Optional PWA installation [SHIPPED #467, 2026-09-29]
 
 Owner-approved restoration: stable manifest identity, existing icons, iOS standalone metadata and a quiet Settings installation entry. Browser invitations require an explicit click; manual guidance and a backup reminder cover other browsers. Existing offline caching and stored profiles stay intact. See `docs/pwa-installation.md` for scope and the physical-device release check.
 
