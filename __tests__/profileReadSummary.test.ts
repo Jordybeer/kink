@@ -79,7 +79,7 @@ describe("profile category read summary", () => {
 
     expect(summary.context).toEqual({
       text: "Alleen als we rustig opbouwen.",
-      subject: null,
+      subject: "Suspension",
     });
   });
 
