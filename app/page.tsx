@@ -11,6 +11,7 @@ import { decodeSharedProfileTransfer } from "@/lib/profileSwitchShare";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import { classifyProfileImport, getProfileVerificationCode } from "@/lib/profileVerification";
 import { profileConsentAlias } from "@/lib/consentProof";
+import FirstRunBackupRestore from "@/components/FirstRunBackupRestore";
 import Onboarding from "@/components/Onboarding";
 import PageShell from "@/components/PageShell";
 import ProfileList from "@/components/ProfileList";
@@ -50,6 +51,11 @@ function HomeContent() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const backupInputRef = useRef<HTMLInputElement | null>(null);
+  const importOperation = useRef<AbortController | null>(null);
+  const [importReading, setImportReading] = useState(false);
+  const [firstRunRestore, setFirstRunRestore] = useState(false);
+
+  useEffect(() => () => importOperation.current?.abort(), []);
 
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -117,47 +123,81 @@ function HomeContent() {
     closeDeleteSheet();
   }
 
-  async function restoreFromParsed(parsed: Record<string, unknown>) {
-    try {
-      const { restoreLocalBackup } = await import("@/lib/restoreLocalBackup");
-      setImportSuccess(await restoreLocalBackup(parsed));
-    } catch {
-      setImportError("Ongeldig bestand: geen geldige profielen gevonden.");
-    }
-  }
-
-  function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    importOperation.current?.abort();
+    const controller = new AbortController();
+    importOperation.current = controller;
     setImportError(null);
     setImportSuccess(null);
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!backupFileSizeAllowed(file.size)) {
-      setImportError("Backupbestand is te groot (max. 10 MB).");
-      event.target.value = "";
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (loadEvent) => {
-      try {
-        const parsed = JSON.parse(loadEvent.target?.result as string);
-        if (parsed.encrypted === true) {
-          setPendingEncrypted(parsed as EncryptedBackup);
-          setImportPwOpen(true);
-        } else {
-          await restoreFromParsed(parsed as Record<string, unknown>);
-        }
-      } catch {
-        setImportError("Bestand kon niet worden gelezen.");
+    setImportReading(true);
+    try {
+      if (!backupFileSizeAllowed(file.size)) {
+        setImportError("Backupbestand is te groot (max. 10 MB).");
+        return;
       }
-    };
-    reader.readAsText(file);
-    event.target.value = "";
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(await file.text());
+      } catch {
+        if (!controller.signal.aborted) setImportError("Bestand kon niet worden gelezen.");
+        return;
+      }
+      controller.signal.throwIfAborted();
+      if (parsed && typeof parsed === "object" && "encrypted" in parsed && parsed.encrypted === true) {
+        setPendingEncrypted(parsed as EncryptedBackup);
+        setImportPwOpen(true);
+      } else {
+        const { restoreLocalBackup } = await import("@/lib/restoreLocalBackup");
+        setImportSuccess(await restoreLocalBackup(parsed, controller.signal));
+      }
+    } catch {
+      if (!controller.signal.aborted) setImportError("Ongeldig bestand: geen geldige KinkSync-backup gevonden.");
+    } finally {
+      if (importOperation.current === controller) {
+        importOperation.current = null;
+        setImportReading(false);
+      }
+    }
   }
+
+  const encryptedImportSheet = (
+    <EncryptedImportSheet
+      open={importPwOpen}
+      data={pendingEncrypted}
+      onClose={() => { setImportPwOpen(false); setPendingEncrypted(null); }}
+      onSuccess={setImportSuccess}
+    />
+  );
 
   if (!hydrated) return <PageShell loading width="2xl" />;
 
-  if (!onboardingComplete) return <Onboarding onComplete={completeOnboarding} />;
+  if (!onboardingComplete) {
+    if (!firstRunRestore) return <Onboarding onComplete={completeOnboarding} onRestore={() => setFirstRunRestore(true)} />;
+    return (
+      <>
+        <FirstRunBackupRestore
+          onImportFile={handleImportFile}
+          busy={importReading}
+          obscured={importPwOpen}
+          error={importError}
+          success={importSuccess}
+          onComplete={completeOnboarding}
+          onBack={() => {
+            importOperation.current?.abort();
+            importOperation.current = null;
+            setImportReading(false);
+            setImportError(null);
+            setImportSuccess(null);
+            setFirstRunRestore(false);
+          }}
+        />
+        {encryptedImportSheet}
+      </>
+    );
+  }
 
   const deleteTargetProfile = profiles.find((profile) => profile.id === deleteTarget);
   const emptyHome = profiles.length === 0;
@@ -372,15 +412,7 @@ function HomeContent() {
         onClose={() => setExportOpen(false)}
       />
 
-      <EncryptedImportSheet
-        open={importPwOpen}
-        data={pendingEncrypted}
-        onClose={() => {
-          setImportPwOpen(false);
-          setPendingEncrypted(null);
-        }}
-        onSuccess={(message) => setImportSuccess(message)}
-      />
+      {encryptedImportSheet}
 
       <Sheet
         open={deleteSheetOpen}
