@@ -95,7 +95,7 @@ export default function KinkEditSheet({
         </p>
 
         {kink?.description && (
-          <p className="mt-3 text-sm leading-6" style={{ color: "var(--text2)" }}>
+          <p className="mt-3 text-base leading-7" style={{ color: "var(--text2)" }}>
             {kink.description}
           </p>
         )}
@@ -103,7 +103,7 @@ export default function KinkEditSheet({
         {kink?.safetyNote && (
           <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-safety-title">
             <h4 id="kink-edit-safety-title" className="text-sm font-semibold">Veiligheid</h4>
-            <p className="mt-1 text-sm leading-6" style={{ color: "var(--text2)" }}>
+            <p className="mt-1 text-base leading-7" style={{ color: "var(--text2)" }}>
               {kink.safetyNote}
             </p>
           </section>
@@ -119,7 +119,7 @@ export default function KinkEditSheet({
           <StatusOptionRows current={entry.status} onSelect={onStatusChange} presentation="list" />
         </section>
 
-        <section className="mt-6" aria-labelledby="kink-edit-agreements-title">
+        <section className="mt-6 border-t pt-5" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-agreements-title">
           <h4 id="kink-edit-agreements-title" className="text-sm font-semibold">Afspraken</h4>
           {AGREEMENTS.map((agreement) => (
             <ToggleRow
@@ -132,7 +132,7 @@ export default function KinkEditSheet({
           ))}
         </section>
 
-        <section className="mt-6" aria-labelledby="kink-edit-visibility-title">
+        <section className="mt-6 border-t pt-5" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-visibility-title">
           <h4 id="kink-edit-visibility-title" className="text-sm font-semibold">Zichtbaarheid</h4>
           <ToggleRow
             label="Privé antwoord"
@@ -146,7 +146,7 @@ export default function KinkEditSheet({
           />
         </section>
 
-        <section className="mt-6" aria-labelledby="kink-edit-context-title">
+        <section className="mt-6 border-t pt-5" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-context-title">
           <h4 id="kink-edit-context-title" className="text-sm font-semibold">Context</h4>
           {contextOptions.map((option) => <ToggleRow key={option.label} {...option} />)}
         </section>

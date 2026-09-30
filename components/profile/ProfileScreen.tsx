@@ -519,12 +519,17 @@ export default function ProfilePage({ params }: Props) {
                       <div
                         id={summaryId}
                         data-testid={`profile-read-category-${category}-summary`}
-                        className="grid gap-3 pb-4 pr-7 text-base font-normal leading-6"
+                        className="grid gap-3 pb-4 text-base font-normal leading-6"
                         style={{ color: "var(--text)" }}
                       >
                         {summary.preview && (
                           <div className="grid gap-1">
-                            <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                            <span className="inline-flex items-center gap-2 text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                              <span
+                                className="h-2 w-2 flex-none rounded-full"
+                                style={{ background: STATUS_VAR[summary.preview.status] }}
+                                aria-hidden="true"
+                              />
                               {STATUS_LABEL[summary.preview.status]}
                             </span>
                             <div className="grid gap-0.5">
@@ -565,7 +570,12 @@ export default function ProfilePage({ params }: Props) {
 
                         {summary.fallback && (
                           <div className="grid gap-1">
-                            <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                            <span className="inline-flex items-center gap-2 text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                              <span
+                                className="h-2 w-2 flex-none rounded-full"
+                                style={{ background: STATUS_VAR[summary.fallback.status] }}
+                                aria-hidden="true"
+                              />
                               {STATUS_LABEL[summary.fallback.status]}
                             </span>
                             <span>{summary.fallback.name}</span>
