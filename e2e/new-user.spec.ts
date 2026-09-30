@@ -63,7 +63,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: /kluisschijf.*kinksync/i }).press("Enter");
 
     // Onboarding rondt af op home. Profielaanmaak blijft een bewuste volgende tik.
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible();
     await expect(page.getByRole("dialog", { name: /nieuw profiel maken/i })).not.toBeVisible();
     await expect(page.getByRole("dialog", { name: /welkom bij kinksync/i })).not.toBeVisible();
   });
@@ -118,7 +118,7 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await expect(page.getByRole("heading", { name: /leg jullie kaarten op tafel/i })).toBeVisible();
     await expect(page.getByText(/een match is nooit automatisch consent/i)).toBeVisible();
     await page.getByRole("button", { name: /naar kinksync/i }).click();
-    await expect(page.getByRole("button", { name: "Begin met jouw profiel" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible();
   });
 
   test("lockout bij 'ik ben jonger'", async ({ page }) => {
@@ -136,11 +136,13 @@ test.describe("Nieuwe gebruiker — volledig onboarding pad", () => {
     await page.getByRole("button", { name: "Niet nu" }).click();
     await page.getByRole("button", { name: /kluisschijf.*kinksync/i }).press("Enter");
 
-    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
-    await page.getByLabel("Naam of alias").fill("Testmeester");
-    await page.getByRole("button", { name: /^Dominant/ }).click();
-    await page.getByRole("button", { name: "Verder" }).click();
-    await page.getByRole("button", { name: "Start vragen" }).click();
+    await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
+    const createDialog = page.getByRole("dialog", { name: "Nieuw profiel maken" });
+    await createDialog.getByLabel("Naam of alias").fill("Testmeester");
+    await createDialog.getByRole("button", { name: /^Dominant/ }).click();
+    await createDialog.getByLabel("Ervaringsniveau").selectOption("beginner");
+    await createDialog.getByRole("button", { name: "Verder", exact: true }).click();
+    await createDialog.getByRole("button", { name: "Start vragen" }).click();
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/);

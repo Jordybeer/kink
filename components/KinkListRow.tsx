@@ -60,7 +60,8 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
 
       {status ? (
         <span
-          className="flex-none text-sm px-2 py-0.5 rounded-full border whitespace-nowrap min-w-[5.5rem] text-center inline-flex items-center justify-center gap-1"
+          data-testid="kink-status-pill"
+          className="flex-none w-[var(--status-pill-width)] text-sm px-2 py-0.5 rounded-full border whitespace-nowrap text-center inline-flex items-center justify-center gap-1"
           style={status === "hard_no"
             ? { color: colour, borderColor: colour, borderStyle: "dashed" }
             : { color: colour, borderColor: `color-mix(in srgb, ${colour} 45%, transparent)`, background: `color-mix(in srgb, ${colour} 12%, transparent)` }}
@@ -69,7 +70,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
           {STATUS_LABEL[status]}
         </span>
       ) : (
-        <span className="flex-none text-sm min-w-[5.5rem] text-center" style={{ color: "var(--text2)" }}>
+        <span data-testid="kink-status-pill" className="flex-none w-[var(--status-pill-width)] text-sm text-center" style={{ color: "var(--text2)" }}>
           beoordeel
         </span>
       )}

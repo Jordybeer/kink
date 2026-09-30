@@ -44,7 +44,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Acties ope
                     background: "var(--surface2)",
                     border: "1px solid var(--border)",
                     color: "var(--text)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                    boxShadow: "0 4px 12px var(--deep-shadow)",
                   }}
                 >
                   {item.label}
@@ -59,7 +59,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Acties ope
                     background: "var(--surface2)",
                     border: "1px solid var(--border)",
                     color: "var(--text)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                    boxShadow: "0 4px 12px var(--deep-shadow)",
                   }}
                   aria-label={item.label}
                 >
@@ -92,7 +92,7 @@ export default function FAB({ items, icon, "aria-label": ariaLabel = "Acties ope
             : {
                 background: "linear-gradient(135deg, var(--accent), var(--accent2))",
                 border: "none",
-                color: "white",
+                color: "var(--on-accent)",
                 boxShadow: "0 8px 24px color-mix(in srgb, var(--accent) 40%, transparent)",
               }
         }

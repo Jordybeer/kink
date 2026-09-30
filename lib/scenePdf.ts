@@ -125,7 +125,7 @@ export async function exportScenePdf(
   const margin = 14;
   const right = W - margin;
   const usableWidth = W - margin * 2;
-  const contentBottom = H - 34;
+  const contentBottom = H - 26;
 
   const doc = new jsPDF({ unit: "mm", format: "a5" });
   const { registerPdfFonts } = await import("./pdfFonts");
@@ -313,17 +313,21 @@ export async function exportScenePdf(
     y += 3.2;
   }
 
-  // ── 4. Quiet summary anchored to the page bottom ─────────────────────────
+  // ── 4. Quiet summary follows the activity flow ───────────────────────────
   const summary = summarizeIntensities(scene.items);
-  const summaryY = H - 24;
+  const summaryHeight = 13;
+  if (y + summaryHeight > contentBottom) y = addActivityPage();
+  y += 2.5;
+
   doc.setDrawColor(...hexToRgb(LEDGER_PALETTE.line));
   doc.setLineWidth(0.2);
-  doc.line(margin, summaryY - 4, right, summaryY - 4);
+  doc.line(margin, y, right, y);
+  y += 5;
 
   doc.setFont("body", "bold");
   doc.setFontSize(8);
   doc.setTextColor(...hexToRgb(LEDGER_PALETTE.body));
-  doc.text(summary.total === 1 ? "1 activiteit" : `${summary.total} activiteiten`, margin, summaryY);
+  doc.text(summary.total === 1 ? "1 activiteit" : `${summary.total} activiteiten`, margin, y);
 
   if (summary.total > 0) {
     const mix = [
@@ -334,8 +338,9 @@ export async function exportScenePdf(
     doc.setFont("body", "normal");
     doc.setFontSize(7.2);
     doc.setTextColor(...hexToRgb(LEDGER_PALETTE.muted));
-    doc.text(mix, right, summaryY, { align: "right" });
+    doc.text(mix, right, y, { align: "right" });
   }
+  y += 8;
 
   // ── 5. Aftercare in the same editorial vocabulary ────────────────────────
   if (scene.aftercare) {

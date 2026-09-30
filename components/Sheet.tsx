@@ -1,5 +1,6 @@
 "use client";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { X } from "@phosphor-icons/react";
 import {
   createContext,
   useEffect,
@@ -15,6 +16,8 @@ import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const SheetCloseContext = createContext<(() => void) | null>(null);
 
+export type SheetVariant = "sheet" | "task" | "surface";
+
 interface SheetContentProps {
   children: ReactNode;
   className?: string;
@@ -25,24 +28,31 @@ interface SheetContentProps {
   "data-testid"?: string;
 }
 
-/** Standardized sheet content wrapper: surface bg, border and optional drag handle. */
+/** Standardized quick-sheet content wrapper: surface bg, border and optional drag handle. */
 export function SheetContent({
   children,
-  className = "px-6 pb-6 pt-4",
+  className = "px-[var(--sheet-gutter)] pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 sm:pb-6 sm:pt-4",
   showHandle = true,
   style,
   "data-testid": dataTestId,
 }: SheetContentProps) {
   return (
     <div
-      className={`rounded-t-2xl ${className}`}
-      style={{ background: "var(--surface)", border: "1px solid var(--border)", borderBottom: "none", ...style }}
+      className={`min-w-0 max-w-full overflow-x-clip rounded-t-2xl text-pretty ${className}`}
+      style={{
+        maxHeight: "calc(var(--visual-viewport-height, 100dvh) - var(--sheet-edge-clearance))",
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderBottom: "none",
+        ...style,
+        maxBlockSize: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance))",
+      }}
       data-testid={dataTestId}
     >
       {showHandle && (
-        <div className="h-7 mb-1" aria-hidden="true">
+        <div className="mb-1 h-7" aria-hidden="true" data-sheet-handle>
           <div
-            className="h-1 w-10 mx-auto mt-2 rounded-full"
+            className="mx-auto mt-2 h-1 w-10 rounded-full"
             style={{ background: "var(--border)" }}
           />
         </div>
@@ -56,16 +66,115 @@ interface Props {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  title?: string;
   scrollable?: boolean;
+  variant?: SheetVariant;
+  footer?: ReactNode;
   "aria-label"?: string;
 }
 
-export default function Sheet({ open, onClose, children, scrollable = false, "aria-label": ariaLabel }: Props) {
+function TitledSheetFrame({
+  title,
+  onClose,
+  scrollable,
+  variant,
+  footer,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  scrollable: boolean;
+  variant: SheetVariant;
+  footer?: ReactNode;
+  children: ReactNode;
+}) {
+  const quickSheet = variant === "sheet";
+  const surface = variant === "surface";
+
+  const frameClassName = quickSheet
+    ? scrollable
+      ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
+      : "rounded-t-3xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
+    : surface
+      ? "flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[var(--sheet-gutter)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:pt-3"
+      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
+
+  return (
+    <div
+      className={frameClassName}
+      style={quickSheet
+        ? { background: "var(--surface)", borderTop: "1px solid var(--border)" }
+        : { background: "var(--surface)", borderColor: "var(--border)" }}
+    >
+      {quickSheet && (
+        <div className="mb-1 h-7" aria-hidden="true" data-sheet-handle>
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
+        </div>
+      )}
+      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 items-center gap-2 px-1`}>
+        <h2 className="min-w-0 flex-1 text-balance text-lg font-bold">{title}</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={`${title} sluiten`}
+          className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+          style={{ color: "var(--text2)" }}
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+      </div>
+      {scrollable ? (
+        <>
+          <div
+            className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            data-testid="sheet-scroll-body"
+          >
+            {children}
+          </div>
+          {footer && (
+            <div
+              className="flex-none border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              style={{ borderColor: "var(--border)" }}
+              data-testid="sheet-footer"
+            >
+              {footer}
+            </div>
+          )}
+        </>
+      ) : children}
+    </div>
+  );
+}
+
+function TaskSheetFrame({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b"
+      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      data-testid="sheet-scroll-body"
+    >
+      {children}
+    </div>
+  );
+}
+
+export default function Sheet({
+  open,
+  onClose,
+  children,
+  title,
+  scrollable = false,
+  variant = "sheet",
+  footer,
+  "aria-label": ariaLabel,
+}: Props) {
   const t = useMotionSafe();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
+  const quickSheet = variant === "sheet";
+  const draggable = quickSheet && !scrollable;
   useFocusTrap(sheetRef, open && mounted);
 
   useEffect(() => {
@@ -88,38 +197,59 @@ export default function Sheet({ open, onClose, children, scrollable = false, "ar
           <SheetBackdrop
             onClick={onClose}
             transition={t.fast}
-            dragOpacity={backdropOpacity}
+            dragOpacity={quickSheet ? backdropOpacity : 1}
           />
 
-          <motion.div
-            ref={sheetRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={ariaLabel}
+          <div
+            className={`pointer-events-none fixed left-0 right-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
+            data-testid="sheet-visual-viewport"
             style={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              zIndex: 151,
-              y,
-              touchAction: scrollable ? "auto" : "none",
-            }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%", transition: t.sheetExit }}
-            transition={t.sheet}
-            drag={scrollable ? false : "y"}
-            dragConstraints={scrollable ? undefined : { top: 0 }}
-            dragElastic={scrollable ? false : { top: 0.05, bottom: 0.3 }}
-            onDragEnd={scrollable ? undefined : (_, info) => {
-              if (info.offset.y > 80 || info.velocity.y > 500) onClose();
+              top: "var(--visual-viewport-offset-top, 0px)",
+              height: "var(--visual-viewport-height, 100dvh)",
             }}
           >
-            <SheetCloseContext.Provider value={onClose}>
-              {children}
-            </SheetCloseContext.Provider>
-          </motion.div>
+            <motion.div
+              ref={sheetRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={ariaLabel ?? title}
+              data-sheet-variant={variant}
+              className={`pointer-events-auto min-w-0 w-full max-w-full ${variant === "task" ? "sm:max-w-lg" : variant === "surface" ? "sm:max-w-xl" : ""}`}
+              style={quickSheet
+                ? { y, touchAction: scrollable ? "auto" : "none" }
+                : { touchAction: "auto" }}
+              initial={quickSheet ? { y: "100%" } : { opacity: 0, y: 12 }}
+              animate={quickSheet ? { y: 0 } : { opacity: 1, y: 0 }}
+              exit={quickSheet
+                ? { y: "100%", transition: t.sheetExit }
+                : { opacity: 0, y: 8, transition: t.fast }}
+              transition={quickSheet ? t.sheet : t.fast}
+              drag={draggable ? "y" : false}
+              dragConstraints={draggable ? { top: 0 } : undefined}
+              dragElastic={draggable ? { top: 0.05, bottom: 0.3 } : false}
+              onDragEnd={draggable ? (_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 500) onClose();
+              } : undefined}
+            >
+              <SheetCloseContext.Provider value={onClose}>
+                {title
+                  ? (
+                    <TitledSheetFrame
+                      title={title}
+                      onClose={onClose}
+                      scrollable={scrollable}
+                      variant={variant}
+                      footer={footer}
+                    >
+                      {children}
+                    </TitledSheetFrame>
+                  )
+                  : variant === "task"
+                    ? <TaskSheetFrame>{children}</TaskSheetFrame>
+                    : children}
+              </SheetCloseContext.Provider>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>,

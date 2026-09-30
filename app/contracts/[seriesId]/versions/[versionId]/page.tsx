@@ -37,7 +37,7 @@ export default function ContractVersionPage() {
       <Link
         href={`/contracts/${encodeURIComponent(series.id)}/history`}
         prefetch={false}
-        className="focus-ring inline-flex min-h-10 items-center gap-1 text-sm"
+        className="focus-ring inline-flex min-h-11 items-center gap-1 text-sm"
         style={{ color: "var(--text2)" }}
       >
         <ArrowLeft size={15} aria-hidden="true" /> Contractgeschiedenis
@@ -89,7 +89,7 @@ export default function ContractVersionPage() {
         <button
           type="button"
           onClick={() => setTechnicalOpen((current) => !current)}
-          className="focus-ring mt-4 min-h-10 text-sm font-medium"
+          className="focus-ring mt-4 min-h-11 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           {technicalOpen ? "Technische verificatie verbergen" : "Technische verificatie bekijken"}

@@ -33,7 +33,7 @@ export default function PrivateResponseStatus({
     ? "text-sm px-2 py-1"
     : compact
       ? "text-sm px-1.5 py-0.5"
-      : "text-sm px-1.5 py-0.5 min-w-[5.5rem]";
+      : "text-sm px-1.5 py-0.5 w-[var(--status-pill-width)]";
   const sharedClass = `focus-ring rounded-full border whitespace-nowrap inline-flex items-center justify-center gap-1 ${sizeClass}`;
 
   if (!status) {

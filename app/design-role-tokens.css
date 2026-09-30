@@ -1,40 +1,14 @@
 :root {
-  /* One fixed KinkSync house palette. This file loads after globals.css and is
-     the runtime source of truth for visual tokens. The deeper aubergine layers
-     keep depth; raspberry carries the brand without the previous neon edge. */
-  --bg: #09070D;
-  --surface: #120E16;
-  --surface2: #19131E;
-  --surface3: #241C2A;
-  --border: #302635;
-  --text: #F1EAF0;
-  --text2: #A198A4;
-  --border-accent: rgba(212, 82, 124, 0.32);
-  --accent: #D4527C;
-  --accent2: #8F7BA8;
-  --accent-glow: rgba(212, 82, 124, 0.12);
-  --on-accent: #181225;
-  --accent-fill: #BD416B;
-  --on-accent-fill: #FFFFFF;
+  /* Geometry and layout roles do not change with colour mode. */
+  --touch-target: 2.75rem;
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-hero: 1.5rem;
+  --page-gutter: 1.25rem;
+  --sheet-gutter: 1.25rem;
+  --reading-measure: 42rem;
+  --sheet-edge-clearance: 0.75rem;
 
-  /* Semantic roles may evolve without changing the underlying house hues.
-     Text variants are intentionally brighter than their identity fills so
-     small labels retain AA contrast on the highest surface. */
-  --action-primary: var(--accent);
-  --identity-a: var(--accent);
-  --identity-b: var(--accent2);
-  --focus: var(--accent);
-  --accent-text: #DE6C92;
-  --accent2-text: #9D8BC2;
-  --hard-no-text: #F26D6D;
-  --decorative-glow: var(--accent-glow);
-
-  /* Installed-PWA dock: warm indigo navigation hue, separate from verdict/status colours. */
-  --pwa-nav-surface: #181225;
-  --pwa-nav-surface-deep: #120D1D;
-  --pwa-nav-active: #332246;
-  --pwa-nav-icon: #A7A2D8;
-  --pwa-nav-icon-active: #D8D1F5;
   /* 76px base = 56px tab + 6px top air + 14px lift above the iPhone corner/home-indicator zone. */
   --bottom-nav-base-h: 4.75rem;
   --bottom-nav-h: calc(env(safe-area-inset-bottom) + var(--bottom-nav-base-h));
@@ -43,8 +17,209 @@
   --page-bottom-clearance: calc(var(--bottom-nav-h) + 0.75rem);
 
   /* Shared sticky stacks. */
-  --profile-subnav-h: 3.5rem;
   --compare-subnav-h: 4.75rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: 1.5rem;
+    --sheet-gutter: 1.5rem;
+  }
+}
+
+/* Dark is the resilient no-JS fallback. The bootstrap in app/layout.tsx
+   resolves a saved/system preference before the first paint. All components
+   consume these semantic roles; mode-specific colour literals stay here. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #07060B;
+  --surface: #110D16;
+  --surface2: #191320;
+  --surface3: #251D2D;
+  --surface-tint: #17101F;
+  --status-option-surface: var(--surface2);
+  --status-option-idle-tint: 6%;
+  --status-option-idle-border: 12%;
+  --ambient-layer-opacity: 1;
+  --profile-stack-surface: color-mix(in srgb, var(--surface2) 46%, transparent);
+  --profile-stack-border: transparent;
+  --question-utility-surface: color-mix(in srgb, var(--surface2) 66%, transparent);
+  --profile-page-glow: radial-gradient(ellipse 72% 18rem at 50% 0%, color-mix(in srgb, var(--accent2) 7%, transparent), transparent 70%);
+  --profile-hero-glow: radial-gradient(ellipse 72% 68% at 38% 32%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%);
+  --profile-edit-glow: radial-gradient(ellipse 88% 24rem at 50% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 76%);
+  --profile-form-surface: #110D16;
+  --profile-form-control-surface: #191320;
+  --profile-form-muted-surface: #251D2D;
+  --border: #34283B;
+  --control-border: #78697A;
+  --border-bright: rgba(255, 255, 255, 0.18);
+  --text: #F1EAF0;
+  --text2: #A198A4;
+  /* Matte rose-salmon carries action and progress. Lavender carries identity
+     and focus; filled actions keep the deeper rose value required for AA. */
+  --accent: #E18A94;
+  --accent2: #9D8BC2;
+  --accent-text: #E18A94;
+  --accent2-text: #9D8BC2;
+  --border-accent: rgba(225, 138, 148, 0.38);
+  --accent-glow: rgba(225, 138, 148, 0.12);
+  --identity-border: rgba(157, 139, 194, 0.34);
+  --identity-glow: rgba(157, 139, 194, 0.10);
+  --on-accent: #181225;
+  --accent-fill: #B44A57;
+  --on-accent-fill: #FFFFFF;
+  --hard-no: #F26D6D;
+  --hard-no-text: #F26D6D;
+  --danger-fill: #B42318;
+  --on-danger-fill: #FFFFFF;
+  --yes: #F97316;
+  --willing: #10B981;
+  --curious: #EAB308;
+  --maybe: #38BDF8;
+  --no: #818CF8;
+  --conflict: #F59E0B;
+  --category-impact: #C97D6B;
+  --category-bondage: #9D8BC2;
+  --category-power: #B185D1;
+  --category-rituals: #8F80C7;
+  --category-discipline: #B77B90;
+  --category-roleplay: #B679AD;
+  --category-interaction: #9A83BF;
+  --category-sensation: #7895DE;
+  --category-sexual-acts: #B77F9E;
+  --category-exhibition: #AC79B0;
+  --category-media: #7488C9;
+  --category-group-partner: #8F7FC1;
+  --category-body-focus: #A483BB;
+  --category-materials-scent: #9B839F;
+  --category-pet-play: #B57E9F;
+  --category-fluids: #937BA0;
+  --category-toys: #788BD8;
+  --category-penetration: #B87D91;
+  --category-aftercare: #6FA4B8;
+  --category-appearance: #A182B6;
+  --category-adult-ageplay: #A57C9B;
+  --category-custom: #9D8BC2;
+  --scrim: rgba(0, 0, 0, 0.60);
+  --scrim-strong: rgba(0, 0, 0, 0.92);
+  --inset-highlight: rgba(255, 255, 255, 0.08);
+  --deep-shadow: rgba(0, 0, 0, 0.34);
+  --dial-inner-shadow: rgba(0, 0, 0, 0.16);
+  --floating-surface: rgba(20, 16, 25, 0.97);
+  --floating-border: rgba(255, 255, 255, 0.10);
+  --floating-divider: rgba(255, 255, 255, 0.07);
+  --floating-shadow: 0 20px 60px rgba(0, 0, 0, 0.60);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255, 255, 255, 0.10) inset;
+  --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.60), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  --shadow-control: 0 1px 3px rgba(0, 0, 0, 0.34), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  --wordmark-highlight: #D8D1E8;
+  --tour-outline: rgba(255, 255, 255, 0.25);
+  --tour-scrim: rgba(0, 0, 0, 0.78);
+  --pwa-nav-surface: #181225;
+  --pwa-nav-surface-deep: #120D1D;
+  --pwa-nav-active: #332246;
+  --pwa-nav-icon: #A7A2D8;
+  --pwa-nav-icon-active: #D8D1F5;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F7F3F1;
+  --surface: #FFFDFC;
+  --surface2: #EEE8EF;
+  --surface3: #DED4E0;
+  --surface-tint: #F0E8EE;
+  --status-option-surface: var(--surface);
+  --status-option-idle-tint: 8%;
+  --status-option-idle-border: 22%;
+  --ambient-layer-opacity: 0.56;
+  --profile-stack-surface: color-mix(in srgb, var(--surface2) 82%, var(--surface));
+  --profile-stack-border: color-mix(in srgb, var(--border) 62%, transparent);
+  --question-utility-surface: color-mix(in srgb, var(--surface2) 88%, var(--surface));
+  --profile-page-glow: radial-gradient(ellipse 58% 13rem at 45% 0%, color-mix(in srgb, var(--accent2) 4%, transparent), transparent 68%);
+  --profile-hero-glow: radial-gradient(ellipse 58% 54% at 32% 28%, color-mix(in srgb, var(--accent2) 6%, transparent), transparent 70%);
+  --profile-edit-glow: radial-gradient(ellipse 68% 14rem at 50% 0%, color-mix(in srgb, var(--accent) 2%, transparent), transparent 72%);
+  --profile-form-surface: #FCFAF8;
+  --profile-form-control-surface: #F4F0EE;
+  --profile-form-muted-surface: #E4DDDF;
+  --border: #C8BAC5;
+  --control-border: #82737E;
+  --border-bright: rgba(72, 47, 61, 0.30);
+  --text: #291F27;
+  --text2: #6B5D66;
+  --accent: #A72B53;
+  --accent2: #66507B;
+  --accent-text: #972047;
+  --accent2-text: #5B456F;
+  --border-accent: rgba(167, 43, 83, 0.36);
+  --accent-glow: rgba(167, 43, 83, 0.10);
+  --identity-border: rgba(102, 80, 123, 0.32);
+  --identity-glow: rgba(102, 80, 123, 0.10);
+  --on-accent: #FFFFFF;
+  --accent-fill: #972047;
+  --on-accent-fill: #FFFFFF;
+  --hard-no: #A31D14;
+  --hard-no-text: #A31D14;
+  --danger-fill: #A61B12;
+  --on-danger-fill: #FFFFFF;
+  --yes: #963300;
+  --willing: #005D43;
+  --curious: #7A5200;
+  --maybe: #005887;
+  --no: #4338CA;
+  --conflict: #8A4700;
+  --category-impact: #9C4938;
+  --category-bondage: #6650A0;
+  --category-power: #77449A;
+  --category-rituals: #5F5094;
+  --category-discipline: #87445D;
+  --category-roleplay: #864376;
+  --category-interaction: #695188;
+  --category-sensation: #3E5FA4;
+  --category-sexual-acts: #884E6D;
+  --category-exhibition: #75477A;
+  --category-media: #3E538F;
+  --category-group-partner: #5B4B87;
+  --category-body-focus: #6F5186;
+  --category-materials-scent: #69536E;
+  --category-pet-play: #814D69;
+  --category-fluids: #604A6C;
+  --category-toys: #3F559A;
+  --category-penetration: #8B4960;
+  --category-aftercare: #3F7184;
+  --category-appearance: #654B7B;
+  --category-adult-ageplay: #774E69;
+  --category-custom: #6650A0;
+  --scrim: rgba(41, 31, 39, 0.36);
+  --scrim-strong: rgba(41, 31, 39, 0.56);
+  --inset-highlight: rgba(255, 255, 255, 0.88);
+  --deep-shadow: rgba(66, 42, 56, 0.16);
+  --dial-inner-shadow: rgba(41, 31, 39, 0.12);
+  --floating-surface: rgba(255, 255, 255, 0.98);
+  --floating-border: rgba(72, 47, 61, 0.18);
+  --floating-divider: rgba(72, 47, 61, 0.12);
+  --floating-shadow: 0 18px 50px rgba(52, 32, 44, 0.18);
+  --shadow: 0 8px 28px rgba(52, 32, 44, 0.12), 0 1px 0 rgba(255, 255, 255, 0.92) inset;
+  --shadow-lg: 0 16px 48px rgba(52, 32, 44, 0.16), 0 1px 0 rgba(255, 255, 255, 0.96) inset;
+  --shadow-control: 0 1px 3px rgba(52, 32, 44, 0.18), 0 1px 0 rgba(255, 255, 255, 0.92) inset;
+  --wordmark-highlight: #DCCFE4;
+  --tour-outline: rgba(255, 255, 255, 0.78);
+  --tour-scrim: rgba(41, 31, 39, 0.68);
+  --pwa-nav-surface: #F1E7ED;
+  --pwa-nav-surface-deep: #E9DCE5;
+  --pwa-nav-active: #DFCADA;
+  --pwa-nav-icon: #66515E;
+  --pwa-nav-icon-active: #84294F;
+}
+
+:root {
+  /* Semantic aliases keep component intent independent from the palette. */
+  --action-primary: var(--accent);
+  --identity-a: var(--accent2);
+  --identity-b: var(--accent);
+  --focus: var(--accent2);
+  --decorative-glow: var(--identity-glow);
 }
 
 @media (display-mode: standalone) {
@@ -56,5 +231,5 @@
 /* Home alone can sit a little closer to its utility nav. The selector only
    matches once onboarding is complete and the home TopNav is actually present. */
 body:has([data-top-nav-variant="home"]) main {
-  padding-top: 0.75rem;
+  padding-top: 0.5rem;
 }

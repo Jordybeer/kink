@@ -337,9 +337,9 @@ export default function SpotlightTour({
           left: spotLeft,
           width: spotWidth,
           height: spotHeight,
-          boxShadow: "0 0 0 9999px rgba(0,0,0,0.78)",
+          boxShadow: "0 0 0 9999px var(--tour-scrim)",
           borderRadius: 12,
-          border: "2px solid rgba(255,255,255,0.25)",
+          border: "2px solid var(--tour-outline)",
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -369,7 +369,7 @@ export default function SpotlightTour({
             border: "1px solid var(--border)",
             borderRadius: "1rem",
             padding: "1.125rem 1.125rem 0.875rem",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            boxShadow: "var(--shadow)",
           }}
           initial={{ opacity: 0, y: placement.below ? 8 : -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -418,14 +418,16 @@ export default function SpotlightTour({
               {steps.map((_, index) => (
                 <div
                   key={index}
-                  style={{
-                    height: 3,
-                    width: index === step ? 18 : 5,
-                    borderRadius: 999,
-                    background: index === step ? "var(--accent)" : "var(--border)",
-                    transition: "width 300ms cubic-bezier(0.34,1.56,0.64,1), background 200ms ease",
-                  }}
-                />
+                  className="h-[3px] w-[18px]"
+                >
+                  <span
+                    className="block h-full w-full rounded-full transition-[transform,background-color] duration-200 ease-out motion-reduce:transition-none"
+                    style={{
+                      background: index === step ? "var(--accent)" : "var(--border)",
+                      transform: `scaleX(${index === step ? 1 : 5 / 18})`,
+                    }}
+                  />
+                </div>
               ))}
             </div>
           )}

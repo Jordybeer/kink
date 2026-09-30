@@ -9,6 +9,19 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   test("hero toont naam, rol en ervaringsniveau", async ({ page }) => {
     await expect(page.getByText("Alex", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Dominant").first()).toBeVisible();
+    await expect(page.getByTestId("profile-hero").getByText(/Gevorderd/)).toBeVisible();
+  });
+
+  test("lange profielnaam blijft volledig leesbaar zonder horizontale overflow", async ({ page }) => {
+    const longName = "Alexandra-van-de-nachtelijke-verkenningen";
+    await seedAndGo(page, "/profile/pw-alex-001", [{ ...PROFILE_ALEX, name: longName }, PROFILE_SAM]);
+
+    const heading = page.getByTestId("profile-hero").getByRole("heading", { name: longName });
+    await expect(heading).toBeVisible();
+    await expect.poll(() => heading.evaluate((element) => ({
+      textOverflow: getComputedStyle(element).textOverflow,
+      fits: element.scrollWidth <= element.clientWidth + 1,
+    }))).toEqual({ textOverflow: "clip", fits: true });
   });
 
   test("vragenlijst kan vanuit het profiel hervat worden", async ({ page }) => {
@@ -95,12 +108,28 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const nameInput = dialog.getByLabel("Naam of alias");
 
     await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel("Hoofdperspectief *")).toBeVisible();
+    await expect(dialog.getByLabel(/Relatiestatus/)).toBeVisible();
+    await expect(nameInput).toHaveAttribute("required", "");
+    await expect(dialog.getByLabel("Hoofdperspectief *")).toHaveAttribute("required", "");
+    const identityStep = dialog.getByRole("button", { name: "Stap 1 van 2: Identiteit, huidig" });
+    await expect(identityStep).toHaveAttribute("aria-current", "step");
+    await expect.poll(async () => (await identityStep.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(dialog.getByLabel("Verkenningsmodus")).toHaveCount(0);
+    await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
+    const experience = dialog.getByRole("radiogroup", { name: "Ervaringsniveau" });
+    const currentExperience = experience.getByRole("radio", { name: "Gevorderd" });
+    await currentExperience.focus();
+    await currentExperience.press("ArrowRight");
+    await expect(experience.getByRole("radio", { name: "Ervaren", exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(experience.getByRole("radio", { name: "Ervaren", exact: true })).toBeFocused();
     await expect.poll(async () => dialog.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
       return Math.max(0, -rect.top, rect.bottom - visibleHeight);
     })).toBeLessThanOrEqual(1);
     await expect(header).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Profiel bewerken sluiten" })).toBeVisible();
     await expect(footer).toBeVisible();
     await expect.poll(() => nameInput.evaluate((element) =>
       Number.parseFloat(getComputedStyle(element).fontSize),
@@ -120,19 +149,88 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     expect(bodyBox!.y + bodyBox!.height).toBeLessThanOrEqual(footerBox!.y + 1);
     expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
 
-    await dialog.getByRole("button", { name: "Annuleer" }).click();
+    await dialog.getByRole("button", { name: "Profiel bewerken sluiten" }).click();
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
   });
 
-  test("statusbalk blijft bij het overzicht en niet bij bewerken", async ({ page }) => {
+  test("profielbewerking gebruikt een identiteitsstap en rustige vragenlijstnavigatie", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    const trigger = page.getByRole("button", { name: "Profiel bewerken" });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
+
+    await expect(dialog.getByTestId("profile-edit-identity-step")).toBeVisible();
+    const identityBox = await dialog.boundingBox();
+    expect(identityBox).not.toBeNull();
+    await dialog.getByRole("button", { name: /Volgende/ }).click();
+    await expect(dialog.getByTestId("profile-edit-questionnaire-step")).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Vragenlijst" })).toBeFocused();
+    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Identiteit, voltooid" })).toHaveAccessibleName("Stap 1 van 2: Identiteit, voltooid");
+    await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Vragenlijst, huidig" })).toHaveAttribute("aria-current", "step");
+    await expect(dialog.getByRole("button", { name: /Interessegebieden/ })).toBeVisible();
+    const mode = dialog.getByRole("button", { name: /Verkenningsmodus/ });
+    await expect(mode).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Privacy & grenzen/ })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: "Opslaan" })).toBeVisible();
+    const questionnaireBox = await dialog.boundingBox();
+    expect(questionnaireBox).not.toBeNull();
+    expect(questionnaireBox!.height).toBeLessThan(identityBox!.height - 80);
+    expect(questionnaireBox!.y + questionnaireBox!.height).toBeLessThanOrEqual(667);
+
+    await mode.click();
+    await expect(dialog.getByTestId("profile-edit-flow-panel")).toBeVisible();
+    const flowHeading = dialog.getByRole("heading", { name: "Verkenningsmodus" });
+    await expect(flowHeading).toBeVisible();
+    await expect(flowHeading).toBeFocused();
+    const modeGroup = dialog.getByRole("radiogroup", { name: "Verkenningsmodus" });
+    const dynamicMode = modeGroup.getByRole("radio", { name: /Dynamic/ });
+    await dynamicMode.focus();
+    await dynamicMode.press("ArrowDown");
+    await expect(modeGroup.getByRole("radio", { name: /Deep Dive/ })).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("statusbalk hoort bij de rustige read-view en verdwijnt in catalogusbeheer", async ({ page }) => {
     const statusBar = page.getByRole("img", {
       name: "6 Heel graag, 2 Ja, 1 Voor hen, 1 Harde grens",
       exact: true,
     });
     await expect(statusBar).toBeVisible();
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     await expect(statusBar).toHaveCount(0);
+  });
+
+  test("read-view toont expliciete previews zonder ambigue context te kiezen", async ({ page }) => {
+    const impact = page.getByTestId("profile-read-category-impact");
+    const impactSummary = page.getByTestId("profile-read-category-impact-summary");
+    const bondageSummary = page.getByTestId("profile-read-category-bondage-summary");
+    const content = page.locator("#profile-read-category-impact-content");
+
+    await expect(impact).toBeVisible();
+    await expect(impact).toHaveAttribute("aria-expanded", "false");
+    await expect(impact).toHaveAccessibleName("Impact Play. Details tonen");
+    await expect(impactSummary.getByText("Heel graag", { exact: true })).toBeVisible();
+    await expect(impactSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
+    await expect(impactSummary).not.toContainText("Klassiek en heerlijk");
+    await expect(bondageSummary.getByText("Shibari ook", { exact: true })).toBeVisible();
+    await expect(content).toBeHidden();
+
+    await impact.focus();
+    await expect(impact).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    await expect(impact).toHaveAttribute("aria-expanded", "true");
+    await expect(impact).toHaveAccessibleName("Impact Play. Details verbergen");
+    await expect(content).toBeVisible();
+    await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
+    await expect(content.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  });
+
+  test("harde grenzen blijven bij naam zichtbaar zonder de categorie te openen", async ({ page }) => {
+    const sensation = page.getByTestId("profile-read-category-sensation-summary");
+
+    await expect(sensation.getByText("Harde grens", { exact: true })).toBeVisible();
+    await expect(sensation.getByText("Breath restriction / neck pressure", { exact: true })).toBeVisible();
   });
 
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
@@ -141,7 +239,6 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("geen horizontale overflow", async ({ page }) => {
-    // De tab glijdt 8px binnen — poll tot de entrance-animatie is uitgehijgd
     await expect
       .poll(() => page.evaluate(() => document.body.scrollWidth > document.body.clientWidth), { timeout: 3000 })
       .toBe(false);
@@ -155,13 +252,15 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     expect(overflow).toBe(false);
   });
 
-  test("Impact Play categorie is zichtbaar in de bewerkmodus", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
-    await expect(page.getByText("Impact Play", { exact: true }).first()).toBeVisible();
+  test("Impact Play categorie is zichtbaar wanneer onderwerpen bewust worden beheerd", async ({ page }) => {
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    const impactCategory = page.locator('button[aria-controls="category-impact-content"]');
+    await expect(impactCategory).toBeVisible();
+    await expect(impactCategory).toContainText("Impact Play");
   });
 
   test("gesloten categorieën zijn inert tot ze geopend worden", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     const content = page.locator("#category-impact-content");
 
     await expect(content).toHaveAttribute("aria-hidden", "true");
@@ -173,17 +272,26 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(content.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
 
-  test("tabblad 'Bewerken' is een cataloguseditor zonder ingebouwde vragenkaart", async ({ page }) => {
-    const editTab = page.getByRole("tab", { name: "Bewerken" });
-    await editTab.click();
+  test("onderwerpen beheren is een expliciete cataloguseditor zonder permanente filterchrome", async ({ page }) => {
+    await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+    await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveCount(0);
 
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+
+    await expect(page.getByTestId("profile-catalog-manager-header")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Gereed", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Terug naar profiel/ })).toHaveCount(0);
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
     await expect(page.getByRole("button", { name: /Alle categorieën/ })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Gereed", exact: true }).click();
+    await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toBeVisible();
   });
 
   test("categoriefilter blijft zichtbaar en wijzigbaar tijdens zoeken", async ({ page }) => {
-    await page.getByRole("tab", { name: "Bewerken" }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     await page.getByRole("button", { name: /Alle categorieën/ }).click();
 
     const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
@@ -198,7 +306,9 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(activeFilter).toBeVisible();
     await expect(page.getByText("Geen onderwerpen gevonden.")).toBeVisible();
 
-    await page.getByRole("button", { name: "Filter Bondage wissen" }).click();
+    await activeFilter.click();
+    const resetDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
+    await resetDialog.getByRole("button", { name: /^Alle categorieën\b/ }).click();
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveValue("spanking");
     await expect(page.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
@@ -207,9 +317,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
-    const editTab = page.getByRole("tab", { name: "Bewerken" });
-    if (await editTab.count() > 0) await editTab.first().click();
-
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
     await search.fill("spanking");
 
@@ -235,7 +343,7 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
     await expect(profileTour).toBeVisible({ timeout: 3000 });
     await profileTour.getByRole("button", { name: "Volgende" }).click();
 
-    const enrichmentTour = page.getByRole("dialog", { name: "Maak je profiel wat completer" });
+    const enrichmentTour = page.getByRole("dialog", { name: "Beheer je profielinfo" });
     await expect(enrichmentTour).toBeVisible();
     await enrichmentTour.getByRole("button", { name: "Begrepen" }).click();
 
@@ -248,7 +356,7 @@ test.describe("Gesplitste spotlight-rondleiding", () => {
       return raw ? JSON.parse(raw).state?.questionnaireTourSeen === true : false;
     })).toBe(false);
 
-    await page.getByRole("link", { name: /Start met vragen|Verder invullen|Verder ontdekken/i }).click();
+    await page.getByTestId("profile-summary").getByRole("link", { name: /Start met vragen|Verder invullen|Verder ontdekken/i }).click();
     await expect(page).toHaveURL(/\/profile\/pw-alex-001\/questions$/);
 
     const questionTour = page.getByRole("dialog", { name: "Beoordeel de volledige kink" });
@@ -299,8 +407,8 @@ test.describe("Gedeeld profiel", () => {
     await expect(page.getByText("Sam", { exact: true }).first()).toBeVisible();
   });
 
-  test("bewerken-tab is niet aanwezig", async ({ page }) => {
-    await expect(page.getByRole("tab", { name: "Bewerken" })).toHaveCount(0);
+  test("catalogusbeheer is niet aanwezig", async ({ page }) => {
+    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toHaveCount(0);
   });
 
   test("gedeeld profiel kan niet opnieuw gedeeld worden", async ({ page }) => {
@@ -308,7 +416,7 @@ test.describe("Gedeeld profiel", () => {
   });
 
   test("persoonlijke notitie blijft lokaal bewerkbaar", async ({ page }) => {
-    const note = page.getByPlaceholder("Wanneer ontmoet, indrukken…");
+    const note = page.getByLabel("Persoonlijke notitie");
     await expect(note).toBeVisible();
     await note.fill("Goede eerste date");
     await expect(note).toHaveValue("Goede eerste date");
@@ -330,6 +438,13 @@ test.describe("Privé antwoorden op eigen profiel", () => {
       },
     };
     await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
+
+    const impact = page.getByTestId("profile-read-category-impact");
+    const summary = page.getByTestId("profile-read-category-impact-summary");
+    await expect(summary).toContainText("1 privéantwoord");
+    await expect(summary).not.toContainText("Spanking (hand) — giving");
+    await expect(summary).not.toContainText("Dit is alleen voor mezelf bedoeld");
+    await impact.click();
 
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
     await expect(secret).toHaveCount(0);

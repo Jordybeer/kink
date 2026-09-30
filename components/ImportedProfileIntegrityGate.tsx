@@ -74,7 +74,7 @@ export default function ImportedProfileIntegrityGate({ children }: { children: R
           <Link
             href="/quarantine"
             className="focus-ring rounded-lg px-3 py-2 text-sm font-semibold flex-none"
-            style={{ background: "var(--hard-no)", color: "white" }}
+            style={{ background: "var(--danger-fill)", color: "var(--on-danger-fill)" }}
           >
             Bekijken
           </Link>

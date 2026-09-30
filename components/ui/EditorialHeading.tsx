@@ -35,11 +35,11 @@ export default function EditorialHeading({
 }: EditorialHeadingProps) {
   const Heading = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
   const titleClassName = size === "hero"
-    ? "max-w-2xl text-4xl leading-[1.02] sm:text-5xl"
-    : "text-3xl leading-tight";
+    ? "text-balance text-4xl leading-[1.02] sm:text-5xl"
+    : "text-balance text-3xl leading-tight";
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-[var(--reading-measure)]">
       <div className="grid" style={{ rowGap: TITLE_GAP }}>
         <p
           data-testid={testId}
@@ -62,7 +62,7 @@ export default function EditorialHeading({
         </Heading>
       </div>
       {description && (
-        <p className="mt-4 text-base leading-7" style={{ color: "var(--text2)" }}>
+        <p className="mt-4 max-w-[var(--reading-measure)] text-pretty text-base leading-7" style={{ color: "var(--text2)" }}>
           {description}
         </p>
       )}

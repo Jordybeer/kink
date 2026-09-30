@@ -42,7 +42,13 @@ function SignatureImage({ dataUrl, label }: { dataUrl: string; label: string }) 
   );
 }
 
-export default function ContractCanonicalPreview({ content }: { content: ContractVersionContent }) {
+export default function ContractCanonicalPreview({
+  content,
+  eyebrow = "Exact te bevestigen document",
+}: {
+  content: ContractVersionContent;
+  eyebrow?: string;
+}) {
   const handwriting = handwrittenSignaturesFromContent(content);
   const sigA = handwriting ? handwrittenSignatureToPngDataUrl(handwriting.profileA) : null;
   const sigB = handwriting ? handwrittenSignatureToPngDataUrl(handwriting.profileB) : null;
@@ -50,7 +56,7 @@ export default function ContractCanonicalPreview({ content }: { content: Contrac
   return (
     <div className="flex flex-col gap-5" data-testid="contract-canonical-preview">
       <section className="rounded-2xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-        <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent)" }}>Exact te bevestigen document</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent)" }}>{eyebrow}</p>
         <h2 className="mt-3 text-xl italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
           {content.profileA.profileName} × {content.profileB.profileName}
         </h2>

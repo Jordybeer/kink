@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { MagnifyingGlassMinus, Play } from "@phosphor-icons/react";
+import { MagnifyingGlassMinus, PencilSimple, Play } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { parseLocalDate } from "@/lib/dates";
 import AftercareSheet from "@/components/AftercareSheet";
@@ -100,7 +100,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
         className="text-sm uppercase tracking-[0.15em] mb-0.5"
         style={{ color: "var(--text2)" }}
       >
-        {scene.profileAName} — {scene.profileBName}
+        {scene.profileAName} &amp; {scene.profileBName}
       </p>
       <p className="text-sm mb-4" style={{ color: "var(--text2)" }}>
         {date}
@@ -127,14 +127,14 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             </h2>
             <button
               onClick={() => setShowAftercare(true)}
-              className="text-sm focus-ring rounded-lg px-3 py-1"
+              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-1 text-sm"
               style={{
                 color: "var(--accent)",
                 border: "1px solid var(--border-accent)",
-                minHeight: 36,
               }}
             >
-              ✎ Bewerken
+              <PencilSimple size={14} aria-hidden="true" />
+              Bewerken
             </button>
           </div>
 
@@ -365,7 +365,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
           {scene.status === "completed" && (
             <button
               onClick={handleExportPdf}
-              className="focus-ring rounded-lg px-2 py-1"
+              className="focus-ring min-h-11 rounded-lg px-2 py-1"
             >
               Exporteer PDF
             </button>
@@ -381,7 +381,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="focus-ring rounded-lg ml-auto px-2 py-1"
+              className="focus-ring ml-auto min-h-11 rounded-lg px-2 py-1"
               style={{ color: "var(--text2)" }}
             >
               Verwijderen
@@ -390,7 +390,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
             <div className="ml-auto flex items-center gap-3">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="focus-ring rounded-lg text-sm px-2 py-1"
+                className="focus-ring min-h-11 rounded-lg px-2 py-1 text-sm"
                 style={{ color: "var(--text2)" }}
               >
                 Annuleren
@@ -400,7 +400,7 @@ export default function SceneDetailScreen({ id }: { id: string }) {
                   deleteScene(scene.id);
                   router.push("/scenes");
                 }}
-                className="focus-ring rounded-lg text-sm font-bold px-2 py-1"
+                className="focus-ring min-h-11 rounded-lg px-2 py-1 text-sm font-bold"
                 style={{ color: "var(--hard-no)" }}
               >
                 Definitief verwijderen

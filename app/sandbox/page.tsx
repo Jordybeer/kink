@@ -12,7 +12,7 @@ import {
   User,
 } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
-import Sheet from "@/components/ui/Sheet";
+import Sheet from "@/components/Sheet";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 
 type Tab = "planned" | "log";

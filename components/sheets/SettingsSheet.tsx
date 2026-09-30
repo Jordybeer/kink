@@ -3,19 +3,25 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  Check,
   CaretRight,
   DownloadSimple,
   Fingerprint,
   Key,
   LockKey,
+  PaintBrush,
   Sparkle,
+  DeviceMobile,
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
-import Sheet from "@/components/ui/Sheet";
+import Sheet from "@/components/Sheet";
 import Switch from "@/components/ui/Switch";
 import { useStore } from "@/lib/store";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
+import { useTheme } from "@/components/ThemeProvider";
+import { usePwaInstall } from "@/components/PwaInstallProvider";
+import type { ThemePreference } from "@/lib/theme";
 
 interface SettingsSheetProps {
   open: boolean;
@@ -28,18 +34,12 @@ interface SettingsSheetProps {
   importSuccess: string | null;
 }
 
-const SETTINGS_ICON_TONES = {
-  backup: "color-mix(in srgb, var(--willing) 72%, var(--text2))",
-  restore: "color-mix(in srgb, var(--no) 72%, var(--text2))",
-  lock: "color-mix(in srgb, var(--curious) 74%, var(--text2))",
-  biometric: "color-mix(in srgb, var(--maybe) 78%, var(--text2))",
-  about: "color-mix(in srgb, var(--accent) 68%, var(--text2))",
-} as const;
+const SETTINGS_ICON_TONE = "color-mix(in srgb, var(--accent) 64%, var(--text2))";
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h3
-      className="mb-1.5 px-1 font-serif text-sm italic"
+      className="mb-1.5 px-1 text-xs font-semibold tracking-wide"
       style={{ color: "var(--text2)" }}
     >
       {children}
@@ -47,11 +47,13 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-function SettingsGroup({ children }: { children: ReactNode }) {
+function SettingsList({ children }: { children: ReactNode }) {
   return (
     <div
-      className="overflow-hidden rounded-2xl"
-      style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+      style={{
+        borderTop: "1px solid var(--border)",
+        borderBottom: "1px solid var(--border)",
+      }}
     >
       {children}
     </div>
@@ -77,7 +79,7 @@ function RowContent({
     <>
       <span
         className="flex w-8 flex-none items-center justify-center"
-        style={{ color: danger ? "var(--hard-no-text)" : iconColor ?? "var(--text2)" }}
+        style={{ color: danger ? "var(--hard-no-text)" : iconColor ?? SETTINGS_ICON_TONE }}
       >
         {icon}
       </span>
@@ -98,8 +100,94 @@ function RowContent({
 }
 
 const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
-const SETTINGS_ROW_CLASS = "focus-ring flex min-h-14 w-full items-center gap-3 px-3.5 py-2.5 text-left";
-const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-14 w-full items-center gap-3 px-3.5 py-2";
+const SETTINGS_ROW_CLASS = "focus-ring flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 text-left sm:px-2";
+const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 sm:px-2";
+
+const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
+  { value: "system", label: "Systeem" },
+  { value: "light", label: "Licht" },
+  { value: "dark", label: "Donker" },
+];
+
+function ThemeSelector() {
+  const { preference, setPreference } = useTheme();
+
+  return (
+    <fieldset className="px-1.5 pb-3 sm:px-2">
+      <legend className="sr-only">Kleurmodus</legend>
+      <div
+        className="grid grid-cols-3 gap-1 rounded-xl p-1"
+        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+      >
+        {THEME_OPTIONS.map((option) => {
+          const active = preference === option.value;
+          return (
+            <label key={option.value} className="relative cursor-pointer">
+              <input
+                type="radio"
+                name="kleurmodus"
+                value={option.value}
+                checked={active}
+                onChange={() => setPreference(option.value)}
+                className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+              />
+              <span
+                className="flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]"
+                style={{
+                  background: active ? "var(--surface3)" : "transparent",
+                  borderColor: active ? "var(--border-accent)" : "transparent",
+                  color: active ? "var(--text)" : "var(--text2)",
+                  boxShadow: active ? "var(--shadow-control)" : "none",
+                }}
+              >
+                {active && <Check size={14} weight="bold" aria-hidden="true" />}
+                {option.label}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function InstallApp() {
+  const { standalone, ios, canPrompt, busy, message, install } = usePwaInstall();
+  if (standalone) return null;
+
+  return (
+    <details className="group" style={DIVIDER_STYLE}>
+      <summary className={`${SETTINGS_ROW_CLASS} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+        <RowContent
+          icon={<DeviceMobile size={19} aria-hidden="true" />}
+          title="KinkSync installeren"
+          description="Open je eigen plek vanaf het beginscherm"
+          trailing={<CaretRight size={15} aria-hidden="true" className="group-open:rotate-90" style={{ color: "var(--text2)" }} />}
+        />
+      </summary>
+      <div className="space-y-3 px-1.5 pb-3 text-sm leading-relaxed sm:px-2" style={{ color: "var(--text)" }}>
+        <p>Installeren is optioneel. Het KinkSync-icoon wordt zichtbaar op je toestel.</p>
+        {canPrompt || busy ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void install()}
+            className="focus-ring min-h-11 rounded-xl px-4 py-2 font-semibold disabled:opacity-60"
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+          >
+            {busy ? "Installatie openen…" : "Installeer KinkSync"}
+          </button>
+        ) : ios ? (
+          <p>Open KinkSync in Safari. Tik op Delen en kies ‘Zet op beginscherm’. Zet ‘Open als webapp’ aan als die keuze verschijnt.</p>
+        ) : (
+          <p>Open het browsermenu en kies ‘App installeren’ of ‘Toevoegen aan beginscherm’. Ontbreekt die optie? Gebruik een browser die webapps kan installeren, zoals Chrome of Edge.</p>
+        )}
+        {message && <p role="status">{message}</p>}
+        <p style={{ color: "var(--text2)" }}>Maak eerst een back-up als je al profielen hebt. Zie je ze niet in de geïnstalleerde app? Herstel daar je back-up. Installeren is geen back-up.</p>
+      </div>
+    </details>
+  );
+}
 
 export default function SettingsSheet({
   open,
@@ -140,11 +228,32 @@ export default function SettingsSheet({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Instellingen" scrollable aria-label="Instellingen">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Instellingen"
+      scrollable
+      variant="surface"
+      aria-label="Instellingen"
+    >
       <div className="grid gap-4 pb-0.5">
         <section>
+          <SectionTitle>Weergave</SectionTitle>
+          <SettingsList>
+            <div className={SETTINGS_SWITCH_ROW_CLASS}>
+              <RowContent
+                icon={<PaintBrush size={19} aria-hidden="true" />}
+                title="Kleurmodus"
+                description="Gebruik je toestelvoorkeur of kies zelf"
+              />
+            </div>
+            <ThemeSelector />
+          </SettingsList>
+        </section>
+
+        <section>
           <SectionTitle>Gegevens</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <button
               type="button"
               onClick={onExportBackup}
@@ -152,7 +261,6 @@ export default function SettingsSheet({
             >
               <RowContent
                 icon={<DownloadSimple size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.backup}
                 title="Back-up maken"
                 description="Bewaar een kopie van je lokale gegevens"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
@@ -160,7 +268,7 @@ export default function SettingsSheet({
             </button>
 
             <label
-              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-14 w-full cursor-pointer items-center gap-3 px-3.5 py-2.5 text-left"
+              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-3 px-1.5 py-2 text-left sm:px-2"
               style={DIVIDER_STYLE}
             >
               <input
@@ -171,13 +279,12 @@ export default function SettingsSheet({
               />
               <RowContent
                 icon={<UploadSimple size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.restore}
                 title="Back-up herstellen"
                 description="Zet eerder bewaarde gegevens terug"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </label>
-          </SettingsGroup>
+          </SettingsList>
           {importError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {importError}
@@ -192,7 +299,7 @@ export default function SettingsSheet({
 
         <section>
           <SectionTitle>Beveiliging</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <button
               type="button"
               onClick={() => onOpenPinFlow(0)}
@@ -200,7 +307,6 @@ export default function SettingsSheet({
             >
               <RowContent
                 icon={<LockKey size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.lock}
                 title="Appvergrendeling"
                 description={appLockEnabled ? "PIN-vergrendeling actief" : "Bescherm KinkSync met een PIN"}
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
@@ -214,7 +320,6 @@ export default function SettingsSheet({
               >
                 <RowContent
                   icon={<Fingerprint size={19} aria-hidden="true" />}
-                  iconColor={SETTINGS_ICON_TONES.biometric}
                   title="Biometrie"
                   description="Ontgrendel met de beveiliging van je toestel"
                   trailing={
@@ -248,7 +353,7 @@ export default function SettingsSheet({
                 />
               </button>
             )}
-          </SettingsGroup>
+          </SettingsList>
           {bioError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {bioError}
@@ -257,8 +362,8 @@ export default function SettingsSheet({
         </section>
 
         <section>
-          <SectionTitle>App</SectionTitle>
-          <SettingsGroup>
+          <SectionTitle>KinkSync</SectionTitle>
+          <SettingsList>
             <Link
               href="/about"
               onClick={onClose}
@@ -266,18 +371,18 @@ export default function SettingsSheet({
             >
               <RowContent
                 icon={<Sparkle size={19} aria-hidden="true" />}
-                iconColor={SETTINGS_ICON_TONES.about}
                 title="Over KinkSync"
                 description="Wat KinkSync doet en hoe het werkt"
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </Link>
-          </SettingsGroup>
+            <InstallApp />
+          </SettingsList>
         </section>
 
         <section>
           <SectionTitle>Geavanceerd</SectionTitle>
-          <SettingsGroup>
+          <SettingsList>
             <button
               type="button"
               onClick={() => {
@@ -294,7 +399,7 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--hard-no)" }} />}
               />
             </button>
-          </SettingsGroup>
+          </SettingsList>
         </section>
       </div>
     </Sheet>

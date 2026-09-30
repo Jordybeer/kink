@@ -5,7 +5,7 @@ export default function ScenesEmptyState() {
   return (
     <section
       aria-labelledby="scenes-empty-title"
-      className="mx-auto -mb-12 flex min-h-[55svh] w-full max-w-xl translate-y-12 items-center py-6 sm:-mb-8 sm:translate-y-8 sm:py-10"
+      className="mx-auto flex min-h-[55svh] w-full max-w-xl items-center py-6 sm:py-10"
     >
       <div
         className="w-full overflow-hidden rounded-3xl p-5 sm:p-7"
@@ -15,7 +15,7 @@ export default function ScenesEmptyState() {
         }}
       >
         <div
-          className="inline-flex min-h-9 items-center gap-2 rounded-full px-3"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full px-3"
           style={{ background: "var(--surface2)", color: "var(--text2)" }}
         >
           <FilmSlate size={16} aria-hidden="true" style={{ color: "var(--accent)" }} />

@@ -2,13 +2,14 @@
 
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Archive,
   CaretDown,
   CaretRight,
   FileText,
   Pause,
+  Plus,
   QrCode,
   X,
 } from "@phosphor-icons/react";
@@ -63,8 +64,8 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
           </div>
           <div className="min-w-0 flex-1">
             <h2
-              className="truncate text-lg italic leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+              className="break-words text-lg italic leading-tight"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, overflowWrap: "anywhere" }}
             >
               {a.profileName}
               <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
@@ -123,7 +124,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}`}
           prefetch={false}
-          className="focus-ring inline-flex min-h-10 items-center gap-1.5 px-2 text-sm font-semibold"
+          className="focus-ring inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold"
           style={{ color: "var(--text)" }}
         >
           Open contract
@@ -132,7 +133,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring ml-auto inline-flex min-h-10 items-center px-2 text-sm font-medium"
+          className="focus-ring ml-auto inline-flex min-h-11 items-center px-2 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           Verloop
@@ -143,6 +144,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
 }
 
 function ContractsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
   const series = useContractStore((state) => state.series);
@@ -159,7 +161,14 @@ function ContractsContent() {
       onClick: () => setInboxOpen(true),
       placement: "primary",
     },
-  ], []);
+    {
+      id: "new-contract",
+      label: "Nieuw contract",
+      icon: <Plus size={18} aria-hidden="true" />,
+      onClick: () => router.push("/compare"),
+      placement: "secondary",
+    },
+  ], [router]);
   useTopNavActions(navActions);
 
   if (!contractsReady) return <PageShell loading width="2xl" />;
@@ -184,7 +193,7 @@ function ContractsContent() {
       {personId && (
         <Link
           href="/contracts"
-          className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-sm"
+          className="focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm"
           style={{ color: "var(--text2)", background: "var(--surface2)" }}
         >
           <X size={12} aria-hidden="true" />
@@ -216,7 +225,9 @@ function ContractsContent() {
                     className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
-                    <span className="min-w-0 flex-1 truncate">{a.profileName} × {b.profileName}</span>
+                    <span className="min-w-0 flex-1 break-words py-2 leading-5" style={{ overflowWrap: "anywhere" }}>
+                      {a.profileName} × {b.profileName}
+                    </span>
                     <span className="text-xs" style={{ color: "var(--text2)" }}>
                       {item.status === "pending_signature" ? "Wacht op bevestiging" : "Concept"}
                     </span>
@@ -260,7 +271,7 @@ function ContractsContent() {
               : tab === "paused"
                 ? "Tijdelijk gepauzeerde contracten blijven hier totdat beide partijen ze hervatten of iemand ze stopzet."
                 : "Stopgezette contracten en contracten met verwijderde profielen verschijnen hier."}
-            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Vergelijk profielen" } : {})}
+            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Nieuw contract" } : {})}
           />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">

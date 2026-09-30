@@ -1,22 +1,31 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowsLeftRight, FileText } from "@phosphor-icons/react";
+import { ArrowsLeftRight, FileText, Printer } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import CompareProfileHeader from "@/components/compare/CompareProfileHeader";
 import CompareResults from "@/components/compare/CompareResults";
 import CompareScoreSummary from "@/components/compare/CompareScoreSummary";
 import CompareToolbar from "@/components/compare/CompareToolbar";
+import ComparePrintDocument from "@/components/compare/ComparePrintDocument";
 import ProfileSelectorSheet from "@/components/compare/ProfileSelectorSheet";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import useCompareProfiles from "@/hooks/useCompareProfiles";
 import {
   cleanCompareParam,
-  getCompareCategoryScores,
-  getCompareSummary,
   type CompareResultFilter,
 } from "@/lib/compare";
+import { buildCompareModel } from "@/lib/compareV2";
+import {
+  discussionPairKey,
+  invalidateDiscussedTransition,
+  loadValidDiscussed,
+  setDiscussedMemory,
+  subscribeDiscussionMemory,
+  type DiscussionContext,
+} from "@/lib/compareDiscussionMemory";
+import { useContractStore } from "@/lib/contractStore";
 import { useHasHydrated, useStore } from "@/lib/store";
 import type { KinkCategoryId } from "@/types";
 
@@ -30,7 +39,8 @@ function toggleSetValue<T>(current: ReadonlySet<T>, value: T): Set<T> {
 function ComparePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profiles, setEntry, pinnedProfileId } = useStore();
+  const { profiles, pinnedProfileId } = useStore();
+  const contractSeries = useContractStore((state) => state.series);
   const hasHydrated = useHasHydrated();
   const {
     aId,
@@ -55,17 +65,40 @@ function ComparePage() {
   const [discussed, setDiscussed] = useState<Set<string>>(new Set());
   const [hideDiscussed, setHideDiscussed] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState<null | "a" | "b">(null);
+  const previousDiscussion = useRef<DiscussionContext | null>(null);
+
+  const compareModel = useMemo(() => buildCompareModel(profileA, profileB), [profileA, profileB]);
   const pairKey = useMemo(
-    () => profileA && profileB ? [profileA.id, profileB.id].sort().join("|") : "",
+    () => profileA && profileB ? discussionPairKey(profileA, profileB) : "",
     [profileA, profileB],
   );
 
   useEffect(() => {
     setSelectedResults(new Set());
     setSelectedCategories(new Set());
-    setDiscussed(new Set());
     setHideDiscussed(false);
   }, [pairKey]);
+
+  useEffect(() => {
+    if (!hasHydrated || !profileA || !profileB || samePairError || !pairKey) {
+      previousDiscussion.current = null;
+      setDiscussed(new Set());
+      return;
+    }
+    const current = { profileA, profileB, facts: compareModel.facts, contractSeries };
+    const previous = previousDiscussion.current;
+    previousDiscussion.current = current;
+    try {
+      const storage = window.localStorage;
+      if (previous) invalidateDiscussedTransition(storage, previous, current);
+      const refresh = () => setDiscussed(loadValidDiscussed(storage, profileA, profileB, compareModel.facts, contractSeries));
+      const unsubscribe = subscribeDiscussionMemory(window, storage, refresh);
+      refresh();
+      return unsubscribe;
+    } catch {
+      setDiscussed(new Set());
+    }
+  }, [hasHydrated, contractSeries, compareModel, pairKey, profileA, profileB, samePairError]);
 
   const navActions = useMemo<TopNavAction[]>(() => [
     {
@@ -84,24 +117,38 @@ function ComparePage() {
       placement: "secondary",
       disabled: !hasPair,
     },
+    {
+      id: "print-compare",
+      label: "Vergelijking afdrukken",
+      icon: <Printer size={18} aria-hidden="true" />,
+      onClick: () => window.print(),
+      placement: "overflow",
+      disabled: !hasPair,
+    },
   ], [aId, bId, hasPair, router, swapProfiles]);
   useTopNavActions(navActions);
 
   const toggleDiscussed = useCallback((id: string) => {
-    setDiscussed((previous) => toggleSetValue(previous, id));
-  }, []);
+    if (!profileA || !profileB) return;
+    const fact = compareModel.facts.find((candidate) => candidate.id === id);
+    if (!fact) return;
 
-  const updateComment = useCallback((profileId: string, kinkId: string, comment: string) => {
-    setEntry(profileId, kinkId, { comment });
-  }, [setEntry]);
+    const storage = window.localStorage;
+    if (setDiscussedMemory(storage, profileA, profileB, fact, contractSeries, !discussed.has(id))) {
+      setDiscussed(loadValidDiscussed(storage, profileA, profileB, compareModel.facts, contractSeries));
+    }
+  }, [compareModel.facts, contractSeries, discussed, profileA, profileB]);
 
-  const summary = getCompareSummary(profileA, profileB);
-  const categoryScores = getCompareCategoryScores(profileA, profileB);
+  const summary = useMemo(() => ({
+    ...compareModel.summary,
+    match: compareModel.summary.shared + compareModel.summary.complementary,
+  }), [compareModel]);
+  const categoryScores = compareModel.categories;
 
   if (!hasHydrated) return <PageShell loading width="5xl" />;
 
   return (
-    <PageShell width="5xl">
+    <PageShell width="5xl" className="compare-page">
       <h1 className="sr-only">Profielen vergelijken</h1>
 
       <CompareProfileHeader
@@ -115,18 +162,20 @@ function ComparePage() {
       {hasPair && (
         <>
           <CompareScoreSummary {...summary} categoryScores={categoryScores} />
-          <CompareToolbar
-            categoryScores={categoryScores}
-            selectedResults={selectedResults}
-            selectedCategories={selectedCategories}
-            discussedCount={discussed.size}
-            hideDiscussed={hideDiscussed}
-            onToggleResult={(filter) => setSelectedResults((current) => toggleSetValue(current, filter))}
-            onClearResults={() => setSelectedResults(new Set())}
-            onToggleCategory={(category) => setSelectedCategories((current) => toggleSetValue(current, category))}
-            onClearCategories={() => setSelectedCategories(new Set())}
-            onToggleHideDiscussed={() => setHideDiscussed((value) => !value)}
-          />
+          <div className="compare-toolbar" data-print-hide="true">
+            <CompareToolbar
+              categoryScores={categoryScores}
+              selectedResults={selectedResults}
+              selectedCategories={selectedCategories}
+              discussedCount={discussed.size}
+              hideDiscussed={hideDiscussed}
+              onToggleResult={(filter) => setSelectedResults((current) => toggleSetValue(current, filter))}
+              onClearResults={() => setSelectedResults(new Set())}
+              onToggleCategory={(category) => setSelectedCategories((current) => toggleSetValue(current, category))}
+              onClearCategories={() => setSelectedCategories(new Set())}
+              onToggleHideDiscussed={() => setHideDiscussed((value) => !value)}
+            />
+          </div>
         </>
       )}
 
@@ -138,8 +187,8 @@ function ComparePage() {
         selectedCategories={selectedCategories}
         discussed={discussed}
         hideDiscussed={hideDiscussed}
+        model={compareModel}
         onToggleDiscussed={toggleDiscussed}
-        onComment={updateComment}
       />
 
       <ProfileSelectorSheet
@@ -162,6 +211,8 @@ function ComparePage() {
         pinnedProfileId={pinnedProfileId}
         onSelect={setBId}
       />
+
+      {profileA && profileB && !samePairError && <ComparePrintDocument profileA={profileA} profileB={profileB} model={compareModel} />}
     </PageShell>
   );
 }
