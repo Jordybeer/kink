@@ -131,6 +131,20 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 ## Profile surfaces
 
+### Profile read overview
+
+- The category disclosure control contains only the category title and caret. Its collapsed factual summary is sibling reading content, not part of the tap target.
+- When a category expands, hide the collapsed summary and show the complete flat detail rows so the same information is not duplicated twice on screen.
+- Public preview names and every public hard-boundary name remain separate reading lines. Exact statuses, remainder counts and private counts stay factual and secondary.
+- Keep notes as quiet human text with factual attribution; private answers contribute only a count.
+
+### Topic editor
+
+- Follow the focused Profile Edit structure: fixed title/close header, one scrollable body and a persistent `Klaar` footer.
+- Let the topic lead. Description and safety text stay fully readable and use spacing/dividers rather than nested cards.
+- In this editor, status choices use flat list rows with a small state mark and the exact status explanation beneath the label. The questionnaire keeps its existing card-style answer choices.
+- Agreements, visibility and context are separate groups of flat toggle rows. Preserve immediate-save behavior, privacy semantics and the existing status vocabulary.
+
 ### Profile Hero
 
 Locked direction for the upcoming redesign:

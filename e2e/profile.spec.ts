@@ -200,6 +200,39 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(statusBar).toHaveCount(0);
   });
 
+  test("read-view toont expliciete previews zonder ambigue context te kiezen", async ({ page }) => {
+    const impact = page.getByTestId("profile-read-category-impact");
+    const impactSummary = page.getByTestId("profile-read-category-impact-summary");
+    const bondageSummary = page.getByTestId("profile-read-category-bondage-summary");
+    const content = page.locator("#profile-read-category-impact-content");
+
+    await expect(impact).toBeVisible();
+    await expect(impact).toHaveAttribute("aria-expanded", "false");
+    await expect(impact).toHaveAccessibleName("Impact Play. Details tonen");
+    await expect(impactSummary.getByText("Heel graag", { exact: true })).toBeVisible();
+    await expect(impactSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
+    await expect(impactSummary).not.toContainText("Klassiek en heerlijk");
+    await expect(bondageSummary.getByText("Shibari ook", { exact: true })).toBeVisible();
+    await expect(content).toBeHidden();
+
+    await impact.focus();
+    await expect(impact).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    await expect(impact).toHaveAttribute("aria-expanded", "true");
+    await expect(impact).toHaveAccessibleName("Impact Play. Details verbergen");
+    await expect(content).toBeVisible();
+    await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
+    await expect(content.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  });
+
+  test("harde grenzen blijven bij naam zichtbaar zonder de categorie te openen", async ({ page }) => {
+    const sensation = page.getByTestId("profile-read-category-sensation-summary");
+
+    await expect(sensation.getByText("Harde grens", { exact: true })).toBeVisible();
+    await expect(sensation.getByText("Breath restriction / neck pressure", { exact: true })).toBeVisible();
+  });
+
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).not.toContain("★");
@@ -405,6 +438,13 @@ test.describe("Privé antwoorden op eigen profiel", () => {
       },
     };
     await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
+
+    const impact = page.getByTestId("profile-read-category-impact");
+    const summary = page.getByTestId("profile-read-category-impact-summary");
+    await expect(summary).toContainText("1 privéantwoord");
+    await expect(summary).not.toContainText("Spanking (hand) — giving");
+    await expect(summary).not.toContainText("Dit is alleen voor mezelf bedoeld");
+    await impact.click();
 
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
     await expect(secret).toHaveCount(0);

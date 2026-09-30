@@ -19,6 +19,7 @@ import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
+import { summarizeProfileCategory } from "@/lib/profileReadSummary";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
@@ -73,12 +74,14 @@ export default function ProfilePage({ params }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
+  const [expandedReadCategories, setExpandedReadCategories] = useState<Set<KinkCategoryId>>(new Set());
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
 
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
+    setExpandedReadCategories(new Set());
     setIncludePrivateExports(false);
     setEditing(false);
     setCatalogOpen(false);
@@ -183,6 +186,15 @@ export default function ProfilePage({ params }: Props) {
     setRevealedPrivateResponses((current) => {
       const next = new Set(current);
       next.delete(key);
+      return next;
+    });
+  }
+
+  function toggleReadCategory(category: KinkCategoryId) {
+    setExpandedReadCategories((current) => {
+      const next = new Set(current);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
       return next;
     });
   }
@@ -434,6 +446,13 @@ export default function ProfilePage({ params }: Props) {
         </section>
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
+          <h2
+            className="mb-3 text-xl italic leading-tight"
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+          >
+            Interesses &amp; grenzen
+          </h2>
+
           {totalRated > 0 && statusSegments.length > 0 && (
             <div
               role="img"
@@ -452,56 +471,189 @@ export default function ProfilePage({ params }: Props) {
               Nog geen onderwerpen beoordeeld.
             </p>
           ) : (
-            ratedByCategory.map(({ category, kinks }) => (
-              <section key={category} className="mb-4">
-                <h3 className="mb-2 text-base italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}>
-                  {kinkCategoryLabel(category)}
-                </h3>
-                <div className="flex flex-col gap-1.5">
-                  {kinks.map((kink) => {
-                    const entry = currentProfile.entries[kink.id];
-                    const status = entry.status!;
-                    const concealed = !!entry.privateResponse && !privateResponseRevealed(kink.id);
-                    return (
-                      <div
-                        key={kink.id}
-                        className="rounded-xl px-3 py-2.5"
-                        style={{
-                          background: "var(--surface)",
-                          border: "1px solid var(--border)",
-                          borderLeft: concealed ? "4px solid transparent" : `4px solid ${STATUS_VAR[status]}`,
-                        }}
+            <div
+              data-testid="profile-rated-categories"
+              className="border-b"
+              style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
+            >
+              {ratedByCategory.map(({ category, kinks }) => {
+                const expanded = expandedReadCategories.has(category);
+                const contentId = `profile-read-category-${category}-content`;
+                const summaryId = `profile-read-category-${category}-summary`;
+                const categoryLabel = kinkCategoryLabel(category);
+                const summary = summarizeProfileCategory(kinks, currentProfile.entries);
+
+                return (
+                  <section
+                    key={category}
+                    className="border-t [overflow-wrap:anywhere]"
+                    style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
+                  >
+                    <h3>
+                      <button
+                        type="button"
+                        data-testid={`profile-read-category-${category}`}
+                        onClick={() => toggleReadCategory(category)}
+                        aria-expanded={expanded}
+                        aria-controls={contentId}
+                        aria-describedby={!expanded ? summaryId : undefined}
+                        aria-label={`${categoryLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
+                        className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="flex-1 text-sm">{kink.name}</span>
-                          {!concealed && entry.curious && <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />}
-                          <PrivateResponseStatus
-                            status={status}
-                            privateResponse={entry.privateResponse === true}
-                            concealed={concealed}
-                            subject={kink.name}
-                            onReveal={() => revealPrivateResponse(kink.id)}
-                            onConceal={() => concealPrivateResponse(kink.id)}
-                          />
-                        </div>
-                        {!concealed && entry.comment && (
-                          <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{entry.comment}</p>
-                        )}
-                        {!concealed && (entry.tags?.length ?? 0) > 0 && (
-                          <div className="mt-1.5 flex flex-wrap gap-1">
-                            {entry.tags!.map((tag) => (
-                              <span key={tag} className="rounded-full px-2 py-0.5 text-xs" style={{ background: "var(--tag-muted)", color: "var(--text2)" }}>
-                                {tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag}
-                              </span>
-                            ))}
+                        <span className="min-w-0 flex-1 text-base font-semibold leading-6">
+                          {categoryLabel}
+                        </span>
+                        <CaretDown
+                          size={15}
+                          className="flex-none transition-transform motion-reduce:transition-none"
+                          aria-hidden="true"
+                          style={{
+                            color: "var(--text2)",
+                            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                          }}
+                        />
+                      </button>
+                    </h3>
+
+                    {!expanded && (
+                      <div
+                        id={summaryId}
+                        data-testid={`profile-read-category-${category}-summary`}
+                        className="grid gap-3 pb-4 text-base font-normal leading-6"
+                        style={{ color: "var(--text)" }}
+                      >
+                        {summary.preview && (
+                          <div className="grid gap-1">
+                            <span className="inline-flex items-center gap-2 text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                              <span
+                                className="h-2 w-2 flex-none rounded-full"
+                                style={{ background: STATUS_VAR[summary.preview.status] }}
+                                aria-hidden="true"
+                              />
+                              {STATUS_LABEL[summary.preview.status]}
+                            </span>
+                            <div className="grid gap-0.5">
+                              {summary.preview.names.map((name) => <span key={name}>{name}</span>)}
+                              {summary.preview.remaining > 0 && (
+                                <>
+                                  <span className="text-sm leading-5" style={{ color: "var(--text2)" }} aria-hidden="true">
+                                    +{summary.preview.remaining} meer
+                                  </span>
+                                  <span className="sr-only">
+                                    en {summary.preview.remaining} meer met status {STATUS_LABEL[summary.preview.status]}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         )}
+
+                        {summary.hardLimits.length > 0 && (
+                          <div className="grid gap-1">
+                            <span className="text-sm font-semibold leading-5" style={{ color: "var(--hard-no-text)" }}>
+                              {summary.hardLimits.length === 1 ? "Harde grens" : "Harde grenzen"}
+                            </span>
+                            <div className="grid gap-0.5">
+                              {summary.hardLimits.map((name) => <span key={name}>{name}</span>)}
+                            </div>
+                          </div>
+                        )}
+
+                        {summary.context.map((note) => (
+                          <blockquote key={note.subject} className="text-sm leading-6" style={{ color: "var(--text2)" }}>
+                            <span aria-hidden="true">“</span>
+                            <span>{note.text}</span>
+                            <span aria-hidden="true">”</span>
+                            <cite className="mt-1 block text-xs not-italic leading-5">{note.subject}</cite>
+                          </blockquote>
+                        ))}
+
+                        {summary.fallback && (
+                          <div className="grid gap-1">
+                            <span className="inline-flex items-center gap-2 text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                              <span
+                                className="h-2 w-2 flex-none rounded-full"
+                                style={{ background: STATUS_VAR[summary.fallback.status] }}
+                                aria-hidden="true"
+                              />
+                              {STATUS_LABEL[summary.fallback.status]}
+                            </span>
+                            <span>{summary.fallback.name}</span>
+                          </div>
+                        )}
+
+                        {summary.privateCount > 0 && (
+                          <span className="text-xs leading-5" style={{ color: "var(--text2)" }}>
+                            {summary.privateCount === 1 ? "1 privéantwoord" : `${summary.privateCount} privéantwoorden`}
+                          </span>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))
+                    )}
+
+                    <div id={contentId} hidden={!expanded}>
+                      <div
+                        className="border-t pb-1"
+                        style={{ borderColor: "color-mix(in srgb, var(--border) 52%, transparent)" }}
+                      >
+                        {kinks.map((kink, index) => {
+                          const entry = currentProfile.entries[kink.id];
+                          const status = entry.status!;
+                          const concealed = !!entry.privateResponse && !privateResponseRevealed(kink.id);
+
+                          return (
+                            <div
+                              key={kink.id}
+                              className="py-3"
+                              style={index > 0
+                                ? { borderTop: "1px solid color-mix(in srgb, var(--border) 46%, transparent)" }
+                                : undefined}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-sm font-medium leading-5">{kink.name}</p>
+                                    {!concealed && entry.curious && (
+                                      <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />
+                                    )}
+                                  </div>
+                                  {!concealed && entry.comment && (
+                                    <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                                      {entry.comment}
+                                    </p>
+                                  )}
+                                  {!concealed && (entry.tags?.length ?? 0) > 0 && (
+                                    <div className="mt-1.5 flex flex-wrap gap-1">
+                                      {entry.tags!.map((tag) => (
+                                        <span
+                                          key={tag}
+                                          className="rounded-full px-2 py-0.5 text-xs"
+                                          style={{ background: "var(--tag-muted)", color: "var(--text2)" }}
+                                        >
+                                          {tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <PrivateResponseStatus
+                                  status={status}
+                                  privateResponse={entry.privateResponse === true}
+                                  concealed={concealed}
+                                  subject={kink.name}
+                                  onReveal={() => revealPrivateResponse(kink.id)}
+                                  onConceal={() => concealPrivateResponse(kink.id)}
+                                  compact
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
           )}
 
           {shared && (
