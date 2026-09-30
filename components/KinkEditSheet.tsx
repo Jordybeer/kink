@@ -115,7 +115,7 @@ export default function KinkEditSheet({
         </div>
 
         <section className="mt-6" aria-labelledby="kink-edit-answer-title">
-          <h4 id="kink-edit-answer-title" className="mb-2 text-sm font-semibold">Mijn antwoord</h4>
+          <h4 id="kink-edit-answer-title" className="mb-1.5 text-sm font-semibold">Mijn antwoord</h4>
           <StatusOptionRows current={entry.status} onSelect={onStatusChange} presentation="list" />
         </section>
 

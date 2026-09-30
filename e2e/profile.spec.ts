@@ -282,7 +282,8 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByRole("button", { name: "Gereed", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Terug naar profiel/ })).toHaveCount(0);
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Alle categorieën/ })).toBeVisible();
+    const categoryFilter = page.getByRole("button", { name: /Categorie.*Alle categorieën/ });
+    await expect(categoryFilter).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
 
     await page.getByRole("button", { name: "Gereed", exact: true }).click();
@@ -292,13 +293,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
   test("categoriefilter blijft zichtbaar en wijzigbaar tijdens zoeken", async ({ page }) => {
     await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
-    await page.getByRole("button", { name: /Alle categorieën/ }).click();
+    await page.getByRole("button", { name: /Categorie.*Alle categorieën/ }).click();
 
     const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
     await expect(categoryDialog).toBeVisible();
     await categoryDialog.getByRole("button", { name: /^Bondage\b/ }).click();
 
-    const activeFilter = page.getByRole("button", { name: /^Bondage\b/ }).first();
+    const activeFilter = page.getByRole("button", { name: /Categorie.*Bondage/ }).first();
     await expect(activeFilter).toBeVisible();
     const search = page.getByPlaceholder("Zoek in Bondage…");
     await search.fill("spanking");

@@ -343,13 +343,12 @@ export default function ProfilePage({ params }: Props) {
               onClick={() => setCategoriesOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={categoriesOpen}
-              className="focus-ring mt-2 inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold"
-              style={catalogCategoryFilter
-                ? { background: "color-mix(in srgb, var(--accent) 6%, var(--surface))", color: "var(--text)", border: "1px solid var(--border-accent)" }
-                : { background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)" }}
+              className="focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
-              <span className="truncate">{catalogCategoryFilterLabel}</span>
-              <CaretDown size={11} className="flex-none" aria-hidden="true" />
+              <span className="flex-none" style={{ color: "var(--text2)" }}>Categorie</span>
+              <span className="ml-auto min-w-0 truncate font-semibold">{catalogCategoryFilterLabel}</span>
+              <CaretDown size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
             </button>
           </div>
 
@@ -365,14 +364,13 @@ export default function ProfilePage({ params }: Props) {
                     kinks={kinks}
                     entries={currentProfile.entries}
                     onEdit={setEditKink}
-                    onChooseCategory={() => setCategoriesOpen(true)}
                     openByDefault={catalogCategoryFilter === category}
                   />
                 );
               })}
 
               {!catalogCategoryFilter && (
-                <section className="mt-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
                   <h3 className="mb-2 text-sm font-semibold">Eigen onderwerpen</h3>
                   <div className="mb-3 flex flex-col gap-1">
                     {customKinks.map((custom) => {
