@@ -133,11 +133,17 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 ### Profile read overview
 
-- Repeated category disclosure headings use the body sans in a clear semibold weight; keep editorial serif for the person and the main section heading.
-- Public preview names and every public hard-boundary name get their own reading line in primary text colour. Exact status labels sit above their group, with space between interests and boundaries.
-- Show the same-status remainder on its own quiet line as `+N meer`, never attached to an item name. Private answers still contribute only a count.
-- Anchor the disclosure caret beside the category title. Preserve whole-category toggle targets, flat dividers and complete expansion; no cards or new ranking.
-- A longer overview is acceptable when it removes dense sentences without concealing limits. Readability outranks squeezing more categories into a viewport.
+- The category disclosure control contains only the category title and caret. Its collapsed factual summary is sibling reading content, not part of the tap target.
+- When a category expands, hide the collapsed summary and show the complete flat detail rows so the same information is not duplicated twice on screen.
+- Public preview names and every public hard-boundary name remain separate reading lines. Exact statuses, remainder counts and private counts stay factual and secondary.
+- Keep notes as quiet human text with factual attribution; private answers contribute only a count.
+
+### Topic editor
+
+- Follow the focused Profile Edit structure: fixed title/close header, one scrollable body and a persistent `Klaar` footer.
+- Let the topic lead. Description and safety text stay fully readable and use spacing/dividers rather than nested cards.
+- In this editor, status choices use flat list rows with a small state mark and the exact status explanation beneath the label. The questionnaire keeps its existing card-style answer choices.
+- Agreements, visibility and context are separate groups of flat toggle rows. Preserve immediate-save behavior, privacy semantics and the existing status vocabulary.
 
 ### Profile Hero
 

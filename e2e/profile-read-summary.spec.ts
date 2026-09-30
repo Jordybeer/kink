@@ -42,6 +42,7 @@ test("mature profile previews stay factual, private and readable in both themes"
     expect((await remainder.boundingBox())!.y).toBeGreaterThanOrEqual(secondBox.y + secondBox.height);
     expect(await firstPreview.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
     await expect(toggle).toHaveAccessibleDescription(/en 2 meer met status Heel graag/);
+    expect(await summary.evaluate((node) => node.closest("button"))).toBeNull();
     for (const kink of impact.slice(5, 7)) await expect(summary).toContainText(kink.name);
     await expect(summary.getByText("Deze grens staat vast.", { exact: true })).toBeVisible();
     await expect(summary).toContainText("1 privéantwoord");
@@ -64,6 +65,7 @@ test("mature profile previews stay factual, private and readable in both themes"
     await toggle.focus();
     await page.keyboard.press("Space");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(summary).toHaveCount(0);
     await expect(content.getByText(longNote, { exact: true })).toBeVisible();
     await expect(content).not.toContainText("Dit blijft privé");
     await expect.poll(() => content.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);

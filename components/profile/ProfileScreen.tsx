@@ -496,73 +496,16 @@ export default function ProfilePage({ params }: Props) {
                         onClick={() => toggleReadCategory(category)}
                         aria-expanded={expanded}
                         aria-controls={contentId}
-                        aria-describedby={summaryId}
+                        aria-describedby={!expanded ? summaryId : undefined}
                         aria-label={`${categoryLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
-                        className="focus-ring flex min-h-14 w-full items-start gap-3 py-5 text-left"
+                        className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
                       >
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className="block text-lg font-semibold leading-6"
-                          >
-                            {categoryLabel}
-                          </span>
-                          <span
-                            id={summaryId}
-                            data-testid={`profile-read-category-${category}-summary`}
-                            className="mt-3 grid gap-4 text-base font-normal leading-6"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {summary.preview && (
-                              <span className="grid gap-1">
-                                <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
-                                  {STATUS_LABEL[summary.preview.status]}:
-                                </span>{" "}
-                                {summary.preview.names.map((name) => <span key={name}>{name}</span>)}
-                                {summary.preview.remaining > 0 && (
-                                  <>
-                                    {" "}
-                                    <span className="text-sm leading-5" style={{ color: "var(--text2)" }} aria-hidden="true">+{summary.preview.remaining} meer</span>
-                                    <span className="sr-only">
-                                      {" "}en {summary.preview.remaining} meer met status {STATUS_LABEL[summary.preview.status]}
-                                    </span>
-                                  </>
-                                )}
-                              </span>
-                            )}
-                            {summary.hardLimits.length > 0 && (
-                              <span className="grid gap-1">
-                                <span className="text-sm font-medium leading-5" style={{ color: "var(--hard-no)" }}>
-                                  {summary.hardLimits.length === 1 ? "Harde grens:" : "Harde grenzen:"}
-                                </span>{" "}
-                                {summary.hardLimits.map((name) => <span key={name}>{name}</span>)}
-                              </span>
-                            )}
-                            {summary.context.map((note) => (
-                              <span key={note.subject} className="text-sm leading-6" style={{ color: "var(--text2)" }}>
-                                <span aria-hidden="true">“</span>
-                                <span>{note.text}</span>
-                                <span aria-hidden="true">”</span>
-                                <span className="mt-1 block text-xs leading-5">{note.subject}</span>
-                              </span>
-                            ))}
-                            {summary.fallback && (
-                              <span className="grid gap-1">
-                                <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
-                                  {STATUS_LABEL[summary.fallback.status]}:
-                                </span>{" "}
-                                <span>{summary.fallback.name}</span>
-                              </span>
-                            )}
-                            {summary.privateCount > 0 && (
-                              <span className="text-xs leading-5" style={{ color: "var(--text2)" }}>
-                                {summary.privateCount === 1 ? "1 privéantwoord" : `${summary.privateCount} privéantwoorden`}
-                              </span>
-                            )}
-                          </span>
+                        <span className="min-w-0 flex-1 text-base font-semibold leading-6">
+                          {categoryLabel}
                         </span>
                         <CaretDown
                           size={15}
-                          className="mt-1 flex-none transition-transform motion-reduce:transition-none"
+                          className="flex-none transition-transform motion-reduce:transition-none"
                           aria-hidden="true"
                           style={{
                             color: "var(--text2)",
@@ -571,6 +514,71 @@ export default function ProfilePage({ params }: Props) {
                         />
                       </button>
                     </h3>
+
+                    {!expanded && (
+                      <div
+                        id={summaryId}
+                        data-testid={`profile-read-category-${category}-summary`}
+                        className="grid gap-3 pb-4 pr-7 text-base font-normal leading-6"
+                        style={{ color: "var(--text)" }}
+                      >
+                        {summary.preview && (
+                          <div className="grid gap-1">
+                            <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                              {STATUS_LABEL[summary.preview.status]}
+                            </span>
+                            <div className="grid gap-0.5">
+                              {summary.preview.names.map((name) => <span key={name}>{name}</span>)}
+                              {summary.preview.remaining > 0 && (
+                                <>
+                                  <span className="text-sm leading-5" style={{ color: "var(--text2)" }} aria-hidden="true">
+                                    +{summary.preview.remaining} meer
+                                  </span>
+                                  <span className="sr-only">
+                                    en {summary.preview.remaining} meer met status {STATUS_LABEL[summary.preview.status]}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {summary.hardLimits.length > 0 && (
+                          <div className="grid gap-1">
+                            <span className="text-sm font-semibold leading-5" style={{ color: "var(--hard-no-text)" }}>
+                              {summary.hardLimits.length === 1 ? "Harde grens" : "Harde grenzen"}
+                            </span>
+                            <div className="grid gap-0.5">
+                              {summary.hardLimits.map((name) => <span key={name}>{name}</span>)}
+                            </div>
+                          </div>
+                        )}
+
+                        {summary.context.map((note) => (
+                          <blockquote key={note.subject} className="text-sm leading-6" style={{ color: "var(--text2)" }}>
+                            <span aria-hidden="true">“</span>
+                            <span>{note.text}</span>
+                            <span aria-hidden="true">”</span>
+                            <cite className="mt-1 block text-xs not-italic leading-5">{note.subject}</cite>
+                          </blockquote>
+                        ))}
+
+                        {summary.fallback && (
+                          <div className="grid gap-1">
+                            <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+                              {STATUS_LABEL[summary.fallback.status]}
+                            </span>
+                            <span>{summary.fallback.name}</span>
+                          </div>
+                        )}
+
+                        {summary.privateCount > 0 && (
+                          <span className="text-xs leading-5" style={{ color: "var(--text2)" }}>
+                            {summary.privateCount === 1 ? "1 privéantwoord" : `${summary.privateCount} privéantwoorden`}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     <div id={contentId} hidden={!expanded}>
                       <div

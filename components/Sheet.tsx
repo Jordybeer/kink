@@ -69,6 +69,7 @@ interface Props {
   title?: string;
   scrollable?: boolean;
   variant?: SheetVariant;
+  footer?: ReactNode;
   "aria-label"?: string;
 }
 
@@ -77,12 +78,14 @@ function TitledSheetFrame({
   onClose,
   scrollable,
   variant,
+  footer,
   children,
 }: {
   title: string;
   onClose: () => void;
   scrollable: boolean;
   variant: SheetVariant;
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const quickSheet = variant === "sheet";
@@ -121,12 +124,23 @@ function TitledSheetFrame({
         </button>
       </div>
       {scrollable ? (
-        <div
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(2rem+env(safe-area-inset-bottom))]"
-          data-testid="sheet-scroll-body"
-        >
-          {children}
-        </div>
+        <>
+          <div
+            className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            data-testid="sheet-scroll-body"
+          >
+            {children}
+          </div>
+          {footer && (
+            <div
+              className="flex-none border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              style={{ borderColor: "var(--border)" }}
+              data-testid="sheet-footer"
+            >
+              {footer}
+            </div>
+          )}
+        </>
       ) : children}
     </div>
   );
@@ -151,6 +165,7 @@ export default function Sheet({
   title,
   scrollable = false,
   variant = "sheet",
+  footer,
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
@@ -224,6 +239,7 @@ export default function Sheet({
                       onClose={onClose}
                       scrollable={scrollable}
                       variant={variant}
+                      footer={footer}
                     >
                       {children}
                     </TitledSheetFrame>

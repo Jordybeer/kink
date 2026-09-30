@@ -3,11 +3,82 @@ import { Check } from "@phosphor-icons/react";
 import type { KinkStatus } from "@/types";
 import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
-const OPTIONS = STATUS_ORDER.map((status) => ({ status, label: STATUS_LABEL[status], hint: STATUS_HINT[status], danger: status === "hard_no" }));
+const OPTIONS = STATUS_ORDER.map((status) => ({
+  status,
+  label: STATUS_LABEL[status],
+  hint: STATUS_HINT[status],
+  danger: status === "hard_no",
+}));
 
-interface Props { current: KinkStatus; onSelect: (s: KinkStatus) => void; }
+interface Props {
+  current: KinkStatus;
+  onSelect: (s: KinkStatus) => void;
+  presentation?: "cards" | "list";
+}
 
-export default function StatusOptionRows({ current, onSelect }: Props) {
+export default function StatusOptionRows({ current, onSelect, presentation = "cards" }: Props) {
+  if (presentation === "list") {
+    return (
+      <div
+        data-tour="pills"
+        className="border-y"
+        style={{ borderColor: "var(--border)" }}
+        role="group"
+        aria-label="Status kiezen"
+      >
+        {OPTIONS.map(({ status: s, label, hint, danger }) => {
+          const active = current === s;
+          const colour = STATUS_VAR[s];
+          const labelColour = danger ? "var(--hard-no-text)" : colour;
+
+          return (
+            <button
+              key={s}
+              type="button"
+              data-tour={danger ? "hard-no" : undefined}
+              onClick={() => onSelect(active ? null : s)}
+              aria-pressed={active}
+              className="focus-ring flex min-h-[64px] w-full items-center gap-3 border-b px-1 py-3 text-left last:border-b-0"
+              style={{
+                borderColor: "var(--border)",
+                background: active
+                  ? `color-mix(in srgb, ${colour} ${danger ? 7 : 8}%, transparent)`
+                  : "transparent",
+              }}
+            >
+              <span
+                data-status-indicator={s}
+                aria-hidden="true"
+                className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
+                style={{
+                  color: active ? labelColour : colour,
+                  border: active
+                    ? `1px ${danger ? "dashed" : "solid"} color-mix(in srgb, ${colour} 54%, var(--border))`
+                    : "1px solid var(--control-border)",
+                  background: active
+                    ? `color-mix(in srgb, ${colour} ${danger ? 10 : 12}%, transparent)`
+                    : "transparent",
+                }}
+              >
+                {active
+                  ? <Check size={13} weight="bold" />
+                  : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour }} />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-semibold leading-6" style={{ color: active ? labelColour : "var(--text)" }}>
+                  {label}
+                </span>
+                <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  {hint}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="status-option-region min-h-[14.75rem]">
       <div data-tour="pills" className="status-option-rows grid h-full min-h-[14.75rem] grid-rows-5 gap-1" role="group" aria-label="Status kiezen">
@@ -16,9 +87,6 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
           const colour = STATUS_VAR[s];
           const idleTint = danger ? "5%" : "var(--status-option-idle-tint)";
           const idleBorder = danger ? "20%" : "var(--status-option-idle-border)";
-          // De harde grens leest zijn label in een opgelichte tint; zie
-          // --hard-no-text in design-role-tokens.css. Rand, vulling en glyph blijven op
-          // --hard-no, dus de ingetogen behandeling van principe 10 verandert niet.
           const labelColour = danger ? "var(--hard-no-text)" : colour;
           return (
             <button
@@ -55,9 +123,13 @@ export default function StatusOptionRows({ current, onSelect }: Props) {
                       }
                     : { color: colour, background: "transparent", border: "1px solid transparent" }}
                 >
-                  {active ? <Check size={11} weight="bold" /> : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour, boxShadow: `0 0 8px color-mix(in srgb, ${colour} 20%, transparent)` }} />}
+                  {active
+                    ? <Check size={11} weight="bold" />
+                    : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour, boxShadow: `0 0 8px color-mix(in srgb, ${colour} 20%, transparent)` }} />}
                 </span>
-                <span className="status-option-label whitespace-nowrap text-sm font-semibold leading-5" style={{ color: active ? labelColour : "var(--text)" }}>{label}</span>
+                <span className="status-option-label whitespace-nowrap text-sm font-semibold leading-5" style={{ color: active ? labelColour : "var(--text)" }}>
+                  {label}
+                </span>
                 <span
                   data-status-hint={s}
                   className="status-option-hint min-w-0 justify-self-end text-right text-sm leading-5"
