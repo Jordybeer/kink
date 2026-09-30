@@ -28,7 +28,7 @@ test("mature profile previews stay factual, private and readable in both themes"
     const summary = page.getByTestId("profile-read-category-impact-summary");
     const toggle = page.getByTestId("profile-read-category-impact");
     const content = page.locator("#profile-read-category-impact-content");
-    await expect(summary.getByText("Heel graag:", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Heel graag", { exact: true })).toBeVisible();
     const firstPreview = summary.getByText(impact[1].name, { exact: true });
     const secondPreview = summary.getByText(impact[2].name, { exact: true });
     const remainder = summary.getByText("+2 meer", { exact: true });
