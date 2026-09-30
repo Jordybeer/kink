@@ -209,7 +209,8 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(impact).toBeVisible();
     await expect(impact).toHaveAttribute("aria-expanded", "false");
     await expect(impact).toHaveAccessibleName("Impact Play. Details tonen");
-    await expect(impactSummary).toContainText("Heel graag: Spanking (hand) — giving");
+    await expect(impactSummary.getByText("Heel graag:", { exact: true })).toBeVisible();
+    await expect(impactSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
     await expect(impactSummary).not.toContainText("Klassiek en heerlijk");
     await expect(bondageSummary.getByText("Shibari ook", { exact: true })).toBeVisible();
     await expect(content).toBeHidden();
@@ -228,7 +229,8 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   test("harde grenzen blijven bij naam zichtbaar zonder de categorie te openen", async ({ page }) => {
     const sensation = page.getByTestId("profile-read-category-sensation-summary");
 
-    await expect(sensation).toContainText("Harde grens: Breath restriction / neck pressure");
+    await expect(sensation.getByText("Harde grens:", { exact: true })).toBeVisible();
+    await expect(sensation.getByText("Breath restriction / neck pressure", { exact: true })).toBeVisible();
   });
 
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {

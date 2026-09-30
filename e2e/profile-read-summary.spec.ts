@@ -28,7 +28,19 @@ test("mature profile previews stay factual, private and readable in both themes"
     const summary = page.getByTestId("profile-read-category-impact-summary");
     const toggle = page.getByTestId("profile-read-category-impact");
     const content = page.locator("#profile-read-category-impact-content");
-    await expect(summary).toContainText(`Heel graag: ${impact[1].name}, ${impact[2].name} +2`);
+    await expect(summary.getByText("Heel graag:", { exact: true })).toBeVisible();
+    const firstPreview = summary.getByText(impact[1].name, { exact: true });
+    const secondPreview = summary.getByText(impact[2].name, { exact: true });
+    const remainder = summary.getByText("+2 meer", { exact: true });
+    await expect(firstPreview).toBeVisible();
+    await expect(secondPreview).toBeVisible();
+    await expect(remainder).toBeVisible();
+    // Names and the remainder are distinct reading lines, not a comma-packed sentence.
+    const firstBox = (await firstPreview.boundingBox())!;
+    const secondBox = (await secondPreview.boundingBox())!;
+    expect(secondBox.y).toBeGreaterThanOrEqual(firstBox.y + firstBox.height);
+    expect((await remainder.boundingBox())!.y).toBeGreaterThanOrEqual(secondBox.y + secondBox.height);
+    expect(await firstPreview.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
     await expect(toggle).toHaveAccessibleDescription(/en 2 meer met status Heel graag/);
     for (const kink of impact.slice(5, 7)) await expect(summary).toContainText(kink.name);
     await expect(summary.getByText("Deze grens staat vast.", { exact: true })).toBeVisible();

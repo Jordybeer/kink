@@ -131,6 +131,14 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 ## Profile surfaces
 
+### Profile read overview
+
+- Repeated category disclosure headings use the body sans in a clear semibold weight; keep editorial serif for the person and the main section heading.
+- Public preview names and every public hard-boundary name get their own reading line in primary text colour. Exact status labels sit above their group, with space between interests and boundaries.
+- Show the same-status remainder on its own quiet line as `+N meer`, never attached to an item name. Private answers still contribute only a count.
+- Anchor the disclosure caret beside the category title. Preserve whole-category toggle targets, flat dividers and complete expansion; no cards or new ranking.
+- A longer overview is acceptable when it removes dense sentences without concealing limits. Readability outranks squeezing more categories into a viewport.
+
 ### Profile Hero
 
 Locked direction for the upcoming redesign:

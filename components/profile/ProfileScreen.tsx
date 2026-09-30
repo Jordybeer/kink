@@ -498,31 +498,30 @@ export default function ProfilePage({ params }: Props) {
                         aria-controls={contentId}
                         aria-describedby={summaryId}
                         aria-label={`${categoryLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
-                        className="focus-ring flex min-h-14 w-full items-center gap-3 py-2.5 text-left"
+                        className="focus-ring flex min-h-14 w-full items-start gap-3 py-5 text-left"
                       >
                         <span className="min-w-0 flex-1">
                           <span
-                            className="block text-base italic leading-5"
-                            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+                            className="block text-lg font-semibold leading-6"
                           >
                             {categoryLabel}
                           </span>
                           <span
                             id={summaryId}
                             data-testid={`profile-read-category-${category}-summary`}
-                            className="mt-1.5 grid gap-1 text-sm leading-5"
-                            style={{ color: "var(--text2)" }}
+                            className="mt-3 grid gap-4 text-base font-normal leading-6"
+                            style={{ color: "var(--text)" }}
                           >
                             {summary.preview && (
-                              <span>
-                                <span className="font-medium" style={{ color: "var(--text)" }}>
+                              <span className="grid gap-1">
+                                <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
                                   {STATUS_LABEL[summary.preview.status]}:
                                 </span>{" "}
-                                {summary.preview.names.join(", ")}
+                                {summary.preview.names.map((name) => <span key={name}>{name}</span>)}
                                 {summary.preview.remaining > 0 && (
                                   <>
                                     {" "}
-                                    <span aria-hidden="true">+{summary.preview.remaining}</span>
+                                    <span className="text-sm leading-5" style={{ color: "var(--text2)" }} aria-hidden="true">+{summary.preview.remaining} meer</span>
                                     <span className="sr-only">
                                       {" "}en {summary.preview.remaining} meer met status {STATUS_LABEL[summary.preview.status]}
                                     </span>
@@ -531,31 +530,31 @@ export default function ProfilePage({ params }: Props) {
                               </span>
                             )}
                             {summary.hardLimits.length > 0 && (
-                              <span>
-                                <span className="font-semibold" style={{ color: "var(--hard-no)" }}>
+                              <span className="grid gap-1">
+                                <span className="text-sm font-medium leading-5" style={{ color: "var(--hard-no)" }}>
                                   {summary.hardLimits.length === 1 ? "Harde grens:" : "Harde grenzen:"}
                                 </span>{" "}
-                                {summary.hardLimits.join(" · ")}
+                                {summary.hardLimits.map((name) => <span key={name}>{name}</span>)}
                               </span>
                             )}
                             {summary.context.map((note) => (
-                              <span key={note.subject} className="italic">
+                              <span key={note.subject} className="text-sm leading-6" style={{ color: "var(--text2)" }}>
                                 <span aria-hidden="true">“</span>
                                 <span>{note.text}</span>
                                 <span aria-hidden="true">”</span>
-                                <span className="not-italic"> · {note.subject}</span>
+                                <span className="mt-1 block text-xs leading-5">{note.subject}</span>
                               </span>
                             ))}
                             {summary.fallback && (
-                              <span>
-                                <span className="font-medium" style={{ color: "var(--text)" }}>
+                              <span className="grid gap-1">
+                                <span className="text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
                                   {STATUS_LABEL[summary.fallback.status]}:
                                 </span>{" "}
-                                {summary.fallback.name}
+                                <span>{summary.fallback.name}</span>
                               </span>
                             )}
                             {summary.privateCount > 0 && (
-                              <span>
+                              <span className="text-xs leading-5" style={{ color: "var(--text2)" }}>
                                 {summary.privateCount === 1 ? "1 privéantwoord" : `${summary.privateCount} privéantwoorden`}
                               </span>
                             )}
@@ -563,7 +562,7 @@ export default function ProfilePage({ params }: Props) {
                         </span>
                         <CaretDown
                           size={15}
-                          className="flex-none transition-transform motion-reduce:transition-none"
+                          className="mt-1 flex-none transition-transform motion-reduce:transition-none"
                           aria-hidden="true"
                           style={{
                             color: "var(--text2)",
