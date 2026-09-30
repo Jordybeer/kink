@@ -16,6 +16,7 @@ interface Props {
   onConceal?: () => void;
   compact?: boolean;
   readable?: boolean;
+  plain?: boolean;
 }
 
 export default function PrivateResponseStatus({
@@ -27,6 +28,7 @@ export default function PrivateResponseStatus({
   onConceal,
   compact = false,
   readable = false,
+  plain = false,
 }: Props) {
   const t = useMotionSafe();
   const sizeClass = readable
@@ -34,19 +36,23 @@ export default function PrivateResponseStatus({
     : compact
       ? "text-sm px-1.5 py-0.5"
       : "text-sm px-1.5 py-0.5 w-[var(--status-pill-width)]";
-  const sharedClass = `focus-ring rounded-full border whitespace-nowrap inline-flex items-center justify-center gap-1 ${sizeClass}`;
+  const sharedClass = plain
+    ? "focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium"
+    : `focus-ring rounded-full border whitespace-nowrap inline-flex items-center justify-center gap-1 ${sizeClass}`;
 
   if (!status) {
     return <span className="text-sm" style={{ color: "var(--text2)" }}>—</span>;
   }
 
   const colour = STATUS_VAR[status];
-  const statusStyle = {
-    color: colour,
-    borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
-    background: `color-mix(in srgb, ${colour} 15%, transparent)`,
-    borderStyle: status === "hard_no" ? "dashed" : "solid",
-  } as const;
+  const statusStyle = plain
+    ? { color: colour }
+    : {
+        color: colour,
+        borderColor: `color-mix(in srgb, ${colour} 35%, transparent)`,
+        background: `color-mix(in srgb, ${colour} 15%, transparent)`,
+        borderStyle: status === "hard_no" ? "dashed" : "solid",
+      } as const;
 
   if (!privateResponse) {
     return (
@@ -67,7 +73,9 @@ export default function PrivateResponseStatus({
             onClick={onReveal}
             aria-label={`Privéantwoord voor ${subject} tonen`}
             className={`${sharedClass} col-start-1 row-start-1`}
-            style={{ color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
+            style={plain
+              ? { color: "var(--text2)" }
+              : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
             initial={{ opacity: 0, filter: "blur(4px)" }}
             animate={{ opacity: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, filter: "blur(4px)" }}

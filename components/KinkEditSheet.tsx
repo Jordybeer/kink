@@ -119,7 +119,7 @@ export default function KinkEditSheet({
           <StatusOptionRows current={entry.status} onSelect={onStatusChange} presentation="list" />
         </section>
 
-        <section className="mt-6 border-t pt-5" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-agreements-title">
+        <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-agreements-title">
           <h4 id="kink-edit-agreements-title" className="text-sm font-semibold">Afspraken</h4>
           {AGREEMENTS.map((agreement) => (
             <ToggleRow
@@ -132,7 +132,7 @@ export default function KinkEditSheet({
           ))}
         </section>
 
-        <section className="mt-6 border-t pt-5" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-visibility-title">
+        <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-visibility-title">
           <h4 id="kink-edit-visibility-title" className="text-sm font-semibold">Zichtbaarheid</h4>
           <ToggleRow
             label="Privé antwoord"
@@ -146,7 +146,7 @@ export default function KinkEditSheet({
           />
         </section>
 
-        <section className="mt-6 border-t pt-5" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-context-title">
+        <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-context-title">
           <h4 id="kink-edit-context-title" className="text-sm font-semibold">Context</h4>
           {contextOptions.map((option) => <ToggleRow key={option.label} {...option} />)}
         </section>
@@ -179,7 +179,7 @@ function ToggleRow({
       aria-pressed={active}
       aria-label={ariaLabel}
       data-tour={privateControl ? "private" : undefined}
-      className="focus-ring flex min-h-12 w-full items-center gap-3 border-b py-3 text-left"
+      className="focus-ring flex min-h-11 w-full items-center gap-3 border-b py-2.5 text-left"
       style={{ borderColor: "var(--border)" }}
     >
       {icon && (
@@ -190,7 +190,7 @@ function ToggleRow({
       <span className="min-w-0 flex-1">
         <span className="block text-base font-medium leading-6">{label}</span>
         {description && (
-          <span className="mt-1 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+          <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
             {description}
           </span>
         )}

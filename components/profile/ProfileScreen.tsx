@@ -19,8 +19,8 @@ import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
-import { summarizeProfileCategory } from "@/lib/profileReadSummary";
-import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
+import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profileReadSummary";
+import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
@@ -74,14 +74,16 @@ export default function ProfilePage({ params }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
-  const [expandedReadCategories, setExpandedReadCategories] = useState<Set<KinkCategoryId>>(new Set());
+  const [expandedReadStatuses, setExpandedReadStatuses] = useState<Set<NonNullable<KinkStatus>>>(new Set());
+  const [privateReadOpen, setPrivateReadOpen] = useState(false);
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
 
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
-    setExpandedReadCategories(new Set());
+    setExpandedReadStatuses(new Set());
+    setPrivateReadOpen(false);
     setIncludePrivateExports(false);
     setEditing(false);
     setCatalogOpen(false);
@@ -154,19 +156,10 @@ export default function ProfilePage({ params }: Props) {
       )
     : [];
 
-  const statusSegments = STATUS_ORDER.map((status) => ({
-    status,
-    count: KINKS.filter(
-      (kink) => currentProfile.entries[kink.id]?.status === status
-        && currentProfile.entries[kink.id]?.privateResponse !== true,
-    ).length,
-  })).filter((segment) => segment.count > 0);
-  const ratedByCategory = visibleCategories.map((category) => ({
-    category,
-    kinks: (CATALOG_KINKS_BY_CATEGORY.get(category) ?? []).filter(
-      (kink) => currentProfile.entries[kink.id]?.status,
-    ),
-  })).filter((section) => section.kinks.length > 0);
+  const readSummary = buildProfileStatusReadSummary(KINKS, currentProfile.entries);
+  const hardLimitGroup = readSummary.groups.find((group) => group.status === "hard_no") ?? null;
+  const interestGroups = readSummary.groups.filter((group) => group.status !== "hard_no");
+
 
   function updateStatus(kinkId: string, status: KinkStatus) {
     setEntry(currentProfile.id, kinkId, { status, desire: null });
@@ -190,14 +183,15 @@ export default function ProfilePage({ params }: Props) {
     });
   }
 
-  function toggleReadCategory(category: KinkCategoryId) {
-    setExpandedReadCategories((current) => {
+  function toggleReadStatus(status: NonNullable<KinkStatus>) {
+    setExpandedReadStatuses((current) => {
       const next = new Set(current);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
       return next;
     });
   }
+
 
   function addCustom(event: React.FormEvent) {
     event.preventDefault();
@@ -445,212 +439,191 @@ export default function ProfilePage({ params }: Props) {
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
           <h2
-            className="mb-3 text-xl italic leading-tight"
+            className="mb-4 text-xl italic leading-tight"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
             Interesses &amp; grenzen
           </h2>
-
-          {totalRated > 0 && statusSegments.length > 0 && (
-            <div
-              role="img"
-              aria-label={statusSegments.map((segment) => `${segment.count} ${STATUS_LABEL[segment.status]}`).join(", ")}
-              className="mb-4 flex h-1.5 overflow-hidden rounded-full"
-              style={{ background: "var(--surface2)" }}
-            >
-              {statusSegments.map((segment) => (
-                <div key={segment.status} className="h-full" style={{ flex: segment.count, background: STATUS_VAR[segment.status] }} />
-              ))}
-            </div>
-          )}
 
           {totalRated === 0 ? (
             <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>
               Nog geen onderwerpen beoordeeld.
             </p>
           ) : (
-            <div
-              data-testid="profile-rated-categories"
-              className="border-b"
-              style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
-            >
-              {ratedByCategory.map(({ category, kinks }) => {
-                const expanded = expandedReadCategories.has(category);
-                const contentId = `profile-read-category-${category}-content`;
-                const summaryId = `profile-read-category-${category}-summary`;
-                const categoryLabel = kinkCategoryLabel(category);
-                const summary = summarizeProfileCategory(kinks, currentProfile.entries);
-
-                return (
-                  <section
-                    key={category}
-                    className="border-t [overflow-wrap:anywhere]"
-                    style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
-                  >
-                    <h3>
-                      <button
-                        type="button"
-                        data-testid={`profile-read-category-${category}`}
-                        onClick={() => toggleReadCategory(category)}
-                        aria-expanded={expanded}
-                        aria-controls={contentId}
-                        aria-describedby={!expanded ? summaryId : undefined}
-                        aria-label={`${categoryLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
-                        className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
-                      >
-                        <span className="min-w-0 flex-1 text-base font-semibold leading-6">
-                          {categoryLabel}
-                        </span>
-                        <CaretDown
-                          size={15}
-                          className="flex-none transition-transform motion-reduce:transition-none"
-                          aria-hidden="true"
-                          style={{
-                            color: "var(--text2)",
-                            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-                          }}
-                        />
-                      </button>
+            <div data-testid="profile-status-overview">
+              {hardLimitGroup && (
+                <section
+                  data-testid="profile-read-hard-limits"
+                  className="border-y py-4"
+                  style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
+                  aria-labelledby="profile-hard-limits-title"
+                >
+                  <div className="mb-3 flex items-baseline gap-3">
+                    <h3
+                      id="profile-hard-limits-title"
+                      className="min-w-0 flex-1 text-base font-semibold leading-6"
+                      style={{ color: "var(--hard-no-text)" }}
+                    >
+                      Harde grenzen
                     </h3>
+                    <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                      {hardLimitGroup.items.length}
+                    </span>
+                  </div>
+                  <ProfileReadItemsByCategory items={hardLimitGroup.items} showContext />
+                </section>
+              )}
 
-                    {!expanded && (
-                      <div
-                        id={summaryId}
-                        data-testid={`profile-read-category-${category}-summary`}
-                        className="grid gap-3 pb-4 text-base font-normal leading-6"
-                        style={{ color: "var(--text)" }}
-                      >
-                        {summary.preview && (
-                          <div className="grid gap-1">
-                            <span className="inline-flex items-center gap-2 text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
+              {interestGroups.length > 0 && (
+                <section className={hardLimitGroup ? "mt-5" : ""} aria-labelledby="profile-interests-title">
+                  <h3 id="profile-interests-title" className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>
+                    Interesses
+                  </h3>
+
+                  <div className="border-b" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
+                    {interestGroups.map((group) => {
+                      const expanded = expandedReadStatuses.has(group.status);
+                      const contentId = `profile-read-status-${group.status}-content`;
+                      const summaryId = `profile-read-status-${group.status}-summary`;
+                      const preview = group.items.slice(0, 3);
+                      const remaining = Math.max(0, group.items.length - preview.length);
+
+                      return (
+                        <section
+                          key={group.status}
+                          className="border-t [overflow-wrap:anywhere]"
+                          style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
+                        >
+                          <h4>
+                            <button
+                              type="button"
+                              data-testid={`profile-read-status-${group.status}`}
+                              onClick={() => toggleReadStatus(group.status)}
+                              aria-expanded={expanded}
+                              aria-controls={contentId}
+                              aria-describedby={!expanded ? summaryId : undefined}
+                              aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} antwoorden. ${expanded ? "Details verbergen" : "Details tonen"}`}
+                              className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                            >
                               <span
                                 className="h-2 w-2 flex-none rounded-full"
-                                style={{ background: STATUS_VAR[summary.preview.status] }}
+                                style={{ background: STATUS_VAR[group.status] }}
                                 aria-hidden="true"
                               />
-                              {STATUS_LABEL[summary.preview.status]}
-                            </span>
-                            <div className="grid gap-0.5">
-                              {summary.preview.names.map((name) => <span key={name}>{name}</span>)}
-                              {summary.preview.remaining > 0 && (
+                              <span className="min-w-0 flex-1 text-base font-semibold leading-6">
+                                {STATUS_LABEL[group.status]}
+                              </span>
+                              <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                                {group.items.length}
+                              </span>
+                              <CaretDown
+                                size={15}
+                                className="flex-none transition-transform motion-reduce:transition-none"
+                                aria-hidden="true"
+                                style={{
+                                  color: "var(--text2)",
+                                  transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                                }}
+                              />
+                            </button>
+                          </h4>
+
+                          {!expanded && (
+                            <div
+                              id={summaryId}
+                              data-testid={`profile-read-status-${group.status}-summary`}
+                              className="grid gap-0.5 pb-4 pl-5 text-base leading-6"
+                            >
+                              {preview.map((item) => <span key={item.id}>{item.name}</span>)}
+                              {remaining > 0 && (
                                 <>
                                   <span className="text-sm leading-5" style={{ color: "var(--text2)" }} aria-hidden="true">
-                                    +{summary.preview.remaining} meer
+                                    +{remaining} meer
                                   </span>
                                   <span className="sr-only">
-                                    en {summary.preview.remaining} meer met status {STATUS_LABEL[summary.preview.status]}
+                                    en {remaining} meer met status {STATUS_LABEL[group.status]}
                                   </span>
                                 </>
                               )}
                             </div>
+                          )}
+
+                          <div id={contentId} hidden={!expanded}>
+                            <ProfileReadItemsByCategory items={group.items} showContext />
                           </div>
-                        )}
+                        </section>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
 
-                        {summary.hardLimits.length > 0 && (
-                          <div className="grid gap-1">
-                            <span className="text-sm font-semibold leading-5" style={{ color: "var(--hard-no-text)" }}>
-                              {summary.hardLimits.length === 1 ? "Harde grens" : "Harde grenzen"}
-                            </span>
-                            <div className="grid gap-0.5">
-                              {summary.hardLimits.map((name) => <span key={name}>{name}</span>)}
-                            </div>
+              {!shared && readSummary.privateItems.length > 0 && (
+                <section className="mt-5 border-y" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
+                  <h3>
+                    <button
+                      type="button"
+                      data-testid="profile-read-private"
+                      onClick={() => setPrivateReadOpen((open) => !open)}
+                      aria-expanded={privateReadOpen}
+                      aria-controls="profile-read-private-content"
+                      className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                    >
+                      <Lock size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+                      <span className="min-w-0 flex-1 text-sm font-semibold">Privéantwoorden</span>
+                      <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                        {readSummary.privateItems.length}
+                      </span>
+                      <CaretDown
+                        size={15}
+                        aria-hidden="true"
+                        className="flex-none transition-transform motion-reduce:transition-none"
+                        style={{
+                          color: "var(--text2)",
+                          transform: privateReadOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        }}
+                      />
+                    </button>
+                  </h3>
+
+                  <div id="profile-read-private-content" hidden={!privateReadOpen} className="pb-1">
+                    {readSummary.privateItems.map((item, index) => {
+                      const entry = currentProfile.entries[item.id]!;
+                      const concealed = !privateResponseRevealed(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex min-h-11 items-start gap-3 py-2.5"
+                          style={index > 0
+                            ? { borderTop: "1px solid color-mix(in srgb, var(--border) 46%, transparent)" }
+                            : undefined}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium leading-5">{item.name}</p>
+                            <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                              {kinkCategoryLabel(item.category)}
+                            </p>
+                            {!concealed && entry.comment && (
+                              <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                                {entry.comment}
+                              </p>
+                            )}
                           </div>
-                        )}
-
-                        {summary.context.map((note) => (
-                          <blockquote key={note.subject} className="text-sm leading-6" style={{ color: "var(--text2)" }}>
-                            <span aria-hidden="true">“</span>
-                            <span>{note.text}</span>
-                            <span aria-hidden="true">”</span>
-                            <cite className="mt-1 block text-xs not-italic leading-5">{note.subject}</cite>
-                          </blockquote>
-                        ))}
-
-                        {summary.fallback && (
-                          <div className="grid gap-1">
-                            <span className="inline-flex items-center gap-2 text-sm font-medium leading-5" style={{ color: "var(--text2)" }}>
-                              <span
-                                className="h-2 w-2 flex-none rounded-full"
-                                style={{ background: STATUS_VAR[summary.fallback.status] }}
-                                aria-hidden="true"
-                              />
-                              {STATUS_LABEL[summary.fallback.status]}
-                            </span>
-                            <span>{summary.fallback.name}</span>
-                          </div>
-                        )}
-
-                        {summary.privateCount > 0 && (
-                          <span className="text-xs leading-5" style={{ color: "var(--text2)" }}>
-                            {summary.privateCount === 1 ? "1 privéantwoord" : `${summary.privateCount} privéantwoorden`}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div id={contentId} hidden={!expanded}>
-                      <div
-                        className="border-t pb-1"
-                        style={{ borderColor: "color-mix(in srgb, var(--border) 52%, transparent)" }}
-                      >
-                        {kinks.map((kink, index) => {
-                          const entry = currentProfile.entries[kink.id];
-                          const status = entry.status!;
-                          const concealed = !!entry.privateResponse && !privateResponseRevealed(kink.id);
-
-                          return (
-                            <div
-                              key={kink.id}
-                              className="py-3"
-                              style={index > 0
-                                ? { borderTop: "1px solid color-mix(in srgb, var(--border) 46%, transparent)" }
-                                : undefined}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-medium leading-5">{kink.name}</p>
-                                    {!concealed && entry.curious && (
-                                      <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />
-                                    )}
-                                  </div>
-                                  {!concealed && entry.comment && (
-                                    <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
-                                      {entry.comment}
-                                    </p>
-                                  )}
-                                  {!concealed && (entry.tags?.length ?? 0) > 0 && (
-                                    <div className="mt-1.5 flex flex-wrap gap-1">
-                                      {entry.tags!.map((tag) => (
-                                        <span
-                                          key={tag}
-                                          className="rounded-full px-2 py-0.5 text-xs"
-                                          style={{ background: "var(--tag-muted)", color: "var(--text2)" }}
-                                        >
-                                          {tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                <PrivateResponseStatus
-                                  status={status}
-                                  privateResponse={entry.privateResponse === true}
-                                  concealed={concealed}
-                                  subject={kink.name}
-                                  onReveal={() => revealPrivateResponse(kink.id)}
-                                  onConceal={() => concealPrivateResponse(kink.id)}
-                                  compact
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </section>
-                );
-              })}
+                          <PrivateResponseStatus
+                            status={entry.status}
+                            privateResponse
+                            concealed={concealed}
+                            subject={item.name}
+                            onReveal={() => revealPrivateResponse(item.id)}
+                            onConceal={() => concealPrivateResponse(item.id)}
+                            plain
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
             </div>
           )}
 
@@ -745,6 +718,61 @@ export default function ProfilePage({ params }: Props) {
       <ProfileEditSheet open={editing && !shared} profile={currentProfile} onClose={() => setEditing(false)} />
       <QRModal profile={shareOpen && !shared ? currentProfile : null} onClose={() => setShareOpen(false)} />
     </main>
+  );
+}
+
+function ProfileReadItemsByCategory({
+  items,
+  showContext,
+}: {
+  items: ProfileReadItem[];
+  showContext?: boolean;
+}) {
+  const groups = CATEGORIES
+    .map((category) => ({
+      category,
+      items: items.filter((item) => item.category === category),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return (
+    <div className="grid gap-4">
+      {groups.map((group) => (
+        <div key={group.category}>
+          <p className="mb-1.5 text-xs font-medium leading-5" style={{ color: "var(--text2)" }}>
+            {kinkCategoryLabel(group.category)}
+          </p>
+          <div>
+            {group.items.map((item, index) => (
+              <div
+                key={item.id}
+                className="py-2"
+                style={index > 0
+                  ? { borderTop: "1px solid color-mix(in srgb, var(--border) 42%, transparent)" }
+                  : undefined}
+              >
+                <div className="flex items-center gap-1.5">
+                  <p className="text-base leading-6">{item.name}</p>
+                  {item.curious && (
+                    <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />
+                  )}
+                </div>
+                {showContext && item.comment && (
+                  <p className="mt-0.5 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                    {item.comment}
+                  </p>
+                )}
+                {showContext && item.tags.length > 0 && (
+                  <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                    {item.tags.map((tag) => tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag).join(" · ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

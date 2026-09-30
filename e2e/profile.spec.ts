@@ -190,47 +190,29 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(modeGroup.getByRole("radio", { name: /Deep Dive/ })).toHaveAttribute("aria-checked", "true");
   });
 
-  test("statusbalk hoort bij de rustige read-view en verdwijnt in catalogusbeheer", async ({ page }) => {
-    const statusBar = page.getByRole("img", {
-      name: "6 Heel graag, 2 Ja, 1 Voor hen, 1 Harde grens",
-      exact: true,
-    });
-    await expect(statusBar).toBeVisible();
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
-    await expect(statusBar).toHaveCount(0);
-  });
+  test("read-view ordent de persoon op expliciete status in plaats van cataloguscategorie", async ({ page }) => {
+    await expect(page.getByRole("img", { name: /Heel graag/ })).toHaveCount(0);
 
-  test("read-view toont expliciete previews zonder ambigue context te kiezen", async ({ page }) => {
-    const impact = page.getByTestId("profile-read-category-impact");
-    const impactSummary = page.getByTestId("profile-read-category-impact-summary");
-    const bondageSummary = page.getByTestId("profile-read-category-bondage-summary");
-    const content = page.locator("#profile-read-category-impact-content");
+    const yes = page.getByTestId("profile-read-status-yes");
+    const yesSummary = page.getByTestId("profile-read-status-yes-summary");
+    await expect(yes).toBeVisible();
+    await expect(yes).toHaveAttribute("aria-expanded", "false");
+    await expect(yes).toHaveAccessibleName(/Heel graag, 6 antwoorden\. Details tonen/);
+    await expect(yesSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
 
-    await expect(impact).toBeVisible();
-    await expect(impact).toHaveAttribute("aria-expanded", "false");
-    await expect(impact).toHaveAccessibleName("Impact Play. Details tonen");
-    await expect(impactSummary.getByText("Heel graag", { exact: true })).toBeVisible();
-    await expect(impactSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
-    await expect(impactSummary).not.toContainText("Klassiek en heerlijk");
-    await expect(bondageSummary.getByText("Shibari ook", { exact: true })).toBeVisible();
-    await expect(content).toBeHidden();
-
-    await impact.focus();
-    await expect(impact).toBeFocused();
+    await yes.focus();
     await page.keyboard.press("Enter");
-
-    await expect(impact).toHaveAttribute("aria-expanded", "true");
-    await expect(impact).toHaveAccessibleName("Impact Play. Details verbergen");
+    await expect(yes).toHaveAttribute("aria-expanded", "true");
+    const content = page.locator("#profile-read-status-yes-content");
     await expect(content).toBeVisible();
-    await expect(content.getByText("Spanking (hand) — giving", { exact: true }).first()).toBeVisible();
+    await expect(content.getByText("Impact Play", { exact: true })).toBeVisible();
     await expect(content.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
   });
 
-  test("harde grenzen blijven bij naam zichtbaar zonder de categorie te openen", async ({ page }) => {
-    const sensation = page.getByTestId("profile-read-category-sensation-summary");
-
-    await expect(sensation.getByText("Harde grens", { exact: true })).toBeVisible();
-    await expect(sensation.getByText("Breath restriction / neck pressure", { exact: true })).toBeVisible();
+  test("alle publieke harde grenzen blijven onmiddellijk bij naam zichtbaar", async ({ page }) => {
+    const hardLimits = page.getByTestId("profile-read-hard-limits");
+    await expect(hardLimits).toBeVisible();
+    await expect(hardLimits.getByText("Breath restriction / neck pressure", { exact: true })).toBeVisible();
   });
 
   test("geen sterren (★) zichtbaar op de pagina", async ({ page }) => {
@@ -389,10 +371,8 @@ test.describe("Profielpagina — Sam (gevorderd, Submissive)", () => {
   });
 
   test("hard grens (humiliation) blijft zichtbaar in het overzicht", async ({ page }) => {
-    await expect(page.getByRole("img", {
-      name: "5 Heel graag, 1 Ja, 2 Misschien, 1 Harde grens",
-      exact: true,
-    })).toBeVisible();
+    const hardLimits = page.getByTestId("profile-read-hard-limits");
+    await expect(hardLimits.getByText("Verbal humiliation", { exact: true })).toBeVisible();
   });
 });
 
@@ -439,12 +419,11 @@ test.describe("Privé antwoorden op eigen profiel", () => {
     };
     await seedAndGo(page, "/profile/pw-local-private", [privateAlex]);
 
-    const impact = page.getByTestId("profile-read-category-impact");
-    const summary = page.getByTestId("profile-read-category-impact-summary");
-    await expect(summary).toContainText("1 privéantwoord");
-    await expect(summary).not.toContainText("Spanking (hand) — giving");
-    await expect(summary).not.toContainText("Dit is alleen voor mezelf bedoeld");
-    await impact.click();
+    const privateSection = page.getByTestId("profile-read-private");
+    await expect(privateSection).toContainText("1");
+    await expect(page.getByTestId("profile-read-status-yes-summary")).not.toContainText("Spanking (hand) — giving");
+    await expect(page.getByTestId("profile-read-status-yes-summary")).not.toContainText("Dit is alleen voor mezelf bedoeld");
+    await privateSection.click();
 
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
     await expect(secret).toHaveCount(0);
