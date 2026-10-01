@@ -14,8 +14,8 @@ import {
   PushPinSlash,
   Trash,
 } from "@phosphor-icons/react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { splitProfilesByOwnership } from "@/lib/profileType";
 import { usePartnerProfileId } from "@/lib/partnerPreference";
@@ -90,7 +90,8 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
   const [allMine, setAllMine] = useState(false);
   const [allShared, setAllShared] = useState(false);
   const [groupDelete, setGroupDelete] = useState<Profile | null>(null);
-  const reduced = useReducedMotion() ?? false;
+  const motionSafe = useMotionSafe();
+  const reduced = motionSafe.reduced;
 
   const ownership = splitProfilesByOwnership(profiles, pinnedId);
   const partnerExists = partnerId ? ownership.shared.some((profile) => profile.id === partnerId) : true;
@@ -181,40 +182,13 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
           {expanded && extras.length > 0 && (
             <motion.div
               key="profile-extras"
-              initial={reduced ? false : { height: 0, opacity: 0 }}
-              animate={{
-                height: "auto",
-                opacity: 1,
-                transition: reduced
-                  ? { duration: 0 }
-                  : {
-                      height: { duration: 0.24, ease: [0.16, 1, 0.3, 1] },
-                      opacity: { duration: 0.16, ease: "easeOut" },
-                    },
-              }}
-              exit={{
-                height: 0,
-                opacity: 0,
-                transition: reduced
-                  ? { duration: 0 }
-                  : {
-                      height: { duration: 0.18, ease: [0.4, 0, 1, 1] },
-                      opacity: { duration: 0.12, ease: "easeIn" },
-                    },
-              }}
-              style={{ overflow: "hidden" }}
+              initial={reduced ? false : { opacity: 0, y: -4, clipPath: "inset(0 0 5% 0)" }}
+              animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, y: -2, clipPath: "inset(0 0 3% 0)" }}
+              transition={motionSafe.disclosure}
+              className="overflow-hidden"
             >
-              <motion.div
-                initial={reduced ? false : "hidden"}
-                animate="show"
-                variants={STAGGER_CHILDREN}
-              >
-                {extras.map((group, index) => (
-                  <motion.div key={group.key} variants={fadeUp(6)}>
-                    {renderGroup(group, previewCount + index, owned)}
-                  </motion.div>
-                ))}
-              </motion.div>
+              {extras.map((group, index) => renderGroup(group, previewCount + index, owned))}
             </motion.div>
           )}
         </AnimatePresence>
@@ -422,7 +396,7 @@ function Disclosure({
         aria-hidden="true"
         initial={false}
         animate={{ rotate: expanded ? 180 : 0 }}
-        transition={reduced ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        transition={reduced ? { duration: 0 } : { duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       >
         <CaretDown size={14} />
       </motion.span>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { CaretDown } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
@@ -29,25 +29,23 @@ export default function CategorySection({
   const motionSafe = useMotionSafe();
   const filled = countFilled(kinks, entries);
   const [open, setOpen] = useState(() => openByDefault);
-  const [hasOpened, setHasOpened] = useState(() => openByDefault);
   const label = kinkCategoryLabel(category);
   const headingId = `category-${category}`;
 
   useEffect(() => {
     setOpen(openByDefault);
-    if (openByDefault) setHasOpened(true);
   }, [openByDefault]);
 
   function toggleOpen() {
-    setOpen((value) => {
-      const next = !value;
-      if (next) setHasOpened(true);
-      return next;
-    });
+    setOpen((value) => !value);
   }
 
   return (
-    <section aria-labelledby={headingId}>
+    <motion.section
+      aria-labelledby={headingId}
+      layout={motionSafe.reduced ? false : "position"}
+      transition={motionSafe.disclosure}
+    >
       <button
         type="button"
         data-testid="profile-category-header"
@@ -88,27 +86,31 @@ export default function CategorySection({
         </motion.span>
       </button>
 
-      <div
-        id={`${headingId}-content`}
-        className={`accordion-content ${open ? "open" : ""}`}
-        aria-hidden={!open}
-        inert={!open}
-      >
-        <div className="accordion-inner">
-          {hasOpened && (
-            <div className="flex flex-col">
-              {kinks.map((kink) => (
-                <KinkListRow
-                  key={kink.id}
-                  kink={kink}
-                  entry={entries[kink.id] ?? { status: null, comment: "" }}
-                  onOpen={() => onEdit(kink)}
-                />
-              ))}
-            </div>
+      <div id={`${headingId}-content`}>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="category-content"
+              initial={motionSafe.reduced ? false : { opacity: 0, y: -4, clipPath: "inset(0 0 5% 0)" }}
+              animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
+              exit={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2, clipPath: "inset(0 0 3% 0)" }}
+              transition={motionSafe.disclosure}
+              className="overflow-hidden"
+            >
+              <div className="flex flex-col">
+                {kinks.map((kink) => (
+                  <KinkListRow
+                    key={kink.id}
+                    kink={kink}
+                    entry={entries[kink.id] ?? { status: null, comment: "" }}
+                    onOpen={() => onEdit(kink)}
+                  />
+                ))}
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
-    </section>
+    </motion.section>
   );
 }
