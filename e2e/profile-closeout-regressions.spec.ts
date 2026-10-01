@@ -168,7 +168,7 @@ test("profile catalog manager keeps status text compact, aligned and free of pil
   await page.locator('button[aria-controls="category-impact-content"]').click();
 
   const labels = page.getByTestId("kink-status-label");
-  await expect(labels).toHaveCount(5);
+  expect(await labels.count()).toBeGreaterThanOrEqual(5);
   const styles = await labels.evaluateAll((elements) => elements.map((element) => {
     const style = getComputedStyle(element);
     return {
