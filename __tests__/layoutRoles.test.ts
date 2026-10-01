@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const roleCss = readFileSync(new URL("../app/design-role-tokens.css", import.meta.url), "utf8");
+const globalsCss = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+const layout = readFileSync(new URL("../app/layout.tsx", import.meta.url), "utf8");
 const pageShell = readFileSync(new URL("../components/PageShell.tsx", import.meta.url), "utf8");
 const topNav = readFileSync(new URL("../components/TopNav.tsx", import.meta.url), "utf8");
 const sheet = readFileSync(new URL("../components/Sheet.tsx", import.meta.url), "utf8");
@@ -21,6 +23,12 @@ describe("shared layout roles", () => {
     }
     expect(roleCss).toContain("--page-gutter: 1.5rem");
     expect(roleCss).toContain("--sheet-gutter: 1.5rem");
+  });
+
+  it("keeps iOS TopNav safe-area geometry wired end to end", () => {
+    expect(layout).toContain('viewportFit: "cover"');
+    expect(topNav).toContain('paddingTop: "env(safe-area-inset-top)"');
+    expect(globalsCss).toContain("--nav-h: calc(env(safe-area-inset-top) + 3.5rem)");
   });
 
   it("makes PageShell and both TopNav variants consume the same page gutter", () => {
