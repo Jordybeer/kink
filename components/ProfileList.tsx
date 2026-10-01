@@ -178,14 +178,14 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
       >
         {preview.map((group, index) => renderGroup(group, index, owned))}
 
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} mode="popLayout">
           {expanded && extras.length > 0 && (
             <motion.div
               key="profile-extras"
-              initial={reduced ? false : { opacity: 0, y: -4, clipPath: "inset(0 0 5% 0)" }}
-              animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
-              exit={reduced ? { opacity: 0 } : { opacity: 0, y: -2, clipPath: "inset(0 0 3% 0)" }}
-              transition={motionSafe.disclosure}
+              initial={reduced ? false : { y: -3 }}
+              animate={{ y: 0 }}
+              exit={reduced ? { y: 0 } : { y: -2 }}
+              transition={motionSafe.state}
               className="overflow-hidden"
             >
               {extras.map((group, index) => renderGroup(group, previewCount + index, owned))}

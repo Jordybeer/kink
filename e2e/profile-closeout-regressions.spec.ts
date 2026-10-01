@@ -96,6 +96,10 @@ test("profile keeps the read-view quiet and exposes search/filter only through O
   await impactHeader.click();
   await impactHeader.click();
   await expect(impactHeader).toHaveAttribute("aria-expanded", "true");
+
+  const firstImpactRow = page.locator('#category-impact-content button[aria-label$=", bewerken"]').first();
+  await expect(firstImpactRow).toBeVisible();
+  expect(await firstImpactRow.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
 });
 
 test("empty profile keeps the full catalog available behind the explicit manager", async ({ page }) => {

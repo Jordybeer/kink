@@ -74,7 +74,9 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const sharedDisclosure = page.getByRole("button", { name: "Alle gedeelde profielen · 9" });
   await expect(sharedDisclosure).toBeVisible();
   await sharedDisclosure.click();
-  await expect(page.getByRole("link", { name: "Gedeeld 08 Submissive openen" })).toBeVisible();
+  const lastShared = page.getByRole("link", { name: "Gedeeld 08 Submissive openen" });
+  await expect(lastShared).toBeVisible();
+  expect(await lastShared.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
   await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
 

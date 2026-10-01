@@ -87,14 +87,14 @@ export default function CategorySection({
       </button>
 
       <div id={`${headingId}-content`}>
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} mode="popLayout">
           {open && (
             <motion.div
               key="category-content"
-              initial={motionSafe.reduced ? false : { opacity: 0, y: -4, clipPath: "inset(0 0 5% 0)" }}
-              animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
-              exit={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2, clipPath: "inset(0 0 3% 0)" }}
-              transition={motionSafe.disclosure}
+              initial={motionSafe.reduced ? false : { y: -3 }}
+              animate={{ y: 0 }}
+              exit={motionSafe.reduced ? { y: 0 } : { y: -2 }}
+              transition={motionSafe.state}
               className="overflow-hidden"
             >
               <div className="flex flex-col">
