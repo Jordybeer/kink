@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -20,6 +21,7 @@ import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
 import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profileReadSummary";
+import { useMotionSafe } from "@/lib/motion";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
@@ -79,6 +81,7 @@ export default function ProfilePage({ params }: Props) {
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
+  const motionSafe = useMotionSafe();
 
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
@@ -455,11 +458,11 @@ export default function ProfilePage({ params }: Props) {
               {hardLimitGroup && (
                 <section
                   data-testid="profile-read-hard-limits"
-                  className="border-y py-4"
-                  style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
+                  className="rounded-xl px-3.5 py-3.5 [overflow-wrap:anywhere]"
+                  style={{ background: "color-mix(in srgb, var(--hard-no) 5%, var(--surface))" }}
                   aria-labelledby="profile-hard-limits-title"
                 >
-                  <div className="mb-3 flex items-baseline gap-3">
+                  <div className="mb-2.5 flex items-baseline gap-3">
                     <h3
                       id="profile-hard-limits-title"
                       className="min-w-0 flex-1 text-base font-semibold leading-6"
@@ -467,7 +470,7 @@ export default function ProfilePage({ params }: Props) {
                     >
                       Harde grenzen
                     </h3>
-                    <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                    <span className="flex-none text-sm tabular-nums" style={{ color: "color-mix(in srgb, var(--hard-no) 24%, var(--text2))" }}>
                       {hardLimitGroup.items.length}
                     </span>
                   </div>
@@ -476,12 +479,12 @@ export default function ProfilePage({ params }: Props) {
               )}
 
               {interestGroups.length > 0 && (
-                <section className={hardLimitGroup ? "mt-5" : ""} aria-labelledby="profile-interests-title">
-                  <h3 id="profile-interests-title" className="mb-1 text-xs font-medium" style={{ color: "var(--text2)" }}>
+                <section className={hardLimitGroup ? "mt-6" : ""} aria-labelledby="profile-interests-title">
+                  <h3 id="profile-interests-title" className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                     Interesses
                   </h3>
 
-                  <div className="border-b" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
+                  <div className="grid gap-3">
                     {interestGroups.map((group) => {
                       const expanded = expandedReadStatuses.has(group.status);
                       const contentId = `profile-read-status-${group.status}-content`;
@@ -493,10 +496,11 @@ export default function ProfilePage({ params }: Props) {
                         : `${group.items.length} antwoorden`;
 
                       return (
-                        <section
+                        <motion.section
                           key={group.status}
-                          className="border-t [overflow-wrap:anywhere]"
-                          style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}
+                          layout={motionSafe.reduced ? false : "position"}
+                          transition={motionSafe.disclosure}
+                          className="[overflow-wrap:anywhere]"
                         >
                           <h4>
                             <button
@@ -507,7 +511,10 @@ export default function ProfilePage({ params }: Props) {
                               aria-controls={contentId}
                               aria-describedby={!expanded ? summaryId : undefined}
                               aria-label={`${STATUS_LABEL[group.status]}, ${answerCountLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
-                              className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                              className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none"
+                              style={{
+                                background: `color-mix(in srgb, ${STATUS_VAR[group.status]} ${expanded ? 9 : 5}%, var(--surface))`,
+                              }}
                             >
                               <span
                                 className="h-2 w-2 flex-none rounded-full"
@@ -517,45 +524,68 @@ export default function ProfilePage({ params }: Props) {
                               <span className="min-w-0 flex-1 text-base font-semibold leading-6">
                                 {STATUS_LABEL[group.status]}
                               </span>
-                              <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                              <span
+                                className="flex-none text-sm tabular-nums"
+                                style={{ color: `color-mix(in srgb, ${STATUS_VAR[group.status]} 22%, var(--text2))` }}
+                              >
                                 {group.items.length}
                               </span>
-                              <CaretDown
-                                size={15}
-                                className="flex-none transition-transform motion-reduce:transition-none"
+                              <motion.span
+                                className="flex flex-none"
+                                animate={{ rotate: expanded ? 180 : 0 }}
+                                transition={motionSafe.state}
                                 aria-hidden="true"
-                                style={{
-                                  color: "var(--text2)",
-                                  transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-                                }}
-                              />
+                                style={{ color: `color-mix(in srgb, ${STATUS_VAR[group.status]} 22%, var(--text2))` }}
+                              >
+                                <CaretDown size={15} />
+                              </motion.span>
                             </button>
                           </h4>
 
-                          {!expanded && (
-                            <div
-                              id={summaryId}
-                              data-testid={`profile-read-status-${group.status}-summary`}
-                              className="grid gap-0.5 pb-4 pl-5 text-base leading-6"
-                            >
-                              {preview.map((item) => <span key={item.id}>{item.name}</span>)}
-                              {remaining > 0 && (
-                                <>
-                                  <span className="text-sm leading-5" style={{ color: "var(--text2)" }} aria-hidden="true">
-                                    +{remaining} meer
-                                  </span>
-                                  <span className="sr-only">
-                                    en {remaining} meer met status {STATUS_LABEL[group.status]}
-                                  </span>
-                                </>
+                          <div id={contentId} className="overflow-hidden">
+                            <AnimatePresence initial={false} mode="sync">
+                              {expanded ? (
+                                <motion.div
+                                  key="detail"
+                                  initial={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: 5, clipPath: "inset(0 0 8% 0)" }}
+                                  animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
+                                  exit={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2, clipPath: "inset(0 0 4% 0)" }}
+                                  transition={motionSafe.disclosure}
+                                  className="px-4 pb-1 pt-2"
+                                >
+                                  <ProfileReadItemsByCategory items={group.items} showContext />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  key="summary"
+                                  id={summaryId}
+                                  data-testid={`profile-read-status-${group.status}-summary`}
+                                  initial={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2 }}
+                                  transition={motionSafe.state}
+                                  className="grid gap-0.5 px-4 pb-1 pt-2 text-base leading-6"
+                                >
+                                  {preview.map((item) => <span key={item.id}>{item.name}</span>)}
+                                  {remaining > 0 && (
+                                    <>
+                                      <span
+                                        className="mt-1 text-sm font-medium leading-5"
+                                        style={{ color: STATUS_VAR[group.status] }}
+                                        aria-hidden="true"
+                                      >
+                                        +{remaining} meer
+                                      </span>
+                                      <span className="sr-only">
+                                        en {remaining} meer met status {STATUS_LABEL[group.status]}
+                                      </span>
+                                    </>
+                                  )}
+                                </motion.div>
                               )}
-                            </div>
-                          )}
-
-                          <div id={contentId} hidden={!expanded}>
-                            {expanded ? <ProfileReadItemsByCategory items={group.items} showContext /> : null}
+                            </AnimatePresence>
                           </div>
-                        </section>
+                        </motion.section>
                       );
                     })}
                   </div>
@@ -578,15 +608,15 @@ export default function ProfilePage({ params }: Props) {
                       <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
                         {readSummary.privateItems.length}
                       </span>
-                      <CaretDown
-                        size={15}
+                      <motion.span
+                        className="flex flex-none"
+                        animate={{ rotate: privateReadOpen ? 180 : 0 }}
+                        transition={motionSafe.state}
                         aria-hidden="true"
-                        className="flex-none transition-transform motion-reduce:transition-none"
-                        style={{
-                          color: "var(--text2)",
-                          transform: privateReadOpen ? "rotate(180deg)" : "rotate(0deg)",
-                        }}
-                      />
+                        style={{ color: "var(--text2)" }}
+                      >
+                        <CaretDown size={15} />
+                      </motion.span>
                     </button>
                   </h3>
 
@@ -743,17 +773,14 @@ function ProfileReadItemsByCategory({
     <div className="grid gap-4 [overflow-wrap:anywhere]">
       {groups.map((group) => (
         <div key={group.category}>
-          <p className="mb-1.5 text-xs font-medium leading-5" style={{ color: "var(--text2)" }}>
+          <p className="mb-1.5 text-xs font-semibold leading-5" style={{ color: "var(--text2)" }}>
             {kinkCategoryLabel(group.category)}
           </p>
-          <div>
-            {group.items.map((item, index) => (
+          <div className="grid gap-1">
+            {group.items.map((item) => (
               <div
                 key={item.id}
-                className="py-2"
-                style={index > 0
-                  ? { borderTop: "1px solid color-mix(in srgb, var(--border) 42%, transparent)" }
-                  : undefined}
+                className="py-1.5"
               >
                 <div className="flex items-center gap-1.5">
                   <p className="min-w-0 text-base leading-6">{item.name}</p>

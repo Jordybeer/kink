@@ -1,7 +1,9 @@
 "use client";
+import { motion } from "framer-motion";
 import { Check, Eye, EyeSlash, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
+import { useMotionSafe } from "@/lib/motion";
 import { STATUS_LABEL } from "@/lib/statusLabels";
 import Sheet from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
@@ -172,6 +174,8 @@ function ToggleRow({
   ariaLabel?: string;
   privateControl?: boolean;
 }) {
+  const motionSafe = useMotionSafe();
+
   return (
     <button
       type="button"
@@ -179,8 +183,11 @@ function ToggleRow({
       aria-pressed={active}
       aria-label={ariaLabel}
       data-tour={privateControl ? "private" : undefined}
-      className="focus-ring flex min-h-11 w-full items-center gap-3 border-b py-2.5 text-left"
-      style={{ borderColor: "var(--border)" }}
+      className="focus-ring flex min-h-11 w-full items-center gap-3 border-b py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none"
+      style={{
+        borderColor: "var(--border)",
+        background: active ? "color-mix(in srgb, var(--accent) 4%, transparent)" : "transparent",
+      }}
     >
       {icon && (
         <span className="flex-none" style={{ color: active ? "var(--accent)" : "var(--text2)" }}>
@@ -195,16 +202,28 @@ function ToggleRow({
           </span>
         )}
       </span>
-      <span
+      <motion.span
         aria-hidden="true"
-        className="flex h-5 w-5 flex-none items-center justify-center rounded-full"
+        className="flex h-5 w-5 flex-none items-center justify-center rounded-full transition-[background-color,border-color] duration-150 motion-reduce:transition-none"
+        animate={{ scale: active ? 1 : 0.94 }}
+        transition={motionSafe.state}
         style={{
           border: `1px solid ${active ? "var(--accent)" : "var(--control-border)"}`,
           color: "var(--accent)",
+          background: active ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "transparent",
         }}
       >
-        {active && <Check size={12} weight="bold" />}
-      </span>
+        {active && (
+          <motion.span
+            initial={motionSafe.reduced ? false : { opacity: 0, scale: 0.75 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={motionSafe.state}
+            className="flex"
+          >
+            <Check size={12} weight="bold" />
+          </motion.span>
+        )}
+      </motion.span>
     </button>
   );
 }

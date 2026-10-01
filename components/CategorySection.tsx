@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
+import { CaretDown } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
+import { useMotionSafe } from "@/lib/motion";
 import KinkListRow from "./KinkListRow";
 
 interface Props {
@@ -24,6 +26,7 @@ export default function CategorySection({
   onEdit,
   openByDefault = false,
 }: Props) {
+  const motionSafe = useMotionSafe();
   const filled = countFilled(kinks, entries);
   const [open, setOpen] = useState(() => openByDefault);
   const [hasOpened, setHasOpened] = useState(() => openByDefault);
@@ -51,10 +54,12 @@ export default function CategorySection({
         onClick={toggleOpen}
         aria-expanded={open}
         aria-controls={`${headingId}-content`}
-        className="focus-ring sticky z-[5] flex min-h-12 w-full items-center gap-3 border-b py-2.5 text-left"
+        className="focus-ring sticky z-[5] flex min-h-12 w-full items-center gap-3 border-b py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none"
         style={{
           top: "var(--nav-h)",
-          background: "color-mix(in srgb, var(--bg) 96%, var(--surface))",
+          background: open
+            ? "color-mix(in srgb, var(--accent) 5%, var(--bg))"
+            : "color-mix(in srgb, var(--bg) 96%, var(--surface))",
           borderColor: "color-mix(in srgb, var(--border) 76%, transparent)",
         }}
       >
@@ -66,15 +71,21 @@ export default function CategorySection({
         <span
           className="flex-none text-xs tabular-nums"
           aria-label={`${filled} van ${kinks.length} beoordeeld`}
-          style={{ color: filled > 0 ? "var(--text)" : "var(--text2)" }}
+          style={{ color: open
+            ? "color-mix(in srgb, var(--accent) 22%, var(--text2))"
+            : filled > 0 ? "var(--text)" : "var(--text2)" }}
         >
           {filled}/{kinks.length}
         </span>
-        <span className="flex h-8 w-8 flex-none items-center justify-center" style={{ color: "var(--text2)" }}>
-          {open
-            ? <CaretDown aria-hidden="true" size={16} />
-            : <CaretRight aria-hidden="true" size={16} />}
-        </span>
+        <motion.span
+          className="flex h-8 w-8 flex-none items-center justify-center"
+          style={{ color: open ? "color-mix(in srgb, var(--accent) 22%, var(--text2))" : "var(--text2)" }}
+          animate={{ rotate: open ? 0 : -90 }}
+          transition={motionSafe.state}
+          aria-hidden="true"
+        >
+          <CaretDown size={16} />
+        </motion.span>
       </button>
 
       <div

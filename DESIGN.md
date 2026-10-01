@@ -140,6 +140,8 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 - Public counts exclude private answers. On an own profile, private answers live in a separate deliberate disclosure and their status/context remain concealed until individually revealed. Shared profiles must not leak private information through counts, grouping or ordering.
 - Expanded rows inherit their meaning from the parent status group, so they do not repeat a status pill on every item. Notes and agreement context remain quiet secondary text and appear with their named subject rather than being algorithmically promoted.
 - Catalogue management intentionally remains **category-first** because its job is retrieval and editing: catalogue → category → topic → explicit status. Read and manage views are two lenses on the same explicit data, not one hierarchy forced onto both jobs.
+- Interest-status headers may use a low-chroma semantic surface to read as interactive sections; their previews and expanded topic content remain ordinary reading content, indented beneath the parent status rather than boxed into nested cards.
+- Hard boundaries may use one quiet safety-tinted surface because they are semantically distinct. Keep every public boundary immediately readable and never make safety information depend on disclosure or animation.
 
 ### Topic editor
 
@@ -177,6 +179,10 @@ Do not use a tab-semantic segmented control for a choice that is not actually ta
 ## Motion
 
 Motion must explain state or provide tactile feedback. It should be bounded and local.
+
+On Profile surfaces, disclosure is the authored motion moment: rotate the caret, preserve layout continuity, and reveal the child content with a short spatial/opacity transition. Press, selection and toggle feedback stay faster and quieter. Safety information never waits on animation, and page-load choreography is intentionally absent.
+
+Reduced motion removes spatial travel while preserving immediate color/opacity feedback so state changes remain legible.
 
 For ambient brand motion, preserve the existing doctrine from `memory.md`: slow cycles, shallow opacity/position changes, and no attention-seeking blink language.
 

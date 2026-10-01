@@ -61,7 +61,15 @@ test("mature profile read view is status-first, private-safe and readable in bot
     await expect(yesContent).toBeVisible();
     await expect(yesContent.getByText("Impact Play", { exact: true })).toBeVisible();
     await expect.poll(() => yesContent.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-    await page.keyboard.press("Enter");
+
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: "no-preference" });
+    await yes.click();
+    await yes.click();
+    await expect(yes).toHaveAttribute("aria-expanded", "true");
+    await yes.click();
+    await expect(yes).toHaveAttribute("aria-expanded", "false");
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+    await expect(yesSummary).toBeVisible();
 
     if (testInfo.project.name === "mobile" && theme === "dark") {
       await page.setViewportSize({ width: 320, height: 844 });

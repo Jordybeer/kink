@@ -1,7 +1,9 @@
 "use client";
+import { motion } from "framer-motion";
 import { CaretRight, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry } from "@/types";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
+import { useMotionSafe } from "@/lib/motion";
 import StatusGlyph from "./StatusGlyph";
 
 interface Props {
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function KinkListRow({ kink, entry, onOpen }: Props) {
+  const motionSafe = useMotionSafe();
   const status = entry.status;
   const colour = status ? STATUS_VAR[status] : "var(--text2)";
   const askFirst = entry.tags?.includes("vraag eerst") ?? false;
@@ -20,11 +23,13 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
     .join(", ");
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onOpen}
+      whileTap={motionSafe.reduced ? undefined : { scale: 0.992 }}
+      transition={motionSafe.state}
       aria-label={`${kink.name}, ${status ? STATUS_LABEL[status] : "nog niet beoordeeld"}${tagSpeech ? `, ${tagSpeech}` : ""}, bewerken`}
-      className="focus-ring flex min-h-[58px] w-full items-center gap-3 border-b py-2.5 text-left"
+      className="focus-ring flex min-h-[58px] w-full items-center gap-3 border-b py-2.5 text-left transition-colors duration-150 hover:bg-[var(--surface2)] active:bg-[var(--surface2)] motion-reduce:transition-none"
       style={{ borderColor: "color-mix(in srgb, var(--border) 68%, transparent)" }}
     >
       <span className="min-w-0 flex-1">
@@ -72,6 +77,6 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
       </span>
 
       <CaretRight size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
-    </button>
+    </motion.button>
   );
 }

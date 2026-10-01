@@ -1,6 +1,8 @@
 "use client";
+import { motion } from "framer-motion";
 import { Check } from "@phosphor-icons/react";
 import type { KinkStatus } from "@/types";
+import { useMotionSafe } from "@/lib/motion";
 import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
 const OPTIONS = STATUS_ORDER.map((status) => ({
@@ -17,6 +19,8 @@ interface Props {
 }
 
 export default function StatusOptionRows({ current, onSelect, presentation = "cards" }: Props) {
+  const motionSafe = useMotionSafe();
+
   if (presentation === "list") {
     return (
       <div data-tour="pills" role="group" aria-label="Status kiezen">
@@ -32,7 +36,7 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
               data-tour={danger ? "hard-no" : undefined}
               onClick={() => onSelect(active ? null : s)}
               aria-pressed={active}
-              className="focus-ring flex min-h-[54px] w-full items-center gap-3 border-b px-1 py-2 text-left"
+              className="focus-ring flex min-h-[54px] w-full items-center gap-3 border-b px-1 py-2 text-left transition-[background-color,border-color] duration-150 motion-reduce:transition-none"
               style={{
                 borderTop: index === 0 ? "1px solid var(--border)" : undefined,
                 borderColor: "var(--border)",
@@ -41,10 +45,12 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
                   : "transparent",
               }}
             >
-              <span
+              <motion.span
                 data-status-indicator={s}
                 aria-hidden="true"
-                className="flex h-5 w-5 flex-none items-center justify-center rounded-full"
+                className="flex h-5 w-5 flex-none items-center justify-center rounded-full transition-[background-color,border-color,color] duration-150 motion-reduce:transition-none"
+                animate={{ scale: active ? 1 : 0.94 }}
+                transition={motionSafe.state}
                 style={{
                   color: active ? labelColour : colour,
                   border: active
@@ -56,12 +62,21 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
                 }}
               >
                 {active
-                  ? <Check size={12} weight="bold" />
+                  ? (
+                    <motion.span
+                      initial={motionSafe.reduced ? false : { opacity: 0, scale: 0.75 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={motionSafe.state}
+                      className="flex"
+                    >
+                      <Check size={12} weight="bold" />
+                    </motion.span>
+                  )
                   : <span
                       className="h-2 w-2 rounded-full"
                       style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour }}
                     />}
-              </span>
+              </motion.span>
 
               <span className="min-w-0 flex-1">
                 <span

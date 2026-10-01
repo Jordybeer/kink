@@ -77,8 +77,13 @@ test("topic editor uses one focused reading flow with a persistent completion ac
   await expect(done).toBeVisible();
   await page.evaluate(() => { document.documentElement.style.removeProperty("font-size"); });
 
-  await statusGroup.getByRole("button", { name: /^Ja\b/ }).click();
-  await expect(statusGroup.getByRole("button", { name: /^Ja\b/ })).toHaveAttribute("aria-pressed", "true");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const maybe = statusGroup.getByRole("button", { name: /^Misschien\b/ });
+  const willing = statusGroup.getByRole("button", { name: /^Ja\b/ });
+  await maybe.click();
+  await willing.click();
+  await expect(willing).toHaveAttribute("aria-pressed", "true");
+  await expect(maybe).toHaveAttribute("aria-pressed", "false");
   await done.click();
   await expect(dialog).toBeHidden();
   await expect(result).toBeFocused();

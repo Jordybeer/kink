@@ -91,7 +91,11 @@ test("profile keeps the read-view quiet and exposes search/filter only through O
   await categoryDialog.getByRole("button", { name: /Impact Play/ }).click();
   await expect(categoryDialog).not.toBeVisible();
   await expect(page.getByTestId("profile-catalog-controls").getByRole("button", { name: "Categorie, Impact Play" })).toBeVisible();
-  await expect(page.locator('button[aria-controls="category-impact-content"]')).toHaveAttribute("aria-expanded", "true");
+  const impactHeader = page.locator('button[aria-controls="category-impact-content"]');
+  await expect(impactHeader).toHaveAttribute("aria-expanded", "true");
+  await impactHeader.click();
+  await impactHeader.click();
+  await expect(impactHeader).toHaveAttribute("aria-expanded", "true");
 });
 
 test("empty profile keeps the full catalog available behind the explicit manager", async ({ page }) => {
