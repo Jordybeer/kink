@@ -133,10 +133,13 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 ### Profile read overview
 
-- The category disclosure control contains only the category title and caret. Its collapsed factual summary is sibling reading content, not part of the tap target.
-- When a category expands, hide the collapsed summary and show the complete flat detail rows so the same information is not duplicated twice on screen.
-- Public preview names and every public hard-boundary name remain separate reading lines. Exact statuses, remainder counts and private counts stay factual and secondary.
-- Keep notes as quiet human text with factual attribution; private answers contribute only a count.
+- The read view is **person-first and status-first**. It answers what this person explicitly wants, accepts, is unsure about, offers for a partner, or marks as a hard boundary. Catalogue categories are secondary orientation, not the top-level structure.
+- Hard boundaries are a distinct safety layer and every public hard boundary remains named without requiring expansion. Do not reduce them to a count or a partial preview.
+- The four interest statuses use progressive disclosure: a short stable catalogue-order preview when collapsed, then the complete list grouped by quiet category labels when expanded. Do not rank within a status.
+- The status groups replace the old distribution bar. Do not reintroduce redundant summary chrome when the visible groups already communicate the same facts.
+- Public counts exclude private answers. On an own profile, private answers live in a separate deliberate disclosure and their status/context remain concealed until individually revealed. Shared profiles must not leak private information through counts, grouping or ordering.
+- Expanded rows inherit their meaning from the parent status group, so they do not repeat a status pill on every item. Notes and agreement context remain quiet secondary text and appear with their named subject rather than being algorithmically promoted.
+- Catalogue management intentionally remains **category-first** because its job is retrieval and editing: catalogue → category → topic → explicit status. Read and manage views are two lenses on the same explicit data, not one hierarchy forced onto both jobs.
 
 ### Topic editor
 

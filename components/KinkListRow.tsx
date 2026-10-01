@@ -57,7 +57,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
       </span>
 
       <span
-        data-testid="kink-status-pill"
+        data-testid="kink-status-label"
         className="flex min-w-[5.6rem] flex-none items-center justify-end gap-1.5 text-right text-xs font-semibold leading-5"
         style={{ color: colour }}
       >

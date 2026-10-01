@@ -43,7 +43,7 @@ const PROFILE_WITH_MIXED_STATUSES: Profile = {
   name: "Equal status pills",
   entries: Object.fromEntries(
     (["yes", "willing", "maybe", "no", "hard_no"] as const).map((status, index) => [
-      KINKS[index].id,
+      KINKS.filter((kink) => kink.category === "impact")[index].id,
       { status, score: null, comment: "" },
     ]),
   ),
@@ -66,7 +66,7 @@ test("profile keeps the read-view quiet and exposes search/filter only through O
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
   const search = page.getByRole("textbox", { name: "Volledige catalogus doorzoeken" });
   await expect(search).toBeVisible();
-  const categories = page.getByRole("button", { name: "Alle categorieën" });
+  const categories = page.getByTestId("profile-catalog-controls").getByRole("button", { name: "Categorie, Alle categorieën" });
   await expect(categories).toBeVisible();
   for (const control of [search, categories]) {
     const box = await control.boundingBox();
@@ -82,16 +82,15 @@ test("profile keeps the read-view quiet and exposes search/filter only through O
     getComputedStyle(element).top,
   )).toBe("56px");
 
-  const jumpButton = page.getByRole("button", { name: /Andere categorie kiezen; nu/ }).first();
-  const jumpBox = await jumpButton.boundingBox();
-  expect(jumpBox).not.toBeNull();
-  expect(jumpBox!.width).toBeGreaterThanOrEqual(44);
-  expect(jumpBox!.height).toBeGreaterThanOrEqual(44);
-  await jumpButton.click();
+  const filterBox = await categories.boundingBox();
+  expect(filterBox).not.toBeNull();
+  expect(filterBox!.height).toBeGreaterThanOrEqual(44);
+  await categories.click();
   const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
   await expect(categoryDialog).toBeVisible();
   await categoryDialog.getByRole("button", { name: /Impact Play/ }).click();
   await expect(categoryDialog).not.toBeVisible();
+  await expect(page.getByTestId("profile-catalog-controls").getByRole("button", { name: "Categorie, Impact Play" })).toBeVisible();
   await expect(page.locator('button[aria-controls="category-impact-content"]')).toHaveAttribute("aria-expanded", "true");
 });
 
@@ -125,14 +124,14 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
   const profileSummary = page.getByTestId("profile-summary");
   const linkedSources = profileSummary.getByTestId("profile-linked-sources");
   const summary = linkedSources.getByTestId("bdsmtest-summary");
-  const lastCategory = page.getByRole("heading", { name: "Sensation Play" });
+  const statusOverview = page.getByTestId("profile-status-overview");
   await expect(profileSummary).toBeVisible();
   await expect(linkedSources.getByRole("heading", { name: "Gekoppelde bronnen" })).toBeVisible();
   await expect(summary).toBeVisible();
-  await expect(lastCategory).toBeVisible();
-  expect(await lastCategory.evaluate((heading, selector) => {
+  await expect(statusOverview).toBeVisible();
+  expect(await statusOverview.evaluate((overview, selector) => {
     const target = document.querySelector(selector);
-    return Boolean(target && (target.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING));
+    return Boolean(target && (target.compareDocumentPosition(overview) & Node.DOCUMENT_POSITION_FOLLOWING));
   }, '[data-testid="bdsmtest-summary"]')).toBe(true);
 
   const disclosure = summary.getByRole("button", { name: "Bekijk alle 3 BDSMTest-resultaten" });
@@ -161,19 +160,34 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
   await expect(summary).toBeVisible();
 });
 
-test("profile catalog manager gives every kink status pill the same width", async ({ page }) => {
+test("profile catalog manager keeps status text compact, aligned and free of pill chrome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
 
   await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
-  const widths = await page.getByTestId("kink-status-pill").evaluateAll((elements) =>
-    [...new Set(elements.map((element) => getComputedStyle(element).width))],
-  );
-  expect(widths).toEqual(["120px"]);
+  await page.locator('button[aria-controls="category-impact-content"]').click();
+
+  const labels = page.getByTestId("kink-status-label");
+  await expect(labels).toHaveCount(5);
+  const styles = await labels.evaluateAll((elements) => elements.map((element) => {
+    const style = getComputedStyle(element);
+    return {
+      justifyContent: style.justifyContent,
+      minWidth: Number.parseFloat(style.minWidth),
+      backgroundColor: style.backgroundColor,
+      borderTopWidth: style.borderTopWidth,
+    };
+  }));
+
+  expect(styles.every((style) => style.justifyContent === "flex-end")).toBe(true);
+  expect(styles.every((style) => style.minWidth >= 89)).toBe(true);
+  expect(styles.every((style) => style.backgroundColor === "rgba(0, 0, 0, 0)")).toBe(true);
+  expect(styles.every((style) => style.borderTopWidth === "0px")).toBe(true);
 });
 
 test("dense profile share keeps a fixed header and scrolls inside the iPhone visual viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
   await page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" }).click();
@@ -198,12 +212,23 @@ test("dense profile share keeps a fixed header and scrolls inside the iPhone vis
     return { top: Math.round(rect.top), height: Math.round(rect.height) };
   })).toEqual({ top: 80, height: 420 });
 
-  const headerBefore = await header.boundingBox();
+  const stableY = async () => header.evaluate(async (element) => {
+    const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    let previous = element.getBoundingClientRect().y;
+    for (let index = 0; index < 12; index++) {
+      await nextFrame();
+      const current = element.getBoundingClientRect().y;
+      if (Math.abs(current - previous) < 0.25) return current;
+      previous = current;
+    }
+    return previous;
+  });
+
+  const headerBefore = await stableY();
   await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
-  const headerAfter = await header.boundingBox();
-  expect(headerBefore).not.toBeNull();
-  expect(headerAfter!.y).toBeCloseTo(headerBefore!.y, 0);
+  const headerAfter = await stableY();
+  expect(headerAfter).toBeCloseTo(headerBefore, 0);
 
   await expect(dialog.getByRole("button", { name: "Kopieer volledige link" })).toBeVisible();
   await expect.poll(() => sheet.evaluate((element) => {

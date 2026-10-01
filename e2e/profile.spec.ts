@@ -280,7 +280,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(categoryDialog).toBeVisible();
     await categoryDialog.getByRole("button", { name: /^Bondage\b/ }).click();
 
-    const activeFilter = page.getByRole("button", { name: /^Bondage\b/ }).first();
+    const activeFilter = page.getByTestId("profile-catalog-controls").getByRole("button", { name: "Categorie, Bondage" });
     await expect(activeFilter).toBeVisible();
     const search = page.getByPlaceholder("Zoek in Bondage…");
     await search.fill("spanking");

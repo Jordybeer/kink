@@ -337,6 +337,7 @@ export default function ProfilePage({ params }: Props) {
               onClick={() => setCategoriesOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={categoriesOpen}
+              aria-label={`Categorie, ${catalogCategoryFilterLabel}`}
               className="focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
@@ -487,6 +488,9 @@ export default function ProfilePage({ params }: Props) {
                       const summaryId = `profile-read-status-${group.status}-summary`;
                       const preview = group.items.slice(0, 3);
                       const remaining = Math.max(0, group.items.length - preview.length);
+                      const answerCountLabel = group.items.length === 1
+                        ? "1 antwoord"
+                        : `${group.items.length} antwoorden`;
 
                       return (
                         <section
@@ -502,7 +506,7 @@ export default function ProfilePage({ params }: Props) {
                               aria-expanded={expanded}
                               aria-controls={contentId}
                               aria-describedby={!expanded ? summaryId : undefined}
-                              aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} antwoorden. ${expanded ? "Details verbergen" : "Details tonen"}`}
+                              aria-label={`${STATUS_LABEL[group.status]}, ${answerCountLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
                               className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
                             >
                               <span
@@ -549,7 +553,7 @@ export default function ProfilePage({ params }: Props) {
                           )}
 
                           <div id={contentId} hidden={!expanded}>
-                            <ProfileReadItemsByCategory items={group.items} showContext />
+                            {expanded ? <ProfileReadItemsByCategory items={group.items} showContext /> : null}
                           </div>
                         </section>
                       );
@@ -587,13 +591,13 @@ export default function ProfilePage({ params }: Props) {
                   </h3>
 
                   <div id="profile-read-private-content" hidden={!privateReadOpen} className="pb-1">
-                    {readSummary.privateItems.map((item, index) => {
+                    {privateReadOpen ? readSummary.privateItems.map((item, index) => {
                       const entry = currentProfile.entries[item.id]!;
                       const concealed = !privateResponseRevealed(item.id);
                       return (
                         <div
                           key={item.id}
-                          className="flex min-h-11 items-start gap-3 py-2.5"
+                          className="flex min-h-11 items-start gap-3 py-2.5 [overflow-wrap:anywhere]"
                           style={index > 0
                             ? { borderTop: "1px solid color-mix(in srgb, var(--border) 46%, transparent)" }
                             : undefined}
@@ -604,7 +608,7 @@ export default function ProfilePage({ params }: Props) {
                               {kinkCategoryLabel(item.category)}
                             </p>
                             {!concealed && entry.comment && (
-                              <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                              <p className="mt-1 text-xs leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
                                 {entry.comment}
                               </p>
                             )}
@@ -620,7 +624,7 @@ export default function ProfilePage({ params }: Props) {
                           />
                         </div>
                       );
-                    })}
+                    }) : null}
                   </div>
                 </section>
               )}
@@ -736,7 +740,7 @@ function ProfileReadItemsByCategory({
     .filter((group) => group.items.length > 0);
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 [overflow-wrap:anywhere]">
       {groups.map((group) => (
         <div key={group.category}>
           <p className="mb-1.5 text-xs font-medium leading-5" style={{ color: "var(--text2)" }}>
@@ -752,13 +756,13 @@ function ProfileReadItemsByCategory({
                   : undefined}
               >
                 <div className="flex items-center gap-1.5">
-                  <p className="text-base leading-6">{item.name}</p>
+                  <p className="min-w-0 text-base leading-6">{item.name}</p>
                   {item.curious && (
                     <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />
                   )}
                 </div>
                 {showContext && item.comment && (
-                  <p className="mt-0.5 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                  <p className="mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
                     {item.comment}
                   </p>
                 )}

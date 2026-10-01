@@ -14,8 +14,9 @@ test("mature profile read view is status-first, private-safe and readable in bot
   impact.slice(0, 4).forEach((kink) => {
     profile.entries[kink.id] = { status: "yes", comment: "" };
   });
+  const longBoundaryNote = `Geenuitzonderingen${"x".repeat(180)}🙂`;
   impact.slice(4, 7).forEach((kink, index) => {
-    profile.entries[kink.id] = { status: "hard_no", comment: index === 0 ? "Deze grens staat vast." : "" };
+    profile.entries[kink.id] = { status: "hard_no", comment: index === 0 ? longBoundaryNote : "" };
   });
   profile.entries[bondage[0].id] = {
     status: "yes",
@@ -38,7 +39,7 @@ test("mature profile read view is status-first, private-safe and readable in bot
     for (const kink of impact.slice(4, 7)) {
       await expect(hardLimits.getByText(kink.name, { exact: true })).toBeVisible();
     }
-    await expect(hardLimits.getByText("Deze grens staat vast.", { exact: true })).toBeVisible();
+    await expect(hardLimits.getByText(longBoundaryNote, { exact: true })).toBeVisible();
 
     const yes = page.getByTestId("profile-read-status-yes");
     const yesSummary = page.getByTestId("profile-read-status-yes-summary");
@@ -61,6 +62,21 @@ test("mature profile read view is status-first, private-safe and readable in bot
     await expect(yesContent.getByText("Impact Play", { exact: true })).toBeVisible();
     await expect.poll(() => yesContent.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     await page.keyboard.press("Enter");
+
+    if (testInfo.project.name === "mobile" && theme === "dark") {
+      await page.setViewportSize({ width: 320, height: 844 });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+
+      await page.locator("html").evaluate((element) => {
+        element.style.fontSize = "200%";
+      });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+      await expect(hardLimits.getByText(longBoundaryNote, { exact: true })).toBeVisible();
+      await page.locator("html").evaluate((element) => {
+        element.style.fontSize = "";
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+    }
 
     await page.evaluate(async () => { await document.fonts.ready; });
     await page.screenshot({
