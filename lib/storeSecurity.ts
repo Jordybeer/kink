@@ -1,4 +1,4 @@
-import type { Profile, ProfileOwnerKey } from "@/types";
+import type { Profile, ProfileOwnerKey, ProfileIdentityAnchor } from "@/types";
 import {
   canonicalJson,
   createConsentLedgerEvent,
@@ -12,7 +12,132 @@ import {
   classifyProfileImport,
   getProfileVerificationCode,
 } from "@/lib/profileVerification";
+import { isProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
 import type { useStore as CoreUseStore } from "@/lib/storeCore";
+
+export const PROFILE_IDENTITY_ANCHOR_STORAGE_KEY = "kinksync-profile-identity-anchors";
+export const PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA = 1 as const;
+
+export interface ProfileIdentityAnchorRegistry {
+  schema: typeof PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA;
+  anchors: ProfileIdentityAnchor[];
+}
+
+type IdentityAnchorStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+const EMPTY_PROFILE_IDENTITY_ANCHOR_REGISTRY: ProfileIdentityAnchorRegistry = {
+  schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+  anchors: [],
+};
+
+function sameProfileIdentityAnchor(
+  left: ProfileIdentityAnchor,
+  right: ProfileIdentityAnchor,
+): boolean {
+  return left.schema === right.schema
+    && left.profileId === right.profileId
+    && left.verificationCode === right.verificationCode
+    && left.keyId === right.keyId
+    && left.fingerprint === right.fingerprint
+    && left.anchoredAt === right.anchoredAt
+    && left.method === right.method;
+}
+
+function parseProfileIdentityAnchorRegistry(raw: unknown): ProfileIdentityAnchorRegistry | null {
+  if (!raw || typeof raw !== "object") return null;
+  const registry = raw as Record<string, unknown>;
+  if (registry.schema !== PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA || !Array.isArray(registry.anchors)) {
+    return null;
+  }
+
+  const anchors: ProfileIdentityAnchor[] = [];
+  const seenProfileIds = new Set<string>();
+  for (const candidate of registry.anchors) {
+    if (!isProfileIdentityAnchor(candidate) || seenProfileIds.has(candidate.profileId)) return null;
+    seenProfileIds.add(candidate.profileId);
+    anchors.push(candidate);
+  }
+
+  return { schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA, anchors };
+}
+
+function browserIdentityAnchorStorage(): IdentityAnchorStorage | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+function loadWritableProfileIdentityAnchorRegistry(
+  storage: IdentityAnchorStorage | undefined,
+): ProfileIdentityAnchorRegistry | null {
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY);
+    if (raw === null) return { ...EMPTY_PROFILE_IDENTITY_ANCHOR_REGISTRY, anchors: [] };
+    return parseProfileIdentityAnchorRegistry(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+export function readProfileIdentityAnchorRegistry(
+  storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
+): ProfileIdentityAnchorRegistry {
+  const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+  return registry ?? { ...EMPTY_PROFILE_IDENTITY_ANCHOR_REGISTRY, anchors: [] };
+}
+
+export function getPersistedProfileIdentityAnchor(
+  profileId: string,
+  storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
+): ProfileIdentityAnchor | undefined {
+  return readProfileIdentityAnchorRegistry(storage).anchors.find((anchor) => anchor.profileId === profileId);
+}
+
+export function persistProfileIdentityAnchor(
+  anchor: ProfileIdentityAnchor,
+  storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
+): boolean {
+  if (!isProfileIdentityAnchor(anchor)) return false;
+  const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+  if (!registry || !storage) return false;
+
+  const existing = registry.anchors.find((candidate) => candidate.profileId === anchor.profileId);
+  if (existing) return sameProfileIdentityAnchor(existing, anchor);
+
+  try {
+    storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
+      schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+      anchors: [...registry.anchors, anchor],
+    } satisfies ProfileIdentityAnchorRegistry));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function removePersistedProfileIdentityAnchor(
+  profileId: string,
+  storage: IdentityAnchorStorage | undefined = browserIdentityAnchorStorage(),
+): boolean {
+  const registry = loadWritableProfileIdentityAnchorRegistry(storage);
+  if (!registry || !storage) return false;
+  const anchors = registry.anchors.filter((anchor) => anchor.profileId !== profileId);
+  if (anchors.length === registry.anchors.length) return true;
+
+  try {
+    storage.setItem(PROFILE_IDENTITY_ANCHOR_STORAGE_KEY, JSON.stringify({
+      schema: PROFILE_IDENTITY_ANCHOR_STORAGE_SCHEMA,
+      anchors,
+    } satisfies ProfileIdentityAnchorRegistry));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export interface BackupRestoreResult {
   added: number;
