@@ -67,6 +67,7 @@ test("topic editor separates the primary answer from optional details without fo
     await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
     await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details, huidig" })).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "Details" })).toBeFocused();
+    await expect(dialog.getByText(candidate!.name, { exact: false }).first()).toBeVisible();
     await expect(statusGroup).toHaveCount(0);
     await expect(dialog.getByRole("heading", { name: "Afspraken" })).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "Zichtbaarheid" })).toBeVisible();
@@ -89,6 +90,7 @@ test("topic editor separates the primary answer from optional details without fo
 
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await expect.poll(() => dialog.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
   await expect(done).toBeVisible();
   await page.evaluate(() => { document.documentElement.style.removeProperty("font-size"); });
 

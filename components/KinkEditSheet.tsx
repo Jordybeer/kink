@@ -207,6 +207,9 @@ export default function KinkEditSheet({
               >
                 Details
               </h3>
+              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                {kink?.name ?? ""}{kink ? ` · ${kinkCategoryLabel(kink.category)}` : ""}
+              </p>
 
               <section className="mt-5" aria-labelledby="kink-edit-agreements-title">
                 <h4 id="kink-edit-agreements-title" className="text-sm font-semibold">Afspraken</h4>

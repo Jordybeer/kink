@@ -14,7 +14,7 @@ import {
   PushPinSlash,
   Trash,
 } from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { splitProfilesByOwnership } from "@/lib/profileType";
@@ -178,20 +178,11 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
       >
         {preview.map((group, index) => renderGroup(group, index, owned))}
 
-        <AnimatePresence initial={false} mode="popLayout">
-          {expanded && extras.length > 0 && (
-            <motion.div
-              key="profile-extras"
-              initial={reduced ? false : { y: -3 }}
-              animate={{ y: 0 }}
-              exit={reduced ? { y: 0 } : { y: -2 }}
-              transition={motionSafe.state}
-              className="overflow-hidden"
-            >
-              {extras.map((group, index) => renderGroup(group, previewCount + index, owned))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {expanded && extras.length > 0 && (
+          <div>
+            {extras.map((group, index) => renderGroup(group, previewCount + index, owned))}
+          </div>
+        )}
       </div>
     );
   };

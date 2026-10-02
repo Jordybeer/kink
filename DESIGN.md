@@ -182,7 +182,7 @@ Do not use a tab-semantic segmented control for a choice that is not actually ta
 
 Motion must explain state or provide tactile feedback. It should be bounded and local.
 
-On Profile surfaces, disclosure is the authored motion moment: rotate the caret, preserve layout continuity, and reveal the child content with a short spatial/opacity transition. Press, selection and toggle feedback stay faster and quieter. Safety information never waits on animation, and page-load choreography is intentionally absent.
+On Profile surfaces, disclosure is the authored motion moment when the disclosed body is compact. For catalogue categories or profile stacks that can contain many rows, render the body immediately and animate only the trigger state/caret; do not tween height or fade a large list in from an empty surface. Press, selection and toggle feedback stay faster and quieter. Safety information never waits on animation, and page-load choreography is intentionally absent.
 
 Reduced motion removes spatial travel while preserving immediate color/opacity feedback so state changes remain legible.
 

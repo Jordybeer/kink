@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { CaretDown } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
@@ -41,11 +41,7 @@ export default function CategorySection({
   }
 
   return (
-    <motion.section
-      aria-labelledby={headingId}
-      layout={motionSafe.reduced ? false : "position"}
-      transition={motionSafe.disclosure}
-    >
+    <section aria-labelledby={headingId}>
       <button
         type="button"
         data-testid="profile-category-header"
@@ -86,31 +82,24 @@ export default function CategorySection({
         </motion.span>
       </button>
 
-      <div id={`${headingId}-content`}>
-        <AnimatePresence initial={false} mode="popLayout">
-          {open && (
-            <motion.div
-              key="category-content"
-              initial={motionSafe.reduced ? false : { y: -3 }}
-              animate={{ y: 0 }}
-              exit={motionSafe.reduced ? { y: 0 } : { y: -2 }}
-              transition={motionSafe.state}
-              className="overflow-hidden"
-            >
-              <div className="flex flex-col">
-                {kinks.map((kink) => (
-                  <KinkListRow
-                    key={kink.id}
-                    kink={kink}
-                    entry={entries[kink.id] ?? { status: null, comment: "" }}
-                    onOpen={() => onEdit(kink)}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div
+        id={`${headingId}-content`}
+        aria-hidden={!open}
+        inert={!open}
+      >
+        {open && (
+          <div className="flex flex-col">
+            {kinks.map((kink) => (
+              <KinkListRow
+                key={kink.id}
+                kink={kink}
+                entry={entries[kink.id] ?? { status: null, comment: "" }}
+                onOpen={() => onEdit(kink)}
+              />
+            ))}
+          </div>
+        )}
       </div>
-    </motion.section>
+    </section>
   );
 }
