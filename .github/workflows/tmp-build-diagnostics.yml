@@ -1,0 +1,26 @@
+name: Temporary build diagnostics
+
+on:
+  push:
+    branches:
+      - impeccable/profile-topic-ui-prototype-20260930
+
+permissions:
+  contents: read
+
+jobs:
+  build-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - name: Build with full diagnostics
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build-diagnostics.log
