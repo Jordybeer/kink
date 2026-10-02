@@ -145,10 +145,12 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 ### Topic editor
 
-- Follow the focused Profile Edit structure: fixed title/close header, one scrollable body and a persistent `Klaar` footer.
-- Let the topic lead. Description and safety text stay fully readable and use spacing/dividers rather than nested cards.
-- In this editor, status choices use flat list rows with a small state mark and the exact status explanation beneath the label. The questionnaire keeps its existing card-style answer choices.
-- Agreements, visibility and context are separate groups of flat toggle rows. Preserve immediate-save behavior, privacy semantics and the existing status vocabulary.
+- Use the same two-step orientation language as Profile Edit, but do **not** turn topic editing into a required wizard. Step 1 is **Antwoord**; step 2 is **Details**. `Klaar` remains available from either step.
+- Step 1 lets the topic lead: name, category, description and any safety text, followed by the five explicit status choices. Safety meaning stays fully readable and never moves behind the Details step.
+- Step 2 contains optional refinement only: agreements, visibility and context. Keep those three semantic groups readable inside one flat details screen rather than stacking them beneath the primary status decision.
+- Use one scroll body per active step and keep the step/header controls outside that scroll region. Do not reserve a persistent bottom footer that steals mobile viewport height.
+- Status choices remain flat list rows with a small state mark and the exact status explanation beneath the label. The questionnaire keeps its existing card-style answer choices.
+- Preserve immediate-save behavior, privacy semantics and the existing status vocabulary. Switching steps changes presentation only; it never commits, infers or copies an answer.
 
 ### Profile Hero
 

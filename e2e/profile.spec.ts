@@ -295,6 +295,24 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
 
+  test("onderwerpdetails zijn optioneel en bereikbaar zonder statuswijziging", async ({ page }) => {
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
+    await search.fill("spanking");
+
+    const result = page.locator('button[aria-label$=", bewerken"]').filter({ hasText: /spanking/i }).first();
+    await expect(result).toBeVisible();
+    await result.click();
+
+    const dialog = page.getByRole("dialog", { name: /spanking.*bewerken/i });
+    await expect(dialog.getByRole("button", { name: "Klaar" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
+    await expect(dialog.getByRole("heading", { name: "Details" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Klaar" }).click();
+    await expect(dialog).toBeHidden();
+  });
+
   test("kink-status instellen via de cataloguseditor", async ({ page }) => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
