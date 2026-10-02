@@ -232,13 +232,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main
-      className="mx-auto w-full max-w-3xl pt-6"
-      style={{
-        backgroundImage: "var(--profile-page-glow)",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
+    <main className="mx-auto w-full max-w-3xl pt-6">
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
