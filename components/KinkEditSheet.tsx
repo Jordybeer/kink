@@ -125,13 +125,19 @@ export default function KinkEditSheet({
               type="button"
               onClick={() => setStep(1)}
               className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
-              aria-label={step === 1 ? "Stap 1 van 2: Antwoord, huidig" : "Stap 1 van 2: Antwoord"}
+              aria-label={step === 1
+                ? "Stap 1 van 2: Antwoord, huidig"
+                : entry.status
+                  ? "Stap 1 van 2: Antwoord, voltooid"
+                  : "Stap 1 van 2: Antwoord"}
               aria-current={step === 1 ? "step" : undefined}
               style={step === 1
                 ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
-                : { border: "1px solid var(--border-accent)", color: "var(--text2)" }}
+                : entry.status
+                  ? { background: "var(--accent2)", color: "var(--bg)" }
+                  : { border: "1px solid var(--border-accent)", color: "var(--text2)" }}
             >
-              1
+              {step === 1 ? "1" : entry.status ? <Check size={16} weight="bold" aria-hidden="true" /> : "1"}
             </button>
             <span className="h-px flex-1" style={{ background: "var(--border)" }} aria-hidden="true" />
             <button
@@ -212,7 +218,7 @@ export default function KinkEditSheet({
               </p>
 
               <section className="mt-5" aria-labelledby="kink-edit-agreements-title">
-                <h4 id="kink-edit-agreements-title" className="text-sm font-semibold">Afspraken</h4>
+                <h4 id="kink-edit-agreements-title" className="mb-1 text-sm font-semibold">Afspraken</h4>
                 {AGREEMENTS.map((agreement) => (
                   <ToggleRow
                     key={agreement.value}
@@ -224,8 +230,8 @@ export default function KinkEditSheet({
                 ))}
               </section>
 
-              <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-visibility-title">
-                <h4 id="kink-edit-visibility-title" className="text-sm font-semibold">Zichtbaarheid</h4>
+              <section className="mt-6" aria-labelledby="kink-edit-visibility-title">
+                <h4 id="kink-edit-visibility-title" className="mb-1 text-sm font-semibold">Zichtbaarheid</h4>
                 <ToggleRow
                   label="Privé antwoord"
                   active={!!entry.privateResponse}
@@ -238,8 +244,8 @@ export default function KinkEditSheet({
                 />
               </section>
 
-              <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }} aria-labelledby="kink-edit-context-title">
-                <h4 id="kink-edit-context-title" className="text-sm font-semibold">Context</h4>
+              <section className="mt-6" aria-labelledby="kink-edit-context-title">
+                <h4 id="kink-edit-context-title" className="mb-1 text-sm font-semibold">Context</h4>
                 {contextOptions.map((option) => <ToggleRow key={option.label} {...option} />)}
               </section>
             </section>

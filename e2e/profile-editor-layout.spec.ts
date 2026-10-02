@@ -66,6 +66,7 @@ test("topic editor separates the primary answer from optional details without fo
 
     await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
     await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details, huidig" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, voltooid" })).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "Details" })).toBeFocused();
     await expect(dialog.getByText(candidate!.name, { exact: false }).first()).toBeVisible();
     await expect(statusGroup).toHaveCount(0);
