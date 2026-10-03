@@ -74,7 +74,9 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const sharedDisclosure = page.getByRole("button", { name: "Alle gedeelde profielen · 9" });
   await expect(sharedDisclosure).toBeVisible();
   await sharedDisclosure.click();
-  await expect(page.getByRole("link", { name: "Gedeeld 08 Submissive openen" })).toBeVisible();
+  const lastSharedHome = page.getByRole("link", { name: "Gedeeld 08 Submissive openen" });
+  await expect(lastSharedHome).toBeVisible();
+  expect(await lastSharedHome.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
   await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
 
@@ -168,11 +170,15 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const kinkResult = catalogManager.locator('button[aria-label*=", bewerken"]').filter({ hasText: /spanking/i }).first();
   await expect(kinkResult).toBeVisible();
   await kinkResult.click();
-  const kinkDialog = page.locator('[role="dialog"][data-sheet-variant="task"]');
-  await expect(kinkDialog).toBeVisible();
+  const kinkDialog = page.getByRole("dialog", { name: /spanking.*bewerken/i });
+  await expect(kinkDialog).toHaveAttribute("data-sheet-variant", "surface");
   await expect(kinkDialog.locator("[data-sheet-handle]")).toHaveCount(0);
   await expectWithinVisualViewport(kinkDialog);
-  await saveScreenshot(page, testInfo, "kink-edit-task");
+  await saveScreenshot(page, testInfo, "kink-edit-answer");
+  await kinkDialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
+  await expect(kinkDialog.getByRole("heading", { name: "Details" })).toBeFocused();
+  await expectWithinVisualViewport(kinkDialog);
+  await saveScreenshot(page, testInfo, "kink-edit-details");
   await kinkDialog.getByRole("button", { name: "Klaar" }).click();
   await expect(kinkResult).toBeFocused();
 
