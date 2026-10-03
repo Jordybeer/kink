@@ -27,7 +27,7 @@ test("profile keeps notes attached to their subject and reveals them only in del
   await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
   await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
 
-  await page.getByTestId("profile-read-status-willing").click();
+  await page.getByRole("region", { name: "Interesses & grenzen" }).getByRole("link", { name: /^Ja,/ }).click();
   await expect(page.getByText("Lichte sessies", { exact: true })).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Verberg notities" })).toHaveCount(0);

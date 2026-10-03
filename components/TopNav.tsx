@@ -31,7 +31,7 @@ export default function TopNav() {
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
   const onboardingComplete = useStore((state) => state.onboardingComplete);
-  const { actions, title: contextualTitle } = useTopNav();
+  const { actions, title: contextualTitle, backHref } = useTopNav();
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
@@ -200,7 +200,7 @@ export default function TopNav() {
           style={contentNavRow}
         >
           <MotionLink
-            href={route.back}
+            href={backHref ?? route.back}
             whileTap={t.tap}
             className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ color: "var(--text2)" }}

@@ -1,10 +1,11 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowLeft,
   ArrowRight,
   CaretDown,
   FileArrowDown,
@@ -21,6 +22,7 @@ import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
 import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profileReadSummary";
+import { profileHref } from "@/lib/localRoutes";
 import { useMotionSafe } from "@/lib/motion";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
@@ -35,6 +37,7 @@ import KinkEditSheet from "@/components/KinkEditSheet";
 import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
 import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
 import QRModal from "@/components/QRModal";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -76,16 +79,14 @@ export default function ProfilePage({ params }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
-  const [expandedReadStatuses, setExpandedReadStatuses] = useState<Set<NonNullable<KinkStatus>>>(new Set());
   const [privateReadOpen, setPrivateReadOpen] = useState(false);
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
   const motionSafe = useMotionSafe();
-
+  const interestsParam = searchParams.get("interests");
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
-    setExpandedReadStatuses(new Set());
     setPrivateReadOpen(false);
     setIncludePrivateExports(false);
     setEditing(false);
@@ -186,16 +187,6 @@ export default function ProfilePage({ params }: Props) {
     });
   }
 
-  function toggleReadStatus(status: NonNullable<KinkStatus>) {
-    setExpandedReadStatuses((current) => {
-      const next = new Set(current);
-      if (next.has(status)) next.delete(status);
-      else next.add(status);
-      return next;
-    });
-  }
-
-
   function addCustom(event: React.FormEvent) {
     event.preventDefault();
     if (!customInput.trim()) return;
@@ -229,6 +220,10 @@ export default function ProfilePage({ params }: Props) {
       includePrivateResponses: includePrivateExports,
     });
     doc.save(filename);
+  }
+
+  if (interestsParam !== null) {
+    return <ProfileInterestBrowser profileId={id} profileName={currentProfile.name} groups={readSummary.groups} status={interestsParam} />;
   }
 
   return (
@@ -437,7 +432,9 @@ export default function ProfilePage({ params }: Props) {
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
           <h2
-            className="mb-4 text-xl italic leading-tight"
+            id="profile-interests-title"
+            tabIndex={-1}
+            className="outline-none scroll-mt-[var(--nav-h)] mb-4 text-xl italic leading-tight"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
             Interesses &amp; grenzen
@@ -473,116 +470,33 @@ export default function ProfilePage({ params }: Props) {
               )}
 
               {interestGroups.length > 0 && (
-                <section className={hardLimitGroup ? "mt-6" : ""} aria-labelledby="profile-interests-title">
-                  <h3 id="profile-interests-title" className="mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+                <section className={hardLimitGroup ? "mt-6" : ""} aria-labelledby="profile-interests-summary-title">
+                  <h3 id="profile-interests-summary-title" tabIndex={-1} className="outline-none scroll-mt-[var(--nav-h)] mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                     Interesses
                   </h3>
 
-                  <div className="grid gap-3">
-                    {interestGroups.map((group) => {
-                      const expanded = expandedReadStatuses.has(group.status);
-                      const contentId = `profile-read-status-${group.status}-content`;
-                      const summaryId = `profile-read-status-${group.status}-summary`;
-                      const preview = group.items.slice(0, 3);
-                      const remaining = Math.max(0, group.items.length - preview.length);
-                      const answerCountLabel = group.items.length === 1
-                        ? "1 antwoord"
-                        : `${group.items.length} antwoorden`;
-
-                      return (
-                        <motion.section
-                          key={group.status}
-                          layout={motionSafe.reduced ? false : "position"}
-                          transition={motionSafe.disclosure}
-                          className="[overflow-wrap:anywhere]"
-                        >
-                          <h4>
-                            <button
-                              type="button"
-                              data-testid={`profile-read-status-${group.status}`}
-                              onClick={() => toggleReadStatus(group.status)}
-                              aria-expanded={expanded}
-                              aria-controls={contentId}
-                              aria-describedby={!expanded ? summaryId : undefined}
-                              aria-label={`${STATUS_LABEL[group.status]}, ${answerCountLabel}. ${expanded ? "Details verbergen" : "Details tonen"}`}
-                              className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none"
-                              style={{
-                                background: `color-mix(in srgb, ${STATUS_VAR[group.status]} ${expanded ? 9 : 5}%, var(--surface))`,
-                              }}
-                            >
-                              <span
-                                className="h-2 w-2 flex-none rounded-full"
-                                style={{ background: STATUS_VAR[group.status] }}
-                                aria-hidden="true"
-                              />
-                              <span className="min-w-0 flex-1 text-base font-semibold leading-6">
-                                {STATUS_LABEL[group.status]}
-                              </span>
-                              <span
-                                className="flex-none text-sm tabular-nums"
-                                style={{ color: `color-mix(in srgb, ${STATUS_VAR[group.status]} 22%, var(--text2))` }}
-                              >
-                                {group.items.length}
-                              </span>
-                              <motion.span
-                                className="flex flex-none"
-                                animate={{ rotate: expanded ? 180 : 0 }}
-                                transition={motionSafe.state}
-                                aria-hidden="true"
-                                style={{ color: `color-mix(in srgb, ${STATUS_VAR[group.status]} 22%, var(--text2))` }}
-                              >
-                                <CaretDown size={15} />
-                              </motion.span>
-                            </button>
-                          </h4>
-
-                          <div id={contentId} className="overflow-hidden">
-                            <AnimatePresence initial={false} mode="sync">
-                              {expanded ? (
-                                <motion.div
-                                  key="detail"
-                                  initial={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: 5, clipPath: "inset(0 0 8% 0)" }}
-                                  animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
-                                  exit={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2, clipPath: "inset(0 0 4% 0)" }}
-                                  transition={motionSafe.disclosure}
-                                  className="px-4 pb-1 pt-2"
-                                >
-                                  <ProfileReadItemsByCategory items={group.items} showContext />
-                                </motion.div>
-                              ) : (
-                                <motion.div
-                                  key="summary"
-                                  id={summaryId}
-                                  data-testid={`profile-read-status-${group.status}-summary`}
-                                  initial={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={motionSafe.reduced ? { opacity: 0 } : { opacity: 0, y: -2 }}
-                                  transition={motionSafe.state}
-                                  className="grid gap-0.5 px-4 pb-1 pt-2 text-base leading-6"
-                                >
-                                  {preview.map((item) => <span key={item.id}>{item.name}</span>)}
-                                  {remaining > 0 && (
-                                    <>
-                                      <span
-                                        className="mt-1 text-sm font-medium leading-5"
-                                        style={{ color: STATUS_VAR[group.status] }}
-                                        aria-hidden="true"
-                                      >
-                                        +{remaining} meer
-                                      </span>
-                                      <span className="sr-only">
-                                        en {remaining} meer met status {STATUS_LABEL[group.status]}
-                                      </span>
-                                    </>
-                                  )}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </motion.section>
-                      );
-                    })}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {interestGroups.map((group) => (
+                      <Link
+                        key={group.status}
+                        href={`${profileHref(id)}&interests=${group.status}`}
+                        data-testid={`profile-read-status-${group.status}`}
+                        aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}. Bekijk interesses`}
+                        className="focus-ring flex min-h-11 items-center gap-2 text-sm"
+                      >
+                        <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[group.status] }} aria-hidden="true" />
+                        <span className="min-w-0 flex-1 font-semibold">{STATUS_LABEL[group.status]}</span>
+                        <span className="tabular-nums" style={{ color: "var(--text2)" }}>{group.items.length}</span>
+                      </Link>
+                    ))}
                   </div>
+                  <div data-testid={`profile-read-status-${interestGroups[0].status}-summary`} className="mt-3 grid gap-1 text-base leading-6 [overflow-wrap:anywhere]">
+                    <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>{STATUS_LABEL[interestGroups[0].status]}</p>
+                    {interestGroups[0].items.slice(0, 3).map((item) => <p key={item.id}>{item.name}</p>)}
+                  </div>
+                  <Link href={`${profileHref(id)}&interests=${interestGroups[0].status}`} className="focus-ring mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent-text)" }}>
+                    Bekijk interesses &amp; grenzen <ArrowRight size={15} aria-hidden="true" />
+                  </Link>
                 </section>
               )}
 
@@ -745,6 +659,69 @@ export default function ProfilePage({ params }: Props) {
       />
       <ProfileEditSheet open={editing && !shared} profile={currentProfile} onClose={() => setEditing(false)} />
       <QRModal profile={shareOpen && !shared ? currentProfile : null} onClose={() => setShareOpen(false)} />
+    </main>
+  );
+}
+
+const EMPTY_NAV_ACTIONS: TopNavAction[] = [];
+
+function ProfileInterestBrowser({ profileId, profileName, groups, status }: {
+  profileId: string;
+  profileName: string;
+  groups: { status: NonNullable<KinkStatus>; items: ProfileReadItem[] }[];
+  status: string;
+}) {
+  const activeGroup = groups.find((group) => group.status === status)
+    ?? groups.find((group) => group.status !== "hard_no") ?? groups[0];
+  const readerHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  useTopNavActions(EMPTY_NAV_ACTIONS, "Interesses & grenzen", profileHref(profileId) + "#profile-interests-title");
+  useEffect(() => {
+    readerHeadingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [status, profileId]);
+  return (
+    <main className="mx-auto w-full max-w-3xl">
+      <section aria-labelledby="profile-interest-browser-title">
+        <div
+          className="px-[var(--page-gutter)] pt-3"
+          style={{ background: "var(--bg)" }}
+        >
+          <Link href={profileHref(profileId) + "#profile-interests-title"} className="focus-ring inline-flex min-h-11 items-center gap-2 text-sm font-medium" style={{ color: "var(--text2)" }}>
+            <ArrowLeft size={16} aria-hidden="true" /> Terug naar profiel
+          </Link>
+          <h1 id="profile-interest-browser-title" ref={readerHeadingRef} tabIndex={-1} className="outline-none text-xl italic leading-7" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>
+            Interesses &amp; grenzen
+          </h1>
+          <p className="mt-1 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>{profileName}</p>
+        </div>
+          <nav aria-label="Antwoordstatus" className="sticky top-[var(--nav-h)] z-10 mt-3 flex flex-wrap gap-x-4 gap-y-1 border-b px-[var(--page-gutter)] py-3" style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
+            {groups.map((group) => (
+              <Link
+                key={group.status}
+                href={`${profileHref(profileId)}&interests=${group.status}`}
+                replace
+                aria-current={activeGroup?.status === group.status ? "page" : undefined}
+                aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}`}
+                className="focus-ring inline-flex min-h-11 items-center gap-2 border-b-2 text-sm"
+                style={{
+                  borderColor: activeGroup?.status === group.status ? STATUS_VAR[group.status] : "transparent",
+                  color: activeGroup?.status === group.status ? "var(--text)" : "var(--text2)",
+                  fontWeight: activeGroup?.status === group.status ? 600 : 400,
+                }}
+              >
+                {STATUS_LABEL[group.status]} <span className="tabular-nums">{group.items.length}</span>
+              </Link>
+            ))}
+          </nav>
+        <div className="px-[var(--page-gutter)] py-5">
+          {activeGroup ? (
+            <section id={`profile-read-status-${activeGroup.status}-content`} aria-labelledby="profile-active-status-title">
+              <h2 id="profile-active-status-title" className="mb-5 text-base font-semibold">{STATUS_LABEL[activeGroup.status]} · {activeGroup.items.length}</h2>
+              <ProfileReadItemsByCategory items={activeGroup.items} showContext />
+            </section>
+          ) : <p className="text-sm" style={{ color: "var(--text2)" }}>Nog geen openbare antwoorden.</p>}
+        </div>
+      </section>
     </main>
   );
 }

@@ -135,12 +135,12 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 - The read view is **person-first and status-first**. It answers what this person explicitly wants, accepts, is unsure about, offers for a partner, or marks as a hard boundary. Catalogue categories are secondary orientation, not the top-level structure.
 - Hard boundaries are a distinct safety layer and every public hard boundary remains named without requiring expansion. Do not reduce them to a count or a partial preview.
-- The four interest statuses use progressive disclosure: a short stable catalogue-order preview when collapsed, then the complete list grouped by quiet category labels when expanded. Do not rank within a status.
-- The status groups replace the old distribution bar. Do not reintroduce redundant summary chrome when the visible groups already communicate the same facts.
+- The four interest statuses have compact public counts and three stable catalogue-order examples from the first available interest status. A single dedicated `Interesses & grenzen` view displays one status at a time, grouped by quiet category labels. Do not rank within a status or expand long lists inline.
+- Status counts replace the old distribution bar. One explicit `Bekijk interesses & grenzen` link opens the dedicated view; individual counts may open their status directly.
 - Public counts exclude private answers. On an own profile, private answers live in a separate deliberate disclosure and their status/context remain concealed until individually revealed. Shared profiles must not leak private information through counts, grouping or ordering.
-- Expanded rows inherit their meaning from the parent status group, so they do not repeat a status pill on every item. Notes and agreement context remain quiet secondary text and appear with their named subject rather than being algorithmically promoted.
+- Detail rows inherit their meaning from the active status, so they do not repeat a status pill on every item. Notes and agreement context remain quiet secondary text and appear with their named subject rather than being algorithmically promoted.
 - Catalogue management intentionally remains **category-first** because its job is retrieval and editing: catalogue → category → topic → explicit status. Read and manage views are two lenses on the same explicit data, not one hierarchy forced onto both jobs.
-- Interest-status headers may use a low-chroma semantic surface to read as interactive sections; their previews and expanded topic content remain ordinary reading content, indented beneath the parent status rather than boxed into nested cards.
+- The dedicated status browser has a sticky title and wrapping status navigation. Lists render immediately without reveal/loading animation. Use the existing `/profile` query shell so reload, back navigation and offline cache keep the same document route.
 - Hard boundaries may use one quiet safety-tinted surface because they are semantically distinct. Keep every public boundary immediately readable and never make safety information depend on disclosure or animation.
 
 ### Topic editor

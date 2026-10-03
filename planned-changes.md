@@ -406,3 +406,8 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 | — | What landed | Commit |
 |---|-------------|--------|
 | — | Lokale P-256 eigendomssleutels, ondertekende profielversies, broncontrole bij import, correcte ownership-backuprestore, leesbare drie-woordenbron en append-only toestemmingssnapshots per scène | PR pending |
+
+
+### Profile read-view mock follow-up — 2026-10-03
+
+PR #472: compact public status counts with three explicitly labelled catalogue-order examples; one dedicated status browser through the existing `/profile` query shell. Public hard limits stay fully named on the overview; private disclosure, exports and catalogue/editor behaviour remain intact. Sticky navigation and both back controls pass the focused mobile regression, including five statuses, 320px/200% text and long aliases. 788 unit tests and production build pass. Draft only; dependency audit and real iPhone/standalone release gates remain open.

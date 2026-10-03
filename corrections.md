@@ -333,3 +333,10 @@ dicht, de la met oude import bleef open tot de tegen-audit erop wees.
 **What went wrong:** De nieuwe PWA-test verwachtte `apple-mobile-web-app-capable`, terwijl Next.js 16.3.4 voor `appleWebApp.capable` bewust `mobile-web-app-capable` uitvoert. De productie-HTML maakte het verschil zichtbaar.
 
 **Rule:** Controleer gegenereerde metadata in de geïnstalleerde frameworkversie en de gebouwde HTML. Test daarnaast de Apple-titel, statusbalk en manifestidentiteit; wijzig de app niet om een verouderde testaanname te bevestigen.
+
+
+## 2026-10-03 — De readerheader hield te veel vast
+
+**What went wrong:** Naam, titel, teruglink en vijf statussen werden samen sticky. Op 320px bij 200% tekst nam een lange alias vrijwel de hele viewport in. De globale terugknop kende bovendien alleen de profielroute en wees nog naar Home.
+
+**Rule:** Houd alleen de statusnavigatie sticky; laat lange identiteitstekst meescrollen. Gebruik het bestaande TopNav-context voor de lokale terugbestemming. Meet de echte detailview bij 200%, niet alleen het overzicht.

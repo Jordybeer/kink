@@ -196,13 +196,12 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const yes = page.getByTestId("profile-read-status-yes");
     const yesSummary = page.getByTestId("profile-read-status-yes-summary");
     await expect(yes).toBeVisible();
-    await expect(yes).toHaveAttribute("aria-expanded", "false");
-    await expect(yes).toHaveAccessibleName(/Heel graag, 6 antwoorden\. Details tonen/);
+    await expect(yes).toHaveAccessibleName(/Heel graag, 6 antwoorden/);
     await expect(yesSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
 
     await yes.focus();
     await page.keyboard.press("Enter");
-    await expect(yes).toHaveAttribute("aria-expanded", "true");
+    await expect(page).toHaveURL(/interests=yes/);
     const content = page.locator("#profile-read-status-yes-content");
     await expect(content).toBeVisible();
     await expect(content.getByText("Impact Play", { exact: true })).toBeVisible();

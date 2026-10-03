@@ -19,7 +19,7 @@ describe("AmbientGlow architecture", () => {
   });
 
   it("contains slow orb motion inside one viewport and disables it on request", () => {
-    expect(component.match(/ks-ambient-orb/g)).toHaveLength(4);
+    expect(component.match(/className="ks-ambient-orb /g)).toHaveLength(2);
     expect(ambientCss).toContain("position: fixed");
     expect(ambientCss).toContain("z-index: -1");
     expect(ambientCss).toContain("height: 100svh");
