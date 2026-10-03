@@ -408,6 +408,8 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 | — | Lokale P-256 eigendomssleutels, ondertekende profielversies, broncontrole bij import, correcte ownership-backuprestore, leesbare drie-woordenbron en append-only toestemmingssnapshots per scène | PR pending |
 
 
-### Profile read-view mock follow-up — 2026-10-03
+### Profile read-view — OWNER APPROVED, IN REVIEW, 2026-10-03
 
-PR #472: compact public status counts with three explicitly labelled catalogue-order examples; one dedicated status browser through the existing `/profile` query shell. Public hard limits stay fully named on the overview; private disclosure, exports and catalogue/editor behaviour remain intact. Sticky navigation and both back controls pass the focused mobile regression, including five statuses, 320px/200% text and long aliases. 788 unit tests and production build pass. Draft only; dependency audit and real iPhone/standalone release gates remain open.
+PR #472: compact public status counts with three explicitly labelled catalogue-order examples; one dedicated status browser through the existing `/profile` query shell. Public hard limits stay fully named on the overview; private disclosure, exports and catalogue/editor behaviour remain intact. Sticky navigation and both back controls pass the focused mobile regression, including five statuses, 320px/200% text and long aliases. 788 unit tests and production build pass.
+
+The owner approved this implementation on 2026-10-03 as the intended Profile direction, not a disposable mock. Continue development from this accepted implementation. PR #472 is ready for review; approval of the design does not waive technical checks. GitHub run 37117176473 on code head `8893a63` passed browser/device and production-offline rehearsals; the static lane failed at the dependency audit. Dependency repair is tracked in #473. The complete release gate and physical iPhone/standalone sign-off remain open.
