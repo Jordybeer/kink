@@ -5,7 +5,7 @@ const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
 test("TopNav keeps Home branded and anchored while content chrome stays quiet", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
   await expect(homeNav).toHaveAttribute("data-top-nav-variant", "home");
@@ -57,7 +57,7 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   // Home grows to the same desktop measure as its PageShell instead of
   // floating inward at the old max-w-2xl width.
   await page.setViewportSize({ width: 1024, height: 900 });
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
   const desktopHomeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
   const desktopMain = page.locator("main");
   const [desktopNavBox, desktopMainBox] = await Promise.all([
