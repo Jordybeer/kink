@@ -32,6 +32,9 @@ export function runtimeCachesToPurge(allCacheNames: readonly string[]): string[]
 
 export const STATIC_OFFLINE_ROUTES = [
   "/",
+  "/space",
+  "/together",
+  "/moments",
   PROFILE_SHELL_ROUTE,
   "/compare",
   "/contract",
