@@ -50,7 +50,7 @@ test.describe("lege Home gebruikt de werkelijk zichtbare browserruimte", () => {
     const emptyMain = page.locator("main").first();
     const emptyGap = await emptyMain.evaluate((element) => getComputedStyle(element).paddingTop);
 
-    await seedAndGo(page, "/", [PROFILE_ALEX], { onboardingComplete: true, profileTourComplete: true });
+    await seedAndGo(page, "/?profiles=1", [PROFILE_ALEX], { onboardingComplete: true, profileTourComplete: true });
     const populatedMain = page.locator("main").first();
     const populatedGap = await populatedMain.evaluate((element) => getComputedStyle(element).paddingTop);
 
