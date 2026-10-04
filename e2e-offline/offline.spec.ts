@@ -7,6 +7,9 @@ import { goOffline, goOnline } from "./offlineHarness";
 
 const STATIC_ROUTES = [
   { url: "/" },
+  { url: "/space" },
+  { url: "/together" },
+  { url: "/moments" },
   { url: "/profile", shellMarker: "Profiel niet gevonden" },
   { url: "/scene" },
   { url: "/scenes" },
@@ -95,7 +98,7 @@ test("background work never sends local record ids to the origin", async ({ page
   await waitForOfflineCache(page);
 
   // Next.js only starts automatic Link prefetching when a link becomes visible.
-  // Exercise every home link carrying a seeded local id without clicking it.
+  // Exercise every visible link carrying a seeded local id without clicking it.
   const privateLinks = page.locator(
     'a[href*="profile-a"]:visible, a[href*="profile-b"]:visible, a[href*="scene-a"]:visible',
   );
@@ -117,8 +120,8 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   // routed through onboarding instead of using an offline shell as a bypass.
   await seedStore(page);
 
-  // Only the home page is visited online. The install + automatic warmup must
-  // prepare every other fixed route without a manual page-by-page ritual.
+  // Only the app entrypoint is visited online. The install + automatic warmup
+  // must prepare every other fixed route without a manual page-by-page ritual.
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
 
@@ -154,20 +157,19 @@ test("every fixed room works offline without visiting it first", async ({ page, 
   await expect(offlineStatus).toHaveCount(0);
 });
 
-test("legacy cards fold into the fixed profile and scene shells offline", async ({ page, context }) => {
+test("personal spaces preserve local ids when fixed shells open offline", async ({ page, context }) => {
   await seedStore(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await waitForOfflineCache(page);
   await goOffline(context);
 
-  // The large home CTA carries profile IDs in its query string. Offline it must
-  // preserve those IDs instead of reusing a query-less RSC payload.
-  await page.locator('a[href="/compare?a=profile-a&b=profile-b"]').click();
+  await page.goto("/together", { waitUntil: "domcontentloaded" });
+  await page.getByRole("link", { name: /Interesses naast elkaar/ }).click();
   await expect(page).toHaveURL(/\/compare\?a=profile-a&b=profile-b$/);
   await expect(page.getByText("Je bent offline")).toHaveCount(0);
 
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.getByRole("link", { name: "Mira Switch openen" }).click();
+  await page.goto("/space", { waitUntil: "domcontentloaded" });
+  await page.getByRole("link", { name: /Bekijk mijn profiel/ }).click();
   await expect(page).toHaveURL(/\/profile\?id=profile-a$/);
   await expect(page.getByText("Mira").first()).toBeVisible();
   await expect(page.getByText("Profiel niet gevonden")).toHaveCount(0);
