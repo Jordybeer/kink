@@ -567,6 +567,7 @@ span[class~="mr-auto"][class~="text-xs"] {
 :root { --bottom-nav-h: calc(env(safe-area-inset-bottom) + 3.5rem); }
 
 .bottom-nav { display: none; }
+.space-browser-nav { display: grid; }
 
 /* Hoe hoog de toast boven de onderrand zweeft. In de browser is dat gewoon wat
    lucht; in de geïnstalleerde PWA moet hij ook nog over de bottom-nav heen.
@@ -576,6 +577,7 @@ span[class~="mr-auto"][class~="text-xs"] {
 
 @media (display-mode: standalone) {
   .bottom-nav { display: flex; }
+  .space-browser-nav { display: none; }
   main { padding-bottom: var(--bottom-nav-h); }
   :root { --toast-lift: calc(3.5rem + 0.75rem); }
 }
