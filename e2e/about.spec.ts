@@ -3,7 +3,7 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 test("home opens a compact human-first KinkSync story", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
+  await seedAndGo(page, "/?profiles=1", [PROFILE_ALEX, PROFILE_SAM]);
 
   const nav = page.getByLabel("Hoofdnavigatie");
   await nav.getByRole("button", { name: "Meer opties" }).click();
