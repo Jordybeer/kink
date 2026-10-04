@@ -140,7 +140,8 @@ export default function ProfilePage({ params }: Props) {
   const searchTerm = search.trim();
   const customKinks = currentProfile.customKinks ?? [];
   const catalogRated = KINKS.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
-  const totalRated = catalogRated;
+  const customRated = customKinks.filter((kink) => currentProfile.entries[kink.id]?.status != null).length;
+  const totalRated = catalogRated + customRated;
   const catalogCategoryFilterLabel = catalogCategoryFilter
     ? kinkCategoryLabel(catalogCategoryFilter)
     : "Alle categorieën";
@@ -160,7 +161,13 @@ export default function ProfilePage({ params }: Props) {
       )
     : [];
 
-  const readSummary = buildProfileStatusReadSummary(KINKS, currentProfile.entries);
+  const readSummary = buildProfileStatusReadSummary(
+    [
+      ...KINKS,
+      ...customKinks.map((kink) => ({ id: kink.id, name: kink.name, category: "custom" as const })),
+    ],
+    currentProfile.entries,
+  );
   const hardLimitGroup = readSummary.groups.find((group) => group.status === "hard_no") ?? null;
   const interestGroups = readSummary.groups.filter((group) => group.status !== "hard_no");
 
@@ -733,7 +740,7 @@ function ProfileReadItemsByCategory({
   items: ProfileReadItem[];
   showContext?: boolean;
 }) {
-  const groups = CATEGORIES
+  const groups = [...CATEGORIES, "custom" as const]
     .map((category) => ({
       category,
       items: items.filter((item) => item.category === category),
