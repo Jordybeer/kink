@@ -5,9 +5,10 @@ test("personal space connects Ik, Samen and Momenten to real profile data", asyn
   await seedAndGo(page, "/space", [PROFILE_ALEX, PROFILE_SAM], { pinnedProfileId: PROFILE_ALEX.id });
 
   await expect(page.getByRole("heading", { name: PROFILE_ALEX.name })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Ik" })).toHaveAttribute("aria-current", "page");
+  const spaces = page.getByRole("navigation", { name: "Ruimtes" });
+  await expect(spaces.getByRole("link", { name: "Ik" })).toHaveAttribute("aria-current", "page");
 
-  await page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Samen" }).click();
+  await spaces.getByRole("link", { name: "Samen" }).click();
   await expect(page).toHaveURL(/\/together/);
   await expect(page.getByText("Alex × Sam")).toBeVisible();
 
@@ -18,7 +19,9 @@ test("personal space connects Ik, Samen and Momenten to real profile data", asyn
     "/together?a=pw-alex-001&b=pw-sam-002",
   );
 
-  await page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Momenten" }).click();
+  await page.getByRole("link", { name: "Terug" }).click();
+  await expect(page).toHaveURL(/\/together\?a=pw-alex-001&b=pw-sam-002/);
+  await page.getByRole("navigation", { name: "Ruimtes" }).getByRole("link", { name: "Momenten" }).click();
   await expect(page).toHaveURL(/\/moments/);
   await expect(page.getByRole("heading", { name: "Van idee naar afspraak" })).toBeVisible();
 });
