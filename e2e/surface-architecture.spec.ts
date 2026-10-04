@@ -34,7 +34,7 @@ test("Home identity stays centered in its stable masthead slots across viewport 
 
   for (const viewport of viewports) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await seedAndGo(page, "/", PROFILES);
+    await seedAndGo(page, "/?profiles=1", PROFILES);
 
     const nav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
     const identity = page.locator("[data-home-identity]");
@@ -91,7 +91,7 @@ test("Home identity stays centered in its stable masthead slots across viewport 
 
 test("Settings uses a stable utility surface on mobile and a contained panel from tablet upward", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
 
   const trigger = await openSettings(page);
   let dialog = page.getByRole("dialog", { name: "Instellingen" });
@@ -161,7 +161,7 @@ test("kink edit uses the two-step focused surface without a false drag affordanc
 
 test("short profile actions remain a true quick sheet", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
 
   const trigger = page.getByRole("button", { name: "Meer acties voor Alex" });
   await trigger.click();
