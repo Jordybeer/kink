@@ -92,6 +92,24 @@ test("subpages show back chevron pointing at the right parent", async ({ page })
   }
 });
 
+test("PWA tab model stays compact and maps existing routes to Ik, Samen and Momenten", async ({ page }) => {
+  await seedAndGo(page, "/", PROFILES);
+
+  const tabs = page.getByRole("navigation", { name: "Tabbladen" });
+  await expect(tabs.getByRole("link")).toHaveCount(3);
+  await expect(tabs.getByRole("link", { name: "Ik" })).toHaveAttribute("href", "/");
+  await expect(tabs.getByRole("link", { name: "Samen" })).toHaveAttribute("href", "/compare");
+  await expect(tabs.getByRole("link", { name: "Momenten" })).toHaveAttribute("href", "/scenes");
+
+  await seedAndGo(page, "/contracts", PROFILES);
+  await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Samen" }))
+    .toHaveAttribute("aria-current", "page");
+
+  await seedAndGo(page, "/profile?id=pw-alex-001", PROFILES);
+  await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Ik" }))
+    .toHaveAttribute("aria-current", "page");
+});
+
 test("profile tab uses the offline-safe shell without changing profile UX", async ({ page }) => {
   await seedAndGo(page, "/profile?id=pw-alex-001", PROFILES);
 
@@ -103,8 +121,8 @@ test("profile tab uses the offline-safe shell without changing profile UX", asyn
   await expect(page.getByRole("menuitem", { name: "Profiel delen" })).toBeVisible();
   await page.keyboard.press("Escape");
 
-  const profileTab = page.locator('nav[aria-label="Tabbladen"] a').filter({ hasText: "Profiel" });
-  await expect(profileTab).toHaveAttribute("href", "/profile?id=pw-alex-001");
+  const profileTab = page.locator('nav[aria-label="Tabbladen"] a').filter({ hasText: "Ik" });
+  await expect(profileTab).toHaveAttribute("href", "/");
   await expect(profileTab).toHaveAttribute("aria-current", "page");
 });
 
