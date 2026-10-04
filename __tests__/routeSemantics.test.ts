@@ -2,24 +2,32 @@ import { describe, expect, it } from "vitest";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 
 describe("route chrome semantics", () => {
-  it("houdt canonical en legacy profielroutes in dezelfde profieltab", () => {
-    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
-    expect(routeChromeSemantics("/profile/alex").bottomNavSection).toBe("profile");
+  it("houdt profielroutes in de persoonlijke ruimte", () => {
+    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("space");
+    expect(routeChromeSemantics("/profile/alex").bottomNavSection).toBe("space");
     expect(routeChromeSemantics("/profile/alex").hideBottomNav).toBe(false);
+    expect(routeChromeSemantics("/profile/alex").back).toBe("/space");
   });
 
-  it("koppelt de vijf primaire PWA-bestemmingen aan stabiele tabs", () => {
-    expect(routeChromeSemantics("/").bottomNavSection).toBe("home");
-    expect(routeChromeSemantics("/compare").bottomNavSection).toBe("compare");
-    expect(routeChromeSemantics("/contracts").bottomNavSection).toBe("contracts");
-    expect(routeChromeSemantics("/scenes").bottomNavSection).toBe("scenes");
-    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
+  it("koppelt de drie experimentele hoofdbestemmingen aan stabiele tabs", () => {
+    expect(routeChromeSemantics("/").bottomNavSection).toBe("space");
+    expect(routeChromeSemantics("/space").bottomNavSection).toBe("space");
+    expect(routeChromeSemantics("/together").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/moments").bottomNavSection).toBe("moments");
   });
 
-  it("houdt intimiteit als rustige secundaire focusroute", () => {
+  it("houdt bestaande functies bij hun nieuwe bovenliggende ruimte", () => {
+    expect(routeChromeSemantics("/compare").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/contracts").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/contract").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/scenes").bottomNavSection).toBe("moments");
+    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("space");
+  });
+
+  it("houdt intimiteit als rustige focusroute onder Momenten", () => {
     expect(routeChromeSemantics("/intimacy")).toMatchObject({
       title: "Intimiteit",
-      back: "/",
+      back: "/moments",
       hideBottomNav: true,
       bottomNavSection: null,
     });
@@ -32,36 +40,36 @@ describe("route chrome semantics", () => {
     expect(route.back).toBe("/profile?id=alex%20one");
   });
 
-  it("houdt contractdetailroutes visueel bij de contracttab", () => {
+  it("houdt contractdetailroutes visueel bij Samen", () => {
     expect(routeChromeSemantics("/contracts/series/history")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts/series",
       hideBottomNav: false,
-      bottomNavSection: "contracts",
+      bottomNavSection: "together",
     });
     expect(routeChromeSemantics("/contracts/series/versions/v1")).toMatchObject({
       title: "Getekend document",
       back: "/contracts/series/history",
       hideBottomNav: false,
-      bottomNavSection: "contracts",
+      bottomNavSection: "together",
     });
     expect(routeChromeSemantics("/timeline")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts",
       hideBottomNav: false,
-      bottomNavSection: "contracts",
+      bottomNavSection: "together",
     });
   });
 
-  it("noemt de editor contract opstellen en laat sceneplanner focus-mode", () => {
+  it("stuurt editors terug naar hun experimentele bovenliggende ruimte", () => {
     expect(routeChromeSemantics("/contract")).toMatchObject({
       title: "Contract opstellen",
-      back: "/compare",
-      bottomNavSection: "contracts",
+      back: "/together",
+      bottomNavSection: "together",
     });
     expect(routeChromeSemantics("/scene")).toMatchObject({
       hideBottomNav: true,
-      back: "/scenes",
+      back: "/moments",
     });
   });
 });
