@@ -37,6 +37,7 @@ function HomeContent() {
     completeOnboarding,
   } = useStore();
   const hydrated = useHasHydrated();
+  const manageProfiles = searchParams.get("profiles") === "1";
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -107,6 +108,12 @@ function HomeContent() {
     window.addEventListener("ks:open-settings", handler);
     return () => window.removeEventListener("ks:open-settings", handler);
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || !onboardingComplete || profiles.length === 0 || manageProfiles) return;
+    if (window.location.hash.length > 1) return;
+    router.replace("/space");
+  }, [hydrated, manageProfiles, onboardingComplete, profiles.length, router]);
 
   function promptDelete(id: string) {
     setDeleteTarget(id);
