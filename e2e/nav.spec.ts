@@ -95,18 +95,18 @@ test("subpages show back chevron pointing at the right parent", async ({ page })
 test("PWA tab model stays compact and maps existing routes to Ik, Samen and Momenten", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
 
-  const tabs = page.getByRole("navigation", { name: "Tabbladen" });
-  await expect(tabs.getByRole("link")).toHaveCount(3);
-  await expect(tabs.getByRole("link", { name: "Ik" })).toHaveAttribute("href", "/");
-  await expect(tabs.getByRole("link", { name: "Samen" })).toHaveAttribute("href", "/compare");
-  await expect(tabs.getByRole("link", { name: "Momenten" })).toHaveAttribute("href", "/scenes");
+  const tabs = page.locator('nav[aria-label="Tabbladen"]');
+  await expect(tabs.locator("a")).toHaveCount(3);
+  await expect(tabs.locator('a[aria-label="Ik"]')).toHaveAttribute("href", "/");
+  await expect(tabs.locator('a[aria-label="Samen"]')).toHaveAttribute("href", "/compare");
+  await expect(tabs.locator('a[aria-label="Momenten"]')).toHaveAttribute("href", "/scenes");
 
   await seedAndGo(page, "/contracts", PROFILES);
-  await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Samen" }))
+  await expect(page.locator('nav[aria-label="Tabbladen"] a[aria-label="Samen"]'))
     .toHaveAttribute("aria-current", "page");
 
   await seedAndGo(page, "/profile?id=pw-alex-001", PROFILES);
-  await expect(page.getByRole("navigation", { name: "Tabbladen" }).getByRole("link", { name: "Ik" }))
+  await expect(page.locator('nav[aria-label="Tabbladen"] a[aria-label="Ik"]'))
     .toHaveAttribute("aria-current", "page");
 });
 
