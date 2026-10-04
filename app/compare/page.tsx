@@ -126,7 +126,7 @@ function ComparePage() {
       disabled: !hasPair,
     },
   ], [aId, bId, hasPair, router, swapProfiles]);
-  useTopNavActions(navActions);
+  useTopNavActions(navActions, undefined, hasPair ? `/together?a=${encodeURIComponent(aId)}&b=${encodeURIComponent(bId)}` : "/together");
 
   const toggleDiscussed = useCallback((id: string) => {
     if (!profileA || !profileB) return;
