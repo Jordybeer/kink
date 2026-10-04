@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowsLeftRight, FileText, UsersThree } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import SpaceLink from "@/components/space/SpaceLink";
+import SpaceSwitcher from "@/components/space/SpaceSwitcher";
 import { buildCompareModel } from "@/lib/compareV2";
 import { usePartnerProfileId } from "@/lib/partnerPreference";
 import { splitProfilesByOwnership } from "@/lib/profileType";
@@ -53,6 +54,7 @@ export default function TogetherSpace() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-3xl">
+      <SpaceSwitcher />
       <section className="rounded-[28px] px-5 py-6 sm:px-7" style={{
         background: "color-mix(in srgb, var(--surface2) 78%, transparent)",
         border: "1px solid var(--border)",
