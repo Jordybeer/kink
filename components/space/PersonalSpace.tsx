@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, PencilSimple, Sparkle, UsersThree } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import SpaceLink from "@/components/space/SpaceLink";
+import SpaceSwitcher from "@/components/space/SpaceSwitcher";
 import { profileHref } from "@/lib/localRoutes";
 import { usePartnerProfileId } from "@/lib/partnerPreference";
 import { splitProfilesByOwnership } from "@/lib/profileType";
@@ -52,6 +53,7 @@ export default function PersonalSpace() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-3xl">
+      <SpaceSwitcher />
       <section className="relative overflow-hidden rounded-[28px] px-5 py-6 sm:px-7 sm:py-7" style={{
         background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 7%, var(--surface)), color-mix(in srgb, var(--identity-a) 4%, var(--surface2)))",
         border: "1px solid color-mix(in srgb, var(--border-accent) 70%, var(--border))",
