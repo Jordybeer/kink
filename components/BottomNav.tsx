@@ -4,31 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowsLeftRight,
-  FileText,
-  FilmSlate,
-  House,
+  CalendarDots,
   UserCircle,
 } from "@phosphor-icons/react";
-import { useStore, useHasHydrated } from "@/lib/store";
-import { profileHref } from "@/lib/localRoutes";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 
 export default function BottomNav() {
   const path = usePathname();
-  const { profiles } = useStore();
-  const hydrated = useHasHydrated();
   const route = routeChromeSemantics(path);
 
   if (route.hideBottomNav) return null;
 
-  const firstProfileId = hydrated ? profiles[0]?.id : undefined;
-  const firstProfileHref = firstProfileId ? profileHref(firstProfileId) : "/";
   const items = [
-    { href: "/", label: "Home", icon: House, section: "home" as const },
-    { href: "/compare", label: "Vergelijk", icon: ArrowsLeftRight, section: "compare" as const },
-    { href: "/contracts", label: "Contracten", icon: FileText, section: "contracts" as const },
-    { href: "/scenes", label: "Scènes", icon: FilmSlate, section: "scenes" as const },
-    { href: firstProfileHref, label: "Profiel", icon: UserCircle, section: "profile" as const },
+    { href: "/", label: "Ik", icon: UserCircle, section: "self" as const },
+    { href: "/compare", label: "Samen", icon: ArrowsLeftRight, section: "together" as const },
+    { href: "/scenes", label: "Momenten", icon: CalendarDots, section: "moments" as const },
   ];
 
   return (
