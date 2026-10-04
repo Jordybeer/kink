@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
+import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
 const EMPTY_HOME_VIEWPORTS = [
@@ -66,7 +66,7 @@ test.describe("Home page — leeg", () => {
 
 test.describe("Home page — profielen aanwezig", () => {
   test.beforeEach(async ({ page }) => {
-    await seedProfiles(page, [PROFILE_ALEX, SHARED_SAM]);
+    await seedAndGo(page, "/?profiles=1", [PROFILE_ALEX, SHARED_SAM]);
   });
 
   test("scheidt eigen en gedeelde profielen in stabiele secties zonder UI-state te bewaren", async ({ page }) => {
