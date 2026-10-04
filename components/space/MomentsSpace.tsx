@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarDots, FileText, FilmSlate, Plus } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import SpaceLink from "@/components/space/SpaceLink";
+import SpaceSwitcher from "@/components/space/SpaceSwitcher";
 import { sceneDetailHref } from "@/lib/localRoutes";
 import { useHasHydrated, useStore } from "@/lib/store";
 
@@ -24,6 +25,7 @@ export default function MomentsSpace() {
 
   return (
     <PageShell width="2xl" className="lg:max-w-3xl">
+      <SpaceSwitcher />
       <section className="rounded-[28px] px-5 py-6 sm:px-7" style={{
         background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 5%, var(--surface)), color-mix(in srgb, var(--accent) 4%, var(--surface2)))",
         border: "1px solid var(--border)",
