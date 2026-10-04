@@ -68,7 +68,7 @@ test.describe("Editorial spacing regressions", () => {
 
   test("Home overflow utility keeps a 44px target with deliberate top and right gutters", async ({ page }) => {
     await page.setViewportSize(MOBILE);
-    await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
+    await seedAndGo(page, "/?profiles=1", [PROFILE_ALEX, PROFILE_SAM]);
 
     const more = page.getByTestId("home-topnav-more");
     const box = await more.boundingBox();
