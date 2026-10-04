@@ -68,7 +68,7 @@ export function routeChromeSemantics(
       title: "Contractgeschiedenis",
       back: path.replace(/\/history$/, ""),
       hideBottomNav: false,
-      bottomNavSection: "contracts",
+      bottomNavSection: "together",
     };
   }
   if (path.startsWith("/contracts/")) {
