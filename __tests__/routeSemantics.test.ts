@@ -2,21 +2,28 @@ import { describe, expect, it } from "vitest";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 
 describe("route chrome semantics", () => {
-  it("houdt canonical en legacy profielroutes in dezelfde profieltab", () => {
-    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
-    expect(routeChromeSemantics("/profile/alex").bottomNavSection).toBe("profile");
+  it("groepeert Home en profiel onder Ik", () => {
+    expect(routeChromeSemantics("/").bottomNavSection).toBe("self");
+    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("self");
+    expect(routeChromeSemantics("/profile/alex").bottomNavSection).toBe("self");
     expect(routeChromeSemantics("/profile/alex").hideBottomNav).toBe(false);
   });
 
-  it("koppelt de vijf primaire PWA-bestemmingen aan stabiele tabs", () => {
-    expect(routeChromeSemantics("/").bottomNavSection).toBe("home");
-    expect(routeChromeSemantics("/compare").bottomNavSection).toBe("compare");
-    expect(routeChromeSemantics("/contracts").bottomNavSection).toBe("contracts");
-    expect(routeChromeSemantics("/scenes").bottomNavSection).toBe("scenes");
-    expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
+  it("groepeert vergelijken en afspraken onder Samen", () => {
+    expect(routeChromeSemantics("/compare").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/contracts").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/contracts/series/history").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/contracts/series/versions/v1").bottomNavSection).toBe("together");
+    expect(routeChromeSemantics("/timeline").bottomNavSection).toBe("together");
   });
 
-  it("houdt intimiteit als rustige secundaire focusroute", () => {
+  it("groepeert scènes onder Momenten zonder de focusflows open te trekken", () => {
+    expect(routeChromeSemantics("/scenes").bottomNavSection).toBe("moments");
+    expect(routeChromeSemantics("/scene")).toMatchObject({
+      hideBottomNav: true,
+      back: "/scenes",
+      bottomNavSection: null,
+    });
     expect(routeChromeSemantics("/intimacy")).toMatchObject({
       title: "Intimiteit",
       back: "/",
@@ -32,36 +39,19 @@ describe("route chrome semantics", () => {
     expect(route.back).toBe("/profile?id=alex%20one");
   });
 
-  it("houdt contractdetailroutes visueel bij de contracttab", () => {
+  it("houdt bestaande parent-links intact", () => {
     expect(routeChromeSemantics("/contracts/series/history")).toMatchObject({
       title: "Contractgeschiedenis",
       back: "/contracts/series",
-      hideBottomNav: false,
-      bottomNavSection: "contracts",
     });
     expect(routeChromeSemantics("/contracts/series/versions/v1")).toMatchObject({
       title: "Getekend document",
       back: "/contracts/series/history",
-      hideBottomNav: false,
-      bottomNavSection: "contracts",
     });
-    expect(routeChromeSemantics("/timeline")).toMatchObject({
-      title: "Contractgeschiedenis",
-      back: "/contracts",
-      hideBottomNav: false,
-      bottomNavSection: "contracts",
-    });
-  });
-
-  it("noemt de editor contract opstellen en laat sceneplanner focus-mode", () => {
     expect(routeChromeSemantics("/contract")).toMatchObject({
       title: "Contract opstellen",
       back: "/compare",
-      bottomNavSection: "contracts",
-    });
-    expect(routeChromeSemantics("/scene")).toMatchObject({
-      hideBottomNav: true,
-      back: "/scenes",
+      bottomNavSection: "together",
     });
   });
 });
