@@ -176,6 +176,7 @@ export default function TopNav() {
     ? contextualTitle.split(" · ", 2)
     : null;
   const navWidth = navWidthForRoute(path);
+  const topLevelSpace = path === "/space" || path === "/together" || path === "/moments";
 
   const directActions = actions.filter((action) => action.placement !== "overflow");
   const primary = actions.find((action) => action.placement === "primary") ?? directActions[0];
@@ -199,15 +200,20 @@ export default function TopNav() {
           className="grid h-14 w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-1"
           style={contentNavRow}
         >
-          <MotionLink
-            href={backHref ?? route.back}
-            whileTap={t.tap}
-            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
-            style={{ color: "var(--text2)" }}
-            aria-label="Terug"
-          >
-            <CaretLeft aria-hidden="true" size={20} />
-          </MotionLink>
+          {topLevelSpace ? (
+            <span className="h-11 w-11" aria-hidden="true" />
+          ) : (
+            <MotionLink
+              href={backHref ?? route.back}
+              prefetch={false}
+              whileTap={t.tap}
+              className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
+              aria-label="Terug"
+            >
+              <CaretLeft aria-hidden="true" size={20} />
+            </MotionLink>
+          )}
           <span
             className="serif-safe flex min-w-0 items-baseline gap-1.5 overflow-hidden text-base italic"
             style={{
@@ -345,6 +351,7 @@ function OfflineStatus({ compact = false }: { compact?: boolean }) {
 
 function navWidthForRoute(path: string): string {
   if (path === "/compare") return "max-w-5xl";
+  if (path === "/space" || path === "/together" || path === "/moments") return "max-w-3xl";
   if (path === "/about" || path === "/security" || path === "/contracts" || path === "/scenes" || path === "/timeline") {
     return "max-w-4xl";
   }
