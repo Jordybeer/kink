@@ -4,7 +4,7 @@ import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
 test("hub keeps a calm utility nav while brand and settings sit in their proper hierarchy", async ({ page }) => {
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
   const nav = page.getByLabel("Hoofdnavigatie");
   await expect(nav).toBeVisible();
   await expect(nav).toHaveAttribute("data-top-nav-variant", "home");
@@ -51,7 +51,7 @@ test("hub keeps a calm utility nav while brand and settings sit in their proper 
 });
 
 test("Home overflow follows the ARIA menu keyboard contract", async ({ page }) => {
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
   const more = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer opties" });
   await more.focus();
   await page.keyboard.press("Enter");
@@ -79,11 +79,11 @@ test("Home overflow follows the ARIA menu keyboard contract", async ({ page }) =
 
 test("subpages show back chevron pointing at the right parent", async ({ page }) => {
   const cases: Array<[string, string]> = [
-    ["/compare?a=pw-alex-001&b=pw-sam-002", "/"],
-    ["/contract?a=pw-alex-001&b=pw-sam-002", "/compare"],
-    ["/profile/pw-alex-001", "/"],
-    ["/profile?id=pw-alex-001", "/"],
-    ["/intimacy", "/"],
+    ["/compare?a=pw-alex-001&b=pw-sam-002", "/together?a=pw-alex-001&b=pw-sam-002"],
+    ["/contract?a=pw-alex-001&b=pw-sam-002", "/together"],
+    ["/profile/pw-alex-001", "/space"],
+    ["/profile?id=pw-alex-001", "/space"],
+    ["/intimacy", "/moments"],
   ];
   for (const [url, parent] of cases) {
     await seedAndGo(page, url, PROFILES);
@@ -103,8 +103,8 @@ test("profile tab uses the offline-safe shell without changing profile UX", asyn
   await expect(page.getByRole("menuitem", { name: "Profiel delen" })).toBeVisible();
   await page.keyboard.press("Escape");
 
-  const profileTab = page.locator('nav[aria-label="Tabbladen"] a').filter({ hasText: "Profiel" });
-  await expect(profileTab).toHaveAttribute("href", "/profile?id=pw-alex-001");
+  const profileTab = page.locator('nav[aria-label="Tabbladen"] a').filter({ hasText: "Ik" });
+  await expect(profileTab).toHaveAttribute("href", "/space");
   await expect(profileTab).toHaveAttribute("aria-current", "page");
 });
 
