@@ -2,44 +2,31 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ArrowsLeftRight,
-  FileText,
-  FilmSlate,
-  House,
-  UserCircle,
-} from "@phosphor-icons/react";
-import { useStore, useHasHydrated } from "@/lib/store";
-import { profileHref } from "@/lib/localRoutes";
+import { CalendarDots, UserCircle, UsersThree } from "@phosphor-icons/react";
+import { useHasHydrated, useStore } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
 
 export default function BottomNav() {
   const path = usePathname();
-  const { profiles } = useStore();
   const hydrated = useHasHydrated();
+  const onboardingComplete = useStore((state) => state.onboardingComplete);
   const route = routeChromeSemantics(path);
 
-  if (route.hideBottomNav) return null;
+  if (route.hideBottomNav || (hydrated && !onboardingComplete)) return null;
 
-  const firstProfileId = hydrated ? profiles[0]?.id : undefined;
-  const firstProfileHref = firstProfileId ? profileHref(firstProfileId) : "/";
   const items = [
-    { href: "/", label: "Home", icon: House, section: "home" as const },
-    { href: "/compare", label: "Vergelijk", icon: ArrowsLeftRight, section: "compare" as const },
-    { href: "/contracts", label: "Contracten", icon: FileText, section: "contracts" as const },
-    { href: "/scenes", label: "Scènes", icon: FilmSlate, section: "scenes" as const },
-    { href: firstProfileHref, label: "Profiel", icon: UserCircle, section: "profile" as const },
+    { href: "/space", label: "Ik", icon: UserCircle, section: "space" as const },
+    { href: "/together", label: "Samen", icon: UsersThree, section: "together" as const },
+    { href: "/moments", label: "Momenten", icon: CalendarDots, section: "moments" as const },
   ];
 
   return (
     <nav
       className="bottom-nav fixed inset-x-0 bottom-0 z-40 gap-1 pt-1.5"
       style={{
-        background:
-          "linear-gradient(180deg, var(--pwa-nav-surface) 0%, var(--pwa-nav-surface-deep) 100%)",
+        background: "linear-gradient(180deg, var(--pwa-nav-surface) 0%, var(--pwa-nav-surface-deep) 100%)",
         borderTop: "1px solid color-mix(in srgb, var(--pwa-nav-icon) 16%, var(--border))",
-        boxShadow:
-          "0 -10px 30px color-mix(in srgb, var(--pwa-nav-surface-deep) 70%, transparent)",
+        boxShadow: "0 -10px 30px color-mix(in srgb, var(--pwa-nav-surface-deep) 70%, transparent)",
         height: "var(--bottom-nav-h)",
         alignItems: "flex-start",
         paddingLeft: "max(var(--bottom-nav-side-inset), env(safe-area-inset-left, 0px))",
@@ -57,9 +44,7 @@ export default function BottomNav() {
             aria-label={label}
             aria-current={active ? "page" : undefined}
             className="focus-ring flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-[background-color,transform] duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
-            style={{
-              background: active ? "var(--pwa-nav-active)" : "transparent",
-            }}
+            style={{ background: active ? "var(--pwa-nav-active)" : "transparent" }}
           >
             <Icon
               size={24}
@@ -67,9 +52,7 @@ export default function BottomNav() {
               aria-hidden="true"
               style={{
                 color: active ? "var(--pwa-nav-icon-active)" : "var(--pwa-nav-icon)",
-                filter: active
-                  ? "drop-shadow(0 0 8px color-mix(in srgb, var(--pwa-nav-icon) 22%, transparent))"
-                  : "none",
+                filter: active ? "drop-shadow(0 0 8px color-mix(in srgb, var(--pwa-nav-icon) 22%, transparent))" : "none",
               }}
             />
             <span
