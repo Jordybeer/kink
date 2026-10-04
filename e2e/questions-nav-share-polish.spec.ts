@@ -4,7 +4,7 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
 test("Home keeps one brand statement and moves product explanation into the shared context menu", async ({ page }) => {
-  await seedAndGo(page, "/", PROFILES);
+  await seedAndGo(page, "/?profiles=1", PROFILES);
 
   await expect(page.getByText("Verken grenzen. Samen.", { exact: true })).toBeVisible();
   await expect(page.getByText("Twee profielen. Eén gesprek.", { exact: true })).toHaveCount(0);
