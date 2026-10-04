@@ -13,6 +13,7 @@ const kinks: Kink[] = [
   { id: "hard", name: "Metal restraints", category: "bondage", level: 1 },
   { id: "hard-two", name: "Needles", category: "sensation", level: 1 },
   { id: "private", name: "Secret subject", category: "roleplay", level: 1 },
+  { id: "custom-hard", name: "My own boundary", category: "custom", level: 1 },
 ];
 
 const entries: Record<string, KinkEntry> = {
@@ -26,6 +27,7 @@ const entries: Record<string, KinkEntry> = {
   hard: { status: "hard_no", comment: "No exceptions." },
   "hard-two": { status: "hard_no", comment: "" },
   private: { status: "yes", comment: "Never expose this.", tags: ["secret"], curious: true, privateResponse: true },
+  "custom-hard": { status: "hard_no", comment: "This must remain visible." },
 };
 
 describe("profile status-first read summary", () => {
@@ -36,6 +38,16 @@ describe("profile status-first read summary", () => {
     expect(result.groups[1].items.map((item) => item.name)).toEqual(["Rope", "Cuffs", "Harness", "Praise"]);
   });
 
+  it("keeps custom topics in the same explicit status model", () => {
+    const result = buildProfileStatusReadSummary(kinks, entries);
+    const hard = result.groups.find((group) => group.status === "hard_no");
+    expect(hard?.items).toContainEqual(expect.objectContaining({
+      name: "My own boundary",
+      category: "custom",
+      comment: "This must remain visible.",
+    }));
+  });
+
   it("keeps catalogue order inside a status without inventing importance", () => {
     const yes = buildProfileStatusReadSummary(kinks, entries).groups.find((group) => group.status === "yes");
     expect(yes?.items.map((item) => item.name)).toEqual(["Rope", "Cuffs", "Harness", "Praise"]);
@@ -44,7 +56,7 @@ describe("profile status-first read summary", () => {
   it("removes private answers from every public status count and group", () => {
     const result = buildProfileStatusReadSummary(kinks, entries);
     const serialized = JSON.stringify(result.groups);
-    expect(result.publicCount).toBe(9);
+    expect(result.publicCount).toBe(10);
     expect(result.privateItems).toHaveLength(1);
     expect(serialized).not.toContain("Secret subject");
     expect(serialized).not.toContain("Never expose this.");
