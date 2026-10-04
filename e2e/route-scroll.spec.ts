@@ -7,7 +7,7 @@ async function expectRouteAtTop(page: import("@playwright/test").Page) {
 
 test("routewissels landen bovenaan ondanks de sticky navigatie", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, "/", [PROFILE_ALEX], { onboardingComplete: true });
+  await seedAndGo(page, "/?profiles=1", [PROFILE_ALEX], { onboardingComplete: true });
   await expectRouteAtTop(page);
 
   await page.getByRole("button", { name: "Meer opties" }).click();
