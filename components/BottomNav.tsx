@@ -10,9 +10,10 @@ export default function BottomNav() {
   const path = usePathname();
   const hydrated = useHasHydrated();
   const onboardingComplete = useStore((state) => state.onboardingComplete);
+  const profileCount = useStore((state) => state.profiles.length);
   const route = routeChromeSemantics(path);
 
-  if (route.hideBottomNav || (hydrated && !onboardingComplete)) return null;
+  if (!hydrated || !onboardingComplete || profileCount === 0 || route.hideBottomNav) return null;
 
   const items = [
     { href: "/space", label: "Ik", icon: UserCircle, section: "space" as const },
