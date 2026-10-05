@@ -25,7 +25,7 @@ import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profi
 import { profileHref } from "@/lib/localRoutes";
 import { useMotionSafe } from "@/lib/motion";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
-import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
+import type { Kink, KinkCategory, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
@@ -44,9 +44,9 @@ interface Props {
 }
 
 const EMPTY_KINKS: Kink[] = [];
-const PROFILE_READ_CATEGORIES: readonly KinkCategoryId[] = [...CATEGORIES, "custom"];
+const PROFILE_READ_CATEGORIES: readonly KinkCategory[] = [...CATEGORIES, "custom"];
 
-function profileReadCategoryLabel(category: KinkCategoryId): string {
+function profileReadCategoryLabel(category: KinkCategory): string {
   return category === "custom" ? "Eigen onderwerpen" : kinkCategoryLabel(category);
 }
 
