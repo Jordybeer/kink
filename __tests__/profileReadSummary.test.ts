@@ -38,7 +38,7 @@ describe("profile status-first read summary", () => {
   it("orders explicit public meaning as boundaries first, then the four interest statuses", () => {
     const result = buildProfileStatusReadSummary(kinks, entries);
     expect(result.groups.map((group) => group.status)).toEqual(["hard_no", "yes", "willing", "maybe", "no"]);
-    expect(result.groups[0].items.map((item) => item.name)).toEqual(["Metal restraints", "Needles"]);
+    expect(result.groups[0].items.map((item) => item.name)).toEqual(["Metal restraints", "Needles", "Persoonlijke grens"]);
     expect(result.groups[1].items.map((item) => item.name)).toEqual(["Rope", "Cuffs", "Harness", "Praise"]);
   });
 
@@ -50,8 +50,8 @@ describe("profile status-first read summary", () => {
   it("removes private answers from every public status count and group", () => {
     const result = buildProfileStatusReadSummary(kinks, entries);
     const serialized = JSON.stringify(result.groups);
-    expect(result.publicCount).toBe(9);
-    expect(result.privateItems).toHaveLength(1);
+    expect(result.publicCount).toBe(11);
+    expect(result.privateItems).toHaveLength(2);
     expect(serialized).not.toContain("Secret subject");
     expect(serialized).not.toContain("Never expose this.");
     expect(serialized).not.toContain("secret");
