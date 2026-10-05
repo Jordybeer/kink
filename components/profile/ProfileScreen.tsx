@@ -176,6 +176,7 @@ export default function ProfilePage({ params }: Props) {
     ],
     currentProfile.entries,
   );
+  const readAnswerCount = readSummary.publicCount + readSummary.privateItems.length;
   const hardLimitGroup = readSummary.groups.find((group) => group.status === "hard_no") ?? null;
   const interestGroups = readSummary.groups.filter((group) => group.status !== "hard_no");
 
@@ -455,7 +456,7 @@ export default function ProfilePage({ params }: Props) {
             Interesses &amp; grenzen
           </h2>
 
-          {totalRated === 0 ? (
+          {readAnswerCount === 0 ? (
             <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>
               Nog geen onderwerpen beoordeeld.
             </p>
