@@ -27,7 +27,7 @@ export function buildProfileStatusReadSummary(
 
   for (const kink of kinks) {
     const entry = entries[kink.id];
-    if (!entry?.status || kink.category === "custom") continue;
+    if (!entry?.status) continue;
 
     const item: ProfileReadItem = {
       id: kink.id,
