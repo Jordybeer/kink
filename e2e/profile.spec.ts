@@ -276,6 +276,22 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByText("Alleen voor mezelf.", { exact: true })).toBeVisible();
   });
 
+  test("profiel met alleen een ingevuld eigen onderwerp heeft geen lege leesstaat", async ({ page }) => {
+    const customOnlyAlex = {
+      ...PROFILE_ALEX,
+      entries: {
+        custom_pw001: {
+          status: "willing" as const,
+          comment: "Dit is mijn enige ingevulde onderwerp.",
+        },
+      },
+    };
+    await seedAndGo(page, "/profile/pw-alex-001", [customOnlyAlex, PROFILE_SAM]);
+
+    await expect(page.getByText("Nog geen onderwerpen beoordeeld.", { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("profile-read-status-willing")).toHaveAccessibleName(/Ja, 1 antwoord/);
+  });
+
   test("alle publieke harde grenzen blijven onmiddellijk bij naam zichtbaar", async ({ page }) => {
     const hardLimits = page.getByTestId("profile-read-hard-limits");
     await expect(hardLimits).toBeVisible();
