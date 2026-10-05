@@ -1,4 +1,4 @@
-import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
+import type { Kink, KinkCategory, KinkEntry, KinkStatus } from "@/types";
 
 export const PROFILE_READ_STATUS_ORDER = [
   "hard_no",
@@ -11,7 +11,7 @@ export const PROFILE_READ_STATUS_ORDER = [
 export interface ProfileReadItem {
   id: string;
   name: string;
-  category: KinkCategoryId;
+  category: KinkCategory;
   status: NonNullable<KinkStatus>;
   comment: string;
   tags: string[];
