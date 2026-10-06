@@ -9,17 +9,17 @@ interface Props {
   topColor?: string;
   /** Bottom glow colour. Defaults to the warm action hue. */
   bottomColor?: string;
-  /** Top glow opacity (0–1). Default 0.10. */
+  /** Top glow opacity (0–1). Default 0.16. */
   topOpacity?: number;
-  /** Bottom glow opacity (0–1). Default 0.05. */
+  /** Bottom glow opacity (0–1). Default 0.10. */
   bottomOpacity?: number;
 }
 
 export default function AmbientGlow({
   topColor = "var(--identity-a)",
   bottomColor = "var(--identity-b)",
-  topOpacity = 0.10,
-  bottomOpacity = 0.05,
+  topOpacity = 0.16,
+  bottomOpacity = 0.10,
 }: Props) {
   const pathname = usePathname();
   const context = ambientGlowContextForPathname(pathname);
