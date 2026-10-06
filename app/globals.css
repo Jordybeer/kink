@@ -31,7 +31,7 @@ body { isolation: isolate; }
 .status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: var(--willing); border-width: 2px; }
 .status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: var(--maybe);   border-width: 2px; }
 .status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: var(--no);      border-width: 2px; }
-.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 3.2s ease-in-out infinite; }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; }
 
 .focus-ring:focus-visible {
   outline: none;
@@ -470,9 +470,9 @@ span[class~="mr-auto"][class~="text-xs"] {
 }
 
 .ks-ambient-orb-route-top {
-  top: -18rem;
-  left: calc(50% - min(23rem, 74vw));
-  width: min(46rem, 148vw);
+  top: -16rem;
+  left: calc(50% - min(25rem, 80vw));
+  width: min(50rem, 160vw);
   aspect-ratio: 1;
   border-radius: 9999px;
   transform-origin: 50% 0%;
@@ -520,9 +520,9 @@ span[class~="mr-auto"][class~="text-xs"] {
 }
 
 .ks-ambient-orb-bottom {
-  right: -17rem;
-  bottom: -18rem;
-  width: min(43rem, 142vw);
+  right: -15rem;
+  bottom: -15rem;
+  width: min(48rem, 154vw);
   aspect-ratio: 1;
   background: radial-gradient(
     circle,
@@ -533,13 +533,13 @@ span[class~="mr-auto"][class~="text-xs"] {
 }
 
 @keyframes ks-ambient-drift-top {
-  from { transform: translate3d(-2.5%, -1.5%, 0) scale(0.98); }
-  to { transform: translate3d(5%, 4%, 0) scale(1.04); }
+  from { transform: translate3d(-2%, -1.5%, 0) scale(0.98); }
+  to { transform: translate3d(6%, 4.5%, 0) scale(1.05); }
 }
 
 @keyframes ks-ambient-drift-bottom {
-  from { transform: translate3d(2%, 2%, 0) scale(1.03); }
-  to { transform: translate3d(-7%, -4%, 0) scale(0.97); }
+  from { transform: translate3d(2%, 2.5%, 0) scale(1.03); }
+  to { transform: translate3d(-8%, -4.5%, 0) scale(0.97); }
 }
 
 @media (prefers-reduced-motion: reduce) {
