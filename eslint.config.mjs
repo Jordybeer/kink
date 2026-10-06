@@ -22,7 +22,7 @@ const eslintConfig = defineConfig([
     },
   },
   // Serwist forges these from app/sw.ts; flog the source, not its minified offspring.
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'public/sw.js', 'public/sw.js.map', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'public/sw.js', 'public/sw.js.map', 'vendor/braces/**', 'next-env.d.ts']),
 ])
 
 export default eslintConfig
