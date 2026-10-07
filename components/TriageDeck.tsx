@@ -5,6 +5,7 @@ import type { Kink, KinkCategory, KinkCategoryId, KinkEntry, KinkStatus } from "
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import { kinkCategoryExplainer } from "@/lib/kinkCategories";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
+import { directionalPairForKinkId, directionalSideForKinkId } from "@/lib/directionality";
 import { isConversationContinuation, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
 import Sheet, { SheetContent } from "./Sheet";
@@ -123,6 +124,8 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
   const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "var(--category-custom)";
   const categoryUnseen = Boolean(current && current.category !== "custom" && !seenCategories.has(current.category));
   const presentation = current ? getQuestionnairePresentation(current) : { title: "", essence: "", details: null, hasDetails: false };
+  const directionalPair = current ? directionalPairForKinkId(current.id) : undefined;
+  const directionalSide = current ? directionalSideForKinkId(current.id) : null;
   const categoryCopy = categoryDetail ? kinkCategoryExplainer(categoryDetail) : null;
   const announcement = current
     ? `Nieuwe vraag: ${presentation.title}. Categorie ${kinkCategoryLabel(current.category)}.`
@@ -135,7 +138,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
       </p>
       <div className="h-full min-h-0">
         {current ? (
-          <div data-tour="kink-card" className="questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
+          <div data-tour="kink-card" className="questionnaire-stage ks-questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
             <div data-testid="question-content" className="question-content relative z-[1] grid min-h-full min-w-0 gap-1">
               <div className="flex min-h-0 min-w-0 items-center gap-2">
                 <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
@@ -164,6 +167,13 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
               </div>
 
               <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
+              {directionalPair && directionalSide && (
+                <div data-testid="question-direction-context" className="grid grid-cols-[auto_minmax(2.75rem,1fr)_auto] items-center gap-2 py-0.5 text-xs font-semibold" aria-label={`Richting: ${directionalSide === "give" ? "geven" : "ontvangen"}`}>
+                  <span style={{ color: directionalSide === "give" ? "var(--identity-a)" : "var(--text2)" }}>Geven</span>
+                  <span className="ks-relation-thread ks-relation-thread--quiet" aria-hidden="true" />
+                  <span style={{ color: directionalSide === "receive" ? "var(--identity-b)" : "var(--text2)" }}>Ontvangen</span>
+                </div>
+              )}
               <p data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
