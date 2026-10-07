@@ -253,9 +253,9 @@ function HomeContent() {
             data-home-empty-card
             className="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-5 sm:pb-7 sm:pt-5"
             style={{
-              background: "linear-gradient(145deg, color-mix(in srgb, var(--accent) 7%, var(--surface2)), color-mix(in srgb, var(--accent) 2%, var(--surface)))",
-              border: "1px solid color-mix(in srgb, var(--border-accent) 72%, var(--border))",
-              boxShadow: "0 18px 44px color-mix(in srgb, var(--accent) 7%, transparent)",
+              background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface2)), color-mix(in srgb, var(--identity-b) 6%, var(--surface)))",
+              border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--identity-border))",
+              boxShadow: "0 18px 44px color-mix(in srgb, var(--identity-a) 7%, transparent)",
             }}
           >
             <div className="px-2 pb-8 pt-1 max-[321px]:pb-7 text-center">
