@@ -193,7 +193,22 @@ body { isolation: isolate; }
   background: linear-gradient(90deg, var(--identity-a), var(--identity-b));
   background-size: 180% 100%;
   animation: ks-brand-thread-shift 7s ease-in-out infinite alternate;
-  opacity: 0.82;
+  opacity: 0.9;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--identity-a) 10%, transparent);
+}
+
+[data-theme="light"] .ks-relation-thread {
+  opacity: 0.74;
+  box-shadow: none;
+}
+
+.ks-relation-thread--quiet {
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+[data-theme="light"] .ks-relation-thread--quiet {
+  opacity: 0.42;
 }
 
 .ks-relation-thread::before,
