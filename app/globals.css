@@ -241,6 +241,42 @@ body { isolation: isolate; }
     );
 }
 
+[data-theme="light"] .ks-brand-surface {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--identity-a) 3%, var(--surface)),
+      color-mix(in srgb, var(--identity-b) 4%, var(--surface))
+    );
+}
+
+/* Relationship surfaces share one quiet visual language across Home, Compare,
+   Contracts and Scenes. The colour is atmosphere; the relation thread carries
+   the actual semantic connection. */
+.ks-relational-surface {
+  background:
+    linear-gradient(
+      122deg,
+      color-mix(in srgb, var(--identity-a) 4%, var(--surface)) 0%,
+      color-mix(in srgb, var(--surface) 98%, transparent) 48%,
+      color-mix(in srgb, var(--identity-b) 5%, var(--surface)) 100%
+    );
+  border-color: color-mix(in srgb, var(--border-accent) 54%, var(--border));
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--identity-a) 4%, transparent);
+}
+
+[data-theme="light"] .ks-relational-surface {
+  background:
+    linear-gradient(
+      122deg,
+      color-mix(in srgb, var(--identity-a) 2%, var(--surface)) 0%,
+      var(--surface) 48%,
+      color-mix(in srgb, var(--identity-b) 3%, var(--surface)) 100%
+    );
+  border-color: color-mix(in srgb, var(--border-accent) 38%, var(--border));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--identity-a) 2%, transparent);
+}
+
 @keyframes ks-brand-thread-shift {
   from { background-position: 0% 50%; }
   to { background-position: 100% 50%; }
