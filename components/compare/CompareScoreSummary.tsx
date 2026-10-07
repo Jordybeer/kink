@@ -81,10 +81,9 @@ export default function CompareScoreSummary({
         style={{ borderColor: "var(--border)", background: "var(--surface)" }}
       >
         <div
-          className="rounded-2xl px-4 py-4 sm:px-5"
+          className="ks-brand-surface rounded-2xl px-4 py-4 sm:px-5"
           style={{
-            background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
-            border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
+            border: "1px solid color-mix(in srgb, var(--border-accent) 72%, var(--border))",
           }}
         >
           <h2
