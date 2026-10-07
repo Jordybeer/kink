@@ -224,11 +224,8 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             href={`/compare?a=${pair[0].id}&b=${pair[1].id}`}
             prefetch={false}
             aria-label={`Vergelijk ${pair[0].name} en ${pair[1].name}`}
-            className="focus-ring block rounded-2xl p-3.5 transition-opacity hover:opacity-90 active:opacity-80 lg:col-span-2"
-            style={{
-              background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 6%, var(--surface)), color-mix(in srgb, var(--action-primary) 6%, var(--surface)))",
-              border: "1px solid var(--border-accent)",
-            }}
+            className="focus-ring ks-relational-surface block rounded-2xl p-3.5 transition-opacity hover:opacity-90 active:opacity-80 lg:col-span-2"
+            style={{ border: "1px solid var(--border-accent)" }}
           >
             <div className="flex items-center gap-3.5">
               <div className="flex flex-none items-center" aria-hidden="true">
