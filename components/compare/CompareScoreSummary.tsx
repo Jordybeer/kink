@@ -77,8 +77,8 @@ export default function CompareScoreSummary({
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
       <div
-        className="rounded-2xl border p-4 sm:p-5"
-        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+        className="ks-relational-surface rounded-2xl border p-4 sm:p-5"
+        style={{ borderColor: "var(--border)" }}
       >
         <div
           className="ks-brand-surface rounded-2xl px-4 py-4 sm:px-5"
