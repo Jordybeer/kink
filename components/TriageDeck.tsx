@@ -5,7 +5,6 @@ import type { Kink, KinkCategory, KinkCategoryId, KinkEntry, KinkStatus } from "
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import { kinkCategoryExplainer } from "@/lib/kinkCategories";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
-import { directionalPairForKinkId, directionalSideForKinkId } from "@/lib/directionality";
 import { isConversationContinuation, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
 import Sheet, { SheetContent } from "./Sheet";
@@ -123,8 +122,6 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
   const detailOpen = Boolean(current && detailKinkId === current.id);
   const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "var(--category-custom)";
   const categoryUnseen = Boolean(current && current.category !== "custom" && !seenCategories.has(current.category));
-  const directionalPair = current ? directionalPairForKinkId(current.id) : undefined;
-  const directionalSide = current ? directionalSideForKinkId(current.id) : null;
   const presentation = current ? getQuestionnairePresentation(current) : { title: "", essence: "", details: null, hasDetails: false };
   const categoryCopy = categoryDetail ? kinkCategoryExplainer(categoryDetail) : null;
   const announcement = current
@@ -166,20 +163,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
                 </div>
               </div>
 
-              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 flex-col justify-center overflow-visible">
-                <h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2>
-                {directionalPair && (
-                  <div
-                    data-testid="question-direction-axis"
-                    className="ks-direction-axis mt-1 w-full max-w-[15rem]"
-                    aria-label={directionalSide === "give" ? "Richting: geven" : "Richting: ontvangen"}
-                  >
-                    <span className="ks-direction-axis-label" data-active={directionalSide === "give" ? "give" : undefined}>Geven</span>
-                    <span className="ks-relation-thread" aria-hidden="true" />
-                    <span className="ks-direction-axis-label" data-active={directionalSide === "receive" ? "receive" : undefined}>Ontvangen</span>
-                  </div>
-                )}
-              </div>
+              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
               <p data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
