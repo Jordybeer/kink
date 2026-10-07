@@ -49,8 +49,8 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
   const [a, b] = series.participants;
   return (
     <article
-      className="overflow-hidden rounded-2xl"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      className="ks-relational-surface overflow-hidden rounded-2xl"
+      style={{ border: "1px solid var(--border)" }}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
@@ -225,8 +225,10 @@ function ContractsContent() {
                     className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
-                    <span className="min-w-0 flex-1 break-words py-2 leading-5" style={{ overflowWrap: "anywhere" }}>
-                      {a.profileName} × {b.profileName}
+                    <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center gap-2 py-2 leading-5" style={{ overflowWrap: "anywhere" }}>
+                      <span className="min-w-0 truncate">{a.profileName}</span>
+                      <span className="ks-relation-thread ks-relation-thread--quiet" aria-hidden="true" />
+                      <span className="min-w-0 truncate text-right">{b.profileName}</span>
                     </span>
                     <span className="text-xs" style={{ color: "var(--text2)" }}>
                       {item.status === "pending_signature" ? "Wacht op bevestiging" : "Concept"}
