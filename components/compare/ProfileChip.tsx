@@ -24,7 +24,7 @@ export default function ProfileChip({
   isPartner,
   onClick,
 }: ProfileChipProps) {
-  const labelColour = slot === "B" ? "var(--accent2-text)" : "var(--accent-text)";
+  const labelColour = slot === "A" ? "var(--accent2-text)" : "var(--accent-text)";
   const roleLabel = profile ? compareRoleLabel(profile) : "";
 
   return (
