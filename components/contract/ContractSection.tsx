@@ -74,7 +74,7 @@ export default function ContractSection({
                       : <span style={{ color: "var(--text2)", fontSize: "14px" }}>{nA}: geen antwoord</span>
                     }
                   </div>
-                  <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${cA}, ${cB})`, opacity: 0.2 }} />
+                  <span className="ks-relation-thread ks-relation-thread--quiet flex-1" aria-hidden="true" />
                   <div className="flex flex-col items-end gap-0.5">
                     {item.statusB
                       ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-sm" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
