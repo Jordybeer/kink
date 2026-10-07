@@ -737,7 +737,6 @@ span[class~="mr-auto"][class~="text-xs"] {
 
 .profile-page .ks-profile-questionnaire > a {
   border-radius: 0.9rem;
-  padding-inline: 0.75rem;
   background:
     linear-gradient(
       112deg,
@@ -762,7 +761,7 @@ span[class~="mr-auto"][class~="text-xs"] {
 .profile-page .ks-profile-interests::before {
   content: "";
   position: absolute;
-  left: 0;
+  left: -0.625rem;
   top: 2.25rem;
   width: 2px;
   height: min(7rem, calc(100% - 2.25rem));
@@ -771,9 +770,6 @@ span[class~="mr-auto"][class~="text-xs"] {
   opacity: 0.56;
 }
 
-.profile-page .ks-profile-interests > * {
-  margin-left: 0.75rem;
-}
 
 .ks-questionnaire-stage::before {
   content: "";
