@@ -177,7 +177,80 @@ body { isolation: isolate; }
   height: 1px;
   width: 120px;
   background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
-  opacity: 0.6;
+  background-size: 180% 100%;
+  opacity: 0.68;
+  animation: ks-brand-thread-shift 7s ease-in-out infinite alternate;
+}
+
+/* The lavender → salmon thread is semantic, never ambient decoration.
+   It only appears between two explicit sides of one relationship/concept. */
+.ks-relation-thread {
+  position: relative;
+  display: block;
+  min-width: 2.75rem;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--identity-a), var(--identity-b));
+  background-size: 180% 100%;
+  animation: ks-brand-thread-shift 7s ease-in-out infinite alternate;
+  opacity: 0.82;
+}
+
+.ks-relation-thread::before,
+.ks-relation-thread::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+}
+
+.ks-relation-thread::before {
+  left: -1px;
+  background: var(--identity-a);
+}
+
+.ks-relation-thread::after {
+  right: -1px;
+  background: var(--identity-b);
+}
+
+.ks-direction-axis {
+  display: grid;
+  grid-template-columns: auto minmax(2.75rem, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ks-direction-axis-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 650;
+  color: var(--text2);
+}
+
+.ks-direction-axis-label[data-active="give"] {
+  color: var(--identity-a);
+}
+
+.ks-direction-axis-label[data-active="receive"] {
+  color: var(--identity-b);
+}
+
+.ks-brand-surface {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--identity-a) 6%, var(--surface)),
+      color-mix(in srgb, var(--identity-b) 7%, var(--surface))
+    );
+}
+
+@keyframes ks-brand-thread-shift {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
 }
 
 /* Dense multi-frame QR codes keep their 280px source resolution, but yield vertical
@@ -336,6 +409,10 @@ span[class~="mr-auto"][class~="text-xs"] {
   .partner-card-tap,
   .partner-reveal  { animation: none; filter: none; opacity: 1; }
   .ks-dot-pulse span { animation: none; opacity: 1; transform: none; }
+  .ks-gradient-rule,
+  .ks-relation-thread {
+    animation: none;
+  }
 }
 
 @keyframes confetti-pop {
