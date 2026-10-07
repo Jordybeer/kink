@@ -434,7 +434,7 @@ export default function ProfilePage({ params }: Props) {
           <h2
             id="profile-interests-title"
             tabIndex={-1}
-            className="outline-none scroll-mt-[var(--nav-h)] mb-4 text-xl italic leading-tight"
+            className="outline-none scroll-mt-[var(--nav-h)] mb-4 text-2xl italic leading-tight"
             style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
           >
             Interesses &amp; grenzen
@@ -449,8 +449,8 @@ export default function ProfilePage({ params }: Props) {
               {hardLimitGroup && (
                 <section
                   data-testid="profile-read-hard-limits"
-                  className="rounded-xl px-3.5 py-3.5 [overflow-wrap:anywhere]"
-                  style={{ background: "color-mix(in srgb, var(--hard-no) 5%, var(--surface))" }}
+                  className="border-y py-3.5 [overflow-wrap:anywhere]"
+                  style={{ borderColor: "color-mix(in srgb, var(--hard-no) 24%, var(--border))" }}
                   aria-labelledby="profile-hard-limits-title"
                 >
                   <div className="mb-2.5 flex items-baseline gap-3">
