@@ -40,6 +40,14 @@ export default function CompareProfileHeader({
           onClick={onOpenB}
         />
       </div>
+      {profileA && profileB && (
+        <div
+          className="mx-auto mt-2 w-14"
+          aria-label={`Relatie tussen ${profileA.name} en ${profileB.name}`}
+        >
+          <span className="ks-relation-thread" aria-hidden="true" />
+        </div>
+      )}
       {samePairError && (
         <p role="alert" className="text-sm mt-2 px-1" style={{ color: "var(--conflict)" }}>
           Kies twee verschillende profielen om te vergelijken.
