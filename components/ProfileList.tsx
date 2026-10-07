@@ -237,16 +237,15 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
               </div>
               <div className="min-w-0 flex-1">
                 <p
-                  className="text-lg italic leading-tight"
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center gap-2 text-lg italic leading-tight"
                   style={{
                     fontFamily: "var(--font-display, Georgia, serif)",
                     fontWeight: 500,
-                    overflowWrap: "anywhere",
                   }}
                 >
-                  {pair[0].name}
-                  <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
-                  {pair[1].name}
+                  <span className="min-w-0 truncate">{pair[0].name}</span>
+                  <span className="ks-relation-thread" aria-hidden="true" />
+                  <span className="min-w-0 truncate text-right">{pair[1].name}</span>
                 </p>
                 <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
                   Bekijk overeenkomsten, bespreekpunten en grenzen.
