@@ -46,7 +46,7 @@ function SceneCard({
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <article className="rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <article className="ks-relational-surface rounded-2xl" style={{ border: "1px solid var(--border)" }}>
       {traffic && (
         <div
           className="flex items-center gap-2.5 rounded-t-[15px] px-4 py-2.5"
