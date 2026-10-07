@@ -24,7 +24,9 @@ export default function CompareProfileHeader({
 
   return (
     <div className="pb-3 mb-3" style={{ borderBottom: "1px solid var(--border)" }}>
-      <div className="grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)] items-center gap-2">
+      <div className={profileA && profileB
+        ? "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)] items-center gap-2"
+        : "grid grid-cols-2 gap-2"}>
         <ProfileChip
           profile={profileA}
           colour={PROFILE_COLOUR_A}
@@ -32,7 +34,7 @@ export default function CompareProfileHeader({
           isPartner={isPartnerA}
           onClick={onOpenA}
         />
-        <span className={profileA && profileB ? "ks-relation-thread" : ""} aria-hidden="true" />
+        {profileA && profileB && <span className="ks-relation-thread" aria-hidden="true" />}
         <ProfileChip
           profile={profileB}
           colour={PROFILE_COLOUR_B}
