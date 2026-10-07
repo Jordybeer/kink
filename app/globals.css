@@ -217,28 +217,6 @@ body { isolation: isolate; }
   background: var(--identity-b);
 }
 
-.ks-direction-axis {
-  display: grid;
-  grid-template-columns: auto minmax(2.75rem, 1fr) auto;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.ks-direction-axis-label {
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 650;
-  color: var(--text2);
-}
-
-.ks-direction-axis-label[data-active="give"] {
-  color: var(--identity-a);
-}
-
-.ks-direction-axis-label[data-active="receive"] {
-  color: var(--identity-b);
-}
-
 .ks-brand-surface {
   background:
     linear-gradient(
