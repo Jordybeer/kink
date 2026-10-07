@@ -23,7 +23,7 @@ export default function CompareProfileHeader({
   const isPartnerB = Boolean(profileB?.isImported || profileB?.origin === "shared");
 
   return (
-    <div className="pb-3 mb-3" style={{ borderBottom: "1px solid var(--border)" }}>
+    <div className="ks-relational-surface mb-3 rounded-2xl px-3 pb-3 pt-3" style={{ border: "1px solid var(--border)" }}>
       <div className={profileA && profileB
         ? "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)] items-center gap-2"
         : "grid grid-cols-2 gap-2"}>
