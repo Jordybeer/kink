@@ -166,14 +166,16 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
                 </div>
               </div>
 
-              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
-              {directionalPair && directionalSide && (
-                <div data-testid="question-direction-context" className="grid grid-cols-[auto_minmax(2.75rem,1fr)_auto] items-center gap-2 py-0.5 text-xs font-semibold" aria-label={`Richting: ${directionalSide === "give" ? "geven" : "ontvangen"}`}>
-                  <span style={{ color: directionalSide === "give" ? "var(--identity-a)" : "var(--text2)" }}>Geven</span>
-                  <span className="ks-relation-thread ks-relation-thread--quiet" aria-hidden="true" />
-                  <span style={{ color: directionalSide === "receive" ? "var(--identity-b)" : "var(--text2)" }}>Ontvangen</span>
-                </div>
-              )}
+              <div data-testid="question-title-slot" className="min-h-0 -translate-y-1 overflow-visible">
+                <h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2>
+                {directionalPair && directionalSide && (
+                  <div data-testid="question-direction-context" className="mt-1 grid grid-cols-[auto_minmax(2.75rem,1fr)_auto] items-center gap-2 text-xs font-semibold" aria-label={`Richting: ${directionalSide === "give" ? "geven" : "ontvangen"}`}>
+                    <span style={{ color: directionalSide === "give" ? "var(--identity-a)" : "var(--text2)" }}>Geven</span>
+                    <span className="ks-relation-thread ks-relation-thread--quiet" aria-hidden="true" />
+                    <span style={{ color: directionalSide === "receive" ? "var(--identity-b)" : "var(--text2)" }}>Ontvangen</span>
+                  </div>
+                )}
+              </div>
               <p data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
