@@ -64,12 +64,12 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
           </div>
           <div className="min-w-0 flex-1">
             <h2
-              className="break-words text-lg italic leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, overflowWrap: "anywhere" }}
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center gap-2 text-lg italic leading-tight"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
             >
-              {a.profileName}
-              <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
-              {b.profileName}
+              <span className="min-w-0 truncate">{a.profileName}</span>
+              <span className="ks-relation-thread" aria-hidden="true" />
+              <span className="min-w-0 truncate text-right">{b.profileName}</span>
             </h2>
             <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
               {a.role} × {b.role}
