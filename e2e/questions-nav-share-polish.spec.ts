@@ -16,20 +16,18 @@ test("Home keeps one brand statement and moves product explanation into the shar
   await expect(page.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
 });
 
-test("profile keeps unambiguous notes inline and ambiguous notes in deliberate detail", async ({ page }) => {
+test("profile keeps notes attached to their subject and reveals them only in deliberate status detail", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, PROFILES);
 
-  // Bondage has one public note, so showing it in the collapsed summary does not
-  // require KinkSync to decide which note matters most.
-  await expect(
-    page.getByTestId("profile-read-category-bondage-summary").getByText("Shibari ook", { exact: true }),
-  ).toBeVisible();
-
-  // Impact has multiple public notes. The distilled read view deliberately does
-  // not choose one on the user's behalf; both remain available in full detail.
   await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeHidden();
-  await page.getByTestId("profile-read-category-impact").click();
+  await expect(page.getByText("Shibari ook", { exact: true })).toBeHidden();
+  await expect(page.getByText("Lichte sessies", { exact: true })).toBeHidden();
+
+  await page.getByTestId("profile-read-status-yes").click();
   await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
+
+  await page.getByRole("region", { name: "Interesses & grenzen" }).getByRole("link", { name: /^Ja,/ }).click();
   await expect(page.getByText("Lichte sessies", { exact: true })).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Verberg notities" })).toHaveCount(0);

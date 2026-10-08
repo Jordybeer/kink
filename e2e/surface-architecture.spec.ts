@@ -127,7 +127,7 @@ test("Settings uses a stable utility surface on mobile and a contained panel fro
   }
 });
 
-test("kink edit uses the focused task presentation without a false drag affordance", async ({ page }) => {
+test("kink edit uses the two-step focused surface without a false drag affordance", async ({ page }) => {
   const emptyAlex = { ...PROFILE_ALEX, entries: {} };
   await page.setViewportSize({ width: 1024, height: 900 });
   await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
@@ -139,15 +139,20 @@ test("kink edit uses the focused task presentation without a false drag affordan
   await expect(result).toBeVisible();
   await result.click();
 
-  const dialog = page.locator('[role="dialog"][data-sheet-variant="task"]');
+  const dialog = page.locator('[role="dialog"][data-sheet-variant="surface"]');
   await expect(dialog).toBeVisible();
   await expect(dialog.locator("[data-sheet-handle]")).toHaveCount(0);
+  await expect(dialog.getByRole("navigation", { name: "Onderwerpstappen" })).toBeVisible();
   await expect(dialog.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 
   const box = await dialog.boundingBox();
   expect(box).not.toBeNull();
-  expect(box!.width).toBeLessThanOrEqual(513);
+  expect(box!.width).toBeLessThanOrEqual(577);
   expect(Math.abs(box!.x + box!.width / 2 - 512)).toBeLessThanOrEqual(2);
+
+  await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
+  await expect(dialog.getByRole("heading", { name: "Details" })).toBeVisible();
+  await expect(dialog.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
 
   await dialog.getByRole("button", { name: "Klaar" }).click();
   await expect(dialog).toBeHidden();

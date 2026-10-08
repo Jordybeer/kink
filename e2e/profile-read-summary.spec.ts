@@ -3,75 +3,120 @@ import { KINKS } from "../lib/kinks";
 import type { Profile } from "../types";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
-test("mature profile previews stay factual, private and readable in both themes", async ({ page }, testInfo) => {
+test("mature profile read view is status-first, private-safe and readable in both themes", async ({ page }, testInfo) => {
   const impact = KINKS.filter((kink) => kink.category === "impact");
-  const longNote = "Geenuitzonderingen".repeat(10);
+  const bondage = KINKS.filter((kink) => kink.category === "bondage");
   const profile: Profile = {
     ...PROFILE_ALEX,
+    name: "Alexandra" + "langealias".repeat(18),
     entries: Object.fromEntries(KINKS.map((kink) => [kink.id, { status: "willing", comment: "" }])),
   };
-  impact.forEach((kink, index) => {
-    profile.entries[kink.id] = {
-      status: index < 5 ? "yes" : index < 7 ? "hard_no" : "willing",
-      comment: index === 5 ? longNote : index === 6 ? "Deze grens staat vast." : "",
-    };
+
+  impact.slice(0, 4).forEach((kink) => {
+    profile.entries[kink.id] = { status: "yes", comment: "" };
   });
-  profile.entries[impact[0].id] = {
-    status: "yes", comment: "Dit blijft privé", tags: ["privégeheim"], curious: true, privateResponse: true,
+  const longBoundaryNote = `Geenuitzonderingen${"x".repeat(180)}🙂`;
+  impact.slice(4, 7).forEach((kink, index) => {
+    profile.entries[kink.id] = { status: "hard_no", comment: index === 0 ? longBoundaryNote : "" };
+  });
+  profile.entries[bondage[0].id] = {
+    status: "yes",
+    comment: "Privé context",
+    tags: ["privégeheim"],
+    curious: true,
+    privateResponse: true,
   };
+
+  profile.entries[KINKS[KINKS.length - 1].id] = { status: "maybe", comment: "" };
+  profile.entries[KINKS[KINKS.length - 2].id] = { status: "no", comment: "" };
+
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await seedAndGo(page, `/profile/${profile.id}`, [profile]);
 
   for (const theme of ["light", "dark"] as const) {
-    await page.emulateMedia({ colorScheme: theme });
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    const summary = page.getByTestId("profile-read-category-impact-summary");
-    const toggle = page.getByTestId("profile-read-category-impact");
-    const content = page.locator("#profile-read-category-impact-content");
-    await expect(summary.getByText("Heel graag", { exact: true })).toBeVisible();
-    const firstPreview = summary.getByText(impact[1].name, { exact: true });
-    const secondPreview = summary.getByText(impact[2].name, { exact: true });
-    const remainder = summary.getByText("+2 meer", { exact: true });
-    await expect(firstPreview).toBeVisible();
-    await expect(secondPreview).toBeVisible();
-    await expect(remainder).toBeVisible();
-    // Names and the remainder are distinct reading lines, not a comma-packed sentence.
-    const firstBox = (await firstPreview.boundingBox())!;
-    const secondBox = (await secondPreview.boundingBox())!;
-    expect(secondBox.y).toBeGreaterThanOrEqual(firstBox.y + firstBox.height);
-    expect((await remainder.boundingBox())!.y).toBeGreaterThanOrEqual(secondBox.y + secondBox.height);
-    expect(await firstPreview.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
-    await expect(toggle).toHaveAccessibleDescription(/en 2 meer met status Heel graag/);
-    expect(await summary.evaluate((node) => node.closest("button"))).toBeNull();
-    for (const kink of impact.slice(5, 7)) await expect(summary).toContainText(kink.name);
-    await expect(summary.getByText("Deze grens staat vast.", { exact: true })).toBeVisible();
-    await expect(summary).toContainText("1 privéantwoord");
-    await expect(summary).not.toContainText(impact[0].name);
-    await expect(summary).not.toContainText("Dit blijft privé");
-    await expect(summary).not.toContainText("privégeheim");
-    expect(await toggle.getAttribute("aria-controls")).toBe(await content.getAttribute("id"));
-    await expect(content).toBeHidden();
-    expect((await toggle.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
-    // A phone width below the standard mobile fixture catches long unbroken notes.
-    const widths = testInfo.project.name === "mobile" ? [320, 390] : [1280];
-    for (const width of widths) {
-      await page.setViewportSize({ width, height: 844 });
-      await expect.poll(() => summary.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    const hardLimits = page.getByTestId("profile-read-hard-limits");
+    await expect(hardLimits).toBeVisible();
+    for (const kink of impact.slice(4, 7)) {
+      await expect(hardLimits.getByText(kink.name, { exact: true })).toBeVisible();
     }
-    await page.evaluate(async () => { await document.fonts.ready; });
-    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-summary-${theme}.png`, fullPage: true });
+    await expect(hardLimits.getByText(longBoundaryNote, { exact: true })).toBeVisible();
 
-    await toggle.focus();
-    await page.keyboard.press("Space");
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await expect(summary).toHaveCount(0);
-    await expect(content.getByText(longNote, { exact: true })).toBeVisible();
-    await expect(content).not.toContainText("Dit blijft privé");
-    await expect.poll(() => content.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-    await expect(toggle).toBeFocused();
+    const yes = page.getByTestId("profile-read-status-yes");
+    const yesSummary = page.getByTestId("profile-read-status-yes-summary");
+    await expect(yes).toHaveAccessibleName(/Heel graag, .* antwoorden/);
+    await expect(yesSummary.getByText(impact[0].name, { exact: true })).toBeVisible();
+    await expect(yesSummary).not.toContainText(bondage[0].name);
+    await expect(yesSummary).not.toContainText("Privé context");
+    await expect(yesSummary).not.toContainText("privégeheim");
+
+    const privateSection = page.getByTestId("profile-read-private");
+    await expect(privateSection).toContainText("1");
+    await expect(page.locator("#profile-read-private-content")).toBeHidden();
+
+    await yes.focus();
     await page.keyboard.press("Enter");
-    await expect(content).toBeHidden();
-    await expect(toggle).toBeFocused();
+    await expect(page).toHaveURL(/interests=yes/);
+    await expect(page.getByTestId("profile-summary")).toHaveCount(0);
+    const browser = page.getByRole("region", { name: "Interesses & grenzen" });
+    const yesContent = page.locator("#profile-read-status-yes-content");
+    await expect(page.getByLabel("Hoofdnavigatie").getByRole("link", { name: "Terug", exact: true })).toHaveAttribute("href", `/profile?id=${profile.id}#profile-interests-title`);
+    await expect(yesContent).toBeVisible();
+    await expect(yesContent.getByText("Impact Play", { exact: true })).toBeVisible();
+    await expect(browser).not.toContainText("Privé context");
+    await expect(browser).not.toContainText("privégeheim");
+    await expect.poll(() => yesContent.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+
+    await browser.getByRole("link", { name: /^Ja,/ }).click();
+    await expect(page).toHaveURL(/interests=willing/);
+    await expect(yesContent).toHaveCount(0);
+    const willingContent = page.locator("#profile-read-status-willing-content");
+    await expect(willingContent).toBeVisible();
+    await expect(willingContent).not.toContainText(bondage[0].name);
+    await page.reload();
+    await expect(willingContent).toBeVisible();
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-interest-browser-${theme}.png`, fullPage: false });
+
+    await page.goBack();
+    await expect(page.getByTestId("profile-summary")).toBeVisible();
+    await page.goForward();
+    await expect(willingContent).toBeVisible();
+    await browser.getByRole("link", { name: "Terug naar profiel" }).click();
+    await expect(page.getByTestId("profile-summary")).toBeVisible();
+    await expect(yesSummary).toBeVisible();
+    await expect(page.getByTestId("profile-read-hard-limits")).toBeVisible();
+
+    if (testInfo.project.name === "mobile" && theme === "dark") {
+      await page.setViewportSize({ width: 320, height: 844 });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+
+      await page.locator("html").evaluate((element) => {
+        element.style.fontSize = "200%";
+      });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+      await expect(hardLimits.getByText(longBoundaryNote, { exact: true })).toBeVisible();
+      await page.getByTestId("profile-read-status-yes").click();
+      await expect(page.getByRole("region", { name: "Interesses & grenzen" })).toBeVisible();
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+      await expect.poll(() => page.locator("#profile-read-status-yes-content").evaluate((node) => {
+        const header = node.parentElement!.previousElementSibling!.getBoundingClientRect();
+        const navHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 112;
+        return header.height + navHeight < window.innerHeight - 160;
+      })).toBe(true);
+      await page.getByRole("link", { name: "Terug naar profiel" }).click();
+      await page.locator("html").evaluate((element) => {
+        element.style.fontSize = "";
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+    }
+
+    await page.evaluate(async () => { await document.fonts.ready; });
+    await page.screenshot({
+      path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-status-first-${theme}.png`,
+      fullPage: true,
+    });
   }
 });

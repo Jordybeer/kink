@@ -1,6 +1,8 @@
 "use client";
+import { motion } from "framer-motion";
 import { Check } from "@phosphor-icons/react";
 import type { KinkStatus } from "@/types";
+import { useMotionSafe } from "@/lib/motion";
 import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 
 const OPTIONS = STATUS_ORDER.map((status) => ({
@@ -17,16 +19,12 @@ interface Props {
 }
 
 export default function StatusOptionRows({ current, onSelect, presentation = "cards" }: Props) {
+  const motionSafe = useMotionSafe();
+
   if (presentation === "list") {
     return (
-      <div
-        data-tour="pills"
-        className="border-y"
-        style={{ borderColor: "var(--border)" }}
-        role="group"
-        aria-label="Status kiezen"
-      >
-        {OPTIONS.map(({ status: s, label, hint, danger }) => {
+      <div data-tour="pills" role="group" aria-label="Status kiezen">
+        {OPTIONS.map(({ status: s, label, hint, danger }, index) => {
           const active = current === s;
           const colour = STATUS_VAR[s];
           const labelColour = danger ? "var(--hard-no-text)" : colour;
@@ -38,37 +36,56 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
               data-tour={danger ? "hard-no" : undefined}
               onClick={() => onSelect(active ? null : s)}
               aria-pressed={active}
-              className="focus-ring flex min-h-[64px] w-full items-center gap-3 border-b px-1 py-3 text-left last:border-b-0"
+              className="focus-ring flex min-h-[54px] w-full items-center gap-3 border-b px-1 py-2 text-left transition-[background-color,border-color] duration-150 motion-reduce:transition-none"
               style={{
+                borderTop: index === 0 ? "1px solid var(--border)" : undefined,
                 borderColor: "var(--border)",
                 background: active
-                  ? `color-mix(in srgb, ${colour} ${danger ? 7 : 8}%, transparent)`
+                  ? `color-mix(in srgb, ${colour} ${danger ? 6 : 7}%, transparent)`
                   : "transparent",
               }}
             >
-              <span
+              <motion.span
                 data-status-indicator={s}
                 aria-hidden="true"
-                className="flex h-6 w-6 flex-none items-center justify-center rounded-full"
+                className="flex h-5 w-5 flex-none items-center justify-center rounded-full transition-[background-color,border-color,color] duration-150 motion-reduce:transition-none"
+                animate={{ scale: active ? 1 : 0.94 }}
+                transition={motionSafe.state}
                 style={{
                   color: active ? labelColour : colour,
                   border: active
                     ? `1px ${danger ? "dashed" : "solid"} color-mix(in srgb, ${colour} 54%, var(--border))`
                     : "1px solid var(--control-border)",
                   background: active
-                    ? `color-mix(in srgb, ${colour} ${danger ? 10 : 12}%, transparent)`
+                    ? `color-mix(in srgb, ${colour} ${danger ? 9 : 10}%, transparent)`
                     : "transparent",
                 }}
               >
                 {active
-                  ? <Check size={13} weight="bold" />
-                  : <span className="h-2.5 w-2.5 rounded-full" style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour }} />}
-              </span>
+                  ? (
+                    <motion.span
+                      initial={motionSafe.reduced ? false : { opacity: 0, scale: 0.75 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={motionSafe.state}
+                      className="flex"
+                    >
+                      <Check size={12} weight="bold" />
+                    </motion.span>
+                  )
+                  : <span
+                      className="h-2 w-2 rounded-full"
+                      style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour }}
+                    />}
+              </motion.span>
+
               <span className="min-w-0 flex-1">
-                <span className="block text-base font-semibold leading-6" style={{ color: active ? labelColour : "var(--text)" }}>
+                <span
+                  className="block text-[15px] font-semibold leading-5"
+                  style={{ color: active ? labelColour : "var(--text)" }}
+                >
                   {label}
                 </span>
-                <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+                <span className="mt-0.5 block text-xs leading-4" style={{ color: "var(--text2)" }}>
                   {hint}
                 </span>
               </span>

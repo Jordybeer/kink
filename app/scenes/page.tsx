@@ -46,7 +46,7 @@ function SceneCard({
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <article className="rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <article className="ks-relational-surface rounded-2xl" style={{ border: "1px solid var(--border)" }}>
       {traffic && (
         <div
           className="flex items-center gap-2.5 rounded-t-[15px] px-4 py-2.5"
@@ -61,10 +61,16 @@ function SceneCard({
       <div className="flex flex-col gap-3 p-4">
         <div className="min-w-0">
           <p className="truncate text-base font-semibold">{scene.title}</p>
-          <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
-            {scene.profileAName} &amp; {scene.profileBName}
-            {!traffic && ` · ${date}${scene.plannedTime ? ` · ${scene.plannedTime}` : ""}`}
-          </p>
+          <div className="mt-1 grid min-w-0 grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-2 text-sm">
+            <span className="min-w-0 truncate" style={{ color: "var(--identity-a)" }}>{scene.profileAName}</span>
+            <span className="ks-relation-thread" aria-hidden="true" />
+            <span className="min-w-0 truncate text-right" style={{ color: "var(--identity-b)" }}>{scene.profileBName}</span>
+          </div>
+          {!traffic && (
+            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>
+              {date}{scene.plannedTime ? ` · ${scene.plannedTime}` : ""}
+            </p>
+          )}
         </div>
 
         {scene.items.length > 0 && (

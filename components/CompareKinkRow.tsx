@@ -77,7 +77,7 @@ export default function CompareKinkRow({
 
       <div className="mt-2 flex items-center gap-2">
         <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
-        <div className="h-px flex-1" style={{ background: "var(--border)", opacity: 0.35 }} />
+        <span className="ks-relation-thread ks-relation-thread--quiet flex-1" aria-hidden="true" />
         <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
       </div>
 

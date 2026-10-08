@@ -1,51 +1,54 @@
-import type { Kink, KinkEntry } from "@/types";
+import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 
-function clipContext(value: string, max = 110): string {
-  const text = value.trim().replace(/\s+/g, " ");
-  const characters = Array.from(text);
-  return characters.length <= max
-    ? text
-    : `${characters.slice(0, max - 1).join("").trimEnd()}…`;
+export const PROFILE_READ_STATUS_ORDER = [
+  "hard_no",
+  "yes",
+  "willing",
+  "maybe",
+  "no",
+] as const satisfies readonly NonNullable<KinkStatus>[];
+
+export interface ProfileReadItem {
+  id: string;
+  name: string;
+  category: KinkCategoryId;
+  status: NonNullable<KinkStatus>;
+  comment: string;
+  tags: string[];
+  curious: boolean;
 }
 
-export function summarizeProfileCategory(
-  kinks: Pick<Kink, "id" | "name">[],
+export function buildProfileStatusReadSummary(
+  kinks: Pick<Kink, "id" | "name" | "category">[],
   entries: Record<string, KinkEntry>,
 ) {
-  let privateCount = 0;
-  const publicRated = kinks.flatMap((kink) => {
+  const publicItems: ProfileReadItem[] = [];
+  const privateItems: ProfileReadItem[] = [];
+
+  for (const kink of kinks) {
     const entry = entries[kink.id];
-    if (!entry?.status) return [];
-    if (entry.privateResponse === true) {
-      privateCount++;
-      return [];
-    }
-    return [{ name: kink.name, status: entry.status, comment: entry.comment }];
-  });
+    if (!entry?.status || kink.category === "custom") continue;
 
-  // Status is explicit; ties retain catalogue order and are only a partial preview.
-  const interestStatus = publicRated.some(({ status }) => status === "yes") ? "yes" : "willing";
-  const interestItems = publicRated.filter(({ status }) => status === interestStatus);
-  const preview = interestItems.length > 0
-    ? {
-        status: interestItems[0].status,
-        names: interestItems.slice(0, 2).map(({ name }) => name),
-        remaining: Math.max(0, interestItems.length - 2),
-      }
-    : null;
+    const item: ProfileReadItem = {
+      id: kink.id,
+      name: kink.name,
+      category: kink.category,
+      status: entry.status,
+      comment: entry.comment?.trim() ?? "",
+      tags: entry.tags ?? [],
+      curious: entry.curious === true,
+    };
 
-  const hardLimits = publicRated.filter(({ status }) => status === "hard_no").map(({ name }) => name);
-  const notes = publicRated.filter(({ comment }) => comment.trim());
-  // Never pick a favourite note. Every named boundary may carry its own context.
-  const context = (notes.length === 1 ? notes : notes.filter(({ status }) => status === "hard_no"))
-    .map(({ name, comment }) => ({ subject: name, text: clipContext(comment) }));
-  const fallback = !preview && !hardLimits.length && !context.length ? publicRated[0] : null;
+    if (entry.privateResponse === true) privateItems.push(item);
+    else publicItems.push(item);
+  }
 
-  return {
-    preview,
-    hardLimits,
-    context,
-    privateCount,
-    fallback: fallback ? { status: fallback.status, name: fallback.name } : null,
-  };
+  const groups = PROFILE_READ_STATUS_ORDER
+    .map((status) => ({
+      status,
+      items: publicItems.filter((item) => item.status === status),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return { groups, privateItems, publicCount: publicItems.length };
 }

@@ -14,8 +14,8 @@ import {
   PushPinSlash,
   Trash,
 } from "@phosphor-icons/react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { STAGGER_CHILDREN, fadeUp } from "@/lib/motion";
+import { motion } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { splitProfilesByOwnership } from "@/lib/profileType";
 import { usePartnerProfileId } from "@/lib/partnerPreference";
@@ -90,7 +90,8 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
   const [allMine, setAllMine] = useState(false);
   const [allShared, setAllShared] = useState(false);
   const [groupDelete, setGroupDelete] = useState<Profile | null>(null);
-  const reduced = useReducedMotion() ?? false;
+  const motionSafe = useMotionSafe();
+  const reduced = motionSafe.reduced;
 
   const ownership = splitProfilesByOwnership(profiles, pinnedId);
   const partnerExists = partnerId ? ownership.shared.some((profile) => profile.id === partnerId) : true;
@@ -177,47 +178,11 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
       >
         {preview.map((group, index) => renderGroup(group, index, owned))}
 
-        <AnimatePresence initial={false}>
-          {expanded && extras.length > 0 && (
-            <motion.div
-              key="profile-extras"
-              initial={reduced ? false : { height: 0, opacity: 0 }}
-              animate={{
-                height: "auto",
-                opacity: 1,
-                transition: reduced
-                  ? { duration: 0 }
-                  : {
-                      height: { duration: 0.24, ease: [0.16, 1, 0.3, 1] },
-                      opacity: { duration: 0.16, ease: "easeOut" },
-                    },
-              }}
-              exit={{
-                height: 0,
-                opacity: 0,
-                transition: reduced
-                  ? { duration: 0 }
-                  : {
-                      height: { duration: 0.18, ease: [0.4, 0, 1, 1] },
-                      opacity: { duration: 0.12, ease: "easeIn" },
-                    },
-              }}
-              style={{ overflow: "hidden" }}
-            >
-              <motion.div
-                initial={reduced ? false : "hidden"}
-                animate="show"
-                variants={STAGGER_CHILDREN}
-              >
-                {extras.map((group, index) => (
-                  <motion.div key={group.key} variants={fadeUp(6)}>
-                    {renderGroup(group, previewCount + index, owned)}
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {expanded && extras.length > 0 && (
+          <div>
+            {extras.map((group, index) => renderGroup(group, previewCount + index, owned))}
+          </div>
+        )}
       </div>
     );
   };
@@ -259,11 +224,8 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             href={`/compare?a=${pair[0].id}&b=${pair[1].id}`}
             prefetch={false}
             aria-label={`Vergelijk ${pair[0].name} en ${pair[1].name}`}
-            className="focus-ring block rounded-2xl p-3.5 transition-opacity hover:opacity-90 active:opacity-80 lg:col-span-2"
-            style={{
-              background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 6%, var(--surface)), color-mix(in srgb, var(--action-primary) 6%, var(--surface)))",
-              border: "1px solid var(--border-accent)",
-            }}
+            className="focus-ring ks-relational-surface block rounded-2xl p-3.5 transition-opacity hover:opacity-90 active:opacity-80 lg:col-span-2"
+            style={{ border: "1px solid var(--border-accent)" }}
           >
             <div className="flex items-center gap-3.5">
               <div className="flex flex-none items-center" aria-hidden="true">
@@ -422,7 +384,7 @@ function Disclosure({
         aria-hidden="true"
         initial={false}
         animate={{ rotate: expanded ? 180 : 0 }}
-        transition={reduced ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        transition={reduced ? { duration: 0 } : { duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       >
         <CaretDown size={14} />
       </motion.span>

@@ -4,6 +4,8 @@ import { useReducedMotion } from "framer-motion";
 // ─── Transition presets ────────────────────────────────────────────────────────
 
 export const TWEEN_FAST = { duration: 0.22, ease: "easeOut" } as const;
+export const TWEEN_STATE = { duration: 0.16, ease: [0.16, 1, 0.3, 1] } as const;
+export const TWEEN_DISCLOSURE = { duration: 0.22, ease: [0.16, 1, 0.3, 1] } as const;
 export const TWEEN_SHEET = { type: "tween" as const, ease: "easeOut" as const, duration: 0.28 } as const;
 export const TWEEN_SHEET_EXIT = { type: "tween" as const, ease: "easeIn" as const, duration: 0.22 } as const;
 export const TWEEN_SLIDE = { duration: 0.22, ease: "easeInOut" } as const;
@@ -48,6 +50,8 @@ export function useMotionSafe() {
     reduced,
     tap:       reduced ? undefined : TAP_SPRING,
     fast:      reduced ? INSTANT : TWEEN_FAST,
+    state:     reduced ? INSTANT : TWEEN_STATE,
+    disclosure: reduced ? INSTANT : TWEEN_DISCLOSURE,
     sheet:     reduced ? INSTANT : TWEEN_SHEET,
     sheetExit: reduced ? INSTANT : TWEEN_SHEET_EXIT,
     slide:     reduced ? INSTANT : TWEEN_SLIDE,

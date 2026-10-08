@@ -58,7 +58,9 @@ export default function BottomNav() {
             aria-current={active ? "page" : undefined}
             className="focus-ring flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-[background-color,transform] duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
             style={{
-              background: active ? "var(--pwa-nav-active)" : "transparent",
+              background: active
+                ? "linear-gradient(135deg, color-mix(in srgb, var(--identity-a) 12%, var(--pwa-nav-active)), color-mix(in srgb, var(--identity-b) 12%, var(--pwa-nav-active)))"
+                : "transparent",
             }}
           >
             <Icon
