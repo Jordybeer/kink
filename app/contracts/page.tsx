@@ -53,7 +53,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
       style={{ border: "1px solid var(--border)" }}
     >
       <div className="p-4">
-        <div className="flex items-start gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex">
           <div
             className="flex h-10 w-10 flex-none items-center justify-center rounded-full"
             style={{ background: "var(--surface2)", color: statusColour(bucket) }}
@@ -62,21 +62,21 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
               : bucket === "archive" ? <Archive size={18} aria-hidden="true" />
                 : <FileText size={18} aria-hidden="true" />}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="col-span-2 row-start-2 min-w-0 flex-1">
             <h2
-              className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center gap-2 text-lg italic leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+              className="break-words text-lg italic leading-tight"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, overflowWrap: "anywhere" }}
             >
-              <span className="min-w-0 truncate">{a.profileName}</span>
-              <span className="ks-relation-thread" aria-hidden="true" />
-              <span className="min-w-0 truncate text-right">{b.profileName}</span>
+              <span>{a.profileName}</span>
+              <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
+              <span>{b.profileName}</span>
             </h2>
             <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
               {a.role} × {b.role}
             </p>
           </div>
           <span
-            className="flex-none rounded-full px-2.5 py-1 text-xs font-medium"
+            className="col-start-2 row-start-1 flex-none rounded-full px-2.5 py-1 text-xs font-medium"
             style={{ color: statusColour(bucket), background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
             {contractStatusLabel(series, profiles)}
@@ -222,13 +222,13 @@ function ContractsContent() {
                     key={item.id}
                     href={`/contract?a=${encodeURIComponent(a.profileId)}&b=${encodeURIComponent(b.profileId)}`}
                     prefetch={false}
-                    className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
+                    className="focus-ring grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-2 text-sm sm:flex"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
-                    <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center gap-2 py-2 leading-5" style={{ overflowWrap: "anywhere" }}>
-                      <span className="min-w-0 truncate">{a.profileName}</span>
-                      <span className="ks-relation-thread ks-relation-thread--quiet" aria-hidden="true" />
-                      <span className="min-w-0 truncate text-right">{b.profileName}</span>
+                    <span className="col-span-2 min-w-0 flex-1 break-words leading-5" style={{ overflowWrap: "anywhere" }}>
+                      <span>{a.profileName}</span>
+                      <span aria-hidden="true"> × </span>
+                      <span>{b.profileName}</span>
                     </span>
                     <span className="text-xs" style={{ color: "var(--text2)" }}>
                       {item.status === "pending_signature" ? "Wacht op bevestiging" : "Concept"}
