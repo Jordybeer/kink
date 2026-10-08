@@ -61,11 +61,11 @@ function SceneCard({
       <div className="flex flex-col gap-3 p-4">
         <div className="min-w-0">
           <p className="truncate text-base font-semibold">{scene.title}</p>
-          <div className="mt-1 grid min-w-0 grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-2 text-sm">
-            <span className="min-w-0 truncate" style={{ color: "var(--identity-a)" }}>{scene.profileAName}</span>
-            <span className="ks-relation-thread" aria-hidden="true" />
-            <span className="min-w-0 truncate text-right" style={{ color: "var(--identity-b)" }}>{scene.profileBName}</span>
-          </div>
+          <p className="mt-1 break-words text-sm [overflow-wrap:anywhere]">
+            <span style={{ color: "var(--identity-a)" }}>{scene.profileAName}</span>
+            <span style={{ color: "var(--text2)" }}> &amp; </span>
+            <span style={{ color: "var(--identity-b)" }}>{scene.profileBName}</span>
+          </p>
           {!traffic && (
             <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>
               {date}{scene.plannedTime ? ` · ${scene.plannedTime}` : ""}
