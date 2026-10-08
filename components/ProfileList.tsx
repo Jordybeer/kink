@@ -173,7 +173,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
     return (
       <div
         data-home-profile-stack
-        className="ks-home-profile-stack overflow-hidden rounded-2xl px-2"
+        className="overflow-hidden rounded-2xl px-2"
         style={{ background: surface }}
       >
         {preview.map((group, index) => renderGroup(group, index, owned))}
@@ -260,7 +260,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
 
         <div
           data-home-utility-list
-          className="ks-home-utility-list flex flex-col lg:col-span-2"
+          className="flex flex-col lg:col-span-2"
           style={{
             borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
             borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
