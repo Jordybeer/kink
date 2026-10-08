@@ -198,7 +198,7 @@ export default function ScenesPage() {
   ];
 
   return (
-    <PageShell width="2xl" className="scenes-page lg:max-w-4xl">
+    <PageShell width="2xl" className="lg:max-w-4xl">
       <h1 className="sr-only">Scènes</h1>
 
       {scenes.length === 0 ? (
