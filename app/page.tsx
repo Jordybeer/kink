@@ -208,15 +208,15 @@ function HomeContent() {
         width="2xl"
         flush={emptyHome}
         className={emptyHome
-          ? "home-page lg:max-w-4xl [--page-bottom-clearance:0px] pb-2 flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_6.5rem)] flex-col justify-center"
-          : "home-page lg:max-w-4xl"}
+          ? "lg:max-w-4xl [--page-bottom-clearance:0px] pb-2 flex min-h-[calc(100svh_-_env(safe-area-inset-top)_-_6.5rem)] flex-col justify-center"
+          : "lg:max-w-4xl"}
       >
         {profiles.length > 0 && <ProfileList onPromptDelete={promptDelete} />}
 
         {profiles.length > 0 ? (
           <div
             data-home-profile-actions
-            className="ks-home-actions mt-4 mb-5 flex flex-col"
+            className="mt-4 mb-5 flex flex-col"
             style={{
               borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
               borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
@@ -251,7 +251,7 @@ function HomeContent() {
         ) : (
           <section
             data-home-empty-card
-            className="ks-brand-surface mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-5 sm:pb-7 sm:pt-5"
+            className="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-5 sm:pb-7 sm:pt-5"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface2)), color-mix(in srgb, var(--identity-b) 6%, var(--surface)))",
               border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--identity-border))",
