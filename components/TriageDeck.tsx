@@ -135,7 +135,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
       </p>
       <div className="h-full min-h-0">
         {current ? (
-          <div data-tour="kink-card" className="questionnaire-stage ks-questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
+          <div data-tour="kink-card" className="questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
             <div data-testid="question-content" className="question-content relative z-[1] grid min-h-full min-w-0 gap-1">
               <div className="flex min-h-0 min-w-0 items-center gap-2">
                 <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
