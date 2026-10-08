@@ -227,7 +227,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="profile-page mx-auto w-full max-w-3xl pt-6">
+    <main className="mx-auto w-full max-w-3xl pt-6">
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
@@ -242,7 +242,7 @@ export default function ProfilePage({ params }: Props) {
 
           {!shared && (
             <section
-              className="ks-profile-questionnaire mt-6 border-t pt-4"
+              className="mt-6 border-t pt-4"
               style={{ borderColor: "var(--border)" }}
               aria-labelledby="profile-questionnaire-title"
             >
@@ -470,7 +470,7 @@ export default function ProfilePage({ params }: Props) {
               )}
 
               {interestGroups.length > 0 && (
-                <section className={`ks-profile-interests ${hardLimitGroup ? "mt-6" : ""}`} aria-labelledby="profile-interests-summary-title">
+                <section className={hardLimitGroup ? "mt-6" : ""} aria-labelledby="profile-interests-summary-title">
                   <h3 id="profile-interests-summary-title" tabIndex={-1} className="outline-none scroll-mt-[var(--nav-h)] mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                     Interesses
                   </h3>
