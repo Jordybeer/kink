@@ -25,7 +25,7 @@ import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profi
 import { profileHref } from "@/lib/localRoutes";
 import { useMotionSafe } from "@/lib/motion";
 import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
-import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
+import type { Kink, KinkCategory, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
@@ -44,6 +44,11 @@ interface Props {
 }
 
 const EMPTY_KINKS: Kink[] = [];
+const PROFILE_READ_CATEGORIES: readonly KinkCategory[] = [...CATEGORIES, "custom"];
+
+function profileReadCategoryLabel(category: KinkCategory): string {
+  return category === "custom" ? "Eigen onderwerpen" : kinkCategoryLabel(category);
+}
 
 const CATALOG_KINKS_BY_CATEGORY = new Map<KinkCategoryId, Kink[]>();
 for (const kink of KINKS) {
@@ -160,7 +165,18 @@ export default function ProfilePage({ params }: Props) {
       )
     : [];
 
-  const readSummary = buildProfileStatusReadSummary(KINKS, currentProfile.entries);
+  const readSummary = buildProfileStatusReadSummary(
+    [
+      ...KINKS,
+      ...customKinks.map((custom) => ({
+        id: custom.id,
+        name: custom.name,
+        category: "custom" as const,
+      })),
+    ],
+    currentProfile.entries,
+  );
+  const readAnswerCount = readSummary.publicCount + readSummary.privateItems.length;
   const hardLimitGroup = readSummary.groups.find((group) => group.status === "hard_no") ?? null;
   const interestGroups = readSummary.groups.filter((group) => group.status !== "hard_no");
 
@@ -440,7 +456,7 @@ export default function ProfilePage({ params }: Props) {
             Interesses &amp; grenzen
           </h2>
 
-          {totalRated === 0 ? (
+          {readAnswerCount === 0 ? (
             <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>
               Nog geen onderwerpen beoordeeld.
             </p>
@@ -543,7 +559,7 @@ export default function ProfilePage({ params }: Props) {
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium leading-5">{item.name}</p>
                             <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
-                              {kinkCategoryLabel(item.category)}
+                              {profileReadCategoryLabel(item.category)}
                             </p>
                             {!concealed && entry.comment && (
                               <p className="mt-1 text-xs leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
@@ -733,7 +749,7 @@ function ProfileReadItemsByCategory({
   items: ProfileReadItem[];
   showContext?: boolean;
 }) {
-  const groups = CATEGORIES
+  const groups = PROFILE_READ_CATEGORIES
     .map((category) => ({
       category,
       items: items.filter((item) => item.category === category),
@@ -745,7 +761,7 @@ function ProfileReadItemsByCategory({
       {groups.map((group) => (
         <div key={group.category}>
           <p className="mb-1.5 text-xs font-semibold leading-5" style={{ color: "var(--text2)" }}>
-            {kinkCategoryLabel(group.category)}
+            {profileReadCategoryLabel(group.category)}
           </p>
           <div className="grid gap-1">
             {group.items.map((item) => (
