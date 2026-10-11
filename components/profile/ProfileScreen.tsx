@@ -490,7 +490,11 @@ export default function ProfilePage({ params }: Props) {
                       </Link>
                     ))}
                   </div>
-                  <div data-testid={`profile-read-status-${interestGroups[0].status}-summary`} className="mt-3 grid gap-1 text-base leading-6 [overflow-wrap:anywhere]">
+                  <div
+                    data-testid={`profile-read-status-${interestGroups[0].status}-summary`}
+                    className="mt-3 grid gap-1 rounded-r-xl px-3 py-3 text-base leading-6 [overflow-wrap:anywhere]"
+                    style={profileReadAccent(interestGroups[0].status)}
+                  >
                     <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>{STATUS_LABEL[interestGroups[0].status]}</p>
                     {interestGroups[0].items.slice(0, 3).map((item) => <p key={item.id}>{item.name}</p>)}
                   </div>
@@ -726,6 +730,15 @@ function ProfileInterestBrowser({ profileId, profileName, groups, status }: {
   );
 }
 
+// The rail carries identity; text and explicit status headings carry meaning.
+// Only public read items reach this treatment. Concealed answers stay neutral.
+function profileReadAccent(status: NonNullable<KinkStatus>) {
+  return {
+    borderInlineStart: `3px ${status === "hard_no" ? "dashed" : "solid"} ${STATUS_VAR[status]}`,
+    background: `color-mix(in srgb, ${STATUS_VAR[status]} 5%, var(--surface))`,
+  };
+}
+
 function ProfileReadItemsByCategory({
   items,
   showContext,
@@ -744,14 +757,18 @@ function ProfileReadItemsByCategory({
     <div className="grid gap-4 [overflow-wrap:anywhere]">
       {groups.map((group) => (
         <div key={group.category}>
-          <p className="mb-1.5 text-xs font-semibold leading-5" style={{ color: "var(--text2)" }}>
+          <p
+            className="mb-2 text-xl font-medium leading-6"
+            style={{ color: "var(--text)", fontFamily: "var(--font-display, Georgia, serif)" }}
+          >
             {kinkCategoryLabel(group.category)}
           </p>
-          <div className="grid gap-1">
+          <div className="grid gap-2">
             {group.items.map((item) => (
               <div
                 key={item.id}
-                className="py-1.5"
+                className="rounded-r-xl px-3 py-3"
+                style={profileReadAccent(item.status)}
               >
                 <div className="flex items-center gap-1.5">
                   <p className="min-w-0 text-base leading-6">{item.name}</p>
