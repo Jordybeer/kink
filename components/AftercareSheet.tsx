@@ -41,7 +41,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
                 type="button"
                 onClick={() => setLight(value)}
                 aria-pressed={light === value}
-                className="focus-ring flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border transition-all"
+                className="focus-ring ks-motion-choice flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border"
                 style={{
                   minHeight: 80,
                   borderColor: light === value ? color : "var(--border)",
