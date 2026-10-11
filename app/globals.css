@@ -152,6 +152,36 @@ body { isolation: isolate; }
 .ks-fade-in  { animation: ksFadeIn  300ms ease-out both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
+/* Scenes-derived shared interaction motion */
+/* Choices acknowledge the hand without moving the surrounding layout.
+   The same restraint applies to status selection, profile picking and aftercare. */
+.ks-motion-choice {
+  transition:
+    background-color 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ks-motion-choice:active:not(:disabled) {
+  transform: scale(0.985);
+}
+/* The scene arc moves when its state changes; questionnaire progress should too. */
+.ks-motion-progress {
+  transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ks-motion-choice,
+  .ks-motion-progress {
+    transition-duration: 0ms;
+  }
+  .ks-motion-choice:active:not(:disabled) {
+    transform: none;
+  }
+}
+/* End shared interaction motion */
+
+
 /* Brand wordmark — a stable lavender identity warming into rose-salmon. */
 .ks-wordmark {
   font-family: var(--font-display, Georgia, "Times New Roman", serif);
