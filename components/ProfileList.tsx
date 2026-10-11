@@ -479,27 +479,27 @@ function ProfileRow({
                     setActions(false);
                     onPin();
                   }}
-              aria-pressed={profile.id === pinnedId}
-              className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
-              style={{
-                color: profile.id === pinnedId ? "var(--accent)" : "var(--text)",
-                background: "var(--surface2)",
-              }}
-            >
-              {profile.id === pinnedId
-                ? <PushPinSlash aria-hidden="true" size={18} />
-                : <PushPin aria-hidden="true" size={18} />}
-              {profile.id === pinnedId ? "Niet langer als mijn profiel" : "Markeer als mijn profiel"}
-            </button>
-            <Link
-              href={`/profile/${profile.id}?edit=1`}
-              prefetch={false}
-              onClick={() => setActions(false)}
-              className="focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium"
-              style={{ background: "var(--surface2)" }}
-            >
-              <PencilSimple aria-hidden="true" size={18} />
-              Profiel bewerken
+                  aria-pressed={profile.id === pinnedId}
+                  className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
+                  style={{
+                    color: profile.id === pinnedId ? "var(--accent)" : "var(--text)",
+                    background: "var(--surface2)",
+                  }}
+                >
+                  {profile.id === pinnedId
+                    ? <PushPinSlash aria-hidden="true" size={18} />
+                    : <PushPin aria-hidden="true" size={18} />}
+                  {profile.id === pinnedId ? "Niet langer als mijn profiel" : "Markeer als mijn profiel"}
+                </button>
+                <Link
+                  href={`/profile/${profile.id}?edit=1`}
+                  prefetch={false}
+                  onClick={() => setActions(false)}
+                  className="focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium"
+                  style={{ background: "var(--surface2)" }}
+                >
+                  <PencilSimple aria-hidden="true" size={18} />
+                  Profiel bewerken
                 </Link>
               </>
             )}
