@@ -88,7 +88,7 @@ export default function ProfileSelectorSheet({
         disabled={isOther}
         aria-label={`${profile.name}, ${profile.role}${isPrimary ? ", primair" : ""}${isShared ? ", gedeeld" : ""}${isOther ? `, al geselecteerd als ${slot === "A" ? "B" : "A"}` : ""}`}
         aria-pressed={isSelected}
-        className="focus-ring min-h-12 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left"
+        className="focus-ring ks-motion-choice min-h-12 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
         style={isSelected
           ? { background: `color-mix(in srgb, ${colour} 12%, transparent)`, border: `1px solid ${colour}` }
           : isOther
