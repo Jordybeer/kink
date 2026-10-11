@@ -123,7 +123,7 @@ function SceneItemRow({
                 onClick={() => onUpdate(item.id, { intensity: v })}
                 disabled={locked}
                 aria-pressed={active}
-                className="focus-ring rounded-full border px-3 text-xs transition-colors disabled:opacity-60"
+                className="focus-ring ks-motion-choice rounded-full border px-3 text-xs disabled:opacity-60"
                 style={{
                   minHeight: 44,
                   background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
