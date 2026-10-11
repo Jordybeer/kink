@@ -357,6 +357,7 @@ function HomeContent() {
                 accept=".json,application/json"
                 onChange={handleImportFile}
                 aria-label="Kies een backupbestand"
+                tabIndex={-1}
                 className="sr-only"
               />
               {importError && (
@@ -422,7 +423,10 @@ function HomeContent() {
       >
         {deleteTargetProfile && (
           <p className="text-center text-sm mb-6" style={{ color: "var(--text2)" }}>
-            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span> wordt permanent gewist. Dit kan niet ongedaan worden gemaakt.
+            <span style={{ color: "var(--text)" }}>{deleteTargetProfile.name}</span>{" "}
+            {deleteTargetProfile.origin === "shared" || deleteTargetProfile.isImported
+              ? "wordt van dit toestel verwijderd. Bestaande contracten en scènes blijven bestaan. Dit kan niet ongedaan worden gemaakt."
+              : "wordt permanent gewist. Dit kan niet ongedaan worden gemaakt."}
           </p>
         )}
         <div className="flex flex-col gap-3">
