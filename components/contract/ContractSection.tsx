@@ -17,6 +17,7 @@ interface Props {
   colourB?: string;
   editableNotes?: boolean;
   noteScope?: string;
+  getItemKey?: (item: KinkDetailItem) => string;
   onNoteChange?: (scope: string, itemName: string, side: NoteSide, value: string) => void;
 }
 
@@ -30,6 +31,7 @@ export default function ContractSection({
   colourB,
   editableNotes = false,
   noteScope = title,
+  getItemKey,
   onNoteChange,
 }: Props) {
   const [openNotes, setOpenNotes] = useState<Set<string>>(new Set());
@@ -60,13 +62,19 @@ export default function ContractSection({
       {isKinkDetail(items[0]) ? (
         <div className="space-y-2">
           {(items as KinkDetailItem[]).map((item, i) => {
-            const editorOpen = openNotes.has(noteKey(item.name)) || Boolean(item.commentA || item.commentB);
+            const identity = getItemKey?.(item) ?? item.name;
+            const editorOpen = openNotes.has(noteKey(identity)) || Boolean(item.commentA || item.commentB);
             return (
-              <div key={`${item.name}-${i}`} className="rounded-xl p-2.5 text-sm" style={{
+              <div key={getItemKey ? identity : `${item.name}-${i}`} className="rounded-xl p-2.5 text-sm" style={{
                 background: `color-mix(in srgb, ${colour} 8%, transparent)`,
                 border: `1px solid color-mix(in srgb, ${colour} 20%, transparent)`,
               }}>
                 <div className="mb-1.5 font-medium" style={{ color: "var(--text)" }}>{item.name}</div>
+                {item.sourceKind === "custom" && (
+                  <p className="mb-1.5 text-xs" style={{ color: "var(--text2)" }}>
+                    Eigen onderwerp van {item.sourceAId && item.sourceBId ? `${nA} en ${nB}` : item.sourceAId ? nA : nB}
+                  </p>
+                )}
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col gap-0.5">
                     {item.statusA
@@ -93,7 +101,7 @@ export default function ContractSection({
                 {editableNotes && !editorOpen && (
                   <button
                     type="button"
-                    onClick={() => openNoteEditor(item.name)}
+                    onClick={() => openNoteEditor(identity)}
                     className="focus-ring -mb-1 -ml-2 mt-1 inline-flex min-h-11 items-center rounded-lg px-2 text-xs font-semibold"
                     style={{ color: "var(--text2)" }}
                     aria-label={`Notitie toevoegen bij ${item.name}`}
@@ -108,7 +116,7 @@ export default function ContractSection({
                       <span className="mb-1 block text-xs font-semibold" style={{ color: cA }}>{nA}</span>
                       <textarea
                         value={item.commentA ?? ""}
-                        onChange={(event) => onNoteChange?.(noteScope, item.name, "a", event.target.value)}
+                        onChange={(event) => onNoteChange?.(noteScope, identity, "a", event.target.value)}
                         rows={2}
                         maxLength={500}
                         placeholder={`Notitie van ${nA}`}
@@ -120,7 +128,7 @@ export default function ContractSection({
                       <span className="mb-1 block text-xs font-semibold" style={{ color: cB }}>{nB}</span>
                       <textarea
                         value={item.commentB ?? ""}
-                        onChange={(event) => onNoteChange?.(noteScope, item.name, "b", event.target.value)}
+                        onChange={(event) => onNoteChange?.(noteScope, identity, "b", event.target.value)}
                         rows={2}
                         maxLength={500}
                         placeholder={`Notitie van ${nB}`}

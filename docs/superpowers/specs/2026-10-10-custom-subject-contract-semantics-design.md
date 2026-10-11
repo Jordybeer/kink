@@ -1,7 +1,7 @@
 # KinkSync: consistente identiteit en grenzen van eigen onderwerpen
 
 **Datum:** 2026-10-10  
-**Status:** ontwerp ter review; geen productcode gewijzigd  
+**Status:** geïmplementeerd en lokaal geverifieerd; publicatie geblokkeerd door automatische goedkeuringscontrole; externe releasegate nog niet voltooid. Zie het implementatieplan voor bewijs en reviewcorrecties.  
 **Basis:** `dev` @ `cc751e28c1e6c3cff85773bb846e96d056b3eadd`  
 **Relevante open PR:** #472 @ `2c254c83a3b3cac4bf2d859fe34f04834857dd63` (niet aanpassen)  
 **Werkbranch:** `safety/custom-subject-semantics-20261010`
