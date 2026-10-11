@@ -116,7 +116,7 @@ export default function CompareKinkRow({
               onClick={onToggleDiscussed}
               aria-label={isDiscussed ? `${accessibleName} als niet besproken markeren` : `${accessibleName} als besproken markeren`}
               aria-pressed={isDiscussed}
-              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors"
+              className="focus-ring ks-motion-choice inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium"
               style={{ color: isDiscussed ? "var(--willing)" : "var(--text2)" }}
             >
               {isDiscussed
