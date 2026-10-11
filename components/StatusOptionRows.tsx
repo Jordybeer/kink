@@ -36,7 +36,7 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
               data-tour={danger ? "hard-no" : undefined}
               onClick={() => onSelect(active ? null : s)}
               aria-pressed={active}
-              className="focus-ring flex min-h-[54px] w-full items-center gap-3 border-b px-1 py-2 text-left transition-[background-color,border-color] duration-150 motion-reduce:transition-none"
+              className="focus-ring ks-motion-choice flex min-h-[54px] w-full items-center gap-3 border-b px-1 py-2 text-left"
               style={{
                 borderTop: index === 0 ? "1px solid var(--border)" : undefined,
                 borderColor: "var(--border)",
@@ -112,7 +112,7 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
               data-tour={danger ? "hard-no" : undefined}
               onClick={() => onSelect(active ? null : s)}
               aria-pressed={active}
-              className="focus-ring h-full min-h-11 w-full rounded-xl px-3.5 py-1.5 text-left transition-[transform,background-color,border-color,box-shadow] duration-150 active:scale-[0.994] motion-reduce:active:scale-100 motion-reduce:transition-none"
+              className="focus-ring ks-motion-choice h-full min-h-11 w-full rounded-xl px-3.5 py-1.5 text-left"
               style={{
                 color: "var(--text)",
                 background: active
