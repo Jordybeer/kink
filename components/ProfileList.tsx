@@ -154,9 +154,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             divider={index > 0}
             owned={owned}
             onPin={owned ? () => profile.id === pinnedId ? unpin() : pin(profile.id) : undefined}
-            onDelete={owned
-              ? () => paired ? setGroupDelete(profile) : onPromptDelete(profile.id)
-              : undefined}
+            onDelete={() => paired ? setGroupDelete(profile) : onPromptDelete(profile.id)}
           />
         ))}
       </section>
@@ -300,6 +298,11 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
           <h2 className="mb-2 text-xl font-bold">Wat wil je verwijderen?</h2>
           <p className="mb-5 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
             {groupDelete?.name} heeft een dominant en submissief profiel met aparte antwoorden.
+            {(groupDelete?.origin === "shared" || groupDelete?.isImported) && (
+              <span className="mt-2 block">
+                Deze kopie wordt alleen van dit toestel verwijderd. Bestaande contracten en scènes blijven bestaan.
+              </span>
+            )}
           </p>
           <div className="grid gap-2">
             <button
@@ -446,7 +449,7 @@ function ProfileRow({
           <CaretRight size={14} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
         </Link>
 
-        {owned && onPin && onDelete && (
+        {onDelete && (
           <button
             type="button"
             onClick={() => setActions(true)}
@@ -461,19 +464,21 @@ function ProfileRow({
         )}
       </div>
 
-      {owned && onPin && onDelete && (
+      {onDelete && (
         <Sheet open={actions} onClose={() => setActions(false)} aria-label={`Acties voor ${profile.name}`}>
           <SheetContent className="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
             <div className="mb-3 px-1">
               <h3 className="text-lg font-semibold">{profile.name}</h3>
               <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>{profile.role}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setActions(false);
-                onPin();
-              }}
+            {owned && onPin && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActions(false);
+                    onPin();
+                  }}
               aria-pressed={profile.id === pinnedId}
               className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
               style={{
@@ -495,7 +500,9 @@ function ProfileRow({
             >
               <PencilSimple aria-hidden="true" size={18} />
               Profiel bewerken
-            </Link>
+                </Link>
+              </>
+            )}
             <button
               type="button"
               onClick={() => {
@@ -506,7 +513,7 @@ function ProfileRow({
               style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 6%, var(--surface2))" }}
             >
               <Trash aria-hidden="true" size={18} />
-              Profiel verwijderen
+              {owned ? "Profiel verwijderen" : "Gedeeld profiel verwijderen"}
             </button>
             <button
               type="button"
