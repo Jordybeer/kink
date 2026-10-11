@@ -32,7 +32,7 @@ export default function ProfileChip({
       type="button"
       onClick={onClick}
       aria-label={profile ? `Kies profiel ${slot}: ${profile.name}` : `Kies profiel ${slot}`}
-      className="focus-ring min-h-14 flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-colors text-left min-w-0"
+      className="focus-ring ks-motion-choice min-h-14 flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left min-w-0"
       style={profile
         ? { borderColor: colour, background: `color-mix(in srgb, ${colour} 10%, transparent)` }
         : { borderColor: "var(--border)", background: "var(--surface)" }}
