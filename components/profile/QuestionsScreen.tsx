@@ -157,7 +157,7 @@ export default function QuestionsScreen({ params }: Props) {
         aria-valuenow={progressPercent}
         data-testid="questions-top-progress"
       >
-        <div data-testid="questions-top-progress-fill" className="h-full" style={{ width: `${progressPercent}%`, background: "var(--accent)" }} />
+        <div data-testid="questions-top-progress-fill" className="ks-motion-progress h-full" style={{ width: `${progressPercent}%`, background: "var(--accent)" }} />
       </div>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden" data-testid="questions-scroll-region">
