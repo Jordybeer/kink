@@ -388,7 +388,7 @@ function ContractPage() {
                           key={option}
                           type="button"
                           onClick={() => toggle(option)}
-                          className="focus-ring min-h-11 rounded-full border px-2 py-1 text-xs transition-all"
+                          className="focus-ring ks-motion-choice min-h-11 rounded-full border px-2 py-1 text-xs"
                           style={{
                             background: active ? "color-mix(in srgb, var(--yes) 20%, transparent)" : "transparent",
                             borderColor: active ? "var(--yes)" : "var(--border)",
