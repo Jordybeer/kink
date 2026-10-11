@@ -224,7 +224,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             href={`/compare?a=${pair[0].id}&b=${pair[1].id}`}
             prefetch={false}
             aria-label={`Vergelijk ${pair[0].name} en ${pair[1].name}`}
-            className="focus-ring ks-relational-surface block rounded-2xl p-3.5 transition-opacity hover:opacity-90 active:opacity-80 lg:col-span-2"
+            className="focus-ring ks-motion-choice ks-relational-surface block rounded-2xl p-3.5 hover:opacity-90 active:opacity-80 lg:col-span-2"
             style={{ border: "1px solid var(--border-accent)" }}
           >
             <div className="flex items-center gap-3.5">
@@ -426,7 +426,7 @@ function ProfileRow({
         <Link
           href={`/profile/${profile.id}`}
           prefetch={false}
-          className="focus-ring flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl transition-opacity hover:opacity-90 active:opacity-75"
+          className="focus-ring ks-motion-choice flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl hover:opacity-90 active:opacity-75"
           aria-label={`${profile.name} ${profile.role} openen`}
         >
           {showName && <Avatar profile={profile} />}
