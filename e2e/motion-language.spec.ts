@@ -43,6 +43,8 @@ test("questionnaire progress and answer selection share the scene motion contrac
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect.poll(async () => (await transition(progress)).duration.every((duration) => duration === 0)).toBe(true);
   await expect.poll(async () => (await transition(choice)).duration.every((duration) => duration === 0)).toBe(true);
+  const progressbar = page.getByRole("progressbar", { name: "Voortgang vragenlijst" });
+  const before = Number(await progressbar.getAttribute("aria-valuenow"));
   await choice.click();
-  await expect(choices.getByRole("button").first()).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(async () => Number(await progressbar.getAttribute("aria-valuenow"))).toBeGreaterThan(before);
 });
