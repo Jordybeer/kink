@@ -164,3 +164,36 @@ test("failed profile persistence rolls back the newly confirmed identity anchor"
   }), { anchorKey: ANCHOR_STORAGE_KEY, profileKey: PROFILE_STORE_KEY });
   expect(stored).toEqual({ anchors: [], profiles: [] });
 });
+
+
+test("a deleted contact is explicitly restored under its unchanged retained identity", async ({ page }, testInfo) => {
+  const sealed = await seal(profile());
+  const encoded = await encodeProfileV3(sealed.profile);
+  const anchor = createProfileIdentityAnchor(sealed.profile, sealed.profile.consentProof!, 1234, "source-device-fingerprint");
+  await seedProfiles(page, []);
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: ANCHOR_STORAGE_KEY, value: JSON.stringify({ schema: 1, anchors: [anchor] }),
+  });
+  await page.goto(`/#p3=${encodeURIComponent(encoded)}`);
+  await expect(page.getByText("Gedeeld profiel herstellen?", { exact: true })).toBeVisible();
+  await expect(page.getByText(/De identiteit bewijst niet hoe recent deze versie is/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Codes onafhankelijk vergeleken. Bevestig en importeer" })).toHaveCount(0);
+  for (const theme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await expect(page.getByText("Gedeeld profiel herstellen?", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Herstel gedeeld profiel", exact: true })).toBeVisible();
+    await page.evaluate(async () => { await document.fonts.ready; });
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/anchored-restore-${theme}.png`, fullPage: false });
+  }
+  await page.getByRole("button", { name: "Herstel gedeeld profiel", exact: true }).click();
+  await expect.poll(() => page.evaluate(({ key, id }) => JSON.parse(localStorage.getItem(key) ?? "null")?.state?.profiles?.find((candidate: Profile) => candidate.id === id) ?? null, { key: PROFILE_STORE_KEY, id: sealed.profile.id })).toMatchObject({
+    origin: "shared", isImported: true, consentProof: sealed.profile.consentProof,
+  });
+  const stored = await page.evaluate(({ anchors, profiles }) => ({
+    registry: JSON.parse(localStorage.getItem(anchors) ?? "null"),
+    keys: JSON.parse(localStorage.getItem(profiles) ?? "null")?.state?.profileOwnerKeys,
+  }), { anchors: ANCHOR_STORAGE_KEY, profiles: PROFILE_STORE_KEY });
+  expect(stored.registry).toEqual({ schema: 1, anchors: [anchor] });
+  expect(stored.keys).toEqual([]);
+});

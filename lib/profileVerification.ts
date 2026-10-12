@@ -135,6 +135,7 @@ export type ProfileImportIdentityConflictReason =
 
 export type AnchoredProfileImportIdentity =
   | { kind: "new-unanchored"; code: string; profile?: Profile }
+  | { kind: "anchored-restore"; code: string; anchor: ProfileIdentityAnchor }
   | { kind: "anchored-existing"; code: string; profile: Profile; anchor: ProfileIdentityAnchor }
   | { kind: "anchored-update"; code: string; profile: Profile; anchor: ProfileIdentityAnchor }
   | {
@@ -200,6 +201,12 @@ export function classifyProfileImportWithIdentityAnchor(
       anchor,
       reason: match.reason,
     };
+  }
+
+  // A retained identity anchor is not a deletion tombstone or proof-version
+  // high-water mark. Restore only a missing exact record, never an existing id.
+  if (classification.kind === "new" && !existingProfiles.some((candidate) => candidate.id === incoming.id)) {
+    return { kind: "anchored-restore", code, anchor };
   }
 
   if (classification.kind === "same-code" && sameSignedProfileVersion(classification.profile, incoming)) {

@@ -150,4 +150,44 @@ describe("anchor-aware profile import classification", () => {
       anchor,
     });
   });
+
+  it("classifies a deleted shared profile with its exact retained anchor as a restore", () => {
+    const incoming = makeProfile();
+    const anchor = anchorFor(incoming);
+    expect(classifyProfileImportWithIdentityAnchor([], incoming, [anchor])).toEqual({
+      kind: "anchored-restore", code: incoming.verificationCode, anchor,
+    });
+  });
+
+  it("does not claim freshness when only an identity anchor remains", () => {
+    const archived = makeProfile();
+    const later = makeProfile({ consentProof: { ...FIRST_PROOF, version: 5, proofHash: "later-proof" } });
+    const anchor = anchorFor(later);
+    expect(classifyProfileImportWithIdentityAnchor([], archived, [anchor]).kind).toBe("anchored-restore");
+  });
+
+  it("does not restore over an existing profile that has the same id and another code", () => {
+    const incoming = makeProfile();
+    const anchor = anchorFor(incoming);
+    const existing = makeProfile({ name: "Other identity", verificationCode: "KS-8J4R-5T6V-W7XY" });
+    expect(classifyProfileImportWithIdentityAnchor([existing], incoming, [anchor]).kind).toBe("identity-conflict");
+  });
+
+
+  it.each(["profile-id", "verification-code", "key-id", "fingerprint"] as const)(
+    "rejects a deleted-record restore when the retained %s binding differs",
+    (reason) => {
+      const original = makeProfile();
+      const anchor = anchorFor(original);
+      const incoming = reason === "profile-id" ? makeProfile({ id: "other-id" })
+        : reason === "verification-code" ? makeProfile({ verificationCode: "KS-8J4R-5T6V-W7XY" })
+          : reason === "key-id" ? makeProfile({ consentProof: { ...FIRST_PROOF, keyId: "other-key" } })
+            : original;
+      const retained = reason === "fingerprint" ? { ...anchor, fingerprint: "substituted" } : anchor;
+      expect(classifyProfileImportWithIdentityAnchor([], incoming, [retained])).toMatchObject({
+        kind: "identity-conflict", reason,
+      });
+    },
+  );
+
 });

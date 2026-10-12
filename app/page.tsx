@@ -89,19 +89,20 @@ function HomeContent() {
   const importIdentity = (() => {
     const conflict = importIdentities.find((identity) => identity.kind === "identity-conflict");
     if (conflict) return conflict;
-    if (importIdentities.length > 0 && importIdentities.every((identity) => (identity.kind === "anchored-update" || identity.kind === "anchored-existing"))) {
+    if (importIdentities.length > 0 && importIdentities.every((identity) => (identity.kind === "anchored-update" || identity.kind === "anchored-existing" || identity.kind === "anchored-restore"))) {
       return importIdentities[0];
     }
     return importIdentities.find((identity) => identity.kind === "legacy-unverified")
       ?? importIdentities.find((identity) => identity.kind === "new-unanchored")
-      ?? importIdentities.find((identity) => (identity.kind === "anchored-update" || identity.kind === "anchored-existing"))
+      ?? importIdentities.find((identity) => (identity.kind === "anchored-update" || identity.kind === "anchored-existing" || identity.kind === "anchored-restore"))
       ?? null;
   })();
   const hasIdentityConflict = importIdentities.some((identity) => identity.kind === "identity-conflict");
   const hasLegacyUnverified = importIdentities.some((identity) => identity.kind === "legacy-unverified");
   const needsIdentityConfirmation = importIdentities.some((identity) => identity.kind === "new-unanchored");
   const allAnchoredImports = importIdentities.length > 0
-    && importIdentities.every((identity) => (identity.kind === "anchored-update" || identity.kind === "anchored-existing"));
+    && importIdentities.every((identity) => (identity.kind === "anchored-update" || identity.kind === "anchored-existing" || identity.kind === "anchored-restore"));
+  const hasAnchoredRestore = importIdentities.some((identity) => identity.kind === "anchored-restore");
   const isSwitchImport = importTransfer?.length === 2
     && !!importTransfer[0].switchShareProof
     && !!importTransfer[0].personGroupId
@@ -248,6 +249,13 @@ function HomeContent() {
     if (operationToken !== undefined) importOperationGuard.assertCurrent(operationToken);
     const previousProfiles = useStore.getState().profiles;
     const prepared = prepareProfileImport(transfer);
+    if (allAnchoredImports) {
+      const freshAnchors = readProfileIdentityAnchorRegistry().anchors;
+      if (prepared.some((candidate) => {
+        const identity = classifyProfileImportWithIdentityAnchor(previousProfiles, candidate, freshAnchors);
+        return identity.kind !== "anchored-update" && identity.kind !== "anchored-existing" && identity.kind !== "anchored-restore";
+      })) return false;
+    }
     const plan = planSafeProfileImport(previousProfiles, prepared);
     if (plan.acceptedCount !== prepared.length) return false;
 
@@ -284,7 +292,7 @@ function HomeContent() {
       const anchorsToCreate: ReturnType<typeof createProfileIdentityAnchor>[] = [];
       for (const candidate of transfer) {
         const identity = classifyProfileImportWithIdentityAnchor(previousProfiles, candidate, initialAnchors);
-        if (identity.kind === "anchored-update" || identity.kind === "anchored-existing") continue;
+        if (identity.kind === "anchored-update" || identity.kind === "anchored-existing" || identity.kind === "anchored-restore") continue;
         if (identity.kind !== "new-unanchored" || !candidate.consentProof) {
           throw new Error("Deze import kan niet als nieuw contact worden bevestigd.");
         }
@@ -346,7 +354,7 @@ function HomeContent() {
             || canonicalJson(persisted) !== canonicalJson(createdAnchor)) {
             throw new Error("De identity anchor veranderde tijdens de import. Import is geblokkeerd.");
           }
-        } else if (refreshed.kind !== "anchored-update" && refreshed.kind !== "anchored-existing") {
+        } else if (refreshed.kind !== "anchored-update" && refreshed.kind !== "anchored-existing" && refreshed.kind !== "anchored-restore") {
           throw new Error("De identity anchor veranderde tijdens de import. Import is geblokkeerd.");
         }
       }
@@ -696,7 +704,7 @@ function HomeContent() {
       <Sheet
         open={!!importPreview}
         onClose={() => replaceImportTransfer(null)}
-        title={needsIdentityConfirmation ? "Identiteit onafhankelijk vergelijken" : isSwitchImport ? "Switch-profiel importeren?" : "Profiel importeren?"}
+        title={needsIdentityConfirmation ? "Identiteit onafhankelijk vergelijken" : hasAnchoredRestore ? "Gedeeld profiel herstellen?" : isSwitchImport ? "Switch-profiel importeren?" : "Profiel importeren?"}
         aria-label="Profiel importeren"
       >
         {importPreview && (
@@ -726,7 +734,9 @@ function HomeContent() {
               </div>
               <div className="text-xs mt-1" style={{ color: "var(--text2)" }}>
                 {isSwitchImport
-                  ? "Switch-koppeling cryptografisch geldig · identiteit nog niet bevestigd"
+                  ? allAnchoredImports
+                    ? "Switch-koppeling cryptografisch geldig · bewaarde identiteit herkend"
+                    : "Switch-koppeling cryptografisch geldig · identiteit nog niet bevestigd"
                   : `${importPreview.consentProof ? "Digitale handtekening aanwezig" : "Niet ondertekend"} · ${profileConsentAlias(importPreview)}`}
               </div>
             </div>
@@ -739,7 +749,13 @@ function HomeContent() {
           </div>
         )}
 
-        {allAnchoredImports && (importIdentity?.kind === "anchored-update" || importIdentity?.kind === "anchored-existing") && (
+        {hasAnchoredRestore && !hasIdentityConflict && (
+          <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 35%, var(--border))", color: "var(--text2)" }}>
+            <strong style={{ color: "var(--text)" }}>Gedeeld profiel herstellen.</strong> Deze versie past bij de bewaarde identiteit. Je herstelt de ontvangen inhoud. De identiteit bewijst niet hoe recent deze versie is. Controleer de inhoud opnieuw met deze persoon.
+          </div>
+        )}
+
+        {allAnchoredImports && !hasAnchoredRestore && (importIdentity?.kind === "anchored-update" || importIdentity?.kind === "anchored-existing") && (
           <div className="rounded-xl px-3 py-3 mb-4 text-sm" style={{ background: "color-mix(in srgb, var(--yes) 10%, var(--surface2))", border: "1px solid color-mix(in srgb, var(--yes) 35%, var(--border))", color: "var(--text2)" }}>
             <strong style={{ color: "var(--yes)" }}>Verankerde identiteit herkend.</strong> Deze profielversie past bij dezelfde onafhankelijk bevestigde sleutel.
           </div>
@@ -843,12 +859,14 @@ function HomeContent() {
             <button
               type="button"
               onClick={() => {
-                if (!finishProfileImport()) setIdentityConfirmError("De verankerde update kon niet veilig worden geïmporteerd.");
+                if (!finishProfileImport()) setIdentityConfirmError(hasAnchoredRestore
+                  ? "Het gedeelde profiel kon niet veilig worden hersteld."
+                  : "De verankerde update kon niet veilig worden geïmporteerd.");
               }}
               className="ks-motion-choice focus-ring w-full py-3 rounded-xl text-sm font-semibold hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
-              Verankerde update importeren
+              {hasAnchoredRestore ? "Herstel gedeeld profiel" : "Verankerde update importeren"}
             </button>
           ) : null}
           <button
