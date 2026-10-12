@@ -208,6 +208,90 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(content.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
   });
 
+  test("ingevuld eigen onderwerp leest mee als gewoon antwoord met eigen categorie", async ({ page }) => {
+    const customAlex = {
+      ...PROFILE_ALEX,
+      entries: {
+        ...PROFILE_ALEX.entries,
+        custom_pw001: {
+          status: "willing" as const,
+          comment: "Alleen met vooraf afgesproken materiaal.",
+        },
+      },
+    };
+    await seedAndGo(page, "/profile/pw-alex-001", [customAlex, PROFILE_SAM]);
+
+    const willing = page.getByTestId("profile-read-status-willing");
+    await expect(willing).toHaveAccessibleName(/Ja, 3 antwoorden/);
+    await willing.click();
+
+    const content = page.locator("#profile-read-status-willing-content");
+    await expect(content.getByText("Kaarsvet druppels", { exact: true })).toBeVisible();
+    await expect(content.getByText("Eigen onderwerpen", { exact: true })).toBeVisible();
+    await expect(content.getByText("Alleen met vooraf afgesproken materiaal.", { exact: true })).toBeVisible();
+  });
+
+  test("eigen harde grens staat meteen tussen de andere harde grenzen", async ({ page }) => {
+    const customAlex = {
+      ...PROFILE_ALEX,
+      entries: {
+        ...PROFILE_ALEX.entries,
+        custom_pw001: {
+          status: "hard_no" as const,
+          comment: "Geen uitzonderingen.",
+        },
+      },
+    };
+    await seedAndGo(page, "/profile/pw-alex-001", [customAlex, PROFILE_SAM]);
+
+    const hardLimits = page.getByTestId("profile-read-hard-limits");
+    await expect(hardLimits.getByText("Kaarsvet druppels", { exact: true })).toBeVisible();
+    await expect(hardLimits.getByText("Geen uitzonderingen.", { exact: true })).toBeVisible();
+  });
+
+  test("privé eigen onderwerp blijft uit openbare groepen en volgt bewust onthullen", async ({ page }) => {
+    const customAlex = {
+      ...PROFILE_ALEX,
+      entries: {
+        ...PROFILE_ALEX.entries,
+        custom_pw001: {
+          status: "maybe" as const,
+          comment: "Alleen voor mezelf.",
+          privateResponse: true,
+        },
+      },
+    };
+    await seedAndGo(page, "/profile/pw-alex-001", [customAlex, PROFILE_SAM]);
+
+    await expect(page.getByText("Kaarsvet druppels", { exact: true })).toHaveCount(0);
+    const privateSection = page.getByTestId("profile-read-private");
+    await privateSection.click();
+
+    const reveal = page.getByRole("button", {
+      name: "Privéantwoord voor Kaarsvet druppels tonen",
+      exact: true,
+    });
+    await expect(reveal).toBeVisible();
+    await reveal.click();
+    await expect(page.getByText("Alleen voor mezelf.", { exact: true })).toBeVisible();
+  });
+
+  test("profiel met alleen een ingevuld eigen onderwerp heeft geen lege leesstaat", async ({ page }) => {
+    const customOnlyAlex = {
+      ...PROFILE_ALEX,
+      entries: {
+        custom_pw001: {
+          status: "willing" as const,
+          comment: "Dit is mijn enige ingevulde onderwerp.",
+        },
+      },
+    };
+    await seedAndGo(page, "/profile/pw-alex-001", [customOnlyAlex, PROFILE_SAM]);
+
+    await expect(page.getByText("Nog geen onderwerpen beoordeeld.", { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("profile-read-status-willing")).toHaveAccessibleName(/Ja, 1 antwoord/);
+  });
+
   test("alle publieke harde grenzen blijven onmiddellijk bij naam zichtbaar", async ({ page }) => {
     const hardLimits = page.getByTestId("profile-read-hard-limits");
     await expect(hardLimits).toBeVisible();
