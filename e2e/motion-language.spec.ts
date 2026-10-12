@@ -12,7 +12,7 @@ async function transition(locator: Locator) {
 }
 
 test("Home profile actions have scene-like tactile timing and become still with reduced motion", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 375, height: 844 });
   await seedAndGo(page, "/", [PROFILE_ALEX]);
 
   const open = page.getByRole("link", { name: "Alex Dominant openen" });
@@ -27,7 +27,7 @@ test("Home profile actions have scene-like tactile timing and become still with 
 });
 
 test("questionnaire progress and answer selection share the scene motion contract", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 375, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}/questions`, [PROFILE_ALEX]);
 
   const progress = page.getByTestId("questions-top-progress-fill");
