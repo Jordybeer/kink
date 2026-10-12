@@ -24,7 +24,7 @@ export default function KinkListRow({ kink, entry, onOpen }: Props) {
       type="button"
       onClick={onOpen}
       aria-label={`${kink.name}, ${status ? STATUS_LABEL[status] : "nog niet beoordeeld"}${tagSpeech ? `, ${tagSpeech}` : ""}, bewerken`}
-      className="focus-ring flex min-h-[58px] w-full items-center gap-3 border-b py-2.5 text-left transition-[transform,background-color] duration-150 hover:bg-[var(--surface2)] active:scale-[0.992] active:bg-[var(--surface2)] motion-reduce:transform-none motion-reduce:transition-none"
+      className="ks-motion-choice focus-ring flex min-h-[58px] w-full items-center gap-3 border-b py-2.5 text-left hover:bg-[var(--surface2)] active:bg-[var(--surface2)]"
       style={{ borderColor: "color-mix(in srgb, var(--border) 68%, transparent)" }}
     >
       <span className="min-w-0 flex-1">

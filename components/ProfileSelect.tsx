@@ -83,7 +83,7 @@ export default function ProfileSelect({
             openAndFocusSelected(-1);
           }
         }}
-        className="w-full focus-ring transition-colors"
+        className="ks-motion-choice w-full focus-ring"
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={open ? listboxId : undefined}
@@ -172,7 +172,7 @@ export default function ProfileSelect({
                       onChange(p.id);
                       closeAndReturnFocus();
                     }}
-                    className="focus-ring transition-colors"
+                    className="ks-motion-choice focus-ring"
                     style={{
                       width: "100%",
                       padding: "10px 12px",

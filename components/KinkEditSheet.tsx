@@ -113,7 +113,7 @@ export default function KinkEditSheet({
             <button
               type="button"
               onClick={onClose}
-              className="focus-ring min-h-11 justify-self-end px-1 text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-11 justify-self-end px-1 text-sm font-semibold"
               style={{ color: "var(--accent)" }}
             >
               Klaar
@@ -124,7 +124,7 @@ export default function KinkEditSheet({
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
               aria-label={step === 1
                 ? "Stap 1 van 2: Antwoord, huidig"
                 : entry.status
@@ -143,7 +143,7 @@ export default function KinkEditSheet({
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
               aria-label={step === 2 ? "Stap 2 van 2: Details, huidig" : "Stap 2 van 2: Details"}
               aria-current={step === 2 ? "step" : undefined}
               style={step === 2
@@ -282,7 +282,7 @@ function ToggleRow({
       aria-pressed={active}
       aria-label={ariaLabel}
       data-tour={privateControl ? "private" : undefined}
-      className="focus-ring flex min-h-11 w-full items-center gap-3 border-b py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none"
+      className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 border-b py-2.5 text-left"
       style={{
         borderColor: "var(--border)",
         background: active ? "color-mix(in srgb, var(--accent) 4%, transparent)" : "transparent",
@@ -303,7 +303,7 @@ function ToggleRow({
       </span>
       <motion.span
         aria-hidden="true"
-        className="flex h-5 w-5 flex-none items-center justify-center rounded-full transition-[background-color,border-color] duration-150 motion-reduce:transition-none"
+        className="flex h-5 w-5 flex-none items-center justify-center rounded-full ks-motion-state"
         animate={{ scale: active ? 1 : 0.94 }}
         transition={motionSafe.state}
         style={{

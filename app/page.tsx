@@ -225,7 +225,7 @@ function HomeContent() {
             <button
               type="button"
               onClick={() => setFormOpen(true)}
-              className="focus-ring flex min-h-12 w-full items-center gap-3 px-1 text-left"
+              className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 px-1 text-left"
             >
               <UserPlus size={18} weight="bold" aria-hidden="true" style={{ color: "var(--action-primary)" }} />
               <span className="flex-1 text-sm font-semibold">Nieuw profiel</span>
@@ -239,7 +239,7 @@ function HomeContent() {
                   setScanError(null);
                   setScanOpen(true);
                 }}
-                className="focus-ring flex min-h-12 w-full items-center gap-3 px-1 text-left"
+                className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 px-1 text-left"
                 style={{ borderTop: "1px solid color-mix(in srgb, var(--border) 58%, transparent)" }}
               >
                 <Camera size={18} aria-hidden="true" style={{ color: "var(--identity-a)" }} />
@@ -285,7 +285,7 @@ function HomeContent() {
               <button
                 type="button"
                 onClick={() => setFormOpen(true)}
-                className="focus-ring flex min-h-[72px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-opacity hover:opacity-95"
+                className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left hover:opacity-95"
                 style={{
                   background: "color-mix(in srgb, var(--accent) 13%, var(--surface2))",
                   border: "1px solid color-mix(in srgb, var(--accent) 34%, var(--border))",
@@ -313,7 +313,7 @@ function HomeContent() {
                     setScanError(null);
                     setScanOpen(true);
                   }}
-                  className="focus-ring flex min-h-[68px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
+                  className="ks-motion-choice focus-ring flex min-h-[68px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
                   style={{
                     background: "color-mix(in srgb, var(--surface2) 82%, transparent)",
                     border: "1px solid var(--border)",
@@ -338,7 +338,7 @@ function HomeContent() {
               <button
                 type="button"
                 onClick={() => backupInputRef.current?.click()}
-                className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 text-left transition-opacity hover:opacity-90 active:opacity-75"
+                className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 text-left hover:opacity-90 active:opacity-75"
                 style={{
                   borderTop: "1px solid color-mix(in srgb, var(--border) 62%, transparent)",
                   color: "var(--text2)",
@@ -429,7 +429,7 @@ function HomeContent() {
           <button
             type="button"
             onClick={confirmDelete}
-            className="focus-ring w-full py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+            className="ks-motion-choice focus-ring w-full py-3 rounded-xl text-sm font-bold hover:opacity-90"
             style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
           >
             Verwijder voor altijd
@@ -437,7 +437,7 @@ function HomeContent() {
           <button
             type="button"
             onClick={closeDeleteSheet}
-            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            className="ks-motion-choice focus-ring w-full py-3 rounded-xl text-sm font-medium border"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
             Annuleer
@@ -472,7 +472,7 @@ function HomeContent() {
             type="button"
             onClick={() => setScanError(null)}
             aria-label="Sluit foutmelding"
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-lg"
+            className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-lg"
           >
             <X size={16} aria-hidden="true" />
           </button>
@@ -550,7 +550,7 @@ function HomeContent() {
                 setImportTransfer(null);
                 router.push(`/profile/${importIdentity.profile.id}`);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              className="ks-motion-choice focus-ring w-full py-3 rounded-xl text-sm font-semibold hover:opacity-90"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Open bestaand profiel
@@ -574,7 +574,7 @@ function HomeContent() {
                   setImportDone(false);
                 }, 1500);
               }}
-              className="focus-ring w-full py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              className="ks-motion-choice focus-ring w-full py-3 rounded-xl text-sm font-semibold hover:opacity-90"
               style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {isSwitchImport
@@ -594,7 +594,7 @@ function HomeContent() {
               setImportTransfer(null);
               router.replace("/");
             }}
-            className="focus-ring w-full py-3 rounded-xl text-sm font-medium border transition-colors"
+            className="ks-motion-choice focus-ring w-full py-3 rounded-xl text-sm font-medium border"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
             Niet nu

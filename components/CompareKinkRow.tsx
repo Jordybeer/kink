@@ -1,5 +1,7 @@
 "use client";
 
+import RelationThread from "@/components/ui/RelationThread";
+
 import { ChatCircle, Check, ShieldWarning } from "@phosphor-icons/react";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import { COMPARE_FACT_LABEL, compactComparisonName } from "@/lib/comparePresentation";
@@ -77,7 +79,7 @@ export default function CompareKinkRow({
 
       <div className="mt-2 flex items-center gap-2">
         <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
-        <span className="ks-relation-thread ks-relation-thread--quiet flex-1" aria-hidden="true" />
+        <RelationThread className="ks-relation-thread--quiet flex-1" />
         <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
       </div>
 

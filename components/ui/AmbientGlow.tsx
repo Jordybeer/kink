@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useMotionActivity } from "@/lib/useMotionActivity";
 import { usePathname } from "next/navigation";
 import { ambientGlowContextForPathname } from "@/lib/ambientGlow";
 
@@ -21,6 +22,7 @@ export default function AmbientGlow({
   topOpacity = 0.16,
   bottomOpacity = 0.10,
 }: Props) {
+  const { ref, active } = useMotionActivity<HTMLDivElement>();
   const pathname = usePathname();
   const context = ambientGlowContextForPathname(pathname);
 
@@ -33,6 +35,8 @@ export default function AmbientGlow({
 
   return (
     <div
+      ref={ref}
+      data-motion-paused={!active}
       aria-hidden="true"
       data-ambient-context={context}
       className="ks-ambient-glow pointer-events-none"

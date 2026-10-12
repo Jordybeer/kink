@@ -1,4 +1,5 @@
 "use client";
+import { useMotionSafe } from "@/lib/motion";
 import { useEffect, useMemo, useState } from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -113,6 +114,7 @@ interface Props {
 }
 
 export function ContractTrendsChart({ contracts }: Props) {
+  const { reduced } = useMotionSafe();
   const { resolvedTheme } = useTheme();
   const [hidden, setHidden] = useState<Record<SeriesKey, boolean>>({
     matchCount: false,
@@ -178,7 +180,7 @@ export function ContractTrendsChart({ contracts }: Props) {
   const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
-    animation: { duration: 280 },
+    animation: reduced ? false : { duration: 300 },
     interaction: { mode: "index", intersect: false },
     plugins: {
       legend: { display: false },

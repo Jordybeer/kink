@@ -384,7 +384,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               type="button"
               onClick={onClose}
               aria-label="Profiel bewerken sluiten"
-              className="focus-ring min-h-11 justify-self-end px-1 text-sm font-medium"
+              className="ks-motion-choice focus-ring min-h-11 justify-self-end px-1 text-sm font-medium"
               style={{ color: "var(--text2)" }}
             >
               Annuleren
@@ -399,7 +399,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 setPanel(null);
                 clearError();
               }}
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
               aria-label={step === 1 ? "Stap 1 van 2: Identiteit, huidig" : "Stap 1 van 2: Identiteit, voltooid"}
               aria-current={step === 1 ? "step" : undefined}
               style={step === 1
@@ -412,7 +412,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <button
               type="button"
               onClick={goNext}
-              className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
               aria-label={step === 2 ? "Stap 2 van 2: Vragenlijst, huidig" : "Stap 2 van 2: Vragenlijst"}
               aria-current={step === 2 ? "step" : undefined}
               style={step === 2
@@ -433,7 +433,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   setPanel(null);
                   clearError();
                 }}
-                className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+                className="ks-motion-choice focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
                 style={{ color: "var(--text2)" }}
               >
                 <CaretLeft size={16} aria-hidden="true" /> Identiteit
@@ -532,7 +532,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                         setRemoveBdsmtest(true);
                         clearError();
                       }}
-                      className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
+                      className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
                       style={{ color: "var(--hard-no-text)", border: "1px solid var(--control-border)" }}
                     >
                       <Trash size={14} aria-hidden="true" /> Verwijder
@@ -570,7 +570,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">Profielfoto</p>
                   <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>Verander je profielfoto.</p>
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="focus-ring mt-2 min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ border: "1px solid var(--control-border)" }}>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="ks-motion-choice focus-ring mt-2 min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ border: "1px solid var(--control-border)" }}>
                     Foto wijzigen
                   </button>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="sr-only" aria-label="Nieuwe profielfoto kiezen" />
@@ -655,7 +655,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                         onKeyDown={(event) => moveExperienceSelection(event, index)}
                         aria-checked={active}
                         tabIndex={active ? 0 : -1}
-                        className="focus-ring min-h-11 rounded-xl px-2 text-sm font-semibold"
+                        className="ks-motion-choice focus-ring min-h-11 rounded-xl px-2 text-sm font-semibold"
                         style={active
                           ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                           : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
@@ -689,7 +689,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   setPanel("sources");
                   clearError();
                 }}
-                className="focus-ring mt-5 flex min-h-[68px] w-full items-center gap-3 border-y px-1 py-3 text-left"
+                className="ks-motion-choice focus-ring mt-5 flex min-h-[68px] w-full items-center gap-3 border-y px-1 py-3 text-left"
                 style={{ borderColor: "var(--border)" }}
               >
                 <LinkSimple size={22} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
@@ -702,7 +702,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : panel === "interests" ? (
             <section data-testid="profile-edit-interests-panel">
-              <button type="button" onClick={() => { setPanel(null); clearError(); }} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              <button type="button" onClick={() => { setPanel(null); clearError(); }} className="ks-motion-choice focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
               </button>
               <h3 ref={panelHeadingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">Interessegebieden</h3>
@@ -716,7 +716,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       type="button"
                       onClick={() => toggleInterest(interest.value)}
                       aria-pressed={active}
-                      className="focus-ring min-h-11 rounded-full px-3.5 text-sm font-semibold"
+                      className="ks-motion-choice focus-ring min-h-11 rounded-full px-3.5 text-sm font-semibold"
                       style={active
                         ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)", border: "1px solid var(--accent)" }
                         : { color: "var(--text2)", border: "1px solid var(--control-border)" }}
@@ -729,7 +729,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : panel === "flow" ? (
             <section data-testid="profile-edit-flow-panel">
-              <button type="button" onClick={() => { setPanel(null); clearError(); }} className="focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              <button type="button" onClick={() => { setPanel(null); clearError(); }} className="ks-motion-choice focus-ring mb-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 <CaretLeft size={16} aria-hidden="true" /> Vragenlijst
               </button>
               <h3 id={flowHeadingId} ref={panelHeadingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">Verkenningsmodus</h3>
@@ -747,7 +747,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                       onKeyDown={(event) => moveModeSelection(event, index)}
                       aria-checked={active}
                       tabIndex={active ? 0 : -1}
-                      className="focus-ring min-h-[70px] rounded-xl px-3.5 py-3 text-left"
+                      className="ks-motion-choice focus-ring min-h-[70px] rounded-xl px-3.5 py-3 text-left"
                       style={active
                         ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--accent)" }
                         : { background: "var(--surface2)", border: "1px solid var(--control-border)" }}
@@ -772,7 +772,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               </p>
 
               <div className="mt-4" style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
-                <button type="button" onClick={() => setPanel("interests")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left">
+                <button type="button" onClick={() => setPanel("interests")} className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left">
                   <Heart size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Interessegebieden</span>
@@ -781,7 +781,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   <CaretRight size={17} aria-hidden="true" style={{ color: "var(--text2)" }} />
                 </button>
 
-                <button type="button" onClick={() => setPanel("flow")} className="focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left" style={{ borderTop: "1px solid var(--border)" }}>
+                <button type="button" onClick={() => setPanel("flow")} className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-3 px-1 py-3 text-left" style={{ borderTop: "1px solid var(--border)" }}>
                   <ListChecks size={25} weight="regular" aria-hidden="true" style={{ color: "var(--accent)" }} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">Verkenningsmodus</span>
@@ -804,7 +804,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             <button
               type="button"
               onClick={goNext}
-              className="focus-ring min-h-12 w-full rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-12 w-full rounded-full text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Volgende <CaretRight size={15} className="ml-1 inline" aria-hidden="true" />
@@ -818,7 +818,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
                   else setStep(1);
                   clearError();
                 }}
-                className="focus-ring min-h-12 rounded-full text-sm font-semibold"
+                className="ks-motion-choice focus-ring min-h-12 rounded-full text-sm font-semibold"
                 style={{ color: "var(--text)", border: "1px solid var(--control-border)" }}
               >
                 <CaretLeft size={15} className="mr-1 inline" aria-hidden="true" /> Vorige
@@ -826,7 +826,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               <button
                 type="button"
                 onClick={save}
-                className="focus-ring min-h-12 rounded-full text-sm font-semibold"
+                className="ks-motion-choice focus-ring min-h-12 rounded-full text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Opslaan

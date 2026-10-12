@@ -52,13 +52,13 @@ function FilterTrigger({
       aria-expanded={open}
       aria-label={`${label}: ${accessibleState}`}
       data-testid={testId}
-      className="focus-ring flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border px-3.5 text-left text-[15px] font-semibold"
+      className="ks-motion-choice focus-ring flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border px-3.5 text-left text-[15px] font-semibold"
       style={{ borderColor: "var(--border)", background: "var(--surface2)", color: "var(--text)" }}
     >
       <span className="min-w-0 truncate">{label}{count > 0 ? ` · ${count}` : ""}</span>
       <CaretDown
         size={17}
-        className="shrink-0 transition-transform"
+        className="shrink-0 ks-motion-state"
         aria-hidden="true"
         style={{ transform: open ? "rotate(180deg)" : undefined }}
       />
@@ -122,7 +122,7 @@ export default function CompareToolbar({
             type="button"
             onClick={onClearResults}
             aria-pressed={selectedResults.size === 0}
-            className="focus-ring mb-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
+            className="ks-motion-choice focus-ring mb-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
             style={selectedResults.size === 0
               ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
               : { background: "var(--surface2)", border: "1px solid var(--border)" }}
@@ -140,7 +140,7 @@ export default function CompareToolbar({
                   type="button"
                   onClick={() => onToggleResult(option.id)}
                   aria-pressed={active}
-                  className="focus-ring flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left"
+                  className="ks-motion-choice focus-ring flex min-h-14 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left"
                   style={active
                     ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
                     : { background: "var(--surface2)", border: "1px solid var(--border)" }}
@@ -155,7 +155,7 @@ export default function CompareToolbar({
             })}
           </div>
 
-          <button type="button" onClick={() => setResultsOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-[14px] font-semibold" style={{ color: "var(--text2)" }}>
+          <button type="button" onClick={() => setResultsOpen(false)} className="ks-motion-choice focus-ring mt-3 min-h-11 w-full rounded-xl text-[14px] font-semibold" style={{ color: "var(--text2)" }}>
             Klaar
           </button>
         </SheetContent>
@@ -177,7 +177,7 @@ export default function CompareToolbar({
             type="button"
             onClick={onClearCategories}
             aria-pressed={selectedCategories.size === 0}
-            className="focus-ring mb-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
+            className="ks-motion-choice focus-ring mb-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left"
             style={selectedCategories.size === 0
               ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
               : { background: "var(--surface2)", border: "1px solid var(--border)" }}
@@ -195,7 +195,7 @@ export default function CompareToolbar({
                   type="button"
                   onClick={() => onToggleCategory(category.category)}
                   aria-pressed={active}
-                  className="focus-ring min-h-[4.75rem] rounded-xl px-3 py-2.5 text-left"
+                  className="ks-motion-choice focus-ring min-h-[4.75rem] rounded-xl px-3 py-2.5 text-left"
                   style={active
                     ? { background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", border: "1px solid var(--border-accent)" }
                     : { background: "var(--surface2)", border: "1px solid var(--border)" }}
@@ -214,7 +214,7 @@ export default function CompareToolbar({
             })}
           </div>
 
-          <button type="button" onClick={() => setCategoriesOpen(false)} className="focus-ring mt-3 min-h-11 w-full rounded-xl text-[14px] font-semibold" style={{ color: "var(--text2)" }}>
+          <button type="button" onClick={() => setCategoriesOpen(false)} className="ks-motion-choice focus-ring mt-3 min-h-11 w-full rounded-xl text-[14px] font-semibold" style={{ color: "var(--text2)" }}>
             Klaar
           </button>
         </SheetContent>

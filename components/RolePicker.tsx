@@ -21,7 +21,7 @@ export default function RolePicker({ value, onChange }: Props) {
       <Drawer.Trigger asChild>
         <button
           type="button"
-          className="focus-ring w-full flex items-center justify-between gap-3 rounded-lg px-3 min-h-11 text-left transition-colors"
+          className="ks-motion-choice focus-ring w-full flex items-center justify-between gap-3 rounded-lg px-3 min-h-11 text-left"
           style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
         >
           {value ? (
@@ -60,7 +60,7 @@ export default function RolePicker({ value, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => { onChange(""); setOpen(false); }}
-                className="focus-ring inline-flex min-h-11 flex-none items-center rounded-lg px-2 text-sm"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 flex-none items-center rounded-lg px-2 text-sm"
                 style={{ color: "var(--text2)" }}
               >
                 Wis keuze
@@ -85,7 +85,7 @@ export default function RolePicker({ value, onChange }: Props) {
                         type="button"
                         onClick={() => { onChange(r); setOpen(false); }}
                         aria-pressed={active}
-                        className="focus-ring flex items-center justify-between gap-3 rounded-lg px-2 min-h-11 text-left transition-colors"
+                        className="ks-motion-choice focus-ring flex items-center justify-between gap-3 rounded-lg px-2 min-h-11 text-left"
                         style={active
                           ? { color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }
                           : { color: "var(--text)" }}

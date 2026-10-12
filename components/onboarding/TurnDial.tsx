@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionPreference } from "@/lib/motion";
 import { ArrowClockwise, LockKey, LockKeyOpen } from "@phosphor-icons/react";
 
 interface TurnDialProps {
@@ -37,7 +38,7 @@ function vibrate(pattern: number | number[]) {
 }
 
 export default function TurnDial({ onComplete }: TurnDialProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = useReducedMotionPreference();
   const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [armed, setArmed] = useState(false);

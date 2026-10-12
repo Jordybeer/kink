@@ -61,7 +61,7 @@ export default function DestroyAllSheet({ open, onClose }: DestroyAllSheetProps)
           type="button"
           onClick={() => void handleDestroy()}
           disabled={busy || phrase.trim().toLowerCase() !== DESTROY_PHRASE}
-          className="focus-ring w-full rounded-xl py-3 text-sm font-bold transition-opacity disabled:opacity-30"
+          className="ks-motion-choice focus-ring w-full rounded-xl py-3 text-sm font-bold disabled:opacity-30"
           style={{ background: "color-mix(in srgb, var(--hard-no) 25%, var(--surface2))", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
         >
           {busy ? "Alles verwijderen…" : "Vernietig voor altijd"}
@@ -70,7 +70,7 @@ export default function DestroyAllSheet({ open, onClose }: DestroyAllSheetProps)
           type="button"
           onClick={handleClose}
           disabled={busy}
-          className="focus-ring w-full rounded-xl border py-3 text-sm font-medium transition-colors disabled:opacity-40"
+          className="ks-motion-choice focus-ring w-full rounded-xl border py-3 text-sm font-medium disabled:opacity-40"
           style={{ borderColor: "var(--border)", color: "var(--text2)" }}
         >
           Annuleer

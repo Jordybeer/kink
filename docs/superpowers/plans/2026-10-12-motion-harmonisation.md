@@ -32,9 +32,9 @@ GitHub run 38185791756: browser failures pin progress to zero duration and a rem
 
 ## Tasks
 
-- [ ] 1. Reproduce TypeScript failure; remove unnecessary dotAll flags without weakening regex assertions. Update obsolete browser assertions to computed behavior while retaining geometry checks. Run motion Vitest, tsc and relevant mobile questions tests. Commit.
-- [ ] 2. Consolidate CSS timing variables and JS presets; apply explicit motion classes to remaining interactive controls across the named screens, preserving layout/copy. Bound scene delay. Add focused browser tests for state, disabled and reduced motion. Commit after targeted checks.
-- [ ] 3. Pause ornamental motion when hidden/offscreen; remove permanent will-change; adapt chart/contract overlay timing to Reduced Motion. Verify lifecycle and state retention in browser. Commit.
+- [x] 1. Reproduce TypeScript failure; remove unnecessary dotAll flags without weakening regex assertions. Update obsolete browser assertions to computed behavior while retaining geometry checks. Run motion Vitest, tsc and relevant mobile questions tests. Commit.
+- [x] 2. Consolidate CSS timing variables and JS presets; apply explicit motion classes to remaining interactive controls across the named screens, preserving layout/copy. Bound scene delay. Add focused browser tests for state, disabled and reduced motion. Commit after targeted checks.
+- [x] 3. Pause ornamental motion when hidden/offscreen; remove permanent will-change; adapt chart/contract overlay timing to Reduced Motion. Verify lifecycle and state retention in browser. Commit.
 - [ ] 4. Batch mobile/desktop, light/dark visual captures, keyboard/sheet checks, Reduced Motion and scene interactions. Impeccable critique then one correction pass and confirmation. Record evidence.
 - [ ] 5. Full unit/lint/build/browser/launch/print/offline verification once final code is stable. Independent review; fix consequential findings with targeted tests and rerun only invalidated checks. Publish coherent commits to existing branch and update PR truthfully. No merge while release gate red.
 
@@ -46,3 +46,12 @@ Current PR synchronize runs all browser tests on mobile and desktop, followed by
 
 - Initial checkout clean; isolated new clone on requested branch. No unrelated user files touched.
 - TypeScript failure reproduced locally (TS1501 at lines 25,36,37). No tsconfig/build bypass.
+
+- Task 1: local tsc now passes; 10/10 motion Vitest pass. Browser execution is blocked locally by socket sandbox restrictions, not a product assertion. Testing continues in an isolated Vercel sandbox at the original head, then against the exact patch.
+- Ruling: Scene list changes use existing Framer layout-position interpolation instead of CSS entrance stagger. CSS transform transitions never animated reordered DOM positions; removing index delays makes newly added rows immediately available. No removal delay or consent change.
+
+- Tasks 2/3: 10 mobile motion browser tests passed on the patched tree, including settings, background pause/resume, offscreen relationship threads, keyboard focus, scene reorder and aftercare disabled state.
+- Reduced Motion test was strengthened to sample the full 250ms press interval. It reproduced live-preference failure (0.66px shrink vs 0.5px maximum); the hook now subscribes to OS changes. Scene endpoint keyboard focus failure was reproduced and fixed by focusing the same item's available opposite move action, independent of animation completion.
+- Final static checks: 792/792 Vitest, 98 files; TypeScript pass; full lint 0 errors / 30 existing warnings; production build exit 0. An earlier lint attempt included generated Playwright-report scripts; moving test artifacts out of source restored the actual source-only result without changing lint policy.
+- Audit remains red: seven high entries on this unmodified lockfile, including sharp/source-map-js handled by separate #480 and the unpatched braces lint-tooling chain. No gate or dependency edits.
+- Vercel test environment supports Chromium 148 and WebKit after installing test-only OS libraries. No claim of physical Safari/device performance.

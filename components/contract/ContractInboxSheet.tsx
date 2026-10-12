@@ -187,7 +187,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => setScannerOpen(true)}
-                className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold"
+                className="ks-motion-choice focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Scanner openen
@@ -249,7 +249,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
                 type="button"
                 disabled={busy}
                 onClick={() => void confirm()}
-                className="focus-ring mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                className="ks-motion-choice focus-ring mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 <Check size={17} aria-hidden="true" />
@@ -287,7 +287,7 @@ export default function ContractInboxSheet({ open, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-medium"
+            className="ks-motion-choice focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-medium"
             style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
           >
             Sluiten

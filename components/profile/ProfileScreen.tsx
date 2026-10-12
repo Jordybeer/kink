@@ -257,7 +257,7 @@ export default function ProfilePage({ params }: Props) {
 
               <Link
                 href={`/profile/${currentProfile.id}/questions`}
-                className="focus-ring mt-1 flex min-h-[68px] items-center gap-4 py-2.5"
+                className="ks-motion-choice focus-ring mt-1 flex min-h-[68px] items-center gap-4 py-2.5"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
@@ -280,7 +280,7 @@ export default function ProfilePage({ params }: Props) {
                 onClick={() => setCatalogOpen(true)}
                 aria-expanded="false"
                 aria-controls="profile-catalog-manager"
-                className="focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
                 style={{ color: "var(--text2)" }}
               >
                 Onderwerpen beheren
@@ -307,7 +307,7 @@ export default function ProfilePage({ params }: Props) {
             <button
               type="button"
               onClick={closeCatalogManager}
-              className="focus-ring min-h-11 rounded-lg px-2.5 text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-11 rounded-lg px-2.5 text-sm font-semibold"
               style={{ color: "var(--accent-text)" }}
             >
               Gereed
@@ -330,7 +330,7 @@ export default function ProfilePage({ params }: Props) {
               aria-haspopup="dialog"
               aria-expanded={categoriesOpen}
               aria-label={`Categorie, ${catalogCategoryFilterLabel}`}
-              className="focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
+              className="ks-motion-choice focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
               <span className="flex-none" style={{ color: "var(--text2)" }}>Categorie</span>
@@ -380,7 +380,7 @@ export default function ProfilePage({ params }: Props) {
                             type="button"
                             onClick={() => removeCustomKink(currentProfile.id, custom.id)}
                             aria-label={`${custom.name} verwijderen`}
-                            className="focus-ring h-11 w-11 rounded-full"
+                            className="ks-motion-choice focus-ring h-11 w-11 rounded-full"
                             style={{ color: "var(--hard-no)" }}
                           >
                             ×
@@ -400,7 +400,7 @@ export default function ProfilePage({ params }: Props) {
                     />
                     <button
                       type="submit"
-                      className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold"
+                      className="ks-motion-choice focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold"
                       style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                     >
                       Toevoegen
@@ -482,7 +482,7 @@ export default function ProfilePage({ params }: Props) {
                         href={`${profileHref(id)}&interests=${group.status}`}
                         data-testid={`profile-read-status-${group.status}`}
                         aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}. Bekijk interesses`}
-                        className="focus-ring flex min-h-11 items-center gap-2 text-sm"
+                        className="ks-motion-choice focus-ring flex min-h-11 items-center gap-2 text-sm"
                       >
                         <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[group.status] }} aria-hidden="true" />
                         <span className="min-w-0 flex-1 font-semibold">{STATUS_LABEL[group.status]}</span>
@@ -498,7 +498,7 @@ export default function ProfilePage({ params }: Props) {
                     <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>{STATUS_LABEL[interestGroups[0].status]}</p>
                     {interestGroups[0].items.slice(0, 3).map((item) => <p key={item.id}>{item.name}</p>)}
                   </div>
-                  <Link href={`${profileHref(id)}&interests=${interestGroups[0].status}`} className="focus-ring mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent-text)" }}>
+                  <Link href={`${profileHref(id)}&interests=${interestGroups[0].status}`} className="ks-motion-choice focus-ring mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent-text)" }}>
                     Bekijk interesses &amp; grenzen <ArrowRight size={15} aria-hidden="true" />
                   </Link>
                 </section>
@@ -513,7 +513,7 @@ export default function ProfilePage({ params }: Props) {
                       onClick={() => setPrivateReadOpen((open) => !open)}
                       aria-expanded={privateReadOpen}
                       aria-controls="profile-read-private-content"
-                      className="focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                      className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
                     >
                       <Lock size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
                       <span className="min-w-0 flex-1 text-sm font-semibold">Privéantwoorden</span>
@@ -624,7 +624,7 @@ export default function ProfilePage({ params }: Props) {
                   type="button"
                   onClick={downloadText}
                   aria-label="Download toegankelijke tekstexport"
-                  className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+                  className="ks-motion-choice focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
                   style={{ border: "1px solid var(--border)", color: "var(--text)" }}
                 >
                   <FileText aria-hidden="true" size={16} /> Tekst
@@ -632,7 +632,7 @@ export default function ProfilePage({ params }: Props) {
                 <button
                   type="button"
                   onClick={downloadPdf}
-                  className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+                  className="ks-motion-choice focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
                   style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                 >
                   <FileArrowDown aria-hidden="true" size={16} /> PDF
@@ -690,7 +690,7 @@ function ProfileInterestBrowser({ profileId, profileName, groups, status }: {
           className="px-[var(--page-gutter)] pt-3"
           style={{ background: "var(--bg)" }}
         >
-          <Link href={profileHref(profileId) + "#profile-interests-title"} className="focus-ring inline-flex min-h-11 items-center gap-2 text-sm font-medium" style={{ color: "var(--text2)" }}>
+          <Link href={profileHref(profileId) + "#profile-interests-title"} className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 text-sm font-medium" style={{ color: "var(--text2)" }}>
             <ArrowLeft size={16} aria-hidden="true" /> Terug naar profiel
           </Link>
           <h1 id="profile-interest-browser-title" ref={readerHeadingRef} tabIndex={-1} className="outline-none text-xl italic leading-7" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>
@@ -706,7 +706,7 @@ function ProfileInterestBrowser({ profileId, profileName, groups, status }: {
                 replace
                 aria-current={activeGroup?.status === group.status ? "page" : undefined}
                 aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}`}
-                className="focus-ring inline-flex min-h-11 items-center gap-2 border-b-2 text-sm"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 border-b-2 text-sm"
                 style={{
                   borderColor: activeGroup?.status === group.status ? STATUS_VAR[group.status] : "transparent",
                   color: activeGroup?.status === group.status ? "var(--text)" : "var(--text2)",

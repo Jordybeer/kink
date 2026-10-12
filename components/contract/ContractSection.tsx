@@ -1,5 +1,7 @@
 "use client";
 
+import RelationThread from "@/components/ui/RelationThread";
+
 import { useEffect, useState } from "react";
 import { STATUS_LABEL as STATUS_NL } from "@/lib/statusLabels";
 import { isKinkDetail } from "@/lib/contractPdf";
@@ -74,7 +76,7 @@ export default function ContractSection({
                       : <span style={{ color: "var(--text2)", fontSize: "14px" }}>{nA}: geen antwoord</span>
                     }
                   </div>
-                  <span className="ks-relation-thread ks-relation-thread--quiet flex-1" aria-hidden="true" />
+                  <RelationThread className="ks-relation-thread--quiet flex-1" />
                   <div className="flex flex-col items-end gap-0.5">
                     {item.statusB
                       ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-sm" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
@@ -94,7 +96,7 @@ export default function ContractSection({
                   <button
                     type="button"
                     onClick={() => openNoteEditor(item.name)}
-                    className="focus-ring -mb-1 -ml-2 mt-1 inline-flex min-h-11 items-center rounded-lg px-2 text-xs font-semibold"
+                    className="ks-motion-choice focus-ring -mb-1 -ml-2 mt-1 inline-flex min-h-11 items-center rounded-lg px-2 text-xs font-semibold"
                     style={{ color: "var(--text2)" }}
                     aria-label={`Notitie toevoegen bij ${item.name}`}
                   >

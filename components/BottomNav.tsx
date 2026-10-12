@@ -56,7 +56,7 @@ export default function BottomNav() {
             href={href}
             aria-label={label}
             aria-current={active ? "page" : undefined}
-            className="focus-ring flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-[background-color,transform] duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
+            className="ks-motion-choice focus-ring flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1"
             style={{
               background: active
                 ? "linear-gradient(135deg, color-mix(in srgb, var(--identity-a) 12%, var(--pwa-nav-active)), color-mix(in srgb, var(--identity-b) 12%, var(--pwa-nav-active)))"

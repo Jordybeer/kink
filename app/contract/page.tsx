@@ -15,6 +15,8 @@ import { contractParticipantFromProfile, type ContractVersionContent } from "@/l
 import SignaturePad from "@/components/contract/SignaturePad";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { statusPairRank } from "@/lib/statusLabels";
 import { DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
@@ -42,6 +44,8 @@ function readablePreamble(text: string): { firstSentence: string; paragraphs: st
 }
 
 function ContractPage() {
+  const t = useMotionSafe();
+  const whyRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
   const _hasHydrated = useHasHydrated();
@@ -61,6 +65,7 @@ function ContractPage() {
   const [realNameA, setRealNameA] = useState("");
   const [realNameB, setRealNameB] = useState("");
   const [whyOpen, setWhyOpen] = useState(false);
+  useFocusTrap(whyRef, whyOpen);
   const [signedA, setSignedA] = useState(false);
   const [signedB, setSignedB] = useState(false);
 
@@ -345,7 +350,7 @@ function ContractPage() {
             <button
               type="button"
               onClick={() => setPreambleOpen((value) => !value)}
-              className="focus-ring mt-2 inline-flex min-h-11 items-center gap-1 px-3 text-xs transition-colors"
+              className="ks-motion-choice focus-ring mt-2 inline-flex min-h-11 items-center gap-1 px-3 text-xs"
               style={{ color: "var(--accent)" }}
             >
               {preambleOpen ? <>Minder <CaretUp size={13} aria-hidden="true" /></> : <>Lees meer <CaretDown size={13} aria-hidden="true" /></>}
@@ -483,7 +488,7 @@ function ContractPage() {
               <input value={realNameB} onChange={(event) => setRealNameB(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
             </label>
           </div>
-          <button type="button" onClick={() => setWhyOpen(true)} className="focus-ring mt-3 inline-flex min-h-11 items-center gap-1 text-xs transition-colors" style={{ color: "var(--accent)" }}>
+          <button type="button" onClick={() => setWhyOpen(true)} className="ks-motion-choice focus-ring mt-3 inline-flex min-h-11 items-center gap-1 text-xs" style={{ color: "var(--accent)" }}>
             Waarom een echte naam toevoegen? <ArrowRight size={13} aria-hidden="true" />
           </button>
         </div>
@@ -504,12 +509,12 @@ function ContractPage() {
         <button
           type="button"
           onClick={handleConfirm}
-          className="focus-ring min-h-12 w-full rounded-xl px-4 text-sm font-bold transition-opacity hover:opacity-90"
+          className="ks-motion-choice focus-ring min-h-12 w-full rounded-xl px-4 text-sm font-bold hover:opacity-90"
           style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           Contract bewaren of digitaal bevestigen
         </button>
-        <Link href="/contracts" className="focus-ring mt-3 flex min-h-11 items-center justify-center text-sm" style={{ color: "var(--text2)" }}>
+        <Link href="/contracts" className="ks-motion-choice focus-ring mt-3 flex min-h-11 items-center justify-center text-sm" style={{ color: "var(--text2)" }}>
           Naar contractgeschiedenis
         </Link>
       </PageShell>
@@ -534,17 +539,18 @@ function ContractPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={t.state}
             onClick={() => setWhyOpen(false)}
             className="fixed inset-0 z-[220] flex items-center justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
             style={{ background: "var(--scrim)" }}
           >
             <motion.div
               key="why-panel"
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              ref={whyRef}
+              initial={t.reduced ? false : { opacity: 0, y: 10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              exit={t.reduced ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98 }}
+              transition={t.fast}
               onClick={(event) => event.stopPropagation()}
               role="dialog"
               aria-modal="true"
@@ -554,7 +560,7 @@ function ContractPage() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>Waarom echte namen?</span>
-                <button type="button" onClick={() => setWhyOpen(false)} className="focus-ring rounded-full p-1" style={{ color: "var(--text2)" }} aria-label="Sluiten">
+                <button type="button" onClick={() => setWhyOpen(false)} className="ks-motion-choice focus-ring rounded-full p-1" style={{ color: "var(--text2)" }} aria-label="Sluiten">
                   <X aria-hidden="true" size={18} />
                 </button>
               </div>

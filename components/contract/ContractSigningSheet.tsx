@@ -228,7 +228,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                   type="button"
                   disabled={busy}
                   onClick={() => void persistDraft(true).catch((caught) => setError(caught instanceof Error ? caught.message : "Opslaan mislukt."))}
-                  className="focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  className="ks-motion-choice focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
                   style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                 >
                   Opslaan als concept
@@ -238,7 +238,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                     type="button"
                     disabled={busy}
                     onClick={() => void startLocalDevSigning()}
-                    className="focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    className="ks-motion-choice focus-ring min-h-11 rounded-xl text-sm font-semibold disabled:opacity-50"
                     style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                   >
                     {busy ? "Lokaal bevestigen…" : "Beide lokale profielen bevestigen"}
@@ -248,7 +248,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
                     type="button"
                     disabled={busy}
                     onClick={() => void startSigning()}
-                    className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                    className="ks-motion-choice focus-ring flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-50"
                     style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
                   >
                     <QrCode size={18} aria-hidden="true" />
@@ -308,7 +308,7 @@ export default function ContractSigningSheet({ open, onClose, profileA, profileB
               <button
                 type="button"
                 onClick={onClose}
-                className="focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
+                className="ks-motion-choice focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Gereed

@@ -9,6 +9,11 @@
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
   /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */
   --nav-h: calc(env(safe-area-inset-top) + 3.5rem);
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-press: 140ms;
+  --motion-state: 190ms;
+  --motion-disclosure: 220ms;
+  --motion-progress: 300ms;
   --glow-accent: 0 0 32px var(--accent-glow);
 }
 
@@ -66,7 +71,7 @@ body { isolation: isolate; }
 .accordion-content {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 200ms ease-out, opacity 150ms ease-out;
+  transition: grid-template-rows var(--motion-disclosure) var(--motion-ease), opacity var(--motion-state) var(--motion-ease);
   opacity: 0;
 }
 .accordion-content.open {
@@ -157,14 +162,24 @@ body { isolation: isolate; }
    The same restraint applies to status selection, profile picking and aftercare. */
 .ks-motion-choice {
   transition:
-    background-color 190ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 190ms cubic-bezier(0.16, 1, 0.3, 1),
-    color 190ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 190ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+    background-color var(--motion-state) var(--motion-ease),
+    border-color var(--motion-state) var(--motion-ease),
+    color var(--motion-state) var(--motion-ease),
+    box-shadow var(--motion-state) var(--motion-ease),
+    opacity var(--motion-state) var(--motion-ease),
+    transform var(--motion-press) var(--motion-ease);
 }
-.ks-motion-choice:active:not(:disabled) {
+.ks-motion-choice:active:not(:disabled):not([aria-disabled="true"]) {
   transform: scale(0.985);
+}
+/* Surfaces inside a control change state without adding another press transform. */
+.ks-motion-state {
+  transition: background-color var(--motion-state) var(--motion-ease),
+    border-color var(--motion-state) var(--motion-ease),
+    color var(--motion-state) var(--motion-ease),
+    box-shadow var(--motion-state) var(--motion-ease),
+    opacity var(--motion-state) var(--motion-ease),
+    transform var(--motion-state) var(--motion-ease);
 }
 /* The scene arc moves when its state changes; questionnaire progress should too. */
 .ks-motion-progress {
@@ -172,10 +187,11 @@ body { isolation: isolate; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ks-motion-choice,
+  .ks-motion-state,
   .ks-motion-progress {
     transition-duration: 0ms;
   }
-  .ks-motion-choice:active:not(:disabled) {
+  .ks-motion-choice:active:not(:disabled):not([aria-disabled="true"]) {
     transform: none;
   }
 }
@@ -482,7 +498,7 @@ span[class~="mr-auto"][class~="text-xs"] {
 
 /* Scene arc bar segments */
 .scene-arc-segment {
-  transition: flex 300ms ease-out;
+  transition: flex var(--motion-progress) var(--motion-ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .scene-arc-segment { transition: none; }
@@ -594,12 +610,12 @@ span[class~="mr-auto"][class~="text-xs"] {
   position: absolute;
   border-radius: 9999px;
   transform: translate3d(0, 0, 0);
-  will-change: transform;
+  will-change: auto;
 }
 
 .ks-ambient-orb-route {
   position: absolute;
-  will-change: transform, opacity;
+  will-change: auto;
   transition:
     transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
     opacity 320ms ease-out;
@@ -714,4 +730,10 @@ span[class~="mr-auto"][class~="text-xs"] {
   .bottom-nav { display: flex; }
   main { padding-bottom: var(--bottom-nav-h); }
   :root { --toast-lift: calc(3.5rem + 0.75rem); }
+}
+
+/* Preserve the current animation phase when a decorative surface is out of view. */
+[data-motion-paused="true"].ks-relation-thread,
+[data-motion-paused="true"] .ks-ambient-orb {
+  animation-play-state: paused;
 }

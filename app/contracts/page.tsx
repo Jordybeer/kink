@@ -1,5 +1,7 @@
 "use client";
 
+import RelationThread from "@/components/ui/RelationThread";
+
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -68,7 +70,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
             >
               <span className="min-w-0 truncate">{a.profileName}</span>
-              <span className="ks-relation-thread" aria-hidden="true" />
+              <RelationThread />
               <span className="min-w-0 truncate text-right">{b.profileName}</span>
             </h2>
             <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
@@ -124,7 +126,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}`}
           prefetch={false}
-          className="focus-ring inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold"
+          className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold"
           style={{ color: "var(--text)" }}
         >
           Open contract
@@ -133,7 +135,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring ml-auto inline-flex min-h-11 items-center px-2 text-sm font-medium"
+          className="ks-motion-choice focus-ring ml-auto inline-flex min-h-11 items-center px-2 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           Verloop
@@ -193,7 +195,7 @@ function ContractsContent() {
       {personId && (
         <Link
           href="/contracts"
-          className="focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm"
+          className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm"
           style={{ color: "var(--text2)", background: "var(--surface2)" }}
         >
           <X size={12} aria-hidden="true" />
@@ -206,7 +208,7 @@ function ContractsContent() {
           <button
             type="button"
             onClick={() => setConceptsOpen((current) => !current)}
-            className="focus-ring flex min-h-12 w-full items-center gap-3 px-4 text-left"
+            className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 px-4 text-left"
           >
             <FileText size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
             <span className="text-sm font-medium">{concepts.length} {concepts.length === 1 ? "open concept" : "open concepten"}</span>
@@ -222,12 +224,12 @@ function ContractsContent() {
                     key={item.id}
                     href={`/contract?a=${encodeURIComponent(a.profileId)}&b=${encodeURIComponent(b.profileId)}`}
                     prefetch={false}
-                    className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
+                    className="ks-motion-choice focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
                     <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] items-center gap-2 py-2 leading-5" style={{ overflowWrap: "anywhere" }}>
                       <span className="min-w-0 truncate">{a.profileName}</span>
-                      <span className="ks-relation-thread ks-relation-thread--quiet" aria-hidden="true" />
+                      <RelationThread className="ks-relation-thread--quiet" />
                       <span className="min-w-0 truncate text-right">{b.profileName}</span>
                     </span>
                     <span className="text-xs" style={{ color: "var(--text2)" }}>
@@ -253,7 +255,7 @@ function ContractsContent() {
               role="tab"
               aria-selected={active}
               onClick={() => setTab(id)}
-              className="focus-ring relative min-h-11 px-2 text-sm font-medium"
+              className="ks-motion-choice focus-ring relative min-h-11 px-2 text-sm font-medium"
               style={{ color: active ? colour : "var(--text2)" }}
             >
               {label}{counts[id] > 0 ? ` ${counts[id]}` : ""}

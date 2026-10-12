@@ -48,7 +48,7 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
               <motion.span
                 data-status-indicator={s}
                 aria-hidden="true"
-                className="flex h-5 w-5 flex-none items-center justify-center rounded-full transition-[background-color,border-color,color] duration-150 motion-reduce:transition-none"
+                className="flex h-5 w-5 flex-none items-center justify-center rounded-full ks-motion-state"
                 animate={{ scale: active ? 1 : 0.94 }}
                 transition={motionSafe.state}
                 style={{
@@ -130,7 +130,7 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
                 <span
                   data-status-indicator={s}
                   aria-hidden="true"
-                  className="status-option-indicator inline-flex h-5 w-5 items-center justify-center rounded-full transition-[background-color,border-color,box-shadow,color] duration-100 motion-reduce:transition-none"
+                  className="status-option-indicator inline-flex h-5 w-5 items-center justify-center rounded-full ks-motion-state"
                   style={active
                     ? {
                         color: colour,

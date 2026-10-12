@@ -10,7 +10,7 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "@phosphor-icons/react";
-import { TAP_SPRING, useMotionSafe } from "@/lib/motion";
+import { useMotionSafe } from "@/lib/motion";
 
 export interface SpotlightStep {
   selector: string;
@@ -394,7 +394,7 @@ export default function SpotlightTour({
               ref={focusPrimaryAction}
               type="button"
               onClick={advance}
-              whileTap={TAP_SPRING}
+              whileTap={t.tap}
               className="focus-ring flex-1 rounded-full px-4 py-2 text-[0.8125rem] font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
@@ -405,7 +405,7 @@ export default function SpotlightTour({
             <motion.button
               type="button"
               onClick={() => finishTour("skipped")}
-              whileTap={TAP_SPRING}
+              whileTap={t.tap}
               className="focus-ring rounded-full px-3.5 py-2 text-xs"
               style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text2)" }}
             >

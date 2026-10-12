@@ -1,4 +1,6 @@
 "use client";
+
+import RelationThread from "@/components/ui/RelationThread";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -63,7 +65,7 @@ function SceneCard({
           <p className="truncate text-base font-semibold">{scene.title}</p>
           <div className="mt-1 grid min-w-0 grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-2 text-sm">
             <span className="min-w-0 truncate" style={{ color: "var(--identity-a)" }}>{scene.profileAName}</span>
-            <span className="ks-relation-thread" aria-hidden="true" />
+            <RelationThread />
             <span className="min-w-0 truncate text-right" style={{ color: "var(--identity-b)" }}>{scene.profileBName}</span>
           </div>
           {!traffic && (
@@ -103,7 +105,7 @@ function SceneCard({
           {scene.status === "completed" ? (
             <button
               onClick={() => router.push(sceneDetailHref(scene.id))}
-              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
+              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold hover:opacity-90"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               Bekijken
@@ -112,14 +114,14 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold hover:opacity-90"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 <Play size={13} weight="fill" aria-hidden="true" /> Spelen
               </button>
               <button
                 onClick={() => onAftercare(scene.id)}
-                className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
+                className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold hover:opacity-90"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               >
                 Afronden
@@ -142,7 +144,7 @@ function SceneCard({
             <button
               type="button"
               onClick={() => setMenuOpen((current) => !current)}
-              className="focus-ring flex h-11 w-11 items-center justify-center rounded-xl"
+              className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-xl"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
               aria-label={`Meer acties voor ${scene.title}`}
               aria-haspopup="menu"

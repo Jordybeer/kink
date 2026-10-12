@@ -136,7 +136,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
               <Link
                 href={`/compare?a=${group.profiles[0].id}&b=${group.profiles[1].id}`}
                 prefetch={false}
-                className="focus-ring inline-flex min-h-11 items-center px-1 text-xs font-semibold transition-opacity hover:opacity-90 active:opacity-75"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center px-1 text-xs font-semibold hover:opacity-90 active:opacity-75"
                 style={{ color: "var(--accent)" }}
               >
                 Vergelijk kanten
@@ -274,7 +274,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             <Link
               key={href}
               href={href}
-              className="focus-ring flex min-h-12 items-center gap-3 px-1 transition-opacity hover:opacity-90 active:opacity-75"
+              className="ks-motion-choice focus-ring flex min-h-12 items-center gap-3 px-1 hover:opacity-90 active:opacity-75"
               style={index
                 ? { borderTop: "1px solid color-mix(in srgb, var(--border) 58%, transparent)" }
                 : undefined}
@@ -308,7 +308,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
                 if (groupDelete) remove(groupDelete.id);
                 setGroupDelete(null);
               }}
-              className="focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-semibold"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               Alleen {groupDelete?.role ?? "dit perspectief"} verwijderen
@@ -319,7 +319,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
                 deleteGroup.forEach((profile) => remove(profile.id));
                 setGroupDelete(null);
               }}
-              className="focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-bold"
+              className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-bold"
               style={{
                 background: "color-mix(in srgb, var(--hard-no) 15%, var(--surface2))",
                 border: "1px solid var(--hard-no)",
@@ -331,7 +331,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
             <button
               type="button"
               onClick={() => setGroupDelete(null)}
-              className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-12 rounded-xl text-sm font-semibold"
               style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
             >
               Annuleren
@@ -375,7 +375,7 @@ function Disclosure({
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className="focus-ring mt-0 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium transition-opacity hover:opacity-90 active:opacity-75"
+      className="ks-motion-choice focus-ring mt-0 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-left text-sm font-medium hover:opacity-90 active:opacity-75"
       style={{ color: "var(--text2)" }}
     >
       <span className="flex-1">{label}</span>
@@ -453,7 +453,7 @@ function ProfileRow({
             aria-label={`Meer acties voor ${profile.name}`}
             aria-haspopup="dialog"
             aria-expanded={actions}
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full transition-opacity hover:opacity-90 active:opacity-70"
+            className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full hover:opacity-90 active:opacity-70"
             style={{ color: "var(--text2)" }}
           >
             <DotsThree aria-hidden="true" size={20} weight="bold" />
@@ -475,7 +475,7 @@ function ProfileRow({
                 onPin();
               }}
               aria-pressed={profile.id === pinnedId}
-              className="focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
+              className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
               style={{
                 color: profile.id === pinnedId ? "var(--accent)" : "var(--text)",
                 background: "var(--surface2)",
@@ -490,7 +490,7 @@ function ProfileRow({
               href={`/profile/${profile.id}?edit=1`}
               prefetch={false}
               onClick={() => setActions(false)}
-              className="focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium"
+              className="ks-motion-choice focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium"
               style={{ background: "var(--surface2)" }}
             >
               <PencilSimple aria-hidden="true" size={18} />
@@ -502,7 +502,7 @@ function ProfileRow({
                 setActions(false);
                 onDelete();
               }}
-              className="focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
+              className="ks-motion-choice focus-ring mt-2 flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium"
               style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 6%, var(--surface2))" }}
             >
               <Trash aria-hidden="true" size={18} />
@@ -511,7 +511,7 @@ function ProfileRow({
             <button
               type="button"
               onClick={() => setActions(false)}
-              className="focus-ring mt-3 min-h-11 w-full rounded-xl px-3 text-sm font-medium"
+              className="ks-motion-choice focus-ring mt-3 min-h-11 w-full rounded-xl px-3 text-sm font-medium"
               style={{ color: "var(--text2)" }}
             >
               Annuleren

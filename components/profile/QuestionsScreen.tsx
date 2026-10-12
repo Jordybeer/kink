@@ -188,25 +188,25 @@ export default function QuestionsScreen({ params }: Props) {
               {runtimeKind === "dynamic" ? "Je hebt breed gepeild zonder dat KinkSync antwoorden voor je invult. Je kunt nu gericht verder ontdekken of de volledige catalogus doorlopen." : runtimeKind === "discover" ? "Genoeg ontdekt voor nu. Je kunt later verdergaan of bewust de volledige catalogus doorlopen." : "Je hebt de volledige catalogus expliciet beoordeeld. Je kunt altijd terugkomen om iets bij te stellen."}
             </p>
 
-            <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
+            <Link href={`/profile/${currentProfile.id}`} prefetch={false} className="ks-motion-choice focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold" style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
               Terug naar profiel
             </Link>
 
             {runtimeKind === "dynamic" && !completionOptionsOpen && (
-              <button type="button" onClick={() => setCompletionOptionsOpen(true)} className="focus-ring mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              <button type="button" onClick={() => setCompletionOptionsOpen(true)} className="ks-motion-choice focus-ring mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 Verder ontdekken
               </button>
             )}
 
             {runtimeKind === "dynamic" && completionOptionsOpen && (
               <div className="mt-3 grid grid-cols-2 gap-2" data-testid="questions-complete-next-options">
-                <button type="button" onClick={startDiscover} disabled={discoverComplete} className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold disabled:opacity-40" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>Discover</button>
-                <button type="button" onClick={startDeepDive} className="focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>Deep Dive</button>
+                <button type="button" onClick={startDiscover} disabled={discoverComplete} className="ks-motion-choice focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold disabled:opacity-40" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>Discover</button>
+                <button type="button" onClick={startDeepDive} className="ks-motion-choice focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}>Deep Dive</button>
               </div>
             )}
 
             {runtimeKind === "discover" && (
-              <button type="button" onClick={startDeepDive} className="focus-ring mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+              <button type="button" onClick={startDeepDive} className="ks-motion-choice focus-ring mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 Verder met Deep Dive
               </button>
             )}

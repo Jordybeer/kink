@@ -1,5 +1,7 @@
 "use client";
 
+import RelationThread from "@/components/ui/RelationThread";
+
 import ProfileChip from "@/components/compare/ProfileChip";
 import { PROFILE_COLOUR_A, PROFILE_COLOUR_B } from "@/lib/compare";
 import type { Profile } from "@/types";
@@ -34,7 +36,7 @@ export default function CompareProfileHeader({
           isPartner={isPartnerA}
           onClick={onOpenA}
         />
-        {profileA && profileB && <span className="ks-relation-thread" aria-hidden="true" />}
+        {profileA && profileB && <RelationThread />}
         <ProfileChip
           profile={profileB}
           colour={PROFILE_COLOUR_B}

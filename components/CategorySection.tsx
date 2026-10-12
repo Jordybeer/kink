@@ -48,7 +48,7 @@ export default function CategorySection({
         onClick={toggleOpen}
         aria-expanded={open}
         aria-controls={`${headingId}-content`}
-        className="focus-ring sticky z-[5] flex min-h-12 w-full items-center gap-3 border-b py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none"
+        className="ks-motion-choice focus-ring sticky z-[5] flex min-h-12 w-full items-center gap-3 border-b py-2.5 text-left"
         style={{
           top: "var(--nav-h)",
           background: open
