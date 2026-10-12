@@ -11,8 +11,10 @@ const contact: Profile = {
   createdAt: 1, updatedAt: 1, origin: "shared", isImported: true,
 };
 
-function setup(rejectWrites = false) {
-  const values = new Map<string, string>([["kink-profiles", JSON.stringify({ state: { profiles: [] }, version: 0 })]]);
+function setup(rejectWrites = false, initiallyPersisted = true) {
+  const values = new Map<string, string>(initiallyPersisted
+    ? [["kink-profiles", JSON.stringify({ state: { profiles: [] }, version: 0 })]]
+    : []);
   const storage = {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -44,4 +46,43 @@ describe("profile import commit", () => {
     expect(store.getState().profiles).toEqual([]);
     expect(JSON.parse(storage.getItem("kink-profiles")!).state.profiles).toEqual([]);
   });
+
+  it("does not overwrite externally changed persisted profiles while memory is stale", () => {
+    const { store, storage } = setup();
+    const external = JSON.stringify({ state: { profiles: [{ ...contact, id: "other-contact" }] }, version: 0 });
+    storage.setItem("kink-profiles", external);
+
+    expect(security.commitProfileImportPlan(store, plan, storage)).toBe(false);
+    expect(store.getState().profiles).toEqual([]);
+    expect(storage.getItem("kink-profiles")).toBe(external);
+  });
+
+  it("does not write a rollback if persisted storage cannot be read before the write", () => {
+    const { store, storage } = setup();
+    const external = JSON.stringify({ state: { profiles: [contact] }, version: 0 });
+    storage.setItem("kink-profiles", external);
+    const read = storage.getItem;
+    storage.getItem = () => { throw new Error("unreadable"); };
+
+    expect(security.commitProfileImportPlan(store, plan, storage)).toBe(false);
+    expect(store.getState().profiles).toEqual([]);
+    expect(read("kink-profiles")).toBe(external);
+  });
+
+  it("allows a genuinely fresh empty Zustand store only after its first durable write", () => {
+    const { store, storage } = setup(false, false);
+    expect(storage.getItem("kink-profiles")).toBeNull();
+    expect(security.commitProfileImportPlan(store, plan, storage)).toBe(true);
+    expect(JSON.parse(storage.getItem("kink-profiles")!).state.profiles).toEqual([contact]);
+  });
+
+  it("fails closed when persisted data is missing for a non-empty in-memory store", () => {
+    const { store, storage } = setup();
+    store.setState({ profiles: [contact] });
+    storage.removeItem("kink-profiles");
+    expect(security.commitProfileImportPlan(store, plan, storage)).toBe(false);
+    expect(store.getState().profiles).toEqual([contact]);
+    expect(storage.getItem("kink-profiles")).toBeNull();
+  });
+
 });

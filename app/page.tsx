@@ -267,7 +267,6 @@ function HomeContent() {
     setIdentityConfirming(true);
     const newlyPersistedAnchors: ReturnType<typeof createProfileIdentityAnchor>[] = [];
     let previousProfiles: Profile[] | null = null;
-    let profileWriteStarted = false;
 
     try {
       for (const candidate of transfer) {
@@ -353,13 +352,11 @@ function HomeContent() {
       }
 
       importOperationGuard.assertCurrent(operationToken);
-      profileWriteStarted = true;
       if (!commitProfileImportPlan(useStore, importPlan)) {
         throw new Error("Het profiel kon niet exact volgens het vooraf gecontroleerde importplan worden opgeslagen.");
       }
       completeProfileImport(operationToken);
     } catch (error) {
-      if (profileWriteStarted && previousProfiles) useStore.setState({ profiles: previousProfiles });
       let anchorsRolledBack = true;
       for (const anchor of [...newlyPersistedAnchors].reverse()) {
         if (!await removePersistedProfileIdentityAnchorIfMatches(anchor)) anchorsRolledBack = false;

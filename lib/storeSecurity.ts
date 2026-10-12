@@ -333,9 +333,21 @@ export function commitProfileImportPlan(
   storage: Pick<Storage, "getItem"> | undefined = browserIdentityAnchorStorage(),
 ): boolean {
   const previousProfiles = store.getState().profiles;
+  let writeAttempted = false;
   try {
+    if (!storage) return false;
+    const previousRaw = storage.getItem("kink-profiles");
+    if (previousRaw === null) {
+      if (previousProfiles.length !== 0) return false;
+    } else {
+      const previousPersisted = JSON.parse(previousRaw) as { state?: { profiles?: Profile[] } };
+      if (!Array.isArray(previousPersisted?.state?.profiles)
+        || canonicalJson(previousPersisted.state.profiles) !== canonicalJson(previousProfiles)) return false;
+    }
+
+    writeAttempted = true;
     store.setState({ profiles: plan.profiles });
-    const raw = storage?.getItem("kink-profiles");
+    const raw = storage.getItem("kink-profiles");
     const persisted = raw ? JSON.parse(raw) as { state?: { profiles?: Profile[] } } : null;
     if (canonicalJson(store.getState().profiles) !== canonicalJson(plan.profiles)
       || !Array.isArray(persisted?.state?.profiles)
@@ -344,7 +356,7 @@ export function commitProfileImportPlan(
     }
     return true;
   } catch {
-    store.setState({ profiles: previousProfiles });
+    if (writeAttempted) store.setState({ profiles: previousProfiles });
     return false;
   }
 }
