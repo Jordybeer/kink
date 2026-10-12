@@ -35,6 +35,8 @@ test("questionnaire progress and answer selection share the scene motion contrac
   const choices = page.getByRole("group", { name: "Status kiezen" });
   await expect(choices).toBeVisible();
   const choice = choices.getByRole("button").first();
+  const marker = choices.locator("[data-status-indicator]").first();
+  expect((await transition(marker)).property).not.toContain("transform");
 
   expect((await transition(progress)).property).toContain("width");
   expect((await transition(progress)).duration[0]).toBeCloseTo(0.3, 2);
@@ -96,6 +98,8 @@ test("scene reorder keeps the focused control and aftercare honours disabled and
     await page.getByRole("button", { name: "Item toevoegen" }).click();
   }
   const rows = page.locator(".scene-item-reorder");
+  // Framer owns the positional transform; CSS must not tween its projection frames.
+  await expect(rows.first()).toHaveCSS("transition-duration", "0s");
   await rows.first().getByRole("button", { name: "Details", exact: true }).click();
   const move = rows.first().getByRole("button", { name: "Naar beneden verplaatsen" });
   await move.focus();

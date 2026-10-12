@@ -178,8 +178,11 @@ body { isolation: isolate; }
     border-color var(--motion-state) var(--motion-ease),
     color var(--motion-state) var(--motion-ease),
     box-shadow var(--motion-state) var(--motion-ease),
-    opacity var(--motion-state) var(--motion-ease),
-    transform var(--motion-state) var(--motion-ease);
+    opacity var(--motion-state) var(--motion-ease);
+}
+/* Only CSS-owned spatial state (switch thumb/caret); never Framer projection. */
+.ks-motion-travel {
+  transition: transform var(--motion-state) var(--motion-ease);
 }
 /* The scene arc moves when its state changes; questionnaire progress should too. */
 .ks-motion-progress {
@@ -188,6 +191,7 @@ body { isolation: isolate; }
 @media (prefers-reduced-motion: reduce) {
   .ks-motion-choice,
   .ks-motion-state,
+  .ks-motion-travel,
   .ks-motion-progress {
     transition-duration: 0ms;
   }
@@ -504,13 +508,7 @@ span[class~="mr-auto"][class~="text-xs"] {
   .scene-arc-segment { transition: none; }
 }
 
-/* Scene item reorder mode */
-.scene-item-reorder {
-  transition: transform 200ms ease-out, opacity 150ms ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .scene-item-reorder { transition: none; }
-}
+/* Scene row position is owned by Framer; no competing CSS transform transition. */
 
 @media print {
   /* Hide all buttons scoped to the contract page */

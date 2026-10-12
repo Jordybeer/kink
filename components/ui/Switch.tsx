@@ -32,7 +32,7 @@ export default function Switch({
         }}
       >
         <span
-          className="absolute left-0.5 top-0.5 h-[18px] w-[18px] rounded-full ks-motion-state"
+          className="absolute left-0.5 top-0.5 h-[18px] w-[18px] rounded-full ks-motion-travel"
           style={{
             background: "var(--text)",
             transform: checked ? "translateX(22px)" : "translateX(0)",

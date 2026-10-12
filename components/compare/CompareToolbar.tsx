@@ -58,7 +58,7 @@ function FilterTrigger({
       <span className="min-w-0 truncate">{label}{count > 0 ? ` · ${count}` : ""}</span>
       <CaretDown
         size={17}
-        className="shrink-0 ks-motion-state"
+        className="shrink-0 ks-motion-travel"
         aria-hidden="true"
         style={{ transform: open ? "rotate(180deg)" : undefined }}
       />
