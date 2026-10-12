@@ -42,7 +42,7 @@ export function ProfileTrustStateNotice({
   if (state === "signed-unanchored") {
     return (
       <div className="mb-4 rounded-xl px-3 py-3 text-sm" style={{ background: "var(--surface2)", border: "1px solid var(--border-accent)", color: "var(--text2)" }}>
-        <strong style={{ color: "var(--text)" }}>Identiteit nog niet bevestigd.</strong> De digitale handtekening van deze profielversie is geldig, maar dat bewijst niet dat deze sleutel bij de persoon hoort die jij denkt te kennen. Vergelijk de leesbare broncode onafhankelijk op het brontoestel of via een apart kanaal.
+        <strong style={{ color: "var(--text)" }}>Identiteit nog niet bevestigd.</strong> De digitale handtekening van deze profielversie is geldig, maar dat bewijst niet dat deze sleutel bij de persoon hoort die jij denkt te kennen. Laat het profiel opnieuw delen. Vergelijk op Home de leesbare broncode onafhankelijk op het brontoestel of via een apart kanaal.
       </div>
     );
   }

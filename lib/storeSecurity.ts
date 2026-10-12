@@ -11,6 +11,7 @@ import {
 import {
   classifyProfileImport,
   getProfileVerificationCode,
+  sameSignedProfileVersion,
 } from "@/lib/profileVerification";
 import { isProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
 import type { useStore as CoreUseStore } from "@/lib/storeCore";
@@ -296,6 +297,13 @@ export function planSafeProfileImport(
       continue;
     }
 
+    if (identity.kind === "same-code" && sameSignedProfileVersion(identity.profile, profile)) {
+      // Confirmation may establish a local anchor, but a replay never replaces
+      // existing profile content, private context, optional disclosures or metadata.
+      acceptedCount += 1;
+      continue;
+    }
+
     if (identity.kind !== "signed-update" || identity.profile.id !== profile.id) {
       rejectedProfileIds.push(profile.id);
       continue;
@@ -313,6 +321,32 @@ export function planSafeProfileImport(
   }
 
   return { profiles, acceptedCount, rejectedProfileIds };
+}
+
+/** Commit boundary shared by anchored, legacy and update imports. */
+export function commitProfileImportPlan(
+  store: {
+    getState(): { profiles: Profile[] };
+    setState(state: { profiles: Profile[] }): void;
+  },
+  plan: SafeProfileImportPlan,
+  storage: Pick<Storage, "getItem"> | undefined = browserIdentityAnchorStorage(),
+): boolean {
+  const previousProfiles = store.getState().profiles;
+  try {
+    store.setState({ profiles: plan.profiles });
+    const raw = storage?.getItem("kink-profiles");
+    const persisted = raw ? JSON.parse(raw) as { state?: { profiles?: Profile[] } } : null;
+    if (canonicalJson(store.getState().profiles) !== canonicalJson(plan.profiles)
+      || !Array.isArray(persisted?.state?.profiles)
+      || canonicalJson(persisted.state.profiles) !== canonicalJson(plan.profiles)) {
+      throw new Error("Profile import commit did not persist exactly");
+    }
+    return true;
+  } catch {
+    store.setState({ profiles: previousProfiles });
+    return false;
+  }
 }
 
 function upsertOwnerKey(

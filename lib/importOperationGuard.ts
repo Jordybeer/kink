@@ -10,6 +10,7 @@ export interface ImportOperationGuard {
   invalidate(): void;
   isCurrent(token: number): boolean;
   assertCurrent(token: number): void;
+  applyIfCurrent(token: number, apply: () => void): boolean;
 }
 
 export function createImportOperationGuard(): ImportOperationGuard {
@@ -24,6 +25,13 @@ export function createImportOperationGuard(): ImportOperationGuard {
     },
     isCurrent(token) {
       return generation === token;
+    },
+    applyIfCurrent(token, apply) {
+      if (generation !== token) return false;
+      apply();
+      // Acceptance is the decision before the callback. Replacing a candidate
+      // may invalidate this token without invalidating its scanner dismissal.
+      return true;
     },
     assertCurrent(token) {
       if (generation !== token) throw new ImportOperationCancelledError();

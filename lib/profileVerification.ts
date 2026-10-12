@@ -1,5 +1,6 @@
 import type { Profile, ProfileIdentityAnchor } from "@/types";
 import { matchProfileIdentityAnchor } from "@/lib/profileIdentityTrust";
+import { canonicalJson, projectProfileConsent } from "@/lib/consentProof";
 
 const PROFILE_CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const PROFILE_CODE_BODY_LENGTH = 12;
@@ -114,6 +115,17 @@ export function classifyProfileImport(
   return { kind: "new", code };
 }
 
+/** Exact signed shared replay, never a profile update or ownership grant. */
+export function sameSignedProfileVersion(existing: Profile, incoming: Profile): boolean {
+  return (existing.origin === "shared" || existing.isImported === true)
+    && existing.id === incoming.id
+    && getProfileVerificationCode(existing) === getProfileVerificationCode(incoming)
+    && !!existing.consentProof
+    && !!incoming.consentProof
+    && canonicalJson(existing.consentProof) === canonicalJson(incoming.consentProof)
+    && canonicalJson(projectProfileConsent(existing)) === canonicalJson(projectProfileConsent(incoming));
+}
+
 export type ProfileImportIdentityConflictReason =
   | "profile-id"
   | "verification-code"
@@ -123,6 +135,7 @@ export type ProfileImportIdentityConflictReason =
 
 export type AnchoredProfileImportIdentity =
   | { kind: "new-unanchored"; code: string; profile?: Profile }
+  | { kind: "anchored-existing"; code: string; profile: Profile; anchor: ProfileIdentityAnchor }
   | { kind: "anchored-update"; code: string; profile: Profile; anchor: ProfileIdentityAnchor }
   | {
       kind: "identity-conflict";
@@ -187,6 +200,10 @@ export function classifyProfileImportWithIdentityAnchor(
       anchor,
       reason: match.reason,
     };
+  }
+
+  if (classification.kind === "same-code" && sameSignedProfileVersion(classification.profile, incoming)) {
+    return { kind: "anchored-existing", code, profile: classification.profile, anchor };
   }
 
   if (classification.kind === "signed-update") {

@@ -51,10 +51,10 @@ test("independent first-contact confirmation persists a real identity anchor", a
   await openSharedProfile(page, encoded);
 
   await expect(page.getByText("Digitale handtekening geldig is niet hetzelfde als identiteit bevestigd.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Codes onafhankelijk vergeleken — bevestig en importeer" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Codes onafhankelijk vergeleken. Bevestig en importeer" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Rechtstreeks op hun toestel" }).click();
-  await page.getByRole("button", { name: "Codes onafhankelijk vergeleken — bevestig en importeer" }).click();
+  await page.getByRole("button", { name: "Codes onafhankelijk vergeleken. Bevestig en importeer" }).click();
 
   await expect.poll(async () => page.evaluate(({ anchorKey, profileKey, profileId }) => {
     const registry = JSON.parse(localStorage.getItem(anchorKey) ?? "null") as { schema?: number; anchors?: ProfileIdentityAnchor[] } | null;
@@ -104,11 +104,63 @@ test("identity conflict blocks confirmation and offers no import-anyway path", a
 
   await page.goto(`/#p3=${encodeURIComponent(encoded)}`);
 
-  await expect(page.getByText("Identiteitsconflict — import geblokkeerd.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Codes onafhankelijk vergeleken — bevestig en importeer" })).toHaveCount(0);
+  await expect(page.getByText("Identiteitsconflict. Import geblokkeerd.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Codes onafhankelijk vergeleken. Bevestig en importeer" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Importeer als|Importeer profiel|Bevestig en importeer/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Open bestaand profiel" })).toBeVisible();
 
   const persisted = await page.evaluate((key) => localStorage.getItem(key), ANCHOR_STORAGE_KEY);
   expect(JSON.parse(persisted ?? "null")).toEqual({ schema: 1, anchors: [anchor] });
+});
+
+test("scanner closes when a decoded candidate opens independent confirmation", async ({ page }) => {
+  const sealed = await seal(profile());
+  const encoded = await encodeProfileV3(sealed.profile);
+  await seedProfiles(page, []);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Scan gedeeld profiel" }).click();
+  const scanner = page.getByRole("dialog", { name: "QR-code scannen" });
+  await expect(scanner).toBeVisible();
+  const paste = scanner.getByRole("button", { name: "Profiel-link plakken" });
+  if (await paste.isVisible()) await paste.click();
+  await scanner.getByLabel("Profiel-link of code", { exact: true }).fill(`#p3=${encoded}`);
+  await scanner.getByRole("button", { name: "Importeer", exact: true }).click();
+  await expect(page.getByText("Identiteit onafhankelijk vergelijken", { exact: true })).toBeVisible();
+  await expect(scanner).not.toBeVisible();
+});
+
+test("an existing identical signed contact can be independently anchored without replacing local data", async ({ page }) => {
+  const sealed = await seal(profile());
+  const encoded = await encodeProfileV3(sealed.profile);
+  const existing = { ...sealed.profile, origin: "shared" as const, isImported: true, lockedAt: 50, privateNote: "Local context" };
+  await seedProfiles(page, [existing]);
+  await openSharedProfile(page, encoded);
+  await page.getByRole("button", { name: "Via een apart kanaal" }).click();
+  await page.getByRole("button", { name: "Codes onafhankelijk vergeleken. Bevestig en importeer" }).click();
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null")?.anchors?.length ?? 0, ANCHOR_STORAGE_KEY)).toBe(1);
+  const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null").state.profiles, PROFILE_STORE_KEY);
+  expect(stored).toEqual([existing]);
+});
+
+
+test("failed profile persistence rolls back the newly confirmed identity anchor", async ({ page }) => {
+  const sealed = await seal(profile());
+  const encoded = await encodeProfileV3(sealed.profile);
+  await seedProfiles(page, []);
+  await openSharedProfile(page, encoded);
+  await page.evaluate(() => {
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (key === "kink-profiles") throw new DOMException("full", "QuotaExceededError");
+      originalSetItem.call(this, key, value);
+    };
+  });
+  await page.getByRole("button", { name: "Rechtstreeks op hun toestel" }).click();
+  await page.getByRole("button", { name: "Codes onafhankelijk vergeleken. Bevestig en importeer" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Het profiel kon niet exact" })).toBeVisible();
+  const stored = await page.evaluate(({ anchorKey, profileKey }) => ({
+    anchors: JSON.parse(localStorage.getItem(anchorKey) ?? "null")?.anchors ?? [],
+    profiles: JSON.parse(localStorage.getItem(profileKey) ?? "null")?.state?.profiles ?? [],
+  }), { anchorKey: ANCHOR_STORAGE_KEY, profileKey: PROFILE_STORE_KEY });
+  expect(stored).toEqual({ anchors: [], profiles: [] });
 });

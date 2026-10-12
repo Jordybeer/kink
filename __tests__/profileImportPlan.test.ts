@@ -77,4 +77,29 @@ describe("safe profile import plan", () => {
     expect(plan.profiles).toEqual([existing]);
     expect(plan.profiles.some((candidate) => candidate.id === incoming.id)).toBe(false);
   });
+
+  it("recognizes an unchanged signed shared contact without replacing any local content", () => {
+    const existing = profile({ privateNote: "local only", lockedAt: 10, avatarDataUrl: "data:image/png;base64,x" });
+    const incoming = profile({ origin: "own", isImported: false });
+    const plan = planSafeProfileImport([existing], [incoming], 1234);
+
+    expect(plan.acceptedCount).toBe(1);
+    expect(plan.rejectedProfileIds).toEqual([]);
+    expect(plan.profiles).toEqual([existing]);
+    expect(plan.profiles[0]).toBe(existing);
+  });
+
+  it("does not treat same-proof material with changed signed content as an unchanged contact", () => {
+    const existing = profile();
+    const plan = planSafeProfileImport([existing], [profile({ name: "Substituted" })]);
+    expect(plan.acceptedCount).toBe(0);
+    expect(plan.profiles[0]).toBe(existing);
+  });
+
+  it("does not import an owned profile back as an unchanged shared contact", () => {
+    const existing = profile({ origin: "own", isImported: false });
+    const plan = planSafeProfileImport([existing], [profile()]);
+    expect(plan.acceptedCount).toBe(0);
+    expect(plan.profiles[0]).toBe(existing);
+  });
 });

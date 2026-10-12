@@ -340,3 +340,10 @@ dicht, de la met oude import bleef open tot de tegen-audit erop wees.
 **What went wrong:** Naam, titel, teruglink en vijf statussen werden samen sticky. Op 320px bij 200% tekst nam een lange alias vrijwel de hele viewport in. De globale terugknop kende bovendien alleen de profielroute en wees nog naar Home.
 
 **Rule:** Houd alleen de statusnavigatie sticky; laat lange identiteitstekst meescrollen. Gebruik het bestaande TopNav-context voor de lokale terugbestemming. Meet de echte detailview bij 200%, niet alleen het overzicht.
+
+
+## 2026-10-12 — Een identity anchor overleefde een mislukte profielwrite
+
+**What went wrong:** De geconsolideerde identity-import controleerde na een Zustand-write alleen de profielen in geheugen. `createQuotaSafeStorage` vangt een quota- of opslagfout bewust af. Daardoor kon de anchor al lokaal opgeslagen zijn terwijl de nieuwe profielversie niet duurzaam was geschreven, en meldde de import toch succes.
+
+**Rule:** Een import die profielen en onafhankelijke trustmetadata samen bevestigt, moet na de profielwrite de echte persisted profielen exact teruglezen. Een geheugenvergelijking bewijst geen duurzame opslag. Bij mismatch: herstel de eerdere profielstaat en verwijder uitsluitend de anchors die deze operatie zelf heeft aangemaakt en die nog exact overeenkomen. Bewijs zowel een geslaagde write als de quota-safe foutweg met de echte persist-wrapper.

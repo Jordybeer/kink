@@ -140,14 +140,14 @@ describe("anchor-aware profile import classification", () => {
     });
   });
 
-  it("never upgrades an exact anchored profile replay without a newer chained proof", () => {
+  it("recognizes an identical anchored shared version without claiming a new update", () => {
     const existing = makeProfile();
     const anchor = anchorFor(existing);
 
     expect(classifyProfileImportWithIdentityAnchor([existing], existing, [anchor])).toMatchObject({
-      kind: "identity-conflict",
+      kind: "anchored-existing",
+      profile: existing,
       anchor,
-      reason: "lineage",
     });
   });
 });
