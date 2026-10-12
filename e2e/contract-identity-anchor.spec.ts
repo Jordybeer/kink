@@ -165,16 +165,16 @@ test("signed-unanchored contact cannot start activation; anchoring unlocks the e
   await drawContractSignature(page, local.name);
   await drawContractSignature(page, remote.profile.name);
   await page.getByRole("button", { name: "Contract bewaren of digitaal bevestigen" }).click();
-  await page.getByRole("button", { name: "Digitaal bevestigen via QR" }).click();
+  await page.getByRole("button", { name: "QR voor partner tonen" }).click();
 
   await expect(page.getByRole("alert").filter({
     hasText: /Bevestig eerst onafhankelijk de identiteit van de andere contractpartij/i,
   })).toBeVisible();
-  await expect(page.getByText("Tweede digitale bevestiging", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Laat je partner scannen", exact: true })).toHaveCount(0);
 
   await persistAnchor(page, remote.anchor);
-  await page.getByRole("button", { name: "Digitaal bevestigen via QR" }).click();
-  await expect(page.getByText("Tweede digitale bevestiging", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "QR voor partner tonen" }).click();
+  await expect(page.getByRole("heading", { name: "Laat je partner scannen", exact: true })).toBeVisible();
 });
 
 test("signed-unanchored incoming activation cannot be accepted; anchoring unlocks the unchanged response flow", async ({ page }) => {
@@ -210,18 +210,18 @@ test("signed-unanchored incoming activation cannot be accepted; anchoring unlock
     });
   });
   await seedAndGo(page, "/contracts", [trustedActor, responder]);
-  await page.getByRole("button", { name: "Contractverzoek scannen" }).click();
+  await page.getByRole("button", { name: "Contract van partner scannen" }).click();
   await submitContractFrames(page, encoded);
 
   await expect(page.getByRole("alert").filter({
     hasText: /Bevestig eerst onafhankelijk de identiteit van Alex/i,
   })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Contract ondertekenen" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Exact dit contract ondertekenen" })).toHaveCount(0);
 
   await persistAnchor(page, actorAnchor);
   await page.getByRole("button", { name: "Scanner openen" }).click();
   await submitContractFrames(page, encoded);
-  await expect(page.getByRole("button", { name: "Contract ondertekenen" })).toBeVisible();
-  await page.getByRole("button", { name: "Contract ondertekenen" }).click();
-  await expect(page.getByText("Antwoord terugsturen", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Exact dit contract ondertekenen" })).toBeVisible();
+  await page.getByRole("button", { name: "Exact dit contract ondertekenen" }).click();
+  await expect(page.getByRole("heading", { name: "Bevestiging terugsturen", exact: true })).toBeVisible();
 });

@@ -116,13 +116,17 @@ test("identity conflict blocks confirmation and offers no import-anyway path", a
 test("scanner closes when a decoded candidate opens independent confirmation", async ({ page }) => {
   const sealed = await seal(profile());
   const encoded = await encodeProfileV3(sealed.profile);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => Promise.reject(new Error("camera disabled in test")) },
+    });
+  });
   await seedProfiles(page, []);
   await page.goto("/");
   await page.getByRole("button", { name: "Scan gedeeld profiel" }).click();
   const scanner = page.getByRole("dialog", { name: "QR-code scannen" });
   await expect(scanner).toBeVisible();
-  const paste = scanner.getByRole("button", { name: "Profiel-link plakken" });
-  if (await paste.isVisible()) await paste.click();
   await scanner.getByLabel("Profiel-link of code", { exact: true }).fill(`#p3=${encoded}`);
   await scanner.getByRole("button", { name: "Importeer", exact: true }).click();
   await expect(page.getByText("Identiteit onafhankelijk vergelijken", { exact: true })).toBeVisible();
