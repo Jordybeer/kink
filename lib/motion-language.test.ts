@@ -22,7 +22,7 @@ describe("Scenes-derived site motion language", () => {
   it("brings the scenes' state-progress timing to the questionnaire", () => {
     expect(source("components/profile/QuestionsScreen.tsx")).toContain("ks-motion-progress");
     const css = source("app/globals.css");
-    expect(css).toMatch(/\.ks-motion-progress\s*\{[^}]*transition:[^}]*width[^}]*300ms/s);
+    expect(css).toMatch(/\.ks-motion-progress\s*\{[^}]*transition:[^}]*width[^}]*300ms/);
   });
 
   it("defines constrained, accessible transitions without ambient loops or persistent will-change", () => {
@@ -33,8 +33,8 @@ describe("Scenes-derived site motion language", () => {
     expect(motion).toMatch(/\.ks-motion-choice\s*\{/);
     expect(motion).toMatch(/\.ks-motion-choice:active:not\(:disabled\)/);
     expect(motion).toContain("prefers-reduced-motion: reduce");
-    expect(motion).toMatch(/\.ks-motion-choice:active:not\(:disabled\)[^}]*\{[^}]*transform:\s*none/s);
-    expect(motion).toMatch(/\.ks-motion-progress\s*\{[^}]*transition:[^}]*width[^}]*300ms/s);
+    expect(motion).toMatch(/\.ks-motion-choice:active:not\(:disabled\)[^}]*\{[^}]*transform:\s*none/);
+    expect(motion).toMatch(/\.ks-motion-progress\s*\{[^}]*transition:[^}]*width[^}]*300ms/);
     expect(motion).not.toMatch(/will-change|infinite|animation-iteration-count/);
   });
 

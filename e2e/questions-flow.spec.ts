@@ -165,7 +165,9 @@ test("question change keeps a stable visual shell without a full-content fade", 
   const firstQuestion = await title.innerText();
   const progressFill = page.getByTestId("questions-top-progress-fill");
   await expect(content).toHaveCSS("opacity", "1");
-  await expect(progressFill).toHaveCSS("transition-duration", "0s");
+  // Only the thin progress fill interpolates; the question shell stays opaque and fixed.
+  await expect(progressFill).toHaveCSS("transition-property", "width");
+  await expect(progressFill).toHaveCSS("transition-duration", "0.3s");
   await content.evaluate((node) => { (window as typeof window & { __questionContentNode?: Element }).__questionContentNode = node; });
   await card.getByRole("button", { name: /Heel graag/i }).click();
   await page.waitForTimeout(40);
@@ -283,7 +285,8 @@ test("answer hints share one right edge and selection never steals their space",
   expectAlignedRightEdges(beforeEdges);
 
   const yesButton = card.getByRole("button", { name: /Heel graag/i });
-  await expect(yesButton).toHaveClass(/active:scale-\[0\.994\]/);
+  // Assert the interaction contract rather than a Tailwind implementation detail.
+  await expect(yesButton).toHaveCSS("transition-property", /transform/);
   const idleBackground = await yesButton.evaluate((node) => getComputedStyle(node).backgroundColor);
   const idleShadow = await yesButton.evaluate((node) => getComputedStyle(node).boxShadow);
   await yesButton.click();
