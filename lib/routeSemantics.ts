@@ -34,6 +34,9 @@ export function routeChromeSemantics(
   if (path.startsWith("/scenes/")) {
     return { title: dynamic.sceneTitle ?? "Scène", back: "/scenes", hideBottomNav: true, bottomNavSection: null };
   }
+  if (path === "/intimacy") {
+    return { title: "Intimiteit", back: "/", hideBottomNav: true, bottomNavSection: null };
+  }
   if (path === "/compare" || path.startsWith("/compare/")) {
     return { title: "Vergelijk", back: "/", hideBottomNav: false, bottomNavSection: "compare" };
   }
@@ -48,6 +51,9 @@ export function routeChromeSemantics(
   }
   if (path === "/sandbox") {
     return { title: "Intimiteit sandbox", back: "/", hideBottomNav: true, bottomNavSection: null };
+  }
+  if (path === "/qa") {
+    return { title: "QA-lab", back: "/", hideBottomNav: true, bottomNavSection: null };
   }
   if (path.includes("/versions/") && path.startsWith("/contracts/")) {
     return {

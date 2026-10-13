@@ -1,14 +1,16 @@
 "use client";
 
+
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Archive,
   CaretDown,
   CaretRight,
   FileText,
   Pause,
+  Plus,
   QrCode,
   X,
 } from "@phosphor-icons/react";
@@ -48,11 +50,11 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
   const [a, b] = series.participants;
   return (
     <article
-      className="overflow-hidden rounded-2xl"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      className="ks-relational-surface overflow-hidden rounded-2xl"
+      style={{ border: "1px solid var(--border)" }}
     >
       <div className="p-4">
-        <div className="flex items-start gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex">
           <div
             className="flex h-10 w-10 flex-none items-center justify-center rounded-full"
             style={{ background: "var(--surface2)", color: statusColour(bucket) }}
@@ -61,21 +63,21 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
               : bucket === "archive" ? <Archive size={18} aria-hidden="true" />
                 : <FileText size={18} aria-hidden="true" />}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="col-span-2 row-start-2 min-w-0 flex-1">
             <h2
-              className="truncate text-lg italic leading-tight"
-              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+              className="break-words text-lg italic leading-tight"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, overflowWrap: "anywhere" }}
             >
-              {a.profileName}
+              <span>{a.profileName}</span>
               <span aria-hidden="true" style={{ color: "var(--accent)", fontStyle: "normal" }}> × </span>
-              {b.profileName}
+              <span>{b.profileName}</span>
             </h2>
             <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
               {a.role} × {b.role}
             </p>
           </div>
           <span
-            className="flex-none rounded-full px-2.5 py-1 text-xs font-medium"
+            className="col-start-2 row-start-1 flex-none rounded-full px-2.5 py-1 text-xs font-medium"
             style={{ color: statusColour(bucket), background: "var(--surface2)", border: "1px solid var(--border)" }}
           >
             {contractStatusLabel(series, profiles)}
@@ -123,7 +125,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}`}
           prefetch={false}
-          className="focus-ring inline-flex min-h-10 items-center gap-1.5 px-2 text-sm font-semibold"
+          className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold"
           style={{ color: "var(--text)" }}
         >
           Open contract
@@ -132,7 +134,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
         <Link
           href={`/contracts/${encodeURIComponent(series.id)}/history`}
           prefetch={false}
-          className="focus-ring ml-auto inline-flex min-h-10 items-center px-2 text-sm font-medium"
+          className="ks-motion-choice focus-ring ml-auto inline-flex min-h-11 items-center px-2 text-sm font-medium"
           style={{ color: "var(--text2)" }}
         >
           Verloop
@@ -143,6 +145,7 @@ function ContractCard({ series, profiles }: { series: ContractSeries; profiles: 
 }
 
 function ContractsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
   const series = useContractStore((state) => state.series);
@@ -159,7 +162,14 @@ function ContractsContent() {
       onClick: () => setInboxOpen(true),
       placement: "primary",
     },
-  ], []);
+    {
+      id: "new-contract",
+      label: "Nieuw contract",
+      icon: <Plus size={18} aria-hidden="true" />,
+      onClick: () => router.push("/compare"),
+      placement: "secondary",
+    },
+  ], [router]);
   useTopNavActions(navActions);
 
   if (!contractsReady) return <PageShell loading width="2xl" />;
@@ -184,7 +194,7 @@ function ContractsContent() {
       {personId && (
         <Link
           href="/contracts"
-          className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-sm"
+          className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm"
           style={{ color: "var(--text2)", background: "var(--surface2)" }}
         >
           <X size={12} aria-hidden="true" />
@@ -197,7 +207,7 @@ function ContractsContent() {
           <button
             type="button"
             onClick={() => setConceptsOpen((current) => !current)}
-            className="focus-ring flex min-h-12 w-full items-center gap-3 px-4 text-left"
+            className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 px-4 text-left"
           >
             <FileText size={17} aria-hidden="true" style={{ color: "var(--accent)" }} />
             <span className="text-sm font-medium">{concepts.length} {concepts.length === 1 ? "open concept" : "open concepten"}</span>
@@ -213,10 +223,14 @@ function ContractsContent() {
                     key={item.id}
                     href={`/contract?a=${encodeURIComponent(a.profileId)}&b=${encodeURIComponent(b.profileId)}`}
                     prefetch={false}
-                    className="focus-ring flex min-h-12 items-center gap-2 px-4 text-sm"
+                    className="ks-motion-choice focus-ring grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-2 text-sm sm:flex"
                     style={{ borderBottom: "1px solid var(--border)" }}
                   >
-                    <span className="min-w-0 flex-1 truncate">{a.profileName} × {b.profileName}</span>
+                    <span className="col-span-2 min-w-0 flex-1 break-words leading-5" style={{ overflowWrap: "anywhere" }}>
+                      <span>{a.profileName}</span>
+                      <span aria-hidden="true"> × </span>
+                      <span>{b.profileName}</span>
+                    </span>
                     <span className="text-xs" style={{ color: "var(--text2)" }}>
                       {item.status === "pending_signature" ? "Wacht op bevestiging" : "Concept"}
                     </span>
@@ -240,7 +254,7 @@ function ContractsContent() {
               role="tab"
               aria-selected={active}
               onClick={() => setTab(id)}
-              className="focus-ring relative min-h-11 px-2 text-sm font-medium"
+              className="ks-motion-choice focus-ring relative min-h-11 px-2 text-sm font-medium"
               style={{ color: active ? colour : "var(--text2)" }}
             >
               {label}{counts[id] > 0 ? ` ${counts[id]}` : ""}
@@ -260,7 +274,7 @@ function ContractsContent() {
               : tab === "paused"
                 ? "Tijdelijk gepauzeerde contracten blijven hier totdat beide partijen ze hervatten of iemand ze stopzet."
                 : "Stopgezette contracten en contracten met verwijderde profielen verschijnen hier."}
-            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Vergelijk profielen" } : {})}
+            {...(tab === "active" ? { ctaHref: "/compare", ctaLabel: "Nieuw contract" } : {})}
           />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">

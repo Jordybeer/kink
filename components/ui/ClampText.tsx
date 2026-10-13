@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useReducedMotionPreference } from "@/lib/motion";
 import { useMotionSafe } from "@/lib/motion";
 
 interface Props {
@@ -21,7 +22,7 @@ export default function ClampText({ text, className = "", style }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [clipped, setClipped] = useState(false);
   const t = useMotionSafe();
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useReducedMotionPreference();
 
   // New text, fresh restraint — collapse before measuring.
   useLayoutEffect(() => {
@@ -102,7 +103,7 @@ export default function ClampText({ text, className = "", style }: Props) {
               maxHeight: "min(45vh, calc(var(--visual-viewport-height, 100dvh) - var(--nav-h) - 1.5rem))",
               background: "var(--surface2)",
               border: "1px solid var(--border-accent)",
-              boxShadow: "0 10px 28px rgba(0,0,0,0.45)",
+              boxShadow: "0 10px 28px var(--deep-shadow)",
               color: "var(--text)",
             }}
           >

@@ -45,6 +45,17 @@ function readStoredValue(): string | null {
   }
 }
 
+export function setDevTestToolsEnabled(enabled: boolean): boolean {
+  if (typeof window === "undefined" || !isDevTestToolsHost(window.location.hostname)) return false;
+  try {
+    if (enabled) window.localStorage.setItem(DEV_TEST_TOOLS_STORAGE_KEY, "1");
+    else window.localStorage.removeItem(DEV_TEST_TOOLS_STORAGE_KEY);
+    return enabled;
+  } catch {
+    return false;
+  }
+}
+
 export function devTestToolsEnabled(): boolean {
   if (typeof window === "undefined") return false;
   return resolveDevTestToolsDecision({
@@ -73,13 +84,10 @@ export function syncDevTestToolsFromLocation(): boolean {
     } catch {
       return false;
     }
-
-    const url = new URL(window.location.href);
-    if (url.searchParams.has(DEV_TEST_TOOLS_QUERY_PARAM)) {
-      url.searchParams.delete(DEV_TEST_TOOLS_QUERY_PARAM);
-      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
-    }
   }
 
+  // Intentionally do not rewrite the URL. An explicit ?testtools=1 link stays
+  // visible/bookmarkable, while localStorage keeps the mode active after normal
+  // navigation to routes that no longer carry the query parameter.
   return decision.enabled;
 }

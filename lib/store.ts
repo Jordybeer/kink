@@ -6,6 +6,8 @@ import {
   type BackupRestoreResult,
 } from "@/lib/storeSecurity";
 import { installBackupRestoreSecurity } from "@/lib/storeBackupRestoreSecurity";
+import { installDiscussionInvalidation } from "@/lib/compareDiscussionSync";
+import { useContractStore } from "@/lib/contractStore";
 import {
   installProfileQuarantineSecurity,
   type ProfileQuarantineState,
@@ -43,6 +45,14 @@ function stripLegacyThemeState() {
 if (typeof window !== "undefined") {
   stripLegacyThemeState();
   coreUseStore.persist.onFinishHydration(stripLegacyThemeState);
+  // Install once per store instance, including during hot reloads.
+  const discussionStore = coreUseStore as typeof coreUseStore & { discussionCleanup?: () => void };
+  discussionStore.discussionCleanup?.();
+  try {
+    discussionStore.discussionCleanup = installDiscussionInvalidation(coreUseStore, useContractStore, window.localStorage);
+  } catch {
+    // A browser that refuses storage still allows an in-memory questionnaire.
+  }
 }
 
 // Tests and explicit resets must restore the guarded actions, not the raw core.

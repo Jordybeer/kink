@@ -6,6 +6,33 @@ Format: `## YYYY-MM-DD — <short title>` then what went wrong and the rule to f
 
 ---
 
+## 2026-09-26 — Hover speelde voor half gehydrateerd profiel
+
+**What went wrong:** De desktop-launchtest opende de Home-profielenlijst en
+verwachtte daarna volledige dekking. Onder de stilstaande muis verscheen een
+profielrij met de bedoelde `hover:opacity-90`; de test zag daardoor 0.9 in plaats
+van 1. Dezelfde fout was lokaal reproduceerbaar door de rij bewust te hoveren.
+
+**Rule:** Zet de pointer buiten de gemeten content voordat een readiness-check
+de rusttoestand meet. Behoud de strenge opacity-assertie; verlaag geen drempel om
+een hovertoestand voor voltooide hydratatie te laten doorgaan.
+
+---
+
+## 2026-09-26 — De CI-riem bereikte de gestapelde branch niet
+
+**What went wrong:** PR #466 werd op zijn echte parent #460 gericht, maar CI
+luisterde alleen naar PR's richting `dev` en `main`. De PR-beschrijving meldde
+al een lopende volledige gate terwijl GitHub geen run had gestart. Een later
+onderbroken lokale browserrun had bovendien geen eindresultaat.
+
+**Rule:** Controleer na retargeten de workflowfilters en na push het werkelijke
+run-ID voor de nieuwe head. Laat de PR-gate ook gestapelde bases testen. Meld
+een gate pas als lopend of groen wanneer GitHub dat voor die commit bevestigt;
+een onderbroken lokale run telt niet als geslaagd.
+
+---
+
 ## 2026-08-17 — Zichtbaars veranderd zonder te kijken wie het vastpinde
 
 **What went wrong:** Twee keer in één sessie dezelfde fout, allebei pas gevangen
@@ -300,3 +327,23 @@ methode:
 
 Punt 2 tweede helft was ook al fout bij `sanitizeBdsmtestUrl`: de importdeur ging
 dicht, de la met oude import bleef open tot de tegen-audit erop wees.
+
+## 2026-09-28 — Installatietest verwachtte een verouderde metanaam
+
+**What went wrong:** De nieuwe PWA-test verwachtte `apple-mobile-web-app-capable`, terwijl Next.js 16.3.4 voor `appleWebApp.capable` bewust `mobile-web-app-capable` uitvoert. De productie-HTML maakte het verschil zichtbaar.
+
+**Rule:** Controleer gegenereerde metadata in de geïnstalleerde frameworkversie en de gebouwde HTML. Test daarnaast de Apple-titel, statusbalk en manifestidentiteit; wijzig de app niet om een verouderde testaanname te bevestigen.
+
+
+## 2026-10-03 — De readerheader hield te veel vast
+
+**What went wrong:** Naam, titel, teruglink en vijf statussen werden samen sticky. Op 320px bij 200% tekst nam een lange alias vrijwel de hele viewport in. De globale terugknop kende bovendien alleen de profielroute en wees nog naar Home.
+
+**Rule:** Houd alleen de statusnavigatie sticky; laat lange identiteitstekst meescrollen. Gebruik het bestaande TopNav-context voor de lokale terugbestemming. Meet de echte detailview bij 200%, niet alleen het overzicht.
+
+
+## 2026-10-12 — Een identity anchor overleefde een mislukte profielwrite
+
+**What went wrong:** De geconsolideerde identity-import controleerde na een Zustand-write alleen de profielen in geheugen. `createQuotaSafeStorage` vangt een quota- of opslagfout bewust af. Daardoor kon de anchor al lokaal opgeslagen zijn terwijl de nieuwe profielversie niet duurzaam was geschreven, en meldde de import toch succes.
+
+**Rule:** Een import die profielen en onafhankelijke trustmetadata samen bevestigt, moet na de profielwrite de echte persisted profielen exact teruglezen. Een geheugenvergelijking bewijst geen duurzame opslag. Controleer ook vóór de write dat de persisted profielen nog overeenkomen met het geheugen; een verouderde tab mag geen nieuwere opslag of een stale rollback terugschrijven. Bij mismatch na een werkelijk gestarte write: herstel de eerdere profielstaat en verwijder uitsluitend de anchors die deze operatie zelf heeft aangemaakt en die nog exact overeenkomen. Bewijs zowel een geslaagde write als de quota-safe foutweg met de echte persist-wrapper.

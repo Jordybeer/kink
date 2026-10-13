@@ -8,6 +8,14 @@ Mobile-first. No regressions. No Playwright unless a feature genuinely needs it.
 
 ## Active queue
 
+### First-run backup recovery [IN REVIEW, 2026-09-29]
+
+Returning users can choose restore before the optional tour/PIN setup, after the existing age and consent information. Reuse validated JSON/encrypted restoration, keep onboarding incomplete on cancellation/failure, and never create a replacement profile. Next: reassess #451, audit the release delta, record physical-device sign-off, then promote the exact verified head.
+
+### Optional PWA installation [SHIPPED #467, 2026-09-29]
+
+Owner-approved restoration: stable manifest identity, existing icons, iOS standalone metadata and a quiet Settings installation entry. Browser invitations require an explicit click; manual guidance and a backup reminder cover other browsers. Existing offline caching and stored profiles stay intact. See `docs/pwa-installation.md` for scope and the physical-device release check.
+
 **Owner-set priority order (2026-07-09): 31, then resume the rest of this queue while implementing suggestion-pool items alongside. (Phases 28–30 shipped — see ledger.)**
 
 ### Launch-readiness audit 2026-08-17 [L-01 SHIPPED — full verdict in docs/launch-readiness-audit-2026-08-17.md]
@@ -240,6 +248,17 @@ In order of expected win, per the evening's re-rating against the July 11 audit:
 
 ## Shipped — historical ledger (full detail preserved in git log)
 
+### Home/Profile foundation and repair stack (PR #460 with #466, 2026-09-27)
+
+The integration brings the flat person-first profile, **Identiteit → Vragenlijst**
+editor, quieter Home, explicit local **Mijn partner**, empty-Home restore,
+person-pair **Besproken**, complete validated archive restore and accessibility /
+device fixes together. Experience stays an explicit self-assessment and Compare
+does not edit profile answers or notes. See
+[the integration record](docs/profile-foundation-integration.md) for scope,
+compatibility limits, visual evidence, test counts and rollback guidance; #460
+records the final merge gate. Discover / Deep Dive rationalisation remains open.
+
 ### Vragenlijst- en navigatiepolish (dev, 2026-08-13)
 
 | — | What landed | Commit |
@@ -387,3 +406,10 @@ All v4 items (2–5) and polish pass shipped to main in PR #192 on 2026-06-18. S
 | — | What landed | Commit |
 |---|-------------|--------|
 | — | Lokale P-256 eigendomssleutels, ondertekende profielversies, broncontrole bij import, correcte ownership-backuprestore, leesbare drie-woordenbron en append-only toestemmingssnapshots per scène | PR pending |
+
+
+### Profile read-view — OWNER APPROVED, IN REVIEW, 2026-10-03
+
+PR #472: compact public status counts with three explicitly labelled catalogue-order examples; one dedicated status browser through the existing `/profile` query shell. Public hard limits stay fully named on the overview; private disclosure, exports and catalogue/editor behaviour remain intact. Sticky navigation and both back controls pass the focused mobile regression, including five statuses, 320px/200% text and long aliases. 788 unit tests and production build pass.
+
+The owner approved this implementation on 2026-10-03 as the intended Profile direction, not a disposable mock. Continue development from this accepted implementation. PR #472 is ready for review; approval of the design does not waive technical checks. GitHub run 37117176473 on code head `8893a63` passed browser/device and production-offline rehearsals; the static lane failed at the dependency audit. Dependency repair is tracked in #473. The complete release gate and physical iPhone/standalone sign-off remain open.

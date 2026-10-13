@@ -1,6 +1,7 @@
 import type { Profile } from "@/types";
 import { CATEGORIES, getKinksByCategoryAndLevel, kinkCategoryLabel } from "@/lib/kinks";
 import { profileExportResponse } from "@/lib/privateResponses";
+import { STATUS_LABEL } from "@/lib/statusLabels";
 
 interface ProfileTextExportOptions {
   includePrivateResponses?: boolean;
@@ -15,6 +16,8 @@ export function buildProfileTextExport(
   const lines: string[] = [
     `# KinkSync — ${profile.name} (${profile.role})`,
     `Gegenereerd: ${(options.generatedAt ?? new Date()).toLocaleDateString("nl-NL")}`,
+    "Privacy: lokaal gegenereerde export.",
+    "Belangrijk: een voorkeur of overlap is geen toestemming.",
     "",
   ];
 
@@ -26,7 +29,7 @@ export function buildProfileTextExport(
       if (response.kind === "omitted") return [];
       const tags = response.tags.length ? ` [${response.tags.join(", ")}]` : "";
       const comment = response.comment ? ` — ${response.comment}` : "";
-      return [`- [${response.status?.toUpperCase()}] ${kink.name}${tags}${comment}`];
+      return [`- [${response.status ? STATUS_LABEL[response.status] : "Onbeantwoord"}] ${kink.name}${tags}${comment}`];
     });
 
     if (!rows.length) continue;
@@ -40,7 +43,7 @@ export function buildProfileTextExport(
     if (response.kind === "omitted") return [];
     const tags = response.tags.length ? ` [${response.tags.join(", ")}]` : "";
     const comment = response.comment ? ` — ${response.comment}` : "";
-    return [`- [${response.status?.toUpperCase()}] ${custom.name}${tags}${comment}`];
+    return [`- [${response.status ? STATUS_LABEL[response.status] : "Onbeantwoord"}] ${custom.name}${tags}${comment}`];
   });
 
   if (customRows.length) lines.push("## Meer", ...customRows, "");

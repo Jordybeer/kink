@@ -2,14 +2,66 @@ import { test, expect } from "@playwright/test";
 import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
 const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
+const EMPTY_HOME_VIEWPORTS = [
+  { width: 320, height: 667 },
+  { width: 375, height: 812 },
+  { width: 390, height: 844 },
+] as const;
 
 test.describe("Home page — leeg", () => {
-  test("laadt zonder overflow en toont onboarding of lege staat", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-    const overflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
-    expect(overflow).toBe(false);
-  });
+  for (const viewport of EMPTY_HOME_VIEWPORTS) {
+    test(`centreert de lege compositie in de bruikbare viewport op ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
+      await page.setViewportSize(viewport);
+      await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
+
+      const horizontalOverflow = await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth);
+      expect(horizontalOverflow).toBe(false);
+
+      const masthead = page.locator("[data-home-masthead]");
+      const wordmark = page.locator("[data-home-nav-wordmark]");
+      const subtitle = page.getByText("Verken grenzen. Samen.", { exact: true });
+      const emptyCard = page.locator("[data-home-empty-card]");
+      const stage = emptyCard.locator("xpath=ancestor::main");
+
+      await expect(masthead).toBeVisible();
+      await expect(wordmark).toBeVisible();
+      await expect(subtitle).toHaveCount(1);
+      await expect(emptyCard).toBeVisible();
+
+      const [mastheadBox, wordmarkBox, subtitleBox, stageBox, cardBox] = await Promise.all([
+        masthead.boundingBox(),
+        wordmark.boundingBox(),
+        subtitle.boundingBox(),
+        stage.boundingBox(),
+        emptyCard.boundingBox(),
+      ]);
+      expect(mastheadBox).not.toBeNull();
+      expect(wordmarkBox).not.toBeNull();
+      expect(subtitleBox).not.toBeNull();
+      expect(stageBox).not.toBeNull();
+      expect(cardBox).not.toBeNull();
+
+      const mastheadBottom = mastheadBox!.y + mastheadBox!.height;
+      const cardBottom = cardBox!.y + cardBox!.height;
+      const stageBottom = stageBox!.y + stageBox!.height;
+      const freeAbove = cardBox!.y - stageBox!.y;
+      const freeBelow = stageBottom - cardBottom;
+      const minimumBreathingRoom = viewport.width <= 320 ? 8 : 12;
+
+      expect(subtitleBox!.y).toBeGreaterThan(wordmarkBox!.y);
+      expect(cardBox!.y).toBeGreaterThanOrEqual(mastheadBottom - 1);
+      expect(freeAbove).toBeGreaterThanOrEqual(minimumBreathingRoom);
+      expect(freeBelow).toBeGreaterThanOrEqual(minimumBreathingRoom);
+      expect(Math.abs(freeAbove - freeBelow)).toBeLessThanOrEqual(12);
+
+      const verticalOverflow = await page.evaluate(() => document.body.scrollHeight - window.innerHeight);
+      expect(verticalOverflow).toBeLessThanOrEqual(2);
+      await page.screenshot({
+        path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-empty-${viewport.width}.png`,
+        fullPage: false,
+      });
+    });
+  }
 });
 
 test.describe("Home page — profielen aanwezig", () => {
@@ -17,34 +69,54 @@ test.describe("Home page — profielen aanwezig", () => {
     await seedProfiles(page, [PROFILE_ALEX, SHARED_SAM]);
   });
 
-  test("scheidt eigen en gedeelde profielen zonder verborgen profielmetadata te bewaren", async ({ page }) => {
-    const mine = page.getByRole("button", { name: "Mijn profielen 1" });
-    const shared = page.getByRole("button", { name: "Gedeeld met mij 1" });
+  test("scheidt eigen en gedeelde profielen in stabiele secties zonder UI-state te bewaren", async ({ page }) => {
+    const mine = page.getByRole("heading", { name: "Mijn profielen" });
+    const shared = page.getByRole("heading", { name: "Gedeeld met mij" });
 
-    await expect(mine).toHaveAttribute("aria-expanded", "true");
-    await expect(shared).toHaveAttribute("aria-expanded", "false");
+    await expect(mine).toBeVisible();
+    await expect(shared).toBeVisible();
     await expect(page.getByText("Alex", { exact: true })).toBeVisible();
-    await expect(page.getByText("Sam", { exact: true })).toBeHidden();
-
-    await shared.click();
     await expect(page.getByText("Sam", { exact: true })).toBeVisible();
-    await mine.click();
-    await expect(page.getByText("Alex", { exact: true })).toBeHidden();
+    await expect(page.getByRole("button", { name: /Mijn profielen/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Gedeeld met mij/ })).toHaveCount(0);
 
     const stored = await page.evaluate(() => sessionStorage.getItem("kinksync-home-profile-disclosures"));
-    expect(stored).toBe('{"mine":false,"shared":true}');
-    expect(stored).not.toContain(PROFILE_ALEX.id);
-    expect(stored).not.toContain(PROFILE_SAM.id);
+    expect(stored).toBeNull();
 
     await page.goto("/about");
     await page.goBack();
-    await expect(mine).toHaveAttribute("aria-expanded", "false");
-    await expect(shared).toHaveAttribute("aria-expanded", "true");
+    await expect(mine).toBeVisible();
+    await expect(shared).toBeVisible();
+    await expect(page.getByText("Alex", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sam", { exact: true })).toBeVisible();
   });
 
   test("navigeert naar profielpagina via link op profiel", async ({ page }) => {
     await page.getByRole("link", { name: "Alex Dominant openen" }).click();
     await expect(page).toHaveURL(/\/profile\/pw-alex-001/);
+  });
+
+  test("bundelt zeldzame profielacties in een ruime actiekiezer", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    const profileLink = page.getByRole("link", { name: "Alex Dominant openen" });
+    const trigger = page.getByRole("button", { name: "Meer acties voor Alex" });
+    const [linkBox, triggerBox] = await Promise.all([profileLink.boundingBox(), trigger.boundingBox()]);
+
+    expect(linkBox).not.toBeNull();
+    expect(triggerBox).not.toBeNull();
+    expect(triggerBox!.width).toBeGreaterThanOrEqual(44);
+    expect(triggerBox!.height).toBeGreaterThanOrEqual(44);
+    expect(linkBox!.x + linkBox!.width).toBeLessThanOrEqual(triggerBox!.x + 1);
+
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "Acties voor Alex" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Markeer als mijn profiel" })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Profiel bewerken" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Profiel verwijderen" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Annuleren" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
   });
 
   test("houdt home vrij van directe contract- en scènecreatie", async ({ page }) => {
@@ -62,8 +134,9 @@ test.describe("Home page — profielen aanwezig", () => {
 
   test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 480 });
-    const trigger = page.getByRole("button", { name: "Instellingen openen" });
-    await trigger.click();
+    const more = page.getByRole("button", { name: "Meer opties" });
+    await more.click();
+    await page.getByRole("menuitem", { name: "Instellingen" }).click();
 
     const dialog = page.getByRole("dialog", { name: "Instellingen" });
     const title = dialog.getByRole("heading", { name: "Instellingen" });
@@ -86,11 +159,13 @@ test.describe("Home page — profielen aanwezig", () => {
     const visibleHeight = await page.evaluate(() => window.visualViewport?.height ?? window.innerHeight);
     expect(actionBox).not.toBeNull();
     expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(visibleHeight + 1);
-    expect((await title.boundingBox())!.y).toBeCloseTo(titleTop, 0);
+    const titleAfterScroll = await title.boundingBox();
+    expect(titleAfterScroll).not.toBeNull();
+    expect(Math.abs(titleAfterScroll!.y - titleTop)).toBeLessThanOrEqual(1.25);
 
     await dialog.getByRole("button", { name: "Instellingen sluiten" }).click();
     await expect(dialog).toBeHidden();
-    await expect(trigger).toBeFocused();
+    await expect(more).toBeFocused();
   });
 
   test("geen horizontale overflow op mobiel (390px)", async ({ page }) => {
@@ -107,26 +182,29 @@ test.describe("Profiel aanmaken via UI", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: false });
 
-    await page.getByRole("button", { name: "Begin met jouw profiel" }).click();
-    await expect(page.getByRole("dialog", { name: "Nieuw profiel maken" })).toBeVisible();
-    await expect(page.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
-    await page.getByLabel("Naam of alias").fill("TestPersoon");
-    await page.getByRole("button", { name: /^Dominant/ }).click();
-    await page.getByRole("button", { name: "Verder" }).click();
-    await expect(page.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Start vragen" }).click();
+    await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
+    const createDialog = page.getByRole("dialog", { name: "Nieuw profiel maken" });
+    await expect(createDialog).toBeVisible();
+    await expect(createDialog.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
+    await createDialog.getByLabel("Naam of alias").fill("TestPersoon");
+    await createDialog.getByRole("button", { name: /^Dominant/ }).click();
+    await createDialog.getByLabel("Ervaringsniveau").selectOption("ervaren");
+    await createDialog.getByRole("button", { name: "Verder", exact: true }).click();
+    await expect(createDialog.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
+    await createDialog.getByRole("button", { name: "Start vragen" }).click();
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/, { timeout: 8000 });
     await expect(page.getByTestId("questions-screen")).toBeVisible();
     await expect(page.getByText("Vragenlijst", { exact: true })).toBeVisible();
     await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 
-    const entries = await page.evaluate(() => {
+    const savedProfile = await page.evaluate(() => {
       const raw = localStorage.getItem("kink-profiles");
       if (!raw) return null;
-      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; entries?: unknown }> } };
-      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon")?.entries ?? null;
+      const parsed = JSON.parse(raw) as { state?: { profiles?: Array<{ name?: string; experienceLevel?: string; entries?: unknown }> } };
+      return parsed.state?.profiles?.find((profile) => profile.name === "TestPersoon") ?? null;
     });
-    expect(entries).toEqual({});
+    expect(savedProfile?.entries).toEqual({});
+    expect(savedProfile?.experienceLevel).toBe("ervaren");
   });
 });

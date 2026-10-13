@@ -4,7 +4,13 @@ import path from "path";
 export default defineConfig({
   test: {
     environment: "node",
-    exclude: ["e2e/**", "e2e-offline/**", "node_modules/**", ".claude/worktrees/**"],
+    exclude: [
+      "e2e/**",
+      "e2e-offline/**",
+      "e2e-print/**",
+      "node_modules/**",
+      ".claude/worktrees/**",
+    ],
   },
   resolve: {
     alias: {

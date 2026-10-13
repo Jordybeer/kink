@@ -73,10 +73,11 @@ function contractContent(a: Profile, b: Profile): ContractVersionContent {
   };
 }
 
-async function signedSeries(): Promise<ContractSeries> {
+async function signedSeries(withSources = false): Promise<ContractSeries> {
   const a = profile("a", "A");
   const b = profile("b", "B");
   const content = contractContent(a, b);
+  if (withSources) content.discuss.push({name:"Custom",statusA:"yes",statusB:null,sourceKind:"custom",sourceAId:"custom-a",commentA:"Only this topic"});
   const keyA = await generateProfileOwnerKey(a.id);
   const keyB = await generateProfileOwnerKey(b.id);
   const signatures = [
@@ -195,4 +196,15 @@ describe("contract-series backup restore", () => {
     expect(restore([newer])).toEqual({ added: 0, updated: 1, unchanged: 0 });
     expect(useContractStore.getState().series[0].status).toBe("paused");
   });
+});
+
+it("restores signed source references byte-for-byte and rejects source tampering", async () => {
+  const original = await signedSeries(true);
+  const prepared = await prepareBackupRestore({version:3,source:"backup",profiles:[],contracts:[],profileOwnerKeys:[],contractSeries:[original]});
+  expect(prepared.contractSeries).toHaveLength(1);
+  expect(prepared.contractSeries[0].versions[0].content).toEqual(original.versions[0].content);
+  const tampered = structuredClone(original);
+  tampered.versions[0].content!.discuss[0].sourceAId="different";
+  const rejected = await prepareBackupRestore({version:3,source:"backup",profiles:[],contracts:[],profileOwnerKeys:[],contractSeries:[tampered]});
+  expect(rejected.contractSeries).toEqual([]);
 });

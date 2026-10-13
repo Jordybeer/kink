@@ -1,8 +1,8 @@
 name: KinkSync CI
 
 on:
+  # Stacked repair PRs need the same gate before joining their parent branch.
   pull_request:
-    branches: [dev, main]
   push:
     branches: [dev]
 
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   test-and-build:
-    name: Lint, test and build
+    name: Static verification
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -56,19 +56,37 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
-      - run: npm run test:e2e
+      - name: Run browser E2E with compact diagnostics
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee e2e-console.log
         env:
           CI: "1"
       - run: npm run test:e2e:launch
         env:
           CI: "1"
-      - name: Keep device smoke screenshots
+      - run: npm run test:e2e:print
+        env:
+          CI: "1"
+      - name: Keep visual rehearsal screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: device-smoke-screenshots
-          path: test-results/device-screenshots
+          name: visual-rehearsal-screenshots
+          path: |
+            screenshots/theme-rehearsal
+            test-results/device-screenshots
+            test-results/print-screenshots
           if-no-files-found: ignore
+          retention-days: 14
+      - name: Keep compact browser failure log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-failure-summary
+          path: e2e-console.log
+          if-no-files-found: warn
           retention-days: 14
       - name: Keep Playwright failure diagnostics
         if: failure()
@@ -81,10 +99,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  # Offline/PWA behavior needs a real production build. Keep it as a separate
+  # Offline web resilience needs a real production build. Keep it as a separate
   # gate, but serialize it with the regular browser rehearsal for this candidate.
   pwa-rehearsal:
-    name: Production PWA and offline rehearsal
+    name: Production offline web rehearsal
     runs-on: ubuntu-latest
     timeout-minutes: 40
     concurrency:
@@ -113,3 +131,26 @@ jobs:
             test-results
           if-no-files-found: warn
           retention-days: 14
+
+  # Branch protection already requires the historical "Lint, test and build"
+  # context. Keep that context as the final candidate gate so a green static
+  # suite can no longer mask a red browser, launch, print, or offline rehearsal.
+  release-gate:
+    name: Lint, test and build
+    if: ${{ always() }}
+    needs: [test-and-build, scene-rehearsal, pwa-rehearsal]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every release-candidate lane
+        env:
+          STATIC_RESULT: ${{ needs.test-and-build.result }}
+          BROWSER_RESULT: ${{ needs.scene-rehearsal.result }}
+          OFFLINE_RESULT: ${{ needs.pwa-rehearsal.result }}
+        run: |
+          echo "Static verification: $STATIC_RESULT"
+          echo "Browser/device/launch/print: $BROWSER_RESULT"
+          echo "Offline web: $OFFLINE_RESULT"
+          test "$STATIC_RESULT" = "success"
+          test "$BROWSER_RESULT" = "success"
+          test "$OFFLINE_RESULT" = "success"

@@ -1,0 +1,71 @@
+.root {
+  min-height: 0;
+}
+
+.root > :global(div) {
+  top: var(--visual-viewport-offset-top, 0px) !important;
+  height: var(--visual-viewport-height, 100dvh) !important;
+  min-height: 0;
+  overscroll-behavior: none;
+  text-wrap: pretty;
+  background:
+    radial-gradient(
+      ellipse 58% 28rem at 50% -9rem,
+      color-mix(in srgb, var(--identity-a) 8%, transparent),
+      transparent 72%
+    ),
+    var(--bg) !important;
+}
+
+.root > :global(div) button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.root > :global(div) ::selection {
+  background: color-mix(in srgb, var(--accent) 28%, var(--surface2));
+  color: var(--text);
+}
+
+/* On a phone, the textual step count already carries orientation. Removing the
+   duplicate bar and small eyebrow labels gives the actual onboarding thought
+   more room without moving the fixed action area or changing the flow. */
+@media (max-width: 639px) {
+  .root > [role="dialog"] > div:first-child:has(> :global(.max-w-sm)) {
+    padding-top: max(0.875rem, env(safe-area-inset-top)) !important;
+  }
+
+  .root > [role="dialog"] > div:first-child:has(> :global(.max-w-sm)) > :global(.max-w-sm):nth-child(2) {
+    display: none;
+  }
+
+  .root > [role="dialog"] > div:nth-child(2):has(> :global(.max-w-sm)) {
+    padding-top: clamp(0.9rem, 2.2dvh, 1.25rem) !important;
+    padding-bottom: clamp(1rem, 2.5dvh, 1.4rem) !important;
+  }
+
+  .root > [role="dialog"] > div:nth-child(2) :global(p.uppercase) {
+    display: none;
+  }
+
+  .root > [role="dialog"] > div:nth-child(2) :global(h2.serif-safe) {
+    margin-top: 0 !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .root > :global(div) :global(.max-w-sm) {
+    max-width: 27rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .root > :global(div) :global(.max-w-sm) {
+    max-width: 29rem;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .root > :global(div) {
+    background: var(--bg) !important;
+  }
+}

@@ -1,5 +1,5 @@
 import type { jsPDF as JsPdfType } from "jspdf";
-import type { KinkStatus } from "@/types";
+import type { ContractKinkDetail } from "@/lib/contractLifecycle";
 import { STATUS_LABEL as STATUS_NL } from "@/lib/statusLabels";
 import { hexToRgb, PDF_PAPER_PALETTE, PDF_PARTY_ON_PAPER, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
 
@@ -19,12 +19,7 @@ export const SIGNAL_LEVELS: { key: SignalKey; color: string; meaning: string }[]
 ];
 export const DEFAULT_SIGNALS: Signals = { green: "Meer", yellow: "Geel", red: "Rood", black: "Safeword" };
 
-export type KinkDetailItem = {
-  name: string;
-  statusA: KinkStatus | null; statusB: KinkStatus | null;
-  commentA?: string; commentB?: string;
-  desireA?: number | null; desireB?: number | null;
-};
+export type KinkDetailItem = ContractKinkDetail;
 export type ContractItem = string | { text: string; tag: string } | KinkDetailItem;
 
 export function isKinkDetail(item: ContractItem): item is KinkDetailItem {

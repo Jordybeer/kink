@@ -30,7 +30,8 @@ type ActionOwner = symbol;
 interface TopNavContextValue {
   actions: TopNavAction[];
   title?: string;
-  setActions: (owner: ActionOwner, actions: TopNavAction[], title?: string) => void;
+  backHref?: string;
+  setActions: (owner: ActionOwner, actions: TopNavAction[], title?: string, backHref?: string) => void;
   clearActions: (owner: ActionOwner) => void;
 }
 
@@ -41,9 +42,10 @@ export function TopNavProvider({ children }: { children: ReactNode }) {
     owner: ActionOwner;
     actions: TopNavAction[];
     title?: string;
+    backHref?: string;
   } | null>(null);
-  const setActions = useCallback((owner: ActionOwner, actions: TopNavAction[], title?: string) => {
-    setRegistration({ owner, actions, title });
+  const setActions = useCallback((owner: ActionOwner, actions: TopNavAction[], title?: string, backHref?: string) => {
+    setRegistration({ owner, actions, title, backHref });
   }, []);
   const clearActions = useCallback((owner: ActionOwner) => {
     setRegistration((current) => current?.owner === owner ? null : current);
@@ -51,7 +53,8 @@ export function TopNavProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       actions: registration?.actions ?? [],
-      title: registration?.actions.length ? registration.title : undefined,
+      title: registration?.title,
+      backHref: registration?.backHref,
       setActions,
       clearActions,
     }),
@@ -68,16 +71,16 @@ export function useTopNav() {
 }
 
 /**
- * Register screen-specific TopNav actions and, when useful, a contextual title.
+ * Register screen-specific TopNav actions, an optional title and a local back target.
  * Keep the actions array memoized so callbacks do not cause needless command-bar updates.
  */
-export function useTopNavActions(actions: TopNavAction[], title?: string) {
+export function useTopNavActions(actions: TopNavAction[], title?: string, backHref?: string) {
   const { setActions, clearActions } = useTopNav();
   const ownerRef = useRef<ActionOwner>(Symbol("top-nav-actions"));
 
   useLayoutEffect(() => {
     const owner = ownerRef.current;
-    setActions(owner, actions, title);
+    setActions(owner, actions, title, backHref);
     return () => clearActions(owner);
-  }, [actions, clearActions, setActions, title]);
+  }, [actions, clearActions, setActions, title, backHref]);
 }

@@ -16,6 +16,15 @@ describe("route chrome semantics", () => {
     expect(routeChromeSemantics("/profile").bottomNavSection).toBe("profile");
   });
 
+  it("houdt intimiteit als rustige secundaire focusroute", () => {
+    expect(routeChromeSemantics("/intimacy")).toMatchObject({
+      title: "Intimiteit",
+      back: "/",
+      hideBottomNav: true,
+      bottomNavSection: null,
+    });
+  });
+
   it("behandelt de vragenlijst als focusroute met offline-veilige terugweg", () => {
     const route = routeChromeSemantics("/profile/alex%20one/questions");
     expect(route.hideBottomNav).toBe(true);

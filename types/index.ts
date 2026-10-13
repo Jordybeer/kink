@@ -34,11 +34,14 @@ export type KinkCategoryId =
   | "rituals"
   | "discipline"
   | "roleplay"
+  | "interaction"
   | "sensation"
+  | "sexual_acts"
   | "exhibition"
   | "media"
   | "group_partner"
   | "body_focus"
+  /** Legacy catalog key retained so the pre-migration snapshot remains type-safe. */
   | "materials_scent"
   | "pet_play"
   | "fluids"
@@ -249,6 +252,25 @@ export interface ContractSnapshot {
 export interface BdsmtestScore {
   role: string;
   pct: number;
+}
+
+export type ProfileIdentityAnchorMethod =
+  | "source-device-fingerprint"
+  | "independent-channel-fingerprint";
+
+/**
+ * Local-only binding between a known human contact and one exact profile signing
+ * identity. It is deliberately separate from Profile so it cannot travel in a
+ * normal profile share payload.
+ */
+export interface ProfileIdentityAnchor {
+  schema: 1;
+  profileId: string;
+  verificationCode: string;
+  keyId: string;
+  fingerprint: string;
+  anchoredAt: number;
+  method: ProfileIdentityAnchorMethod;
 }
 
 export interface Profile {

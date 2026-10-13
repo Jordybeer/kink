@@ -7,16 +7,30 @@ Breaking something that already worked is the single worst outcome — worse tha
 - Mobile-first + the installed PWA are the primary surfaces — a desktop/tablet improvement that degrades either of those is a net loss, not a win.
 - If a change *might* regress and you can't prove it won't, stop and flag it rather than shipping on hope.
 
+## Repository context (mandatory)
+Do not start a new conversation by inventing a fresh KinkSync product or visual direction. Durable decisions live in the repo.
+
+Before user-visible product work, read `PRODUCT.md`.
+Before **any** UI/UX work, read in this order:
+1. `PRODUCT.md` — durable product truth and non-goals.
+2. `UI-principles.md` — binding UI doctrine and conflict priority.
+3. `DESIGN.md` — current visual world, locked surface decisions and anti-patterns.
+4. `corrections.md` — mistakes that must not recur.
+5. `memory.md` — current cross-session operational decisions and explicit ongoing authorizations.
+
+When the user says to remember a durable project/design decision, put it in the correct repository source of truth instead of relying on conversational memory alone.
+
 ## Git (mandatory)
-- `dev` is the playroom — all work here. `main` only via PR.
+- `dev` is the integration branch. `main` only via PR.
 - Never add `Co-Authored-By` trailers. No AI credits, no Happy attribution — commits are yours alone.
 - Always `git checkout dev && git pull` before starting.
 - Pre-commit hooks are non-negotiable. Never skip with `--no-verify` unless explicitly discussing the exception with the user first.
 
 ## Branching
-- Small features / fixes: commit directly to `dev`.
-- Large features that might conflict: `feature/name` off `dev`, merge back when complete.
+- For the active serial UI/UX improvement programme, **every visual foundation change gets its own branch and PR from the latest merged `dev`**. Do not start the next branch until the previous branch passed its quality gate and merged.
+- Outside that programme, tiny isolated non-UI fixes may still land directly on `dev` when safe; larger or overlapping work uses a branch and PR.
 - Hotfixes to production: branch off `main`, PR to `main`, then merge back to `dev`.
+- Read `memory.md` for the current approved branch sequence. Do not let a weak branch become the base of the next one.
 
 ## Worktree & branch naming (mandatory)
 Use the `worktree` skill for spawning worktrees and shipping (test → push → PR to dev).
@@ -30,7 +44,6 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 - Before pushing: rebase onto latest `origin/dev`, re-run `npm test` + `npm run build` to catch silent regressions from the other branch landing first.
 - Call out surface-area overlap explicitly in PR descriptions.
 
-
 ## Commits
 - One commit = one logical unit (complete feature, fix, or polish pass).
 - Group related changes (component + tests + imports) into a single commit.
@@ -41,16 +54,27 @@ Two Claude accounts — **claude1** and **claude2** — work this repo simultane
 The `frontend-design` skill is available for UI/visual decisions.
 **Never auto-invoke it** — only call `/frontend-design` when the user explicitly asks. It freezes when auto-triggered.
 
-## KinkSync UI principles (mandatory — every UI/UX decision)
-`UI-principles.md` is the repository's source of truth for interface design.
+### Impeccable design workflow
+Impeccable is an approved supplementary design methodology for KinkSync.
 
-- **Read `UI-principles.md` at session start before touching any UI, UX, component layout, visual hierarchy, interaction, motion, responsive behaviour, or user-facing interface copy.** This applies even to tiny polish fixes.
+- If a native Impeccable skill/CLI is available, use it after loading KinkSync's repo context.
+- If it is not available, apply the same workflow manually. Native skill availability is not a blocker.
+- Default meaningful UI flow: `shape → implement → critique → audit → distill when needed → bounded polish`.
+- Do not run open-ended polish loops. One batched inspection, one batched fix, then one confirmation pass is the ceiling unless a real failure remains.
+- Impeccable never outranks `PRODUCT.md`, `UI-principles.md`, `DESIGN.md`, consent/privacy semantics or explicit user direction.
+- See `DESIGN.md` for the current container discipline and Home/Profile directions.
+
+## KinkSync UI principles (mandatory — every UI/UX decision)
+`UI-principles.md` is the repository's highest interface authority. `PRODUCT.md` and `DESIGN.md` provide the durable product and visual context around it.
+
+- **Read `PRODUCT.md`, `UI-principles.md`, and `DESIGN.md` before touching any UI, UX, component layout, visual hierarchy, interaction, motion, responsive behaviour, or user-facing interface copy.** This applies even to tiny polish fixes.
 - Every new UI decision, component, feature, redesign, visual audit, and frontend review **must** be evaluated against its conflict priority and its `UI decision gate` before implementation and again before calling the work done.
 - The priority order in `UI-principles.md` is binding inside UI decisions: consent/safety/privacy → readability → stable interaction geometry → hierarchy/calm → expression/decoration → density/speed.
 - Essential consent, safety, privacy, or decision-making context must never be hidden merely to make a layout cleaner, smaller, faster, or more visually stable.
-- `frontend-design`, personal taste, screenshots, trends, existing component conventions, and visual polish may refine an interface but **may not override `UI-principles.md`**.
+- Impeccable, `frontend-design`, personal taste, screenshots, trends, existing component conventions, and visual polish may refine an interface but **may not override `UI-principles.md`**.
 - If a requested UI direction conflicts with a higher principle and the conflict cannot be resolved cleanly, stop and surface the trade-off instead of silently choosing the prettier or more compact option.
 - Preserve KinkSync's character: private, warm, human, expressive in colour, restrained in structure, mobile-native, reflective rather than rushed.
+- Do not solve hierarchy by adding cards, pills or nested bordered surfaces. Whitespace, typography, alignment and dividers come first; see `DESIGN.md`.
 
 ## Tone (mandatory, entire repo)
 Playful, kinky, BDSM-themed throughout — commits, docs, comments, PRs.
@@ -63,13 +87,15 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - Don't test React rendering. Add one test per new feature.
 - `npm run build` must complete without TypeScript errors or lint violations.
 - Scale coverage to task size: tiny fix → run affected test file only. Feature → full `npm test`. Structural change → `npm test` + `npm run build`.
-- **Playwright/E2E execution is opt-in only. Never run `test:e2e`, `test:e2e:launch`, `test:e2e:offline`, or any equivalent Playwright command unless the user explicitly asks for or approves that E2E run for the current work.** Do not treat a prior approval from another task as permission.
-- **Before any merge, explicitly ask the user whether the relevant Playwright/E2E gate should be run.** A PR is not merge-ready until that question has been asked. If the user authorizes E2E, do not merge until the requested relevant suites have reached a terminal result and any failure is understood. If the user explicitly chooses to merge without E2E, record that as an explicit override rather than silently skipping the gate.
+- Playwright/E2E is normally opt-in per task. **However, an explicit ongoing authorization recorded in `memory.md` is valid for the named programme and must not be re-asked on every branch.** The current serial UI/UX programme has such authorization; run its relevant browser/device/offline gate before merge as described there.
+- For work outside an explicitly authorized programme, ask the user before running `test:e2e`, `test:e2e:launch`, `test:e2e:offline`, or equivalent Playwright suites.
+- If E2E is authorized, do not merge until requested relevant suites have reached a terminal result and any failure is understood. If the user explicitly chooses to merge without E2E, record that as an explicit override rather than silently skipping the gate.
 - Before changing user-visible behaviour, selectors, copy, `aria-*`, test IDs, routes, or interaction structure, search **all relevant existing tests** in both `__tests__/` and every E2E suite. Never assume the newest test is the only one pinning the behaviour.
 - When existing tests cover the changed behaviour, update stale expectations/selectors deliberately so they still test the intended invariant rather than the old presentation. Do not delete or weaken a meaningful regression assertion just to make a redesign pass.
 - When no relevant test exists for a changed or newly introduced behaviour, add the smallest appropriate regression test at the correct layer. Pure logic belongs in Vitest; browser interaction/layout/navigation belongs in Playwright. A newly added Playwright test may be committed without executing it until the user authorizes the E2E gate.
 - For any visible UI change, grep/search the complete test surface for both the old text/structure and the surrounding interaction contract. Never truncate that search with `head` or an equivalent partial-result shortcut.
 - Playwright tests are mobile-first (375px viewport), but responsive behaviour must also be covered when tablet or desktop genuinely differs. Add breakpoint-specific coverage only for a real behavioural/layout distinction, not merely because a larger viewport exists.
+- Green CI is necessary, not sufficient for a visual branch. Inspect available rehearsal screenshots and perform the `DESIGN.md` branch quality gate before merge.
 
 ## Stack
 - Next.js 16 App Router · TypeScript · Tailwind CSS v4 · Zustand persist
@@ -90,8 +116,12 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - `e2e/` — Playwright tests
 - `e2e-offline/` — Playwright offline tests
 - `docs/` — internal documentation
-- `UI-principles.md` — mandatory KinkSync interface doctrine; read before every UI/UX change
+- `PRODUCT.md` — durable product truth, trust model and non-goals
+- `UI-principles.md` — mandatory KinkSync interface doctrine; highest UI authority
+- `DESIGN.md` — current visual world, locked surface directions and Impeccable workflow
+- `AGENTS.md` — cross-agent repo contract; keep custom KinkSync rules outside the generated Next.js block
 - `corrections.md` — mistake log (read at session start)
+- `memory.md` — cross-session operational/user-approved decisions
 - `planned-changes.md` — the single backlog: active phases + suggestion pool + shipped ledger (read at session start, update when work lands; absorbed `future.md` on 2026-07-08)
 - `ideas.md` — raw ideas, read only
 
@@ -99,7 +129,7 @@ Never corporate-neutral. If it could appear in a Jira ticket at a bank, rewrite 
 - No backend, no auth — all state in localStorage via Zustand persist
 - `_hasHydrated` must gate every page that reads store state
 - Never add a fetch() to an external API without explicit discussion
-- Never install packages without asking first
+- Never add runtime packages without asking first. Approved development tooling may be used when its scope is already explicitly authorized and it does not become a product dependency.
 
 ## Component layer rules
 - `components/ui/` — interaction primitives only (motion, touch, layout). Must never import from `lib/store`, `lib/kinks`, or any domain type beyond what's passed via props. No kink knowledge lives here.

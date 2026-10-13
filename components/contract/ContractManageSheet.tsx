@@ -280,7 +280,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                     key={item}
                     type="button"
                     onClick={() => choose(item)}
-                    className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium"
+                    className="ks-motion-choice focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium"
                     style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: item === "stop" ? "var(--hard-no)" : "var(--text)" }}
                   >
                     {item === "pause" ? <Pause size={18} aria-hidden="true" />
@@ -293,7 +293,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                   <button
                     type="button"
                     onClick={showPendingRequest}
-                    className="focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-medium"
+                    className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 text-left text-sm font-medium"
                     style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
                   >
                     Openstaande QR opnieuw tonen
@@ -304,7 +304,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                     type="button"
                     disabled={busy}
                     onClick={() => void permanentlyDeleteSeries()}
-                    className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium disabled:opacity-50"
+                    className="ks-motion-choice focus-ring flex min-h-12 items-center gap-3 rounded-xl px-4 text-left text-sm font-medium disabled:opacity-50"
                     style={{ color: "var(--hard-no)", border: "1px solid var(--border)" }}
                   >
                     <Trash size={18} aria-hidden="true" />
@@ -331,7 +331,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => setView("menu")}
-                className="focus-ring -ml-2 flex min-h-10 items-center gap-1 px-2 text-xs"
+                className="ks-motion-choice focus-ring -ml-2 flex min-h-11 items-center gap-1 px-2 text-xs"
                 style={{ color: "var(--text2)" }}
               >
                 <ArrowLeft size={14} aria-hidden="true" />
@@ -378,11 +378,11 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
                 type="button"
                 disabled={busy}
                 onClick={() => void startRequest()}
-                className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold disabled:opacity-50"
+                className="ks-motion-choice focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold disabled:opacity-50"
                 // De stopvariant houdt donkere inkt: wit op --hard-no haalt maar
                 // 3,76:1, de plumzwarte inkt 5,15:1.
                 style={action === "stop"
-                  ? { background: "var(--hard-no)", color: "var(--on-accent)" }
+                  ? { background: "var(--danger-fill)", color: "var(--on-danger-fill)" }
                   : { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 {busy ? "Bevestigen…" : actionLabel(action)}
@@ -409,7 +409,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
+                className="ks-motion-choice focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Gereed
@@ -426,7 +426,7 @@ export default function ContractManageSheet({ open, series, onClose }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold"
+                className="ks-motion-choice focus-ring mt-5 min-h-11 w-full rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 Gereed

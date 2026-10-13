@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
+import { CaretDown } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
+import { useMotionSafe } from "@/lib/motion";
 import KinkListRow from "./KinkListRow";
 
 interface Props {
@@ -13,10 +15,8 @@ interface Props {
   openByDefault?: boolean;
 }
 
-const MAX_PIPS = 12;
-
 function countFilled(kinks: Kink[], entries: Record<string, KinkEntry>) {
-  return kinks.filter((k) => entries[k.id]?.status != null).length;
+  return kinks.filter((kink) => entries[kink.id]?.status != null).length;
 }
 
 export default function CategorySection({
@@ -26,94 +26,79 @@ export default function CategorySection({
   onEdit,
   openByDefault = false,
 }: Props) {
+  const motionSafe = useMotionSafe();
   const filled = countFilled(kinks, entries);
   const [open, setOpen] = useState(() => openByDefault);
-  const [hasOpened, setHasOpened] = useState(() => openByDefault);
-  const pipCount = Math.min(kinks.length, MAX_PIPS);
-  const filledPips = Math.round((filled / kinks.length) * pipCount);
-  const overflow = kinks.length > MAX_PIPS ? `+${kinks.length - MAX_PIPS}` : null;
   const label = kinkCategoryLabel(category);
   const headingId = `category-${category}`;
 
   useEffect(() => {
     setOpen(openByDefault);
-    if (openByDefault) setHasOpened(true);
   }, [openByDefault]);
 
   function toggleOpen() {
-    setOpen((value) => {
-      const next = !value;
-      if (next) setHasOpened(true);
-      return next;
-    });
+    setOpen((value) => !value);
   }
 
   return (
-    <section className="mb-3" aria-labelledby={headingId}>
-      <div
-        className="sticky z-[5] flex items-center rounded-2xl transition-colors"
+    <section aria-labelledby={headingId}>
+      <button
+        type="button"
+        data-testid="profile-category-header"
+        onClick={toggleOpen}
+        aria-expanded={open}
+        aria-controls={`${headingId}-content`}
+        className="ks-motion-choice focus-ring sticky z-[5] flex min-h-12 w-full items-center gap-3 border-b py-2.5 text-left"
         style={{
-          top: "calc(var(--nav-h) + var(--profile-subnav-h))",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderLeft: open ? "4px solid var(--accent)" : "4px solid transparent",
+          top: "var(--nav-h)",
+          background: open
+            ? "color-mix(in srgb, var(--accent) 5%, var(--bg))"
+            : "color-mix(in srgb, var(--bg) 96%, var(--surface))",
+          borderColor: "color-mix(in srgb, var(--border) 76%, transparent)",
         }}
       >
-        <button
-          type="button"
-          onClick={toggleOpen}
-          aria-expanded={open}
-          aria-controls={`${headingId}-content`}
-          className="focus-ring flex min-h-12 flex-1 items-center gap-2 px-3 py-2.5 text-left min-w-0"
-        >
-          <span className="text-[var(--accent)] flex-none">
-            {open ? <CaretDown aria-hidden="true" size={16} /> : <CaretRight aria-hidden="true" size={16} />}
-          </span>
-          <h2
-            id={headingId}
-            className="text-base flex-1 text-left truncate"
-            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
-          >
+        <span className="min-w-0 flex-1">
+          <h2 id={headingId} className="truncate text-base font-semibold leading-6">
             {label}
           </h2>
-          <div className="flex items-center gap-1.5 flex-none" aria-label={`${filled} van ${kinks.length} beoordeeld`}>
-            <div className="flex gap-0.5 items-center" aria-hidden="true">
-              {Array.from({ length: pipCount }, (_, index) => (
-                <div
-                  key={index}
-                  className="w-1.5 h-1.5 rounded-full transition-colors"
-                  style={{ background: index < filledPips ? "var(--accent)" : "var(--border)" }}
-                />
-              ))}
-              {overflow && <span className="text-xs ml-0.5" style={{ color: "var(--text2)" }}>{overflow}</span>}
-            </div>
-            <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
-              {filled}/{kinks.length}
-            </span>
-          </div>
-        </button>
-      </div>
+        </span>
+        <span
+          className="flex-none text-xs tabular-nums"
+          aria-label={`${filled} van ${kinks.length} beoordeeld`}
+          style={{ color: open
+            ? "color-mix(in srgb, var(--accent) 22%, var(--text2))"
+            : filled > 0 ? "var(--text)" : "var(--text2)" }}
+        >
+          {filled}/{kinks.length}
+        </span>
+        <motion.span
+          className="flex h-8 w-8 flex-none items-center justify-center"
+          style={{ color: open ? "color-mix(in srgb, var(--accent) 22%, var(--text2))" : "var(--text2)" }}
+          animate={{ rotate: open ? 0 : -90 }}
+          transition={motionSafe.state}
+          aria-hidden="true"
+        >
+          <CaretDown size={16} />
+        </motion.span>
+      </button>
 
       <div
         id={`${headingId}-content`}
-        className={`accordion-content ${open ? "open" : ""}`}
         aria-hidden={!open}
         inert={!open}
       >
-        <div className="accordion-inner">
-          {hasOpened && (
-            <div className="mt-1 flex flex-col pl-1">
-              {kinks.map((kink) => (
-                <KinkListRow
-                  key={kink.id}
-                  kink={kink}
-                  entry={entries[kink.id] ?? { status: null, comment: "" }}
-                  onOpen={() => onEdit(kink)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {open && (
+          <div className="flex flex-col">
+            {kinks.map((kink) => (
+              <KinkListRow
+                key={kink.id}
+                kink={kink}
+                entry={entries[kink.id] ?? { status: null, comment: "" }}
+                onOpen={() => onEdit(kink)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -74,11 +74,11 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
                 Stel een PIN in om de app te beveiligen. Je hebt deze nodig bij elke herstart.
               </p>
               <button onClick={() => setStep(1)}
-                className="w-full py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1"
+                className="focus-ring ks-motion-choice w-full py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 PIN instellen <ArrowRight size={14} aria-hidden="true" />
               </button>
-              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
+              <button onClick={handleClose} className="focus-ring ks-motion-choice w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
                 Annuleer
               </button>
             </motion.div>
@@ -110,11 +110,11 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
               />
               {pinError && <p className="text-xs text-center" role="alert" style={{ color: "var(--hard-no)" }}>{pinError}</p>}
               <button onClick={handleSavePin}
-                className="w-full py-3 rounded-xl text-sm font-semibold"
+                className="focus-ring ks-motion-choice w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}>
                 PIN opslaan
               </button>
-              <button onClick={() => setStep(0)} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
+              <button onClick={() => setStep(0)} className="focus-ring ks-motion-choice w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
                 <ArrowLeft size={14} aria-hidden="true" /> Terug
               </button>
             </motion.div>
@@ -130,11 +130,11 @@ export default function PinFlowSheet({ open, initialStep = 0, onClose }: PinFlow
                 De app wordt niet meer vergrendeld bij het herstarten.
               </p>
               <button onClick={handleRemovePin}
-                className="w-full py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "var(--hard-no)", color: "var(--on-accent)" }}>
+                className="focus-ring ks-motion-choice w-full py-3 rounded-xl text-sm font-semibold"
+                style={{ background: "var(--danger-fill)", color: "var(--on-danger-fill)" }}>
                 Ja, verwijder PIN
               </button>
-              <button onClick={handleClose} className="w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
+              <button onClick={handleClose} className="focus-ring ks-motion-choice w-full py-3 rounded-xl text-sm inline-flex items-center justify-center gap-1" style={{ color: "var(--text2)" }}>
                 Annuleer
               </button>
             </motion.div>

@@ -660,6 +660,29 @@ export async function decodeProfileV3(encoded: string): Promise<Profile> {
   return profile;
 }
 
+/** Legacy formats may carry a modern proof; validate it before returning an import candidate. */
+async function decodeVerifiedLegacyProfile(encoded: string): Promise<Profile> {
+  const profile = decodeAny(encoded);
+  // Legacy links never authenticated photos. A validated bundle attaches its
+  // independently verified avatar after this decoder returns.
+  delete profile.avatarDataUrl;
+  const hasBdsmtest = Boolean(profile.bdsmtestUrl || profile.bdsmtestScores?.length);
+  if (!profile.consentProof) return hasBdsmtest ? withoutBdsmtest(profile) : profile;
+
+  const coreVerification = await verifyConsentPayload(projectProfileConsent(profile), profile.consentProof);
+  if (coreVerification.status !== "valid") {
+    const verification = await verifyProfileConsent(profile);
+    if (verification.status !== "valid") {
+      throw new Error(verification.status === "invalid" ? verification.reason : "Profiel mist bronbevestiging");
+    }
+  } else if (hasBdsmtest) {
+    // Legacy envelopes have no separate disclosure proof. Preserve enrichment
+    // only when an older profile signature actually authenticated those fields.
+    throw new Error("BDSMTest-openbaarmaking ontbreekt");
+  }
+  return profile;
+}
+
 async function decodeProfileShareBundle(encoded: string): Promise<Profile> {
   if (encoded.length > MAX_PROFILE_SHARE_ENCODED_CHARS) {
     throw new Error("Profielbundel is te groot");
@@ -674,7 +697,7 @@ async function decodeProfileShareBundle(encoded: string): Promise<Profile> {
   }
   const profile = isProfileV3(decoded.p)
     ? await decodeProfileV3(decoded.p)
-    : decodeAny(decoded.p);
+    : await decodeVerifiedLegacyProfile(decoded.p);
   const envelope = decodeAvatarEnvelope(decoded.x);
   await verifyAvatarEnvelope(profile, envelope);
   return { ...profile, avatarDataUrl: envelope.a };
@@ -682,5 +705,5 @@ async function decodeProfileShareBundle(encoded: string): Promise<Profile> {
 
 export async function decodeSharedProfile(encoded: string): Promise<Profile> {
   if (isProfileShareBundle(encoded)) return decodeProfileShareBundle(encoded);
-  return isProfileV3(encoded) ? decodeProfileV3(encoded) : decodeAny(encoded);
+  return isProfileV3(encoded) ? decodeProfileV3(encoded) : decodeVerifiedLegacyProfile(encoded);
 }

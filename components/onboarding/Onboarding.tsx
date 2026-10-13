@@ -22,6 +22,7 @@ import { useMotionSafe, STAGGER_CHILDREN, fadeUp, SHAKE_ANIM } from '@/lib/motio
 
 interface OnboardingProps {
   onComplete: () => void;
+  onRestore?: () => void;
 }
 
 const PIN_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
@@ -36,11 +37,12 @@ const primaryButton: React.CSSProperties = {
   fontWeight: 650,
 };
 
-export default function Onboarding({ onComplete }: OnboardingProps) {
+export default function Onboarding({ onComplete, onRestore }: OnboardingProps) {
   const t = useMotionSafe();
   const [step, setStep] = useState(0);
   const [lockout, setLockout] = useState(false);
   const [skipRequested, setSkipRequested] = useState(false);
+  const [restoreRequested, setRestoreRequested] = useState(false);
   const [lockSub, setLockSub] = useState<LockSub>('intro');
   const [pin1, setPin1] = useState<string[]>([]);
   const [pin2, setPin2] = useState<string[]>([]);
@@ -221,6 +223,16 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         <Action onClick={() => { setSkipRequested(true); setStep(1); }} ariaLabel="Sla de introductie over">
                           Sla intro over
                         </Action>
+                        {onRestore && (
+                          <button
+                            type="button"
+                            onClick={() => { setRestoreRequested(true); setSkipRequested(true); setStep(1); }}
+                            className="focus-ring min-h-11 rounded-xl px-4 py-2 text-sm underline underline-offset-4"
+                            style={{ color: 'var(--text2)' }}
+                          >
+                            Back-up herstellen
+                          </button>
+                        )}
                       </>
                     )}
                     {step === 1 && (
@@ -233,8 +245,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       <Action primary onClick={advance}>Kom maar door <ArrowRight size={17} aria-hidden="true" /></Action>
                     )}
                     {step === 3 && (
-                      <Action primary onClick={skipRequested ? onComplete : advance}>
-                        {skipRequested ? 'Naar KinkSync' : 'Verder'} <ArrowRight size={17} aria-hidden="true" />
+                      <Action primary onClick={restoreRequested && onRestore ? onRestore : skipRequested ? onComplete : advance}>
+                        {restoreRequested ? 'Verder naar mijn back-up' : skipRequested ? 'Naar KinkSync' : 'Verder'} <ArrowRight size={17} aria-hidden="true" />
                       </Action>
                     )}
                     {step === 4 && lockSub === 'intro' && (

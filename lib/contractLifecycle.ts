@@ -7,6 +7,8 @@ import {
 } from "@/lib/consentProof";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 
+import type { ContractSourceReference } from "@/lib/contractSources";
+
 const CURVE = "P-256";
 const TEXT = new TextEncoder();
 
@@ -45,7 +47,7 @@ export interface ContractParticipant {
   publicKeyJwk?: JsonWebKey;
 }
 
-export interface ContractKinkDetail {
+export interface ContractKinkDetail extends ContractSourceReference {
   name: string;
   statusA: KinkStatus | null;
   statusB: KinkStatus | null;
@@ -55,7 +57,7 @@ export interface ContractKinkDetail {
   desireB?: number | null;
 }
 
-export interface ContractHardLimit {
+export interface ContractHardLimit extends ContractSourceReference {
   name: string;
   who: string;
 }

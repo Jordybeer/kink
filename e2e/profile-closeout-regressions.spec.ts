@@ -37,31 +37,77 @@ const PROFILE_WITH_BDSMTEST: Profile = {
   ],
 };
 
-test("profile keeps catalog search and category filtering available from Overview without duplicate answer help", async ({ page }) => {
+const PROFILE_WITH_MIXED_STATUSES: Profile = {
+  ...EMPTY_PROFILE,
+  id: "pw-profile-equal-status-pills",
+  name: "Equal status pills",
+  entries: Object.fromEntries(
+    (["yes", "willing", "maybe", "no", "hard_no"] as const).map((status, index) => [
+      KINKS.filter((kink) => kink.category === "impact")[index].id,
+      { status, score: null, comment: "" },
+    ]),
+  ),
+};
+
+test("profile keeps the read-view quiet and exposes search/filter only through Onderwerpen beheren", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
 
-  await expect(page.getByRole("tab", { name: "Overzicht" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
-  await expect(page.getByPlaceholder("Zoek in je profiel…")).toBeVisible();
+  await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+  await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveCount(0);
+  const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+  await expect(manage).toBeVisible();
+  const manageBox = await manage.boundingBox();
+  expect(manageBox).not.toBeNull();
+  expect(manageBox!.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByRole("button", { name: "Wat betekenen deze keuzes?" })).toHaveCount(0);
-  await expect(page.getByText(/\d+ beoordeeld/, { exact: false })).toHaveCount(0);
 
-  const search = page.getByPlaceholder("Zoek in je profiel…");
+  await manage.click();
+  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+  const search = page.getByRole("textbox", { name: "Volledige catalogus doorzoeken" });
+  await expect(search).toBeVisible();
+  const categories = page.getByTestId("profile-catalog-controls").getByRole("button", { name: "Categorie, Alle categorieën" });
+  await expect(categories).toBeVisible();
+  for (const control of [search, categories]) {
+    const box = await control.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
+
   await search.fill("spanking");
   await expect(page.getByText(/spanking/i).first()).toBeVisible();
   await search.fill("");
 
-  await page.getByRole("tab", { name: "Bewerken" }).click();
-  await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
-  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+  await expect.poll(() => page.getByTestId("profile-category-header").first().evaluate((element) =>
+    getComputedStyle(element).top,
+  )).toBe("56px");
+
+  const filterBox = await categories.boundingBox();
+  expect(filterBox).not.toBeNull();
+  expect(filterBox!.height).toBeGreaterThanOrEqual(44);
+  await categories.click();
+  const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
+  await expect(categoryDialog).toBeVisible();
+  await categoryDialog.getByRole("button", { name: /Impact Play/ }).click();
+  await expect(categoryDialog).not.toBeVisible();
+  await expect(page.getByTestId("profile-catalog-controls").getByRole("button", { name: "Categorie, Impact Play" })).toBeVisible();
+  const impactHeader = page.locator('button[aria-controls="category-impact-content"]');
+  await expect(impactHeader).toHaveAttribute("aria-expanded", "true");
+  await impactHeader.click();
+  await impactHeader.click();
+  await expect(impactHeader).toHaveAttribute("aria-expanded", "true");
+
+  const firstImpactRow = page.locator('#category-impact-content button[aria-label$=", bewerken"]').first();
+  await expect(firstImpactRow).toBeVisible();
+  expect(await firstImpactRow.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
 });
 
-test("empty profile keeps the full catalog searchable from Edit", async ({ page }) => {
+test("empty profile keeps the full catalog available behind the explicit manager", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${EMPTY_PROFILE.id}`, [EMPTY_PROFILE]);
 
-  await expect(page.getByRole("tab", { name: "Bewerken" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
   const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
   await expect(search).toBeVisible();
@@ -79,47 +125,123 @@ test("profile completion card avoids coverage jargon and percentage metrics", as
   await expect(continueCard).not.toContainText(/100%/);
 });
 
-test("BDSMTest stays readable below the profile hero across both tabs", async ({ page }) => {
+test("BDSMTest stays readable in read-view and yields to focused catalog management", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_BDSMTEST.id}`, [PROFILE_WITH_BDSMTEST]);
 
-  const summary = page.getByTestId("bdsmtest-summary");
-  const lastCategory = page.getByRole("heading", { name: "Sensation Play" });
+  const profileSummary = page.getByTestId("profile-summary");
+  const linkedSources = profileSummary.getByTestId("profile-linked-sources");
+  const summary = linkedSources.getByTestId("bdsmtest-summary");
+  const statusOverview = page.getByTestId("profile-status-overview");
+  await expect(profileSummary).toBeVisible();
+  await expect(linkedSources.getByRole("heading", { name: "Gekoppelde bronnen" })).toBeVisible();
   await expect(summary).toBeVisible();
-  await expect(lastCategory).toBeVisible();
-  expect(await lastCategory.evaluate((heading, selector) => {
+  await expect(statusOverview).toBeVisible();
+  expect(await statusOverview.evaluate((overview, selector) => {
     const target = document.querySelector(selector);
-    return Boolean(target && (target.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING));
+    return Boolean(target && (target.compareDocumentPosition(overview) & Node.DOCUMENT_POSITION_FOLLOWING));
   }, '[data-testid="bdsmtest-summary"]')).toBe(true);
 
-  const disclosure = summary.getByRole("button", { name: /Bekijk alle 3/ });
+  const disclosure = summary.getByRole("button", { name: "Bekijk alle 3 BDSMTest-resultaten" });
   const disclosureBox = await disclosure.boundingBox();
   expect(disclosureBox).not.toBeNull();
   expect(disclosureBox!.height).toBeGreaterThanOrEqual(44);
-  await expect.poll(() => summary.getByText("Dominant", { exact: true }).evaluate((element) =>
-    Number.parseFloat(getComputedStyle(element).fontSize),
-  )).toBeGreaterThanOrEqual(12);
+  await expect(summary).toContainText("3 resultaten gekoppeld");
 
-  await page.getByRole("tab", { name: "Bewerken" }).click();
+  await disclosure.click();
+  const resultsDialog = page.getByRole("dialog", { name: "Alle BDSMTest-resultaten" });
+  await expect(resultsDialog).toBeVisible();
+  await expect(resultsDialog.getByText("Dominant", { exact: true })).toBeVisible();
+  await expect.poll(() => resultsDialog.getByText("Dominant", { exact: true }).evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).fontSize),
+  )).toBeGreaterThanOrEqual(14);
+  await resultsDialog.getByRole("button", { name: "Sluit" }).click();
+  await expect(resultsDialog).toBeHidden();
+
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await expect(profileSummary).toHaveCount(0);
+  await expect(summary).toHaveCount(0);
+  await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+
+  await page.getByRole("button", { name: "Gereed" }).click();
+  await expect(profileSummary).toBeVisible();
   await expect(summary).toBeVisible();
 });
 
-test("dense profile share keeps its primary controls inside an iPhone viewport", async ({ page }) => {
+test("profile catalog manager keeps status text compact, aligned and free of pill chrome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
+
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.locator('button[aria-controls="category-impact-content"]').click();
+
+  const labels = page.getByTestId("kink-status-label");
+  expect(await labels.count()).toBeGreaterThanOrEqual(5);
+  const styles = await labels.evaluateAll((elements) => elements.map((element) => {
+    const style = getComputedStyle(element);
+    return {
+      justifyContent: style.justifyContent,
+      minWidth: Number.parseFloat(style.minWidth),
+      backgroundColor: style.backgroundColor,
+      borderTopWidth: style.borderTopWidth,
+    };
+  }));
+
+  expect(styles.every((style) => style.justifyContent === "flex-end")).toBe(true);
+  expect(styles.every((style) => style.minWidth >= 89)).toBe(true);
+  expect(styles.every((style) => style.backgroundColor === "rgba(0, 0, 0, 0)")).toBe(true);
+  expect(styles.every((style) => style.borderTopWidth === "0px")).toBe(true);
+});
+
+test("dense profile share keeps a fixed header and scrolls inside the iPhone visual viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await seedAndGo(page, `/profile/${DENSE_PROFILE.id}`, [DENSE_PROFILE]);
 
-  await page.getByRole("button", { name: "Profiel delen" }).click();
+  await page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" }).click();
+  await page.getByRole("menuitem", { name: "Profiel delen" }).click();
   const dialog = page.getByRole("dialog", { name: "Profiel delen" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByTestId("profile-share-qr")).toBeVisible({ timeout: 15_000 });
   await expect(dialog.getByText(/Profiel QR \d+ van \d+/)).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Kopieer volledige link" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Sluit" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Profiel delen sluiten" })).toBeVisible();
 
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty("--visual-viewport-height", "420px");
+    document.documentElement.style.setProperty("--visual-viewport-offset-top", "80px");
+  });
+
+  const viewportFrame = page.getByTestId("sheet-visual-viewport");
   const sheet = dialog.getByTestId("profile-share-sheet");
-  const dimensions = await sheet.evaluate((node) => ({
-    clientHeight: node.clientHeight,
-    scrollHeight: node.scrollHeight,
-  }));
-  expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.clientHeight + 2);
+  const header = dialog.getByTestId("profile-share-header");
+  const scrollBody = dialog.getByTestId("profile-share-scroll-body");
+  await expect.poll(() => viewportFrame.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { top: Math.round(rect.top), height: Math.round(rect.height) };
+  })).toEqual({ top: 80, height: 420 });
+
+  const stableY = async () => header.evaluate(async (element) => {
+    const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    let previous = element.getBoundingClientRect().y;
+    for (let index = 0; index < 12; index++) {
+      await nextFrame();
+      const current = element.getBoundingClientRect().y;
+      if (Math.abs(current - previous) < 0.25) return current;
+      previous = current;
+    }
+    return previous;
+  });
+
+  const headerBefore = await stableY();
+  await scrollBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => scrollBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const headerAfter = await stableY();
+  expect(headerAfter).toBeCloseTo(headerBefore, 0);
+
+  await expect(dialog.getByRole("button", { name: "Kopieer volledige link" })).toBeVisible();
+  await expect.poll(() => sheet.evaluate((element) => {
+    const frame = element.parentElement?.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
+  })).toBeLessThanOrEqual(1);
 });

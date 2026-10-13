@@ -41,6 +41,7 @@ export default function CompareScoreSummary({
   const story = planCompareStory(summary, categoryScores);
   const hardBoundaryCount = conflict + limit;
   const clearOverlapCount = shared + complementary;
+  const hasJointAnswers = jointlyAssessed > 0;
 
   const stats = [
     {
@@ -76,14 +77,13 @@ export default function CompareScoreSummary({
   return (
     <section className="mb-5 mt-1" aria-labelledby="compare-summary-heading">
       <div
-        className="rounded-2xl border p-4 sm:p-5"
-        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+        className="ks-relational-surface rounded-2xl border p-4 sm:p-5"
+        style={{ borderColor: "var(--border)" }}
       >
         <div
-          className="rounded-2xl px-4 py-4 sm:px-5"
+          className="ks-brand-surface rounded-2xl px-4 py-4 sm:px-5"
           style={{
-            background: "color-mix(in srgb, var(--accent) 7%, var(--surface2))",
-            border: "1px solid color-mix(in srgb, var(--accent) 20%, var(--border))",
+            border: "1px solid color-mix(in srgb, var(--border-accent) 72%, var(--border))",
           }}
         >
           <h2
@@ -98,25 +98,39 @@ export default function CompareScoreSummary({
           </p>
         </div>
 
-        <div
-          className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border"
-          style={{ borderColor: "var(--border)", background: "var(--border)" }}
-          aria-label="Vergelijkingssamenvatting"
-        >
-          {stats.map(({ key, count, label, color, icon: Icon }) => (
-            <div key={key} className="min-w-0 px-3 py-4 text-center sm:px-4 sm:py-5" style={{ background: "var(--surface2)" }}>
-              <Icon size={18} weight="duotone" className="mx-auto mb-2" aria-hidden="true" style={{ color }} />
-              <div className="text-3xl font-semibold leading-none tabular-nums" style={{ color }}>
-                {count}
+        {hasJointAnswers ? (
+          <div
+            className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border"
+            style={{ borderColor: "var(--border)", background: "var(--border)" }}
+            aria-label="Vergelijkingssamenvatting"
+          >
+            {stats.map(({ key, count, label, color, icon: Icon }) => (
+              <div key={key} className="min-w-0 px-3 py-4 text-center sm:px-4 sm:py-5" style={{ background: "var(--surface2)" }}>
+                <div className="flex items-center justify-center gap-1.5" style={{ color }}>
+                  <Icon size={18} weight="duotone" className="shrink-0" aria-hidden="true" />
+                  <span className="text-3xl font-semibold leading-none tabular-nums">{count}</span>
+                </div>
+                <div className="mt-2 text-sm font-semibold leading-tight" style={{ color: "var(--text)" }}>
+                  {label}
+                </div>
               </div>
-              <div className="mt-2 text-sm font-semibold leading-tight" style={{ color: "var(--text)" }}>
-                {label}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            className="mt-4 px-1 py-3 sm:px-2"
+            aria-label="Vergelijkingssamenvatting"
+          >
+            <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
+              Nog niets om te vergelijken
+            </p>
+            <p className="mt-1 max-w-2xl text-sm leading-6" style={{ color: "var(--text2)" }}>
+              Vul allebei minstens één zichtbaar antwoord in. Daarna verschijnen overlap, bespreekpunten, verschillen en grenzen hier vanzelf.
+            </p>
+          </div>
+        )}
 
-        {story.insights.length > 0 && (
+        {hasJointAnswers && story.insights.length > 0 && (
           <div
             className="mt-4 overflow-hidden rounded-2xl border"
             style={{ borderColor: "var(--border)", background: "var(--surface2)" }}

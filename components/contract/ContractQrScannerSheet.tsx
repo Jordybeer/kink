@@ -172,7 +172,7 @@ export default function ContractQrScannerSheet({
                 const done = consume(pasteValue, false);
                 if (!done) setPasteValue("");
               }}
-              className="focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-semibold disabled:opacity-40"
+              className="ks-motion-choice focus-ring mt-3 min-h-11 w-full rounded-xl text-sm font-semibold disabled:opacity-40"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Code verwerken
@@ -188,7 +188,7 @@ export default function ContractQrScannerSheet({
             <button
               type="button"
               onClick={() => { stopCamera(); setPasteMode(true); }}
-              className="focus-ring mx-auto mt-3 block min-h-10 px-3 text-sm underline-offset-2 hover:underline"
+              className="ks-motion-choice focus-ring mx-auto mt-3 block min-h-11 px-3 text-sm underline-offset-2 hover:underline"
               style={{ color: "var(--text2)" }}
             >
               Geen camera? Plak de code
@@ -205,7 +205,7 @@ export default function ContractQrScannerSheet({
         <button
           type="button"
           onClick={handleClose}
-          className="focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-medium"
+          className="ks-motion-choice focus-ring mt-4 min-h-11 w-full rounded-xl text-sm font-medium"
           style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
         >
           Annuleer

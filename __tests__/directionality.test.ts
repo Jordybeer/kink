@@ -61,7 +61,7 @@ describe("directionele kinkvragen", () => {
       { conceptId: "rimming", giveId: "rimming_give", receiveId: "rimming_receive" },
       { conceptId: "footjob", giveId: "footjob_give", receiveId: "footjob_receive" },
     ]);
-    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(53);
+    expect(DIRECTIONAL_KINK_PAIRS).toHaveLength(55);
     const affinityPairs = DIRECTIONAL_KINK_PAIRS.filter((pair) => "questionnaireAffinity" in pair);
     expect(affinityPairs).toHaveLength(34);
     for (const pair of affinityPairs) {

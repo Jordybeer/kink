@@ -1,8 +1,7 @@
 import { useStore } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
+import { useIntimacyStore } from "@/lib/intimacyStore";
 import { useSplitTourStore } from "@/lib/splitTourState";
-import { useInstallPromptPolicyStore } from "@/lib/installPromptPolicyStore";
-import { DEFAULT_INSTALL_PROMPT_POLICY } from "@/lib/installPrompt";
 import { deleteAllContractArtifacts } from "@/lib/contractArtifacts";
 import { runtimeCachesToPurge } from "@/lib/offlineRoutes";
 
@@ -27,14 +26,14 @@ export async function destroyAllLocalData(): Promise<void> {
     biometricCredentialId: null,
   });
   useContractStore.setState({ series: [], migratedLegacySnapshotIds: [] });
+  useIntimacyStore.setState({ entries: [] });
   useSplitTourStore.setState({ profileIntroTourSeen: false, questionnaireTourSeen: false });
-  useInstallPromptPolicyStore.setState({ ...DEFAULT_INSTALL_PROMPT_POLICY });
 
   await Promise.all([
     useStore.persist.clearStorage(),
     useContractStore.persist.clearStorage(),
+    useIntimacyStore.persist.clearStorage(),
     useSplitTourStore.persist.clearStorage(),
-    useInstallPromptPolicyStore.persist.clearStorage(),
     deleteAllContractArtifacts(),
   ]);
 

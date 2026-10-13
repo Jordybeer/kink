@@ -1,11 +1,13 @@
 "use client";
-import { Check, Eye, EyeSlash, Star, WarningCircle } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Check, Eye, EyeSlash, Star } from "@phosphor-icons/react";
 import type { Kink, KinkEntry, KinkStatus } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
+import { useMotionSafe } from "@/lib/motion";
 import { STATUS_LABEL } from "@/lib/statusLabels";
 import Sheet, { SheetContent } from "./Sheet";
 import StatusOptionRows from "./StatusOptionRows";
-import ClampText from "./ui/ClampText";
 
 const AGREEMENTS = [
   {
@@ -24,6 +26,8 @@ const CONTEXT_TAGS = [
   { value: "alleen privé", label: "Alleen in privésfeer" },
   { value: "scène specifiek", label: "Alleen voor afgesproken scène" },
 ] as const;
+
+type TopicEditStep = 1 | 2;
 
 interface Props {
   kink: Kink | null;
@@ -44,155 +48,281 @@ export default function KinkEditSheet({
   onCuriousChange,
   onPrivateChange,
 }: Props) {
+  const [step, setStep] = useState<TopicEditStep>(1);
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const previousStepRef = useRef<TopicEditStep>(1);
   const tags = entry.tags ?? [];
+
+  useEffect(() => {
+    setStep(1);
+    previousStepRef.current = 1;
+  }, [kink?.id]);
+
+  useEffect(() => {
+    if (!kink) return;
+    scrollBodyRef.current?.scrollTo({ top: 0 });
+    if (previousStepRef.current !== step) {
+      const frame = window.requestAnimationFrame(() => {
+        stepHeadingRef.current?.focus({ preventScroll: true });
+      });
+      previousStepRef.current = step;
+      return () => window.cancelAnimationFrame(frame);
+    }
+    previousStepRef.current = step;
+  }, [kink, step]);
 
   function toggleTag(tag: string) {
     onTagsChange(tags.includes(tag) ? tags.filter((candidate) => candidate !== tag) : [...tags, tag]);
   }
 
+  const contextOptions = [
+    {
+      label: "Nieuwsgierig",
+      active: !!entry.curious,
+      onClick: () => onCuriousChange(!entry.curious),
+      icon: <Star size={18} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />,
+    },
+    ...CONTEXT_TAGS.map((tag) => ({
+      label: tag.label,
+      active: tags.includes(tag.value),
+      onClick: () => toggleTag(tag.value),
+      icon: null,
+    })),
+  ];
+
   return (
-    <Sheet open={kink !== null} onClose={onClose} scrollable aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}>
+    <Sheet
+      open={kink !== null}
+      onClose={onClose}
+      variant="surface"
+      aria-label={kink ? `${kink.name} bewerken` : "Kink bewerken"}
+    >
       <SheetContent
-        className="min-h-0 overflow-y-auto overscroll-contain px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
-        style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - max(0.75rem, env(safe-area-inset-top)))" }}
+        showClose={false}
+        showHandle={false}
+        className="flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-[24px] px-0 pb-0 pt-0 sm:h-auto sm:min-h-[36rem] sm:max-h-[min(44rem,calc(100dvh-3rem))] sm:rounded-[24px]"
+        style={{
+          maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance))",
+        }}
       >
-        <p className="text-xs mb-0.5" style={{ color: "var(--text2)" }}>
-          {kink ? kinkCategoryLabel(kink.category) : ""}
-        </p>
-        <h2
-          className="text-xl leading-tight mb-1"
-          style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}
-        >
-          {kink?.name ?? ""}
-        </h2>
-        {kink?.description && (
-          <ClampText text={kink.description} className="text-sm mb-4" style={{ color: "var(--text2)" }} />
-        )}
-        {kink?.safetyNote && (
-          <aside
-            className="mb-4 rounded-xl px-3 py-3 text-sm leading-relaxed"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
-          >
-            <p className="font-semibold" style={{ color: "var(--text)" }}>Veiligheid</p>
-            <p className="mt-1">{kink.safetyNote}</p>
-          </aside>
-        )}
-        {!kink?.description && !kink?.safetyNote && <div className="mb-3" />}
+        <header className="flex-none px-5 pb-2 pt-3" data-testid="kink-edit-header">
+          <div className="grid min-h-11 grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <span aria-hidden="true" />
+            <h2 className="text-base font-semibold">Onderwerp bewerken</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="ks-motion-choice focus-ring min-h-11 justify-self-end px-1 text-sm font-semibold"
+              style={{ color: "var(--accent)" }}
+            >
+              Klaar
+            </button>
+          </div>
 
-        <div aria-live="polite" className="sr-only">
-          {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
-          {entry.privateResponse ? " Antwoord is privé." : ""}
+          <nav className="mx-auto mt-1 flex max-w-[12rem] items-center gap-3" aria-label="Onderwerpstappen">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              aria-label={step === 1
+                ? "Stap 1 van 2: Antwoord, huidig"
+                : entry.status
+                  ? "Stap 1 van 2: Antwoord, voltooid"
+                  : "Stap 1 van 2: Antwoord"}
+              aria-current={step === 1 ? "step" : undefined}
+              style={step === 1
+                ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
+                : entry.status
+                  ? { background: "var(--accent2)", color: "var(--bg)" }
+                  : { border: "1px solid var(--border-accent)", color: "var(--text2)" }}
+            >
+              {step === 1 ? "1" : entry.status ? <Check size={16} weight="bold" aria-hidden="true" /> : "1"}
+            </button>
+            <span className="h-px flex-1" style={{ background: "var(--border)" }} aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              aria-label={step === 2 ? "Stap 2 van 2: Details, huidig" : "Stap 2 van 2: Details"}
+              aria-current={step === 2 ? "step" : undefined}
+              style={step === 2
+                ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
+                : { border: "1px solid var(--border-accent)", color: "var(--text2)" }}
+            >
+              2
+            </button>
+          </nav>
+        </header>
+
+        <div
+          ref={scrollBodyRef}
+          data-testid="kink-edit-scroll-body"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 [overflow-wrap:anywhere]"
+        >
+          <div aria-live="polite" className="sr-only">
+            {kink && entry.status ? `Status: ${STATUS_LABEL[entry.status]}.` : ""}
+            {entry.privateResponse ? " Antwoord is privé." : ""}
+          </div>
+
+          {step === 1 ? (
+            <section data-testid="kink-edit-answer-step">
+              <h3
+                ref={stepHeadingRef}
+                tabIndex={-1}
+                className="text-2xl leading-tight focus:outline-none"
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
+              >
+                {kink?.name ?? ""}
+              </h3>
+              <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
+                {kink ? kinkCategoryLabel(kink.category) : ""}
+              </p>
+
+              {kink?.description && (
+                <p className="mt-3 text-base leading-7" style={{ color: "var(--text2)" }}>
+                  {kink.description}
+                </p>
+              )}
+
+              {kink?.safetyNote && (
+                <section
+                  className="mt-5 border-t pt-4"
+                  style={{ borderColor: "var(--border)" }}
+                  aria-labelledby="kink-edit-safety-title"
+                >
+                  <h4 id="kink-edit-safety-title" className="text-sm font-semibold">Veiligheid</h4>
+                  <p className="mt-1 text-base leading-7" style={{ color: "var(--text2)" }}>
+                    {kink.safetyNote}
+                  </p>
+                </section>
+              )}
+
+              <section className="mt-6" aria-labelledby="kink-edit-answer-title">
+                <h4 id="kink-edit-answer-title" className="mb-1.5 text-sm font-semibold">Mijn antwoord</h4>
+                <StatusOptionRows current={entry.status} onSelect={onStatusChange} presentation="list" />
+              </section>
+            </section>
+          ) : (
+            <section data-testid="kink-edit-details-step">
+              <h3
+                ref={stepHeadingRef}
+                tabIndex={-1}
+                className="text-2xl leading-tight focus:outline-none"
+                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
+              >
+                Details
+              </h3>
+              <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
+                {kink?.name ?? ""}{kink ? ` · ${kinkCategoryLabel(kink.category)}` : ""}
+              </p>
+
+              <section className="mt-5" aria-labelledby="kink-edit-agreements-title">
+                <h4 id="kink-edit-agreements-title" className="mb-1 text-sm font-semibold">Afspraken</h4>
+                {AGREEMENTS.map((agreement) => (
+                  <ToggleRow
+                    key={agreement.value}
+                    label={agreement.label}
+                    description={agreement.description}
+                    active={tags.includes(agreement.value)}
+                    onClick={() => toggleTag(agreement.value)}
+                  />
+                ))}
+              </section>
+
+              <section className="mt-6" aria-labelledby="kink-edit-visibility-title">
+                <h4 id="kink-edit-visibility-title" className="mb-1 text-sm font-semibold">Zichtbaarheid</h4>
+                <ToggleRow
+                  label="Privé antwoord"
+                  active={!!entry.privateResponse}
+                  onClick={() => onPrivateChange(!entry.privateResponse)}
+                  ariaLabel={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
+                  privateControl
+                  icon={entry.privateResponse
+                    ? <EyeSlash size={18} aria-hidden="true" />
+                    : <Eye size={18} aria-hidden="true" />}
+                />
+              </section>
+
+              <section className="mt-6" aria-labelledby="kink-edit-context-title">
+                <h4 id="kink-edit-context-title" className="mb-1 text-sm font-semibold">Context</h4>
+                {contextOptions.map((option) => <ToggleRow key={option.label} {...option} />)}
+              </section>
+            </section>
+          )}
         </div>
-
-        <StatusOptionRows current={entry.status} onSelect={onStatusChange} />
-
-        <section className="mt-5">
-          <div className="flex items-center gap-2 mb-2">
-            <WarningCircle size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
-            <h3 className="text-sm font-semibold">Afspraken</h3>
-          </div>
-          <div className="grid gap-2">
-            {AGREEMENTS.map((agreement) => {
-              const active = tags.includes(agreement.value);
-              return (
-                <button
-                  type="button"
-                  key={agreement.value}
-                  onClick={() => toggleTag(agreement.value)}
-                  aria-pressed={active}
-                  className="focus-ring min-h-[62px] rounded-xl px-3 py-2.5 flex items-center gap-3 text-left"
-                  style={active
-                    ? {
-                        background: "color-mix(in srgb, var(--accent) 11%, var(--surface2))",
-                        border: "1px solid var(--accent)",
-                      }
-                    : { background: "var(--surface2)", border: "1px solid var(--border)" }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="w-5 h-5 rounded-full flex items-center justify-center flex-none"
-                    style={{
-                      background: active ? "var(--accent)" : "transparent",
-                      border: active ? "none" : "1px solid var(--border)",
-                      color: active ? "var(--on-accent)" : "transparent",
-                    }}
-                  >
-                    {active && <Check size={12} weight="bold" aria-hidden="true" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">{agreement.label}</span>
-                    <span className="block text-sm mt-0.5 leading-relaxed" style={{ color: "var(--text2)" }}>
-                      {agreement.description}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="mt-5">
-          <h3 className="text-sm font-semibold mb-2">Zichtbaarheid & context</h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => onCuriousChange(!entry.curious)}
-              aria-pressed={!!entry.curious}
-              className="focus-ring rounded-full border transition-colors text-sm px-3 min-h-10 inline-flex items-center gap-1.5"
-              style={entry.curious
-                ? { background: "color-mix(in srgb, var(--curious) 20%, transparent)", borderColor: "var(--curious)", color: "var(--curious)" }
-                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              <Star size={12} weight={entry.curious ? "fill" : "regular"} aria-hidden="true" />
-              Nieuwsgierig
-            </button>
-            <button
-              type="button"
-              data-tour="private"
-              onClick={() => onPrivateChange(!entry.privateResponse)}
-              aria-pressed={!!entry.privateResponse}
-              aria-label={entry.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"}
-              className="focus-ring rounded-full border transition-colors text-sm px-3 min-h-10 inline-flex items-center gap-1.5"
-              style={entry.privateResponse
-                ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)", borderColor: "var(--accent)", color: "var(--accent)" }
-                : { background: "var(--tag-muted)", borderColor: "var(--border)", color: "var(--text2)" }}
-            >
-              {entry.privateResponse
-                ? <EyeSlash size={13} weight="bold" aria-hidden="true" />
-                : <Eye size={13} aria-hidden="true" />}
-              Privé antwoord
-            </button>
-            {CONTEXT_TAGS.map((tag) => {
-              const active = tags.includes(tag.value);
-              return (
-                <button
-                  type="button"
-                  key={tag.value}
-                  onClick={() => toggleTag(tag.value)}
-                  aria-pressed={active}
-                  className="focus-ring rounded-full border transition-colors text-sm px-3 min-h-10"
-                  style={{
-                    background: active ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--tag-muted)",
-                    borderColor: active ? "var(--accent)" : "var(--border)",
-                    color: active ? "var(--accent)" : "var(--text2)",
-                  }}
-                >
-                  {tag.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="focus-ring w-full min-h-12 rounded-xl mt-6 text-sm font-semibold"
-          style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
-        >
-          Klaar
-        </button>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ToggleRow({
+  label,
+  description,
+  active,
+  onClick,
+  icon,
+  ariaLabel,
+  privateControl,
+}: {
+  label: string;
+  description?: string;
+  active: boolean;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  ariaLabel?: string;
+  privateControl?: boolean;
+}) {
+  const motionSafe = useMotionSafe();
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={ariaLabel}
+      data-tour={privateControl ? "private" : undefined}
+      className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 border-b py-2.5 text-left"
+      style={{
+        borderColor: "var(--border)",
+        background: active ? "color-mix(in srgb, var(--accent) 4%, transparent)" : "transparent",
+      }}
+    >
+      {icon && (
+        <span className="flex-none" style={{ color: active ? "var(--accent)" : "var(--text2)" }}>
+          {icon}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block text-base font-medium leading-6">{label}</span>
+        {description && (
+          <span className="mt-0.5 block text-sm leading-5" style={{ color: "var(--text2)" }}>
+            {description}
+          </span>
+        )}
+      </span>
+      <motion.span
+        aria-hidden="true"
+        className="flex h-5 w-5 flex-none items-center justify-center rounded-full ks-motion-state"
+        animate={{ scale: active ? 1 : 0.94 }}
+        transition={motionSafe.state}
+        style={{
+          border: `1px solid ${active ? "var(--accent)" : "var(--control-border)"}`,
+          color: "var(--accent)",
+          background: active ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "transparent",
+        }}
+      >
+        {active && (
+          <motion.span
+            initial={motionSafe.reduced ? false : { opacity: 0, scale: 0.75 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={motionSafe.state}
+            className="flex"
+          >
+            <Check size={12} weight="bold" />
+          </motion.span>
+        )}
+      </motion.span>
+    </button>
   );
 }

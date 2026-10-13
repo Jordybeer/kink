@@ -1,5 +1,7 @@
 "use client";
 
+import RelationThread from "@/components/ui/RelationThread";
+
 import ProfileChip from "@/components/compare/ProfileChip";
 import { PROFILE_COLOUR_A, PROFILE_COLOUR_B } from "@/lib/compare";
 import type { Profile } from "@/types";
@@ -23,8 +25,10 @@ export default function CompareProfileHeader({
   const isPartnerB = Boolean(profileB?.isImported || profileB?.origin === "shared");
 
   return (
-    <div className="pb-3 mb-3" style={{ borderBottom: "1px solid var(--border)" }}>
-      <div className="grid grid-cols-2 gap-2">
+    <div className="ks-relational-surface mb-3 rounded-2xl px-3 pb-3 pt-3" style={{ border: "1px solid var(--border)" }}>
+      <div className={profileA && profileB
+        ? "grid grid-cols-2 items-stretch gap-2 sm:grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)] sm:items-center"
+        : "grid grid-cols-2 gap-2"}>
         <ProfileChip
           profile={profileA}
           colour={PROFILE_COLOUR_A}
@@ -32,6 +36,11 @@ export default function CompareProfileHeader({
           isPartner={isPartnerA}
           onClick={onOpenA}
         />
+        {profileA && profileB && (
+          <span className="hidden sm:block" aria-hidden="true">
+            <RelationThread />
+          </span>
+        )}
         <ProfileChip
           profile={profileB}
           colour={PROFILE_COLOUR_B}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hexToRgb, PDF_DARK_PAGE, PDF_PAPER_PALETTE, PDF_PARTY_ON_PAPER, PDF_STATUS_ON_PAPER, PDF_STATUS_ON_DARK } from "@/lib/pdfPalette";
+import { hexToRgb, PDF_PAPER_PALETTE, PDF_PARTY_ON_PAPER, PDF_STATUS_ON_PAPER } from "@/lib/pdfPalette";
 import { STATUS_ORDER } from "@/lib/statusLabels";
 
 // WCAG relative luminance → contrast ratio, so a colour can never sneak
@@ -30,10 +30,9 @@ describe("pdfPalette", () => {
     }
   });
 
-  it("covers all five verdicts on both surfaces", () => {
+  it("covers all five verdicts on paper", () => {
     for (const s of STATUS_ORDER) {
       expect(PDF_STATUS_ON_PAPER[s]).toMatch(/^#[0-9a-f]{6}$/);
-      expect(PDF_STATUS_ON_DARK[s]).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
 
@@ -42,13 +41,5 @@ describe("pdfPalette", () => {
     expect(PDF_PARTY_ON_PAPER.b).toMatch(/^#[0-9a-f]{6}$/);
     expect(PDF_PARTY_ON_PAPER.a).not.toBe(PDF_PARTY_ON_PAPER.b);
     expect(PDF_PARTY_ON_PAPER.a).toBe(PDF_PAPER_PALETTE.accent); // A wears the brand
-  });
-
-  it("dark-page chrome mirrors the warm-deep house palette", () => {
-    expect(PDF_DARK_PAGE.accent).toBe("#d4527c"); // --accent
-    expect(PDF_DARK_PAGE.bg).toBe("#09070d");     // --bg
-    expect(PDF_DARK_PAGE.muted).toBe("#a198a4"); // --text2
-    expect(PDF_DARK_PAGE.light).toBe("#f1eaf0"); // --text
-    expect(Object.values(PDF_DARK_PAGE)).not.toContain("#c084fc");
   });
 });

@@ -26,7 +26,6 @@ describe("shared motion accessibility contract", () => {
   it.each([
     "components/AppLock.tsx",
     "components/onboarding/Onboarding.tsx",
-    "components/PwaInstallGuide.tsx",
   ])("keeps launch-sensitive motion in %s explicit instead of direct TAP_SPRING usage", (path) => {
     const content = source(path);
     expect(content).toContain("useMotionSafe");

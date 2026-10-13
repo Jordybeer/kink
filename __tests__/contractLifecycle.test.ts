@@ -420,3 +420,42 @@ describe("contract lifecycle", () => {
     expect(parseContractQrValue(`KSC1P:abcdefgh.1.2.abcdefg.${"A".repeat(5_000)}`)).toBeNull();
   });
 });
+
+describe("optional contract source references", () => {
+  it("preserves references through signed QR activation and rejects source tampering", async () => {
+    const a = profile("a-dom", "A"), b = profile("b-sub", "B");
+    const keyA = await generateProfileOwnerKey(a.id), keyB = await generateProfileOwnerKey(b.id);
+    a.consentProof = (await signProfileConsent(a, keyA)).proof;
+    const draft = await draftSeries(a,b);
+    const body = draft.versions[0].content!;
+    Object.assign(body.shared[0], {sourceKind:"custom",sourceAId:"one",sourceBId:"one"});
+    Object.assign(body.hardLimits[0], {sourceKind:"custom",sourceBId:"limit"});
+    Object.assign(body.hardLimitDetails[0], {sourceKind:"custom",sourceBId:"limit"});
+    draft.versions[0].contentHash = await hashContractContent(body);
+    const request = await createContractRequest({series:draft,action:"activate",actor:a,counterparty:b,ownerKey:keyA});
+    const transferred = decodeContractEnvelope(encodeContractEnvelope(request.envelope));
+    expect(await verifyContractRequest(transferred)).toBe(true);
+    const response = await createContractResponse({envelope:transferred,trustedActor:a,responder:b,ownerKey:keyB});
+    const active = await verifyAndApplyContractResponse({currentSeries:request.series,envelope:decodeContractEnvelope(encodeContractEnvelope(response.envelope))});
+    const version = active.versions[0];
+    expect(version.content).toEqual(body);
+    expect(version.signatures).toHaveLength(2);
+    for (const proof of version.signatures) expect(await verifyContractProof(body,proof)).toBe(true);
+    const tampered = structuredClone(body);
+    tampered.shared[0].sourceAId = "different";
+    expect(await verifyContractProof(tampered,version.signatures[0])).toBe(false);
+    expect(await hashContractContent(tampered)).not.toBe(version.contentHash);
+  });
+  it("does not rewrite legacy content or proofs when composing referenced content", async () => {
+    const a = profile("a-dom","A"), b = profile("b-sub","B"), key = await generateProfileOwnerKey(a.id);
+    const legacy = content(a,b);
+    const bytes = JSON.stringify(legacy), hash = await hashContractContent(legacy);
+    const proof = await signContractPayload(legacy,a.id,key);
+    const fresh = structuredClone(legacy);
+    Object.assign(fresh.shared[0], {sourceKind:"custom",sourceAId:"one",sourceBId:"one"});
+    expect(await hashContractContent(fresh)).not.toBe(hash);
+    expect(JSON.stringify(legacy)).toBe(bytes);
+    expect(await hashContractContent(legacy)).toBe(hash);
+    expect(await verifyContractProof(legacy,proof)).toBe(true);
+  });
+});

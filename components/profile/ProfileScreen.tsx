@@ -1,56 +1,54 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   ArrowRight,
   CaretDown,
-  ChatCircle,
   FileArrowDown,
   FileText,
   Lock,
   Star,
   UserMinus,
-  X,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
 import { questionnaireCoverage, searchAllKinks } from "@/lib/questionnaire";
-import { useMotionSafe } from "@/lib/motion";
 import { getProfileType } from "@/lib/profileType";
 import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
-import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
-import type { Kink, KinkCategoryId, KinkStatus } from "@/types";
+import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profileReadSummary";
+import { profileHref } from "@/lib/localRoutes";
+import { useMotionSafe } from "@/lib/motion";
+import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
+import type { Kink, KinkCategory, KinkCategoryId, KinkStatus } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
-import BdsmtestScores from "@/components/BdsmtestScores";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
-import SegmentedPill from "@/components/ui/SegmentedPill";
 import CategorySection from "@/components/CategorySection";
 import KinkListRow from "@/components/KinkListRow";
 import KinkEditSheet from "@/components/KinkEditSheet";
 import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
 import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
 import QRModal from "@/components/QRModal";
+import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-type ProfileTab = "overzicht" | "bewerken";
-
-const TAB_VARIANTS = {
-  enter: (direction: number) => ({ opacity: 0, x: direction > 0 ? 28 : -28 }),
-  center: { opacity: 1, x: 0 },
-  exit: (direction: number) => ({ opacity: 0, x: direction > 0 ? -28 : 28 }),
-};
 const EMPTY_KINKS: Kink[] = [];
+const PROFILE_READ_CATEGORIES: readonly KinkCategory[] = [...CATEGORIES, "custom"];
+
+function profileReadCategoryLabel(category: KinkCategory): string {
+  return category === "custom" ? "Eigen onderwerpen" : kinkCategoryLabel(category);
+}
 
 const CATALOG_KINKS_BY_CATEGORY = new Map<KinkCategoryId, Kink[]>();
 for (const kink of KINKS) {
@@ -63,14 +61,12 @@ export default function ProfilePage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const transition = useMotionSafe();
   const hydrated = useHasHydrated();
   const {
     profiles,
     setEntry,
     addCustomKink,
     removeCustomKink,
-    setProfileAvatar,
     updatePrivateNote,
     pinnedProfileId,
     profileSnapshots,
@@ -78,8 +74,7 @@ export default function ProfilePage({ params }: Props) {
   } = useStore();
   const profile = profiles.find((candidate) => candidate.id === id);
 
-  const [activeTab, setActiveTab] = useState<ProfileTab | null>(null);
-  const [tabDirection, setTabDirection] = useState<1 | -1>(1);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<KinkCategoryId | null>(null);
   const [search, setSearch] = useState("");
@@ -87,29 +82,32 @@ export default function ProfilePage({ params }: Props) {
   const [editKink, setEditKink] = useState<Kink | null>(null);
   const [editing, setEditing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [showOverviewComments, setShowOverviewComments] = useState(true);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
   const [revealedPrivateResponses, setRevealedPrivateResponses] = useState<Set<string>>(new Set());
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const initializedProfileId = useRef<string | null>(null);
+  const [privateReadOpen, setPrivateReadOpen] = useState(false);
   const editQueryConsumed = useRef(false);
-
+  const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreCatalogFocus = useRef(false);
+  const motionSafe = useMotionSafe();
+  const interestsParam = searchParams.get("interests");
   useEffect(() => {
     setRevealedPrivateResponses(new Set());
+    setPrivateReadOpen(false);
     setIncludePrivateExports(false);
     setEditing(false);
+    setCatalogOpen(false);
     setCategoriesOpen(false);
     setCatalogCategoryFilter(null);
-    initializedProfileId.current = null;
+    setSearch("");
     editQueryConsumed.current = false;
+    restoreCatalogFocus.current = false;
   }, [id]);
 
   useEffect(() => {
-    if (!hydrated || !profile || initializedProfileId.current === profile.id) return;
-    initializedProfileId.current = profile.id;
-    const hasRatings = Object.values(profile.entries).some((entry) => entry.status);
-    setActiveTab(hasRatings ? "overzicht" : "bewerken");
-  }, [hydrated, profile]);
+    if (catalogOpen || !restoreCatalogFocus.current) return;
+    restoreCatalogFocus.current = false;
+    manageTriggerRef.current?.focus();
+  }, [catalogOpen]);
 
   useEffect(() => {
     if (!hydrated || !profile || profile.origin === "shared" || profile.isImported) return;
@@ -142,7 +140,6 @@ export default function ProfilePage({ params }: Props) {
   const currentProfile = profile;
   const coverage = questionnaireCoverage(currentProfile);
   const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
-  const effectiveTab = shared ? "overzicht" : activeTab;
   const visibleCategories = CATEGORIES;
   const exportMaxLevel = LEVEL_MAX.diepgaand;
   const searchTerm = search.trim();
@@ -152,9 +149,6 @@ export default function ProfilePage({ params }: Props) {
   const catalogCategoryFilterLabel = catalogCategoryFilter
     ? kinkCategoryLabel(catalogCategoryFilter)
     : "Alle categorieën";
-  const catalogFilterKinks = catalogCategoryFilter
-    ? CATALOG_KINKS_BY_CATEGORY.get(catalogCategoryFilter) ?? EMPTY_KINKS
-    : KINKS;
   const catalogCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
   const categoryFilterOptions = visibleCategories.map((category) => {
     const categoryKinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? EMPTY_KINKS;
@@ -170,32 +164,22 @@ export default function ProfilePage({ params }: Props) {
         (kink) => catalogCategoryFilter === null || kink.category === catalogCategoryFilter,
       )
     : [];
-  const searchResultIds = searchTerm ? new Set(searchResults.map((kink) => kink.id)) : null;
-  const activeFilterKinks = searchTerm ? searchResults : catalogFilterKinks;
 
-  const statusSegments = STATUS_ORDER.map((status) => ({
-    status,
-    count: activeFilterKinks.filter(
-      (kink) => currentProfile.entries[kink.id]?.status === status
-        && currentProfile.entries[kink.id]?.privateResponse !== true,
-    ).length,
-  })).filter((segment) => segment.count > 0);
+  const readSummary = buildProfileStatusReadSummary(
+    [
+      ...KINKS,
+      ...customKinks.map((custom) => ({
+        id: custom.id,
+        name: custom.name,
+        category: "custom" as const,
+      })),
+    ],
+    currentProfile.entries,
+  );
+  const readAnswerCount = readSummary.publicCount + readSummary.privateItems.length;
+  const hardLimitGroup = readSummary.groups.find((group) => group.status === "hard_no") ?? null;
+  const interestGroups = readSummary.groups.filter((group) => group.status !== "hard_no");
 
-  const overviewCategories = catalogCategoryFilter ? [catalogCategoryFilter] : visibleCategories;
-  const ratedByCategory = overviewCategories.map((category) => ({
-    category,
-    kinks: (CATALOG_KINKS_BY_CATEGORY.get(category) ?? []).filter(
-      (kink) => currentProfile.entries[kink.id]?.status && (!searchResultIds || searchResultIds.has(kink.id)),
-    ),
-  })).filter((section) => section.kinks.length > 0);
-
-  function switchTab(next: ProfileTab) {
-    if (next === activeTab) return;
-    const currentIndex = activeTab === "bewerken" ? 1 : 0;
-    const nextIndex = next === "bewerken" ? 1 : 0;
-    setTabDirection(nextIndex > currentIndex ? 1 : -1);
-    setActiveTab(next);
-  }
 
   function updateStatus(kinkId: string, status: KinkStatus) {
     setEntry(currentProfile.id, kinkId, { status, desire: null });
@@ -226,6 +210,14 @@ export default function ProfilePage({ params }: Props) {
     setCustomInput("");
   }
 
+  function closeCatalogManager() {
+    restoreCatalogFocus.current = true;
+    setCatalogOpen(false);
+    setCategoriesOpen(false);
+    setSearch("");
+    setCatalogCategoryFilter(null);
+  }
+
   function downloadText() {
     const text = buildProfileTextExport(currentProfile, exportMaxLevel, {
       includePrivateResponses: includePrivateExports,
@@ -246,404 +238,426 @@ export default function ProfilePage({ params }: Props) {
     doc.save(filename);
   }
 
+  if (interestsParam !== null) {
+    return <ProfileInterestBrowser profileId={id} profileName={currentProfile.name} groups={readSummary.groups} status={interestsParam} />;
+  }
+
   return (
-    <main className="max-w-3xl mx-auto w-full pt-6">
-      {errorMessage && (
-        <div
-          role="alert"
-          className="fixed top-4 left-4 right-4 mx-auto max-w-md z-[300] px-4 py-3 rounded-xl text-sm shadow-lg"
-          style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
-        >
-          {errorMessage}
+    <main className="mx-auto w-full max-w-3xl pt-6">
+      <h1 className="sr-only">{currentProfile.name}</h1>
+
+      {!catalogOpen && (
+        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-6">
+          <ProfileHero
+            profile={currentProfile}
+            onShare={shared ? undefined : () => setShareOpen(true)}
+            onEdit={shared ? undefined : () => setEditing(true)}
+            profileType={getProfileType(currentProfile, pinnedProfileId)}
+            embedded
+          />
+
+          {!shared && (
+            <section
+              className="mt-6 border-t pt-4"
+              style={{ borderColor: "var(--border)" }}
+              aria-labelledby="profile-questionnaire-title"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="profile-questionnaire-title" className="text-xs font-medium" style={{ color: "var(--text2)" }}>
+                  Vragenlijst
+                </h2>
+                <span className="text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                  {catalogRated} van {KINKS.length} beoordeeld
+                </span>
+              </div>
+
+              <Link
+                href={`/profile/${currentProfile.id}/questions`}
+                className="ks-motion-choice focus-ring mt-1 flex min-h-[68px] items-center gap-4 py-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
+                    {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+                    {coverage.complete
+                      ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
+                      : totalRated > 0
+                        ? "Ga verder waar je gebleven bent."
+                        : "Beantwoord vragen in je eigen tempo."}
+                  </p>
+                </div>
+                <ArrowRight size={16} weight="regular" aria-hidden="true" style={{ color: "var(--text2)" }} />
+              </Link>
+
+              <button
+                ref={manageTriggerRef}
+                type="button"
+                onClick={() => setCatalogOpen(true)}
+                aria-expanded="false"
+                aria-controls="profile-catalog-manager"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
+                style={{ color: "var(--text2)" }}
+              >
+                Onderwerpen beheren
+                <ArrowRight size={13} aria-hidden="true" />
+              </button>
+            </section>
+          )}
         </div>
       )}
 
-      <h1 className="sr-only">{currentProfile.name}</h1>
-      <div>
-        <ProfileHero
-          profile={currentProfile}
-          onShare={shared ? undefined : () => setShareOpen(true)}
-          onEdit={shared ? undefined : () => setEditing(true)}
-          onAvatarChange={(dataUrl) => setProfileAvatar(currentProfile.id, dataUrl)}
-          onError={(message) => {
-            setErrorMessage(message);
-            window.setTimeout(() => setErrorMessage(null), 5000);
-          }}
-          profileType={getProfileType(currentProfile, pinnedProfileId)}
-        />
-      </div>
-
-      {(currentProfile.bdsmtestScores?.length ?? 0) > 0 && (
-        <BdsmtestScores scores={currentProfile.bdsmtestScores!} url={currentProfile.bdsmtestUrl} />
-      )}
-
-      {!shared && (
-        <div className="mx-4 mb-3">
-          <Link
-            href={`/profile/${currentProfile.id}/questions`}
-            className="focus-ring flex min-h-12 items-center gap-3 rounded-2xl px-3.5 py-3"
-            style={{
-              background: "color-mix(in srgb, var(--accent) 8%, var(--surface2))",
-              border: "1px solid var(--border-accent)",
-            }}
+      {catalogOpen && !shared ? (
+        <section id="profile-catalog-manager" className="pb-5" aria-label="Onderwerpen beheren">
+          <div
+            data-testid="profile-catalog-manager-header"
+            className="mb-3 flex items-center gap-3 border-b px-[var(--page-gutter)] pb-3"
+            style={{ borderColor: "var(--border)" }}
           >
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                {coverage.complete ? "Verder ontdekken" : totalRated > 0 ? "Verder invullen" : "Start met vragen"}
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
-                {coverage.complete
-                  ? "Je eerste ronde is afgerond. Discover en Deep Dive blijven beschikbaar."
-                  : totalRated > 0
-                    ? "Ga verder waar je gebleven bent."
-                    : "Beantwoord vragen in je eigen tempo."}
+              <h2 className="text-base font-semibold">Onderwerpen beheren</h2>
+              <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
+                {catalogRated} van {KINKS.length} beoordeeld
               </p>
             </div>
-            <ArrowRight size={16} weight="bold" aria-hidden="true" style={{ color: "var(--accent)" }} />
-          </Link>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={closeCatalogManager}
+              className="ks-motion-choice focus-ring min-h-11 rounded-lg px-2.5 text-sm font-semibold"
+              style={{ color: "var(--accent-text)" }}
+            >
+              Gereed
+            </button>
+          </div>
 
-      {!shared && activeTab && (
-        <div className="mx-4 mb-3">
-          <SegmentedPill
-            segments={[
-              { value: "overzicht", label: "Overzicht" },
-              { value: "bewerken", label: "Bewerken" },
-            ]}
-            value={activeTab}
-            onChange={switchTab}
-          />
-        </div>
-      )}
+          <div className="mb-3 px-[var(--page-gutter)]" data-testid="profile-catalog-controls">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              aria-label="Volledige catalogus doorzoeken"
+              placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
+              className="focus-ring min-h-11 w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
 
-      {effectiveTab && (effectiveTab === "bewerken" || totalRated > 0) && (
-        <div className="px-4 mb-3" data-testid="profile-catalog-controls">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={effectiveTab === "overzicht"
-              ? (catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in je profiel…")
-              : (catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…")}
-            className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-          />
+            <button
+              type="button"
+              onClick={() => setCategoriesOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={categoriesOpen}
+              aria-label={`Categorie, ${catalogCategoryFilterLabel}`}
+              className="ks-motion-choice focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
+              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+            >
+              <span className="flex-none" style={{ color: "var(--text2)" }}>Categorie</span>
+              <span className="ml-auto min-w-0 truncate font-semibold">{catalogCategoryFilterLabel}</span>
+              <CaretDown size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
+            </button>
+          </div>
 
-          <div className="mt-2 flex items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setCategoriesOpen(true)}
-                aria-haspopup="dialog"
-                aria-expanded={categoriesOpen}
-                className="focus-ring inline-flex min-h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-                style={catalogCategoryFilter
-                  ? { background: "var(--surface3)", color: "var(--text)", border: "1px solid var(--border-accent)" }
-                  : { background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
-              >
-                <span className="truncate">{catalogCategoryFilterLabel}</span>
-                <CaretDown size={11} className="flex-none" aria-hidden="true" />
-              </button>
-              {catalogCategoryFilter && (
-                <button
-                  type="button"
-                  onClick={() => setCatalogCategoryFilter(null)}
-                  aria-label={`Filter ${catalogCategoryFilterLabel} wissen`}
-                  className="focus-ring flex h-9 w-9 flex-none items-center justify-center rounded-full"
-                  style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
-                >
-                  <X size={13} weight="bold" aria-hidden="true" />
-                </button>
+          {!searchTerm ? (
+            <div className="px-[var(--page-gutter)]">
+              {catalogCategories.map((category) => {
+                const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
+                if (!kinks.length) return null;
+                return (
+                  <CategorySection
+                    key={category}
+                    category={category}
+                    kinks={kinks}
+                    entries={currentProfile.entries}
+                    onEdit={setEditKink}
+                    openByDefault={catalogCategoryFilter === category}
+                  />
+                );
+              })}
+
+              {!catalogCategoryFilter && (
+                <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+                  <h3 className="mb-2 text-sm font-semibold">Eigen onderwerpen</h3>
+                  <div className="mb-3 flex flex-col gap-1">
+                    {customKinks.map((custom) => {
+                      const customAsKink: Kink = {
+                        id: custom.id,
+                        name: custom.name,
+                        category: "custom",
+                        level: 1,
+                      };
+                      return (
+                        <div key={custom.id} className="flex items-center gap-1">
+                          <div className="flex-1">
+                            <KinkListRow
+                              kink={customAsKink}
+                              entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
+                              onOpen={() => setEditKink(customAsKink)}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCustomKink(currentProfile.id, custom.id)}
+                            aria-label={`${custom.name} verwijderen`}
+                            className="ks-motion-choice focus-ring h-11 w-11 rounded-full"
+                            style={{ color: "var(--hard-no)" }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <form onSubmit={addCustom} className="flex gap-2">
+                    <input
+                      value={customInput}
+                      onChange={(event) => setCustomInput(event.target.value)}
+                      aria-label="Eigen onderwerp toevoegen"
+                      placeholder="Voeg iets eigens toe…"
+                      className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm focus:outline-none"
+                      style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                    />
+                    <button
+                      type="submit"
+                      className="ks-motion-choice focus-ring min-h-11 rounded-xl px-3 text-sm font-semibold"
+                      style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                    >
+                      Toevoegen
+                    </button>
+                  </form>
+                </section>
               )}
             </div>
-            {effectiveTab === "overzicht" && totalRated > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowOverviewComments((value) => !value)}
-                aria-label={showOverviewComments ? "Verberg notities" : "Toon notities"}
-                className="focus-ring inline-flex min-h-10 flex-none items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold"
-                style={{ color: showOverviewComments ? "var(--accent)" : "var(--text2)", border: "1px solid var(--border)" }}
-              >
-                <ChatCircle aria-hidden="true" size={16} />
-                <span>{showOverviewComments ? "Verberg notities" : "Toon notities"}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+          ) : (
+            <div className="px-[var(--page-gutter)]">
+              <div className="flex flex-col">
+                {searchResults.map((kink) => (
+                  <KinkListRow
+                    key={kink.id}
+                    kink={kink}
+                    entry={currentProfile.entries[kink.id] ?? { status: null, comment: "" }}
+                    onOpen={() => setEditKink(kink)}
+                  />
+                ))}
+              </div>
+              {searchResults.length === 0 && (
+                <p className="py-8 text-center text-sm" style={{ color: "var(--text2)" }}>
+                  Geen onderwerpen gevonden.
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
+          <h2
+            id="profile-interests-title"
+            tabIndex={-1}
+            className="outline-none scroll-mt-[var(--nav-h)] mb-4 text-2xl italic leading-tight"
+            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+          >
+            Interesses &amp; grenzen
+          </h2>
 
-      {effectiveTab === "overzicht" && totalRated > 0 && !searchTerm && statusSegments.length > 0 && (
-        <div
-          role="img"
-          aria-label={statusSegments.map((segment) => `${segment.count} ${STATUS_LABEL[segment.status]}`).join(", ")}
-          className="mx-4 mb-3 h-1.5 rounded-full overflow-hidden flex"
-          style={{ background: "var(--surface2)" }}
-        >
-          {statusSegments.map((segment) => (
-            <div
-              key={segment.status}
-              className="h-full"
-              style={{ flex: segment.count, background: STATUS_VAR[segment.status] }}
-            />
-          ))}
-        </div>
-      )}
+          {readAnswerCount === 0 ? (
+            <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>
+              Nog geen onderwerpen beoordeeld.
+            </p>
+          ) : (
+            <div data-testid="profile-status-overview">
+              {hardLimitGroup && (
+                <section
+                  data-testid="profile-read-hard-limits"
+                  className="border-y py-3.5 [overflow-wrap:anywhere]"
+                  style={{ borderColor: "color-mix(in srgb, var(--hard-no) 24%, var(--border))" }}
+                  aria-labelledby="profile-hard-limits-title"
+                >
+                  <div className="mb-2.5 flex items-baseline gap-3">
+                    <h3
+                      id="profile-hard-limits-title"
+                      className="min-w-0 flex-1 text-base font-semibold leading-6"
+                      style={{ color: "var(--hard-no-text)" }}
+                    >
+                      Harde grenzen
+                    </h3>
+                    <span className="flex-none text-sm tabular-nums" style={{ color: "color-mix(in srgb, var(--hard-no) 24%, var(--text2))" }}>
+                      {hardLimitGroup.items.length}
+                    </span>
+                  </div>
+                  <ProfileReadItemsByCategory items={hardLimitGroup.items} showContext />
+                </section>
+              )}
 
-      <div className="relative overflow-x-hidden">
-        <AnimatePresence initial={false} custom={tabDirection} mode="popLayout">
-          {effectiveTab === "bewerken" && (
-            <motion.section
-              key="edit"
-              custom={tabDirection}
-              variants={TAB_VARIANTS}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={transition.fast}
-              className="pb-5"
-            >
-              {!searchTerm ? (
-                <div className="px-4">
-                  {catalogCategories.map((category) => {
-                    const kinks = CATALOG_KINKS_BY_CATEGORY.get(category) ?? [];
-                    if (!kinks.length) return null;
-                    return (
-                      <CategorySection
-                        key={category}
-                        category={category}
-                        kinks={kinks}
-                        entries={currentProfile.entries}
-                        onEdit={setEditKink}
-                        openByDefault={catalogCategoryFilter === category}
-                      />
-                    );
-                  })}
+              {interestGroups.length > 0 && (
+                <section className={hardLimitGroup ? "mt-6" : ""} aria-labelledby="profile-interests-summary-title">
+                  <h3 id="profile-interests-summary-title" tabIndex={-1} className="outline-none scroll-mt-[var(--nav-h)] mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
+                    Interesses
+                  </h3>
 
-                  {!catalogCategoryFilter && (
-                    <section className="rounded-xl mt-3 p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
-                      <h3 className="text-sm font-semibold mb-2">Eigen onderwerpen</h3>
-                      <div className="flex flex-col gap-1 mb-3">
-                        {customKinks.map((custom) => {
-                          const customAsKink: Kink = {
-                            id: custom.id,
-                            name: custom.name,
-                            category: "custom",
-                            level: 1,
-                          };
-                          return (
-                            <div key={custom.id} className="flex items-center gap-1">
-                              <div className="flex-1">
-                                <KinkListRow
-                                  kink={customAsKink}
-                                  entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
-                                  onOpen={() => setEditKink(customAsKink)}
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeCustomKink(currentProfile.id, custom.id)}
-                                aria-label={`${custom.name} verwijderen`}
-                                className="focus-ring w-10 h-10 rounded-full"
-                                style={{ color: "var(--hard-no)" }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <form onSubmit={addCustom} className="flex gap-2">
-                        <input
-                          value={customInput}
-                          onChange={(event) => setCustomInput(event.target.value)}
-                          placeholder="Voeg iets eigens toe…"
-                          className="focus-ring flex-1 min-h-11 rounded-xl px-3 text-sm focus:outline-none"
-                          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-                        />
-                        <button
-                          type="submit"
-                          className="focus-ring min-h-11 px-3 rounded-xl text-sm font-semibold"
-                          style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-                        >
-                          Toevoegen
-                        </button>
-                      </form>
-                    </section>
-                  )}
-                </div>
-              ) : (
-                <div className="px-4">
-                  <div className="flex flex-col">
-                    {searchResults.map((kink) => (
-                      <KinkListRow
-                        key={kink.id}
-                        kink={kink}
-                        entry={currentProfile.entries[kink.id] ?? { status: null, comment: "" }}
-                        onOpen={() => setEditKink(kink)}
-                      />
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {interestGroups.map((group) => (
+                      <Link
+                        key={group.status}
+                        href={`${profileHref(id)}&interests=${group.status}`}
+                        data-testid={`profile-read-status-${group.status}`}
+                        aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}. Bekijk interesses`}
+                        className="ks-motion-choice focus-ring flex min-h-11 items-center gap-2 text-sm"
+                      >
+                        <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[group.status] }} aria-hidden="true" />
+                        <span className="min-w-0 flex-1 font-semibold">{STATUS_LABEL[group.status]}</span>
+                        <span className="tabular-nums" style={{ color: "var(--text2)" }}>{group.items.length}</span>
+                      </Link>
                     ))}
                   </div>
-                  {searchResults.length === 0 && (
-                    <p className="text-center text-sm py-8" style={{ color: "var(--text2)" }}>
-                      Geen onderwerpen gevonden.
-                    </p>
-                  )}
-                </div>
-              )}
-            </motion.section>
-          )}
-
-          {effectiveTab === "overzicht" && (
-            <motion.section
-              key="overview"
-              custom={tabDirection}
-              variants={TAB_VARIANTS}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={transition.fast}
-              className="px-4 pt-3 pb-5"
-            >
-              {totalRated === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-sm mb-3" style={{ color: "var(--text2)" }}>Nog niets beoordeeld.</p>
-                  {!shared && (
-                    <Link
-                      href={`/profile/${currentProfile.id}/questions`}
-                      className="focus-ring inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
-                      style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-                    >
-                      Start met vragen
-                    </Link>
-                  )}
-                </div>
-              ) : ratedByCategory.length === 0 ? (
-                <p className="text-center text-sm py-8" style={{ color: "var(--text2)" }}>
-                  Geen beoordeelde onderwerpen gevonden.
-                </p>
-              ) : (
-                <>
-                  {ratedByCategory.map(({ category, kinks }) => (
-                    <section key={category} className="mb-4">
-                      <h3
-                        className="text-base italic mb-2"
-                        style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-                      >
-                        {kinkCategoryLabel(category)}
-                      </h3>
-                      <div className="flex flex-col gap-1.5">
-                        {kinks.map((kink) => {
-                          const entry = currentProfile.entries[kink.id];
-                          const status = entry.status!;
-                          const concealed = !!entry.privateResponse && !privateResponseRevealed(kink.id);
-                          return (
-                            <div
-                              key={kink.id}
-                              className="rounded-xl px-3 py-2.5"
-                              style={{
-                                background: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                borderLeft: concealed ? "4px solid transparent" : `4px solid ${STATUS_VAR[status]}`,
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm flex-1">{kink.name}</span>
-                                {!concealed && entry.curious && <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />}
-                                <PrivateResponseStatus
-                                  status={status}
-                                  privateResponse={entry.privateResponse === true}
-                                  concealed={concealed}
-                                  subject={kink.name}
-                                  onReveal={() => revealPrivateResponse(kink.id)}
-                                  onConceal={() => concealPrivateResponse(kink.id)}
-                                />
-                              </div>
-                              {!concealed && showOverviewComments && entry.comment && (
-                                <p className="text-xs mt-1" style={{ color: "var(--text2)" }}>{entry.comment}</p>
-                              )}
-                              {!concealed && (entry.tags?.length ?? 0) > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                  {entry.tags!.map((tag) => (
-                                    <span key={tag} className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--tag-muted)", color: "var(--text2)" }}>
-                                      {tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))}
-                </>
-              )}
-
-              {shared && (
-                <section className="mt-4">
-                  <label className="block text-sm italic mb-1.5" style={{ color: "var(--text2)" }}>
-                    Persoonlijke notitie
-                  </label>
-                  <textarea
-                    value={currentProfile.privateNote ?? ""}
-                    onChange={(event) => updatePrivateNote(currentProfile.id, event.target.value)}
-                    rows={3}
-                    placeholder="Wanneer ontmoet, indrukken…"
-                    className="focus-ring w-full rounded-xl px-3 py-2.5 text-sm resize-none"
-                    style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
-                  />
-                  <p className="text-xs mt-2 flex items-center justify-center gap-1.5" style={{ color: "var(--text2)" }}>
-                    <Lock size={12} aria-hidden="true" /> Gedeeld profiel. Bewerken en opnieuw delen zijn uitgeschakeld.
-                  </p>
+                  <div
+                    data-testid={`profile-read-status-${interestGroups[0].status}-summary`}
+                    className="mt-3 grid gap-1 rounded-r-xl px-3 py-3 text-base leading-6 [overflow-wrap:anywhere]"
+                    style={profileReadAccent(interestGroups[0].status)}
+                  >
+                    <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>{STATUS_LABEL[interestGroups[0].status]}</p>
+                    {interestGroups[0].items.slice(0, 3).map((item) => <p key={item.id}>{item.name}</p>)}
+                  </div>
+                  <Link href={`${profileHref(id)}&interests=${interestGroups[0].status}`} className="ks-motion-choice focus-ring mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent-text)" }}>
+                    Bekijk interesses &amp; grenzen <ArrowRight size={15} aria-hidden="true" />
+                  </Link>
                 </section>
               )}
 
-              {!shared && totalRated > 0 && (
-                <ProfileSnapshotPanel
-                  profileId={currentProfile.id}
-                  snapshots={profileSnapshots}
-                  currentEntries={currentProfile.entries}
-                  onSave={saveProfileSnapshot}
-                />
-              )}
+              {!shared && readSummary.privateItems.length > 0 && (
+                <section className="mt-5 border-y" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
+                  <h3>
+                    <button
+                      type="button"
+                      data-testid="profile-read-private"
+                      onClick={() => setPrivateReadOpen((open) => !open)}
+                      aria-expanded={privateReadOpen}
+                      aria-controls="profile-read-private-content"
+                      className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                    >
+                      <Lock size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+                      <span className="min-w-0 flex-1 text-sm font-semibold">Privéantwoorden</span>
+                      <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                        {readSummary.privateItems.length}
+                      </span>
+                      <motion.span
+                        className="flex flex-none"
+                        animate={{ rotate: privateReadOpen ? 180 : 0 }}
+                        transition={motionSafe.state}
+                        aria-hidden="true"
+                        style={{ color: "var(--text2)" }}
+                      >
+                        <CaretDown size={15} />
+                      </motion.span>
+                    </button>
+                  </h3>
 
-              {!shared && totalRated > 0 && (
-                <section className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-                  <h3 className="text-sm italic mb-2" style={{ color: "var(--text2)" }}>Download dit profiel</h3>
-                  {hasPrivateResponses(currentProfile.entries) && (
-                    <label className="flex items-center gap-2 text-xs mb-2" style={{ color: "var(--text2)" }}>
-                      <input
-                        type="checkbox"
-                        checked={includePrivateExports}
-                        onChange={(event) => setIncludePrivateExports(event.target.checked)}
-                      />
-                      Privé antwoorden meenemen
-                    </label>
-                  )}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={downloadText}
-                      className="focus-ring min-h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
-                      style={{ border: "1px solid var(--border)", color: "var(--text)" }}
-                    >
-                      <FileText aria-hidden="true" size={16} /> Tekst
-                    </button>
-                    <button
-                      type="button"
-                      onClick={downloadPdf}
-                      className="focus-ring min-h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2"
-                      style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-                    >
-                      <FileArrowDown aria-hidden="true" size={16} /> PDF
-                    </button>
+                  <div id="profile-read-private-content" hidden={!privateReadOpen} className="pb-1">
+                    {privateReadOpen ? readSummary.privateItems.map((item, index) => {
+                      const entry = currentProfile.entries[item.id]!;
+                      const concealed = !privateResponseRevealed(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex min-h-11 items-start gap-3 py-2.5 [overflow-wrap:anywhere]"
+                          style={index > 0
+                            ? { borderTop: "1px solid color-mix(in srgb, var(--border) 46%, transparent)" }
+                            : undefined}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium leading-5">{item.name}</p>
+                            <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                              {profileReadCategoryLabel(item.category)}
+                            </p>
+                            {!concealed && entry.comment && (
+                              <p className="mt-1 text-xs leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
+                                {entry.comment}
+                              </p>
+                            )}
+                          </div>
+                          <PrivateResponseStatus
+                            status={entry.status}
+                            privateResponse
+                            concealed={concealed}
+                            subject={item.name}
+                            onReveal={() => revealPrivateResponse(item.id)}
+                            onConceal={() => concealPrivateResponse(item.id)}
+                            plain
+                          />
+                        </div>
+                      );
+                    }) : null}
                   </div>
                 </section>
               )}
-            </motion.section>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
+
+          {shared && (
+            <section className="mt-4">
+              <label htmlFor="profile-private-note" className="mb-1.5 block text-sm italic" style={{ color: "var(--text2)" }}>
+                Persoonlijke notitie
+              </label>
+              <textarea
+                id="profile-private-note"
+                value={currentProfile.privateNote ?? ""}
+                onChange={(event) => updatePrivateNote(currentProfile.id, event.target.value)}
+                rows={3}
+                placeholder="Wanneer ontmoet, indrukken…"
+                className="focus-ring w-full resize-none rounded-xl px-3 py-2.5 text-sm"
+                style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-xs" style={{ color: "var(--text2)" }}>
+                <Lock size={12} aria-hidden="true" /> Gedeeld profiel. Bewerken en opnieuw delen zijn uitgeschakeld.
+              </p>
+            </section>
+          )}
+
+          {!shared && totalRated > 0 && (
+            <ProfileSnapshotPanel
+              profileId={currentProfile.id}
+              snapshots={profileSnapshots}
+              currentEntries={currentProfile.entries}
+              onSave={saveProfileSnapshot}
+            />
+          )}
+
+          {!shared && totalRated > 0 && (
+            <section className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+              <h3 className="mb-1 text-sm font-semibold" style={{ color: "var(--text)" }}>Download dit profiel</h3>
+              <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--text2)" }}>
+                Tekst is screenreader-vriendelijk; PDF is opgemaakt voor scherm en A4-print.
+              </p>
+              {hasPrivateResponses(currentProfile.entries) && (
+                <label className="mb-2 flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--text2)" }}>
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 flex-none"
+                    checked={includePrivateExports}
+                    onChange={(event) => setIncludePrivateExports(event.target.checked)}
+                  />
+                  Privé antwoorden meenemen
+                </label>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={downloadText}
+                  aria-label="Download toegankelijke tekstexport"
+                  className="ks-motion-choice focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+                  style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                >
+                  <FileText aria-hidden="true" size={16} /> Tekst
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadPdf}
+                  className="ks-motion-choice focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+                  style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+                >
+                  <FileArrowDown aria-hidden="true" size={16} /> PDF
+                </button>
+              </div>
+            </section>
+          )}
+        </section>
+      )}
 
       <CategoryFilterSheet
         open={categoriesOpen}
@@ -666,6 +680,134 @@ export default function ProfilePage({ params }: Props) {
       <ProfileEditSheet open={editing && !shared} profile={currentProfile} onClose={() => setEditing(false)} />
       <QRModal profile={shareOpen && !shared ? currentProfile : null} onClose={() => setShareOpen(false)} />
     </main>
+  );
+}
+
+const EMPTY_NAV_ACTIONS: TopNavAction[] = [];
+
+function ProfileInterestBrowser({ profileId, profileName, groups, status }: {
+  profileId: string;
+  profileName: string;
+  groups: { status: NonNullable<KinkStatus>; items: ProfileReadItem[] }[];
+  status: string;
+}) {
+  const activeGroup = groups.find((group) => group.status === status)
+    ?? groups.find((group) => group.status !== "hard_no") ?? groups[0];
+  const readerHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  useTopNavActions(EMPTY_NAV_ACTIONS, "Interesses & grenzen", profileHref(profileId) + "#profile-interests-title");
+  useEffect(() => {
+    readerHeadingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [status, profileId]);
+  return (
+    <main className="mx-auto w-full max-w-3xl">
+      <section aria-labelledby="profile-interest-browser-title">
+        <div
+          className="px-[var(--page-gutter)] pt-3"
+          style={{ background: "var(--bg)" }}
+        >
+          <Link href={profileHref(profileId) + "#profile-interests-title"} className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 text-sm font-medium" style={{ color: "var(--text2)" }}>
+            <ArrowLeft size={16} aria-hidden="true" /> Terug naar profiel
+          </Link>
+          <h1 id="profile-interest-browser-title" ref={readerHeadingRef} tabIndex={-1} className="outline-none text-xl italic leading-7" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>
+            Interesses &amp; grenzen
+          </h1>
+          <p className="mt-1 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>{profileName}</p>
+        </div>
+          <nav aria-label="Antwoordstatus" className="sticky top-[var(--nav-h)] z-10 mt-3 flex flex-wrap gap-x-4 gap-y-1 border-b px-[var(--page-gutter)] py-3" style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
+            {groups.map((group) => (
+              <Link
+                key={group.status}
+                href={`${profileHref(profileId)}&interests=${group.status}`}
+                replace
+                aria-current={activeGroup?.status === group.status ? "page" : undefined}
+                aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}`}
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 border-b-2 text-sm"
+                style={{
+                  borderColor: activeGroup?.status === group.status ? STATUS_VAR[group.status] : "transparent",
+                  color: activeGroup?.status === group.status ? "var(--text)" : "var(--text2)",
+                  fontWeight: activeGroup?.status === group.status ? 600 : 400,
+                }}
+              >
+                {STATUS_LABEL[group.status]} <span className="tabular-nums">{group.items.length}</span>
+              </Link>
+            ))}
+          </nav>
+        <div className="px-[var(--page-gutter)] py-5">
+          {activeGroup ? (
+            <section id={`profile-read-status-${activeGroup.status}-content`} aria-labelledby="profile-active-status-title">
+              <h2 id="profile-active-status-title" className="mb-5 text-base font-semibold">{STATUS_LABEL[activeGroup.status]} · {activeGroup.items.length}</h2>
+              <ProfileReadItemsByCategory items={activeGroup.items} showContext />
+            </section>
+          ) : <p className="text-sm" style={{ color: "var(--text2)" }}>Nog geen openbare antwoorden.</p>}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+// The rail carries identity; text and explicit status headings carry meaning.
+// Only public read items reach this treatment. Concealed answers stay neutral.
+function profileReadAccent(status: NonNullable<KinkStatus>) {
+  return {
+    borderInlineStart: `3px ${status === "hard_no" ? "dashed" : "solid"} ${STATUS_VAR[status]}`,
+    background: `color-mix(in srgb, ${STATUS_VAR[status]} 5%, var(--surface))`,
+  };
+}
+
+function ProfileReadItemsByCategory({
+  items,
+  showContext,
+}: {
+  items: ProfileReadItem[];
+  showContext?: boolean;
+}) {
+  const groups = PROFILE_READ_CATEGORIES
+    .map((category) => ({
+      category,
+      items: items.filter((item) => item.category === category),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return (
+    <div className="grid gap-4 [overflow-wrap:anywhere]">
+      {groups.map((group) => (
+        <div key={group.category}>
+          <p
+            className="mb-2 text-xl font-medium leading-6"
+            style={{ color: "var(--text)", fontFamily: "var(--font-display, Georgia, serif)" }}
+          >
+            {profileReadCategoryLabel(group.category)}
+          </p>
+          <div className="grid gap-2">
+            {group.items.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-r-xl px-3 py-3"
+                style={profileReadAccent(item.status)}
+              >
+                <div className="flex items-center gap-1.5">
+                  <p className="min-w-0 text-base leading-6">{item.name}</p>
+                  {item.curious && (
+                    <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />
+                  )}
+                </div>
+                {showContext && item.comment && (
+                  <p className="mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
+                    {item.comment}
+                  </p>
+                )}
+                {showContext && item.tags.length > 0 && (
+                  <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
+                    {item.tags.map((tag) => tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag).join(" · ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -107,12 +107,12 @@ export const QUESTIONNAIRE_MODES: Array<{
   {
     value: "dynamic",
     label: "Dynamic",
-    description: "Brede dekking, met lokale vervolgvragen die alleen uit jouw expliciete antwoorden ontstaan.",
+    description: "Begint breed en laat relevante vervolgvragen eerder zien. Je antwoorden worden nooit voorspeld of ingevuld.",
   },
   {
     value: "deepDive",
     label: "Deep Dive",
-    description: "Werk uiteindelijk de volledige catalogus af; de volgorde blijft rustig en gevarieerd.",
+    description: "Toont uiteindelijk de volledige catalogus. Je beoordeelt elk onderwerp zelf.",
   },
 ];
 

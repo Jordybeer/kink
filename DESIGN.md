@@ -1,0 +1,249 @@
+# KinkSync Design Context
+
+`DESIGN.md` describes the current visual world and the design decisions future agents should preserve. It does **not** outrank `UI-principles.md`. When aesthetics conflict with consent, safety, privacy, readability or stable interaction geometry, the higher principle wins.
+
+## Authority order for UI work
+
+Read and apply in this order:
+
+1. `PRODUCT.md` for durable product truth and non-goals;
+2. `UI-principles.md` for binding interface doctrine and conflict priority;
+3. this `DESIGN.md` for the current visual language and surface-level decisions;
+4. `corrections.md` for known mistakes and regressions;
+5. the incumbent implementation, screenshots and tests as evidence of what currently ships.
+
+Impeccable, `frontend-design`, screenshots, trends and agent taste are review lenses only. They may sharpen the work but may not replace this hierarchy.
+
+## Surface mode
+
+KinkSync's product UI is primarily **Operate with room for reflection**.
+
+The user is doing real tasks, but speed is not the only success metric. Interfaces should be scannable and stable while still leaving enough air to think about sensitive choices.
+
+## Emotional target
+
+The product should feel:
+
+- private;
+- intimate;
+- editorial rather than corporate;
+- warm rather than clinical;
+- adult rather than gimmicky;
+- calm but not sterile;
+- designed, without constantly announcing that it was designed.
+
+A useful test: the screen should feel like a thoughtful private space, not a dashboard assembled from component-library cards.
+
+## Core visual language
+
+### Typography
+
+- Editorial/display serif is reserved for brand identity, names, meaningful headings and selected section moments.
+- Body copy, metadata and controls use the established sans/body system.
+- Use existing font variables and components. Do not introduce a new font family locally to solve one surface.
+- Hierarchy comes from scale, weight, whitespace and placement before borders or badges.
+
+### Colour
+
+Use semantic design roles from `app/design-role-tokens.css`. Do not hard-code new mode-specific colours inside components when an existing role expresses the intent.
+
+Current palette character:
+
+- dark base: near-black aubergine rather than neutral black;
+- light base: warm near-white with pink/lilac undertone;
+- matte rose/salmon carries action and progress;
+- lavender carries identity, focus and supporting structure;
+- status hues retain their semantic meaning.
+
+Colour can be expressive while visual weight stays restrained.
+
+### Geometry
+
+- Mobile page gutter is the shared token, currently 1.25rem on small screens.
+- Minimum touch target is 2.75rem / 44px.
+- Respect safe areas, browser viewport behaviour and installed-PWA geometry explicitly.
+- Browser and installed PWA may expose different chrome, but content should not reserve invisible controls.
+- Repeated interaction geometry must stay stable.
+
+### Depth
+
+Use depth sparingly. Shadows, borders, glow and tinted surfaces are accents, not default wrappers.
+
+One meaningful feature surface is stronger than five equally decorated cards.
+
+## Container discipline
+
+This is a locked design direction.
+
+**Do not wrap every concept in a card. Do not nest cards merely to create hierarchy.**
+
+Prefer, in order:
+
+1. whitespace and grouping;
+2. typography and alignment;
+3. subtle dividers;
+4. a shared surface when a group truly needs containment;
+5. a distinct feature surface only when an action or concept deserves focal weight.
+
+Avoid "container lasagne": card inside card, bordered pill inside card, then another bordered section immediately below.
+
+Ordinary labels should not become pills merely because a pill component exists. Metadata should usually read as metadata.
+
+## Home
+
+### Shared masthead
+
+Empty and populated Home use the same brand masthead and the same post-masthead rhythm. The wordmark and subtitle are one identity block, not separate page content.
+
+Do not independently nudge empty and populated Home unless there is a real behavioural reason. A spacing fix that makes one state pretty while breaking the other is a regression.
+
+### Empty Home
+
+The first-profile state may use one deliberate feature surface because it is the entire activation task.
+
+Hierarchy:
+
+1. create my profile;
+2. scan/import a partner profile;
+3. restore an existing backup as tertiary utility.
+
+Locked backup-import treatment, not necessarily implemented yet:
+
+- place it below `Scan partnerprofiel` within the empty-state area;
+- do **not** make it a third equal large card;
+- use quiet utility treatment, for example `Heb je al een back-up?` followed by `Importeer back-up`;
+- invoking it should reuse the established backup import/restore path rather than inventing a parallel restore system.
+
+### Populated Home
+
+The current heavy stack of bordered surfaces is an anti-reference for the next refinement.
+
+Locked direction:
+
+- section heading should be simply `Mijn profielen`; a redundant right-aligned profile count adds noise when the profiles are already visible;
+- profile entries should read primarily as **content/people**, not independent dashboard cards competing for attention;
+- profile rows may share a flatter grouping with whitespace/dividers rather than one heavy container per person;
+- `Vergelijk` may retain stronger feature-surface treatment because it represents a combined action across profiles;
+- Contracts, Scenes and Agenda should be quieter utility rows;
+- `Nieuw profiel` and `Scan profiel` remain clear actions but must not make the lower half of Home another equal-weight card grid.
+
+The goal is fewer simultaneous rectangles and a clearer visual sentence.
+
+## Profile surfaces
+
+### Profile read overview
+
+- The read view is **person-first and status-first**. It answers what this person explicitly wants, accepts, is unsure about, offers for a partner, or marks as a hard boundary. Catalogue categories are secondary orientation, not the top-level structure.
+- Hard boundaries are a distinct safety layer and every public hard boundary remains named without requiring expansion. Do not reduce them to a count or a partial preview.
+- The four interest statuses have compact public counts and three stable catalogue-order examples from the first available interest status. A single dedicated `Interesses & grenzen` view displays one status at a time, grouped by quiet category labels. Do not rank within a status or expand long lists inline.
+- Status counts replace the old distribution bar. One explicit `Bekijk interesses & grenzen` link opens the dedicated view; individual counts may open their status directly.
+- Public counts exclude private answers. On an own profile, private answers live in a separate deliberate disclosure and their status/context remain concealed until individually revealed. Shared profiles must not leak private information through counts, grouping or ordering.
+- Detail rows inherit their meaning from the active status, so they do not repeat a status pill on every item. Notes and agreement context remain quiet secondary text and appear with their named subject rather than being algorithmically promoted.
+- Owner-approved identity refinement (2026-10-11): preserve the reference screenshot's warm semantic hues, 3px status rails and editorial serif category headings in the read overview and interest browser. Use a light semantic surface tint without surrounding outlines, shadows or repeated status pills. Hard-boundary rails are dashed as an additional cue. This is a deliberate identity choice, not permission to restore nested card stacks. Concealed answers must not reveal their status through decorative colour.
+- Catalogue management intentionally remains **category-first** because its job is retrieval and editing: catalogue → category → topic → explicit status. Read and manage views are two lenses on the same explicit data, not one hierarchy forced onto both jobs.
+- The dedicated status browser has a sticky title and wrapping status navigation. Lists render immediately without reveal/loading animation. Use the existing `/profile` query shell so reload, back navigation and offline cache keep the same document route.
+- Hard boundaries may use one quiet safety-tinted surface because they are semantically distinct. Keep every public boundary immediately readable and never make safety information depend on disclosure or animation.
+
+### Topic editor
+
+- Use the same two-step orientation language as Profile Edit, but do **not** turn topic editing into a required wizard. Step 1 is **Antwoord**; step 2 is **Details**. `Klaar` remains available from either step.
+- Step 1 lets the topic lead: name, category, description and any safety text, followed by the five explicit status choices. Safety meaning stays fully readable and never moves behind the Details step.
+- Step 2 contains optional refinement only: agreements, visibility and context. Keep those three semantic groups readable inside one flat details screen rather than stacking them beneath the primary status decision.
+- Use one scroll body per active step and keep the step/header controls outside that scroll region. Do not reserve a persistent bottom footer that steals mobile viewport height.
+- Status choices remain flat list rows with a small state mark and the exact status explanation beneath the label. The questionnaire keeps its existing card-style answer choices.
+- Preserve immediate-save behavior, privacy semantics and the existing status vocabulary. Switching steps changes presentation only; it never commits, infers or copies an answer.
+
+### Profile Hero
+
+Locked direction for the upcoming redesign:
+
+- the person comes first: avatar/photo, name, role/perspective and meaningful experience/context;
+- remove thick pills for ordinary ownership/edit metadata such as `Eigen profiel` and `Profiel bewerken`;
+- reduce badge clusters;
+- trust/source metadata should be legible but quieter;
+- FetLife/BDSMTest/contract/context integrations should not overpower the human identity;
+- a private note should not automatically become another loud section card.
+
+A profile should feel like a person with context, not a stack of metadata widgets.
+
+### Profile Edit
+
+Target structure:
+
+1. **Identiteit**: photo/avatar, name/alias, explicit perspective/role, linked perspective when relevant;
+2. **Vragenlijst**: interest areas and how the user continues filling the profile.
+
+Keep the step indicator if it improves orientation. Keep photo copy concise. Avoid redundant helper paragraphs.
+
+Do not invent a generic `Privacy & boundaries` section unless real editable settings justify it.
+
+Do not use a tab-semantic segmented control for a choice that is not actually tab navigation. Use controls whose accessibility semantics match the decision.
+
+## Motion
+
+Motion must explain state or provide tactile feedback. It should be bounded and local.
+
+On Profile surfaces, disclosure is the authored motion moment when the disclosed body is compact. For catalogue categories or profile stacks that can contain many rows, render the body immediately and animate only the trigger state/caret; do not tween height or fade a large list in from an empty surface. Press, selection and toggle feedback stay faster and quieter. Safety information never waits on animation, and page-load choreography is intentionally absent.
+
+Reduced motion removes spatial travel while preserving immediate color/opacity feedback so state changes remain legible.
+
+For ambient brand motion, preserve the existing doctrine from `memory.md`: slow cycles, shallow opacity/position changes, and no attention-seeking blink language.
+
+No bounce or elastic motion merely to look polished.
+
+## Light and dark themes
+
+Both themes are first-class. Do not design in one mode and mechanically invert the other.
+
+Use the semantic roles already defined in `app/design-role-tokens.css`; contrast must be measured on the actual tinted surface, not assumed from the raw token pair.
+
+Never use low-contrast grey text on a coloured/tinted background because it looks "soft".
+
+## Anti-patterns to catch during review
+
+Fail the review when a change introduces any of these without a strong product reason:
+
+- card-in-card structure;
+- a bordered container for every row;
+- multiple equally loud primary surfaces in one viewport;
+- decorative pills for ordinary metadata;
+- redundant counts, labels or helper copy that repeat visible information;
+- generic purple-gradient SaaS styling detached from KinkSync tokens;
+- hard-coded colours that bypass semantic roles;
+- hiding essential context to make geometry cleaner;
+- moving repeated controls between items;
+- browser/PWA spacing that only works in one display mode;
+- visual polish that silently changes consent or privacy semantics.
+
+## Impeccable review workflow
+
+Impeccable is the preferred supplementary design vocabulary when the skill/CLI is available. When it is not available, apply the same workflow manually.
+
+For a meaningful UI branch:
+
+1. **shape** before code: define the user task, hierarchy and what should become quieter/louder;
+2. implement the smallest coherent surface change;
+3. **critique** once against hierarchy, clarity, emotional fit and incumbent identity;
+4. **audit** accessibility, responsive behaviour, overflow, contrast, touch targets and interaction semantics;
+5. use **distill** when the surface accumulated containers, copy or chrome;
+6. use **polish** only as a bounded final pass, never as an open-ended loop.
+
+The brief and KinkSync doctrine always win over generic Impeccable taste.
+
+## Branch quality gate
+
+For the active UI/UX programme, a branch is not a foundation merely because CI is green.
+
+Before merge, explicitly review:
+
+- scope: one coherent problem;
+- UX: genuinely better, not merely different;
+- visual geometry on relevant mobile sizes and browser/PWA states;
+- semantics and behaviour unchanged unless intentionally specified;
+- accessibility and contrast;
+- code quality, especially selector hacks and duplicated chrome;
+- regression surface and existing tests;
+- diff against the current `dev`;
+- CI and available rehearsal screenshots.
+
+If the result is only "mostly good", fix or discard it. Do not make the next branch inherit a compromised foundation.

@@ -114,15 +114,15 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
             <button
               type="button"
               onClick={() => deleteQuarantinedProfile(record.profile.id)}
-              className="focus-ring flex-1 min-h-10 rounded-xl text-sm font-semibold"
-              style={{ background: "var(--hard-no)", color: "white" }}
+              className="focus-ring min-h-11 flex-1 rounded-xl text-sm font-semibold"
+              style={{ background: "var(--danger-fill)", color: "var(--on-danger-fill)" }}
             >
               Definitief verwijderen
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
-              className="focus-ring px-4 min-h-10 rounded-xl text-sm border"
+              className="focus-ring min-h-11 rounded-xl border px-4 text-sm"
               style={{ borderColor: "var(--border)", color: "var(--text2)" }}
             >
               Annuleer
@@ -132,7 +132,7 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="focus-ring w-full min-h-10 rounded-xl text-sm flex items-center justify-center gap-2 border"
+            className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm"
             style={{ borderColor: "var(--border)", color: "var(--text2)" }}
           >
             <Trash size={15} aria-hidden="true" />

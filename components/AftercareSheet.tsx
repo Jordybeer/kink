@@ -41,7 +41,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
                 type="button"
                 onClick={() => setLight(value)}
                 aria-pressed={light === value}
-                className="focus-ring flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border transition-all"
+                className="focus-ring ks-motion-choice flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border"
                 style={{
                   minHeight: 80,
                   borderColor: light === value ? color : "var(--border)",
@@ -63,8 +63,9 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
 
         <div className="flex flex-col gap-3 mt-5">
           <div>
-            <label className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Wat werkte goed?</label>
+            <label htmlFor="aftercare-went-well" className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Wat werkte goed?</label>
             <textarea
+              id="aftercare-went-well"
               rows={2}
               value={wentWell}
               onChange={(event) => setWentWell(event.target.value)}
@@ -74,8 +75,9 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
             />
           </div>
           <div>
-            <label className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer</label>
+            <label htmlFor="aftercare-remember" className="block text-sm mb-1.5" style={{ color: "var(--text2)" }}>Onthouden voor volgende keer</label>
             <textarea
+              id="aftercare-remember"
               rows={2}
               value={remember}
               onChange={(event) => setRemember(event.target.value)}
@@ -90,7 +92,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
           <button
             type="button"
             onClick={onClose}
-            className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl text-sm font-semibold"
             style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
           >
             Annuleer
@@ -99,7 +101,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
             type="button"
             onClick={handleSave}
             disabled={!light}
-            className="focus-ring min-h-12 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40"
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl text-sm font-semibold disabled:opacity-40"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             {existing ? "Bijwerken" : "Opslaan"}

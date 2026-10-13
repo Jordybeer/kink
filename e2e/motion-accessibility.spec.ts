@@ -24,13 +24,20 @@ async function expectPressKeepsSize(page: Page, target: Locator) {
   const before = await boxSize(target);
   await holdPress(page, target);
 
-  await expect.poll(async () => {
-    const held = await boxSize(target);
-    return Math.max(
-      Math.abs(held.width - before.width),
-      Math.abs(held.height - before.height),
-    );
-  }).toBeLessThanOrEqual(SIZE_TOLERANCE_PX);
+  // Sample the complete press interval. An immediate poll can pass before
+  // Framer starts scaling and falsely claim that Reduced Motion is respected.
+  const largestChange = await target.evaluate((node, original) => new Promise<number>((resolve) => {
+    const start = performance.now();
+    let largest = 0;
+    const sample = () => {
+      const held = node.getBoundingClientRect();
+      largest = Math.max(largest, Math.abs(held.width - original.width), Math.abs(held.height - original.height));
+      if (performance.now() - start < 250) requestAnimationFrame(sample);
+      else resolve(largest);
+    };
+    requestAnimationFrame(sample);
+  }), before);
+  expect(largestChange).toBeLessThanOrEqual(SIZE_TOLERANCE_PX);
 
   await page.mouse.up();
 }
@@ -74,5 +81,14 @@ test("reduced motion keeps shared TopNav press feedback still", async ({ page })
 
   const back = page.getByLabel("Hoofdnavigatie").getByRole("link", { name: "Terug" });
   await expect(back).toBeVisible();
+  await expectPressKeepsSize(page, back);
+});
+
+test("switching Reduced Motion during a session disables Framer press scaling immediately", async ({ page }) => {
+  await seedProfiles(page, [PROFILE_ALEX, PROFILE_SAM], { pinnedProfileId: PROFILE_ALEX.id });
+  await page.goto(`/profile/${PROFILE_ALEX.id}`);
+  const back = page.getByLabel("Hoofdnavigatie").getByRole("link", { name: "Terug" });
+  await expect(back).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expectPressKeepsSize(page, back);
 });

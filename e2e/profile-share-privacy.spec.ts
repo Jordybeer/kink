@@ -14,7 +14,8 @@ test.describe("profiel delen — optionele externe data", () => {
   test("BDSMTest blijft standaard lokaal en vereist expliciete opt-in", async ({ page }) => {
     await seedAndGo(page, "/profile/pw-alex-001", [WITH_BDSMTEST], { profileTourComplete: true });
 
-    await page.getByRole("button", { name: "Profiel delen" }).click();
+    await page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer acties" }).click();
+    await page.getByRole("menuitem", { name: "Profiel delen" }).click();
     const dialog = page.getByRole("dialog", { name: "Profiel delen" });
     const bdsmtest = dialog.getByLabel("BDSMTest-resultaten meesturen");
     const bdsmtestToggle = dialog.getByText("BDSMTest-resultaten meesturen", { exact: true });

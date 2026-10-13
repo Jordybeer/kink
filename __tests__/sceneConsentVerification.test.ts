@@ -7,6 +7,7 @@ import {
   projectSceneConsentAgreement,
   signProfileConsent,
 } from "@/lib/consentProof";
+import { sanitizeSceneBackup } from "@/lib/sceneBackup";
 import { verifySceneConsentRecord } from "@/lib/sceneConsentVerification";
 
 function profile(id: string, name: string, code: string): Profile {
@@ -90,6 +91,14 @@ async function fixture() {
 }
 
 describe("scene consent source verification", () => {
+  it("restores intact consent archives and rejects tampered or incomplete proof", async () => {
+    const { scene } = await fixture();
+    expect(await sanitizeSceneBackup([scene])).toEqual([scene]);
+    expect(await sanitizeSceneBackup([{ ...scene, title: "Changed after signing" }])).toEqual([]);
+    expect(await sanitizeSceneBackup([{ ...scene, consentLedger: [] }])).toEqual([]);
+    expect(await sanitizeSceneBackup([{ ...scene, consentSnapshots: {} }])).toEqual([]);
+  });
+
   it("accepts an intact agreement signed by a participating profile", async () => {
     const { scene } = await fixture();
     const result = await verifySceneConsentRecord(scene);

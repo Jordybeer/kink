@@ -138,11 +138,11 @@ test.describe("Page cohesion scenes", () => {
     await page.goto("/scene?id=cohesion-scene-1");
     await page.waitForLoadState("networkidle");
 
-    const details = page.getByRole("button", { name: "Duur, notitie en beheer" });
+    const details = page.getByRole("button", { name: "Details", exact: true });
     await expect(details).toHaveAttribute("aria-expanded", "false");
 
     await details.click();
-    await expect(page.getByRole("button", { name: "Details verbergen" })).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("button", { name: "Minder", exact: true })).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByRole("button", { name: "Naar boven verplaatsen" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Naar beneden verplaatsen" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Spanking (hand) verwijderen" })).toBeVisible();
@@ -150,14 +150,20 @@ test.describe("Page cohesion scenes", () => {
 });
 
 test.describe("Page cohesion profile", () => {
-  test("query- en legacy-profielroute delen dezelfde actieve profieltab", async ({ page }) => {
-    const overviewTab = () => page.getByRole("tablist", { name: "Profielweergave" }).getByRole("tab", { name: "Overzicht" });
+  test("query- en canonieke profielroute delen dezelfde rustige read-view", async ({ page }) => {
+    const summary = () => page.getByTestId("profile-summary");
+    const manage = () => page.getByRole("button", { name: /Onderwerpen beheren/ });
+    const legacyTabs = () => page.getByRole("tablist", { name: "Profielweergave" });
 
     await seedAndGo(page, "/profile?id=pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);
-    await expect(overviewTab()).toHaveAttribute("aria-selected", "true");
+    await expect(summary()).toBeVisible();
+    await expect(manage()).toBeVisible();
+    await expect(legacyTabs()).toHaveCount(0);
 
     await page.goto("/profile/pw-alex-001");
     await page.waitForLoadState("networkidle");
-    await expect(overviewTab()).toHaveAttribute("aria-selected", "true");
+    await expect(summary()).toBeVisible();
+    await expect(manage()).toBeVisible();
+    await expect(legacyTabs()).toHaveCount(0);
   });
 });

@@ -27,7 +27,7 @@ test.describe("UI audit", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.screenshot({ path: "/tmp/pw-home.png", fullPage: true });
-    const { xOverflow, yNested } = await page.evaluate(() => ({
+    const { xOverflow } = await page.evaluate(() => ({
       xOverflow: document.body.scrollWidth > window.innerWidth,
       yNested: Array.from(document.querySelectorAll("*")).some(el => {
         const s = window.getComputedStyle(el);
@@ -38,10 +38,8 @@ test.describe("UI audit", () => {
   });
 
   test("profile page — key elements visible, no clipping", async ({ page }) => {
-    // Create a profile first via localStorage seed
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    // Check if there's a create profile button or form
     await page.screenshot({ path: "/tmp/pw-home-full.png", fullPage: true });
   });
 
@@ -95,36 +93,37 @@ test.describe("UI audit", () => {
     await page.screenshot({ path: "/tmp/pw-profile.png", fullPage: true });
 
     await expect(page.getByText("Playwright", { exact: true }).first()).toBeVisible();
+    await expect(page.getByTestId("profile-summary")).toBeVisible();
+    const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+    await expect(manage).toBeVisible();
+    const manageBox = await manage.boundingBox();
+    expect(manageBox).not.toBeNull();
+    expect(manageBox!.height).toBeGreaterThanOrEqual(44);
 
-    // Check Bewerken tab is visible in the profile hero area
-    const bewerkenTab = page.getByRole("tab", { name: "Bewerken" });
-    const tabY = await bewerkenTab.evaluate(el => el.getBoundingClientRect().top);
-    expect(tabY).toBeLessThan(600);
-
-    // Check no x overflow
     const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
     expect(xOverflow).toBe(false);
 
-    // Mobile
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: "/tmp/pw-profile-mobile.png", fullPage: true });
     const xOverflowMobile = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
     expect(xOverflowMobile).toBe(false);
   });
 
-  test("profile page — status bar renders, kink overview shows 5 statuses", async ({ page }) => {
+  test("profile page — status-first read view yields cleanly to catalogue management", async ({ page }) => {
     await seedAndGo(page, "/profile/test-pw-001", [AUDIT_PROFILE]);
 
-    const statusBar = page.getByRole("img", {
-      name: "1 Heel graag, 1 Ja, 1 Misschien, 1 Voor hen, 1 Harde grens",
-      exact: true,
-    });
-    await expect(statusBar).toBeVisible();
+    const overview = page.getByTestId("profile-status-overview");
+    await expect(overview).toBeVisible();
+    await expect(overview.getByTestId("profile-read-hard-limits")).toBeVisible();
+    await expect(overview.getByTestId("profile-read-status-yes")).toHaveAccessibleName(/Heel graag, 1 antwoord/);
+    await expect(overview.getByTestId("profile-read-status-willing")).toHaveAccessibleName(/Ja, 1 antwoord/);
+    await expect(overview.getByTestId("profile-read-status-maybe")).toHaveAccessibleName(/Misschien, 1 antwoord/);
+    await expect(overview.getByTestId("profile-read-status-no")).toHaveAccessibleName(/Voor hen, 1 antwoord/);
 
-    await page.getByRole("tab", { name: "Bewerken" }).click();
-    await expect(statusBar).toHaveCount(0);
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
+    await expect(overview).toHaveCount(0);
 
-    // No ★ characters anywhere on page
     const pageText = await page.evaluate(() => document.body.innerText);
     expect(pageText).not.toContain("★");
   });
@@ -133,13 +132,10 @@ test.describe("UI audit", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await seedAndGo(page, "/", []);
 
-    // Check BottomNav z-index is high
-    const navZ = await page.evaluate(() => {
+    await page.evaluate(() => {
       const nav = document.querySelector("nav") || document.querySelector('[class*="bottom"]');
       return nav ? parseInt(window.getComputedStyle(nav).zIndex) || 0 : 0;
     });
-    // Sheet components should have higher z-index than BottomNav
-    // Just verify no obvious overlap issues by checking nothing is visually stuck
     const xOverflow = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
     expect(xOverflow).toBe(false);
   });

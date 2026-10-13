@@ -13,7 +13,7 @@ export default function DiscussedToggle({ count, hidden, onToggle }: Props) {
       <button
         type="button"
         onClick={onToggle}
-        className="focus-ring min-h-11 rounded-full border px-3 text-[14px] transition-colors"
+        className="ks-motion-choice focus-ring min-h-11 rounded-full border px-3 text-[14px]"
         style={{
           borderColor: hidden ? "var(--accent)" : "var(--border)",
           color: hidden ? "var(--accent)" : "var(--text2)",
