@@ -7,6 +7,7 @@ import { CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@ph
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
+import { resetHomeScrollOnReload } from "@/lib/homeReloadScroll";
 import ContextMenu from "@/components/ui/ContextMenu";
 import Wordmark from "@/components/Wordmark";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
@@ -41,6 +42,8 @@ export default function TopNav() {
   const saveFeedbackRoute = path === "/compare"
     || path === "/profile"
     || (path.startsWith("/profile/") && !path.endsWith("/questions"));
+
+  useEffect(resetHomeScrollOnReload, []);
 
   useEffect(() => {
     setOverflowOpen(false);
@@ -110,7 +113,7 @@ export default function TopNav() {
         data-home-masthead
       >
         <nav
-          className="mx-auto grid h-[6.5rem] max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] pt-8 lg:max-w-4xl"
+          className="mx-auto grid h-28 max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] pt-10 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
