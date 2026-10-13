@@ -105,12 +105,12 @@ export default function TopNav() {
 
     return (
       <header
-        className="relative z-40"
-        style={safeAreaShell}
+        className="sticky top-0 z-40"
+        style={{ ...safeAreaShell, background: "var(--bg)" }}
         data-home-masthead
       >
         <nav
-          className="mx-auto grid h-[6.5rem] max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] pt-8 lg:max-w-4xl"
+          className="mx-auto grid h-28 max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] pt-10 lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >

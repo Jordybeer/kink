@@ -17,6 +17,12 @@
   --glow-accent: 0 0 32px var(--accent-glow);
 }
 
+/* Home keeps its taller identity/navigation block pinned too. Native anchor
+   and focus scrolling must reserve its actual occupied height. */
+html:has([data-home-masthead]) {
+  --nav-h: calc(env(safe-area-inset-top) + 7rem);
+}
+
 * { box-sizing: border-box; }
 
 html, body {

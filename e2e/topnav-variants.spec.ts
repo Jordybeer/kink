@@ -26,6 +26,9 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   expect(homeNavBox).not.toBeNull();
   expect(homeMoreBox).not.toBeNull();
   expect(homeWordmarkBox).not.toBeNull();
+  expect(homeWordmarkBox!.y - homeNavBox!.y).toBeGreaterThanOrEqual(36);
+  expect(await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)))
+    .toBeCloseTo((await page.locator("[data-home-masthead]").boundingBox())!.height, 0);
   expect(homeMoreBox!.width).toBeGreaterThanOrEqual(43);
   expect(homeMoreBox!.height).toBeGreaterThanOrEqual(43);
   expect(Math.abs(
