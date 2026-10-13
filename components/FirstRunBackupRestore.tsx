@@ -33,12 +33,12 @@ export default function FirstRunBackupRestore({ onImportFile, onBack, onComplete
         type="button"
         disabled={busy}
         onClick={success ? onComplete : () => input.current?.click()}
-        className="focus-ring min-h-11 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60"
+        className="ks-motion-choice focus-ring min-h-11 rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60"
         style={{ background: "var(--accent)", color: "var(--on-accent)" }}
       >
         {busy ? "Back-up lezen…" : success ? "Verder met mijn gegevens" : "Kies je back-up"}
       </button>
-      <button type="button" onClick={onBack} className="focus-ring min-h-11 rounded-xl px-4 py-3 text-sm" style={{ color: "var(--text2)" }}>Terug naar de introductie</button>
+      <button type="button" onClick={onBack} className="ks-motion-choice focus-ring min-h-11 rounded-xl px-4 py-3 text-sm" style={{ color: "var(--text2)" }}>Terug naar de introductie</button>
     </main>
   );
 }

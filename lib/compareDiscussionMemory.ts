@@ -1,3 +1,4 @@
+import type { ContractSourceReference } from "@/lib/contractSources";
 import type { ComparisonFact } from "@/lib/compareV2";
 import type { ContractParticipant, ContractSeries } from "@/lib/contractLifecycle";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
@@ -136,12 +137,42 @@ function canonicalHardLimitWho(
   return normalized;
 }
 
+/** Source-aware rows never fall back to their presentation label. */
+function matchesAgreementSource(
+  source: ContractSourceReference & { name: string },
+  content: NonNullable<ContractSeries["versions"][number]["content"]>,
+  profileA: Profile,
+  profileB: Profile,
+  fact: ComparisonFact,
+): boolean {
+  const referenced = "sourceKind" in source || "sourceAId" in source || "sourceBId" in source;
+  if (!referenced) return normalize(source.name) === normalize(fact.label);
+  if (source.sourceKind !== (fact.custom ? "custom" : "catalog")) return false;
+  // Catalogue topics belong to people across linked perspectives; custom
+  // topics remain anchored to the exact profile that authored their identity.
+  const expected = new Map([
+    [fact.custom ? profileA.id : profilePersonKey(profileA), fact.kinkAId],
+    [fact.custom ? profileB.id : profilePersonKey(profileB), fact.kinkBId],
+  ]);
+  let count = 0;
+  for (const [profileId, sourceId] of [
+    [fact.custom ? content.profileA.profileId : participantPersonKey(content.profileA), source.sourceAId],
+    [fact.custom ? content.profileB.profileId : participantPersonKey(content.profileB), source.sourceBId],
+  ]) {
+    if (sourceId === undefined) continue;
+    if (typeof sourceId !== "string" || !sourceId || expected.get(profileId!) !== sourceId) return false;
+    count++;
+  }
+  return count > 0;
+}
+
 function relevantAgreementMeaning(
   pairKey: string,
+  profileA: Profile,
+  profileB: Profile,
   fact: ComparisonFact,
   contractSeries: readonly ContractSeries[],
 ): unknown[] {
-  const factLabel = normalize(fact.label);
   const rows: unknown[] = [];
 
   for (const series of contractSeries) {
@@ -157,13 +188,13 @@ function relevantAgreementMeaning(
       ["discuss", content.discuss],
     ] as const) {
       for (const detail of details) {
-        if (normalize(detail.name) !== factLabel) continue;
+        if (!matchesAgreementSource(detail, content, profileA, profileB, fact)) continue;
         rows.push({ bucket, ...canonicalAgreementDetail(content, detail) });
       }
     }
 
     for (const limit of content.hardLimits) {
-      if (normalize(limit.name) !== factLabel) continue;
+      if (!matchesAgreementSource(limit, content, profileA, profileB, fact)) continue;
       rows.push({
         bucket: "hard-who",
         name: normalize(limit.name),
@@ -189,7 +220,7 @@ export function discussionFingerprint(
 
   return JSON.stringify({
     statuses,
-    agreement: relevantAgreementMeaning(pairKey, fact, contractSeries),
+    agreement: relevantAgreementMeaning(pairKey, profileA, profileB, fact, contractSeries),
   });
 }
 

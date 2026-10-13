@@ -41,7 +41,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
                 type="button"
                 onClick={() => setLight(value)}
                 aria-pressed={light === value}
-                className="focus-ring flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border transition-all"
+                className="focus-ring ks-motion-choice flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border"
                 style={{
                   minHeight: 80,
                   borderColor: light === value ? color : "var(--border)",
@@ -92,7 +92,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
           <button
             type="button"
             onClick={onClose}
-            className="focus-ring min-h-12 rounded-xl text-sm font-semibold"
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl text-sm font-semibold"
             style={{ border: "1px solid var(--border)", color: "var(--text2)" }}
           >
             Annuleer
@@ -101,7 +101,7 @@ export default function AftercareSheet({ onSave, onClose, existing }: AftercareS
             type="button"
             onClick={handleSave}
             disabled={!light}
-            className="focus-ring min-h-12 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40"
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl text-sm font-semibold disabled:opacity-40"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             {existing ? "Bijwerken" : "Opslaan"}

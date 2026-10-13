@@ -219,7 +219,7 @@ export default function AboutPage() {
         </p>
         <Link
           href="/security"
-          className="focus-ring mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold"
+          className="ks-motion-choice focus-ring mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold"
           style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           Security &amp; privacy

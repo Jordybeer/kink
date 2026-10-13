@@ -138,7 +138,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
                 aria-checked={item.selected}
                 tabIndex={-1}
                 onClick={() => activateItem(item)}
-                className="w-full min-h-11 flex items-center justify-between gap-3 px-4 py-[13px] text-sm font-medium text-left transition-colors duration-100 active:scale-[0.97] motion-reduce:active:scale-100 motion-reduce:transition-none"
+                className="focus-ring ks-motion-choice w-full min-h-11 flex items-center justify-between gap-3 px-4 py-[13px] text-sm font-medium text-left"
                 style={{
                   color: item.danger ? "var(--hard-no)" : "var(--text)",
                   background: item.selected ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",

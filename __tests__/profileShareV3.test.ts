@@ -259,6 +259,9 @@ describe("lossless profile share v3", () => {
     const decoded = await decodeProfileV3(encodeRawPayload(legacyPayload));
     expect(decoded.bdsmtestScores).toEqual(legacy.bdsmtestScores);
     expect((await verifyProfileConsent(decoded)).status).toBe("valid");
+    const decodedRawLegacy = await decodeSharedProfile(Buffer.from(JSON.stringify(signedLegacy)).toString("base64url"));
+    expect(decodedRawLegacy.bdsmtestScores).toEqual(legacy.bdsmtestScores);
+    expect((await verifyProfileConsent(decodedRawLegacy)).status).toBe("valid");
   });
 
   it("cannot export private answers even when an untyped caller asks for them", async () => {

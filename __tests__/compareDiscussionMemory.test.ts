@@ -389,3 +389,62 @@ describe("discussion memory without crossed ropes", () => {
     stop();
   });
 });
+
+describe("referenced agreement identity", () => {
+  const a = profile("profile-a", "person-a"), b = profile("profile-b", "person-b");
+  const fact = {...FACT, custom: true, kinkAId: "one", kinkBId: "one"};
+  function referenced(source: {sourceKind?: "custom" | "catalog"; sourceAId?: string; sourceBId?: string}) {
+    const series = contract();
+    Object.assign(series.versions[0].content!.shared[0], source);
+    return series;
+  }
+  it("does not attach same-name unrelated source rows", () => {
+    const unrelated = referenced({sourceKind:"custom",sourceAId:"other",sourceBId:"other"});
+    expect(discussionFingerprint(a,b,fact,[unrelated])).toBe(discussionFingerprint(a,b,fact,[]));
+  });
+  it("matches exact sources even after a presentation rename", () => {
+    const exact = referenced({sourceKind:"custom",sourceAId:"one",sourceBId:"one"});
+    exact.versions[0].content!.shared[0].name = "Renamed";
+    expect(discussionFingerprint(a,b,fact,[exact])).not.toBe(discussionFingerprint(a,b,fact,[]));
+  });
+  it("does not cross custom/catalog namespaces or mismatched profiles", () => {
+    const catalog = referenced({sourceKind:"catalog",sourceAId:"one",sourceBId:"one"});
+    expect(discussionFingerprint(a,b,fact,[catalog])).toBe(discussionFingerprint(a,b,fact,[]));
+    const wrongProfile = referenced({sourceKind:"custom",sourceAId:"one",sourceBId:"one"});
+    wrongProfile.versions[0].content!.profileA.profileId = "another-perspective";
+    expect(discussionFingerprint(a,b,fact,[wrongProfile])).toBe(discussionFingerprint(a,b,fact,[]));
+  });
+  it("requires each supplied reference to match and fails closed on incomplete metadata", () => {
+    for (const source of [{sourceKind:"custom" as const}, {sourceAId:"one"}, {sourceKind:"custom" as const,sourceAId:"one",sourceBId:"other"}]) {
+      expect(discussionFingerprint(a,b,fact,[referenced(source)])).toBe(discussionFingerprint(a,b,fact,[]));
+    }
+  });
+  it("matches a one-sided limit and remains invariant under A/B reversal", () => {
+    const exact = referenced({sourceKind:"custom",sourceAId:"one"});
+    const content = exact.versions[0].content!;
+    content.shared=[];
+    content.hardLimits=[{name:"Renamed",who:"A",sourceKind:"custom",sourceAId:"one"}];
+    const before = discussionFingerprint(a,b,fact,[exact]);
+    expect(before).not.toBe(discussionFingerprint(a,b,fact,[]));
+    expect(discussionFingerprint(b,a,{...fact,statusA:fact.statusB,statusB:fact.statusA},[exact])).toBe(before);
+    [content.profileA,content.profileB]=[content.profileB,content.profileA];
+    content.hardLimits=[{name:"Renamed",who:"A",sourceKind:"custom",sourceBId:"one"}];
+    expect(discussionFingerprint(a,b,fact,[exact])).toBe(before);
+  });
+  it("keeps metadata-free legacy matching read-only", () => {
+    const legacy = contract();
+    const bytes=JSON.stringify(legacy);
+    expect(discussionFingerprint(a,b,fact,[legacy])).not.toBe(discussionFingerprint(a,b,fact,[]));
+    expect(JSON.stringify(legacy)).toBe(bytes);
+  });
+});
+
+it("keeps referenced catalogue agreement meaning person-scoped across linked profiles", () => {
+  const a = profile("profile-a", "person-a"), linked = profile("linked-a", "person-a"), b = profile("profile-b", "person-b");
+  const series = contract();
+  Object.assign(series.versions[0].content!.shared[0], {sourceKind:"catalog",sourceAId:"bondage",sourceBId:"bondage"});
+  const before = discussionFingerprint(a,b,FACT,[series]);
+  expect(discussionFingerprint(linked,b,FACT,[series])).toBe(before);
+  series.versions[0].content!.shared[0].commentA = "A changed agreement";
+  expect(discussionFingerprint(linked,b,FACT,[series])).not.toBe(before);
+});

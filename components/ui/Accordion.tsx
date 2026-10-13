@@ -28,7 +28,7 @@ export default function Accordion({ trigger, icon, children, defaultOpen = false
         aria-expanded={open}
         aria-controls={bodyId}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-5 py-4 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none"
+        className="focus-ring ks-motion-choice flex w-full items-center justify-between px-5 py-4"
         style={{ background: "transparent", border: "none", color: "var(--text)" }}
       >
         <span className="flex items-center gap-3">

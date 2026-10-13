@@ -117,7 +117,7 @@ function TitledSheetFrame({
           type="button"
           onClick={onClose}
           aria-label={`${title} sluiten`}
-          className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+          className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
           style={{ color: "var(--text2)" }}
         >
           <X size={20} aria-hidden="true" />
@@ -126,7 +126,7 @@ function TitledSheetFrame({
       {scrollable ? (
         <>
           <div
-            className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            className={`min-h-0 flex-1 scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
             data-testid="sheet-scroll-body"
           >
             {children}

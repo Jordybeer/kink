@@ -163,7 +163,7 @@ function IntimacyCard({
             aria-label={`Meer acties voor ${entry.title?.trim() || "privé moment"}`}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl"
+            className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl"
             style={{ color: "var(--text2)" }}
           >
             <DotsThree size={20} weight="bold" aria-hidden="true" />
@@ -182,7 +182,7 @@ function IntimacyCard({
           <button
             type="button"
             onClick={onLog}
-            className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold"
+            className="ks-motion-choice focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             <Check size={15} weight="bold" aria-hidden="true" />
@@ -192,7 +192,7 @@ function IntimacyCard({
             type="button"
             onClick={onCalendar}
             disabled={!entry.time}
-            className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold disabled:opacity-35"
+            className="ks-motion-choice focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold disabled:opacity-35"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             <CalendarPlus size={15} aria-hidden="true" />
@@ -391,7 +391,7 @@ export default function IntimacyPlanner() {
               aria-selected={active}
               aria-controls="intimacy-tab-panel"
               onClick={() => setTab(value)}
-              className="focus-ring min-h-11 rounded-lg px-3 text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-11 rounded-lg px-3 text-sm font-semibold"
               style={{
                 background: active ? "var(--surface)" : "transparent",
                 color: active ? "var(--text)" : "var(--text2)",
@@ -419,7 +419,7 @@ export default function IntimacyPlanner() {
             <button
               type="button"
               onClick={() => openComposer(tab)}
-              className="focus-ring mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold"
+              className="ks-motion-choice focus-ring mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {tab === "planned" ? <CalendarPlus size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
@@ -604,7 +604,7 @@ export default function IntimacyPlanner() {
             <button
               type="button"
               onClick={closeComposer}
-              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
             >
               Annuleer
@@ -612,7 +612,7 @@ export default function IntimacyPlanner() {
             <button
               type="button"
               onClick={saveEntry}
-              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {saveLabel}
@@ -669,7 +669,7 @@ export default function IntimacyPlanner() {
               downloadCalendar(calendarTarget, includeCalendarDetails);
               setCalendarTarget(null);
             }}
-            className="focus-ring mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
+            className="ks-motion-choice focus-ring mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             <CalendarPlus size={17} aria-hidden="true" />

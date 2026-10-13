@@ -109,18 +109,20 @@ test.describe("UI audit", () => {
     expect(xOverflowMobile).toBe(false);
   });
 
-  test("profile page — status bar renders in read view and yields to management", async ({ page }) => {
+  test("profile page — status-first read view yields cleanly to catalogue management", async ({ page }) => {
     await seedAndGo(page, "/profile/test-pw-001", [AUDIT_PROFILE]);
 
-    const statusBar = page.getByRole("img", {
-      name: "1 Heel graag, 1 Ja, 1 Misschien, 1 Voor hen, 1 Harde grens",
-      exact: true,
-    });
-    await expect(statusBar).toBeVisible();
+    const overview = page.getByTestId("profile-status-overview");
+    await expect(overview).toBeVisible();
+    await expect(overview.getByTestId("profile-read-hard-limits")).toBeVisible();
+    await expect(overview.getByTestId("profile-read-status-yes")).toHaveAccessibleName(/Heel graag, 1 antwoord/);
+    await expect(overview.getByTestId("profile-read-status-willing")).toHaveAccessibleName(/Ja, 1 antwoord/);
+    await expect(overview.getByTestId("profile-read-status-maybe")).toHaveAccessibleName(/Misschien, 1 antwoord/);
+    await expect(overview.getByTestId("profile-read-status-no")).toHaveAccessibleName(/Voor hen, 1 antwoord/);
 
     await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
     await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
-    await expect(statusBar).toHaveCount(0);
+    await expect(overview).toHaveCount(0);
 
     const pageText = await page.evaluate(() => document.body.innerText);
     expect(pageText).not.toContain("★");

@@ -9,6 +9,11 @@
   --info-ghost: color-mix(in srgb, var(--text2) 12%, transparent);
   /* Global TopNav occupied height (h-14 + notch). Inner sticky bars pin below this. */
   --nav-h: calc(env(safe-area-inset-top) + 3.5rem);
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-press: 140ms;
+  --motion-state: 190ms;
+  --motion-disclosure: 220ms;
+  --motion-progress: 300ms;
   --glow-accent: 0 0 32px var(--accent-glow);
 }
 
@@ -23,6 +28,37 @@ html, body {
 
 body { isolation: isolate; }
 
+.ks-content-nav { container-type: inline-size; }
+.compare-kink-row { container-type: inline-size; }
+.ks-scene-card { container-type: inline-size; }
+.ks-compare-person-status { display: contents; }
+.ks-compare-person-name { display: none; }
+
+/* Stacked responses keep their person's name when enlarged text cannot fit a pair. */
+@container (max-width: 14rem) {
+  .ks-compare-statuses { flex-direction: column; align-items: stretch; }
+  .ks-compare-person-status { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 4px; }
+  .ks-compare-person-name { display: block; }
+  .ks-compare-statuses .ks-relation-thread { display: none; }
+  .ks-scene-actions > button { flex-basis: auto; }
+}
+
+/* Keep icon controls usable when enlarged text leaves little inline room.
+   Captions remain in the accessible names; the page title keeps its text size. */
+@container (max-width: 16rem) {
+  .ks-content-nav [data-testid="content-topnav-row"] {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+  }
+  .ks-content-nav [data-topnav-control] {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+  .ks-content-nav [data-topnav-control] svg { width: 20px; height: 20px; }
+  .ks-content-nav [data-topnav-short-label] { display: none; }
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -31,7 +67,7 @@ body { isolation: isolate; }
 .status-willing { background: color-mix(in srgb, var(--willing) 15%, transparent);  color: var(--willing); border-color: var(--willing); border-width: 2px; }
 .status-maybe   { background: color-mix(in srgb, var(--maybe) 15%, transparent);   color: var(--maybe);   border-color: var(--maybe);   border-width: 2px; }
 .status-no      { background: color-mix(in srgb, var(--no) 15%, transparent);      color: var(--no);      border-color: var(--no);      border-width: 2px; }
-.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; animation: ks-glow-hard-no 3.2s ease-in-out infinite; }
+.status-hard_no { background: color-mix(in srgb, var(--hard-no) 15%, transparent); color: var(--hard-no); border-color: var(--hard-no); border-width: 2px; }
 
 .focus-ring:focus-visible {
   outline: none;
@@ -66,7 +102,7 @@ body { isolation: isolate; }
 .accordion-content {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 200ms ease-out, opacity 150ms ease-out;
+  transition: grid-template-rows var(--motion-disclosure) var(--motion-ease), opacity var(--motion-state) var(--motion-ease);
   opacity: 0;
 }
 .accordion-content.open {
@@ -152,6 +188,51 @@ body { isolation: isolate; }
 .ks-fade-in  { animation: ksFadeIn  300ms ease-out both; }
 .ks-slide-up { animation: ksSlideUp 350ms ease-out both; }
 
+/* Scenes-derived shared interaction motion */
+/* Choices acknowledge the hand without moving the surrounding layout.
+   The same restraint applies to status selection, profile picking and aftercare. */
+.ks-motion-choice {
+  transition:
+    background-color var(--motion-state) var(--motion-ease),
+    border-color var(--motion-state) var(--motion-ease),
+    color var(--motion-state) var(--motion-ease),
+    box-shadow var(--motion-state) var(--motion-ease),
+    opacity var(--motion-state) var(--motion-ease),
+    transform var(--motion-press) var(--motion-ease);
+}
+.ks-motion-choice:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.985);
+}
+/* Surfaces inside a control change state without adding another press transform. */
+.ks-motion-state {
+  transition: background-color var(--motion-state) var(--motion-ease),
+    border-color var(--motion-state) var(--motion-ease),
+    color var(--motion-state) var(--motion-ease),
+    box-shadow var(--motion-state) var(--motion-ease),
+    opacity var(--motion-state) var(--motion-ease);
+}
+/* Only CSS-owned spatial state (switch thumb/caret); never Framer projection. */
+.ks-motion-travel {
+  transition: transform var(--motion-state) var(--motion-ease);
+}
+/* The scene arc moves when its state changes; questionnaire progress should too. */
+.ks-motion-progress {
+  transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ks-motion-choice,
+  .ks-motion-state,
+  .ks-motion-travel,
+  .ks-motion-progress {
+    transition-duration: 0ms;
+  }
+  .ks-motion-choice:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: none;
+  }
+}
+/* End shared interaction motion */
+
+
 /* Brand wordmark — a stable lavender identity warming into rose-salmon. */
 .ks-wordmark {
   font-family: var(--font-display, Georgia, "Times New Roman", serif);
@@ -177,7 +258,109 @@ body { isolation: isolate; }
   height: 1px;
   width: 120px;
   background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
-  opacity: 0.6;
+  background-size: 180% 100%;
+  opacity: 0.68;
+  animation: ks-brand-thread-shift 7s ease-in-out infinite alternate;
+}
+
+/* The lavender → salmon thread is semantic, never ambient decoration.
+   It only appears between two explicit sides of one relationship/concept. */
+.ks-relation-thread {
+  position: relative;
+  display: block;
+  min-width: 2.75rem;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--identity-a), var(--identity-b));
+  background-size: 180% 100%;
+  animation: ks-brand-thread-shift 7s ease-in-out infinite alternate;
+  opacity: 0.9;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--identity-a) 10%, transparent);
+}
+
+[data-theme="light"] .ks-relation-thread {
+  opacity: 0.74;
+  box-shadow: none;
+}
+
+.ks-relation-thread--quiet {
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+[data-theme="light"] .ks-relation-thread--quiet {
+  opacity: 0.42;
+}
+
+.ks-relation-thread::before,
+.ks-relation-thread::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+}
+
+.ks-relation-thread::before {
+  left: -1px;
+  background: var(--identity-a);
+}
+
+.ks-relation-thread::after {
+  right: -1px;
+  background: var(--identity-b);
+}
+
+.ks-brand-surface {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--identity-a) 6%, var(--surface)),
+      color-mix(in srgb, var(--identity-b) 7%, var(--surface))
+    );
+}
+
+[data-theme="light"] .ks-brand-surface {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--identity-a) 3%, var(--surface)),
+      color-mix(in srgb, var(--identity-b) 4%, var(--surface))
+    );
+}
+
+/* Relationship surfaces share one quiet visual language across Home, Compare,
+   Contracts and Scenes. The colour is atmosphere; the relation thread carries
+   the actual semantic connection. */
+.ks-relational-surface {
+  background:
+    linear-gradient(
+      122deg,
+      color-mix(in srgb, var(--identity-a) 4%, var(--surface)) 0%,
+      color-mix(in srgb, var(--surface) 98%, transparent) 48%,
+      color-mix(in srgb, var(--identity-b) 5%, var(--surface)) 100%
+    );
+  border-color: color-mix(in srgb, var(--border-accent) 54%, var(--border));
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--identity-a) 4%, transparent);
+}
+
+[data-theme="light"] .ks-relational-surface {
+  background:
+    linear-gradient(
+      122deg,
+      color-mix(in srgb, var(--identity-a) 2%, var(--surface)) 0%,
+      var(--surface) 48%,
+      color-mix(in srgb, var(--identity-b) 3%, var(--surface)) 100%
+    );
+  border-color: color-mix(in srgb, var(--border-accent) 38%, var(--border));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--identity-a) 2%, transparent);
+}
+
+@keyframes ks-brand-thread-shift {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
 }
 
 /* Dense multi-frame QR codes keep their 280px source resolution, but yield vertical
@@ -336,6 +519,10 @@ span[class~="mr-auto"][class~="text-xs"] {
   .partner-card-tap,
   .partner-reveal  { animation: none; filter: none; opacity: 1; }
   .ks-dot-pulse span { animation: none; opacity: 1; transform: none; }
+  .ks-gradient-rule,
+  .ks-relation-thread {
+    animation: none;
+  }
 }
 
 @keyframes confetti-pop {
@@ -346,19 +533,13 @@ span[class~="mr-auto"][class~="text-xs"] {
 
 /* Scene arc bar segments */
 .scene-arc-segment {
-  transition: flex 300ms ease-out;
+  transition: flex var(--motion-progress) var(--motion-ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .scene-arc-segment { transition: none; }
 }
 
-/* Scene item reorder mode */
-.scene-item-reorder {
-  transition: transform 200ms ease-out, opacity 150ms ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .scene-item-reorder { transition: none; }
-}
+/* Scene row position is owned by Framer; no competing CSS transform transition. */
 
 @media print {
   /* Hide all buttons scoped to the contract page */
@@ -458,14 +639,59 @@ span[class~="mr-auto"][class~="text-xs"] {
   position: absolute;
   border-radius: 9999px;
   transform: translate3d(0, 0, 0);
-  will-change: transform;
+  will-change: auto;
+}
+
+.ks-ambient-orb-route {
+  position: absolute;
+  will-change: auto;
+  transition:
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 320ms ease-out;
+}
+
+.ks-ambient-orb-route-top {
+  top: -16rem;
+  left: calc(50% - min(25rem, 80vw));
+  width: min(50rem, 160vw);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  transform-origin: 50% 0%;
+  opacity: 0.94;
+}
+
+.ks-ambient-glow[data-ambient-context="home"] .ks-ambient-orb-route-top {
+  transform: translate3d(0, -1rem, 0) scale(0.92);
+  opacity: 0.82;
+}
+
+.ks-ambient-glow[data-ambient-context="profile"] .ks-ambient-orb-route-top {
+  transform: translate3d(0, 1.1rem, 0) scale(1.12);
+  opacity: 1;
+}
+
+.ks-ambient-orb-route-top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--identity-b) 7%, transparent) 0%,
+    transparent 69%
+  );
+  opacity: 0;
+  transition: opacity 380ms ease-out;
+}
+
+.ks-ambient-glow[data-ambient-context="profile"] .ks-ambient-orb-route-top::after {
+  opacity: 1;
 }
 
 .ks-ambient-orb-top {
-  top: -18rem;
-  left: calc(50% - min(23rem, 74vw));
-  width: min(46rem, 148vw);
-  aspect-ratio: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: radial-gradient(
     circle,
     color-mix(in srgb, var(--ambient-top-color) var(--ambient-top-opacity), transparent) 0%,
@@ -475,9 +701,9 @@ span[class~="mr-auto"][class~="text-xs"] {
 }
 
 .ks-ambient-orb-bottom {
-  right: -17rem;
-  bottom: -18rem;
-  width: min(43rem, 142vw);
+  right: -15rem;
+  bottom: -15rem;
+  width: min(48rem, 154vw);
   aspect-ratio: 1;
   background: radial-gradient(
     circle,
@@ -488,18 +714,24 @@ span[class~="mr-auto"][class~="text-xs"] {
 }
 
 @keyframes ks-ambient-drift-top {
-  from { transform: translate3d(-2.5%, -1.5%, 0) scale(0.98); }
-  to { transform: translate3d(5%, 4%, 0) scale(1.04); }
+  from { transform: translate3d(-2%, -1.5%, 0) scale(0.98); }
+  to { transform: translate3d(6%, 4.5%, 0) scale(1.05); }
 }
 
 @keyframes ks-ambient-drift-bottom {
-  from { transform: translate3d(2%, 2%, 0) scale(1.03); }
-  to { transform: translate3d(-7%, -4%, 0) scale(0.97); }
+  from { transform: translate3d(2%, 2.5%, 0) scale(1.03); }
+  to { transform: translate3d(-8%, -4.5%, 0) scale(0.97); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ks-ambient-orb {
     animation: none;
+    will-change: auto;
+  }
+
+  .ks-ambient-orb-route,
+  .ks-ambient-orb-route-top::after {
+    transition: none;
     will-change: auto;
   }
 }
@@ -527,4 +759,10 @@ span[class~="mr-auto"][class~="text-xs"] {
   .bottom-nav { display: flex; }
   main { padding-bottom: var(--bottom-nav-h); }
   :root { --toast-lift: calc(3.5rem + 0.75rem); }
+}
+
+/* Preserve the current animation phase when a decorative surface is out of view. */
+[data-motion-paused="true"].ks-relation-thread,
+[data-motion-paused="true"] .ks-ambient-orb {
+  animation-play-state: paused;
 }

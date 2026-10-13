@@ -1,7 +1,9 @@
 "use client";
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
 import { KINKS } from "@/lib/kinks";
@@ -76,19 +78,25 @@ function SceneItemRow({
   item, locked = false, index, totalItems,
   onUpdate, onDelete, onMoveUp, onMoveDown,
 }: SceneItemRowProps) {
+  const t = useMotionSafe();
+  const moveUpRef = useRef<HTMLButtonElement>(null);
+  const moveDownRef = useRef<HTMLButtonElement>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const visibleDetails = locked || detailsOpen;
   const color = intensityColor(item.intensity);
   const detailsId = `scene-item-details-${item.id}`;
 
   return (
-    <div
-      className="scene-item-reorder mb-2 flex items-stretch overflow-hidden rounded-2xl ks-slide-up"
+    <motion.div
+      layout={t.reduced ? false : "position"}
+      initial={t.reduced ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...t.fast, layout: t.disclosure }}
+      className="scene-item-reorder mb-2 flex items-stretch overflow-hidden rounded-2xl"
       aria-disabled={locked}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        animationDelay: `${index * 35}ms`,
       }}
     >
       <div className="transition-colors" style={{ width: 3, background: color, flexShrink: 0 }} aria-hidden="true" />
@@ -123,7 +131,7 @@ function SceneItemRow({
                 onClick={() => onUpdate(item.id, { intensity: v })}
                 disabled={locked}
                 aria-pressed={active}
-                className="focus-ring rounded-full border px-3 text-xs transition-colors disabled:opacity-60"
+                className="focus-ring ks-motion-choice rounded-full border px-3 text-xs disabled:opacity-60"
                 style={{
                   minHeight: 44,
                   background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
@@ -139,7 +147,7 @@ function SceneItemRow({
             onClick={() => setDetailsOpen((o) => !o)}
             aria-expanded={visibleDetails}
             aria-controls={detailsId}
-            className="focus-ring ml-auto min-h-11 rounded-lg px-2 text-xs"
+            className="ks-motion-choice focus-ring ml-auto min-h-11 rounded-lg px-2 text-xs"
             style={{ color: visibleDetails ? "var(--accent)" : "var(--text2)" }}
           >
             {visibleDetails ? "Minder" : "Details"}
@@ -176,19 +184,29 @@ function SceneItemRow({
               <div className="flex items-center gap-1 border-t pt-2" style={{ borderColor: "var(--border)" }}>
                 <span className="mr-auto text-xs" style={{ color: "var(--text2)" }}>Volgorde &amp; beheer</span>
                 <button
-                  onClick={() => onMoveUp(index)}
+                  ref={moveUpRef}
+                  onClick={() => {
+                    onMoveUp(index);
+                    // At the endpoint this control becomes disabled. Keep keyboard
+                    // focus on the same item, on its remaining reorder action.
+                    if (index === 1) requestAnimationFrame(() => moveDownRef.current?.focus({ preventScroll: true }));
+                  }}
                   disabled={index === 0}
                   aria-label="Naar boven verplaatsen"
-                  className="focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
                   style={{ color: "var(--text2)" }}
                 >
                   <CaretUp size={16} aria-hidden="true" />
                 </button>
                 <button
-                  onClick={() => onMoveDown(index)}
+                  ref={moveDownRef}
+                  onClick={() => {
+                    onMoveDown(index);
+                    if (index === totalItems - 2) requestAnimationFrame(() => moveUpRef.current?.focus({ preventScroll: true }));
+                  }}
                   disabled={index === totalItems - 1}
                   aria-label="Naar beneden verplaatsen"
-                  className="focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
                   style={{ color: "var(--text2)" }}
                 >
                   <CaretDown size={16} aria-hidden="true" />
@@ -196,7 +214,7 @@ function SceneItemRow({
                 <button
                   onClick={() => onDelete(item.id)}
                   aria-label={`${item.name} verwijderen`}
-                  className="focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
+                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
                   style={{ color: "var(--hard-no)" }}
                 >
                   <Trash size={16} aria-hidden="true" />
@@ -206,7 +224,7 @@ function SceneItemRow({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -217,7 +235,7 @@ function KinkChip({
     <button
       onClick={onAdd}
       disabled={added}
-      className="text-xs px-3 py-1.5 rounded-full border focus-ring disabled:opacity-40 flex items-center gap-1 transition-colors"
+      className="ks-motion-choice text-xs px-3 py-1.5 rounded-full border focus-ring disabled:opacity-40 flex items-center gap-1"
       style={{
         background: added ? "transparent" : `color-mix(in srgb, ${color} 12%, transparent)`,
         borderColor: added ? "var(--border)" : `color-mix(in srgb, ${color} 45%, transparent)`,
@@ -470,7 +488,7 @@ function ScenePage() {
             href={backHref}
             prefetch={false}
             aria-label="Terug"
-            className="focus-ring flex h-11 w-11 items-center rounded-lg"
+            className="ks-motion-choice focus-ring flex h-11 w-11 items-center rounded-lg"
             style={{ color: "var(--text2)", fontSize: 13 }}
           >
             <ArrowRight size={16} className="rotate-180" aria-hidden="true" />
@@ -497,7 +515,7 @@ function ScenePage() {
             type="button"
             onClick={handleExport}
             disabled={items.length === 0}
-            className="focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-35"
+            className="ks-motion-choice focus-ring min-h-11 rounded-xl px-3 text-xs font-semibold disabled:opacity-35"
             style={{ color: "var(--text2)", border: "1px solid var(--border)" }}
             aria-label="Exporteer scène als PDF"
           >
@@ -568,7 +586,7 @@ function ScenePage() {
             </div>
             <Link
               href={`/contract?a=${profileA.id}&b=${profileB.id}`}
-              className="focus-ring inline-flex min-h-11 flex-none items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold"
+              className="ks-motion-choice focus-ring inline-flex min-h-11 flex-none items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold"
               style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
             >
               Contract opstellen
@@ -600,7 +618,7 @@ function ScenePage() {
         {hasKinks && !isCompleted && !isConsentLocked && (
           <button
             onClick={() => setDrawerOpen(true)}
-            className="focus-ring mb-4 flex min-h-12 w-full items-center justify-between rounded-xl px-3"
+            className="ks-motion-choice focus-ring mb-4 flex min-h-12 w-full items-center justify-between rounded-xl px-3"
             style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid var(--border-accent)" }}
           >
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--accent)" }}>
@@ -670,7 +688,7 @@ function ScenePage() {
               <button
                 onClick={addManualItem}
                 aria-label="Item toevoegen"
-                className="focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl font-bold"
+                className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-xl font-bold"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)" }}
               >
                 <Plus size={20} aria-hidden="true" />
@@ -681,7 +699,7 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={items.length === 0}
-                className="focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-bold disabled:opacity-40"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-bold disabled:opacity-40"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 {savedStatus === "draft" ? <><Check size={14} aria-hidden="true" /> Opgeslagen</> : "Opslaan"}
@@ -689,7 +707,7 @@ function ScenePage() {
               <button
                 onClick={() => handleSave("planned")}
                 disabled={items.length === 0}
-                className="focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold disabled:opacity-40"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold disabled:opacity-40"
                 style={{ background: "var(--surface)", border: "1px solid var(--border-accent)", color: savedStatus === "planned" ? "var(--accent)" : "var(--text)" }}
                 aria-label="Scène inplannen"
                 aria-describedby="scene-plan-lock-note"
@@ -714,7 +732,7 @@ function ScenePage() {
             <button
               type="button"
               onClick={() => setShowAftercare(true)}
-              className="focus-ring min-h-11 w-full rounded-xl px-4 text-sm font-bold"
+              className="ks-motion-choice focus-ring min-h-11 w-full rounded-xl px-4 text-sm font-bold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Scène afronden
@@ -742,7 +760,7 @@ function ScenePage() {
             <h2 className="text-sm font-bold" style={{ color: "var(--text)" }}>Toevoegen aan setlist</h2>
             <button
               onClick={() => setDrawerOpen(false)}
-              className="focus-ring rounded-lg"
+              className="ks-motion-choice focus-ring rounded-lg"
               style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
               aria-label="Sluiten"
             >

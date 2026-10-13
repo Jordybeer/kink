@@ -100,7 +100,7 @@ function RowContent({
 }
 
 const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
-const SETTINGS_ROW_CLASS = "focus-ring flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 text-left sm:px-2";
+const SETTINGS_ROW_CLASS = "focus-ring ks-motion-choice flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 text-left sm:px-2";
 const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 sm:px-2";
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
@@ -132,7 +132,7 @@ function ThemeSelector() {
                 className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
               />
               <span
-                className="flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]"
+                className="flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 text-sm font-semibold ks-motion-state peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]"
                 style={{
                   background: active ? "var(--surface3)" : "transparent",
                   borderColor: active ? "var(--border-accent)" : "transparent",
@@ -172,7 +172,7 @@ function InstallApp() {
             type="button"
             disabled={busy}
             onClick={() => void install()}
-            className="focus-ring min-h-11 rounded-xl px-4 py-2 font-semibold disabled:opacity-60"
+            className="ks-motion-choice focus-ring min-h-11 rounded-xl px-4 py-2 font-semibold disabled:opacity-60"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             {busy ? "Installatie openen…" : "Installeer KinkSync"}

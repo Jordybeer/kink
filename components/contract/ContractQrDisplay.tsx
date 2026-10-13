@@ -90,7 +90,7 @@ export default function ContractQrDisplay({
             type="button"
             aria-label="Vorige QR"
             onClick={() => { setAutoAdvance(false); setIndex((current) => (current - 1 + frames.length) % frames.length); }}
-            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
+            className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ background: "var(--surface2)", color: "var(--text2)" }}
           >
             <ArrowLeft size={16} aria-hidden="true" />
@@ -99,7 +99,7 @@ export default function ContractQrDisplay({
             type="button"
             onClick={() => setAutoAdvance((current) => !current)}
             aria-pressed={autoAdvance}
-            className="focus-ring min-h-11 rounded-lg px-3 text-xs font-semibold"
+            className="ks-motion-choice focus-ring min-h-11 rounded-lg px-3 text-xs font-semibold"
             style={{ background: "var(--surface2)", color: "var(--text2)" }}
           >
             {autoAdvance ? "Pauzeer wisselen" : "Automatisch wisselen"}
@@ -108,7 +108,7 @@ export default function ContractQrDisplay({
             type="button"
             aria-label="Volgende QR"
             onClick={() => { setAutoAdvance(false); setIndex((current) => (current + 1) % frames.length); }}
-            className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
+            className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-full"
             style={{ background: "var(--surface2)", color: "var(--text2)" }}
           >
             <ArrowRight size={16} aria-hidden="true" />
@@ -120,7 +120,7 @@ export default function ContractQrDisplay({
         <button
           type="button"
           onClick={onScanResponse}
-          className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold"
+          className="ks-motion-choice focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold"
           style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}
         >
           <Camera size={17} aria-hidden="true" />

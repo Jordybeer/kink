@@ -49,7 +49,7 @@ export default function ScenesEmptyState() {
 
         <Link
           href="/scene"
-          className="btn-accent focus-ring mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 sm:w-auto sm:min-w-52"
+          className="ks-motion-choice btn-accent focus-ring mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 sm:w-auto sm:min-w-52"
         >
           <Plus size={17} aria-hidden="true" />
           Plan een scène

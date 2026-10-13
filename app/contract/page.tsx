@@ -6,7 +6,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { KINKS } from "@/lib/kinks";
-import type { KinkStatus, KinkEntry } from "@/types";
+import type { ContractKinkDetail, ContractHardLimit } from "@/lib/contractLifecycle";
+import { projectCustomContractEvidence } from "@/lib/contractCustomProjection";
+import { contractSourceKey } from "@/lib/contractSources";
 import { isKinkMatch, isHardLimit, kinkMatchScore } from "@/lib/matching";
 import PageShell from "@/components/PageShell";
 import ContractSection from "@/components/contract/ContractSection";
@@ -15,6 +17,8 @@ import { contractParticipantFromProfile, type ContractVersionContent } from "@/l
 import SignaturePad from "@/components/contract/SignaturePad";
 import { useToast } from "@/components/Toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMotionSafe } from "@/lib/motion";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { buildPreamble } from "@/lib/contractPreamble";
 import { statusPairRank } from "@/lib/statusLabels";
 import { DEFAULT_SIGNALS, SIGNAL_LEVELS } from "@/lib/contractPdf";
@@ -28,7 +32,7 @@ import {
 
 const AFTERCARE_OPTIONS = ["Knuffelen", "Verbaal", "Eten & drinken", "Alleen tijd", "Journaling"];
 type ContractNoteSide = "a" | "b";
-type ContractNotes = Record<string, { a?: string; b?: string }>;
+type ContractNotes = Record<string, string>;
 
 function readablePreamble(text: string): { firstSentence: string; paragraphs: string[] } {
   const sentences = text.match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g)?.map((sentence) => sentence.trim()).filter(Boolean) ?? [];
@@ -42,6 +46,8 @@ function readablePreamble(text: string): { firstSentence: string; paragraphs: st
 }
 
 function ContractPage() {
+  const t = useMotionSafe();
+  const whyRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const profiles = useStore((state) => state.profiles);
   const _hasHydrated = useHasHydrated();
@@ -61,15 +67,12 @@ function ContractPage() {
   const [realNameA, setRealNameA] = useState("");
   const [realNameB, setRealNameB] = useState("");
   const [whyOpen, setWhyOpen] = useState(false);
+  useFocusTrap(whyRef, whyOpen);
   const [signedA, setSignedA] = useState(false);
   const [signedB, setSignedB] = useState(false);
 
   const canvasARef = useRef<HTMLCanvasElement>(null);
   const canvasBRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    setContractNotes({});
-  }, [aId, bId]);
 
   useEffect(() => {
     if (!whyOpen) return;
@@ -85,7 +88,7 @@ function ContractPage() {
   const profileA = profiles.find((profile) => profile.id === aId);
   const profileB = profiles.find((profile) => profile.id === bId);
 
-  if (!profileA || !profileB) {
+  if (!profileA || !profileB || profileA.id === profileB.id) {
     return (
       <PageShell width="3xl">
         <p className="py-12 text-center text-sm" style={{ color: "var(--text2)" }}>
@@ -98,22 +101,13 @@ function ContractPage() {
   const selectedProfileA = profileA;
   const selectedProfileB = profileB;
 
-  type KinkDetail = {
-    name: string;
-    statusA: KinkStatus | null;
-    statusB: KinkStatus | null;
-    commentA?: string;
-    commentB?: string;
-    desireA?: number | null;
-    desireB?: number | null;
-  };
+  type KinkDetail = ContractKinkDetail;
 
   const shared: KinkDetail[] = [];
-  const hardLimits: { name: string; who: string }[] = [];
+  const hardLimits: ContractHardLimit[] = [];
   const hardLimitDetails: KinkDetail[] = [];
   const softLimits: KinkDetail[] = [];
   const discuss: KinkDetail[] = [];
-  const EMPTY: KinkEntry = { status: null, comment: "" };
 
   for (const kink of KINKS) {
     const pair = directionalComparisonEntries(profileA.entries, profileB.entries, kink.id);
@@ -126,6 +120,9 @@ function ContractPage() {
       name: directionalCompareLabel(kink.id, kink.name),
       statusA: entryA.status,
       statusB: entryB.status,
+      sourceKind: "catalog",
+      ...(hasA ? { sourceAId: pair.sourceKinkId } : {}),
+      ...(hasB ? { sourceBId: pair.partnerKinkId } : {}),
       desireA: entryA.desire ?? null,
       desireB: entryB.desire ?? null,
     };
@@ -133,7 +130,7 @@ function ContractPage() {
       const aHard = entryA.status === "hard_no";
       const bHard = entryB.status === "hard_no";
       const who = aHard && bHard ? "beiden" : aHard ? profileA.name : profileB.name;
-      hardLimits.push({ name: detail.name, who });
+      hardLimits.push({ name: detail.name, who, sourceKind: detail.sourceKind, sourceAId: detail.sourceAId, sourceBId: detail.sourceBId });
       hardLimitDetails.push(detail);
     } else if (isKinkMatch(entryA, entryB)) {
       shared.push(detail);
@@ -144,38 +141,27 @@ function ContractPage() {
     }
   }
 
-  const customShared: KinkDetail[] = [];
-  const allCustom = [
-    ...(profileA.customKinks ?? []).map((kink) => ({ ...kink, side: "a" as const })),
-    ...(profileB.customKinks ?? []).map((kink) => ({ ...kink, side: "b" as const })),
-  ];
-  const customMerged = new Map<string, { name: string; aId?: string; bId?: string }>();
-  for (const kink of allCustom) {
-    const key = kink.name.trim().toLowerCase();
-    const existing = customMerged.get(key) ?? { name: kink.name };
-    customMerged.set(key, kink.side === "a" ? { ...existing, aId: kink.id } : { ...existing, bId: kink.id });
-  }
-  for (const item of customMerged.values()) {
-    const entryA = item.aId ? comparableEntry(profileA.entries[item.aId]) : EMPTY;
-    const entryB = item.bId ? comparableEntry(profileB.entries[item.bId]) : EMPTY;
-    const detail: KinkDetail = {
-      name: item.name,
-      statusA: entryA.status,
-      statusB: entryB.status,
-    };
-    if (isKinkMatch(entryA, entryB)) customShared.push(detail);
-    else if (entryA.status || entryB.status) discuss.push(detail);
-  }
+  const custom = projectCustomContractEvidence(profileA, profileB);
+  softLimits.push(...custom.softLimits);
+  discuss.push(...custom.discuss);
+  hardLimits.push(...custom.hardLimits);
+  hardLimitDetails.push(...custom.hardLimitDetails);
 
+  // Editor state belongs to this relationship, including an unanswered partner.
+  // Source metadata itself only identifies the publicly visible topic owners.
+  const itemKey = (item: KinkDetail) => JSON.stringify([
+    [profileA.id, profileB.id].sort(),
+    contractSourceKey(item, profileA.id, profileB.id),
+  ]);
   const byChoice = (left: KinkDetail, right: KinkDetail) =>
     statusPairRank(left.statusA, left.statusB) - statusPairRank(right.statusA, right.statusB)
     || left.name.localeCompare(right.name, "nl");
-  const sharedAll = [...shared, ...customShared].sort(byChoice);
+  const sharedAll = [...shared, ...custom.shared].sort(byChoice);
   softLimits.sort(byChoice);
   discuss.sort(byChoice);
   hardLimitDetails.sort(byChoice);
-  const hardOrder = new Map(hardLimitDetails.map((detail, index) => [detail.name, index]));
-  hardLimits.sort((left, right) => (hardOrder.get(left.name) ?? 0) - (hardOrder.get(right.name) ?? 0));
+  const hardOrder = new Map(hardLimitDetails.map((detail, index) => [contractSourceKey(detail, profileA.id, profileB.id), index]));
+  hardLimits.sort((left, right) => (hardOrder.get(contractSourceKey(left, profileA.id, profileB.id)) ?? 0) - (hardOrder.get(contractSourceKey(right, profileA.id, profileB.id)) ?? 0));
 
   const today = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
   const trimmedRealNameA = realNameA.trim();
@@ -194,47 +180,29 @@ function ContractPage() {
   });
   const preambleLayout = readablePreamble(preamble);
 
-  function noteKey(scope: string, itemName: string): string {
-    return `${scope}\u0000${itemName}`;
-  }
-
-  function withNotes(items: KinkDetail[], scope: string): KinkDetail[] {
-    return items.map((item) => {
-      const notes = contractNotes[noteKey(scope, item.name)];
-      const noteA = notes?.a?.trim();
-      const noteB = notes?.b?.trim();
-      return {
-        ...item,
-        ...(noteA ? { commentA: noteA } : {}),
-        ...(noteB ? { commentB: noteB } : {}),
-      };
-    });
+  function noteKey(scope: string, sourceKey: string, ownerId: string): string {
+    return JSON.stringify([scope, sourceKey, ownerId]);
   }
 
   function editableItems(items: KinkDetail[], scope: string): KinkDetail[] {
-    return items.map((item) => {
-      const notes = contractNotes[noteKey(scope, item.name)];
-      return {
-        ...item,
-        commentA: notes?.a ?? "",
-        commentB: notes?.b ?? "",
-      };
-    });
+    return items.map((item) => ({
+      ...item,
+      commentA: contractNotes[noteKey(scope, itemKey(item), selectedProfileA.id)] ?? "",
+      commentB: contractNotes[noteKey(scope, itemKey(item), selectedProfileB.id)] ?? "",
+    }));
   }
 
-  function updateContractNote(scope: string, itemName: string, side: ContractNoteSide, value: string) {
-    setContractNotes((current) => {
-      const key = noteKey(scope, itemName);
-      const previous = current[key] ?? {};
-      const nextValue = value.slice(0, 500);
-      const nextEntry = { ...previous, [side]: nextValue || undefined };
-      if (!nextEntry.a && !nextEntry.b) {
-        const next = { ...current };
-        delete next[key];
-        return next;
-      }
-      return { ...current, [key]: nextEntry };
-    });
+  function withNotes(items: KinkDetail[], scope: string): KinkDetail[] {
+    return editableItems(items, scope).map(({ commentA, commentB, ...item }) => ({
+      ...item,
+      ...(commentA?.trim() ? { commentA: commentA.trim() } : {}),
+      ...(commentB?.trim() ? { commentB: commentB.trim() } : {}),
+    }));
+  }
+
+  function updateContractNote(scope: string, sourceKey: string, side: ContractNoteSide, value: string) {
+    const owner = side === "a" ? selectedProfileA.id : selectedProfileB.id;
+    setContractNotes((current) => ({ ...current, [noteKey(scope, sourceKey, owner)]: value.slice(0, 500) }));
   }
 
   function baseContractContent(): ContractVersionContent {
@@ -345,7 +313,7 @@ function ContractPage() {
             <button
               type="button"
               onClick={() => setPreambleOpen((value) => !value)}
-              className="focus-ring mt-2 inline-flex min-h-11 items-center gap-1 px-3 text-xs transition-colors"
+              className="ks-motion-choice focus-ring mt-2 inline-flex min-h-11 items-center gap-1 px-3 text-xs"
               style={{ color: "var(--accent)" }}
             >
               {preambleOpen ? <>Minder <CaretUp size={13} aria-hidden="true" /></> : <>Lees meer <CaretDown size={13} aria-hidden="true" /></>}
@@ -388,7 +356,7 @@ function ContractPage() {
                           key={option}
                           type="button"
                           onClick={() => toggle(option)}
-                          className="focus-ring min-h-11 rounded-full border px-2 py-1 text-xs transition-all"
+                          className="focus-ring ks-motion-choice min-h-11 rounded-full border px-2 py-1 text-xs"
                           style={{
                             background: active ? "color-mix(in srgb, var(--yes) 20%, transparent)" : "transparent",
                             borderColor: active ? "var(--yes)" : "var(--border)",
@@ -410,6 +378,7 @@ function ContractPage() {
             items={editableItems(sharedAll, "shared")}
             noteScope="shared"
             editableNotes
+            getItemKey={itemKey}
             onNoteChange={updateContractNote}
             colour="var(--yes)"
             nameA={profileA.name}
@@ -422,6 +391,7 @@ function ContractPage() {
             items={editableItems(softLimits, "soft")}
             noteScope="soft"
             editableNotes
+            getItemKey={itemKey}
             onNoteChange={updateContractNote}
             colour="var(--maybe)"
             nameA={profileA.name}
@@ -434,6 +404,7 @@ function ContractPage() {
             items={editableItems(hardLimitDetails, "hard")}
             noteScope="hard"
             editableNotes
+            getItemKey={itemKey}
             onNoteChange={updateContractNote}
             colour="var(--hard-no)"
             nameA={profileA.name}
@@ -446,6 +417,7 @@ function ContractPage() {
             items={editableItems(discuss, "discuss")}
             noteScope="discuss"
             editableNotes
+            getItemKey={itemKey}
             onNoteChange={updateContractNote}
             colour="var(--willing)"
             nameA={profileA.name}
@@ -483,7 +455,7 @@ function ContractPage() {
               <input value={realNameB} onChange={(event) => setRealNameB(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
             </label>
           </div>
-          <button type="button" onClick={() => setWhyOpen(true)} className="focus-ring mt-3 inline-flex min-h-11 items-center gap-1 text-xs transition-colors" style={{ color: "var(--accent)" }}>
+          <button type="button" onClick={() => setWhyOpen(true)} className="ks-motion-choice focus-ring mt-3 inline-flex min-h-11 items-center gap-1 text-xs" style={{ color: "var(--accent)" }}>
             Waarom een echte naam toevoegen? <ArrowRight size={13} aria-hidden="true" />
           </button>
         </div>
@@ -504,12 +476,12 @@ function ContractPage() {
         <button
           type="button"
           onClick={handleConfirm}
-          className="focus-ring min-h-12 w-full rounded-xl px-4 text-sm font-bold transition-opacity hover:opacity-90"
+          className="ks-motion-choice focus-ring min-h-12 w-full rounded-xl px-4 text-sm font-bold hover:opacity-90"
           style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
         >
           Contract bewaren of digitaal bevestigen
         </button>
-        <Link href="/contracts" className="focus-ring mt-3 flex min-h-11 items-center justify-center text-sm" style={{ color: "var(--text2)" }}>
+        <Link href="/contracts" className="ks-motion-choice focus-ring mt-3 flex min-h-11 items-center justify-center text-sm" style={{ color: "var(--text2)" }}>
           Naar contractgeschiedenis
         </Link>
       </PageShell>
@@ -534,17 +506,18 @@ function ContractPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={t.state}
             onClick={() => setWhyOpen(false)}
             className="fixed inset-0 z-[220] flex items-center justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
             style={{ background: "var(--scrim)" }}
           >
             <motion.div
               key="why-panel"
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              ref={whyRef}
+              initial={t.reduced ? false : { opacity: 0, y: 10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              exit={t.reduced ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98 }}
+              transition={t.fast}
               onClick={(event) => event.stopPropagation()}
               role="dialog"
               aria-modal="true"
@@ -554,7 +527,7 @@ function ContractPage() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>Waarom echte namen?</span>
-                <button type="button" onClick={() => setWhyOpen(false)} className="focus-ring rounded-full p-1" style={{ color: "var(--text2)" }} aria-label="Sluiten">
+                <button type="button" onClick={() => setWhyOpen(false)} className="ks-motion-choice focus-ring rounded-full p-1" style={{ color: "var(--text2)" }} aria-label="Sluiten">
                   <X aria-hidden="true" size={18} />
                 </button>
               </div>

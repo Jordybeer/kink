@@ -139,7 +139,7 @@ export default function SignaturePad({
       {/* Clickable canvas — tap to open modal */}
       <button
         onClick={() => setModalOpen(true)}
-        className="focus-ring w-full rounded-xl transition-opacity hover:opacity-80 active:opacity-90 p-0 m-0 border-none"
+        className="ks-motion-choice focus-ring w-full rounded-xl hover:opacity-80 active:opacity-90 p-0 m-0 border-none"
         style={{
           border: `1px solid ${colour}`,
           background: "var(--surface2)",
@@ -162,7 +162,7 @@ export default function SignaturePad({
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={clear}
-          className="focus-ring min-h-11 flex-1 text-sm px-3 py-1 rounded-full border transition-colors"
+          className="ks-motion-choice focus-ring min-h-11 flex-1 text-sm px-3 py-1 rounded-full border"
           style={{ color: "var(--text2)", borderColor: "var(--border)" }}
         >
           Veld wissen
@@ -200,7 +200,7 @@ export default function SignaturePad({
               </span>
               <button
                 onClick={closeModal}
-                className="focus-ring p-1 rounded-full"
+                className="ks-motion-choice focus-ring p-1 rounded-full"
                 style={{ color: "var(--text2)" }}
                 aria-label="Sluiten"
               >
@@ -219,14 +219,14 @@ export default function SignaturePad({
             <div className="flex items-center justify-between mt-4">
               <button
                 onClick={clear}
-                className="focus-ring min-h-11 text-sm px-3 py-1.5 rounded-full border"
+                className="ks-motion-choice focus-ring min-h-11 text-sm px-3 py-1.5 rounded-full border"
                 style={{ color: "var(--text2)", borderColor: "var(--border)" }}
               >
                 Wis
               </button>
               <button
                 onClick={closeModal}
-                className="focus-ring min-h-11 text-sm px-4 py-1.5 rounded-full font-semibold"
+                className="ks-motion-choice focus-ring min-h-11 text-sm px-4 py-1.5 rounded-full font-semibold"
                 style={{ background: colour, color: "var(--on-accent)" }}
               >
                 Klaar

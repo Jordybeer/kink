@@ -125,15 +125,15 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #F7F3F1;
+  --bg: #F6F1EF;
   --surface: #FFFDFC;
-  --surface2: #EEE8EF;
-  --surface3: #DED4E0;
-  --surface-tint: #F0E8EE;
+  --surface2: #EFE7EA;
+  --surface3: #E3D9DF;
+  --surface-tint: #F3ECEF;
   --status-option-surface: var(--surface);
   --status-option-idle-tint: 8%;
   --status-option-idle-border: 22%;
-  --ambient-layer-opacity: 0.56;
+  --ambient-layer-opacity: 0.70;
   --profile-stack-surface: color-mix(in srgb, var(--surface2) 82%, var(--surface));
   --profile-stack-border: color-mix(in srgb, var(--border) 62%, transparent);
   --question-utility-surface: color-mix(in srgb, var(--surface2) 88%, var(--surface));
@@ -141,21 +141,21 @@
   --profile-hero-glow: radial-gradient(ellipse 58% 54% at 32% 28%, color-mix(in srgb, var(--accent2) 6%, transparent), transparent 70%);
   --profile-edit-glow: radial-gradient(ellipse 68% 14rem at 50% 0%, color-mix(in srgb, var(--accent) 2%, transparent), transparent 72%);
   --profile-form-surface: #FCFAF8;
-  --profile-form-control-surface: #F4F0EE;
-  --profile-form-muted-surface: #E4DDDF;
-  --border: #C8BAC5;
+  --profile-form-control-surface: #F5EFEE;
+  --profile-form-muted-surface: #E7DDE2;
+  --border: #BBAEB7;
   --control-border: #82737E;
   --border-bright: rgba(72, 47, 61, 0.30);
   --text: #291F27;
-  --text2: #6B5D66;
+  --text2: #675A62;
   --accent: #A72B53;
-  --accent2: #66507B;
+  --accent2: #6B4E80;
   --accent-text: #972047;
-  --accent2-text: #5B456F;
+  --accent2-text: #5F4375;
   --border-accent: rgba(167, 43, 83, 0.36);
   --accent-glow: rgba(167, 43, 83, 0.10);
-  --identity-border: rgba(102, 80, 123, 0.32);
-  --identity-glow: rgba(102, 80, 123, 0.10);
+  --identity-border: rgba(107, 78, 128, 0.34);
+  --identity-glow: rgba(107, 78, 128, 0.11);
   --on-accent: #FFFFFF;
   --accent-fill: #972047;
   --on-accent-fill: #FFFFFF;
@@ -206,10 +206,10 @@
   --wordmark-highlight: #DCCFE4;
   --tour-outline: rgba(255, 255, 255, 0.78);
   --tour-scrim: rgba(41, 31, 39, 0.68);
-  --pwa-nav-surface: #F1E7ED;
-  --pwa-nav-surface-deep: #E9DCE5;
-  --pwa-nav-active: #DFCADA;
-  --pwa-nav-icon: #66515E;
+  --pwa-nav-surface: #F7F0F2;
+  --pwa-nav-surface-deep: #EFE4E9;
+  --pwa-nav-active: #E3D1DC;
+  --pwa-nav-icon: #6F5C67;
   --pwa-nav-icon-active: #84294F;
 }
 

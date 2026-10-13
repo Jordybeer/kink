@@ -58,7 +58,7 @@ export default function CategoryFilterSheet({
           type="button"
           onClick={() => choose(null)}
           aria-pressed={selected === null}
-          className="focus-ring flex min-h-14 w-full items-center gap-3 px-2 text-left"
+          className="ks-motion-choice focus-ring flex min-h-14 w-full items-center gap-3 px-2 text-left"
           style={selected === null
             ? { background: "color-mix(in srgb, var(--accent) 6%, transparent)" }
             : undefined}
@@ -82,7 +82,7 @@ export default function CategoryFilterSheet({
               type="button"
               onClick={() => choose(category.id)}
               aria-pressed={active}
-              className="focus-ring flex min-h-14 w-full items-center gap-3 px-2 text-left"
+              className="ks-motion-choice focus-ring flex min-h-14 w-full items-center gap-3 px-2 text-left"
               style={{
                 borderTop: "1px solid var(--border)",
                 background: active ? "color-mix(in srgb, var(--accent) 6%, transparent)" : "transparent",

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { KINKS } from "../lib/kinks";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
-test("topic editor uses one focused reading flow with a persistent completion action", async ({ page }, testInfo) => {
+test("topic editor separates the primary answer from optional details without forcing a wizard", async ({ page }, testInfo) => {
   const candidate = KINKS.find((kink) => kink.description && kink.safetyNote)
     ?? KINKS.find((kink) => kink.description);
   expect(candidate).toBeTruthy();
@@ -32,8 +32,17 @@ test("topic editor uses one focused reading flow with a persistent completion ac
   await result.click();
 
   const dialog = page.getByRole("dialog", { name: `${candidate!.name} bewerken` });
-  await expect(dialog).toHaveAttribute("data-sheet-variant", "task");
+  await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
   await expect(dialog.getByRole("heading", { name: "Onderwerp bewerken" })).toBeVisible();
+  await expect(dialog.getByRole("navigation", { name: "Onderwerpstappen" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, huidig" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details" })).toBeVisible();
+
+  const body = dialog.getByTestId("kink-edit-scroll-body");
+  const done = dialog.getByRole("button", { name: "Klaar" });
+  await expect(done).toBeVisible();
+  await expect(dialog.getByTestId("sheet-footer")).toHaveCount(0);
+
   await expect(dialog.getByRole("heading", { name: candidate!.name })).toBeVisible();
   await expect(dialog.getByText(candidate!.description!, { exact: true })).toBeVisible();
   if (candidate!.safetyNote) await expect(dialog.getByText(candidate!.safetyNote, { exact: true })).toBeVisible();
@@ -41,14 +50,9 @@ test("topic editor uses one focused reading flow with a persistent completion ac
   const statusGroup = dialog.getByRole("group", { name: "Status kiezen" });
   await expect(statusGroup.getByRole("button")).toHaveCount(5);
   await expect(statusGroup.getByRole("button", { name: /Heel graag/ })).toHaveAttribute("aria-pressed", "true");
-  await expect(dialog.getByRole("heading", { name: "Afspraken" })).toBeVisible();
-  await expect(dialog.getByRole("heading", { name: "Zichtbaarheid" })).toBeVisible();
-  await expect(dialog.getByRole("heading", { name: "Context" })).toBeVisible();
-
-  const body = dialog.getByTestId("sheet-scroll-body");
-  const footer = dialog.getByTestId("sheet-footer");
-  const done = footer.getByRole("button", { name: "Klaar" });
-  await expect(done).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Afspraken" })).toHaveCount(0);
+  await expect(dialog.getByRole("heading", { name: "Zichtbaarheid" })).toHaveCount(0);
+  await expect(dialog.getByRole("heading", { name: "Context" })).toHaveCount(0);
 
   for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
@@ -56,29 +60,49 @@ test("topic editor uses one focused reading flow with a persistent completion ac
     await body.evaluate((node) => { node.scrollTop = 0; });
     await page.evaluate(async () => { await document.fonts.ready; });
     await page.screenshot({
-      path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-${theme}-top.png`,
+      path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-${theme}-answer.png`,
       fullPage: false,
     });
 
-    await body.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+    await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
+    await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details, huidig" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, voltooid" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Details" })).toBeFocused();
+    await expect(dialog.getByText(candidate!.name, { exact: false }).first()).toBeVisible();
+    await expect(statusGroup).toHaveCount(0);
+    await expect(dialog.getByRole("heading", { name: "Afspraken" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Zichtbaarheid" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Context" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Eerst vragen" })).toHaveAttribute("aria-pressed", "true");
     await expect(dialog.getByRole("button", { name: "Antwoord niet langer privé maken" })).toHaveAttribute("aria-pressed", "true");
     await expect(dialog.getByRole("button", { name: "Nieuwsgierig" })).toHaveAttribute("aria-pressed", "true");
+
     await page.screenshot({
       path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-${theme}-details.png`,
       fullPage: false,
     });
+
+    await dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord" }).click();
+    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, huidig" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: candidate!.name })).toBeFocused();
   }
 
   await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
 
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await expect.poll(() => dialog.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
   await expect(done).toBeVisible();
   await page.evaluate(() => { document.documentElement.style.removeProperty("font-size"); });
 
-  await statusGroup.getByRole("button", { name: /^Ja\b/ }).click();
-  await expect(statusGroup.getByRole("button", { name: /^Ja\b/ })).toHaveAttribute("aria-pressed", "true");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const maybe = statusGroup.getByRole("button", { name: /^Misschien\b/ });
+  const willing = statusGroup.getByRole("button", { name: /^Ja\b/ });
+  await maybe.click();
+  await willing.click();
+  await expect(willing).toHaveAttribute("aria-pressed", "true");
+  await expect(maybe).toHaveAttribute("aria-pressed", "false");
+
   await done.click();
   await expect(dialog).toBeHidden();
   await expect(result).toBeFocused();

@@ -41,7 +41,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
               type="button"
               onClick={() => onDone(label)}
               aria-label={label}
-              className="focus-ring w-20 h-20 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-colors"
+              className="ks-motion-choice focus-ring w-20 h-20 rounded-2xl flex flex-col items-center justify-center gap-1.5"
               style={{ border: "1px solid var(--border)", color: "var(--text)" }}
             >
               <MoodIcon size={28} aria-hidden="true" />
@@ -55,7 +55,7 @@ export default function CheckIn({ profileName, onDone }: Props) {
         <button
           type="button"
           onClick={() => onDone()}
-          className="focus-ring mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm underline-offset-2 hover:underline"
+          className="ks-motion-choice focus-ring mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm underline-offset-2 hover:underline"
           style={{ color: "var(--text2)" }}
         >
           Doorgaan

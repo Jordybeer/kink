@@ -251,7 +251,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                           setNameError(null);
                         }}
                         aria-pressed={active}
-                        className="focus-ring w-full min-h-[78px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left transition-colors"
+                        className="ks-motion-choice focus-ring w-full min-h-[78px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
                         style={active
                           ? {
                               background: "color-mix(in srgb, var(--accent) 11%, var(--profile-form-control-surface))",
@@ -339,7 +339,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       type="button"
                       onClick={() => toggleInterest(interest.value)}
                       aria-pressed={active}
-                      className="focus-ring min-h-[66px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
+                      className="ks-motion-choice focus-ring min-h-[66px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
                       style={active
                         ? {
                             background: "color-mix(in srgb, var(--accent) 10%, var(--profile-form-control-surface))",
@@ -383,7 +383,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             type="button"
             onClick={step === 0 ? onClose : () => setStep(0)}
             disabled={isCreating}
-            className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
             style={{ background: "var(--profile-form-control-surface)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
           >
             {step === 0 ? "Annuleer" : <><ArrowLeft size={16} aria-hidden="true" /> Terug</>}
@@ -392,7 +392,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             type="button"
             onClick={step === 0 ? continueFromIdentity : create}
             disabled={isCreating}
-            className="focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             {step === 1

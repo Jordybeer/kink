@@ -1,4 +1,5 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -46,7 +47,7 @@ function SceneCard({
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <article className="rounded-2xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <article className="ks-scene-card ks-relational-surface rounded-2xl" style={{ border: "1px solid var(--border)" }}>
       {traffic && (
         <div
           className="flex items-center gap-2.5 rounded-t-[15px] px-4 py-2.5"
@@ -61,10 +62,16 @@ function SceneCard({
       <div className="flex flex-col gap-3 p-4">
         <div className="min-w-0">
           <p className="truncate text-base font-semibold">{scene.title}</p>
-          <p className="mt-0.5 text-sm" style={{ color: "var(--text2)" }}>
-            {scene.profileAName} &amp; {scene.profileBName}
-            {!traffic && ` · ${date}${scene.plannedTime ? ` · ${scene.plannedTime}` : ""}`}
+          <p className="mt-1 break-words text-sm [overflow-wrap:anywhere]">
+            <span style={{ color: "var(--identity-a)" }}>{scene.profileAName}</span>
+            <span style={{ color: "var(--text2)" }}> &amp; </span>
+            <span style={{ color: "var(--identity-b)" }}>{scene.profileBName}</span>
           </p>
+          {!traffic && (
+            <p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>
+              {date}{scene.plannedTime ? ` · ${scene.plannedTime}` : ""}
+            </p>
+          )}
         </div>
 
         {scene.items.length > 0 && (
@@ -93,11 +100,11 @@ function SceneCard({
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-0.5">
+        <div className="ks-scene-actions flex flex-wrap items-center gap-2 pt-0.5">
           {scene.status === "completed" ? (
             <button
               onClick={() => router.push(sceneDetailHref(scene.id))}
-              className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
+              className="ks-motion-choice focus-ring min-h-11 min-w-0 flex-1 rounded-xl px-[12px] text-sm font-semibold hover:opacity-90"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               Bekijken
@@ -106,14 +113,14 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-[12px] text-sm font-semibold hover:opacity-90"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 <Play size={13} weight="fill" aria-hidden="true" /> Spelen
               </button>
               <button
                 onClick={() => onAftercare(scene.id)}
-                className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold transition-opacity hover:opacity-90"
+                className="ks-motion-choice focus-ring min-h-11 min-w-0 flex-1 rounded-xl px-[12px] text-sm font-semibold hover:opacity-90"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               >
                 Afronden
@@ -136,7 +143,7 @@ function SceneCard({
             <button
               type="button"
               onClick={() => setMenuOpen((current) => !current)}
-              className="focus-ring flex h-11 w-11 items-center justify-center rounded-xl"
+              className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-xl"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
               aria-label={`Meer acties voor ${scene.title}`}
               aria-haspopup="menu"

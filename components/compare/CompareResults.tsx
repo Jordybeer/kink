@@ -110,15 +110,15 @@ export default function CompareResults({
 
       {!filtersActive && model.unpaired.length > 0 && (
         <details className="mb-6 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-          <summary className="focus-ring min-h-11 cursor-pointer px-3 py-3 text-sm font-medium">Nog niet door beiden beoordeeld · {model.unpaired.length}</summary>
+          <summary className="ks-motion-choice focus-ring min-h-11 cursor-pointer px-3 py-3 text-sm font-medium">Nog niet door beiden beoordeeld · {model.unpaired.length}</summary>
           <div className="space-y-2 px-3 pb-3">
             <p className="text-sm leading-relaxed" style={{ color: "var(--text2)" }}>Deze voorkeuren tellen niet mee als vergelijking.</p>
             {model.unpaired.map((item) => {
               const owner = item.visibleSide === "a" ? profileA.name : profileB.name;
               return (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm" style={{ borderColor: "var(--border)", background: "var(--surface2)" }}>
-                  <span className="min-w-0 truncate">{item.label}</span>
-                  <span className="flex-none text-right" style={{ color: "var(--text2)" }}>{owner}: <span style={{ color: STATUS_VAR[item.status] }}>{STATUS_LABEL[item.status]}</span></span>
+                <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm" style={{ borderColor: "var(--border)", background: "var(--surface2)" }}>
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{item.label}</span>
+                  <span className="min-w-0 text-right [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>{owner}: <span style={{ color: STATUS_VAR[item.status] }}>{STATUS_LABEL[item.status]}</span></span>
                 </div>
               );
             })}
@@ -126,9 +126,9 @@ export default function CompareResults({
         </details>
       )}
 
-      <div className="compare-page-actions flex gap-2 pb-2 pt-2" data-print-hide="true">
-        <Link href={`/scene?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-opacity hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text)" }}><FilmSlate size={16} aria-hidden="true" /> Plan een scène</Link>
-        <Link href={`/contract?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-opacity hover:opacity-80" style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}><FileText size={16} aria-hidden="true" /> Contract</Link>
+      <div className="compare-page-actions flex flex-wrap gap-2 pb-2 pt-2" data-print-hide="true">
+        <Link href={`/scene?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="ks-motion-choice focus-ring flex min-h-11 flex-1 basis-auto items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text)" }}><FilmSlate size={16} aria-hidden="true" /> Plan een scène</Link>
+        <Link href={`/contract?a=${profileA.id}&b=${profileB.id}`} prefetch={false} className="ks-motion-choice focus-ring flex min-h-11 flex-1 basis-auto items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium hover:opacity-80" style={{ background: "var(--action-primary)", color: "var(--on-accent)" }}><FileText size={16} aria-hidden="true" /> Contract</Link>
       </div>
     </>
   );

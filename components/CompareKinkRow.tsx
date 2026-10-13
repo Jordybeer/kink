@@ -1,5 +1,7 @@
 "use client";
 
+import RelationThread from "@/components/ui/RelationThread";
+
 import { ChatCircle, Check, ShieldWarning } from "@phosphor-icons/react";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import { COMPARE_FACT_LABEL, compactComparisonName } from "@/lib/comparePresentation";
@@ -56,7 +58,7 @@ export default function CompareKinkRow({
 
   return (
     <div
-      className="compare-kink-row rounded-xl px-3 py-3"
+      className="compare-kink-row rounded-xl px-3 py-3 [overflow-wrap:anywhere]"
       data-fact-kind={factKind}
       style={{
         background: "var(--surface)",
@@ -75,10 +77,16 @@ export default function CompareKinkRow({
         </div>
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
-        <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
-        <div className="h-px flex-1" style={{ background: "var(--border)", opacity: 0.35 }} />
-        <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
+      <div className="ks-compare-statuses mt-2 flex items-center gap-2">
+        <div className="ks-compare-person-status">
+          <span className="ks-compare-person-name text-xs [overflow-wrap:anywhere]" style={{ color: colourA }}>{profileA.name}</span>
+          <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
+        </div>
+        <RelationThread className="ks-relation-thread--quiet flex-1" />
+        <div className="ks-compare-person-status">
+          <span className="ks-compare-person-name text-xs [overflow-wrap:anywhere]" style={{ color: colourB }}>{profileB.name}</span>
+          <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
+        </div>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug">
@@ -116,7 +124,7 @@ export default function CompareKinkRow({
               onClick={onToggleDiscussed}
               aria-label={isDiscussed ? `${accessibleName} als niet besproken markeren` : `${accessibleName} als besproken markeren`}
               aria-pressed={isDiscussed}
-              className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors"
+              className="focus-ring ks-motion-choice inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium"
               style={{ color: isDiscussed ? "var(--willing)" : "var(--text2)" }}
             >
               {isDiscussed
