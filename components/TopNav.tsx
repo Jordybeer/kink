@@ -7,7 +7,6 @@ import { CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@ph
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
-import { resetHomeScrollOnReload } from "@/lib/homeReloadScroll";
 import ContextMenu from "@/components/ui/ContextMenu";
 import Wordmark from "@/components/Wordmark";
 import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
@@ -42,8 +41,6 @@ export default function TopNav() {
   const saveFeedbackRoute = path === "/compare"
     || path === "/profile"
     || (path.startsWith("/profile/") && !path.endsWith("/questions"));
-
-  useEffect(resetHomeScrollOnReload, []);
 
   useEffect(() => {
     setOverflowOpen(false);
@@ -108,8 +105,8 @@ export default function TopNav() {
 
     return (
       <header
-        className="relative z-40"
-        style={safeAreaShell}
+        className="sticky top-0 z-40"
+        style={{ ...safeAreaShell, background: "var(--bg)" }}
         data-home-masthead
       >
         <nav
