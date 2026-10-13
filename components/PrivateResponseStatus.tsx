@@ -38,7 +38,7 @@ export default function PrivateResponseStatus({
       : "text-sm px-1.5 py-0.5 w-[var(--status-pill-width)]";
   const sharedClass = plain
     ? "focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium"
-    : `focus-ring rounded-full border whitespace-nowrap inline-flex items-center justify-center gap-1 ${sizeClass}`;
+    : `focus-ring rounded-full border inline-flex items-center justify-center gap-1 ${readable ? "min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere] text-center" : "whitespace-nowrap"} ${sizeClass}`;
 
   if (!status) {
     return <span className="text-sm" style={{ color: "var(--text2)" }}>—</span>;

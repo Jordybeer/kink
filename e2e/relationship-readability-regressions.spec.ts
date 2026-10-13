@@ -56,7 +56,16 @@ for (const { width, textScale } of [{ width: 320, textScale: 1 }, { width: 390, 
       await expect(page.getByRole("dialog")).toBeVisible();
       await page.keyboard.press("Escape");
     }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    if (textScale === 2) {
+      const row = page.locator(".compare-kink-row").first();
+      for (const name of [NAME_A, NAME_B]) {
+        await expectUnclippedText(row.locator(".ks-compare-person-name").getByText(name, { exact: true }));
+      }
+      for (const response of await row.locator(".ks-compare-person-status > :last-child").all()) {
+        await expectUnclippedText(response);
+      }
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
   });
 
   test(`Contract list keeps both participants readable at ${context}`, async ({ page }, testInfo) => {
@@ -76,7 +85,7 @@ for (const { width, textScale } of [{ width: 320, textScale: 1 }, { width: 390, 
       await expect(labels).toHaveCount(2);
       for (const label of await labels.all()) await expectUnclippedText(label);
     }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
   });
 
   test(`Scene list keeps both participants readable at ${context}`, async ({ page }, testInfo) => {
@@ -98,7 +107,9 @@ for (const { width, textScale } of [{ width: 320, textScale: 1 }, { width: 390, 
     await setRootTextScale(page, textScale);
     await page.screenshot({ path: testInfo.outputPath("scenes.png") });
     for (const name of [NAME_A, NAME_B]) await expectUnclippedText(page.getByRole("main").getByText(name, { exact: true }));
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await expectUnclippedText(page.getByRole("button", { name: "Spelen", exact: true }));
+    await expectUnclippedText(page.getByRole("button", { name: "Afronden", exact: true }));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
   });
 }
 }

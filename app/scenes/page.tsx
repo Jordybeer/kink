@@ -47,7 +47,7 @@ function SceneCard({
     : new Date(scene.updatedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <article className="ks-relational-surface rounded-2xl" style={{ border: "1px solid var(--border)" }}>
+    <article className="ks-scene-card ks-relational-surface rounded-2xl" style={{ border: "1px solid var(--border)" }}>
       {traffic && (
         <div
           className="flex items-center gap-2.5 rounded-t-[15px] px-4 py-2.5"
@@ -100,11 +100,11 @@ function SceneCard({
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-0.5">
+        <div className="ks-scene-actions flex flex-wrap items-center gap-2 pt-0.5">
           {scene.status === "completed" ? (
             <button
               onClick={() => router.push(sceneDetailHref(scene.id))}
-              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold hover:opacity-90"
+              className="ks-motion-choice focus-ring min-h-11 min-w-0 flex-1 rounded-xl px-[12px] text-sm font-semibold hover:opacity-90"
               style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               Bekijken
@@ -113,14 +113,14 @@ function SceneCard({
             <>
               <button
                 onClick={() => router.push(`/scene?id=${scene.id}`)}
-                className="ks-motion-choice focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold hover:opacity-90"
+                className="ks-motion-choice focus-ring inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-[12px] text-sm font-semibold hover:opacity-90"
                 style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
               >
                 <Play size={13} weight="fill" aria-hidden="true" /> Spelen
               </button>
               <button
                 onClick={() => onAftercare(scene.id)}
-                className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold hover:opacity-90"
+                className="ks-motion-choice focus-ring min-h-11 min-w-0 flex-1 rounded-xl px-[12px] text-sm font-semibold hover:opacity-90"
                 style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
               >
                 Afronden

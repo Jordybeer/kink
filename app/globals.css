@@ -28,6 +28,37 @@ html, body {
 
 body { isolation: isolate; }
 
+.ks-content-nav { container-type: inline-size; }
+.compare-kink-row { container-type: inline-size; }
+.ks-scene-card { container-type: inline-size; }
+.ks-compare-person-status { display: contents; }
+.ks-compare-person-name { display: none; }
+
+/* Stacked responses keep their person's name when enlarged text cannot fit a pair. */
+@container (max-width: 14rem) {
+  .ks-compare-statuses { flex-direction: column; align-items: stretch; }
+  .ks-compare-person-status { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 4px; }
+  .ks-compare-person-name { display: block; }
+  .ks-compare-statuses .ks-relation-thread { display: none; }
+  .ks-scene-actions > button { flex-basis: auto; }
+}
+
+/* Keep icon controls usable when enlarged text leaves little inline room.
+   Captions remain in the accessible names; the page title keeps its text size. */
+@container (max-width: 16rem) {
+  .ks-content-nav [data-testid="content-topnav-row"] {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+  }
+  .ks-content-nav [data-topnav-control] {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+  .ks-content-nav [data-topnav-control] svg { width: 20px; height: 20px; }
+  .ks-content-nav [data-topnav-short-label] { display: none; }
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

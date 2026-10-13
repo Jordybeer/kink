@@ -58,7 +58,7 @@ export default function CompareKinkRow({
 
   return (
     <div
-      className="compare-kink-row rounded-xl px-3 py-3"
+      className="compare-kink-row rounded-xl px-3 py-3 [overflow-wrap:anywhere]"
       data-fact-kind={factKind}
       style={{
         background: "var(--surface)",
@@ -77,10 +77,16 @@ export default function CompareKinkRow({
         </div>
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
-        <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
+      <div className="ks-compare-statuses mt-2 flex items-center gap-2">
+        <div className="ks-compare-person-status">
+          <span className="ks-compare-person-name text-xs [overflow-wrap:anywhere]" style={{ color: colourA }}>{profileA.name}</span>
+          <PrivateResponseStatus status={entryA.status} privateResponse={false} concealed={false} subject={`${profileA.name} bij ${accessibleName}`} compact readable />
+        </div>
         <RelationThread className="ks-relation-thread--quiet flex-1" />
-        <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
+        <div className="ks-compare-person-status">
+          <span className="ks-compare-person-name text-xs [overflow-wrap:anywhere]" style={{ color: colourB }}>{profileB.name}</span>
+          <PrivateResponseStatus status={entryB.status} privateResponse={false} concealed={false} subject={`${profileB.name} bij ${accessibleName}`} compact readable />
+        </div>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug">

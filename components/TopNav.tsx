@@ -190,7 +190,7 @@ export default function TopNav() {
       style={{ ...safeAreaShell, ...contentHeaderSurface }}
     >
       <nav
-        className={`mx-auto h-14 ${navWidth} px-[var(--page-gutter)]`}
+        className={`ks-content-nav mx-auto h-14 ${navWidth} px-[var(--page-gutter)]`}
         aria-label="Hoofdnavigatie"
         data-top-nav-variant="content"
       >
@@ -200,6 +200,7 @@ export default function TopNav() {
           style={contentNavRow}
         >
           <MotionLink
+            data-topnav-control
             href={backHref ?? route.back}
             whileTap={t.tap}
             className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
@@ -257,6 +258,7 @@ export default function TopNav() {
                   }))}
               >
                 <button
+                  data-topnav-control
                   type="button"
                   data-tour={questionTitle ? "questionnaire-menu" : undefined}
                   onClick={() => setOverflowOpen((open) => !open)}
@@ -289,6 +291,7 @@ function TopNavActionButton({
 
   return (
     <motion.button
+      data-topnav-control
       type="button"
       data-tour={action.id === "questionnaire-help" ? "questionnaire-info" : undefined}
       whileTap={action.disabled ? undefined : t.tap}
@@ -306,7 +309,7 @@ function TopNavActionButton({
       }}
     >
       {action.icon}
-      {action.shortLabel && <span className="whitespace-nowrap">{action.shortLabel}</span>}
+      {action.shortLabel && <span data-topnav-short-label className="whitespace-nowrap">{action.shortLabel}</span>}
     </motion.button>
   );
 }
