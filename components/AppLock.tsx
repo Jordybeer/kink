@@ -187,7 +187,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
               </p>
             )}
             {storedHash && (
-              <p style={{ fontSize: "0.875rem", lineHeight: 1.4, color: "var(--text2)", marginTop: "0.375rem", opacity: 0.6 }}>
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.4, color: "var(--text2)", marginTop: "0.375rem" }}>
                 of voer PIN in
               </p>
             )}

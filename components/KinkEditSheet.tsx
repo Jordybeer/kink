@@ -107,50 +107,62 @@ export default function KinkEditSheet({
         }}
       >
         <header className="flex-none px-5 pb-2 pt-3" data-testid="kink-edit-header">
-          <div className="grid min-h-11 grid-cols-[1fr_auto_1fr] items-center gap-2">
-            <span aria-hidden="true" />
-            <h2 className="text-base font-semibold">Onderwerp bewerken</h2>
+          <div className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1">
+            <h2 className="min-w-0 flex-[1_1_12rem] text-base font-semibold">Onderwerp bewerken</h2>
             <button
               type="button"
               onClick={onClose}
-              className="ks-motion-choice focus-ring min-h-11 justify-self-end px-1 text-sm font-semibold"
+              className="ks-motion-choice focus-ring ml-auto min-h-11 flex-none px-1 text-sm font-semibold"
               style={{ color: "var(--accent)" }}
             >
               Klaar
             </button>
           </div>
 
-          <nav className="mx-auto mt-1 flex max-w-[12rem] items-center gap-3" aria-label="Onderwerpstappen">
+          <nav className="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="Onderwerpstappen">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring flex min-h-11 min-w-0 flex-[1_1_8rem] items-center gap-1.5 rounded-lg py-1 text-left text-sm font-semibold"
               aria-label={step === 1
                 ? "Stap 1 van 2: Antwoord, huidig"
                 : entry.status
                   ? "Stap 1 van 2: Antwoord, voltooid"
                   : "Stap 1 van 2: Antwoord"}
               aria-current={step === 1 ? "step" : undefined}
-              style={step === 1
-                ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
-                : entry.status
-                  ? { background: "var(--accent2)", color: "var(--bg)" }
-                  : { border: "1px solid var(--border-accent)", color: "var(--text2)" }}
+              style={{ color: step === 1 ? "var(--text)" : "var(--text2)" }}
             >
-              {step === 1 ? "1" : entry.status ? <Check size={16} weight="bold" aria-hidden="true" /> : "1"}
+              <span
+                aria-hidden="true"
+                className="flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full"
+                style={step === 1
+                  ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
+                  : entry.status
+                    ? { background: "var(--accent2)", color: "var(--bg)" }
+                    : { border: "1px solid var(--border-accent)" }}
+              >1</span>
+              <span>Antwoord</span>
             </button>
-            <span className="h-px flex-1" style={{ background: "var(--border)" }} aria-hidden="true" />
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full text-sm font-semibold"
+              className="ks-motion-choice focus-ring flex min-h-11 min-w-0 flex-[1_1_8rem] items-center gap-1.5 rounded-lg py-1 text-left text-sm font-semibold"
               aria-label={step === 2 ? "Stap 2 van 2: Details, huidig" : "Stap 2 van 2: Details"}
               aria-current={step === 2 ? "step" : undefined}
-              style={step === 2
-                ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
-                : { border: "1px solid var(--border-accent)", color: "var(--text2)" }}
+              aria-describedby="kink-edit-details-optional"
+              style={{ color: step === 2 ? "var(--text)" : "var(--text2)" }}
             >
-              2
+              <span
+                aria-hidden="true"
+                className="flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full"
+                style={step === 2
+                  ? { background: "var(--accent-fill)", color: "var(--on-accent-fill)" }
+                  : { border: "1px solid var(--border-accent)" }}
+              >2</span>
+              <span>
+                <span className="block">Details</span>
+                <span id="kink-edit-details-optional" className="block text-xs font-normal" style={{ color: "var(--text2)" }}>optioneel</span>
+              </span>
             </button>
           </nav>
         </header>

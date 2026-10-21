@@ -34,9 +34,20 @@ test("topic editor separates the primary answer from optional details without fo
   const dialog = page.getByRole("dialog", { name: `${candidate!.name} bewerken` });
   await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
   await expect(dialog.getByRole("heading", { name: "Onderwerp bewerken" })).toBeVisible();
-  await expect(dialog.getByRole("navigation", { name: "Onderwerpstappen" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, huidig" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details" })).toBeVisible();
+  const steps = dialog.getByRole("navigation", { name: "Onderwerpstappen" });
+  await expect(steps).toBeVisible();
+  const answerStep = steps.getByRole("button", { name: /Stap 1 van 2: Antwoord/ });
+  const detailsStep = steps.getByRole("button", { name: /Stap 2 van 2: Details/ });
+  await expect(answerStep).toHaveAttribute("aria-current", "step");
+  await expect(answerStep.getByText("Antwoord", { exact: true })).toBeVisible();
+  await expect(detailsStep.getByText("Details", { exact: true })).toBeVisible();
+  await expect(detailsStep.getByText("optioneel", { exact: true })).toBeVisible();
+  await expect(detailsStep).toHaveAccessibleDescription("optioneel");
+  for (const control of [answerStep, detailsStep]) {
+    const box = await control.boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+  }
 
   const body = dialog.getByTestId("kink-edit-scroll-body");
   const done = dialog.getByRole("button", { name: "Klaar" });
@@ -68,6 +79,8 @@ test("topic editor separates the primary answer from optional details without fo
     await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details, huidig" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, voltooid" })).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "Details" })).toBeFocused();
+    await expect(done).toBeVisible();
+    await expect(detailsStep).toHaveAttribute("aria-current", "step");
     await expect(dialog.getByText(candidate!.name, { exact: false }).first()).toBeVisible();
     await expect(statusGroup).toHaveCount(0);
     await expect(dialog.getByRole("heading", { name: "Afspraken" })).toBeVisible();
@@ -89,11 +102,39 @@ test("topic editor separates the primary answer from optional details without fo
 
   await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
 
+  await page.setViewportSize({ width: 320, height: 844 });
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
   await expect.poll(() => dialog.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  const header = dialog.getByTestId("kink-edit-header");
+  await expect.poll(() => header.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  const headingBox = (await dialog.getByRole("heading", { name: "Onderwerp bewerken" }).boundingBox())!;
+  const doneBox = (await done.boundingBox())!;
+  expect(headingBox.y + headingBox.height).toBeLessThanOrEqual(doneBox.y);
+  for (const [control, label, number] of [[answerStep, "Antwoord", "1"], [detailsStep, "Details", "2"]] as const) {
+    const controlBox = (await control.boundingBox())!;
+    const numberBox = (await control.getByText(number, { exact: true }).boundingBox())!;
+    const labelBox = (await control.getByText(label, { exact: true }).boundingBox())!;
+    expect(controlBox.x).toBeGreaterThanOrEqual(0);
+    expect(controlBox.x + controlBox.width).toBeLessThanOrEqual(320);
+    expect(labelBox.x).toBeGreaterThanOrEqual(numberBox.x + numberBox.width);
+    expect(controlBox.height).toBeGreaterThanOrEqual(44);
+    const labelLines = await control.getByText(label, { exact: true }).evaluate((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return range.getClientRects().length;
+    });
+    expect(labelLines).toBe(1);
+  }
+  const scrollBodyBox = (await body.boundingBox())!;
+  expect(scrollBodyBox.height).toBeGreaterThanOrEqual(200);
   await expect(done).toBeVisible();
+  await page.screenshot({
+    path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-320-text-200.png`,
+    fullPage: false,
+  });
   await page.evaluate(() => { document.documentElement.style.removeProperty("font-size"); });
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const maybe = statusGroup.getByRole("button", { name: /^Misschien\b/ });
