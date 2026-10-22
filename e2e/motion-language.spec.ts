@@ -154,10 +154,10 @@ test("quick sheet keeps finite backdrop opacity through interruption, live reduc
   await page.evaluate(() => {
     const state = window as unknown as { sheetOpacityWrites: string[] };
     state.sheetOpacityWrites = [];
-    const original = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, "opacity")!;
     Object.defineProperty(CSSStyleDeclaration.prototype, "opacity", {
-      ...original,
-      set(value) { state.sheetOpacityWrites.push(String(value)); original.set!.call(this, value); },
+      configurable: true,
+      get() { return this.getPropertyValue("opacity"); },
+      set(value) { state.sheetOpacityWrites.push(String(value)); this.setProperty("opacity", String(value)); },
     });
   });
   const trigger = page.getByRole("button", { name: "Moment plannen", exact: true }).first();
@@ -182,10 +182,13 @@ test("quick sheet keeps finite backdrop opacity through interruption, live reduc
   expect(writes.every((value) => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)).toBe(true);
 
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await trigger.click();
-  await expect(sheet).toBeFocused();
-  const handle = sheet.locator("[data-sheet-handle]");
-  await expect.poll(() => sheet.evaluate((element) => Math.abs(element.getBoundingClientRect().bottom - window.innerHeight))).toBeLessThan(1);
+  await page.goto(`/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`);
+  const addKinks = page.getByRole("button", { name: "Kinks toevoegen", exact: true });
+  await addKinks.click();
+  const draggable = page.getByRole("dialog", { name: "Kinks toevoegen", exact: true });
+  await expect(draggable).toBeFocused();
+  const handle = draggable.getByRole("heading", { name: "Toevoegen aan setlist", exact: true });
+  await expect.poll(() => draggable.evaluate((element) => Math.abs(element.getBoundingClientRect().bottom - window.innerHeight))).toBeLessThan(1);
   const box = (await handle.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
@@ -195,6 +198,6 @@ test("quick sheet keeps finite backdrop opacity through interruption, live reduc
   expect(opacity).toBeLessThan(1);
   await page.mouse.up();
   await page.keyboard.press("Escape");
-  await expect(sheet).toHaveCount(0);
-  await expect(trigger).toBeFocused();
+  await expect(draggable).toHaveCount(0);
+  await expect(addKinks).toBeFocused();
 });

@@ -128,3 +128,33 @@ for (const withKinks of [true, false]) {
     await expect(page.getByRole("button", { name: "Kinks toevoegen", exact: true })).toHaveCount(withKinks ? 1 : 0);
   });
 }
+
+for (const theme of ["light", "dark"] as const) {
+  for (const { width, scale } of [{ width: 390, scale: 1 }, { width: 320, scale: 2 }]) {
+    test(`scene scheduling and quiet contract utility stay readable at ${width}px/${scale * 100}%/${theme}`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
+      await seedAndGo(page, `/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`, [PROFILE_ALEX, PROFILE_SAM]);
+      await page.evaluate((scale) => { document.documentElement.style.fontSize = `${scale * 100}%`; }, scale);
+      for (const label of ["Datum", "Tijd", "Safeword"]) {
+        await expect(page.getByLabel(label, { exact: true })).toBeVisible();
+        await expect(page.locator("label").filter({ hasText: new RegExp(`^${label}$`) })).toBeVisible();
+      }
+      const contract = page.getByRole("link", { name: "Contract opstellen", exact: true });
+      expect((await contract.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      const overflow = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        width: document.documentElement.scrollWidth,
+        elements: [...document.querySelectorAll("main *, input, button")].flatMap((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.right > document.documentElement.clientWidth + 1
+            ? [{ tag: element.tagName, id: element.id, text: element.textContent?.slice(0, 50), x: rect.x, right: rect.right, width: rect.width }]
+            : [];
+        }),
+      }));
+      await testInfo.attach("scene-geometry", { body: JSON.stringify(overflow, null, 2), contentType: "application/json" });
+      expect(overflow.width).toBeLessThanOrEqual(overflow.viewport);
+      await page.screenshot({ path: testInfo.outputPath("scene-scheduling.png") });
+    });
+  }
+}

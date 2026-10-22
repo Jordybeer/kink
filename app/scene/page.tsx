@@ -606,7 +606,7 @@ function ScenePage() {
             onChange={(e) => { if (!isConsentLocked) { setSafeword(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             placeholder="bijv. rood"
-            className="focus-ring flex-1 rounded-lg px-3 focus:outline-none"
+            className="focus-ring min-w-0 flex-1 rounded-lg px-3 focus:outline-none"
             style={{ background: "var(--surface)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14, minHeight: "var(--touch-target)" }}
           />
         </div>
