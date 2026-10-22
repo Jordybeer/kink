@@ -148,7 +148,7 @@ test("relationship ornament pauses offscreen while contract help traps and resto
   await expect(why).toBeFocused();
 });
 
-test("quick sheet keeps finite backdrop opacity through interruption, live reduced motion and numeric dragging", async ({ page }) => {
+test("quick sheet keeps finite backdrop opacity through interruption, live reduced motion and numeric dragging", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);
   await page.evaluate(() => {
@@ -196,6 +196,10 @@ test("quick sheet keeps finite backdrop opacity through interruption, live reduc
   const opacity = await page.locator('[aria-hidden="true"].fixed.inset-0 > div').last().evaluate((element) => Number(getComputedStyle(element).opacity));
   expect(opacity).toBeGreaterThan(0);
   expect(opacity).toBeLessThan(1);
+  await testInfo.attach("sheet-motion-measurements", {
+    body: JSON.stringify({ finiteOpacityWrites: writes.length, numericDragOpacity: opacity, scrollBefore, scrollAfter: await page.evaluate(() => window.scrollY) }),
+    contentType: "application/json",
+  });
   await page.mouse.up();
   await page.keyboard.press("Escape");
   await expect(draggable).toHaveCount(0);

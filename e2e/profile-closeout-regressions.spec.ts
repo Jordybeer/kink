@@ -282,18 +282,18 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 for (const theme of ["light", "dark"] as const) {
- for (const width of [390, 1280]) {
-  test(`ordinary profile identity retains the avatar and name row at ${width}px in ${theme}`, async ({ page }, testInfo) => {
-    await page.setViewportSize({ width, height: 844 });
-    await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
-    await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
-    const hero = page.getByTestId("profile-hero");
-    const name = (await hero.getByRole("heading", { name: "Alex", exact: true }).boundingBox())!;
-    const avatar = (await hero.getByRole("button", { name: "Geen profielfoto voor Alex" }).boundingBox())!;
-    expect(name.x).toBeGreaterThan(avatar.x + avatar.width);
-    expect(name.y).toBeLessThan(avatar.y + avatar.height);
-    await expect(hero.getByText("Hoofdperspectief: Dominant", { exact: true })).toBeVisible();
-    await page.screenshot({ path: testInfo.outputPath("ordinary-profile.png") });
-  });
-}
+  for (const width of [390, 1280]) {
+    test(`ordinary profile identity retains the avatar and name row at ${width}px in ${theme}`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
+      await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
+      const hero = page.getByTestId("profile-hero");
+      const name = (await hero.getByRole("heading", { name: "Alex", exact: true }).boundingBox())!;
+      const avatar = (await hero.getByRole("button", { name: "Geen profielfoto voor Alex" }).boundingBox())!;
+      expect(name.x).toBeGreaterThan(avatar.x + avatar.width);
+      expect(name.y).toBeLessThan(avatar.y + avatar.height);
+      await expect(hero.getByText("Hoofdperspectief: Dominant", { exact: true })).toBeVisible();
+      await page.screenshot({ path: testInfo.outputPath("ordinary-profile.png") });
+    });
+  }
 }
