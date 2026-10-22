@@ -245,3 +245,38 @@ test("dense profile share keeps a fixed header and scrolls inside the iPhone vis
     return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
   })).toBeLessThanOrEqual(1);
 });
+
+for (const theme of ["light", "dark"] as const) {
+  for (const width of [320, 390]) {
+    for (const scale of [1, 2]) {
+      test(`long profile alias uses readable full width at ${width}px/${scale * 100}%/${theme}`, async ({ page }, testInfo) => {
+        const alias = "Een heel lange profielalias met ruimte voor de volledige naam ".repeat(3) + "ZonderEnigeWoordafbreking".repeat(3);
+        await page.setViewportSize({ width, height: 844 });
+        await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
+        await seedAndGo(page, `/profile/${PROFILE.id}`, [{ ...PROFILE, name: alias }]);
+        await page.evaluate((scale) => { document.documentElement.style.fontSize = `${scale * 100}%`; }, scale);
+        const hero = page.getByTestId("profile-hero");
+        const name = hero.getByRole("heading", { name: alias, exact: true });
+        await expect(name).toHaveText(alias);
+        const geometry = await name.evaluate((element) => {
+          const box = element.getBoundingClientRect();
+          const hero = element.closest('[data-testid="profile-hero"]')!.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return {
+            width: box.width,
+            available: hero.width,
+            clipped: [...range.getClientRects()].some((rect) => rect.left < box.left - 1 || rect.right > box.right + 1),
+            wrap: getComputedStyle(element).overflowWrap,
+            overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          };
+        });
+        expect(geometry.width).toBeGreaterThanOrEqual(geometry.available * 0.95);
+        expect(geometry.wrap).toBe("anywhere");
+        expect(geometry.clipped).toBe(false);
+        expect(geometry.overflow).toBe(false);
+        await page.screenshot({ path: testInfo.outputPath("long-alias.png") });
+      });
+    }
+  }
+}

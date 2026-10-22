@@ -147,3 +147,54 @@ test("relationship ornament pauses offscreen while contract help traps and resto
   await expect(dialog).not.toBeVisible();
   await expect(why).toBeFocused();
 });
+
+test("quick sheet keeps finite backdrop opacity through interruption, live reduced motion and numeric dragging", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);
+  await page.evaluate(() => {
+    const state = window as unknown as { sheetOpacityWrites: string[] };
+    state.sheetOpacityWrites = [];
+    const original = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, "opacity")!;
+    Object.defineProperty(CSSStyleDeclaration.prototype, "opacity", {
+      ...original,
+      set(value) { state.sheetOpacityWrites.push(String(value)); original.set!.call(this, value); },
+    });
+  });
+  const trigger = page.getByRole("button", { name: "Moment plannen", exact: true }).first();
+  const sheet = page.getByRole("dialog", { name: "Intiem moment plannen", exact: true });
+  const scrollBefore = await page.evaluate(() => window.scrollY);
+  for (let index = 0; index < 3; index++) {
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+    await expect(sheet).toBeFocused();
+    if (index === 1) await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.keyboard.press("Escape");
+    await expect(trigger).toBeFocused();
+    // Reopen during exit rather than waiting for the sheet to unmount.
+    await page.keyboard.press("Enter");
+    await expect(sheet).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(sheet).toHaveCount(0);
+  }
+  expect(await page.evaluate(() => window.scrollY)).toBeCloseTo(scrollBefore, 0);
+  const writes = await page.evaluate(() => (window as unknown as { sheetOpacityWrites: string[] }).sheetOpacityWrites);
+  expect(writes.length).toBeGreaterThan(0);
+  expect(writes.every((value) => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)).toBe(true);
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await trigger.click();
+  await expect(sheet).toBeFocused();
+  const handle = sheet.locator("[data-sheet-handle]");
+  await expect.poll(() => sheet.evaluate((element) => Math.abs(element.getBoundingClientRect().bottom - window.innerHeight))).toBeLessThan(1);
+  const box = (await handle.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 65, { steps: 12 });
+  const opacity = await page.locator('[aria-hidden="true"].fixed.inset-0 > div').last().evaluate((element) => Number(getComputedStyle(element).opacity));
+  expect(opacity).toBeGreaterThan(0);
+  expect(opacity).toBeLessThan(1);
+  await page.mouse.up();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});

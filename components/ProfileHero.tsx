@@ -98,7 +98,7 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
           aria-hidden="true"
         />
 
-        <div className="relative flex items-start gap-5">
+        <div className="relative flex flex-wrap items-start gap-5">
           <div className="relative flex-none">
             <button
               type="button"
@@ -117,9 +117,9 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
             </button>
           </div>
 
-          <div className="min-w-0 flex-1 pt-1">
+          <div className="min-w-0 max-w-full flex-[1_1_max-content] pt-1">
             <h2
-              className="serif-safe break-words text-[clamp(2rem,9vw,2.55rem)] leading-[0.98]"
+              className="serif-safe [overflow-wrap:anywhere] text-[clamp(2rem,9vw,2.55rem)] leading-[0.98]"
               style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 600, letterSpacing: "-0.025em", color: "var(--text)" }}
             >
               {profile.name}

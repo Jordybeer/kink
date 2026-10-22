@@ -169,8 +169,13 @@ export default function Sheet({
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
-  const y = useMotionValue(0);
-  const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
+  const y = useMotionValue<number | string>(0);
+  // Entrance/exit uses percentages; only pixel-valued dragging owns dimming.
+  const backdropOpacity = useTransform(y, (value) =>
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.max(0, Math.min(1, 1 - value / 300))
+      : 1,
+  );
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const quickSheet = variant === "sheet";
