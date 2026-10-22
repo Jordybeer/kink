@@ -24,38 +24,68 @@ test.describe("Vergelijkingspagina", () => {
     await seedAndGo(page, URL, [PROFILE_ALEX, PROFILE_SAM]);
   });
 
-  test("toont een menselijke samenvatting zonder compatibility-score", async ({ page }) => {
+  test("toont het zichtbare aantal zonder relatieoordeel", async ({ page }) => {
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).toMatch(/Alex/);
     expect(text).toMatch(/Sam/);
-    expect(text).toContain("Wat valt op tussen jullie");
-    expect(text).toMatch(/golflengte|één lijn|goed gesprek|anders over|beeld is nog niet helemaal compleet/i);
-    expect(text).not.toContain("duidelijke overlap");
+    expect(text).toContain("Jullie antwoorden");
+    const expected = getCompareSummary(PROFILE_ALEX, PROFILE_SAM);
+    expect(text).toContain(`Jullie hebben allebei een zichtbaar antwoord bij ${expected.jointlyAssessed} onderwerpen.`);
+    expect(text).not.toMatch(/golflengte|één lijn|goed gesprek|anders over|beeld is nog niet helemaal compleet/i);
     expect(text).not.toContain("Sterke compatibiliteit");
     expect(text).not.toContain("Goede basis");
     expect(text).not.toContain("compatibiliteitsscore");
   });
 
-  test("toont vier rustige hoofdvakken, ook wanneer grenzen nul zijn", async ({ page }) => {
-    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
-    await expect(summary).toContainText("Overlap");
-    await expect(summary).toContainText("Bespreekbaar");
-    await expect(summary).toContainText("Verschillen");
-    await expect(summary).toContainText("Grenzen");
-    await expect(summary).not.toContainText("zachte verschillen");
+  test("houdt de samenvatting bij overlap, grenzen en de zichtbare dekking", async ({ page }) => {
+    const summary = page.getByRole("region", { name: "Jullie antwoorden" });
+    const expected = getCompareSummary(PROFILE_ALEX, PROFILE_SAM);
+    await expect(summary).toContainText(`Bij ${expected.shared + expected.complementary} onderwerpen is er overlap.`);
+    await expect(summary).toContainText("Bij 1 onderwerp staat een harde grens.");
+    await expect(summary).toContainText("Bij 1 ander onderwerp ontbreekt nog één zichtbaar antwoord.");
+    await expect(summary).toContainText("Alleen zichtbare antwoorden tellen mee. Overlap is geen toestemming.");
+    await expect(summary).not.toContainText(/Inzichten|Bespreekbaar|Verschillen/i);
+    await expect(page.locator(".compare-kink-row").filter({ hasText: "Verbal humiliation" })).toContainText("Harde grens");
   });
 
-  test("vervangt vier nullen door een rustige lege vergelijking", async ({ page }) => {
+  test("legt een lege vergelijking één keer uit met een concrete volgende stap", async ({ page }) => {
     const alex: Profile = { ...PROFILE_ALEX, entries: {}, customKinks: [] };
     const sam: Profile = { ...PROFILE_SAM, entries: {}, customKinks: [] };
     await seedAndGo(page, URL, [alex, sam]);
 
-    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
-    await expect(summary).toContainText("Nog niets om te vergelijken");
-    await expect(summary.getByText("Overlap", { exact: true })).toHaveCount(0);
-    await expect(summary.getByText("Bespreekbaar", { exact: true })).toHaveCount(0);
-    await expect(summary.getByText("Verschillen", { exact: true })).toHaveCount(0);
-    await expect(summary.getByText("Grenzen", { exact: true })).toHaveCount(0);
+    const summary = page.getByRole("region", { name: "Jullie antwoorden" });
+    const explanation = "Er zijn nog geen onderwerpen met een zichtbaar antwoord van jullie allebei.";
+    await expect(page.getByText(explanation, { exact: true })).toHaveCount(1);
+    await expect(summary).toContainText("Vul allebei een antwoord in bij hetzelfde onderwerp en vergelijk opnieuw.");
+    await expect(page.getByText("Nog geen voorkeuren aan beide kanten ingevuld.")).toHaveCount(0);
+    await expect(summary).not.toContainText(/Bij 0|Inzichten/);
+  });
+
+  test("houdt eenzijdige en privéantwoorden buiten het gezamenlijke aantal", async ({ page }) => {
+    const alex: Profile = {
+      ...PROFILE_ALEX, customKinks: [], entries: {
+        praise_kink: { status: "yes", comment: "" },
+        wax_play: { status: "yes", comment: "" },
+        choking: { status: "hard_no", comment: "Privégrens", privateResponse: true },
+      },
+    };
+    const sam: Profile = {
+      ...PROFILE_SAM, entries: {
+        praise_kink: { status: "yes", comment: "" },
+        choking: { status: "yes", comment: "" },
+      },
+    };
+    await seedAndGo(page, URL, [alex, sam]);
+    const summary = page.getByRole("region", { name: "Jullie antwoorden" });
+    await expect(summary).toContainText("Jullie hebben allebei een zichtbaar antwoord bij 1 onderwerp.");
+    await expect(summary).toContainText("Bij 1 onderwerp is er overlap.");
+    await expect(summary).not.toContainText("harde grens");
+    await expect(page.locator(".compare-kink-row")).toHaveCount(1);
+    const unpaired = page.locator("details").filter({ hasText: "Nog niet door beiden beoordeeld" });
+    await expect(unpaired.locator("summary")).toContainText("· 2");
+    await unpaired.locator("summary").click();
+    await expect(unpaired).not.toContainText("Privégrens");
+    await expect(unpaired).not.toContainText("Harde grens");
   });
 
   test("toont de rol van beide gekozen profielen", async ({ page }) => {
@@ -64,10 +94,9 @@ test.describe("Vergelijkingspagina", () => {
   });
 
   test("houdt profielrol en expliciete richting van elkaar gescheiden", async ({ page }) => {
-    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+    const summary = page.getByRole("region", { name: "Jullie antwoorden" });
     await expect(summary).toContainText(/Overlap/i);
-    await expect(summary).toContainText(/Bespreekbaar/i);
-    await expect(summary).toContainText(/Grenzen/i);
+    await expect(summary).toContainText(/harde grens/i);
 
     const text = await page.evaluate(() => document.body.innerText);
     expect(text).toContain("Spanking (hand)");
@@ -100,14 +129,12 @@ test.describe("Vergelijkingspagina", () => {
     expect(text).not.toMatch(/Diaper wearing[\s\S]{0,120}geven.*ontvangen/i);
   });
 
-  test("neemt aanvullende matches mee in Overlap zonder ze opnieuw in de intro uit te schrijven", async ({ page }) => {
-    const summary = page.getByRole("region", { name: "Wat valt op tussen jullie" });
+  test("neemt aanvullende matches mee in het feitelijke overlapaantal", async ({ page }) => {
+    const summary = page.getByRole("region", { name: "Jullie antwoorden" });
     const expected = getCompareSummary(PROFILE_ALEX, PROFILE_SAM);
     const expectedClearOverlap = expected.shared + expected.complementary;
-    const overlapStat = summary.getByText("Overlap", { exact: true }).locator("..");
-    await expect(overlapStat).toContainText(String(expectedClearOverlap));
-    const summaryText = await summary.innerText();
-    expect(summaryText).not.toContain(`${expectedClearOverlap}%`);
+    await expect(summary).toContainText(`Bij ${expectedClearOverlap} onderwerpen is er overlap.`);
+    expect(await summary.innerText()).not.toContain("%");
   });
 
   test("filtert resultaten en categorieën via twee multiselect sheets", async ({ page }) => {
@@ -137,6 +164,8 @@ test.describe("Vergelijkingspagina", () => {
     await expect(resultsTrigger).toContainText("· 2");
     await expect(resultsTrigger).toHaveAccessibleName("Resultaten: 2 geselecteerd");
     await expect(resultsTrigger).toHaveAttribute("aria-expanded", "false");
+    const boundary = page.locator(".compare-kink-row").filter({ hasText: "Verbal humiliation" });
+    await expect(boundary).toBeVisible();
 
     await categoriesTrigger.click();
     const categoriesDialog = page.getByRole("dialog", { name: "Categorieën filteren" });
@@ -148,6 +177,7 @@ test.describe("Vergelijkingspagina", () => {
     await categoriesDialog.getByRole("button", { name: "Klaar" }).click();
     await expect(categoriesTrigger).toContainText("· 1");
     await expect(categoriesTrigger).toHaveAccessibleName("Categorieën: 1 geselecteerd");
+    await expect(boundary).toHaveCount(0);
   });
 
   test("houdt eenzijdige antwoorden apart van pair-resultaten", async ({ page }) => {
