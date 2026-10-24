@@ -9,7 +9,6 @@ import {
   Fingerprint,
   Key,
   LockKey,
-  PaintBrush,
   Sparkle,
   DeviceMobile,
   Trash,
@@ -17,6 +16,7 @@ import {
 } from "@phosphor-icons/react";
 import Sheet from "@/components/Sheet";
 import Switch from "@/components/ui/Switch";
+import Accordion from "@/components/ui/Accordion";
 import { useStore } from "@/lib/store";
 import { registerBiometric, isPlatformAuthenticatorAvailable } from "@/lib/webauthn";
 import { useTheme } from "@/components/ThemeProvider";
@@ -39,24 +39,11 @@ const SETTINGS_ICON_TONE = "color-mix(in srgb, var(--accent) 64%, var(--text2))"
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h3
-      className="mb-1.5 px-1 text-xs font-semibold tracking-wide"
-      style={{ color: "var(--text2)" }}
+      className="mb-2 px-1 text-base font-medium"
+      style={{ color: "var(--text)", fontFamily: "var(--font-display, Georgia, serif)" }}
     >
       {children}
     </h3>
-  );
-}
-
-function SettingsList({ children }: { children: ReactNode }) {
-  return (
-    <div
-      style={{
-        borderTop: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
-      {children}
-    </div>
   );
 }
 
@@ -83,7 +70,7 @@ function RowContent({
       >
         {icon}
       </span>
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 flex-1 break-words">
         <span
           className="block text-sm font-semibold leading-5"
           style={{ color: danger ? "var(--hard-no)" : "var(--text)" }}
@@ -113,11 +100,16 @@ function ThemeSelector() {
   const { preference, setPreference } = useTheme();
 
   return (
-    <fieldset className="px-1.5 pb-3 sm:px-2">
+    <fieldset className="min-w-0 px-1.5 sm:px-2">
       <legend className="sr-only">Kleurmodus</legend>
       <div
-        className="grid grid-cols-3 gap-1 rounded-xl p-1"
-        style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+        className="grid gap-1 rounded-xl p-1"
+        data-testid="settings-theme-options"
+        style={{
+          background: "var(--surface2)",
+          border: "1px solid var(--border)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr))",
+        }}
       >
         {THEME_OPTIONS.map((option) => {
           const active = preference === option.value;
@@ -140,8 +132,10 @@ function ThemeSelector() {
                   boxShadow: active ? "var(--shadow-control)" : "none",
                 }}
               >
-                {active && <Check size={14} weight="bold" aria-hidden="true" />}
-                {option.label}
+                <span className="flex w-3.5 flex-none items-center justify-center" aria-hidden="true">
+                  <Check size={14} weight="bold" style={{ visibility: active ? "visible" : "hidden" }} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 break-words">{option.label}</span>
               </span>
             </label>
           );
@@ -156,15 +150,19 @@ function InstallApp() {
   if (standalone) return null;
 
   return (
-    <details className="group" style={DIVIDER_STYLE}>
-      <summary className={`${SETTINGS_ROW_CLASS} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
-        <RowContent
-          icon={<DeviceMobile size={19} aria-hidden="true" />}
-          title="KinkSync installeren"
-          description="Open je eigen plek vanaf het beginscherm"
-          trailing={<CaretRight size={15} aria-hidden="true" className="group-open:rotate-90" style={{ color: "var(--text2)" }} />}
-        />
-      </summary>
+    <Accordion
+      className="border-t border-[var(--border)]"
+      triggerClassName="px-1.5 py-2 sm:px-2"
+      trigger={
+        <span className="flex items-center gap-3">
+          <RowContent
+            icon={<DeviceMobile size={19} aria-hidden="true" />}
+            title="KinkSync installeren"
+            description="Open je eigen plek vanaf het beginscherm"
+          />
+        </span>
+      }
+    >
       <div className="space-y-3 px-1.5 pb-3 text-sm leading-relaxed sm:px-2" style={{ color: "var(--text)" }}>
         <p>Installeren is optioneel. Het KinkSync-icoon wordt zichtbaar op je toestel.</p>
         {canPrompt || busy ? (
@@ -185,7 +183,7 @@ function InstallApp() {
         {message && <p role="status">{message}</p>}
         <p style={{ color: "var(--text2)" }}>Maak eerst een back-up als je al profielen hebt. Zie je ze niet in de geïnstalleerde app? Herstel daar je back-up. Installeren is geen back-up.</p>
       </div>
-    </details>
+    </Accordion>
   );
 }
 
@@ -236,24 +234,16 @@ export default function SettingsSheet({
       variant="surface"
       aria-label="Instellingen"
     >
-      <div className="grid gap-4 pb-0.5">
+      <div className="grid gap-6 pb-0.5">
         <section>
-          <SectionTitle>Weergave</SectionTitle>
-          <SettingsList>
-            <div className={SETTINGS_SWITCH_ROW_CLASS}>
-              <RowContent
-                icon={<PaintBrush size={19} aria-hidden="true" />}
-                title="Kleurmodus"
-                description="Gebruik je toestelvoorkeur of kies zelf"
-              />
-            </div>
-            <ThemeSelector />
-          </SettingsList>
+          <SectionTitle>Kleurmodus</SectionTitle>
+          <p className="mb-3 px-1 text-xs leading-4" style={{ color: "var(--text2)" }}>Gebruik je toestelvoorkeur of kies zelf</p>
+          <ThemeSelector />
         </section>
 
         <section>
           <SectionTitle>Gegevens</SectionTitle>
-          <SettingsList>
+          <div>
             <button
               type="button"
               onClick={onExportBackup}
@@ -284,7 +274,7 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--text2)" }} />}
               />
             </label>
-          </SettingsList>
+          </div>
           {importError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {importError}
@@ -299,7 +289,7 @@ export default function SettingsSheet({
 
         <section>
           <SectionTitle>Beveiliging</SectionTitle>
-          <SettingsList>
+          <div>
             <button
               type="button"
               onClick={() => onOpenPinFlow(0)}
@@ -353,7 +343,7 @@ export default function SettingsSheet({
                 />
               </button>
             )}
-          </SettingsList>
+          </div>
           {bioError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {bioError}
@@ -363,7 +353,7 @@ export default function SettingsSheet({
 
         <section>
           <SectionTitle>KinkSync</SectionTitle>
-          <SettingsList>
+          <div>
             <Link
               href="/about"
               onClick={onClose}
@@ -377,12 +367,11 @@ export default function SettingsSheet({
               />
             </Link>
             <InstallApp />
-          </SettingsList>
+          </div>
         </section>
 
-        <section>
-          <SectionTitle>Geavanceerd</SectionTitle>
-          <SettingsList>
+        <div className="border-t border-[var(--border)] pt-3">
+          <div>
             <button
               type="button"
               onClick={() => {
@@ -399,8 +388,8 @@ export default function SettingsSheet({
                 trailing={<CaretRight size={15} aria-hidden="true" style={{ color: "var(--hard-no)" }} />}
               />
             </button>
-          </SettingsList>
-        </section>
+          </div>
+        </div>
       </div>
     </Sheet>
   );

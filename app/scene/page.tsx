@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import DisclosureBody from "@/components/ui/DisclosureBody";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
@@ -154,75 +155,68 @@ function SceneItemRow({
           </button>
         </div>
 
-        <div
-          id={detailsId}
-          className={`accordion-content ${visibleDetails ? "open" : ""}`}
-          aria-hidden={!visibleDetails}
-          inert={visibleDetails ? undefined : true}
-        >
-          <div className="accordion-inner space-y-3 pt-3">
-            <div className="flex items-start gap-2">
-              <label className="flex-none pt-1 text-xs" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
-              <DurationStepper
-                value={item.duration}
-                disabled={locked}
-                onChange={(v) => onUpdate(item.id, { duration: v })}
-              />
-            </div>
-            <textarea
-              rows={2}
-              value={item.note}
-              readOnly={locked}
-              onChange={(e) => onUpdate(item.id, { note: e.target.value })}
-              placeholder="Notitie…"
-              aria-label={`Notitie bij ${item.name}`}
-              className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
-              style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14 }}
+        <DisclosureBody open={visibleDetails} id={detailsId} contentClassName="space-y-3 pt-3">
+          <div className="flex items-start gap-2">
+            <label className="flex-none pt-1 text-xs" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
+            <DurationStepper
+              value={item.duration}
+              disabled={locked}
+              onChange={(v) => onUpdate(item.id, { duration: v })}
             />
-
-            {!locked && (
-              <div className="flex items-center gap-1 border-t pt-2" style={{ borderColor: "var(--border)" }}>
-                <span className="mr-auto text-xs" style={{ color: "var(--text2)" }}>Volgorde &amp; beheer</span>
-                <button
-                  ref={moveUpRef}
-                  onClick={() => {
-                    onMoveUp(index);
-                    // At the endpoint this control becomes disabled. Keep keyboard
-                    // focus on the same item, on its remaining reorder action.
-                    if (index === 1) requestAnimationFrame(() => moveDownRef.current?.focus({ preventScroll: true }));
-                  }}
-                  disabled={index === 0}
-                  aria-label="Naar boven verplaatsen"
-                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
-                  style={{ color: "var(--text2)" }}
-                >
-                  <CaretUp size={16} aria-hidden="true" />
-                </button>
-                <button
-                  ref={moveDownRef}
-                  onClick={() => {
-                    onMoveDown(index);
-                    if (index === totalItems - 2) requestAnimationFrame(() => moveUpRef.current?.focus({ preventScroll: true }));
-                  }}
-                  disabled={index === totalItems - 1}
-                  aria-label="Naar beneden verplaatsen"
-                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
-                  style={{ color: "var(--text2)" }}
-                >
-                  <CaretDown size={16} aria-hidden="true" />
-                </button>
-                <button
-                  onClick={() => onDelete(item.id)}
-                  aria-label={`${item.name} verwijderen`}
-                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
-                  style={{ color: "var(--hard-no)" }}
-                >
-                  <Trash size={16} aria-hidden="true" />
-                </button>
-              </div>
-            )}
           </div>
-        </div>
+          <textarea
+            rows={2}
+            value={item.note}
+            readOnly={locked}
+            onChange={(e) => onUpdate(item.id, { note: e.target.value })}
+            placeholder="Notitie…"
+            aria-label={`Notitie bij ${item.name}`}
+            className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
+            style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14 }}
+          />
+
+          {!locked && (
+            <div className="flex items-center gap-1 border-t pt-2" style={{ borderColor: "var(--border)" }}>
+              <span className="mr-auto text-xs" style={{ color: "var(--text2)" }}>Volgorde &amp; beheer</span>
+              <button
+                ref={moveUpRef}
+                onClick={() => {
+                  onMoveUp(index);
+                  // At the endpoint this control becomes disabled. Keep keyboard
+                  // focus on the same item, on its remaining reorder action.
+                  if (index === 1) requestAnimationFrame(() => moveDownRef.current?.focus({ preventScroll: true }));
+                }}
+                disabled={index === 0}
+                aria-label="Naar boven verplaatsen"
+                className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                style={{ color: "var(--text2)" }}
+              >
+                <CaretUp size={16} aria-hidden="true" />
+              </button>
+              <button
+                ref={moveDownRef}
+                onClick={() => {
+                  onMoveDown(index);
+                  if (index === totalItems - 2) requestAnimationFrame(() => moveUpRef.current?.focus({ preventScroll: true }));
+                }}
+                disabled={index === totalItems - 1}
+                aria-label="Naar beneden verplaatsen"
+                className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                style={{ color: "var(--text2)" }}
+              >
+                <CaretDown size={16} aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => onDelete(item.id)}
+                aria-label={`${item.name} verwijderen`}
+                className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
+                style={{ color: "var(--hard-no)" }}
+              >
+                <Trash size={16} aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </DisclosureBody>
       </div>
     </motion.div>
   );

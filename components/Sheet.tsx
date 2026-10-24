@@ -112,7 +112,10 @@ function TitledSheetFrame({
         </div>
       )}
       <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 items-center gap-2 px-1`}>
-        <h2 className="min-w-0 flex-1 text-balance text-lg font-bold">{title}</h2>
+        <h2
+          className={`min-w-0 flex-1 text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
+          style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+        >{title}</h2>
         <button
           type="button"
           onClick={onClose}

@@ -179,6 +179,39 @@ Do not invent a generic `Privacy & boundaries` section unless real editable sett
 
 Do not use a tab-semantic segmented control for a choice that is not actually tab navigation. Use controls whose accessibility semantics match the decision.
 
+## Settings and compact disclosures
+
+Settings keeps the warm aubergine/rose utility surface: a fixed header and close,
+one scroll body, full-height mobile geometry and a contained desktop panel. Titled
+`surface` sheets use the existing editorial face at 28px with moderate weight;
+quick and task sheets retain their own heading typography.
+
+Four editorial 16px group headings establish hierarchy through space:
+Kleurmodus, Gegevens, Beveiliging and KinkSync. The appearance choice has one
+heading and its existing helper, rather than a duplicate icon row. Dividers belong
+between related rows; repeated top/bottom rules and the redundant Geavanceerd
+heading stay removed. The destructive action has its own quiet separator and
+remains directly reachable by scrolling. All action descriptions remain intact.
+Native theme radios keep at least 44px targets and a reserved check slot, so labels
+do not move when selection changes. Their columns reflow with enlarged text
+rather than shrinking labels or overflowing the mobile surface.
+
+The bounded disclosure moment follows Scene: persistent CSS grid 0fr/1fr at
+220ms and opacity at 190ms, both with cubic-bezier(.16,1,.3,1). `DisclosureBody`
+owns clipping and immediate `aria-hidden`/`inert`; padding lives inside its clipped
+child so closed content has zero footprint. Content stays mounted through rapid
+reversals, default-open content starts visible and live Reduced Motion removes
+timed interpolation. Flat `Accordion` adds the native button, stable relationship
+and quiet caret, without imposing a card.
+
+Use this shared body only for Scene item details, Settings installation help,
+consent-ledger technical explanation, quarantined-profile technical reason and
+contract-version technical verification. Keep main consent/invalidity information
+visible. Scene position projection remains separate; large Profile/catalogue/
+Compare lists, ContractSection and the contract preamble retain their established
+behavior. No page choreography, height measurement or animation-completion side
+effects belong to this pattern.
+
 ## Motion
 
 Motion must explain state or provide tactile feedback. It should be bounded and local.
