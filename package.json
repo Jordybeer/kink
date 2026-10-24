@@ -34,7 +34,8 @@
   },
   "overrides": {
     "browserslist": "4.28.8",
-    "postcss": "^8.5.15"
+    "postcss": "^8.5.15",
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
