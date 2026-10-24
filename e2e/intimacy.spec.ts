@@ -4,6 +4,38 @@ import { seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
 
 test.describe("Intimiteitsagenda", () => {
+  test("verplaatst tabselectie en focus samen met pijlen, Home en End", async ({ page }) => {
+    await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);
+    const tabs = page.getByRole("tablist", { name: "Intimiteitsagenda" });
+    const planned = tabs.getByRole("tab", { name: "Gepland", exact: true });
+    const logbook = tabs.getByRole("tab", { name: "Logboek", exact: true });
+    await planned.focus();
+
+    for (const [key, target, other, label] of [
+      ["ArrowRight", logbook, planned, "Logboek"],
+      ["ArrowRight", planned, logbook, "Gepland"],
+      ["ArrowLeft", logbook, planned, "Logboek"],
+      ["Home", planned, logbook, "Gepland"],
+      ["End", logbook, planned, "Logboek"],
+    ] as const) {
+      await page.keyboard.press(key);
+      await expect(target).toBeFocused();
+      await expect(target).toHaveAttribute("aria-selected", "true");
+      await expect(target).toHaveAttribute("tabindex", "0");
+      await expect(other).toHaveAttribute("aria-selected", "false");
+      await expect(other).toHaveAttribute("tabindex", "-1");
+      const panel = page.getByRole("tabpanel", { name: label, exact: true });
+      await expect(panel).toBeVisible();
+      await expect(panel).toHaveAttribute("id", (await target.getAttribute("aria-controls"))!);
+      await expect(panel).toHaveAttribute("aria-labelledby", (await target.getAttribute("id"))!);
+    }
+
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("tabpanel", { name: "Logboek", exact: true })).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(logbook).toBeFocused();
+  });
+
   test("plant, corrigeert en houdt een lokaal moment bij op mobiel", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);

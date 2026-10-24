@@ -112,7 +112,10 @@ function TitledSheetFrame({
         </div>
       )}
       <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 items-center gap-2 px-1`}>
-        <h2 className="min-w-0 flex-1 text-balance text-lg font-bold">{title}</h2>
+        <h2
+          className={`min-w-0 flex-1 text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
+          style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+        >{title}</h2>
         <button
           type="button"
           onClick={onClose}
@@ -169,8 +172,13 @@ export default function Sheet({
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
-  const y = useMotionValue(0);
-  const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
+  const y = useMotionValue<number | string>(0);
+  // Entrance/exit uses percentages; only pixel-valued dragging owns dimming.
+  const backdropOpacity = useTransform(y, (value) =>
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.max(0, Math.min(1, 1 - value / 300))
+      : 1,
+  );
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const quickSheet = variant === "sheet";

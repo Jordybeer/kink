@@ -75,7 +75,7 @@ test.describe("Scene planner hardening", () => {
     await expect(page.getByText("Alex & Sam", { exact: true })).toBeVisible();
     await expect(page.getByText("Voor wie is deze scène?", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Terug" })).toHaveAttribute("href", "/scenes");
-    await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
+    await expect(page.getByText("Een contract is optioneel.", { exact: true })).toBeVisible();
   });
 
   test("inplannen zet afspraken vast en laat afronden vanuit de play-surface", async ({ page }) => {
@@ -103,3 +103,58 @@ test.describe("Scene planner hardening", () => {
     await expect(page.getByLabel("Onthouden voor volgende keer")).toBeVisible();
   });
 });
+
+for (const withKinks of [true, false]) {
+  test(`persistent scheduling labels and empty guidance match available actions (${withKinks ? "catalogue" : "custom only"})`, async ({ page }) => {
+    const profiles = [PROFILE_ALEX, PROFILE_SAM].map((profile) => ({ ...profile, entries: withKinks ? profile.entries : {} }));
+    await seedAndGo(page, `/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`, profiles);
+    for (const label of ["Datum", "Tijd"]) {
+      const control = page.getByLabel(label, { exact: true });
+      await expect(control).toBeVisible();
+      const id = await control.getAttribute("id");
+      await expect(page.locator(`label[for="${id}"]`)).toBeVisible();
+      expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+    await page.getByLabel("Datum", { exact: true }).fill("2026-11-15");
+    await page.getByLabel("Tijd", { exact: true }).click();
+    const time = page.getByRole("dialog", { name: "Starttijd" });
+    await time.getByRole("button", { name: "21", exact: true }).click();
+    await time.getByRole("button", { name: "Bevestigen" }).click();
+    await expect(page.getByLabel("Tijd", { exact: true })).toHaveText("21:00");
+    await expect(page.getByLabel("Tijd", { exact: true })).toBeFocused();
+    await expect(page.getByText(withKinks
+      ? "Kies ‘Kinks toevoegen’ of voeg onderaan een eigen item toe."
+      : "Voeg onderaan een eigen item toe.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Kinks toevoegen", exact: true })).toHaveCount(withKinks ? 1 : 0);
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  for (const { width, scale } of [{ width: 390, scale: 1 }, { width: 320, scale: 2 }]) {
+    test(`scene scheduling and quiet contract utility stay readable at ${width}px/${scale * 100}%/${theme}`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
+      await seedAndGo(page, `/scene?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`, [PROFILE_ALEX, PROFILE_SAM]);
+      await page.evaluate((scale) => { document.documentElement.style.fontSize = `${scale * 100}%`; }, scale);
+      for (const label of ["Datum", "Tijd", "Safeword"]) {
+        await expect(page.getByLabel(label, { exact: true })).toBeVisible();
+        await expect(page.locator("label").filter({ hasText: new RegExp(`^${label}$`) })).toBeVisible();
+      }
+      const contract = page.getByRole("link", { name: "Contract opstellen", exact: true });
+      expect((await contract.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      const overflow = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        width: document.documentElement.scrollWidth,
+        elements: [...document.querySelectorAll("main *, input, button")].flatMap((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.right > document.documentElement.clientWidth + 1
+            ? [{ tag: element.tagName, id: element.id, text: element.textContent?.slice(0, 50), x: rect.x, right: rect.right, width: rect.width }]
+            : [];
+        }),
+      }));
+      await testInfo.attach("scene-geometry", { body: JSON.stringify(overflow, null, 2), contentType: "application/json" });
+      expect(overflow.width).toBeLessThanOrEqual(overflow.viewport);
+      await page.screenshot({ path: testInfo.outputPath("scene-scheduling.png") });
+    });
+  }
+}
