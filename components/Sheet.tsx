@@ -101,7 +101,7 @@ function TitledSheetFrame({
 
   return (
     <div
-      className={frameClassName}
+      className={`min-w-0 w-full max-w-full ${frameClassName}`}
       style={quickSheet
         ? { background: "var(--surface)", borderTop: "1px solid var(--border)" }
         : { background: "var(--surface)", borderColor: "var(--border)" }}
@@ -111,9 +111,9 @@ function TitledSheetFrame({
           <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
         </div>
       )}
-      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 items-center gap-2 px-1`}>
+      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start gap-2 px-1`}>
         <h2
-          className={`min-w-0 flex-1 text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
+          className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
           style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
         >{title}</h2>
         <button
@@ -129,7 +129,7 @@ function TitledSheetFrame({
       {scrollable ? (
         <>
           <div
-            className={`min-h-0 flex-1 scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            className={`min-h-0 min-w-0 flex-1 scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
             data-testid="sheet-scroll-body"
           >
             {children}

@@ -16,18 +16,18 @@ test("Home keeps one brand statement and moves product explanation into the shar
   await expect(page.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
 });
 
-test("profile keeps notes attached to their subject and reveals them only in deliberate status detail", async ({ page }) => {
+test("profile keeps notes attached to their subject under local status filters", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, PROFILES);
 
-  await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeHidden();
-  await expect(page.getByText("Shibari ook", { exact: true })).toBeHidden();
+  await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
   await expect(page.getByText("Lichte sessies", { exact: true })).toBeHidden();
 
   await page.getByTestId("profile-read-status-yes").click();
   await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
   await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
 
-  await page.getByRole("region", { name: "Interesses & grenzen" }).getByRole("link", { name: /^Ja,/ }).click();
+  await page.getByTestId("profile-read-status-willing").click();
   await expect(page.getByText("Lichte sessies", { exact: true })).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Verberg notities" })).toHaveCount(0);

@@ -133,7 +133,14 @@ test("locked Scene details render open immediately and remain visible", async ({
   expect(initial.hidden).toBe("false");
   expect(initial.height).toBeGreaterThan(20);
   expect(initial.animations).toBe(0);
-  await trigger.click();
+  // aria-disabled on the locked row intentionally disables descendant controls.
+  // Read-only details are already open; never force an editing interaction.
+  await expect(trigger).toBeDisabled();
+  const row = page.locator(".scene-item-reorder");
+  await expect(row).toHaveAttribute("aria-disabled", "true");
+  await expect(row.getByRole("button", { name: "Zacht", exact: true })).toBeDisabled();
+  await expect(row.getByRole("textbox", { name: "Notitie bij Start rustig" })).toHaveAttribute("readonly", "");
+  await expect(row.getByRole("button", { name: /verwijderen|Naar .* verplaatsen/ })).toHaveCount(0);
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
   await expect(body).toHaveCSS("opacity", "1");
 });

@@ -98,9 +98,9 @@ test("questions route locks the document while sheets keep their own scroll", as
   const dialog = page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveCSS("touch-action", "auto");
-  const sheetContent = dialog.locator(":scope > div").first();
+  const sheetContent = dialog.getByTestId("sheet-scroll-body");
   await expect(sheetContent).toHaveCSS("overflow-y", "auto");
-  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await dialog.getByRole("button", { name: "Info & uitleg sluiten" }).click();
 
   await page.getByRole("link", { name: "Terug" }).click();
   await expect(page).toHaveURL(new RegExp(`/profile\\?id=${CUCKOLDING_PROFILE.id}$`));
@@ -249,7 +249,7 @@ test("cuckolding keeps the exact visible essence when depth opens", async ({ pag
   await expect(dialog.getByTestId("question-detail-essence")).toHaveText(CUCKOLDING_ESSENCE);
   await expect(dialog).toContainText("De specifieke cuckolding-dynamiek wordt daarbij expliciet benoemd.");
   await expect(dialog).toContainText("Cuckolding / hotwifing");
-  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await dialog.getByRole("button", { name: "Info & uitleg sluiten" }).click();
   await expect(dialog).toBeHidden();
   await expect(card.getByRole("heading", { name: "Cuckolding" })).toBeVisible();
   expectSameGeometry(before, await stableControlGeometry(page));
@@ -272,7 +272,7 @@ test("category explainer teaches context without changing answers", async ({ pag
   const dialog = page.getByRole("dialog", { name: /Over / });
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText("vult niets voor je in");
-  await dialog.getByRole("button", { name: "Begrepen" }).click();
+  await dialog.getByRole("button", { name: "Group Play sluiten" }).click();
   expectSameGeometry(before, await stableControlGeometry(page));
 });
 
@@ -399,7 +399,7 @@ test("safety guidance keeps its essential stop signal visible before the sheet o
   const dialog = page.getByRole("dialog", { name: "Veiligheid bij Restricting a partner’s hearing" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(SAFETY_COPY, { exact: true })).toBeVisible();
-  await dialog.getByRole("button", { name: "Sluit" }).click();
+  await dialog.getByRole("button", { name: "Veiligheid sluiten" }).click();
   await expect(dialog).toBeHidden();
 });
 
@@ -415,7 +415,7 @@ test("questionnaire help stays inside a short visual viewport", async ({ page })
     const box = await dialog.boundingBox();
     return box ? box.y + box.height : Number.POSITIVE_INFINITY;
   }).toBeLessThanOrEqual(visibleHeight + 1);
-  await dialog.getByTestId("sheet-scroll-body").getByRole("button", { name: "Sluit", exact: true }).click();
+  await dialog.getByRole("button", { name: "Wat betekenen deze keuzes? sluiten", exact: true }).click();
 });
 
 test("questionnaire modes live in the context menu", async ({ page }) => {

@@ -127,35 +127,22 @@ test("Settings uses a stable utility surface on mobile and a contained panel fro
   }
 });
 
-test("kink edit uses the two-step focused surface without a false drag affordance", async ({ page }) => {
-  const emptyAlex = { ...PROFILE_ALEX, entries: {} };
+test("kink editing stays inline and keeps optional details in one disclosure", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
-  await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
-
+  await seedAndGo(page, "/profile/pw-alex-001", [{ ...PROFILE_ALEX, entries: {} }]);
   await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
   await page.getByPlaceholder("Zoek in de volledige catalogus…").fill("spanking");
-
   const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*=", bewerken"]').first();
-  await expect(result).toBeVisible();
   await result.click();
-
-  const dialog = page.locator('[role="dialog"][data-sheet-variant="surface"]');
-  await expect(dialog).toBeVisible();
-  await expect(dialog.locator("[data-sheet-handle]")).toHaveCount(0);
-  await expect(dialog.getByRole("navigation", { name: "Onderwerpstappen" })).toBeVisible();
-  await expect(dialog.getByRole("group", { name: "Status kiezen" })).toBeVisible();
-
-  const box = await dialog.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box!.width).toBeLessThanOrEqual(577);
-  expect(Math.abs(box!.x + box!.width / 2 - 512)).toBeLessThanOrEqual(2);
-
-  await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
-  await expect(dialog.getByRole("heading", { name: "Details" })).toBeVisible();
-  await expect(dialog.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
-
-  await dialog.getByRole("button", { name: "Klaar" }).click();
-  await expect(dialog).toBeHidden();
+  const editor = result.locator("..").getByTestId("profile-inline-editor");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(result).toHaveAttribute("aria-expanded", "true");
+  await expect(editor.getByRole("group", { name: "Status kiezen" })).toBeVisible();
+  await editor.getByRole("button", { name: "Details", exact: true }).click();
+  await expect(editor.getByRole("button", { name: "Eerst vragen", exact: true })).toBeVisible();
+  await expect(editor.getByRole("group", { name: "Status kiezen" })).toBeVisible();
+  await editor.getByRole("button", { name: "Klaar" }).click();
+  await expect(editor).toHaveAttribute("aria-hidden", "true");
   await expect(result).toBeFocused();
 });
 

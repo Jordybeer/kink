@@ -89,6 +89,13 @@ async function expectSettingsGeometry(settings: import("@playwright/test").Locat
   const scroll = settings.getByTestId("sheet-scroll-body");
   expect(await overflowsHorizontally(settings)).toBe(false);
   expect(await overflowsHorizontally(scroll)).toBe(false);
+  expect(await overflowsHorizontally(settings.getByRole("heading", { name: "Instellingen", exact: true }))).toBe(false);
+  const visibleBounds = await settings.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { left: box.left, right: box.right, viewportWidth: window.innerWidth };
+  });
+  expect(visibleBounds.left).toBeGreaterThanOrEqual(-1);
+  expect(visibleBounds.right).toBeLessThanOrEqual(visibleBounds.viewportWidth + 1);
   for (const target of await settings.locator('button, a, input[type="radio"], label:has(input[type="file"])').all()) {
     if (!await target.isVisible()) continue;
     const box = (await target.boundingBox())!;
@@ -97,6 +104,8 @@ async function expectSettingsGeometry(settings: import("@playwright/test").Locat
   }
   const close = settings.getByRole("button", { name: "Instellingen sluiten" });
   const before = (await close.boundingBox())!;
+  expect(before.x).toBeGreaterThanOrEqual(-1);
+  expect(before.x + before.width).toBeLessThanOrEqual(visibleBounds.viewportWidth + 1);
   await scroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await expect(settings.getByRole("button", { name: /Alle data verwijderen/ })).toBeInViewport();
   await expect(close).toBeInViewport();

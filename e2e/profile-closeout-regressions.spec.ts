@@ -168,7 +168,7 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
   await expect(summary).toBeVisible();
 });
 
-test("profile catalog manager keeps status text compact, aligned and free of pill chrome", async ({ page }) => {
+test("profile catalog manager keeps status text readable, wrapping and free of pill chrome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
 
@@ -180,15 +180,15 @@ test("profile catalog manager keeps status text compact, aligned and free of pil
   const styles = await labels.evaluateAll((elements) => elements.map((element) => {
     const style = getComputedStyle(element);
     return {
-      justifyContent: style.justifyContent,
-      minWidth: Number.parseFloat(style.minWidth),
+      fits: element.scrollWidth <= element.clientWidth + 1,
+      fontSize: Number.parseFloat(style.fontSize),
       backgroundColor: style.backgroundColor,
       borderTopWidth: style.borderTopWidth,
     };
   }));
 
-  expect(styles.every((style) => style.justifyContent === "flex-end")).toBe(true);
-  expect(styles.every((style) => style.minWidth >= 89)).toBe(true);
+  expect(styles.every((style) => style.fits)).toBe(true);
+  expect(styles.every((style) => style.fontSize >= 14)).toBe(true);
   expect(styles.every((style) => style.backgroundColor === "rgba(0, 0, 0, 0)")).toBe(true);
   expect(styles.every((style) => style.borderTopWidth === "0px")).toBe(true);
 });

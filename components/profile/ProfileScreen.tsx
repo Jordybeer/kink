@@ -5,13 +5,11 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   CaretDown,
   FileArrowDown,
   FileText,
   Lock,
-  Star,
   UserMinus,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -22,22 +20,19 @@ import { privateResponseKey } from "@/lib/privateResponses";
 import { buildProfileTextExport } from "@/lib/profileTextExport";
 import { buildProfilePdf } from "@/lib/profilePdf";
 import { buildProfileStatusReadSummary, type ProfileReadItem } from "@/lib/profileReadSummary";
-import { profileHref } from "@/lib/localRoutes";
 import { useMotionSafe } from "@/lib/motion";
-import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
-import type { Kink, KinkCategory, KinkCategoryId, KinkStatus } from "@/types";
+import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
+import type { Kink, KinkCategory, KinkCategoryId, KinkStatus, KinkEntry } from "@/types";
 import PageShell from "@/components/PageShell";
 import EmptyState from "@/components/EmptyState";
 import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
-import PrivateResponseStatus from "@/components/PrivateResponseStatus";
 import CategorySection from "@/components/CategorySection";
-import KinkListRow from "@/components/KinkListRow";
-import KinkEditSheet from "@/components/KinkEditSheet";
+import ProfileTopicRow from "./ProfileTopicRow";
+import { pinnedPublicItems, profileInlineStatus } from "@/lib/profileInline";
 import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
 import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
 import QRModal from "@/components/QRModal";
-import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -79,7 +74,8 @@ export default function ProfilePage({ params }: Props) {
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<KinkCategoryId | null>(null);
   const [search, setSearch] = useState("");
   const [customInput, setCustomInput] = useState("");
-  const [editKink, setEditKink] = useState<Kink | null>(null);
+  const [editor, setEditor] = useState<{ kink: Kink; open: boolean; publicItems: ProfileReadItem[] } | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<NonNullable<KinkStatus> | null>(null);
   const [editing, setEditing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [includePrivateExports, setIncludePrivateExports] = useState(false);
@@ -95,6 +91,8 @@ export default function ProfilePage({ params }: Props) {
     setPrivateReadOpen(false);
     setIncludePrivateExports(false);
     setEditing(false);
+    setEditor(null);
+    setSelectedStatus(null);
     setCatalogOpen(false);
     setCategoriesOpen(false);
     setCatalogCategoryFilter(null);
@@ -121,6 +119,13 @@ export default function ProfilePage({ params }: Props) {
     router.replace(`/profile/${profile.id}${query ? `?${query}` : ""}`, { scroll: false });
   }, [hydrated, profile, router, searchParams]);
 
+  useEffect(() => {
+    setEditor(null);
+    setCatalogOpen(false);
+    setSelectedStatus(null);
+    if (interestsParam === "hard_no") document.getElementById("profile-hard-limits-title")?.focus();
+  }, [interestsParam]);
+
   if (!hydrated) return <PageShell loading width="2xl" />;
 
   if (!profile) {
@@ -139,7 +144,7 @@ export default function ProfilePage({ params }: Props) {
 
   const currentProfile = profile;
   const coverage = questionnaireCoverage(currentProfile);
-  const shared = currentProfile.origin === "shared" || (!currentProfile.origin && currentProfile.isImported === true);
+  const shared = getProfileType(currentProfile, pinnedProfileId) === "partner";
   const visibleCategories = CATEGORIES;
   const exportMaxLevel = LEVEL_MAX.diepgaand;
   const searchTerm = search.trim();
@@ -159,8 +164,12 @@ export default function ProfilePage({ params }: Props) {
       total: categoryKinks.length,
     };
   });
+  const matchingCustomKinks = !catalogCategoryFilter && searchTerm
+    ? customKinks.filter((custom) => custom.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()))
+      .map((custom) => ({ ...custom, category: "custom" as const, level: 1 as const }))
+    : [];
   const searchResults = searchTerm
-    ? searchAllKinks(searchTerm).filter(
+    ? [...searchAllKinks(searchTerm), ...matchingCustomKinks].filter(
         (kink) => catalogCategoryFilter === null || kink.category === catalogCategoryFilter,
       )
     : [];
@@ -176,13 +185,76 @@ export default function ProfilePage({ params }: Props) {
     ],
     currentProfile.entries,
   );
-  const readAnswerCount = readSummary.publicCount + readSummary.privateItems.length;
-  const hardLimitGroup = readSummary.groups.find((group) => group.status === "hard_no") ?? null;
-  const interestGroups = readSummary.groups.filter((group) => group.status !== "hard_no");
+  const publicItems = readSummary.groups.flatMap((group) => group.items);
+  const activeStatus = profileInlineStatus(STATUS_ORDER.find((status) => status === interestsParam) ?? selectedStatus, publicItems);
+  const privateIds = new Set(Object.keys(currentProfile.entries).filter((kinkId) => currentProfile.entries[kinkId].privateResponse));
+  // Freeze list membership through edits; current privacy always overrides the snapshot.
+  const displayItems = pinnedPublicItems(editor?.open && !catalogOpen ? editor.publicItems : undefined, publicItems, privateIds);
+  const interestItems = displayItems.filter((item) => item.status === activeStatus && item.status !== "hard_no");
+  const pinnedLimits = displayItems.filter((item) => item.status === "hard_no");
+  // New limits are immediately named below the interest editor, without moving it.
+  const hardLimits = [...pinnedLimits, ...publicItems.filter((item) =>
+    item.status === "hard_no" && !pinnedLimits.some((candidate) => candidate.id === item.id),
+  )];
+  const allKinks: Kink[] = [...KINKS, ...customKinks.map((custom) => ({ ...custom, category: "custom" as const, level: 1 as const }))];
 
+  const privateKinks = allKinks.filter((kink) => readSummary.privateItems.some((item) => item.id === kink.id)
+    || (editor?.open && editor.kink.id === kink.id && privateIds.has(kink.id)));
 
-  function updateStatus(kinkId: string, status: KinkStatus) {
-    setEntry(currentProfile.id, kinkId, { status, desire: null });
+  function closeEditor() {
+    setEditor((current) => current ? { ...current, open: false } : null);
+  }
+  function selectStatus(status: NonNullable<KinkStatus>) {
+    closeEditor();
+    setSelectedStatus(status);
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("id", currentProfile.id);
+    next.set("interests", status);
+    router.push(`/profile?${next}`, { scroll: false });
+  }
+  function renderTopic(kink: Kink, editable = !shared) {
+    const entry = currentProfile.entries[kink.id] ?? { status: null, comment: "" };
+    const selected = editor?.kink.id === kink.id;
+    return <ProfileTopicRow kink={kink} entry={entry} editable={editable}
+      selected={selected} open={selected && !!editor?.open} concealed={!privateResponseRevealed(kink.id)}
+      onToggle={() => {
+        const closing = editor?.kink.id === kink.id && editor.open;
+        const leavesList = entry.privateResponse ? !entry.status
+          : editor?.publicItems.find((item) => item.id === kink.id)?.status !== entry.status;
+        if (closing && !catalogOpen && leavesList) {
+          document.getElementById(`profile-filter-${activeStatus}`)?.focus({ preventScroll: true });
+        }
+        setSelectedStatus(activeStatus);
+        setEditor((current) => current?.kink.id === kink.id
+          ? { ...current, open: !current.open, publicItems: current.open ? current.publicItems : publicItems }
+          : { kink, open: true, publicItems });
+      }}
+      onReveal={() => revealPrivateResponse(kink.id)} onConceal={() => { closeEditor(); concealPrivateResponse(kink.id); }}
+      onChange={(partial: Partial<KinkEntry>) => {
+        if (shared) return;
+        if (partial.privateResponse !== undefined) {
+          setEditor(null);
+          concealPrivateResponse(kink.id);
+          document.getElementById(catalogOpen ? "profile-catalog-search" : `profile-filter-${activeStatus}`)?.focus({ preventScroll: true });
+        }
+        setEntry(currentProfile.id, kink.id, partial);
+      }} />;
+  }
+  function renderReadItems(items: ProfileReadItem[]) {
+    return <div className="grid gap-5 [overflow-wrap:anywhere]">
+      {PROFILE_READ_CATEGORIES.map((category) => {
+        const grouped = items.filter((item) => item.category === category);
+        return grouped.length ? <section key={category} aria-label={profileReadCategoryLabel(category)}>
+          <h4 className="mb-1 text-xl font-medium leading-6" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>{profileReadCategoryLabel(category)}</h4>
+          {grouped.map((item) => {
+            const kink = allKinks.find((candidate) => candidate.id === item.id)!;
+            const duplicateLimit = item.status === "hard_no" && editor?.open && editor.kink.id === item.id
+              && editor.publicItems.some((candidate) => candidate.id === item.id && candidate.status !== "hard_no");
+            return <div key={item.id}>{renderTopic(kink, !shared && !duplicateLimit)}</div>;
+          })}
+        </section> : null;
+      })}
+    </div>;
   }
 
   function privateResponseRevealed(kinkId: string): boolean {
@@ -211,6 +283,7 @@ export default function ProfilePage({ params }: Props) {
   }
 
   function closeCatalogManager() {
+    setEditor(null);
     restoreCatalogFocus.current = true;
     setCatalogOpen(false);
     setCategoriesOpen(false);
@@ -236,10 +309,6 @@ export default function ProfilePage({ params }: Props) {
       includePrivateResponses: includePrivateExports,
     });
     doc.save(filename);
-  }
-
-  if (interestsParam !== null) {
-    return <ProfileInterestBrowser profileId={id} profileName={currentProfile.name} groups={readSummary.groups} status={interestsParam} />;
   }
 
   return (
@@ -293,7 +362,7 @@ export default function ProfilePage({ params }: Props) {
               <button
                 ref={manageTriggerRef}
                 type="button"
-                onClick={() => setCatalogOpen(true)}
+                onClick={() => { setEditor(null); setCatalogOpen(true); }}
                 aria-expanded="false"
                 aria-controls="profile-catalog-manager"
                 className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
@@ -332,8 +401,9 @@ export default function ProfilePage({ params }: Props) {
 
           <div className="mb-3 px-[var(--page-gutter)]" data-testid="profile-catalog-controls">
             <input
+              id="profile-catalog-search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => { setEditor(null); setSearch(event.target.value); }}
               aria-label="Volledige catalogus doorzoeken"
               placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
               className="focus-ring min-h-11 w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
@@ -366,7 +436,8 @@ export default function ProfilePage({ params }: Props) {
                     category={category}
                     kinks={kinks}
                     entries={currentProfile.entries}
-                    onEdit={setEditKink}
+                    renderRow={renderTopic}
+                    onToggle={() => setEditor(null)}
                     openByDefault={catalogCategoryFilter === category}
                   />
                 );
@@ -384,17 +455,13 @@ export default function ProfilePage({ params }: Props) {
                         level: 1,
                       };
                       return (
-                        <div key={custom.id} className="flex items-center gap-1">
-                          <div className="flex-1">
-                            <KinkListRow
-                              kink={customAsKink}
-                              entry={currentProfile.entries[custom.id] ?? { status: null, comment: "" }}
-                              onOpen={() => setEditKink(customAsKink)}
-                            />
+                        <div key={custom.id} className="flex min-w-0 items-start gap-1">
+                          <div className="min-w-0 flex-1">
+                            {renderTopic(customAsKink)}
                           </div>
                           <button
                             type="button"
-                            onClick={() => removeCustomKink(currentProfile.id, custom.id)}
+                            onClick={() => { setEditor(null); removeCustomKink(currentProfile.id, custom.id); }}
                             aria-label={`${custom.name} verwijderen`}
                             className="ks-motion-choice focus-ring h-11 w-11 rounded-full"
                             style={{ color: "var(--hard-no)" }}
@@ -405,13 +472,13 @@ export default function ProfilePage({ params }: Props) {
                       );
                     })}
                   </div>
-                  <form onSubmit={addCustom} className="flex gap-2">
+                  <form onSubmit={addCustom} className="flex min-w-0 flex-wrap gap-2">
                     <input
                       value={customInput}
                       onChange={(event) => setCustomInput(event.target.value)}
                       aria-label="Eigen onderwerp toevoegen"
                       placeholder="Voeg iets eigens toe…"
-                      className="focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm focus:outline-none"
+                      className="focus-ring min-h-11 min-w-0 flex-[1_1_10rem] rounded-xl px-3 text-sm focus:outline-none"
                       style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                     />
                     <button
@@ -429,12 +496,7 @@ export default function ProfilePage({ params }: Props) {
             <div className="px-[var(--page-gutter)]">
               <div className="flex flex-col">
                 {searchResults.map((kink) => (
-                  <KinkListRow
-                    key={kink.id}
-                    kink={kink}
-                    entry={currentProfile.entries[kink.id] ?? { status: null, comment: "" }}
-                    onOpen={() => setEditKink(kink)}
-                  />
+                  <div key={kink.id}>{renderTopic(kink)}</div>
                 ))}
               </div>
               {searchResults.length === 0 && (
@@ -456,138 +518,67 @@ export default function ProfilePage({ params }: Props) {
             Interesses &amp; grenzen
           </h2>
 
-          {readAnswerCount === 0 ? (
-            <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>
-              Nog geen onderwerpen beoordeeld.
-            </p>
-          ) : (
-            <div data-testid="profile-status-overview">
-              {hardLimitGroup && (
-                <section
-                  data-testid="profile-read-hard-limits"
-                  className="border-y py-3.5 [overflow-wrap:anywhere]"
-                  style={{ borderColor: "color-mix(in srgb, var(--hard-no) 24%, var(--border))" }}
-                  aria-labelledby="profile-hard-limits-title"
-                >
-                  <div className="mb-2.5 flex items-baseline gap-3">
-                    <h3
-                      id="profile-hard-limits-title"
-                      className="min-w-0 flex-1 text-base font-semibold leading-6"
-                      style={{ color: "var(--hard-no-text)" }}
-                    >
-                      Harde grenzen
-                    </h3>
-                    <span className="flex-none text-sm tabular-nums" style={{ color: "color-mix(in srgb, var(--hard-no) 24%, var(--text2))" }}>
-                      {hardLimitGroup.items.length}
-                    </span>
-                  </div>
-                  <ProfileReadItemsByCategory items={hardLimitGroup.items} showContext />
-                </section>
-              )}
-
-              {interestGroups.length > 0 && (
-                <section className={hardLimitGroup ? "mt-6" : ""} aria-labelledby="profile-interests-summary-title">
-                  <h3 id="profile-interests-summary-title" tabIndex={-1} className="outline-none scroll-mt-[var(--nav-h)] mb-2 text-sm font-semibold" style={{ color: "var(--text2)" }}>
-                    Interesses
-                  </h3>
-
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                    {interestGroups.map((group) => (
-                      <Link
-                        key={group.status}
-                        href={`${profileHref(id)}&interests=${group.status}`}
-                        data-testid={`profile-read-status-${group.status}`}
-                        aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}. Bekijk interesses`}
-                        className="ks-motion-choice focus-ring flex min-h-11 items-center gap-2 text-sm"
-                      >
-                        <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[group.status] }} aria-hidden="true" />
-                        <span className="min-w-0 flex-1 font-semibold">{STATUS_LABEL[group.status]}</span>
-                        <span className="tabular-nums" style={{ color: "var(--text2)" }}>{group.items.length}</span>
-                      </Link>
-                    ))}
-                  </div>
-                  <div
-                    data-testid={`profile-read-status-${interestGroups[0].status}-summary`}
-                    className="mt-3 grid gap-1 rounded-r-xl px-3 py-3 text-base leading-6 [overflow-wrap:anywhere]"
-                    style={profileReadAccent(interestGroups[0].status)}
-                  >
-                    <p className="text-sm font-medium" style={{ color: "var(--text2)" }}>{STATUS_LABEL[interestGroups[0].status]}</p>
-                    {interestGroups[0].items.slice(0, 3).map((item) => <p key={item.id}>{item.name}</p>)}
-                  </div>
-                  <Link href={`${profileHref(id)}&interests=${interestGroups[0].status}`} className="ks-motion-choice focus-ring mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent-text)" }}>
-                    Bekijk interesses &amp; grenzen <ArrowRight size={15} aria-hidden="true" />
-                  </Link>
-                </section>
-              )}
-
-              {!shared && readSummary.privateItems.length > 0 && (
-                <section className="mt-5 border-y" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
-                  <h3>
-                    <button
-                      type="button"
-                      data-testid="profile-read-private"
-                      onClick={() => setPrivateReadOpen((open) => !open)}
-                      aria-expanded={privateReadOpen}
-                      aria-controls="profile-read-private-content"
-                      className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
-                    >
-                      <Lock size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
-                      <span className="min-w-0 flex-1 text-sm font-semibold">Privéantwoorden</span>
-                      <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
-                        {readSummary.privateItems.length}
-                      </span>
-                      <motion.span
-                        className="flex flex-none"
-                        animate={{ rotate: privateReadOpen ? 180 : 0 }}
-                        transition={motionSafe.state}
-                        aria-hidden="true"
-                        style={{ color: "var(--text2)" }}
-                      >
-                        <CaretDown size={15} />
-                      </motion.span>
-                    </button>
-                  </h3>
-
-                  <div id="profile-read-private-content" hidden={!privateReadOpen} className="pb-1">
-                    {privateReadOpen ? readSummary.privateItems.map((item, index) => {
-                      const entry = currentProfile.entries[item.id]!;
-                      const concealed = !privateResponseRevealed(item.id);
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex min-h-11 items-start gap-3 py-2.5 [overflow-wrap:anywhere]"
-                          style={index > 0
-                            ? { borderTop: "1px solid color-mix(in srgb, var(--border) 46%, transparent)" }
-                            : undefined}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium leading-5">{item.name}</p>
-                            <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
-                              {profileReadCategoryLabel(item.category)}
-                            </p>
-                            {!concealed && entry.comment && (
-                              <p className="mt-1 text-xs leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
-                                {entry.comment}
-                              </p>
-                            )}
-                          </div>
-                          <PrivateResponseStatus
-                            status={entry.status}
-                            privateResponse
-                            concealed={concealed}
-                            subject={item.name}
-                            onReveal={() => revealPrivateResponse(item.id)}
-                            onConceal={() => concealPrivateResponse(item.id)}
-                            plain
-                          />
-                        </div>
-                      );
-                    }) : null}
-                  </div>
-                </section>
-              )}
+          <div data-testid="profile-status-overview">
+            <div role="group" aria-label="Antwoordstatus" className="mb-5 grid grid-cols-[minmax(0,1fr)] gap-x-5 gap-y-1 min-[480px]:grid-cols-2">
+              {STATUS_ORDER.map((status) => {
+                const count = publicItems.filter((item) => item.status === status).length;
+                return <button key={status} id={`profile-filter-${status}`} type="button" onClick={() => selectStatus(status)}
+                  data-testid={`profile-read-status-${status}`} aria-pressed={activeStatus === status}
+                  aria-label={`${STATUS_LABEL[status]}, ${count} ${count === 1 ? "antwoord" : "antwoorden"}`}
+                  className="focus-ring ks-motion-choice flex min-h-11 min-w-0 items-center gap-2 border-b-2 py-2 text-left text-sm"
+                  style={{ borderColor: activeStatus === status ? STATUS_VAR[status] : "transparent" }}>
+                  <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
+                  <span className="min-w-0 flex-1 font-semibold [overflow-wrap:anywhere]">{STATUS_LABEL[status]}</span>
+                  <span className="w-10 flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
+                </button>;
+              })}
             </div>
-          )}
+            {activeStatus !== "hard_no" && <section id={`profile-read-status-${activeStatus}-content`} aria-label={STATUS_LABEL[activeStatus]}>
+              <h3 className="mb-4 text-base font-semibold">{STATUS_LABEL[activeStatus]}</h3>
+              {interestItems.length ? renderReadItems(interestItems) : <p className="py-5 text-sm" style={{ color: "var(--text2)" }}>Nog geen openbare antwoorden met deze status.</p>}
+            </section>}
+            {(hardLimits.length > 0 || activeStatus === "hard_no") && <section data-testid="profile-read-hard-limits" aria-labelledby="profile-hard-limits-title"
+              className="mt-6 border-y py-4 [overflow-wrap:anywhere]" style={{ borderColor: "color-mix(in srgb, var(--hard-no) 24%, var(--border))" }}>
+              <h3 id="profile-hard-limits-title" tabIndex={-1} className="mb-3 scroll-mt-[var(--nav-h)] text-base font-semibold outline-none" style={{ color: "var(--hard-no-text)" }}>Harde grenzen</h3>
+              {hardLimits.length ? renderReadItems(hardLimits) : <p className="text-sm" style={{ color: "var(--text2)" }}>Nog geen openbare harde grenzen.</p>}
+            </section>}
+
+            {!shared && privateKinks.length > 0 && (
+              <section className="mt-5 border-y" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
+                <h3>
+                  <button
+                    type="button"
+                    data-testid="profile-read-private"
+                    onClick={() => { closeEditor(); setPrivateReadOpen((open) => !open); }}
+                    aria-expanded={privateReadOpen}
+                    aria-controls="profile-read-private-content"
+                    className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                  >
+                    <Lock size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+                    <span className="min-w-0 flex-1 text-sm font-semibold">Privéantwoorden</span>
+                    <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                      {readSummary.privateItems.length}
+                    </span>
+                    <motion.span
+                      className="flex flex-none"
+                      animate={{ rotate: privateReadOpen ? 180 : 0 }}
+                      transition={motionSafe.state}
+                      aria-hidden="true"
+                      style={{ color: "var(--text2)" }}
+                    >
+                      <CaretDown size={15} />
+                    </motion.span>
+                  </button>
+                </h3>
+
+                <div id="profile-read-private-content" hidden={!privateReadOpen} className="pb-1">
+                  {privateReadOpen ? privateKinks.map((kink) => {
+                    return <div key={kink.id}>{renderTopic(kink)}</div>;
+                  }) : null}
+                </div>
+              </section>
+            )}
+          </div>
 
           {shared && (
             <section className="mt-4">
@@ -666,148 +657,11 @@ export default function ProfilePage({ params }: Props) {
         categories={categoryFilterOptions}
         totalRated={catalogRated}
         totalCount={KINKS.length}
-        onSelect={setCatalogCategoryFilter}
-      />
-      <KinkEditSheet
-        kink={editKink}
-        entry={editKink ? (currentProfile.entries[editKink.id] ?? { status: null, comment: "" }) : { status: null, comment: "" }}
-        onClose={() => setEditKink(null)}
-        onStatusChange={(status) => { if (editKink) updateStatus(editKink.id, status); }}
-        onTagsChange={(tags) => { if (editKink) setEntry(currentProfile.id, editKink.id, { tags }); }}
-        onCuriousChange={(value) => { if (editKink) setEntry(currentProfile.id, editKink.id, { curious: value }); }}
-        onPrivateChange={(value) => { if (editKink) setEntry(currentProfile.id, editKink.id, { privateResponse: value }); }}
+        onSelect={(category) => { setEditor(null); setCatalogCategoryFilter(category); }}
       />
       <ProfileEditSheet open={editing && !shared} profile={currentProfile} onClose={() => setEditing(false)} />
       <QRModal profile={shareOpen && !shared ? currentProfile : null} onClose={() => setShareOpen(false)} />
     </main>
-  );
-}
-
-const EMPTY_NAV_ACTIONS: TopNavAction[] = [];
-
-function ProfileInterestBrowser({ profileId, profileName, groups, status }: {
-  profileId: string;
-  profileName: string;
-  groups: { status: NonNullable<KinkStatus>; items: ProfileReadItem[] }[];
-  status: string;
-}) {
-  const activeGroup = groups.find((group) => group.status === status)
-    ?? groups.find((group) => group.status !== "hard_no") ?? groups[0];
-  const readerHeadingRef = useRef<HTMLHeadingElement | null>(null);
-  useTopNavActions(EMPTY_NAV_ACTIONS, "Interesses & grenzen", profileHref(profileId) + "#profile-interests-title");
-  useEffect(() => {
-    readerHeadingRef.current?.focus({ preventScroll: true });
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [status, profileId]);
-  return (
-    <main className="mx-auto w-full max-w-3xl">
-      <section aria-labelledby="profile-interest-browser-title">
-        <div
-          className="px-[var(--page-gutter)] pt-3"
-          style={{ background: "var(--bg)" }}
-        >
-          <Link href={profileHref(profileId) + "#profile-interests-title"} className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 text-sm font-medium" style={{ color: "var(--text2)" }}>
-            <ArrowLeft size={16} aria-hidden="true" /> Terug naar profiel
-          </Link>
-          <h1 id="profile-interest-browser-title" ref={readerHeadingRef} tabIndex={-1} className="outline-none text-xl italic leading-7" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>
-            Interesses &amp; grenzen
-          </h1>
-          <p className="mt-1 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>{profileName}</p>
-        </div>
-          <nav aria-label="Antwoordstatus" className="sticky top-[var(--nav-h)] z-10 mt-3 flex flex-wrap gap-x-4 gap-y-1 border-b px-[var(--page-gutter)] py-3" style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
-            {groups.map((group) => (
-              <Link
-                key={group.status}
-                href={`${profileHref(profileId)}&interests=${group.status}`}
-                replace
-                aria-current={activeGroup?.status === group.status ? "page" : undefined}
-                aria-label={`${STATUS_LABEL[group.status]}, ${group.items.length} ${group.items.length === 1 ? "antwoord" : "antwoorden"}`}
-                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 border-b-2 text-sm"
-                style={{
-                  borderColor: activeGroup?.status === group.status ? STATUS_VAR[group.status] : "transparent",
-                  color: activeGroup?.status === group.status ? "var(--text)" : "var(--text2)",
-                  fontWeight: activeGroup?.status === group.status ? 600 : 400,
-                }}
-              >
-                {STATUS_LABEL[group.status]} <span className="tabular-nums">{group.items.length}</span>
-              </Link>
-            ))}
-          </nav>
-        <div className="px-[var(--page-gutter)] py-5">
-          {activeGroup ? (
-            <section id={`profile-read-status-${activeGroup.status}-content`} aria-labelledby="profile-active-status-title">
-              <h2 id="profile-active-status-title" className="mb-5 text-base font-semibold">{STATUS_LABEL[activeGroup.status]} · {activeGroup.items.length}</h2>
-              <ProfileReadItemsByCategory items={activeGroup.items} showContext />
-            </section>
-          ) : <p className="text-sm" style={{ color: "var(--text2)" }}>Nog geen openbare antwoorden.</p>}
-        </div>
-      </section>
-    </main>
-  );
-}
-
-// The rail carries identity; text and explicit status headings carry meaning.
-// Only public read items reach this treatment. Concealed answers stay neutral.
-function profileReadAccent(status: NonNullable<KinkStatus>) {
-  return {
-    borderInlineStart: `3px ${status === "hard_no" ? "dashed" : "solid"} ${STATUS_VAR[status]}`,
-    background: `color-mix(in srgb, ${STATUS_VAR[status]} 5%, var(--surface))`,
-  };
-}
-
-function ProfileReadItemsByCategory({
-  items,
-  showContext,
-}: {
-  items: ProfileReadItem[];
-  showContext?: boolean;
-}) {
-  const groups = PROFILE_READ_CATEGORIES
-    .map((category) => ({
-      category,
-      items: items.filter((item) => item.category === category),
-    }))
-    .filter((group) => group.items.length > 0);
-
-  return (
-    <div className="grid gap-4 [overflow-wrap:anywhere]">
-      {groups.map((group) => (
-        <div key={group.category}>
-          <p
-            className="mb-2 text-xl font-medium leading-6"
-            style={{ color: "var(--text)", fontFamily: "var(--font-display, Georgia, serif)" }}
-          >
-            {profileReadCategoryLabel(group.category)}
-          </p>
-          <div className="grid gap-2">
-            {group.items.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-r-xl px-3 py-3"
-                style={profileReadAccent(item.status)}
-              >
-                <div className="flex items-center gap-1.5">
-                  <p className="min-w-0 text-base leading-6">{item.name}</p>
-                  {item.curious && (
-                    <Star aria-hidden="true" size={11} weight="fill" style={{ color: "var(--curious)" }} />
-                  )}
-                </div>
-                {showContext && item.comment && (
-                  <p className="mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]" style={{ color: "var(--text2)" }}>
-                    {item.comment}
-                  </p>
-                )}
-                {showContext && item.tags.length > 0 && (
-                  <p className="mt-0.5 text-xs leading-5" style={{ color: "var(--text2)" }}>
-                    {item.tags.map((tag) => tag === "vraag eerst" ? "Eerst vragen" : tag === "eerste keer" ? "Eerste keer" : tag).join(" · ")}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 

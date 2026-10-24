@@ -234,7 +234,7 @@ export default function SettingsSheet({
       variant="surface"
       aria-label="Instellingen"
     >
-      <div className="grid gap-6 pb-0.5">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 pb-0.5 [overflow-wrap:anywhere]">
         <section>
           <SectionTitle>Kleurmodus</SectionTitle>
           <p className="mb-3 px-1 text-xs leading-4" style={{ color: "var(--text2)" }}>Gebruik je toestelvoorkeur of kies zelf</p>

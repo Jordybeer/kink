@@ -122,8 +122,7 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   expect(scrollTop).toBeLessThanOrEqual(1);
 
   await dialog
-    .getByTestId("sheet-scroll-body")
-    .getByRole("button", { name: "Sluit", exact: true })
+    .getByRole("button", { name: "Wat betekenen deze keuzes? sluiten", exact: true })
     .click();
   await expect(dialog).toBeHidden();
 }

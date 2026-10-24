@@ -2,149 +2,138 @@ import { expect, test } from "@playwright/test";
 import { KINKS } from "../lib/kinks";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
-test("topic editor separates the primary answer from optional details without forcing a wizard", async ({ page }, testInfo) => {
-  const candidate = KINKS.find((kink) => kink.description && kink.safetyNote)
-    ?? KINKS.find((kink) => kink.description);
-  expect(candidate).toBeTruthy();
+const topic = KINKS.find((kink) => kink.description && kink.safetyNote)!;
+const secondTopic = KINKS.find((kink) => kink.id !== topic.id)!;
 
-  const profile = {
-    ...PROFILE_ALEX,
-    entries: {
-      [candidate!.id]: {
-        status: "yes" as const,
-        comment: "",
-        tags: ["vraag eerst", "scène specifiek"],
-        curious: true,
-        privateResponse: true,
-      },
-    },
-  };
-
-  await page.setViewportSize({ width: 390, height: 844 });
+test("inline answer keeps its position, saves partial fields and survives clear and reload", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await seedAndGo(page, "/profile/pw-alex-001", [profile]);
+  await seedAndGo(page, `/profile?id=${PROFILE_ALEX.id}&interests=yes`, [{ ...PROFILE_ALEX, entries: {
+    [topic.id]: { status: "yes", comment: "Existing context", tags: ["vraag eerst", "unknown tag"], experienced: true, curious: true },
+  } }]);
+  const row = page.locator(`[data-kink-id="${topic.id}"]`).first();
+  const trigger = row.locator('button[aria-label$=", bewerken"]');
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await expect(trigger).toBeFocused();
+  const editor = row.getByTestId("profile-inline-editor");
+  await expect(editor).toHaveAttribute("aria-hidden", "false");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(editor.getByText(topic.description!, { exact: true })).toBeVisible();
+  await expect(editor.getByText(topic.safetyNote!, { exact: true })).toBeVisible();
+  const answers = editor.getByRole("group", { name: "Status kiezen" });
+  const answerPosition = () => answers.evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+  const before = await answerPosition();
+  await answers.getByRole("button", { name: /^Ja\b/ }).click();
+  await expect(answers.getByRole("button", { name: /^Ja\b/ })).toHaveAttribute("aria-pressed", "true");
+  expect(await answerPosition()).toBeCloseTo(before, 0);
+  await answers.getByRole("button", { name: /^Ja\b/ }).click();
+  await expect(answers.locator('[aria-pressed="true"]')).toHaveCount(0);
+  expect(await answerPosition()).toBeCloseTo(before, 0);
+  await expect(row).toBeVisible();
+  await answers.getByRole("button", { name: /^Harde grens\b/ }).click();
+  await expect(page.getByTestId("profile-read-hard-limits").getByText(topic.name, { exact: true })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(1);
+  expect(await answerPosition()).toBeCloseTo(before, 0);
+  await answers.getByRole("button", { name: /^Ja\b/ }).click();
+  await editor.getByRole("button", { name: "Details", exact: true }).click();
+  await expect(editor.getByRole("button", { name: "Eerst vragen", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await editor.getByLabel("Persoonlijke context").fill("Updated context");
+  await editor.getByRole("button", { name: "Klaar", exact: true }).click();
+  await expect(row).toHaveCount(0);
+  await expect(page.getByTestId("profile-read-status-yes")).toBeFocused();
+  await page.getByTestId("profile-read-status-willing").click();
+  const updatedRow = page.locator(`[data-kink-id="${topic.id}"]`);
+  await expect(updatedRow.getByText("Updated context", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(updatedRow).toContainText("Updated context");
+  const persisted = await page.evaluate((id) => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles[0].entries[id], topic.id);
+  expect(persisted).toMatchObject({ status: "willing", comment: "Updated context", tags: ["vraag eerst", "unknown tag"], experienced: true, curious: true });
+});
 
-  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
-  await page.getByPlaceholder("Zoek in de volledige catalogus…").fill(candidate!.name);
-
-  const result = page.locator('button[aria-label$=", bewerken"]').filter({ hasText: candidate!.name }).first();
-  await expect(result).toBeVisible();
-  await result.click();
-
-  const dialog = page.getByRole("dialog", { name: `${candidate!.name} bewerken` });
-  await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
-  await expect(dialog.getByRole("heading", { name: "Onderwerp bewerken" })).toBeVisible();
-  const steps = dialog.getByRole("navigation", { name: "Onderwerpstappen" });
-  await expect(steps).toBeVisible();
-  const answerStep = steps.getByRole("button", { name: /Stap 1 van 2: Antwoord/ });
-  const detailsStep = steps.getByRole("button", { name: /Stap 2 van 2: Details/ });
-  await expect(answerStep).toHaveAttribute("aria-current", "step");
-  await expect(answerStep.getByText("Antwoord", { exact: true })).toBeVisible();
-  await expect(detailsStep.getByText("Details", { exact: true })).toBeVisible();
-  await expect(detailsStep.getByText("optioneel", { exact: true })).toBeVisible();
-  await expect(detailsStep).toHaveAccessibleDescription("optioneel");
-  for (const control of [answerStep, detailsStep]) {
-    const box = await control.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(44);
-    expect(box!.width).toBeGreaterThanOrEqual(44);
-  }
-
-  const body = dialog.getByTestId("kink-edit-scroll-body");
-  const done = dialog.getByRole("button", { name: "Klaar" });
-  await expect(done).toBeVisible();
-  await expect(dialog.getByTestId("sheet-footer")).toHaveCount(0);
-
-  await expect(dialog.getByRole("heading", { name: candidate!.name })).toBeVisible();
-  await expect(dialog.getByText(candidate!.description!, { exact: true })).toBeVisible();
-  if (candidate!.safetyNote) await expect(dialog.getByText(candidate!.safetyNote, { exact: true })).toBeVisible();
-
-  const statusGroup = dialog.getByRole("group", { name: "Status kiezen" });
-  await expect(statusGroup.getByRole("button")).toHaveCount(5);
-  await expect(statusGroup.getByRole("button", { name: /Heel graag/ })).toHaveAttribute("aria-pressed", "true");
-  await expect(dialog.getByRole("heading", { name: "Afspraken" })).toHaveCount(0);
-  await expect(dialog.getByRole("heading", { name: "Zichtbaarheid" })).toHaveCount(0);
-  await expect(dialog.getByRole("heading", { name: "Context" })).toHaveCount(0);
-
-  for (const theme of ["light", "dark"] as const) {
-    await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
-    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    await body.evaluate((node) => { node.scrollTop = 0; });
-    await page.evaluate(async () => { await document.fonts.ready; });
-    await page.screenshot({
-      path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-${theme}-answer.png`,
-      fullPage: false,
-    });
-
-    await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
-    await expect(dialog.getByRole("button", { name: "Stap 2 van 2: Details, huidig" })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, voltooid" })).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "Details" })).toBeFocused();
-    await expect(done).toBeVisible();
-    await expect(detailsStep).toHaveAttribute("aria-current", "step");
-    await expect(dialog.getByText(candidate!.name, { exact: false }).first()).toBeVisible();
-    await expect(statusGroup).toHaveCount(0);
-    await expect(dialog.getByRole("heading", { name: "Afspraken" })).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "Zichtbaarheid" })).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "Context" })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "Eerst vragen" })).toHaveAttribute("aria-pressed", "true");
-    await expect(dialog.getByRole("button", { name: "Antwoord niet langer privé maken" })).toHaveAttribute("aria-pressed", "true");
-    await expect(dialog.getByRole("button", { name: "Nieuwsgierig" })).toHaveAttribute("aria-pressed", "true");
-
-    await page.screenshot({
-      path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-${theme}-details.png`,
-      fullPage: false,
-    });
-
-    await dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord" }).click();
-    await expect(dialog.getByRole("button", { name: "Stap 1 van 2: Antwoord, huidig" })).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: candidate!.name })).toBeFocused();
-  }
-
-  await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-
-  await page.setViewportSize({ width: 320, height: 844 });
-  await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
-  await expect.poll(() => body.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-  await expect.poll(() => dialog.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-  const header = dialog.getByTestId("kink-edit-header");
-  await expect.poll(() => header.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-  const headingBox = (await dialog.getByRole("heading", { name: "Onderwerp bewerken" }).boundingBox())!;
-  const doneBox = (await done.boundingBox())!;
-  expect(headingBox.y + headingBox.height).toBeLessThanOrEqual(doneBox.y);
-  for (const [control, label, number] of [[answerStep, "Antwoord", "1"], [detailsStep, "Details", "2"]] as const) {
-    const controlBox = (await control.boundingBox())!;
-    const numberBox = (await control.getByText(number, { exact: true }).boundingBox())!;
-    const labelBox = (await control.getByText(label, { exact: true }).boundingBox())!;
-    expect(controlBox.x).toBeGreaterThanOrEqual(0);
-    expect(controlBox.x + controlBox.width).toBeLessThanOrEqual(320);
-    expect(labelBox.x).toBeGreaterThanOrEqual(numberBox.x + numberBox.width);
-    expect(controlBox.height).toBeGreaterThanOrEqual(44);
-    const labelLines = await control.getByText(label, { exact: true }).evaluate((node) => {
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      return range.getClientRects().length;
-    });
-    expect(labelLines).toBe(1);
-  }
-  const scrollBodyBox = (await body.boundingBox())!;
-  expect(scrollBodyBox.height).toBeGreaterThanOrEqual(200);
-  await expect(done).toBeVisible();
-  await page.screenshot({
-    path: `screenshots/theme-rehearsal/${testInfo.project.name}/topic-editor-320-text-200.png`,
-    fullPage: false,
-  });
-  await page.evaluate(() => { document.documentElement.style.removeProperty("font-size"); });
-  await page.setViewportSize({ width: 390, height: 844 });
-
+test("inline close, rapid reversal and live reduced motion retain input and exclude hidden controls", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  const maybe = statusGroup.getByRole("button", { name: /^Misschien\b/ });
-  const willing = statusGroup.getByRole("button", { name: /^Ja\b/ });
-  await maybe.click();
-  await willing.click();
-  await expect(willing).toHaveAttribute("aria-pressed", "true");
-  await expect(maybe).toHaveAttribute("aria-pressed", "false");
+  await seedAndGo(page, `/profile?id=${PROFILE_ALEX.id}`, [{ ...PROFILE_ALEX, entries: { [topic.id]: { status: "yes", comment: "" }, [secondTopic.id]: { status: "yes", comment: "" } } }]);
+  const row = page.locator(`[data-kink-id="${topic.id}"]`);
+  const trigger = row.locator('button[aria-label$=", bewerken"]');
+  await trigger.click();
+  const editor = row.getByTestId("profile-inline-editor");
+  await expect(editor).toHaveCSS("transition-duration", "0.22s, 0.19s");
+  await editor.getByRole("button", { name: "Details", exact: true }).click();
+  await editor.getByLabel("Persoonlijke context").fill("Keep me");
+  await trigger.evaluate((node: HTMLButtonElement) => { node.click(); });
+  await expect(editor).toHaveAttribute("aria-hidden", "true");
+  await expect.poll(() => editor.evaluate((node) => (node as HTMLElement).inert)).toBe(true);
+  await trigger.evaluate((node: HTMLButtonElement) => { node.click(); });
+  await expect(editor).toHaveAttribute("aria-hidden", "false");
+  await expect(editor.getByLabel("Persoonlijke context")).toHaveValue("Keep me");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(editor).toHaveCSS("transition-duration", "0s");
+  await editor.getByRole("button", { name: "Klaar", exact: true }).click();
+  await expect(trigger).toBeFocused();
+  await expect.poll(() => editor.boundingBox().then((box) => box!.height)).toBeLessThanOrEqual(1);
+  await page.keyboard.press("Tab");
+  await expect(editor.locator(":focus")).toHaveCount(0);
+  await trigger.click();
+  const secondRow = page.locator(`[data-kink-id="${secondTopic.id}"]`);
+  await secondRow.locator('button[aria-label$=", bewerken"]').click();
+  await expect(editor).toHaveAttribute("aria-hidden", "true");
+  await expect(editor.getByRole("group", { name: "Status kiezen", includeHidden: true })).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(1);
+});
 
-  await done.click();
-  await expect(dialog).toBeHidden();
-  await expect(result).toBeFocused();
+test("private reveal gates editing, conceal hides context and privacy removes public editor immediately", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await seedAndGo(page, `/profile?id=${PROFILE_ALEX.id}`, [{ ...PROFILE_ALEX, entries: { [topic.id]: { status: "yes", comment: "Secret context", tags: ["secret tag"] } } }]);
+  let row = page.locator(`[data-kink-id="${topic.id}"]`);
+  await row.locator('button[aria-label$=", bewerken"]').click();
+  await row.getByRole("button", { name: "Details", exact: true }).click();
+  await row.getByRole("button", { name: "Antwoord privé maken", exact: true }).click();
+  await expect(page.getByTestId("profile-read-status-yes")).toBeFocused();
+  await expect(page.locator("#profile-read-status-yes-content")).not.toContainText(topic.name);
+  await expect(page.getByText("Secret context", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
+  await page.getByTestId("profile-read-private").click();
+  row = page.locator("#profile-read-private-content").locator(`[data-kink-id="${topic.id}"]`);
+  await expect(row.locator('button[aria-label$=", bewerken"]')).toHaveCount(0);
+  await expect(row).not.toContainText("Heel graag");
+  await expect(row).not.toContainText("secret tag");
+  await row.getByRole("button", { name: `Privéantwoord voor ${topic.name} tonen`, exact: true }).click();
+  await expect(row).toContainText("Secret context");
+  await row.locator('button[aria-label$=", bewerken"]').click();
+  await row.getByRole("button", { name: "Details", exact: true }).click();
+  await row.getByLabel("Persoonlijke context").fill("Changed secret");
+  await row.getByRole("group", { name: "Status kiezen" }).getByRole("button", { name: /^Heel graag\b/ }).click();
+  await expect(row.getByRole("group", { name: "Status kiezen" })).toBeVisible();
+  await row.getByRole("group", { name: "Status kiezen" }).getByRole("button", { name: /^Heel graag\b/ }).click();
+  await row.getByRole("button", { name: `Privéantwoord voor ${topic.name} opnieuw verbergen`, exact: true }).click();
+  await expect(page.getByText("Changed secret", { exact: true })).toHaveCount(0);
+  await expect(row.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator("#profile-read-private-content")).toBeHidden();
+});
+
+test("catalogue categories, search and custom topics share the same inline editor", async ({ page }) => {
+  await seedAndGo(page, `/profile?id=${PROFILE_ALEX.id}`, [{ ...PROFILE_ALEX, entries: {} }]);
+  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.locator('button[aria-controls="category-impact-content"]').click();
+  await page.locator('#category-impact-content button[aria-label$=", bewerken"]').first().click();
+  await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(1);
+  await page.getByLabel("Volledige catalogus doorzoeken").fill(topic.name);
+  await page.locator('button[aria-label$=", bewerken"]').first().click();
+  await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(1);
+  await page.getByRole("button", { name: "Klaar", exact: true }).click();
+  await page.getByLabel("Volledige catalogus doorzoeken").fill("");
+  await page.getByLabel("Eigen onderwerp toevoegen").fill("Mijn eigen lange onderwerp");
+  await page.getByRole("button", { name: "Toevoegen", exact: true }).click();
+  const custom = page.getByTestId("profile-topic-row").filter({ hasText: "Mijn eigen lange onderwerp" });
+  await custom.locator('button[aria-label$=", bewerken"]').click();
+  await custom.getByRole("group", { name: "Status kiezen" }).getByRole("button", { name: /^Misschien\b/ }).click();
+  await custom.getByRole("button", { name: "Details", exact: true }).click();
+  await custom.getByLabel("Persoonlijke context").fill("Zelf gekozen context");
+  await custom.getByRole("button", { name: "Klaar", exact: true }).click();
+  await page.getByRole("button", { name: "Gereed", exact: true }).click();
+  await page.getByTestId("profile-read-status-maybe").click();
+  await expect(page.locator("#profile-read-status-maybe-content")).toContainText("Zelf gekozen context");
+  await page.reload();
+  await expect(page.locator("#profile-read-status-maybe-content")).toContainText("Mijn eigen lange onderwerp");
 });

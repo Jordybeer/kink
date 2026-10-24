@@ -7,7 +7,7 @@ import { kinkCategoryExplainer } from "@/lib/kinkCategories";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
 import { isConversationContinuation, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
-import Sheet, { SheetContent } from "./Sheet";
+import Sheet from "./Sheet";
 
 const AGREEMENTS = [
   { value: "vraag eerst", label: "Eerst vragen", emphasized: true, tour: "agreement-ask-first" },
@@ -186,9 +186,45 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
         )}
       </div>
 
-      {current && presentation.hasDetails && <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} scrollable aria-label={`Info en uitleg bij ${presentation.title}`}><SheetContent className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3" style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), 36rem)" }}><div className="flex items-center gap-2"><Info size={20} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>Info & uitleg</h3></div><p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{presentation.title}</p><div className="mt-4 rounded-xl p-3" style={{ background: "color-mix(in srgb, var(--surface2) 72%, transparent)", border: "1px solid color-mix(in srgb, var(--border) 88%, transparent)" }}><p className="text-xs font-semibold" style={{ color: "var(--text2)" }}>In het kort</p><p data-testid="question-detail-essence" className="mt-1 text-sm leading-6" style={{ color: "var(--text)" }}>{presentation.essence}</p></div>{presentation.details && <div className="mt-4"><p className="text-xs font-semibold" style={{ color: "var(--text2)" }}>Meer context</p><p className="mt-1 text-sm leading-6" style={{ color: "var(--text)" }}>{presentation.details}</p></div>}{current.aliases && current.aliases.length > 0 && <div className="mt-4"><p className="text-xs font-semibold" style={{ color: "var(--text2)" }}>Ook bekend als</p><p className="mt-1 text-sm leading-6" style={{ color: "var(--text)" }}>{current.aliases.join(" · ")}</p></div>}<button type="button" onClick={() => setDetailKinkId(null)} className="ks-motion-choice focus-ring mt-5 min-h-12 w-full rounded-xl text-sm font-semibold" style={{ border: "1px solid var(--border)", color: "var(--text2)" }}>Sluit</button></SheetContent></Sheet>}
-      {current?.safetyNote && <Sheet open={safetyOpen} onClose={() => setSafetyKinkId(null)} scrollable aria-label={`Veiligheid bij ${presentation.title}`}><SheetContent className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3" style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), 32rem)" }}><div className="flex items-center gap-2"><ShieldCheck size={20} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>Veiligheid</h3></div><p className="mt-1 text-xs" style={{ color: "var(--text2)" }}>{presentation.title}</p><p className="mt-4 text-sm leading-6" style={{ color: "var(--text)" }}>{current.safetyNote}</p><button type="button" onClick={() => setSafetyKinkId(null)} className="ks-motion-choice focus-ring mt-5 min-h-12 w-full rounded-xl text-sm font-semibold" style={{ border: "1px solid var(--border)", color: "var(--text2)" }}>Sluit</button></SheetContent></Sheet>}
-      {categoryDetail && categoryCopy && <Sheet open onClose={() => setCategoryDetail(null)} scrollable aria-label={`Over ${kinkCategoryLabel(categoryDetail)}`}><SheetContent className="overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3" style={{ maxHeight: "min(calc(var(--visual-viewport-height, 100dvh) - 1rem), 30rem)" }}><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: CATEGORY_ACCENT[categoryDetail] }} aria-hidden="true" /><h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>{kinkCategoryLabel(categoryDetail)}</h3></div><p className="mt-4 text-sm leading-6" style={{ color: "var(--text)" }}>{categoryCopy}</p><p className="mt-3 text-xs leading-5" style={{ color: "var(--text2)" }}>Deze uitleg helpt termen herkennen. Ze vult niets voor je in en verandert geen antwoorden.</p><button type="button" onClick={() => setCategoryDetail(null)} className="ks-motion-choice focus-ring mt-5 min-h-12 w-full rounded-xl text-sm font-semibold" style={{ border: "1px solid var(--border)", color: "var(--text2)" }}>Begrepen</button></SheetContent></Sheet>}
+      {current && presentation.hasDetails && (
+        <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} title="Info & uitleg" variant="surface" scrollable aria-label={`Info en uitleg bij ${presentation.title}`}>
+          <div className="min-w-0 break-words px-1 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+            <h3 className="text-base font-medium leading-snug" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>{presentation.title}</h3>
+            <section className="mt-6">
+              <h4 className="text-sm font-semibold" style={{ color: "var(--text2)" }}>In het kort</h4>
+              <p data-testid="question-detail-essence" className="mt-2">{presentation.essence}</p>
+            </section>
+            {presentation.details && (
+              <section className="mt-6">
+                <h4 className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Meer context</h4>
+                <p className="mt-2">{presentation.details}</p>
+              </section>
+            )}
+            {current.aliases && current.aliases.length > 0 && (
+              <section className="mt-6">
+                <h4 className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Ook bekend als</h4>
+                <p className="mt-2">{current.aliases.join(" · ")}</p>
+              </section>
+            )}
+          </div>
+        </Sheet>
+      )}
+      {current?.safetyNote && (
+        <Sheet open={safetyOpen} onClose={() => setSafetyKinkId(null)} title="Veiligheid" variant="surface" scrollable aria-label={`Veiligheid bij ${presentation.title}`}>
+          <div className="min-w-0 break-words px-1 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+            <h3 className="text-base font-medium leading-snug" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>{presentation.title}</h3>
+            <p className="mt-6">{current.safetyNote}</p>
+          </div>
+        </Sheet>
+      )}
+      {categoryDetail && categoryCopy && (
+        <Sheet open onClose={() => setCategoryDetail(null)} title={kinkCategoryLabel(categoryDetail)} variant="surface" scrollable aria-label={`Over ${kinkCategoryLabel(categoryDetail)}`}>
+          <div className="min-w-0 break-words px-1 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+            <p>{categoryCopy}</p>
+            <p className="mt-6" style={{ color: "var(--text2)" }}>Deze uitleg helpt termen herkennen. Ze vult niets voor je in en verandert geen antwoorden.</p>
+          </div>
+        </Sheet>
+      )}
     </>
   );
 }

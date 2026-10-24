@@ -59,3 +59,71 @@ The compatible repair adds one exact Zod4.6.6 override, deduplicates three neste
 Clean npm ci, the targeted dependency graph and a composed Serwist schema smoke passed. Audit now reports zero vulnerabilities. The full graph has no missing/invalid nodes but reports seven unrelated optional sharp/wasm helpers as extraneous; no pre-fix full graph was captured, and no unrelated cleanup was added. Independent review verified the registry integrity, constraints and narrow diff without findings. The controller reran full unit tests (109 files/929 passed), lint (zero errors/30 baseline warnings) and production build (including TypeScript), all successfully.
 
 The initial run is superseded before its regular browser/screenshot lane starts. This avoids spending a complete visual rehearsal on an already failed dependency candidate; the definitive candidate still requires the entire exact-head CI and screenshot inspection. Local browser restrictions, hardware limits and draft/no-deployment status remain unchanged.
+
+
+### Task 2: Reading surfaces and CI repair
+
+Spec: docs/superpowers/specs/2026-10-24-reading-surfaces-design.md. User's October24 iPhone screenshots extend the scope to explanation-modal usability. Existing permission to perform UI fixes applies; reuse the current surface architecture rather than create a new navigation pattern.
+
+- [x] Diagnose and fix320px/200% Settings intrinsic-width overflow without masking or shrinking content.
+- [x] Align the locked Scene browser assertion with intentional disabled semantics while retaining initial visible-detail checks.
+- [x] Convert Status and three questionnaire explanations to titled surfaces, remove nested summary container/redundant bottom dismissals, preserve copy/state/focus.
+- [ ] Cover mobile/desktop/large-text geometry, one scroll region, fixed close and state retention; collect screenshots via existing CI artifact path.
+- [ ] Focused implementation checks, independent new-delta review and root final checks; publish once and verify fullCI plus batched visual evidence.
+
+
+## Reading-surface implementation checkpoint
+
+The source/test changes were committed locally as `d8b4eef`: four explanations now reuse the existing titled surface, with fixed close/header, one scroll region, flat prose, retained factual content and contained desktop presentation. Shared frame/header/body widths are constrained; Settings has an explicit shrinkable grid track and minimum-content-aware wrapping. The locked Scene browser assertion now respects inherited aria-disabled state while still proving initial open details and read-only content. No dependency or application state semantics changed.
+
+Focused TypeScript/lint/discovery passed. Root full verification passed 109 files/929 unit tests, lint with zero errors/the same30 baseline warnings, and production build including TypeScript. Independent expert source review approved the new delta without findings and confirmed both CI repairs at source level. Runtime geometry/focus and visual acceptance remain pending the next exact-head CI; discovery and source review are not substituted for browser results. Existing question/device selectors were updated, with four meaningful reading geometry/focus/state tests and captures added to the existing artifact path.
+# Profile extension, 2026-10-24
+
+Spec: `docs/superpowers/specs/2026-10-24-profile-inline-design.md`.
+The owner explicitly requests inline Profile editing and same-page status filters.
+This extends the owned PR before publication of the reviewed reading-surface work.
+
+### Task 3: Unified Profile list with inline editor
+
+**Files:** `components/profile/ProfileScreen.tsx`, `components/KinkListRow.tsx`,
+`components/CategorySection.tsx`, `components/KinkEditSheet.tsx` (extract/reuse fields
+or remove if unused), focused new components under `components/profile/`,
+`DESIGN.md`, relevant `e2e/profile*.spec.ts` and other affected consumers/tests.
+
+**Interfaces:** Consume existing `DisclosureBody`, `StatusOptionRows` with
+`presentation="list"`, `useStore.setEntry(profileId,kinkId,partial)` and public
+summary/privacy helpers. Produce one consistent inline row/editor used by Profile
+overview and its catalogue. Preserve schema and partial update semantics.
+
+**Binding constraints:** Follow the linked spec verbatim. No dependency changes,
+questionnaire/Compare rewrite, private leakage, browser-launch workaround, global
+list-height animation or gratuitous visual overhaul. Existing source-reviewed
+Settings/reading changes remain. Read AGENTS and product doctrine in order; use
+installed Next client-component docs and Impeccable operate/animate/craft-floor.
+Context CLI already failed this session; direct context fallback is complete.
+
+- [ ] Read the linked spec and current Profile/editor/summary/privacy/test paths.
+- [ ] Write meaningful regressions for inline filter/hero and query restoration;
+  row open/change/clear/close/reload; private conceal/reveal/edit and shared read-only;
+  custom topics; keyboard/focus, rapid reversal/reduced motion, long text geometry.
+  Search all e2e and unit references to the old labels/structure without truncation.
+- [ ] Implement the cohesive inline row/editor and integrate all Profile entry
+  points. Reuse status choices and optional field semantics without divergent
+  copies. Update DESIGN.md to the new explicit owner direction.
+- [ ] Run focused runnable unit checks and lint; discover E2E tests without
+  launching a browser. Root owns the one full unit/lint/build pass and remote CI.
+  Browser runtime remains unverified until CI, never claim RED/GREEN there.
+- [ ] Self-review and commit scoped code/tests/docs; record report with files,
+  commands/results and limitations in the controller-provided report path.
+
+**Review focus:** a changed status retains controls until close; privacy removes
+public presentation immediately; imported/shared entries cannot mutate; deep link
+and back preserve same-page context; enlarged text and long names cannot overflow.
+
+Task 3 source checkpoint: implemented at `34b9c2e`; independent expert review
+approved spec compliance and code quality with no actionable findings. All 933
+unit tests (110 files), lint (zero errors, 30 existing warnings), TypeScript and
+production build pass. Browser test discovery is preparation only; exact-candidate
+CI and screenshot inspection remain required. The reviewed reading-surface fixes
+and this Profile extension will be published together to avoid a redundant run.
+

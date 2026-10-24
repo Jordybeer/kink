@@ -194,7 +194,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByRole("img", { name: /Heel graag/ })).toHaveCount(0);
 
     const yes = page.getByTestId("profile-read-status-yes");
-    const yesSummary = page.getByTestId("profile-read-status-yes-summary");
+    const yesSummary = page.locator("#profile-read-status-yes-content");
     await expect(yes).toBeVisible();
     await expect(yes).toHaveAccessibleName(/Heel graag, 6 antwoorden/);
     await expect(yesSummary.getByText("Spanking (hand) — giving", { exact: true })).toBeVisible();
@@ -387,13 +387,13 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(result).toBeVisible();
     await result.click();
 
-    const dialog = page.getByRole("dialog", { name: /spanking.*bewerken/i });
-    await expect(dialog.getByRole("button", { name: "Klaar" })).toBeVisible();
-    await dialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
-    await expect(dialog.getByRole("heading", { name: "Details" })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
-    await dialog.getByRole("button", { name: "Klaar" }).click();
-    await expect(dialog).toBeHidden();
+    const editor = result.locator("..").getByTestId("profile-inline-editor");
+    await expect(editor.getByRole("button", { name: "Klaar" })).toBeVisible();
+    await editor.getByRole("button", { name: "Details", exact: true }).click();
+    await expect(editor.getByRole("button", { name: "Eerst vragen", exact: true })).toBeVisible();
+    await editor.getByRole("button", { name: "Klaar" }).click();
+    await expect(editor).toHaveAttribute("aria-hidden", "true");
+    await expect(result).toBeFocused();
   });
 
   test("kink-status instellen via de cataloguseditor", async ({ page }) => {
@@ -522,8 +522,8 @@ test.describe("Privé antwoorden op eigen profiel", () => {
 
     const privateSection = page.getByTestId("profile-read-private");
     await expect(privateSection).toContainText("1");
-    await expect(page.getByTestId("profile-read-status-yes-summary")).not.toContainText("Spanking (hand) — giving");
-    await expect(page.getByTestId("profile-read-status-yes-summary")).not.toContainText("Dit is alleen voor mezelf bedoeld");
+    await expect(page.locator("#profile-read-status-yes-content")).not.toContainText("Spanking (hand) — giving");
+    await expect(page.locator("#profile-read-status-yes-content")).not.toContainText("Dit is alleen voor mezelf bedoeld");
     await privateSection.click();
 
     const secret = page.getByText("Dit is alleen voor mezelf bedoeld", { exact: true });
