@@ -139,7 +139,7 @@ test("kink editing stays inline and keeps optional details in one disclosure", a
   await expect(result).toHaveAttribute("aria-expanded", "true");
   await expect(editor.getByRole("group", { name: "Status kiezen" })).toBeVisible();
   await editor.getByRole("button", { name: "Details", exact: true }).click();
-  await expect(editor.getByRole("button", { name: "Eerst vragen", exact: true })).toBeVisible();
+  await expect(editor.getByRole("button", { name: /^Eerst vragen\b/ })).toBeVisible();
   await expect(editor.getByRole("group", { name: "Status kiezen" })).toBeVisible();
   await editor.getByRole("button", { name: "Klaar" }).click();
   await expect(editor).toHaveAttribute("aria-hidden", "true");

@@ -36,7 +36,7 @@ test("inline answer keeps its position, saves partial fields and survives clear 
   expect(await answerPosition()).toBeCloseTo(before, 0);
   await answers.getByRole("button", { name: /^Ja\b/ }).click();
   await editor.getByRole("button", { name: "Details", exact: true }).click();
-  await expect(editor.getByRole("button", { name: "Eerst vragen", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(editor.getByRole("button", { name: /^Eerst vragen\b/ })).toHaveAttribute("aria-pressed", "true");
   await editor.getByLabel("Persoonlijke context").fill("Updated context");
   await editor.getByRole("button", { name: "Klaar", exact: true }).click();
   await expect(row).toHaveCount(0);

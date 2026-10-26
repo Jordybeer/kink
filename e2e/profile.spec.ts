@@ -390,7 +390,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const editor = result.locator("..").getByTestId("profile-inline-editor");
     await expect(editor.getByRole("button", { name: "Klaar" })).toBeVisible();
     await editor.getByRole("button", { name: "Details", exact: true }).click();
-    await expect(editor.getByRole("button", { name: "Eerst vragen", exact: true })).toBeVisible();
+    await expect(editor.getByRole("button", { name: /^Eerst vragen\b/ })).toBeVisible();
     await editor.getByRole("button", { name: "Klaar" }).click();
     await expect(editor).toHaveAttribute("aria-hidden", "true");
     await expect(result).toBeFocused();
