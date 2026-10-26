@@ -36,6 +36,8 @@ async function expectReadingGeometry(dialog: Locator, close: Locator, page: Page
   await expect(dialog.getByRole("button")).toHaveCount(1);
   const body = dialog.getByTestId("sheet-scroll-body");
   const viewport = page.viewportSize()!;
+  // Wait for viewport reconciliation, retaining exact containment/centering below.
+  await expect(page.getByTestId("sheet-visual-viewport")).toHaveCSS("height", `${viewport.height}px`);
   for (const target of [dialog, body, ...await dialog.locator("h2, h3, h4, p, li").all()]) {
     expect(await target.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
   }

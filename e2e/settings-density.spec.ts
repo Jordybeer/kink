@@ -87,11 +87,14 @@ test("settings blijft compact met optionele installatie in de instellingen", asy
 });
 async function expectSettingsGeometry(page: Page, settings: import("@playwright/test").Locator) {
   const scroll = settings.getByTestId("sheet-scroll-body");
+  // A viewport resize resolves before its resize/visualViewport events necessarily
+  // reach the bridge. Measure only after the sheet uses the requested viewport.
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  await expect(page.getByTestId("sheet-visual-viewport")).toHaveCSS("height", `${viewport!.height}px`);
   expect(await overflowsHorizontally(settings)).toBe(false);
   expect(await overflowsHorizontally(scroll)).toBe(false);
   expect(await overflowsHorizontally(settings.getByRole("heading", { name: "Instellingen", exact: true }))).toBe(false);
-  const viewport = page.viewportSize();
-  expect(viewport).not.toBeNull();
   const visibleBounds = (await settings.boundingBox())!;
   expect(visibleBounds.x).toBeGreaterThanOrEqual(-1);
   expect(visibleBounds.x + visibleBounds.width).toBeLessThanOrEqual(viewport!.width + 1);
@@ -157,6 +160,12 @@ test("Settings hierarchy, native theme geometry and enlarged text stay usable", 
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   expect(await page.locator("html").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))).toBe(32);
   await expectSettingsGeometry(page, settings);
+  // Text enlargement must leave useful reading width, including the fixed title
+  // and an entire destructive action inside the single scroll body's budget.
+  const title = settings.getByRole("heading", { name: "Instellingen", exact: true });
+  expect(await title.evaluate((element) => element.getBoundingClientRect().height <= Number.parseFloat(getComputedStyle(element).lineHeight) + 1)).toBe(true);
+  const destructive = settings.getByRole("button", { name: /Alle data verwijderen/ });
+  expect((await destructive.boundingBox())!.height).toBeLessThanOrEqual(await settings.getByTestId("sheet-scroll-body").evaluate((element) => element.clientHeight));
   expect(new Set(await options.locator("label").evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().y))).size).toBe(3);
   for (const label of await options.locator("label > span").all()) expect(await overflowsHorizontally(label)).toBe(false);
   await page.screenshot({ path: `${path}/settings-320-text-200.png` });

@@ -65,7 +65,7 @@ function RowContent({
   return (
     <>
       <span
-        className="flex w-8 flex-none items-center justify-center"
+        className="flex w-[32px] flex-none items-center justify-center"
         style={{ color: danger ? "var(--hard-no-text)" : iconColor ?? SETTINGS_ICON_TONE }}
       >
         {icon}
@@ -87,8 +87,9 @@ function RowContent({
 }
 
 const DIVIDER_STYLE = { borderTop: "1px solid var(--border)" } as const;
-const SETTINGS_ROW_CLASS = "focus-ring ks-motion-choice flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 text-left sm:px-2";
-const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-3 px-1.5 py-2 sm:px-2";
+// Text scales with the root font; decorative rails and gutters keep their budget.
+const SETTINGS_ROW_CLASS = "focus-ring ks-motion-choice flex min-h-[52px] w-full items-center gap-[12px] px-[6px] py-2 text-left sm:px-[8px]";
+const SETTINGS_SWITCH_ROW_CLASS = "flex min-h-[52px] w-full items-center gap-[12px] px-[6px] py-2 sm:px-[8px]";
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
   { value: "system", label: "Systeem" },
@@ -152,9 +153,10 @@ function InstallApp() {
   return (
     <Accordion
       className="border-t border-[var(--border)]"
-      triggerClassName="px-1.5 py-2 sm:px-2"
+      triggerClassName="px-[6px] py-2 sm:px-[8px]"
+      triggerStyle={{ columnGap: 12 }}
       trigger={
-        <span className="flex items-center gap-3">
+        <span className="flex items-center gap-[12px]">
           <RowContent
             icon={<DeviceMobile size={19} aria-hidden="true" />}
             title="KinkSync installeren"
@@ -258,7 +260,7 @@ export default function SettingsSheet({
             </button>
 
             <label
-              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-3 px-1.5 py-2 text-left sm:px-2"
+              className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-[12px] px-[6px] py-2 text-left sm:px-[8px]"
               style={DIVIDER_STYLE}
             >
               <input

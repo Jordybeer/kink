@@ -96,7 +96,7 @@ function TitledSheetFrame({
       ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
       : "rounded-t-3xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
     : surface
-      ? "flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[var(--sheet-gutter)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:pt-3"
+      ? "flex h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)] sm:pt-3"
       : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
 
   return (
@@ -111,7 +111,8 @@ function TitledSheetFrame({
           <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
         </div>
       )}
-      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start gap-2 px-1`}>
+      {/* Bound structural spacing so enlarged text retains the reading width. */}
+      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
         <h2
           className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
           style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
@@ -120,7 +121,7 @@ function TitledSheetFrame({
           type="button"
           onClick={onClose}
           aria-label={`${title} sluiten`}
-          className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+          className={`ks-motion-choice focus-ring flex ${surface ? "h-[44px] w-[44px]" : "h-11 w-11"} flex-none items-center justify-center rounded-full`}
           style={{ color: "var(--text2)" }}
         >
           <X size={20} aria-hidden="true" />
@@ -214,7 +215,11 @@ export default function Sheet({
             style={{
               top: "var(--visual-viewport-offset-top, 0px)",
               width: "100vw",
-              height: "var(--visual-viewport-height, 100dvh)",
+              // A stale or overflow-inflated JS height cannot exceed the CSS
+              // viewport. A smaller visual viewport still accommodates keyboards.
+              height: variant === "surface"
+                ? "min(var(--visual-viewport-height, 100dvh), 100dvh)"
+                : "var(--visual-viewport-height, 100dvh)",
             }}
           >
             <motion.div
