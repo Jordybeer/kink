@@ -29,6 +29,7 @@ import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import CategorySection from "@/components/CategorySection";
 import ProfileTopicRow from "./ProfileTopicRow";
+import EditorialHeading from "@/components/ui/EditorialHeading";
 import { pinnedPublicItems, profileInlineStatus } from "@/lib/profileInline";
 import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
 import ProfileEditSheet from "@/components/sheets/ProfileEditSheet";
@@ -245,7 +246,7 @@ export default function ProfilePage({ params }: Props) {
       {PROFILE_READ_CATEGORIES.map((category) => {
         const grouped = items.filter((item) => item.category === category);
         return grouped.length ? <section key={category} aria-label={profileReadCategoryLabel(category)}>
-          <h4 className="mb-1 text-xl font-medium leading-6" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>{profileReadCategoryLabel(category)}</h4>
+          <div className="mb-1"><EditorialHeading title={profileReadCategoryLabel(category)} size="compact" level={4} /></div>
           {grouped.map((item) => {
             const kink = allKinks.find((candidate) => candidate.id === item.id)!;
             const duplicateLimit = item.status === "hard_no" && editor?.open && editor.kink.id === item.id
@@ -445,7 +446,7 @@ export default function ProfilePage({ params }: Props) {
 
               {!catalogCategoryFilter && (
                 <section className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
-                  <h3 className="mb-2 text-sm font-semibold">Eigen onderwerpen</h3>
+                  <div className="mb-2"><EditorialHeading title="Eigen onderwerpen" size="compact" level={3} /></div>
                   <div className="mb-3 flex flex-col gap-1">
                     {customKinks.map((custom) => {
                       const customAsKink: Kink = {

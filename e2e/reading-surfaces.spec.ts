@@ -7,6 +7,7 @@ const TOPIC = "Vulva / pussy worship — being worshipped";
 const cases = [
   { name: "status", kink: "vagina_aanbidding_receive", trigger: "Uitleg antwoordkeuzes", dialog: "Uitleg keuzes", close: "Wat betekenen deze keuzes? sluiten" },
   { name: "topic", kink: "vagina_aanbidding_receive", trigger: "Info & uitleg", dialog: `Info en uitleg bij ${TOPIC}`, close: "Info & uitleg sluiten" },
+  { name: "topic-short", kink: "cuckolding", trigger: "Info & uitleg", dialog: "Info en uitleg bij Cuckolding", close: "Info & uitleg sluiten" },
   { name: "safety", kink: "sound_deprivation_give", trigger: "Veiligheid", dialog: "Veiligheid bij Restricting a partner’s hearing", close: "Veiligheid sluiten" },
   { name: "category", kink: "vagina_aanbidding_receive", trigger: "Uitleg over Body Focus & Worship", dialog: "Over Body Focus & Worship", close: "Body Focus & Worship sluiten" },
 ] as const;
@@ -64,12 +65,14 @@ async function expectReadingGeometry(dialog: Locator, close: Locator, page: Page
   await body.evaluate((element) => { element.scrollTop = 0; });
 }
 
-for (const sample of cases) {
-  test(`${sample.name} reading surface keeps close reachable and preserves the question`, async ({ page }, testInfo) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
+for (const theme of ["light", "dark"] as const) {
+ for (const sample of cases) {
+  test(`${sample.name} ${theme} reading surface keeps close reachable and preserves the question`, async ({ page }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
     await page.setViewportSize({ width: 390, height: 844 });
     const profile = profileFor(sample.kink);
     await seedAndGo(page, `/profile/${profile.id}/questions`, [profile]);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     const title = await page.getByTestId("question-title").textContent();
     const before = await entries(page);
     const trigger = page.getByRole("button", { name: sample.trigger, exact: true });
@@ -86,9 +89,14 @@ for (const sample of cases) {
       await expect(dialog).toContainText("Dit is een anatomy-specifieke voorkeur en veronderstelt geen rol of genderidentiteit.");
       await expect(dialog).toContainText("Vulva-aanbidding ontvangen · Vagina-aanbidding ontvangen · Je vulva laten aanbidden");
     }
+    if (sample.name === "topic-short") {
+      await expect(dialog.getByRole("heading", { name: "Cuckolding", exact: true })).toBeVisible();
+      await expect(dialog.getByTestId("question-detail-essence")).toHaveText("Een afgesproken scenario waarin jij weet of ziet dat je partner seks heeft met een instemmende derde.");
+      await expect(dialog).toContainText("De specifieke cuckolding-dynamiek wordt daarbij expliciet benoemd.");
+    }
     if (sample.name === "safety") await expect(dialog).toContainText("Spreek een tastbaar non-verbaal stopsignaal af en behoud omgevingsbewustzijn voor alarmen, verkeer en andere gevaren.");
     if (sample.name === "category") await expect(dialog).toContainText("Ze vult niets voor je in en verandert geen antwoorden.");
-    const path = `screenshots/theme-rehearsal/settings-motion/${testInfo.project.name}`;
+    const path = `screenshots/theme-rehearsal/settings-motion/${testInfo.project.name}/${theme}`;
     await expectReadingGeometry(dialog, close, page);
     await page.screenshot({ path: `${path}/reading-${sample.name}-390.png` });
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -127,4 +135,5 @@ for (const sample of cases) {
       expect(await page.evaluate(() => JSON.parse(localStorage.getItem("kinksync-questionnaire-category-explainers-v1")!))).toEqual(["body_focus"]);
     }
   });
+ }
 }

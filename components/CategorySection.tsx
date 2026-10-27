@@ -5,6 +5,7 @@ import { CaretDown } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import { useMotionSafe } from "@/lib/motion";
+import EditorialHeading from "./ui/EditorialHeading";
 
 interface Props {
   category: KinkCategoryId;
@@ -59,11 +60,9 @@ export default function CategorySection({
           borderColor: "color-mix(in srgb, var(--border) 76%, transparent)",
         }}
       >
-        <span className="min-w-0 flex-1">
-          <h2 id={headingId} className="[overflow-wrap:anywhere] text-base font-semibold leading-6">
-            {label}
-          </h2>
-        </span>
+        <div className="min-w-0 flex-1">
+          <EditorialHeading id={headingId} title={label} size="compact" level={2} />
+        </div>
         <span
           className="flex-none text-xs tabular-nums"
           aria-label={`${filled} van ${kinks.length} beoordeeld`}

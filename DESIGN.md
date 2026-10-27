@@ -223,8 +223,13 @@ Read-only status and questionnaire explanations (topic info, safety and category
 use that same titled `surface`, near the safe top edge on phones and centered with
 a contained width on desktop. Keep the title and 44px close outside the single
 scroll body. Long titles wrap; no drag handle, drag gesture or repeated bottom
-dismissal action belongs on these reading surfaces. Topic explanations use flat
-headings and prose rather than a nested summary card. Status dots, factual copy,
+dismissal action belongs on these reading surfaces. Topic explanations share a
+content composition as well as the shell: compact editorial subjects, semantic
+header marks, readable prose and quieter labelled sections. One borderless
+surface2 tint intentionally emphasizes the essence; supporting sections stay flat,
+without nested summary cards. Profile reuses that prose and safety treatment with
+its complete catalogue copy, and compact editorial category headings stay consistent
+across overview, catalogue and custom topics. Status dots, factual copy,
 aliases, safety meaning and the independent curiosity disclaimer stay intact.
 Opening or dismissing an explanation preserves the underlying question and its
 answer, privacy, curiosity and agreement state; category learning memory retains

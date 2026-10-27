@@ -7,6 +7,7 @@ import StatusOptionRows from "@/components/StatusOptionRows";
 import Accordion from "@/components/ui/Accordion";
 import DisclosureBody from "@/components/ui/DisclosureBody";
 import TopicDetailsFields from "./TopicDetailsFields";
+import { ExplanationProse, ExplanationSafety } from "@/components/ExplanationContent";
 
 interface Props {
   kink: Kink;
@@ -44,14 +45,11 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
         <DisclosureBody open={selected && open} id={id} data-testid="profile-inline-editor" contentClassName="pb-5 pt-3 [overflow-wrap:anywhere]">
           {selected && (
             <>
-              {kink.description && (
-                <p className="mb-3 text-base leading-7" style={{ color: "var(--text2)" }}>{kink.description}</p>
-              )}
-              {kink.safetyNote && (
-                <section className="mb-4" aria-label="Veiligheid">
-                  <h4 className="text-sm font-semibold">Veiligheid</h4>
-                  <p className="mt-1 text-base leading-7" style={{ color: "var(--text2)" }}>{kink.safetyNote}</p>
-                </section>
+              {(kink.description || kink.safetyNote) && (
+                <div className="mb-4 grid min-w-0 gap-4">
+                  {kink.description && <ExplanationProse secondary>{kink.description}</ExplanationProse>}
+                  {kink.safetyNote && <ExplanationSafety>{kink.safetyNote}</ExplanationSafety>}
+                </div>
               )}
               <h4 className="mb-2 text-sm font-semibold">Mijn antwoord</h4>
               <StatusOptionRows current={entry.status} presentation="list" onSelect={(status) => onChange({ status, desire: null })} />

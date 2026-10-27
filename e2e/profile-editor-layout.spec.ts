@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { KINKS } from "../lib/kinks";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
+import { kinkCategoryLabel } from "../lib/kinkCategories";
 
 const topic = KINKS.find((kink) => kink.description && kink.safetyNote)!;
 const secondTopic = KINKS.find((kink) => kink.id !== topic.id)!;
@@ -137,3 +138,38 @@ test("catalogue categories, search and custom topics share the same inline edito
   await page.reload();
   await expect(page.locator("#profile-read-status-maybe-content")).toContainText("Mijn eigen lange onderwerp");
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`Profile ${theme} reading composition preserves full context and category hierarchy`, async ({ page }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedAndGo(page, `/profile?id=${PROFILE_ALEX.id}&interests=yes`, [{ ...PROFILE_ALEX, entries: {
+      [topic.id]: { status: "yes", comment: "" },
+    } }]);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    const list = page.locator("#profile-read-status-yes-content");
+    await expect(list.getByRole("heading", { name: kinkCategoryLabel(topic.category), exact: true })).toBeVisible();
+    const row = list.locator(`[data-kink-id="${topic.id}"]`);
+    await row.locator('button[aria-label$=", bewerken"]').click();
+    const editor = row.getByTestId("profile-inline-editor");
+    await expect(editor.getByText(topic.description!, { exact: true })).toBeVisible();
+    await expect(editor.getByRole("region", { name: "Veiligheid" })).toContainText(topic.safetyNote!);
+    const path = `screenshots/theme-rehearsal/settings-motion/${testInfo.project.name}/${theme}`;
+    for (const size of ["390", "desktop", "320-text-200"] as const) {
+      const enlarged = size === "320-text-200";
+      await page.setViewportSize(size === "desktop" ? { width: 1280, height: 900 } : enlarged ? { width: 320, height: 568 } : { width: 390, height: 844 });
+      await page.evaluate((large) => { document.documentElement.style.fontSize = large ? "200%" : ""; }, enlarged);
+      expect(await list.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+      // Capture the complete compact reading group, including safety before answers.
+      await list.screenshot({ path: `${path}/profile-reading-${size}.png` });
+    }
+    await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await editor.getByRole("button", { name: "Klaar", exact: true }).click();
+    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    const catalog = page.locator("#profile-catalog-manager");
+    await expect(catalog.getByRole("heading", { name: kinkCategoryLabel(topic.category), exact: true })).toBeVisible();
+    await expect(catalog.getByRole("heading", { name: "Eigen onderwerpen", exact: true })).toBeVisible();
+    await catalog.screenshot({ path: `${path}/profile-catalogue-categories-390.png` });
+  });
+}

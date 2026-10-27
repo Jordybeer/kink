@@ -67,6 +67,7 @@ interface Props {
   onClose: () => void;
   children: ReactNode;
   title?: string;
+  headerIcon?: ReactNode;
   scrollable?: boolean;
   variant?: SheetVariant;
   footer?: ReactNode;
@@ -75,6 +76,7 @@ interface Props {
 
 function TitledSheetFrame({
   title,
+  headerIcon,
   onClose,
   scrollable,
   variant,
@@ -82,6 +84,7 @@ function TitledSheetFrame({
   children,
 }: {
   title: string;
+  headerIcon?: ReactNode;
   onClose: () => void;
   scrollable: boolean;
   variant: SheetVariant;
@@ -113,6 +116,7 @@ function TitledSheetFrame({
       )}
       {/* Bound structural spacing so enlarged text retains the reading width. */}
       <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
+        {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
         <h2
           className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
           style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
@@ -167,6 +171,7 @@ export default function Sheet({
   onClose,
   children,
   title,
+  headerIcon,
   scrollable = false,
   variant = "sheet",
   footer,
@@ -250,6 +255,7 @@ export default function Sheet({
                   ? (
                     <TitledSheetFrame
                       title={title}
+                      headerIcon={headerIcon}
                       onClose={onClose}
                       scrollable={scrollable}
                       variant={variant}

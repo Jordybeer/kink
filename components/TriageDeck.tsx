@@ -8,6 +8,8 @@ import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
 import { isConversationContinuation, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
 import Sheet from "./Sheet";
+import EditorialHeading from "./ui/EditorialHeading";
+import { ExplanationContent, ExplanationProse, ExplanationSection } from "./ExplanationContent";
 
 const AGREEMENTS = [
   { value: "vraag eerst", label: "Eerst vragen", emphasized: true, tour: "agreement-ask-first" },
@@ -187,42 +189,39 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
       </div>
 
       {current && presentation.hasDetails && (
-        <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} title="Info & uitleg" variant="surface" scrollable aria-label={`Info en uitleg bij ${presentation.title}`}>
-          <div className="min-w-0 break-words px-1 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
-            <h3 className="text-base font-medium leading-snug" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>{presentation.title}</h3>
-            <section className="mt-6">
-              <h4 className="text-sm font-semibold" style={{ color: "var(--text2)" }}>In het kort</h4>
-              <p data-testid="question-detail-essence" className="mt-2">{presentation.essence}</p>
-            </section>
+        <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} title="Info & uitleg" headerIcon={<Info size={20} weight="duotone" />} variant="surface" scrollable aria-label={`Info en uitleg bij ${presentation.title}`}>
+          <ExplanationContent>
+            <EditorialHeading title={presentation.title} size="compact" level={3} />
+            <ExplanationSection title="In het kort" emphasis>
+              <ExplanationProse testId="question-detail-essence">{presentation.essence}</ExplanationProse>
+            </ExplanationSection>
             {presentation.details && (
-              <section className="mt-6">
-                <h4 className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Meer context</h4>
-                <p className="mt-2">{presentation.details}</p>
-              </section>
+              <ExplanationSection title="Meer context">
+                <ExplanationProse>{presentation.details}</ExplanationProse>
+              </ExplanationSection>
             )}
             {current.aliases && current.aliases.length > 0 && (
-              <section className="mt-6">
-                <h4 className="text-sm font-semibold" style={{ color: "var(--text2)" }}>Ook bekend als</h4>
-                <p className="mt-2">{current.aliases.join(" · ")}</p>
-              </section>
+              <ExplanationSection title="Ook bekend als">
+                <ExplanationProse secondary>{current.aliases.join(" · ")}</ExplanationProse>
+              </ExplanationSection>
             )}
-          </div>
+          </ExplanationContent>
         </Sheet>
       )}
       {current?.safetyNote && (
-        <Sheet open={safetyOpen} onClose={() => setSafetyKinkId(null)} title="Veiligheid" variant="surface" scrollable aria-label={`Veiligheid bij ${presentation.title}`}>
-          <div className="min-w-0 break-words px-1 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
-            <h3 className="text-base font-medium leading-snug" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>{presentation.title}</h3>
-            <p className="mt-6">{current.safetyNote}</p>
-          </div>
+        <Sheet open={safetyOpen} onClose={() => setSafetyKinkId(null)} title="Veiligheid" headerIcon={<ShieldCheck size={20} weight="duotone" />} variant="surface" scrollable aria-label={`Veiligheid bij ${presentation.title}`}>
+          <ExplanationContent>
+            <EditorialHeading title={presentation.title} size="compact" level={3} />
+            <ExplanationProse>{current.safetyNote}</ExplanationProse>
+          </ExplanationContent>
         </Sheet>
       )}
       {categoryDetail && categoryCopy && (
-        <Sheet open onClose={() => setCategoryDetail(null)} title={kinkCategoryLabel(categoryDetail)} variant="surface" scrollable aria-label={`Over ${kinkCategoryLabel(categoryDetail)}`}>
-          <div className="min-w-0 break-words px-1 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
-            <p>{categoryCopy}</p>
-            <p className="mt-6" style={{ color: "var(--text2)" }}>Deze uitleg helpt termen herkennen. Ze vult niets voor je in en verandert geen antwoorden.</p>
-          </div>
+        <Sheet open onClose={() => setCategoryDetail(null)} title={kinkCategoryLabel(categoryDetail)} headerIcon={<span className="h-[8px] w-[8px] rounded-full" style={{ background: CATEGORY_ACCENT[categoryDetail] }} />} variant="surface" scrollable aria-label={`Over ${kinkCategoryLabel(categoryDetail)}`}>
+          <ExplanationContent>
+            <ExplanationProse>{categoryCopy}</ExplanationProse>
+            <ExplanationProse secondary>Deze uitleg helpt termen herkennen. Ze vult niets voor je in en verandert geen antwoorden.</ExplanationProse>
+          </ExplanationContent>
         </Sheet>
       )}
     </>

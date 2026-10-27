@@ -1,6 +1,7 @@
 "use client";
 import Sheet from "@/components/Sheet";
-import { Star } from "@phosphor-icons/react";
+import { Info, Star } from "@phosphor-icons/react";
+import { ExplanationContent, ExplanationProse } from "@/components/ExplanationContent";
 import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { KinkStatus } from "@/types";
 
@@ -25,37 +26,36 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
       scrollable
       variant="surface"
       title="Wat betekenen deze keuzes?"
+      headerIcon={<Info size={20} weight="duotone" />}
       aria-label="Uitleg keuzes"
     >
-      <div className="min-w-0 break-words px-1">
-        <ul className="flex flex-col gap-5">
+      <ExplanationContent>
+        <ul className="flex flex-col gap-6">
           {STATUS_ORDER.map((status) => ({
             status,
             label: STATUS_LABEL[status],
             description: STATUS_EXPLAINER[status],
           })).map(({ status, label, description }) => (
             <li key={label} className="flex gap-3">
-              <span className="mt-1 h-3 w-3 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
+              <span className="mt-[8px] h-[12px] w-[12px] flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{label}</p>
-                <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>{description}</p>
+                <p className="mb-1 text-base font-semibold leading-6" style={{ color: "var(--text)" }}>{label}</p>
+                <ExplanationProse secondary>{description}</ExplanationProse>
               </div>
             </li>
           ))}
           <li className="flex gap-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-            <Star size={12} weight="fill" className="mt-1 flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
+            <Star size={12} weight="fill" className="mt-[8px] flex-none" style={{ color: "var(--curious)" }} aria-hidden="true" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
-              <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
+              <p className="mb-1 text-base font-semibold leading-6" style={{ color: "var(--text)" }}>Nieuwsgierig</p>
+              <ExplanationProse secondary>
                 Los van je oordeel: markeer met de ster wat je wil verkennen. Kan naast elke keuze bestaan. Een ster is geen ja.
-              </p>
+              </ExplanationProse>
             </div>
           </li>
         </ul>
-        <p className="mt-4 text-sm italic" style={{ color: "var(--text2)" }}>
-          Tip: tik nogmaals op een actieve knop om hem uit te zetten.
-        </p>
-      </div>
+        <ExplanationProse secondary>Tip: tik nogmaals op een actieve knop om hem uit te zetten.</ExplanationProse>
+      </ExplanationContent>
     </Sheet>
   );
 }
