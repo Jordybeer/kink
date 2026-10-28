@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import DisclosureBody from "@/components/ui/DisclosureBody";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { useContractStore } from "@/lib/contractStore";
@@ -154,75 +155,68 @@ function SceneItemRow({
           </button>
         </div>
 
-        <div
-          id={detailsId}
-          className={`accordion-content ${visibleDetails ? "open" : ""}`}
-          aria-hidden={!visibleDetails}
-          inert={visibleDetails ? undefined : true}
-        >
-          <div className="accordion-inner space-y-3 pt-3">
-            <div className="flex items-start gap-2">
-              <label className="flex-none pt-1 text-xs" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
-              <DurationStepper
-                value={item.duration}
-                disabled={locked}
-                onChange={(v) => onUpdate(item.id, { duration: v })}
-              />
-            </div>
-            <textarea
-              rows={2}
-              value={item.note}
-              readOnly={locked}
-              onChange={(e) => onUpdate(item.id, { note: e.target.value })}
-              placeholder="Notitie…"
-              aria-label={`Notitie bij ${item.name}`}
-              className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
-              style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14 }}
+        <DisclosureBody open={visibleDetails} id={detailsId} contentClassName="space-y-3 pt-3">
+          <div className="flex items-start gap-2">
+            <label className="flex-none pt-1 text-xs" style={{ color: "var(--text2)", minWidth: 32 }}>Duur</label>
+            <DurationStepper
+              value={item.duration}
+              disabled={locked}
+              onChange={(v) => onUpdate(item.id, { duration: v })}
             />
-
-            {!locked && (
-              <div className="flex items-center gap-1 border-t pt-2" style={{ borderColor: "var(--border)" }}>
-                <span className="mr-auto text-xs" style={{ color: "var(--text2)" }}>Volgorde &amp; beheer</span>
-                <button
-                  ref={moveUpRef}
-                  onClick={() => {
-                    onMoveUp(index);
-                    // At the endpoint this control becomes disabled. Keep keyboard
-                    // focus on the same item, on its remaining reorder action.
-                    if (index === 1) requestAnimationFrame(() => moveDownRef.current?.focus({ preventScroll: true }));
-                  }}
-                  disabled={index === 0}
-                  aria-label="Naar boven verplaatsen"
-                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
-                  style={{ color: "var(--text2)" }}
-                >
-                  <CaretUp size={16} aria-hidden="true" />
-                </button>
-                <button
-                  ref={moveDownRef}
-                  onClick={() => {
-                    onMoveDown(index);
-                    if (index === totalItems - 2) requestAnimationFrame(() => moveUpRef.current?.focus({ preventScroll: true }));
-                  }}
-                  disabled={index === totalItems - 1}
-                  aria-label="Naar beneden verplaatsen"
-                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
-                  style={{ color: "var(--text2)" }}
-                >
-                  <CaretDown size={16} aria-hidden="true" />
-                </button>
-                <button
-                  onClick={() => onDelete(item.id)}
-                  aria-label={`${item.name} verwijderen`}
-                  className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
-                  style={{ color: "var(--hard-no)" }}
-                >
-                  <Trash size={16} aria-hidden="true" />
-                </button>
-              </div>
-            )}
           </div>
-        </div>
+          <textarea
+            rows={2}
+            value={item.note}
+            readOnly={locked}
+            onChange={(e) => onUpdate(item.id, { note: e.target.value })}
+            placeholder="Notitie…"
+            aria-label={`Notitie bij ${item.name}`}
+            className="focus-ring w-full resize-none rounded-lg px-3 py-2 focus:outline-none read-only:opacity-70"
+            style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14 }}
+          />
+
+          {!locked && (
+            <div className="flex items-center gap-1 border-t pt-2" style={{ borderColor: "var(--border)" }}>
+              <span className="mr-auto text-xs" style={{ color: "var(--text2)" }}>Volgorde &amp; beheer</span>
+              <button
+                ref={moveUpRef}
+                onClick={() => {
+                  onMoveUp(index);
+                  // At the endpoint this control becomes disabled. Keep keyboard
+                  // focus on the same item, on its remaining reorder action.
+                  if (index === 1) requestAnimationFrame(() => moveDownRef.current?.focus({ preventScroll: true }));
+                }}
+                disabled={index === 0}
+                aria-label="Naar boven verplaatsen"
+                className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                style={{ color: "var(--text2)" }}
+              >
+                <CaretUp size={16} aria-hidden="true" />
+              </button>
+              <button
+                ref={moveDownRef}
+                onClick={() => {
+                  onMoveDown(index);
+                  if (index === totalItems - 2) requestAnimationFrame(() => moveUpRef.current?.focus({ preventScroll: true }));
+                }}
+                disabled={index === totalItems - 1}
+                aria-label="Naar beneden verplaatsen"
+                className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-30"
+                style={{ color: "var(--text2)" }}
+              >
+                <CaretDown size={16} aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => onDelete(item.id)}
+                aria-label={`${item.name} verwijderen`}
+                className="ks-motion-choice focus-ring flex h-11 w-11 items-center justify-center rounded-lg"
+                style={{ color: "var(--hard-no)" }}
+              >
+                <Trash size={16} aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </DisclosureBody>
       </div>
     </motion.div>
   );
@@ -523,22 +517,28 @@ function ScenePage() {
           </button>
         </div>
 
-        <div className="mb-3 flex items-center gap-1.5">
-          <label htmlFor="scene-date" className="sr-only">Datum</label>
-          <input
-            id="scene-date"
-            type="date"
-            value={sceneDate}
-            onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
-            disabled={isConsentLocked}
-            className="focus-ring flex-1 rounded-lg px-2 focus:outline-none"
-            style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text2)", fontSize: 12, minHeight: "var(--touch-target)", maxWidth: 180 }}
-          />
-          <TimePicker
-            value={sceneTime}
-            disabled={isConsentLocked}
-            onChange={(v) => { if (!isConsentLocked) { setSceneTime(v); setSaved(false); } }}
-          />
+        <div className="mb-3 flex flex-wrap items-end gap-3">
+          <div className="grid min-w-0 gap-1">
+            <label htmlFor="scene-date" className="text-xs font-medium" style={{ color: "var(--text2)" }}>Datum</label>
+            <input
+              id="scene-date"
+              type="date"
+              value={sceneDate}
+              onChange={(e) => { if (!isConsentLocked) { setSceneDate(e.target.value); setSaved(false); } }}
+              disabled={isConsentLocked}
+              className="focus-ring min-w-0 max-w-full rounded-lg px-2 focus:outline-none"
+              style={{ background: "var(--surface2)", border: "1px solid var(--control-border)", color: "var(--text2)", fontSize: 16, minHeight: "var(--touch-target)" }}
+            />
+          </div>
+          <div className="grid gap-1">
+            <label htmlFor="scene-time" className="text-xs font-medium" style={{ color: "var(--text2)" }}>Tijd</label>
+            <TimePicker
+              id="scene-time"
+              value={sceneTime}
+              disabled={isConsentLocked}
+              onChange={(v) => { if (!isConsentLocked) { setSceneTime(v); setSaved(false); } }}
+            />
+          </div>
         </div>
 
         {needsProfiles && (
@@ -572,22 +572,18 @@ function ScenePage() {
 
         {showOptionalContract && profileA && profileB && (
           <section
-            className="mb-3 flex flex-col gap-3 rounded-xl p-3 sm:flex-row sm:items-center"
-            style={{ background: "color-mix(in srgb, var(--accent) 5%, var(--surface2))", border: "1px solid var(--border)" }}
+            className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1"
             aria-labelledby="scene-contract-title"
           >
             <div className="min-w-0 flex-1">
-              <p id="scene-contract-title" className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
-                Contract · optioneel
-              </p>
-              <p className="mt-1 text-xs leading-5" style={{ color: "var(--text2)" }}>
-                Een contract kan jullie kink-matches en afspraken als extra startpunt geven, zodat je de scène persoonlijker kunt maken.
+              <p id="scene-contract-title" className="text-sm" style={{ color: "var(--text2)" }}>
+                Een contract is optioneel.
               </p>
             </div>
             <Link
               href={`/contract?a=${profileA.id}&b=${profileB.id}`}
-              className="ks-motion-choice focus-ring inline-flex min-h-11 flex-none items-center justify-center gap-1 rounded-lg px-3 text-xs font-semibold"
-              style={{ color: "var(--accent)", border: "1px solid var(--border-accent)" }}
+              className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-semibold"
+              style={{ color: "var(--accent)" }}
             >
               Contract opstellen
               <ArrowRight size={13} aria-hidden="true" />
@@ -604,7 +600,7 @@ function ScenePage() {
             onChange={(e) => { if (!isConsentLocked) { setSafeword(e.target.value); setSaved(false); } }}
             disabled={isConsentLocked}
             placeholder="bijv. rood"
-            className="focus-ring flex-1 rounded-lg px-3 focus:outline-none"
+            className="focus-ring min-w-0 flex-1 rounded-lg px-3 focus:outline-none"
             style={{ background: "var(--surface)", border: "1px solid var(--control-border)", color: "var(--text)", fontSize: 14, minHeight: "var(--touch-target)" }}
           />
         </div>
@@ -640,7 +636,7 @@ function ScenePage() {
                 <ListPlus size={48} weight="duotone" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </div>
               <p className="mb-1 text-sm font-medium" style={{ color: "var(--text)" }}>Lege setlist</p>
-              <p className="text-sm" style={{ color: "var(--text2)" }}>Voeg kinks of eigen items toe via de balk onderaan</p>
+              <p className="text-sm" style={{ color: "var(--text2)" }}>{hasKinks && !isCompleted && !isConsentLocked ? "Kies ‘Kinks toevoegen’ of voeg onderaan een eigen item toe." : "Voeg onderaan een eigen item toe."}</p>
             </div>
           ) : (
             <div>

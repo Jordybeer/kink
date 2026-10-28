@@ -170,16 +170,16 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   const kinkResult = catalogManager.locator('button[aria-label*=", bewerken"]').filter({ hasText: /spanking/i }).first();
   await expect(kinkResult).toBeVisible();
   await kinkResult.click();
-  const kinkDialog = page.getByRole("dialog", { name: /spanking.*bewerken/i });
-  await expect(kinkDialog).toHaveAttribute("data-sheet-variant", "surface");
-  await expect(kinkDialog.locator("[data-sheet-handle]")).toHaveCount(0);
-  await expectWithinVisualViewport(kinkDialog);
+  const inlineEditor = kinkResult.locator("..").getByTestId("profile-inline-editor");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(inlineEditor.getByRole("group", { name: "Status kiezen" })).toBeVisible();
+  await inlineEditor.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "kink-edit-answer");
-  await kinkDialog.getByRole("button", { name: "Stap 2 van 2: Details" }).click();
-  await expect(kinkDialog.getByRole("heading", { name: "Details" })).toBeFocused();
-  await expectWithinVisualViewport(kinkDialog);
+  await inlineEditor.getByRole("button", { name: "Details", exact: true }).click();
+  await expect(inlineEditor.getByLabel("Persoonlijke context")).toBeVisible();
+  await inlineEditor.getByRole("button", { name: "Details", exact: true }).scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "kink-edit-details");
-  await kinkDialog.getByRole("button", { name: "Klaar" }).click();
+  await inlineEditor.getByRole("button", { name: "Klaar" }).click();
   await expect(kinkResult).toBeFocused();
 
   await catalogManager.getByRole("button", { name: "Gereed" }).click();
@@ -234,8 +234,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await expectWithinVisualViewport(explainer);
   await saveScreenshot(page, testInfo, "status-explainer");
   await explainer
-    .getByTestId("sheet-scroll-body")
-    .getByRole("button", { name: "Sluit", exact: true })
+    .getByRole("button", { name: "Wat betekenen deze keuzes? sluiten", exact: true })
     .click();
 
   const sessionValues = await page.evaluate(() => Object.fromEntries(

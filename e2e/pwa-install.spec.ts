@@ -5,7 +5,7 @@ async function openInstall(page: Page) {
   await page.getByRole("button", { name: "Meer opties" }).click();
   await page.getByRole("menuitem", { name: "Instellingen" }).click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
-  await settings.locator("summary").filter({ hasText: "KinkSync installeren" }).click();
+  await settings.getByRole("button", { name: /KinkSync installeren/ }).click();
   return settings;
 }
 

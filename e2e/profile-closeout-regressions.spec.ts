@@ -168,7 +168,7 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
   await expect(summary).toBeVisible();
 });
 
-test("profile catalog manager keeps status text compact, aligned and free of pill chrome", async ({ page }) => {
+test("profile catalog manager keeps status text readable, wrapping and free of pill chrome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
 
@@ -180,15 +180,15 @@ test("profile catalog manager keeps status text compact, aligned and free of pil
   const styles = await labels.evaluateAll((elements) => elements.map((element) => {
     const style = getComputedStyle(element);
     return {
-      justifyContent: style.justifyContent,
-      minWidth: Number.parseFloat(style.minWidth),
+      fits: element.scrollWidth <= element.clientWidth + 1,
+      fontSize: Number.parseFloat(style.fontSize),
       backgroundColor: style.backgroundColor,
       borderTopWidth: style.borderTopWidth,
     };
   }));
 
-  expect(styles.every((style) => style.justifyContent === "flex-end")).toBe(true);
-  expect(styles.every((style) => style.minWidth >= 89)).toBe(true);
+  expect(styles.every((style) => style.fits)).toBe(true);
+  expect(styles.every((style) => style.fontSize >= 14)).toBe(true);
   expect(styles.every((style) => style.backgroundColor === "rgba(0, 0, 0, 0)")).toBe(true);
   expect(styles.every((style) => style.borderTopWidth === "0px")).toBe(true);
 });
@@ -245,3 +245,55 @@ test("dense profile share keeps a fixed header and scrolls inside the iPhone vis
     return frame ? Math.max(0, frame.top - rect.top, rect.bottom - frame.bottom) : Number.POSITIVE_INFINITY;
   })).toBeLessThanOrEqual(1);
 });
+
+for (const theme of ["light", "dark"] as const) {
+  for (const width of [320, 390]) {
+    for (const scale of [1, 2]) {
+      test(`long profile alias uses readable full width at ${width}px/${scale * 100}%/${theme}`, async ({ page }, testInfo) => {
+        const alias = "Een heel lange profielalias met ruimte voor de volledige naam ".repeat(3) + "ZonderEnigeWoordafbreking".repeat(3);
+        await page.setViewportSize({ width, height: 844 });
+        await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
+        await seedAndGo(page, `/profile/${PROFILE.id}`, [{ ...PROFILE, name: alias }]);
+        await page.evaluate((scale) => { document.documentElement.style.fontSize = `${scale * 100}%`; }, scale);
+        const hero = page.getByTestId("profile-hero");
+        const name = hero.getByRole("heading", { name: alias, exact: true });
+        await expect(name).toHaveText(alias);
+        const geometry = await name.evaluate((element) => {
+          const box = element.getBoundingClientRect();
+          const hero = element.closest('[data-testid="profile-hero"]')!.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return {
+            width: box.width,
+            available: hero.width,
+            clipped: [...range.getClientRects()].some((rect) => rect.left < box.left - 1 || rect.right > box.right + 1),
+            wrap: getComputedStyle(element).overflowWrap,
+            overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          };
+        });
+        expect(geometry.width).toBeGreaterThanOrEqual(geometry.available * 0.95);
+        expect(geometry.wrap).toBe("anywhere");
+        expect(geometry.clipped).toBe(false);
+        expect(geometry.overflow).toBe(false);
+        await page.screenshot({ path: testInfo.outputPath("long-alias.png") });
+      });
+    }
+  }
+}
+
+for (const theme of ["light", "dark"] as const) {
+  for (const width of [390, 1280]) {
+    test(`ordinary profile identity retains the avatar and name row at ${width}px in ${theme}`, async ({ page }, testInfo) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.addInitScript((theme) => localStorage.setItem("kinksync-color-theme", theme), theme);
+      await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
+      const hero = page.getByTestId("profile-hero");
+      const name = (await hero.getByRole("heading", { name: "Alex", exact: true }).boundingBox())!;
+      const avatar = (await hero.getByRole("button", { name: "Geen profielfoto voor Alex" }).boundingBox())!;
+      expect(name.x).toBeGreaterThan(avatar.x + avatar.width);
+      expect(name.y).toBeLessThan(avatar.y + avatar.height);
+      await expect(hero.getByText("Hoofdperspectief: Dominant", { exact: true })).toBeVisible();
+      await page.screenshot({ path: testInfo.outputPath("ordinary-profile.png") });
+    });
+  }
+}

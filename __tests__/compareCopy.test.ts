@@ -39,53 +39,55 @@ describe("compare narrative copy", () => {
     expect(getClearOverlapPercent(summary({ jointlyAssessed: 0 }))).toBeNull();
   });
 
-  it("kiest de heel-veel-overlap tekst zonder de cijfers opnieuw uit te schrijven", () => {
-    const story = planCompareStory(summary({ shared: 34, discuss: 3, soft: 2, jointlyAssessed: 39 }));
-    expect(story.kind).toBe("very-overlapping");
-    expect(story.lead).toBe("Jullie zitten wel héél vaak op dezelfde golflengte 😏 Misschien zijn de paar verschillen juist het leukst om samen verder te ontdekken.");
-    expect(story.lead).not.toMatch(/\b34\b|\b39\b|%/);
+  it.each([
+    ["very-overlapping", { shared: 34, discuss: 3, soft: 2, jointlyAssessed: 39 }],
+    ["overlapping", {}],
+    ["discuss-heavy", { shared: 12, discuss: 16, soft: 3, jointlyAssessed: 31 }],
+    ["different", { shared: 7, discuss: 5, soft: 11, jointlyAssessed: 23 }],
+    ["mixed", { shared: 12, discuss: 7, soft: 5, conflict: 1, jointlyAssessed: 25 }],
+    ["low-coverage", { shared: 3, discuss: 1, soft: 1, jointlyAssessed: 5 }],
+  ] as const)("houdt %s intern beschikbaar en beschrijft alleen het zichtbare aantal", (kind, overrides) => {
+    const input = summary(overrides);
+    const story = planCompareStory(input);
+    expect(story.kind).toBe(kind);
+    expect(story.lead).toBe(`Jullie hebben allebei een zichtbaar antwoord bij ${input.jointlyAssessed} onderwerpen.`);
+    expect(story.lead).not.toMatch(/golflengte|één lijn|compatib|goed gesprek|anders over|ontdekken|%/i);
   });
 
-  it("kiest de gewone overlaptekst en houdt de emoji natuurlijk in de zin", () => {
-    const story = planCompareStory(summary());
-    expect(story.kind).toBe("overlapping");
-    expect(story.lead).toBe("Jullie zitten verrassend vaak op dezelfde golflengte 👀 Waar jullie antwoorden verschillen, valt misschien nog iets nieuws te ontdekken.");
-    expect(story.lead).not.toContain("golflengte. 👀");
-  });
-
-  it("kiest bespreekbaar wanneer onduidelijkheid duidelijk domineert", () => {
-    const story = planCompareStory(summary({ shared: 12, discuss: 16, soft: 3, conflict: 0, limit: 0, jointlyAssessed: 31 }));
-    expect(story.kind).toBe("discuss-heavy");
-    expect(story.lead).toBe("Niet alles is meteen duidelijk tussen jullie. Sommige antwoorden liggen dicht bij elkaar, andere vragen misschien om een goed gesprek.");
-  });
-
-  it("kiest verschillen wanneer zachte verschillen de niet-overlap domineren", () => {
-    const story = planCompareStory(summary({ shared: 7, discuss: 5, soft: 11, conflict: 0, limit: 0, jointlyAssessed: 23 }));
-    expect(story.kind).toBe("different");
-    expect(story.lead).toBe("Jullie denken er best vaak anders over. Dat is niet per se een probleem. Misschien valt er juist daardoor nog veel over elkaar te ontdekken.");
-  });
-
-  it("valt terug op een gemengde tekst wanneer geen patroon overheerst", () => {
-    const story = planCompareStory(summary({ shared: 12, discuss: 7, soft: 5, conflict: 1, limit: 0, jointlyAssessed: 25 }));
-    expect(story.kind).toBe("mixed");
-    expect(story.lead).toBe("Jullie zitten best vaak op één lijn, maar verschillen ook regelmatig van mening. Genoeg om nog over te praten en samen te ontdekken.");
-  });
-
-  it("blijft voorzichtig wanneer er nog te weinig gezamenlijk is ingevuld", () => {
+  it("onderscheidt geen gezamenlijke antwoorden van gedeeltelijk ingevulde profielen", () => {
     const story = planCompareStory(summary({
-      shared: 3,
-      complementary: 0,
-      discuss: 1,
-      soft: 1,
-      conflict: 0,
-      limit: 0,
-      jointlyAssessed: 5,
-      unpairedVisible: 12,
-      match: 3,
+      shared: 0, complementary: 0, discuss: 0, soft: 0, conflict: 0, limit: 0,
+      jointlyAssessed: 0, unpairedVisible: 12, match: 0,
     }));
-    expect(story.kind).toBe("low-coverage");
-    expect(story.lead).toBe("Het beeld is nog niet helemaal compleet. Vul allebei wat meer in en vergelijk daarna opnieuw.");
-    expect(story.coverage).toContain("12 andere");
+    expect(story.lead).toBe("Er zijn nog geen onderwerpen met een zichtbaar antwoord van jullie allebei.");
+    expect(story.coverage).toBe("Bij 12 andere onderwerpen ontbreekt nog één zichtbaar antwoord.");
+    expect(story.overlapCount).toBe(0);
+    expect(story.overlapPercent).toBeNull();
+    expect(story.insights).toEqual([]);
+  });
+
+  it("laat bij volledig lege profielen geen extra dekkingszin achter", () => {
+    const story = planCompareStory(summary({
+      shared: 0, complementary: 0, discuss: 0, soft: 0, conflict: 0, limit: 0,
+      jointlyAssessed: 0, unpairedVisible: 0, match: 0,
+    }));
+    expect(story.coverage).toBe("");
+    expect(story.lead).toBe("Er zijn nog geen onderwerpen met een zichtbaar antwoord van jullie allebei.");
+  });
+
+  it("gebruikt enkelvoud voor één gezamenlijk of eenzijdig zichtbaar onderwerp", () => {
+    const story = planCompareStory(summary({
+      shared: 1, complementary: 0, discuss: 0, soft: 0, conflict: 0, limit: 0,
+      jointlyAssessed: 1, unpairedVisible: 1, match: 1,
+    }));
+    expect(story.lead).toBe("Jullie hebben allebei een zichtbaar antwoord bij 1 onderwerp.");
+    expect(story.coverage).toBe("Bij 1 ander onderwerp ontbreekt nog één zichtbaar antwoord.");
+  });
+
+  it("telt gedeelde en aanvullende antwoorden samen als overlap", () => {
+    const story = planCompareStory(summary({ shared: 4, complementary: 3, jointlyAssessed: 10 }));
+    expect(story.overlapCount).toBe(7);
+    expect(story.overlapPercent).toBe(70);
   });
 
   it("houdt alle harde grenzen zichtbaar zonder de algemene story over te nemen", () => {

@@ -72,7 +72,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toBeVisible();
       await expect(page.getByTestId("compare-results-filter")).toBeVisible();
       await expect(page.getByTestId("compare-categories-filter")).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Wat valt op tussen jullie" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Jullie antwoorden" })).toBeVisible();
       await expect.poll(() => page.locator('section[id^="cat-"]').count()).toBeGreaterThan(0);
       break;
     case "contract":
@@ -122,8 +122,7 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   expect(scrollTop).toBeLessThanOrEqual(1);
 
   await dialog
-    .getByTestId("sheet-scroll-body")
-    .getByRole("button", { name: "Sluit", exact: true })
+    .getByRole("button", { name: "Wat betekenen deze keuzes? sluiten", exact: true })
     .click();
   await expect(dialog).toBeHidden();
 }

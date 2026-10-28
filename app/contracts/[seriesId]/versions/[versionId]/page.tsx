@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, CheckCircle, Info, ShieldCheck } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
+import Accordion from "@/components/ui/Accordion";
 import ContractPdfViewer from "@/components/contract/ContractPdfViewer";
 import { useContractStore } from "@/lib/contractStore";
 import { decodeLocalRouteId } from "@/lib/localRoutes";
@@ -16,7 +16,6 @@ export default function ContractVersionPage() {
   const seriesId = decodeLocalRouteId(params.seriesId);
   const versionId = decodeLocalRouteId(params.versionId);
   const series = useContractStore((state) => state.series.find((item) => item.id === seriesId));
-  const [technicalOpen, setTechnicalOpen] = useState(false);
 
   const contractsReady = useLegacyContractMigration();
   if (!contractsReady) return <PageShell loading width="2xl" />;
@@ -86,20 +85,18 @@ export default function ContractVersionPage() {
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setTechnicalOpen((current) => !current)}
-          className="focus-ring mt-4 min-h-11 text-sm font-medium"
-          style={{ color: "var(--text2)" }}
+        <Accordion
+          trigger={(open) => open ? "Technische verificatie verbergen" : "Technische verificatie bekijken"}
+          className="mt-4"
+          triggerClassName="font-medium"
+          triggerStyle={{ color: "var(--text2)" }}
+          contentClassName="pt-2"
         >
-          {technicalOpen ? "Technische verificatie verbergen" : "Technische verificatie bekijken"}
-        </button>
-        {technicalOpen && (
-          <div className="mt-2 space-y-2 break-all rounded-xl p-3 font-mono text-[11px]" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
+          <div className="space-y-2 break-all rounded-xl p-3 font-mono text-[11px]" style={{ background: "var(--surface2)", color: "var(--text2)" }}>
             <p>Contracthash: {version.contentHash}</p>
             {version.signatures.map((proof) => <p key={proof.profileId}>{proof.profileId}: {proof.keyId}</p>)}
           </div>
-        )}
+        </Accordion>
       </section>
     </PageShell>
   );

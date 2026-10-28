@@ -1,17 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { CaretDown } from "@phosphor-icons/react";
 import type { Kink, KinkCategoryId, KinkEntry } from "@/types";
 import { kinkCategoryLabel } from "@/lib/kinkCategories";
 import { useMotionSafe } from "@/lib/motion";
-import KinkListRow from "./KinkListRow";
+import EditorialHeading from "./ui/EditorialHeading";
 
 interface Props {
   category: KinkCategoryId;
   kinks: Kink[];
   entries: Record<string, KinkEntry>;
-  onEdit: (kink: Kink) => void;
+  renderRow: (kink: Kink) => ReactNode;
+  onToggle?: () => void;
   openByDefault?: boolean;
 }
 
@@ -23,7 +24,8 @@ export default function CategorySection({
   category,
   kinks,
   entries,
-  onEdit,
+  renderRow,
+  onToggle,
   openByDefault = false,
 }: Props) {
   const motionSafe = useMotionSafe();
@@ -37,6 +39,7 @@ export default function CategorySection({
   }, [openByDefault]);
 
   function toggleOpen() {
+    onToggle?.();
     setOpen((value) => !value);
   }
 
@@ -57,11 +60,9 @@ export default function CategorySection({
           borderColor: "color-mix(in srgb, var(--border) 76%, transparent)",
         }}
       >
-        <span className="min-w-0 flex-1">
-          <h2 id={headingId} className="truncate text-base font-semibold leading-6">
-            {label}
-          </h2>
-        </span>
+        <div className="min-w-0 flex-1">
+          <EditorialHeading id={headingId} title={label} size="compact" level={2} />
+        </div>
         <span
           className="flex-none text-xs tabular-nums"
           aria-label={`${filled} van ${kinks.length} beoordeeld`}
@@ -90,12 +91,7 @@ export default function CategorySection({
         {open && (
           <div className="flex flex-col">
             {kinks.map((kink) => (
-              <KinkListRow
-                key={kink.id}
-                kink={kink}
-                entry={entries[kink.id] ?? { status: null, comment: "" }}
-                onOpen={() => onEdit(kink)}
-              />
+              <div key={kink.id}>{renderRow(kink)}</div>
             ))}
           </div>
         )}

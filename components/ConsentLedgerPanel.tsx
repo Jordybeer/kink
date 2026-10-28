@@ -8,6 +8,7 @@ import {
   type SceneConsentVerification,
 } from "@/lib/sceneConsentVerification";
 import { useStore } from "@/lib/store";
+import Accordion from "@/components/ui/Accordion";
 
 export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRecord; profiles: Profile[] }) {
   const { lockSceneConsent, appendSceneConsentEvent } = useStore();
@@ -150,15 +151,14 @@ export default function ConsentLedgerPanel({ scene, profiles }: { scene: SceneRe
 
         {message && <p role="status" className="text-sm mt-3" style={{ color: message.startsWith("✓") ? "var(--yes)" : "var(--text2)" }}>{message}</p>}
 
-        <details className="mt-4">
-          <summary className="ks-motion-choice text-sm cursor-pointer focus-ring rounded" style={{ color: "var(--accent)" }}>Technische details</summary>
+        <Accordion trigger="Technische details" className="mt-4" triggerClassName="rounded" triggerStyle={{ color: "var(--accent)" }}>
           <div className="text-sm mt-2 flex flex-col gap-2 leading-relaxed" style={{ color: "var(--text2)" }}>
             <p>Elke bevestigde profielversie heeft een controleerbare digitale verzegeling. Een logregel telt alleen wanneer de sleutel werkelijk bij één van de twee scèneprofielen hoort; een willekeurige andere sleutel wordt afgewezen.</p>
             <p>Bij het vastzetten bewaart KinkSync exact welke profielversies, activiteiten, intensiteiten, notities en welk safeword golden. Een wijziging of intrekking komt later als nieuwe regel erbij.</p>
             <p>Dit maakt gewijzigde inhoud en gebroken ketens zichtbaar. Zonder server kan een volledig toestel of volledige back-up nog steeds naar een oudere, op zichzelf geldige kopie worden teruggezet. Twee onafhankelijke toestelkopieën of een versleutelde back-up geven bij belangrijke afspraken extra controle.</p>
             <p>Dit vervangt geen gesprek: toestemming kan altijd mondeling of non-verbaal worden ingetrokken en dan moet de activiteit meteen stoppen.</p>
           </div>
-        </details>
+        </Accordion>
       </div>
     </section>
   );

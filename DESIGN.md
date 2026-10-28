@@ -131,27 +131,50 @@ The goal is fewer simultaneous rectangles and a clearer visual sentence.
 
 ## Profile surfaces
 
-### Profile read overview
+### Profile read overview and inline topic editing
 
-- The read view is **person-first and status-first**. It answers what this person explicitly wants, accepts, is unsure about, offers for a partner, or marks as a hard boundary. Catalogue categories are secondary orientation, not the top-level structure.
-- Hard boundaries are a distinct safety layer and every public hard boundary remains named without requiring expansion. Do not reduce them to a count or a partial preview.
-- The four interest statuses have compact public counts and three stable catalogue-order examples from the first available interest status. A single dedicated `Interesses & grenzen` view displays one status at a time, grouped by quiet category labels. Do not rank within a status or expand long lists inline.
-- Status counts replace the old distribution bar. One explicit `Bekijk interesses & grenzen` link opens the dedicated view; individual counts may open their status directly.
-- Public counts exclude private answers. On an own profile, private answers live in a separate deliberate disclosure and their status/context remain concealed until individually revealed. Shared profiles must not leak private information through counts, grouping or ordering.
-- Detail rows inherit their meaning from the active status, so they do not repeat a status pill on every item. Notes and agreement context remain quiet secondary text and appear with their named subject rather than being algorithmically promoted.
-- Owner-approved identity refinement (2026-10-11): preserve the reference screenshot's warm semantic hues, 3px status rails and editorial serif category headings in the read overview and interest browser. Use a light semantic surface tint without surrounding outlines, shadows or repeated status pills. Hard-boundary rails are dashed as an additional cue. This is a deliberate identity choice, not permission to restore nested card stacks. Concealed answers must not reveal their status through decorative colour.
-- Catalogue management intentionally remains **category-first** because its job is retrieval and editing: catalogue → category → topic → explicit status. Read and manage views are two lenses on the same explicit data, not one hierarchy forced onto both jobs.
-- The dedicated status browser has a sticky title and wrapping status navigation. Lists render immediately without reveal/loading animation. Use the existing `/profile` query shell so reload, back navigation and offline cache keep the same document route.
-- Hard boundaries may use one quiet safety-tinted surface because they are semantically distinct. Keep every public boundary immediately readable and never make safety information depend on disclosure or animation.
+Owner-approved direction (2026-10-24): the person and their answers stay on one
+Profile document. All five flat status controls show public counts and filter the
+list directly below them. `interests` query values restore that local selection;
+reload and history retain the hero. Default to the first nonempty interest status,
+and preserve an explicitly selected empty status with an honest empty state.
+The dedicated status browser and three-item preview are superseded.
 
-### Topic editor
+Every public hard boundary stays named in a separate quiet safety section,
+regardless of the interest filter. Harde grens targets that section without a
+second copy of the list. Keep this section after the interest list so a newly set
+boundary cannot move the active interest editor. During that edit, the new boundary
+is also named read-only in the safety section; explicit safety meaning takes
+priority over temporary deduplication.
 
-- Use the same two-step orientation language as Profile Edit, but do **not** turn topic editing into a required wizard. Step 1 is **Antwoord**; step 2 is **Details**. `Klaar` remains available from either step.
-- Step 1 lets the topic lead: name, category, description and any safety text, followed by the five explicit status choices. Safety meaning stays fully readable and never moves behind the Details step.
-- Step 2 contains optional refinement only: agreements, visibility and context. Keep those three semantic groups readable inside one flat details screen rather than stacking them beneath the primary status decision.
-- Use one scroll body per active step and keep the step/header controls outside that scroll region. Do not reserve a persistent bottom footer that steals mobile viewport height.
-- Status choices remain flat list rows with a small state mark and the exact status explanation beneath the label. The questionnaire keeps its existing card-style answer choices.
-- Preserve immediate-save behavior, privacy semantics and the existing status vocabulary. Switching steps changes presentation only; it never commits, infers or copies an answer.
+Use one consistent flat topic row for overview, catalogue categories, search and
+custom topics. Names wrap, category headings remain editorial, and secondary
+context stays attached to the named subject. The clean answer-list reference
+supersedes per-item tinted rail cards on Profile. Use quiet dividers and explicit
+status text with semantic marks, preserving the aubergine/rose visual world.
+
+Own-profile rows open one inline editor at a time: row, description and visible
+safety meaning, then the existing five flat answer choices. Optional agreements,
+visibility and context belong in one Details disclosure. There are no topic steps,
+modal or extra save flow. Comment editing, active-choice clearing and partial
+immediate persistence preserve all other entry fields. The unused topic-edit sheet
+is removed; questionnaire and Compare remain unchanged.
+
+Freeze public list positions while a row is open, including after status changes
+or clearing. Closing or deliberately changing a filter releases that position.
+Privacy overrides pinning immediately: remove all public presentation and focus a
+stable control. Private answers stay in a separate owner-only disclosure, with
+neutral concealed rows; status, tags, curiosity and comments require explicit
+individual reveal before editing. Shared/imported profiles have no answer-editing
+controls and expose no private counts or context. Category-first discovery remains
+available through Onderwerpen beheren.
+
+The bounded active editor and Details reuse DisclosureBody: 220ms grid, 190ms
+opacity, immediate inert/aria-hidden and live Reduced Motion. Keep only the selected
+editor's controls mounted, retaining them through rapid reversal. Focus stays on
+the row trigger on open and returns there on close, or to the active filter when a
+changed row leaves the list. Large category, status and private lists render
+immediately, with no height tween or page choreography.
 
 ### Profile Hero
 
@@ -178,6 +201,57 @@ Keep the step indicator if it improves orientation. Keep photo copy concise. Avo
 Do not invent a generic `Privacy & boundaries` section unless real editable settings justify it.
 
 Do not use a tab-semantic segmented control for a choice that is not actually tab navigation. Use controls whose accessibility semantics match the decision.
+
+## Settings and compact disclosures
+
+Settings keeps the warm aubergine/rose utility surface: a fixed header and close,
+one scroll body, full-height mobile geometry and a contained desktop panel. Titled
+`surface` sheets use the existing editorial face at 28px with moderate weight;
+quick and task sheets retain their own heading typography.
+
+Four editorial 16px group headings establish hierarchy through space:
+Kleurmodus, Gegevens, Beveiliging and KinkSync. The appearance choice has one
+heading and its existing helper, rather than a duplicate icon row. Dividers belong
+between related rows; repeated top/bottom rules and the redundant Geavanceerd
+heading stay removed. The destructive action has its own quiet separator and
+remains directly reachable by scrolling. All action descriptions remain intact.
+Native theme radios keep at least 44px targets and a reserved check slot, so labels
+do not move when selection changes. Their columns reflow with enlarged text
+rather than shrinking labels or overflowing the mobile surface.
+
+Read-only status and questionnaire explanations (topic info, safety and category)
+use that same titled `surface`, near the safe top edge on phones and centered with
+a contained width on desktop. Keep the title and 44px close outside the single
+scroll body. Long titles wrap; no drag handle, drag gesture or repeated bottom
+dismissal action belongs on these reading surfaces. Topic explanations share a
+content composition as well as the shell: compact editorial subjects, semantic
+header marks, readable prose and quieter labelled sections. One borderless
+surface2 tint intentionally emphasizes the essence; supporting sections stay flat,
+without nested summary cards. Profile reuses that prose and safety treatment with
+its complete catalogue copy, and compact editorial category headings stay consistent
+across overview, catalogue and custom topics. Status dots, factual copy,
+aliases, safety meaning and the independent curiosity disclaimer stay intact.
+Opening or dismissing an explanation preserves the underlying question and its
+answer, privacy, curiosity and agreement state; category learning memory retains
+its established behavior. At 320px with 200% text, actual grid tracks and flex
+children must fit and wrap within the surface, rather than hiding overflow or
+reducing text size.
+
+The bounded disclosure moment follows Scene: persistent CSS grid 0fr/1fr at
+220ms and opacity at 190ms, both with cubic-bezier(.16,1,.3,1). `DisclosureBody`
+owns clipping and immediate `aria-hidden`/`inert`; padding lives inside its clipped
+child so closed content has zero footprint. Content stays mounted through rapid
+reversals, default-open content starts visible and live Reduced Motion removes
+timed interpolation. Flat `Accordion` adds the native button, stable relationship
+and quiet caret, without imposing a card.
+
+Use this shared body only for Scene item details, Settings installation help,
+consent-ledger technical explanation, quarantined-profile technical reason and
+contract-version technical verification. Keep main consent/invalidity information
+visible. Scene position projection remains separate; large Profile/catalogue/
+Compare lists, ContractSection and the contract preamble retain their established
+behavior. No page choreography, height measurement or animation-completion side
+effects belong to this pattern.
 
 ## Motion
 

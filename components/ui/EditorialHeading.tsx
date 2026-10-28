@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
-type HeadingLevel = 1 | 2 | 3;
-type HeadingSize = "hero" | "section";
+type HeadingLevel = 1 | 2 | 3 | 4;
+type HeadingSize = "hero" | "section" | "compact";
 
 interface EditorialHeadingProps {
-  eyebrow: ReactNode;
+  eyebrow?: ReactNode;
   title: ReactNode;
   level?: HeadingLevel;
   size?: HeadingSize;
@@ -33,22 +33,24 @@ export default function EditorialHeading({
   testId,
   titleAriaLabel,
 }: EditorialHeadingProps) {
-  const Heading = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
+  const Heading = level === 1 ? "h1" : level === 2 ? "h2" : level === 3 ? "h3" : "h4";
   const titleClassName = size === "hero"
     ? "text-balance text-4xl leading-[1.02] sm:text-5xl"
-    : "text-balance text-3xl leading-tight";
+    : size === "compact"
+      ? "text-xl leading-6 [overflow-wrap:anywhere]"
+      : "text-balance text-3xl leading-tight";
 
   return (
     <div className="max-w-[var(--reading-measure)]">
       <div className="grid" style={{ rowGap: TITLE_GAP }}>
-        <p
+        {eyebrow && <p
           data-testid={testId}
           className="flex min-h-5 w-fit items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
           style={{ color: "var(--accent)" }}
         >
           {icon}
           <span>{eyebrow}</span>
-        </p>
+        </p>}
         <Heading
           id={id}
           aria-label={titleAriaLabel}
@@ -56,6 +58,8 @@ export default function EditorialHeading({
           style={{
             fontFamily: "var(--font-display, Georgia, serif)",
             fontWeight: 500,
+            // Compact list headings reserve the serif guard inside their width.
+            marginInline: size === "compact" ? 0 : undefined,
           }}
         >
           {title}
