@@ -66,11 +66,11 @@ test.describe("Editorial spacing regressions", () => {
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });
 
-  test("Home overflow utility keeps a 44px target with deliberate top and right gutters", async ({ page }) => {
+  test("Home Settings utility keeps a 44px target with deliberate top and right gutters", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
 
-    const more = page.getByTestId("home-topnav-more");
+    const more = page.getByTestId("home-topnav-settings");
     const box = await more.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);

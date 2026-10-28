@@ -244,7 +244,7 @@ export default function ProfileList({ onPromptDelete }: { onPromptDelete: (id: s
                   {pair[1].name}
                 </p>
                 <p className="mt-1 text-sm" style={{ color: "var(--text2)" }}>
-                  Bekijk overeenkomsten, bespreekpunten en grenzen.
+                  Vergelijk overeenkomsten, bespreekpunten en grenzen.
                 </p>
               </div>
               <CaretRight size={16} aria-hidden="true" style={{ color: "var(--accent)" }} />

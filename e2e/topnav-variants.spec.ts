@@ -10,7 +10,7 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
   await expect(homeNav).toHaveAttribute("data-top-nav-variant", "home");
   const homeActions = homeNav.getByTestId("home-topnav-actions");
-  const homeMore = homeNav.getByRole("button", { name: "Meer opties" });
+  const homeMore = homeNav.getByRole("button", { name: "Instellingen" });
   const homeIdentity = page.locator("[data-home-identity]");
   const homeWordmark = homeIdentity.locator("[data-home-nav-wordmark]");
   await expect(homeActions).toBeVisible();
@@ -41,18 +41,14 @@ test("TopNav keeps Home branded and anchored while content chrome stays quiet", 
   await expect.poll(() => homeActions.evaluate((element) => getComputedStyle(element).pointerEvents)).toBe("auto");
 
   await homeMore.click();
-  const homeMenu = page.getByRole("menu");
-  await expect(homeMenu).toBeVisible();
-  await expect(homeMenu.getByRole("menuitem", { name: "Instellingen" })).toBeVisible();
-  await expect(homeMenu.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
-  await expect(homeMenu.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
-  await expect(homeMenu.getByRole("menuitem", { name: "Agenda" })).toHaveCount(0);
-  const homeMenuBox = await homeMenu.boundingBox();
-  expect(homeMenuBox).not.toBeNull();
-  expect(homeMenuBox!.x).toBeGreaterThanOrEqual(0);
-  expect(homeMenuBox!.x + homeMenuBox!.width).toBeLessThanOrEqual(391);
+  const settings = page.getByRole("dialog", { name: "Instellingen" });
+  await expect(settings).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(homeMenu).toBeHidden();
+  await expect(settings).toBeHidden();
+  await expect(homeMore).toBeFocused();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Over KinkSync", exact: true })).toHaveAttribute("href", "/about");
+  await expect(page.getByRole("link", { name: "Privacy & veiligheid" })).toHaveAttribute("href", "/security");
 
   // Home grows to the same desktop measure as its PageShell instead of
   // floating inward at the old max-w-2xl width.

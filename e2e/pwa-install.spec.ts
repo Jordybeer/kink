@@ -2,8 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { PROFILE_ALEX, seedProfiles } from "./fixtures";
 
 async function openInstall(page: Page) {
-  await page.getByRole("button", { name: "Meer opties" }).click();
-  await page.getByRole("menuitem", { name: "Instellingen" }).click();
+  await page.getByRole("button", { name: "Instellingen" }).click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
   await settings.getByRole("button", { name: /KinkSync installeren/ }).click();
   return settings;
@@ -66,8 +65,7 @@ test("installed iOS app hides installation controls", async ({ page }) => {
     Object.defineProperty(navigator, "standalone", { configurable: true, value: true });
   });
   await seedProfiles(page, [PROFILE_ALEX]);
-  await page.getByRole("button", { name: "Meer opties" }).click();
-  await page.getByRole("menuitem", { name: "Instellingen" }).click();
+  await page.getByRole("button", { name: "Instellingen" }).click();
   await expect(page.getByRole("dialog", { name: "Instellingen" })).toBeVisible();
   await expect(page.getByText("KinkSync installeren", { exact: true })).toHaveCount(0);
 });

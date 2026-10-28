@@ -18,9 +18,8 @@ async function expectCenteredWithin(
 }
 
 async function openSettings(page: Page) {
-  const trigger = page.getByRole("button", { name: "Meer opties" });
+  const trigger = page.getByRole("button", { name: "Instellingen" });
   await trigger.click();
-  await page.getByRole("menuitem", { name: "Instellingen" }).click();
   return trigger;
 }
 
@@ -40,7 +39,7 @@ test("Home identity stays centered in its stable masthead slots across viewport 
     const identity = page.locator("[data-home-identity]");
     const wordmark = identity.locator("[data-home-nav-wordmark]");
     const actions = nav.getByTestId("home-topnav-actions");
-    const more = nav.getByRole("button", { name: "Meer opties" });
+    const more = nav.getByRole("button", { name: "Instellingen" });
 
     await expect(nav.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);
     await expectCenteredWithin(identity, wordmark, 1);

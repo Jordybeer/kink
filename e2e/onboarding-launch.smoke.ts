@@ -69,6 +69,6 @@ test("onboarding blijft bruikbaar van telefoon tot desktop", async ({ page }, te
 
   await expect(page.getByRole("button", { name: /^Maak mijn profiel\b/ })).toBeVisible({ timeout: 3000 });
   await expect(page.getByRole("button", { name: /^Scan gedeeld profiel\b/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Backup herstellen\b/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Importeer back-up", exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
